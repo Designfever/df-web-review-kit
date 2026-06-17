@@ -1,0 +1,35 @@
+{
+  "name": "@designfever/web-review-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Designfever web page review overlay toolkit.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap --clean",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --sourcemap --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.6",
+    "typescript": "^6.0.2"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "license": "UNLICENSED"
+}

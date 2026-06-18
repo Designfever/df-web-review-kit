@@ -15,3 +15,8 @@ createWebReviewKit({
   },
 });
 ```
+
+## Docs
+
+- [Initial plan](docs/initial-plan.md)
+- [df-sheet adapter implementation plan](docs/df-sheet-adapter.md)

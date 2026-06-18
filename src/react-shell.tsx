@@ -503,7 +503,7 @@ const getIsFigmaOverlayAvailable = (preset: ReviewShellViewportPreset) => {
 const FIGMA_OVERLAY_UNAVAILABLE_MESSAGE =
   '피그마 오버레이 디버깅이 안되는 해상도';
 const FIGMA_TOKEN_STORAGE_KEY = 'figma-token';
-const REVIEW_USER_ID_STORAGE_KEY = 'df-review-user-id';
+const REVIEW_USER_ID_STORAGE_KEY = 'user-id';
 
 const getStoredFigmaToken = () => {
   if (typeof window === 'undefined') return '';

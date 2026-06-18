@@ -1,7 +1,8 @@
 export type ReviewItemKind = 'text' | 'capture';
 export type ReviewItemScope = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'dom';
-export type ReviewItemStatus = 'open' | 'resolved';
-export type ReviewMode = 'idle' | 'text' | 'capture';
+export type ReviewWorkflowStatus = 'todo' | 'doing' | 'review' | 'hold' | 'done';
+export type ReviewItemStatus = 'open' | 'resolved' | ReviewWorkflowStatus;
+export type ReviewMode = 'idle' | 'text' | 'element' | 'capture';
 export type DomAnchorStrategy =
   | 'configured-attribute'
   | 'id'
@@ -15,8 +16,17 @@ export interface DomAnchorCandidate {
   confidence?: number;
 }
 
+export interface DomSourceHint {
+  component?: string;
+  file?: string;
+  sectionId?: string;
+  sectionIndex?: string;
+}
+
 export interface DomAnchor extends DomAnchorCandidate {
   candidates?: DomAnchorCandidate[];
+  htmlSnippet?: string;
+  source?: DomSourceHint;
 }
 
 export interface RelativeSelection {
@@ -115,6 +125,34 @@ export interface NumberedReviewItem {
   displayLabel: string;
 }
 
+export const REVIEW_WORKFLOW_STATUS_OPTIONS: Array<{
+  value: ReviewWorkflowStatus;
+  label: string;
+}> = [
+  { value: 'todo', label: '작업전' },
+  { value: 'doing', label: '작업중' },
+  { value: 'review', label: '검토 필요' },
+  { value: 'hold', label: '보류' },
+  { value: 'done', label: '완료' },
+];
+
+export function normalizeReviewItemStatus(
+  status: ReviewItemStatus | undefined
+): ReviewWorkflowStatus {
+  if (status === 'resolved') return 'done';
+  if (status === 'open' || !status) return 'todo';
+  return status;
+}
+
+function matchesReviewItemStatus(
+  itemStatus: ReviewItemStatus | undefined,
+  queryStatus: ReviewItemStatus
+) {
+  return (
+    normalizeReviewItemStatus(itemStatus) === normalizeReviewItemStatus(queryStatus)
+  );
+}
+
 export interface WebReviewKitOptions {
   projectId: string;
   adapter?: WebReviewKitAdapter;
@@ -179,6 +217,7 @@ interface TextDraft {
   viewport: ViewportSize;
   anchor?: DomAnchor;
   marker: ReviewMarker;
+  selection?: ReviewSelection;
   comment?: string;
 }
 
@@ -201,7 +240,7 @@ export const DEFAULT_REVIEW_VIEWPORTS: ReviewViewportPreset[] = [
   { label: 'Mobile', width: 390, height: 720, scope: 'mobile' },
   { label: 'Tablet', width: 768, height: 1024, scope: 'tablet' },
   { label: 'Desktop', width: 1440, height: 900, scope: 'desktop' },
-  { label: 'Wide', width: 1940, height: 1080, scope: 'wide' },
+  { label: 'Wide', width: 1980, height: 1080, scope: 'wide' },
 ];
 
 const REVIEW_SCOPE_LABELS: Record<ReviewItemScope, string> = {
@@ -243,7 +282,12 @@ const inferViewportScope = (
 
   if (label.includes('mobile') || label.includes('phone')) return 'mobile';
   if (label.includes('tablet') || label.includes('pad')) return 'tablet';
-  if (label.includes('wide') || label.includes('1940') || label.includes('1920')) {
+  if (
+    label.includes('wide') ||
+    label.includes('1980') ||
+    label.includes('1940') ||
+    label.includes('1920')
+  ) {
     return 'wide';
   }
   if (label.includes('desktop')) return 'desktop';
@@ -356,7 +400,9 @@ export function localAdapter(
         ) {
           return false;
         }
-        if (query.status && item.status !== query.status) return false;
+        if (query.status && !matchesReviewItemStatus(item.status, query.status)) {
+          return false;
+        }
         return true;
       });
     },
@@ -546,7 +592,31 @@ class WebReviewKitApp {
     this.options.onModeChange?.(mode);
   }
 
+  private cancelMode() {
+    if (
+      this.mode === 'idle' &&
+      !this.textDraft &&
+      !this.captureDraft &&
+      !this.isCapturing
+    ) {
+      return false;
+    }
+
+    this.setModeState('idle');
+    this.textDraft = undefined;
+    this.captureDraft = undefined;
+    this.isCapturing = false;
+    this.render();
+    return true;
+  }
+
   private readonly handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && this.cancelMode()) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     if (!isHotkey(event, this.hotkey)) return;
 
     event.preventDefault();
@@ -612,7 +682,6 @@ class WebReviewKitApp {
     this.items = await this.adapter.list({
       projectId: this.options.projectId,
       routeKey: getRouteKey(environment),
-      status: 'open',
     });
     this.options.onItemsChange?.(this.items);
     return this.items;
@@ -648,11 +717,13 @@ class WebReviewKitApp {
 
     shell.append(this.createMarkerLayer());
 
-    if (this.isOpen && this.mode === 'text') {
+    if (this.isOpen && (this.mode === 'text' || this.mode === 'element')) {
       shell.append(
         this.textDraft
           ? this.createTextPopover(this.textDraft)
-          : this.createTextLayer()
+          : this.mode === 'element'
+            ? this.createElementLayer()
+            : this.createTextLayer()
       );
     }
 
@@ -712,6 +783,12 @@ class WebReviewKitApp {
         this.captureDraft = undefined;
         this.render();
       }),
+      this.createToolbarButton('Element', this.mode === 'element', () => {
+        this.setModeState(this.mode === 'element' ? 'idle' : 'element');
+        this.textDraft = undefined;
+        this.captureDraft = undefined;
+        this.render();
+      }),
       this.createToolbarButton(
         this.isCapturing ? 'Capturing' : 'Capture',
         this.mode === 'capture',
@@ -755,7 +832,7 @@ class WebReviewKitApp {
       return body;
     }
 
-    if (this.mode === 'text') {
+    if (this.mode === 'text' || this.mode === 'element') {
       body.append(this.createTextBody());
       return body;
     }
@@ -769,7 +846,9 @@ class WebReviewKitApp {
     empty.className = 'dfwr-empty';
     empty.textContent = this.textDraft
       ? 'Write the note in the page box.'
-      : 'Click on the page to place a text note.';
+      : this.mode === 'element'
+        ? 'Click an element to add QA.'
+        : 'Click on the page to place a text note.';
     return empty;
   }
 
@@ -780,6 +859,16 @@ class WebReviewKitApp {
     if (!environment) return group;
 
     const hostPoint = toHostPoint(draft.marker.viewport, environment);
+
+    if (draft.selection) {
+      group.append(
+        this.createSelectionHighlight(
+          toViewportSelection(draft.selection.viewport),
+          environment,
+          true
+        )
+      );
+    }
 
     const pin = document.createElement('button');
     pin.className = 'dfwr-note-pin';
@@ -821,9 +910,11 @@ class WebReviewKitApp {
       void this.createItem({
         kind: 'text',
         comment,
+        scope: this.mode === 'element' && draft.anchor ? 'dom' : undefined,
         viewport: draft.viewport,
         anchor: draft.anchor,
         marker: draft.marker,
+        selection: draft.selection,
       });
     });
 
@@ -960,13 +1051,13 @@ class WebReviewKitApp {
 
     const heading = document.createElement('div');
     heading.className = 'dfwr-list-heading';
-    heading.textContent = `Open items (${this.items.length})`;
+    heading.textContent = `Review items (${this.items.length})`;
     section.append(heading);
 
     if (this.items.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'dfwr-empty';
-      empty.textContent = 'No open review items on this page.';
+      empty.textContent = 'No review items on this page.';
       section.append(empty);
       return section;
     }
@@ -1040,15 +1131,20 @@ class WebReviewKitApp {
     actions.addEventListener('click', (event) => event.stopPropagation());
     actions.addEventListener('keydown', (event) => event.stopPropagation());
 
-    const resolve = document.createElement('button');
-    resolve.className = 'dfwr-icon-button';
-    resolve.type = 'button';
-    resolve.textContent = 'ok';
-    resolve.setAttribute('aria-label', 'Resolve');
-    resolve.addEventListener('click', (event) => {
+    const status = document.createElement('select');
+    status.className = 'dfwr-status-select';
+    status.setAttribute('aria-label', 'Workflow status');
+    REVIEW_WORKFLOW_STATUS_OPTIONS.forEach((option) => {
+      const itemOption = document.createElement('option');
+      itemOption.value = option.value;
+      itemOption.textContent = option.label;
+      status.append(itemOption);
+    });
+    status.value = normalizeReviewItemStatus(item.status);
+    status.addEventListener('change', (event) => {
       event.stopPropagation();
       void this.adapter
-        .update(item.id, { status: 'resolved' })
+        .update(item.id, { status: status.value as ReviewWorkflowStatus })
         .then(() => this.reload())
         .then(() => this.render());
     });
@@ -1056,7 +1152,7 @@ class WebReviewKitApp {
     const remove = document.createElement('button');
     remove.className = 'dfwr-icon-button';
     remove.type = 'button';
-    remove.textContent = 'del';
+    remove.textContent = 'x';
     remove.setAttribute('aria-label', 'Delete');
     remove.addEventListener('click', (event) => {
       event.stopPropagation();
@@ -1066,7 +1162,7 @@ class WebReviewKitApp {
         .then(() => this.render());
     });
 
-    actions.append(resolve, remove);
+    actions.append(status, remove);
     row.append(body, actions);
     return row;
   }
@@ -1230,10 +1326,10 @@ class WebReviewKitApp {
       isDragging = false;
       pin.releasePointerCapture(event.pointerId);
 
-      void this.bindTextDraftToPoint(
-        toTargetPointFromHostEvent(event, this.getEnvironment()),
-        textarea.value
-      );
+      const nextPoint = toTargetPointFromHostEvent(event, this.getEnvironment());
+      void (this.mode === 'element'
+        ? this.bindElementDraftToPoint(nextPoint, textarea.value)
+        : this.bindTextDraftToPoint(nextPoint, textarea.value));
     });
   }
 
@@ -1257,8 +1353,70 @@ class WebReviewKitApp {
     return layer;
   }
 
+  private createElementLayer() {
+    const layer = document.createElement('div');
+    layer.className = 'dfwr-element-layer';
+    const environment = this.getEnvironment();
+    const hover = document.createElement('div');
+    hover.className = 'dfwr-dom-hover';
+    hover.hidden = true;
+    layer.append(hover);
+
+    if (environment) {
+      placeLayerOverTarget(layer, environment);
+    }
+
+    const updateHover = (point: ReviewPoint) => {
+      const nextEnvironment = this.getEnvironment();
+      if (!nextEnvironment) return;
+
+      const anchor = getDomAnchorFromPoint(
+        clampPoint(point, nextEnvironment),
+        this.options.anchors?.attribute,
+        nextEnvironment
+      );
+      const selection = anchor
+        ? getElementViewportSelection(anchor, nextEnvironment)
+        : undefined;
+
+      if (!selection) {
+        hover.hidden = true;
+        return;
+      }
+
+      const rect = toHostSelection(selection, nextEnvironment);
+      hover.hidden = false;
+      hover.style.left = `${rect.left}px`;
+      hover.style.top = `${rect.top}px`;
+      hover.style.width = `${rect.width}px`;
+      hover.style.height = `${rect.height}px`;
+    };
+
+    layer.addEventListener('pointermove', (event) => {
+      updateHover(toTargetPointFromHostEvent(event, this.getEnvironment()));
+    });
+
+    layer.addEventListener('pointerleave', () => {
+      hover.hidden = true;
+    });
+
+    layer.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      void this.createElementDraft(
+        toTargetPointFromHostEvent(event, this.getEnvironment())
+      );
+    });
+
+    return layer;
+  }
+
   private async createTextDraft(point: ReviewPoint) {
     await this.bindTextDraftToPoint(point);
+  }
+
+  private async createElementDraft(point: ReviewPoint) {
+    await this.bindElementDraftToPoint(point);
   }
 
   private async bindTextDraftToPoint(point: ReviewPoint, comment?: string) {
@@ -1286,6 +1444,54 @@ class WebReviewKitApp {
         viewport,
         anchor,
         marker,
+        comment,
+      };
+    });
+
+    this.textDraft = draft;
+    this.render();
+  }
+
+  private async bindElementDraftToPoint(point: ReviewPoint, comment?: string) {
+    const environment = this.getEnvironment();
+    if (!environment) return;
+
+    const viewport = getViewportSize(environment);
+    const nextPoint = clampPoint(point, environment);
+
+    const draft = await this.withOverlayHidden(() => {
+      const anchor = getDomAnchorFromPoint(
+        nextPoint,
+        this.options.anchors?.attribute,
+        environment
+      );
+      const elementSelection = anchor
+        ? getElementViewportSelection(anchor, environment)
+        : undefined;
+      const selection = elementSelection ?? getPointSelection(nextPoint);
+      const markerPoint = getSelectionCenter(selection);
+      const reviewSelection = elementSelection
+        ? {
+            viewport: toPublicSelection(elementSelection),
+            relative: getRelativeSelection(
+              elementSelection,
+              anchor as DomAnchor,
+              environment
+            ),
+          }
+        : undefined;
+      const marker: ReviewMarker = {
+        viewport: roundPoint(markerPoint),
+        relative: anchor
+          ? getRelativePoint(markerPoint, anchor, environment)
+          : undefined,
+      };
+
+      return {
+        viewport,
+        anchor,
+        marker,
+        selection: reviewSelection,
         comment,
       };
     });
@@ -1476,7 +1682,7 @@ class WebReviewKitApp {
       kind: input.kind,
       title: input.comment.split('\n')[0]?.slice(0, 80),
       comment: input.comment,
-      status: 'open',
+      status: 'todo',
       viewport,
       devicePixelRatio: environment.window.devicePixelRatio || 1,
       scroll: {
@@ -1703,7 +1909,15 @@ function getDomAnchor(
 ): DomAnchor | undefined {
   const x = selection.left + selection.width / 2;
   const y = selection.top + selection.height / 2;
-  const target = environment.document.elementFromPoint(x, y);
+  return getDomAnchorFromPoint({ x, y }, configuredAttribute, environment);
+}
+
+function getDomAnchorFromPoint(
+  point: ReviewPoint,
+  configuredAttribute = 'data-qa-id',
+  environment: ReviewEnvironment
+): DomAnchor | undefined {
+  const target = environment.document.elementFromPoint(point.x, point.y);
   if (!target) return undefined;
 
   const candidates = createAnchorCandidates(target, configuredAttribute);
@@ -1713,6 +1927,28 @@ function getDomAnchor(
   return {
     ...primary,
     candidates,
+    htmlSnippet: getElementHtmlSnippet(
+      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+    ),
+    source: getDomSourceHint(target),
+  };
+}
+
+function getElementViewportSelection(
+  anchor: DomAnchor,
+  environment: ReviewEnvironment
+): ViewportSelection | undefined {
+  const element = getAnchorElement(anchor, environment);
+  if (!element) return undefined;
+
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return undefined;
+
+  return {
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
   };
 }
 
@@ -1735,45 +1971,105 @@ function createAnchorCandidates(
     }
   }
 
-  const anchoredById = findClosest(target, (element) => Boolean(element.id));
-  if (anchoredById?.id) {
+  if (isMeaningfulId(target.id)) {
     candidates.push({
-      selector: `#${cssEscape(anchoredById.id)}`,
+      selector: `#${cssEscape(target.id)}`,
       strategy: 'id',
-      confidence: anchoredById === target ? 0.92 : 0.86,
-      textFingerprint: getTextFingerprint(anchoredById),
+      confidence: 0.94,
+      textFingerprint: getTextFingerprint(target),
     });
   }
 
-  const anchoredByClass = findClosest(target, (element) =>
-    Array.from(element.classList).some((name) => isMeaningfulClass(name))
-  );
-
-  if (anchoredByClass) {
-    const className = Array.from(anchoredByClass.classList).find((name) =>
-      isMeaningfulClass(name)
-    );
-
-    if (className) {
-      candidates.push({
-        selector: `${anchoredByClass.tagName.toLowerCase()}.${cssEscape(
-          className
-        )}`,
-        strategy: 'class',
-        confidence: 0.66,
-        textFingerprint: getTextFingerprint(anchoredByClass),
-      });
-    }
+  const targetClassName = getMeaningfulClassName(target);
+  if (targetClassName) {
+    candidates.push({
+      selector: `${target.tagName.toLowerCase()}.${cssEscape(targetClassName)}`,
+      strategy: 'class',
+      confidence: 0.82,
+      textFingerprint: getTextFingerprint(target),
+    });
   }
 
   candidates.push({
     selector: getDomPath(target),
     strategy: 'dom-path',
-    confidence: 0.44,
+    confidence: 0.9,
     textFingerprint: getTextFingerprint(target),
   });
 
+  const parent = target.parentElement;
+  const anchoredById = parent
+    ? findClosest(parent, (element) => isMeaningfulId(element.id))
+    : undefined;
+  if (anchoredById?.id) {
+    candidates.push({
+      selector: `#${cssEscape(anchoredById.id)}`,
+      strategy: 'id',
+      confidence: 0.72,
+      textFingerprint: getTextFingerprint(anchoredById),
+    });
+  }
+
+  const anchoredByClass = parent
+    ? findClosest(parent, (element) => Boolean(getMeaningfulClassName(element)))
+    : undefined;
+  const className = anchoredByClass
+    ? getMeaningfulClassName(anchoredByClass)
+    : undefined;
+
+  if (anchoredByClass && className) {
+    candidates.push({
+      selector: `${anchoredByClass.tagName.toLowerCase()}.${cssEscape(
+        className
+      )}`,
+      strategy: 'class',
+      confidence: 0.58,
+      textFingerprint: getTextFingerprint(anchoredByClass),
+    });
+  }
+
   return dedupeAnchorCandidates(candidates);
+}
+
+function getAnchorSourceElement(
+  target: Element,
+  candidate: DomAnchorCandidate,
+  configuredAttribute: string
+) {
+  if (candidate.strategy === 'configured-attribute') {
+    return target.closest(`[${configuredAttribute}]`);
+  }
+
+  if (candidate.strategy === 'dom-path') return target;
+
+  try {
+    return target.closest(candidate.selector);
+  } catch {
+    return target;
+  }
+}
+
+function getElementHtmlSnippet(element: Element, maxLength = 1000) {
+  const html = element.outerHTML.replace(/\s+/g, ' ').trim();
+  if (html.length <= maxLength) return html;
+  return `${html.slice(0, maxLength - 3)}...`;
+}
+
+function getDomSourceHint(target: Element): DomSourceHint | undefined {
+  const sourceElement = target.closest(
+    '[data-file], [data-component], [data-section-index], [data-section-id]'
+  );
+  if (!sourceElement) return undefined;
+
+  const dataset = (sourceElement as HTMLElement).dataset;
+  const source: DomSourceHint = {
+    component: dataset.component,
+    file: dataset.file,
+    sectionId: dataset.sectionId,
+    sectionIndex: dataset.sectionIndex,
+  };
+
+  return Object.values(source).some(Boolean) ? source : undefined;
 }
 
 function getRelativeSelection(
@@ -2166,18 +2462,49 @@ function getFingerprintTokens(value: string) {
     .filter((token) => token.length > 1);
 }
 
+function isMeaningfulId(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.length <= 1) return false;
+
+  return ![
+    'app',
+    'main',
+    'page',
+    'root',
+    '__next',
+    '__nuxt',
+  ].includes(normalized);
+}
+
+function getMeaningfulClassName(element: Element) {
+  return Array.from(element.classList).find((name) => isMeaningfulClass(name));
+}
+
 function isMeaningfulClass(value: string) {
+  const normalized = value.trim();
+  if (
+    [
+      'absolute',
+      'block',
+      'contents',
+      'fixed',
+      'flex',
+      'grid',
+      'hidden',
+      'relative',
+      'sticky',
+    ].includes(normalized)
+  ) {
+    return false;
+  }
+
   return (
-    value.length > 2 &&
-    !value.includes(':') &&
-    !value.startsWith('mq-') &&
-    !value.startsWith('font-') &&
-    !value.startsWith('bg-') &&
-    !value.startsWith('text-') &&
-    !value.startsWith('w-') &&
-    !value.startsWith('h-') &&
-    !value.startsWith('p-') &&
-    !value.startsWith('m-')
+    normalized.length > 2 &&
+    !normalized.includes(':') &&
+    !/^(aspect|basis|bg|border|bottom|col|content|delay|duration|ease|font|from|gap|grow|h|inset|items|justify|leading|left|m|max-h|max-w|mb|ml|mr|mt|mx|my|min-h|min-w|object|opacity|order|origin|overflow|p|pb|pl|place|pointer|pr|pt|px|py|right|rotate|rounded|row|scale|self|shadow|shrink|text|to|top|tracking|transition|translate|via|w|z)-/.test(
+      normalized
+    ) &&
+    !normalized.startsWith('mq-')
   );
 }
 
@@ -2637,6 +2964,7 @@ function createStyleElement() {
 
     .dfwr-button:hover,
     .dfwr-icon-button:hover,
+    .dfwr-status-select:hover,
     .dfwr-button.is-active {
       border-color: rgba(255, 255, 255, 0.4);
       background: #3b444b;
@@ -2660,6 +2988,18 @@ function createStyleElement() {
       font-weight: 700;
       line-height: 1;
       text-transform: uppercase;
+    }
+
+    .dfwr-status-select {
+      min-height: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 6px;
+      padding: 0 8px;
+      color: #f7f7f2;
+      background: #2a3137;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 700;
     }
 
     .dfwr-marker-layer {
@@ -2697,6 +3037,22 @@ function createStyleElement() {
         0 0 0 9999px rgba(0, 0, 0, 0.08),
         0 10px 30px rgba(0, 0, 0, 0.2);
       animation: none;
+    }
+
+    .dfwr-dom-hover {
+      position: fixed;
+      z-index: 2;
+      border: 1px solid #d7ff5f;
+      border-radius: 3px;
+      background: rgba(215, 255, 95, 0.1);
+      box-shadow:
+        0 0 0 1px rgba(31, 36, 40, 0.72),
+        0 0 0 9999px rgba(0, 0, 0, 0.08);
+      pointer-events: none;
+    }
+
+    .dfwr-dom-hover[hidden] {
+      display: none;
     }
 
     .dfwr-bound-marker,
@@ -3040,6 +3396,7 @@ function createStyleElement() {
     }
 
     .dfwr-text-layer,
+    .dfwr-element-layer,
     .dfwr-capture-layer {
       position: fixed;
       inset: 0;
@@ -3049,6 +3406,11 @@ function createStyleElement() {
 
     .dfwr-text-layer {
       cursor: text;
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    .dfwr-element-layer {
+      cursor: cell;
       background: rgba(0, 0, 0, 0.06);
     }
 

@@ -1,4 +1,5 @@
 export type ReviewItemKind = 'text' | 'capture';
+export type ReviewItemScope = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'dom';
 export type ReviewItemStatus = 'open' | 'resolved';
 export type ReviewMode = 'idle' | 'text' | 'capture';
 export type DomAnchorStrategy =
@@ -58,6 +59,7 @@ export interface ReviewItem {
   pageUrl: string;
   originalUrl?: string;
   normalizedPath: string;
+  scope?: ReviewItemScope;
   kind: ReviewItemKind;
   title?: string;
   comment: string;
@@ -98,10 +100,28 @@ export interface LocalAdapterOptions {
   storageKey?: string;
 }
 
+export interface ReviewViewportPreset {
+  label: string;
+  width: number;
+  height: number;
+  scope?: Exclude<ReviewItemScope, 'dom'>;
+}
+
+export interface NumberedReviewItem {
+  item: ReviewItem;
+  scope: ReviewItemScope;
+  label: string;
+  number: number;
+  displayLabel: string;
+}
+
 export interface WebReviewKitOptions {
   projectId: string;
   adapter?: WebReviewKitAdapter;
   target?: WebReviewKitTarget | (() => WebReviewKitTarget | undefined);
+  viewports?: {
+    presets?: ReviewViewportPreset[];
+  };
   hotkeys?: {
     qa?: string;
   };
@@ -176,6 +196,131 @@ interface ReviewEnvironment {
 const DEFAULT_STORAGE_KEY = 'df-web-review-kit:items';
 const ROOT_ID = 'df-web-review-kit-root';
 const INTERNAL_QUERY_PARAMS = ['__dfwr_target'];
+
+export const DEFAULT_REVIEW_VIEWPORTS: ReviewViewportPreset[] = [
+  { label: 'Mobile', width: 390, height: 844, scope: 'mobile' },
+  { label: 'Tablet', width: 768, height: 1024, scope: 'tablet' },
+  { label: 'Desktop', width: 1440, height: 900, scope: 'desktop' },
+  { label: 'Wide', width: 1940, height: 1080, scope: 'wide' },
+];
+
+const REVIEW_SCOPE_LABELS: Record<ReviewItemScope, string> = {
+  mobile: 'Mobile',
+  tablet: 'Tablet',
+  desktop: 'Desktop',
+  wide: 'Wide',
+  dom: 'Element',
+};
+
+const normalizeReviewItemScope = (value: unknown): ReviewItemScope | undefined => {
+  if (value === 'element') return 'dom';
+  if (
+    value === 'mobile' ||
+    value === 'tablet' ||
+    value === 'desktop' ||
+    value === 'wide' ||
+    value === 'dom'
+  ) {
+    return value;
+  }
+
+  return undefined;
+};
+
+const getViewportPresetDistance = (
+  preset: ReviewViewportPreset,
+  viewport: ViewportSize
+) =>
+  Math.abs(preset.width - viewport.width) +
+  Math.abs(preset.height - viewport.height);
+
+const inferViewportScope = (
+  preset: ReviewViewportPreset
+): Exclude<ReviewItemScope, 'dom'> => {
+  if (preset.scope) return preset.scope;
+
+  const label = preset.label.toLowerCase();
+
+  if (label.includes('mobile') || label.includes('phone')) return 'mobile';
+  if (label.includes('tablet') || label.includes('pad')) return 'tablet';
+  if (label.includes('wide') || label.includes('1940') || label.includes('1920')) {
+    return 'wide';
+  }
+  if (label.includes('desktop')) return 'desktop';
+  if (preset.width >= 1800) return 'wide';
+  if (preset.width >= 1000) return 'desktop';
+  if (preset.width >= 700) return 'tablet';
+  return 'mobile';
+};
+
+export function findReviewViewportPreset(
+  viewport: ViewportSize,
+  presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
+) {
+  const fallback = presets[0] ?? DEFAULT_REVIEW_VIEWPORTS[0];
+  const exact = presets.find(
+    (preset) =>
+      preset.width === viewport.width && preset.height === viewport.height
+  );
+
+  if (exact) return exact;
+
+  return presets.reduce((closest, preset) => {
+    const closestDistance = getViewportPresetDistance(closest, viewport);
+    const presetDistance = getViewportPresetDistance(preset, viewport);
+    return presetDistance < closestDistance ? preset : closest;
+  }, fallback);
+}
+
+export function getReviewViewportScope(
+  viewport: ViewportSize,
+  presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
+): Exclude<ReviewItemScope, 'dom'> {
+  return inferViewportScope(findReviewViewportPreset(viewport, presets));
+}
+
+export function getReviewItemScope(
+  item: ReviewItem,
+  presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
+): ReviewItemScope {
+  return (
+    normalizeReviewItemScope(item.scope) ??
+    getReviewViewportScope(item.viewport, presets)
+  );
+}
+
+export function getReviewItemScopeLabel(
+  item: ReviewItem,
+  presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
+) {
+  const scope = getReviewItemScope(item, presets);
+  if (scope === 'dom') return REVIEW_SCOPE_LABELS.dom;
+
+  const preset = findReviewViewportPreset(item.viewport, presets);
+  return preset.label || REVIEW_SCOPE_LABELS[scope];
+}
+
+export function getNumberedReviewItems(
+  items: ReviewItem[],
+  presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
+): NumberedReviewItem[] {
+  const counts = new Map<ReviewItemScope, number>();
+
+  return items.map((item) => {
+    const scope = getReviewItemScope(item, presets);
+    const label = getReviewItemScopeLabel(item, presets);
+    const number = (counts.get(scope) ?? 0) + 1;
+    counts.set(scope, number);
+
+    return {
+      item,
+      scope,
+      label,
+      number,
+      displayLabel: `${label}-${number}`,
+    };
+  });
+}
 
 export function localAdapter(
   options: LocalAdapterOptions = {}
@@ -760,7 +905,18 @@ class WebReviewKitApp {
 
     if (draft.marker) {
       const hostPoint = toHostPoint(draft.marker.viewport, environment);
-      layer.append(this.createMarkerElement(hostPoint, '•', true, true));
+      layer.append(
+        this.createMarkerElement(
+          hostPoint,
+          '•',
+          getReviewViewportScope(
+            draft.viewport,
+            this.options.viewports?.presets
+          ),
+          true,
+          true
+        )
+      );
     }
 
     return layer;
@@ -815,14 +971,18 @@ class WebReviewKitApp {
       return section;
     }
 
-    for (const item of this.items) {
-      section.append(this.createListItem(item));
+    for (const numberedItem of getNumberedReviewItems(
+      this.items,
+      this.options.viewports?.presets
+    )) {
+      section.append(this.createListItem(numberedItem));
     }
 
     return section;
   }
 
-  private createListItem(item: ReviewItem) {
+  private createListItem(numberedItem: NumberedReviewItem) {
+    const { item } = numberedItem;
     const row = document.createElement('article');
     row.className = 'dfwr-item';
     row.tabIndex = 0;
@@ -844,9 +1004,17 @@ class WebReviewKitApp {
     const body = document.createElement('div');
     body.className = 'dfwr-item-body';
 
+    const badges = document.createElement('div');
+    badges.className = 'dfwr-item-badges';
+
+    const scope = document.createElement('div');
+    scope.className = `dfwr-item-scope is-scope-${numberedItem.scope}`;
+    scope.textContent = numberedItem.displayLabel;
+
     const kind = document.createElement('div');
     kind.className = 'dfwr-item-kind';
     kind.textContent = item.kind;
+    badges.append(scope, kind);
 
     const comment = document.createElement('p');
     comment.className = 'dfwr-item-comment';
@@ -857,7 +1025,7 @@ class WebReviewKitApp {
     date.dateTime = item.createdAt;
     date.textContent = formatItemMeta(item);
 
-    body.append(kind, comment, date);
+    body.append(badges, comment, date);
 
     if (item.screenshot) {
       const image = document.createElement('img');
@@ -909,7 +1077,25 @@ class WebReviewKitApp {
     const environment = this.getEnvironment();
     if (!environment) return layer;
 
-    this.items.forEach((item, index) => {
+    const currentScope = getReviewViewportScope(
+      getViewportSize(environment),
+      this.options.viewports?.presets
+    );
+
+    getNumberedReviewItems(
+      this.items,
+      this.options.viewports?.presets
+    ).forEach((numberedItem) => {
+      const { item, scope, number, displayLabel } = numberedItem;
+      const point = getBoundMarkerPoint(item, environment);
+      if (
+        !point ||
+        !isPointInViewport(point.viewport, environment) ||
+        !shouldShowMarkerForScope(scope, currentScope, point.isBound)
+      ) {
+        return;
+      }
+
       const isHighlighted = item.id === this.highlightedItemId;
       if (isHighlighted) {
         const selection = getBoundSelection(item, environment);
@@ -920,16 +1106,15 @@ class WebReviewKitApp {
         }
       }
 
-      const point = getBoundMarkerPoint(item, environment);
-      if (!point || !isPointInViewport(point.viewport, environment)) return;
       const hostPoint = toHostPoint(point.viewport, environment);
       const marker = this.createMarkerElement(
         hostPoint,
-        String(index + 1),
+        String(number),
+        scope,
         point.isBound,
         isHighlighted
       );
-      marker.title = `${item.comment}\n${formatItemMeta(item)}`;
+      marker.title = `${displayLabel} / ${item.comment}\n${formatItemMeta(item)}`;
       layer.append(marker);
     });
 
@@ -956,12 +1141,14 @@ class WebReviewKitApp {
   private createMarkerElement(
     hostPoint: ReviewPoint,
     label: string,
+    scope: ReviewItemScope,
     isBound: boolean,
     isHighlighted: boolean
   ) {
     const marker = document.createElement('div');
     marker.className = [
       'dfwr-bound-marker',
+      `is-scope-${scope}`,
       isBound ? 'is-bound' : 'is-fallback',
       isHighlighted ? 'is-highlighted' : '',
     ]
@@ -969,10 +1156,15 @@ class WebReviewKitApp {
       .join(' ');
     marker.style.left = `${hostPoint.x}px`;
     marker.style.top = `${hostPoint.y}px`;
+    marker.dataset.scope = scope;
 
+    const iconElement = document.createElement('span');
+    iconElement.className = 'dfwr-bound-marker-icon';
+    iconElement.setAttribute('aria-hidden', 'true');
     const labelElement = document.createElement('span');
+    labelElement.className = 'dfwr-bound-marker-number';
     labelElement.textContent = label;
-    marker.append(labelElement);
+    marker.append(iconElement, labelElement);
 
     return marker;
   }
@@ -1256,7 +1448,12 @@ class WebReviewKitApp {
       Partial<
         Pick<
           ReviewItem,
-          'viewport' | 'anchor' | 'marker' | 'selection' | 'screenshot'
+          | 'scope'
+          | 'viewport'
+          | 'anchor'
+          | 'marker'
+          | 'selection'
+          | 'screenshot'
         >
       >
   ) {
@@ -1265,6 +1462,7 @@ class WebReviewKitApp {
 
     const now = new Date().toISOString();
     const routeKey = getRouteKey(environment);
+    const viewport = input.viewport ?? getViewportSize(environment);
     const item: ReviewItem = {
       id: createId(),
       projectId: this.options.projectId,
@@ -1272,11 +1470,14 @@ class WebReviewKitApp {
       pageUrl: getPageUrl(environment),
       originalUrl: getOriginalUrl(environment),
       normalizedPath: routeKey,
+      scope:
+        input.scope ??
+        getReviewViewportScope(viewport, this.options.viewports?.presets),
       kind: input.kind,
       title: input.comment.split('\n')[0]?.slice(0, 80),
       comment: input.comment,
       status: 'open',
-      viewport: input.viewport ?? getViewportSize(environment),
+      viewport,
       devicePixelRatio: environment.window.devicePixelRatio || 1,
       scroll: {
         x: environment.window.scrollX,
@@ -1722,6 +1923,15 @@ function getItemSelection(item: ReviewItem): ReviewSelection | undefined {
   }
 
   return undefined;
+}
+
+function shouldShowMarkerForScope(
+  scope: ReviewItemScope,
+  currentScope: ReviewItemScope,
+  isBound: boolean
+) {
+  if (scope === 'dom') return isBound;
+  return scope === currentScope;
 }
 
 function createSelectionCenterMarker(
@@ -2339,7 +2549,7 @@ function createStyleElement() {
       display: none;
       position: fixed;
       inset: 0;
-      z-index: 2147483647;
+      z-index: 500;
       pointer-events: none;
     }
 
@@ -2489,38 +2699,68 @@ function createStyleElement() {
       animation: none;
     }
 
+    .dfwr-bound-marker,
+    .dfwr-item-scope {
+      --dfwr-scope: #7cc7ff;
+      --dfwr-scope-rgb: 124, 199, 255;
+    }
+
+    .dfwr-bound-marker.is-scope-tablet,
+    .dfwr-item-scope.is-scope-tablet {
+      --dfwr-scope: #63d7c7;
+      --dfwr-scope-rgb: 99, 215, 199;
+    }
+
+    .dfwr-bound-marker.is-scope-desktop,
+    .dfwr-item-scope.is-scope-desktop {
+      --dfwr-scope: #f3b75f;
+      --dfwr-scope-rgb: 243, 183, 95;
+    }
+
+    .dfwr-bound-marker.is-scope-wide,
+    .dfwr-item-scope.is-scope-wide {
+      --dfwr-scope: #c99cff;
+      --dfwr-scope-rgb: 201, 156, 255;
+    }
+
+    .dfwr-bound-marker.is-scope-dom,
+    .dfwr-item-scope.is-scope-dom {
+      --dfwr-scope: #ff8f61;
+      --dfwr-scope-rgb: 255, 143, 97;
+    }
+
     .dfwr-bound-marker {
       position: fixed;
       z-index: 2;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 22px;
+      gap: 4px;
+      min-width: 28px;
       height: 22px;
+      padding: 0 6px;
       transform: translate(-50%, -50%);
-      border: 1px solid #d7ff5f;
+      border: 1px solid var(--dfwr-scope);
       border-radius: 999px;
       background: #1f2428;
-      box-shadow: 0 0 0 4px rgba(215, 255, 95, 0.18);
-      color: #d7ff5f;
+      box-shadow: 0 0 0 4px rgba(var(--dfwr-scope-rgb), 0.18);
+      color: var(--dfwr-scope);
       font-size: 10px;
       font-weight: 800;
     }
 
     .dfwr-bound-marker.is-highlighted {
-      width: 26px;
+      min-width: 32px;
       height: 26px;
       border-width: 2px;
       box-shadow:
-        0 0 0 5px rgba(215, 255, 95, 0.22),
+        0 0 0 5px rgba(var(--dfwr-scope-rgb), 0.22),
         0 12px 26px rgba(0, 0, 0, 0.34);
       animation: dfwr-marker-pulse 900ms ease 0s 2;
     }
 
     .dfwr-bound-marker.is-fallback {
-      border-color: #ffb7a7;
-      box-shadow: 0 0 0 4px rgba(255, 183, 167, 0.18);
-      color: #ffb7a7;
+      border-style: dashed;
     }
 
     .dfwr-capture-preview-layer .dfwr-bound-marker {
@@ -2530,6 +2770,67 @@ function createStyleElement() {
         0 0 0 5px rgba(99, 215, 199, 0.2),
         0 12px 26px rgba(0, 0, 0, 0.3);
       color: #63d7c7;
+    }
+
+    .dfwr-bound-marker-icon {
+      position: relative;
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      flex: 0 0 auto;
+    }
+
+    .dfwr-bound-marker-icon::before,
+    .dfwr-bound-marker-icon::after {
+      content: "";
+      position: absolute;
+      display: block;
+    }
+
+    .dfwr-bound-marker-icon::before {
+      inset: 1px 2px;
+      border: 1.5px solid currentColor;
+      border-radius: 2px;
+    }
+
+    .dfwr-bound-marker.is-scope-mobile .dfwr-bound-marker-icon::before {
+      inset: 0 2.5px;
+      border-radius: 2px;
+    }
+
+    .dfwr-bound-marker.is-scope-tablet .dfwr-bound-marker-icon::before {
+      inset: 0.5px 1.5px;
+      border-radius: 2px;
+    }
+
+    .dfwr-bound-marker.is-scope-desktop .dfwr-bound-marker-icon::before {
+      inset: 1px 0 3px;
+      border-radius: 1px;
+    }
+
+    .dfwr-bound-marker.is-scope-desktop .dfwr-bound-marker-icon::after {
+      left: 3px;
+      right: 3px;
+      bottom: 0;
+      height: 1.5px;
+      background: currentColor;
+    }
+
+    .dfwr-bound-marker.is-scope-wide .dfwr-bound-marker-icon::before {
+      inset: 2px 0;
+      border-radius: 1px;
+    }
+
+    .dfwr-bound-marker.is-scope-dom .dfwr-bound-marker-icon::before {
+      inset: 2px;
+      border-radius: 1px;
+      transform: rotate(45deg);
+    }
+
+    .dfwr-bound-marker-number {
+      min-width: 6px;
+      text-align: center;
+      line-height: 1;
     }
 
     .dfwr-note-draft {
@@ -2684,12 +2985,37 @@ function createStyleElement() {
       flex: 1;
     }
 
+    .dfwr-item-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .dfwr-item-scope,
     .dfwr-item-kind {
-      color: #d7ff5f;
+      display: inline-flex;
+      align-items: center;
+      min-height: 20px;
+      border-radius: 999px;
+      padding: 0 7px;
       font-size: 10px;
       font-weight: 800;
+      line-height: 1;
       letter-spacing: 0;
       text-transform: uppercase;
+    }
+
+    .dfwr-item-scope {
+      border: 1px solid rgba(var(--dfwr-scope-rgb), 0.38);
+      background: rgba(var(--dfwr-scope-rgb), 0.12);
+      color: var(--dfwr-scope);
+    }
+
+    .dfwr-item-kind {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(247, 247, 242, 0.64);
     }
 
     .dfwr-item-comment {

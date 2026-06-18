@@ -12,6 +12,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./react-shell": {
+      "types": "./dist/react-shell.d.ts",
+      "import": "./dist/react-shell.js",
+      "require": "./dist/react-shell.cjs"
     }
   },
   "files": [
@@ -19,14 +24,23 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap --clean",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --sourcemap --watch",
+    "build": "tsup src/index.ts src/react-shell.tsx --format esm,cjs --dts --sourcemap --clean --external react --external react-dom --external react/jsx-runtime",
+    "dev": "tsup src/index.ts src/react-shell.tsx --format esm,cjs --dts --sourcemap --watch --external react --external react-dom --external react/jsx-runtime",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "html2canvas": "^1.4.1"
   },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
   "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "lucide-react": "^1.20.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "tsup": "^8.3.6",
     "typescript": "^6.0.2"
   },

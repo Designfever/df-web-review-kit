@@ -503,6 +503,7 @@ const getIsFigmaOverlayAvailable = (preset: ReviewShellViewportPreset) => {
 const FIGMA_OVERLAY_UNAVAILABLE_MESSAGE =
   '피그마 오버레이 디버깅이 안되는 해상도';
 const FIGMA_TOKEN_STORAGE_KEY = 'figma-token';
+const REVIEW_USER_ID_STORAGE_KEY = 'df-review-user-id';
 
 const getStoredFigmaToken = () => {
   if (typeof window === 'undefined') return '';
@@ -522,6 +523,30 @@ const writeStoredFigmaToken = (token: string) => {
       window.localStorage.setItem(FIGMA_TOKEN_STORAGE_KEY, token);
     } else {
       window.localStorage.removeItem(FIGMA_TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    return;
+  }
+};
+
+const getStoredReviewUserId = () => {
+  if (typeof window === 'undefined') return '';
+
+  try {
+    return window.localStorage.getItem(REVIEW_USER_ID_STORAGE_KEY) ?? '';
+  } catch {
+    return '';
+  }
+};
+
+const writeStoredReviewUserId = (userId: string) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    if (userId) {
+      window.localStorage.setItem(REVIEW_USER_ID_STORAGE_KEY, userId);
+    } else {
+      window.localStorage.removeItem(REVIEW_USER_ID_STORAGE_KEY);
     }
   } catch {
     return;
@@ -742,6 +767,9 @@ export const ReviewShell = ({
   const [isSitemapOpen, setIsSitemapOpen] = useState(false);
   const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState(false);
   const [figmaTokenDraft, setFigmaTokenDraft] = useState(getStoredFigmaToken);
+  const [reviewUserIdDraft, setReviewUserIdDraft] = useState(
+    getStoredReviewUserId
+  );
   const [figmaSettingsStatus, setFigmaSettingsStatus] = useState('');
   const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState(false);
   const [qaFilter, setQaFilter] = useState<ReviewQaFilter>('all');
@@ -955,6 +983,7 @@ export const ReviewShell = ({
     cancelReviewMode();
     setIsSitemapOpen(false);
     setFigmaTokenDraft(getStoredFigmaToken());
+    setReviewUserIdDraft(getStoredReviewUserId());
     setFigmaSettingsStatus('');
     setIsFigmaTokenVisible(false);
     setIsFigmaSettingsOpen(true);
@@ -966,12 +995,15 @@ export const ReviewShell = ({
     setIsFigmaTokenVisible(false);
   }, []);
 
-  const saveFigmaToken = useCallback(
-    (token: string) => {
+  const saveReviewSettings = useCallback(
+    (token: string, userId: string) => {
       const nextToken = token.trim();
+      const nextUserId = userId.trim();
       writeStoredFigmaToken(nextToken);
+      writeStoredReviewUserId(nextUserId);
       setFigmaTokenDraft(nextToken);
-      setFigmaSettingsStatus(nextToken ? 'Saved' : 'Cleared');
+      setReviewUserIdDraft(nextUserId);
+      setFigmaSettingsStatus(nextToken || nextUserId ? 'Saved' : 'Cleared');
       reloadTargetFrame();
     },
     [reloadTargetFrame]
@@ -1385,7 +1417,7 @@ export const ReviewShell = ({
               <ImageIcon aria-hidden="true" />
             </button>
             <button
-              aria-label="Open Figma settings"
+              aria-label="Open settings"
               className="df-review-overlay-button is-settings"
               data-tooltip="Settings"
               type="button"
@@ -1449,13 +1481,13 @@ export const ReviewShell = ({
 
       {isFigmaSettingsOpen && (
         <div
-          aria-label="Figma settings"
+          aria-label="Review settings"
           aria-modal="true"
           className="df-review-settings-modal"
           role="dialog"
         >
           <button
-            aria-label="Close Figma settings"
+            aria-label="Close settings"
             className="df-review-settings-backdrop"
             type="button"
             onClick={closeFigmaSettings}
@@ -1464,16 +1496,18 @@ export const ReviewShell = ({
             className="df-review-settings-dialog"
             onSubmit={(event) => {
               event.preventDefault();
-              saveFigmaToken(figmaTokenDraft);
+              saveReviewSettings(figmaTokenDraft, reviewUserIdDraft);
             }}
           >
             <div className="df-review-settings-header">
               <div>
-                <strong>Figma settings</strong>
-                <span>{FIGMA_TOKEN_STORAGE_KEY}</span>
+                <strong>Settings</strong>
+                <span>
+                  {FIGMA_TOKEN_STORAGE_KEY} / {REVIEW_USER_ID_STORAGE_KEY}
+                </span>
               </div>
               <button
-                aria-label="Close Figma settings"
+                aria-label="Close settings"
                 type="button"
                 onClick={closeFigmaSettings}
               >
@@ -1516,13 +1550,32 @@ export const ReviewShell = ({
                   </button>
                 </div>
               </label>
+              <label className="df-review-settings-field">
+                <span>User ID</span>
+                <div className="df-review-settings-text-input">
+                  <input
+                    aria-label="Review user ID"
+                    autoComplete="off"
+                    spellCheck={false}
+                    type="text"
+                    value={reviewUserIdDraft}
+                    onChange={(event) => {
+                      setReviewUserIdDraft(event.target.value);
+                      setFigmaSettingsStatus('');
+                    }}
+                  />
+                </div>
+              </label>
               {figmaSettingsStatus && (
                 <p className="df-review-settings-status">
                   {figmaSettingsStatus}
                 </p>
               )}
               <div className="df-review-settings-actions">
-                <button type="button" onClick={() => saveFigmaToken('')}>
+                <button
+                  type="button"
+                  onClick={() => saveReviewSettings('', '')}
+                >
                   Clear
                 </button>
                 <span />
@@ -2194,34 +2247,45 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		    font-weight: 800;
 		  }
 
-		  .df-review-settings-token-input {
-		    display: grid;
-		    grid-template-columns: minmax(0, 1fr) 38px;
-		    align-items: stretch;
-		    overflow: hidden;
-		    border: 1px solid var(--df-review-line);
+			  .df-review-settings-token-input,
+			  .df-review-settings-text-input {
+			    display: grid;
+			    align-items: stretch;
+			    overflow: hidden;
+			    border: 1px solid var(--df-review-line);
 		    border-radius: 6px;
-		    background: var(--df-review-bg);
-		  }
+			    background: var(--df-review-bg);
+			  }
 
-		  .df-review-settings-token-input:focus-within {
-		    outline: 2px solid rgba(124, 199, 255, 0.58);
-		    outline-offset: 1px;
-		  }
+			  .df-review-settings-token-input {
+			    grid-template-columns: minmax(0, 1fr) 38px;
+			  }
 
-		  .df-review-settings-token-input input {
-		    min-width: 0;
-		    min-height: 38px;
-		    border: 0;
+			  .df-review-settings-text-input {
+			    grid-template-columns: minmax(0, 1fr);
+			  }
+
+			  .df-review-settings-token-input:focus-within,
+			  .df-review-settings-text-input:focus-within {
+			    outline: 2px solid rgba(124, 199, 255, 0.58);
+			    outline-offset: 1px;
+			  }
+
+			  .df-review-settings-token-input input,
+			  .df-review-settings-text-input input {
+			    min-width: 0;
+			    min-height: 38px;
+			    border: 0;
 		    padding: 0 10px;
 		    background: transparent;
 		    color: var(--df-review-text);
-		    font-size: 13px;
-		  }
+			    font-size: 13px;
+			  }
 
-		  .df-review-settings-token-input input:focus {
-		    outline: 0;
-		  }
+			  .df-review-settings-token-input input:focus,
+			  .df-review-settings-text-input input:focus {
+			    outline: 0;
+			  }
 
 		  .df-review-settings-token-toggle {
 		    display: grid;

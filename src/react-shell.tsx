@@ -6,6 +6,7 @@ import React, {
   useState
 } from 'react';
 import {
+  CircleHelp as CircleHelpIcon,
   Copy as CopyIcon,
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
@@ -17,6 +18,7 @@ import {
   Maximize2 as Maximize2Icon,
   Monitor as MonitorIcon,
   RectangleHorizontal as TabletIcon,
+  Ruler as RulerIcon,
   Scan as ScanIcon,
   Settings as SettingsIcon,
   Smartphone as SmartphoneIcon,
@@ -32,6 +34,8 @@ import {
   localAdapter,
   normalizeReviewItemStatus,
   type NumberedReviewItem,
+  type ReviewRulerConfig,
+  type ReviewRulerFrame,
   type ReviewItemScope,
   type ReviewItemStatus,
   type ReviewViewportPreset,
@@ -66,6 +70,8 @@ export interface ReviewShellProps {
   pages: ReviewShellPage[];
   storageKey?: string;
   presets?: ReviewShellViewportPreset[];
+  ruler?: ReviewRulerConfig;
+  initialPrompt?: string;
   reviewPathPrefix?: string;
 }
 
@@ -78,6 +84,22 @@ type TargetOverlayKey = 'grid' | 'figma';
 type TargetOverlayState = Record<TargetOverlayKey, boolean>;
 
 type ReviewQaFilter = 'all' | ReviewItemScope;
+
+type ReviewShellTheme = 'dark' | 'light' | 'system';
+
+type ReviewPromptTab = 'initial' | 'item';
+
+type ReviewRulerPoint = {
+  x: number;
+  y: number;
+};
+
+type ReviewRulerMeasure = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
 
 const REVIEW_QA_FILTERS: Array<{
   key: ReviewQaFilter;
@@ -500,10 +522,101 @@ const getIsFigmaOverlayAvailable = (preset: ReviewShellViewportPreset) => {
   return kind === 'mobile' || kind === 'wide';
 };
 
+const getRulerFrameDistance = (
+  frame: ReviewRulerFrame,
+  preset: ReviewShellViewportPreset
+) => {
+  const widthDistance =
+    typeof frame.viewportWidth === 'number'
+      ? Math.abs(frame.viewportWidth - preset.width)
+      : 0;
+  const heightDistance =
+    typeof frame.viewportHeight === 'number'
+      ? Math.abs(frame.viewportHeight - preset.height)
+      : 0;
+  return widthDistance + heightDistance;
+};
+
+const getReviewRulerFrame = (
+  ruler: ReviewRulerConfig | undefined,
+  preset: ReviewShellViewportPreset
+) => {
+  if (ruler?.enabled === false || !ruler?.frames?.length) return undefined;
+
+  const kind = getViewportPresetKind(preset);
+  const scopeMatches = ruler.frames.filter((frame) => frame.scope === kind);
+
+  if (scopeMatches.length > 0) {
+    return scopeMatches.reduce((closest, frame) =>
+      getRulerFrameDistance(frame, preset) <
+      getRulerFrameDistance(closest, preset)
+        ? frame
+        : closest
+    );
+  }
+
+  return ruler.frames.reduce((closest, frame) =>
+    getRulerFrameDistance(frame, preset) <
+    getRulerFrameDistance(closest, preset)
+      ? frame
+      : closest
+  );
+};
+
+const getRulerPointFromRect = (
+  clientX: number,
+  clientY: number,
+  rect: DOMRect
+): ReviewRulerPoint => {
+  const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+  const y = Math.min(Math.max(clientY - rect.top, 0), rect.height);
+
+  return {
+    x: Math.round(x),
+    y: Math.round(y)
+  };
+};
+
+const getRulerMeasure = (
+  start: ReviewRulerPoint | null,
+  end: ReviewRulerPoint | null
+): ReviewRulerMeasure | undefined => {
+  if (!start || !end) return undefined;
+
+  return {
+    left: Math.min(start.x, end.x),
+    top: Math.min(start.y, end.y),
+    width: Math.abs(end.x - start.x),
+    height: Math.abs(end.y - start.y)
+  };
+};
+
+const formatRulerNumber = (value: number) =>
+  Number.isInteger(value) ? String(value) : value.toFixed(1);
+
 const FIGMA_OVERLAY_UNAVAILABLE_MESSAGE =
   '피그마 오버레이 디버깅이 안되는 해상도';
 const FIGMA_TOKEN_STORAGE_KEY = 'figma-token';
 const REVIEW_USER_ID_STORAGE_KEY = 'user-id';
+const REVIEW_THEME_STORAGE_KEY = 'df-review-theme';
+const DEFAULT_REVIEW_THEME: ReviewShellTheme = 'dark';
+const FIGMA_TOKEN_GUIDE_ID = 'df-review-figma-token-guide';
+const DEFAULT_INITIAL_REVIEW_PROMPT =
+  'You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, coordinates, screenshot context, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.';
+
+const REVIEW_THEME_OPTIONS: Array<{
+  value: ReviewShellTheme;
+  label: string;
+}> = [
+  { value: 'dark', label: 'Dark' },
+  { value: 'light', label: 'Light' },
+  { value: 'system', label: 'System' }
+];
+
+const normalizeReviewTheme = (value: string | null): ReviewShellTheme =>
+  value === 'light' || value === 'system' || value === 'dark'
+    ? value
+    : DEFAULT_REVIEW_THEME;
 
 const getStoredFigmaToken = () => {
   if (typeof window === 'undefined') return '';
@@ -551,6 +664,39 @@ const writeStoredReviewUserId = (userId: string) => {
   } catch {
     return;
   }
+};
+
+const getStoredReviewTheme = () => {
+  if (typeof window === 'undefined') return DEFAULT_REVIEW_THEME;
+
+  try {
+    return normalizeReviewTheme(
+      window.localStorage.getItem(REVIEW_THEME_STORAGE_KEY)
+    );
+  } catch {
+    return DEFAULT_REVIEW_THEME;
+  }
+};
+
+const writeStoredReviewTheme = (theme: ReviewShellTheme) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    if (theme === DEFAULT_REVIEW_THEME) {
+      window.localStorage.removeItem(REVIEW_THEME_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(REVIEW_THEME_STORAGE_KEY, theme);
+    }
+  } catch {
+    return;
+  }
+};
+
+const getSystemReviewTheme = (): Exclude<ReviewShellTheme, 'system'> => {
+  if (typeof window === 'undefined' || !window.matchMedia) return 'dark';
+  return window.matchMedia('(prefers-color-scheme: light)').matches
+    ? 'light'
+    : 'dark';
 };
 
 const getItemTitle = (item: ReviewItem) =>
@@ -618,6 +764,28 @@ const formatPromptSelection = (
   )}, height=${Math.round(selection.height)}`;
 };
 
+const decodePromptHtmlEntities = (value: string) =>
+  value.replace(
+    /&(#\d+|#x[\da-f]+|lt|gt|quot|apos|amp);/gi,
+    (match, entity: string) => {
+      const normalized = entity.toLowerCase();
+
+      if (normalized === 'lt') return '<';
+      if (normalized === 'gt') return '>';
+      if (normalized === 'quot') return '"';
+      if (normalized === 'apos') return "'";
+      if (normalized === 'amp') return '&';
+
+      const codePoint = normalized.startsWith('#x')
+        ? Number.parseInt(normalized.slice(2), 16)
+        : Number.parseInt(normalized.slice(1), 10);
+
+      return Number.isFinite(codePoint)
+        ? String.fromCodePoint(codePoint)
+        : match;
+    }
+  );
+
 const getPromptAnchorCandidates = (item: ReviewItem) => {
   const anchor = item.anchor;
   if (!anchor) return [];
@@ -643,7 +811,7 @@ const formatPromptSourceHint = (item: ReviewItem) => {
   ].join('\n');
 };
 
-const buildDomReviewPrompt = (
+const buildReviewItemPrompt = (
   numberedItem: NumberedReviewItem,
   reviewPathPrefix: string
 ) => {
@@ -667,7 +835,7 @@ const buildDomReviewPrompt = (
       : '(none)';
 
   return [
-    'Fix this df-web-review-kit DOM QA issue.',
+    'Fix this df-web-review-kit QA issue.',
     '',
     `Page: ${getItemTarget(item, reviewPathPrefix)}`,
     `URL: ${item.originalUrl ?? item.pageUrl}`,
@@ -676,7 +844,7 @@ const buildDomReviewPrompt = (
     `Viewport: ${numberedItem.label} ${formatPromptViewport(item)}`,
     `Scroll: ${formatPromptPoint(item.scroll)}`,
     '',
-    'DOM target:',
+    'Target:',
     `Primary selector: ${anchor?.selector ?? '(missing)'}`,
     `Primary strategy: ${anchor?.strategy ?? '(missing)'}`,
     `Text fingerprint: ${anchor?.textFingerprint ?? '(none)'}`,
@@ -693,7 +861,9 @@ const buildDomReviewPrompt = (
     '',
     'Element HTML snippet:',
     '```html',
-    anchor?.htmlSnippet ?? '(not captured)',
+    anchor?.htmlSnippet
+      ? decodePromptHtmlEntities(anchor.htmlSnippet)
+      : '(not captured)',
     '```',
     '',
     'Issue:',
@@ -702,6 +872,13 @@ const buildDomReviewPrompt = (
     'Request:',
     'Find the target element with the selector candidates above and apply the smallest UI/CSS/code change that fixes this QA issue. If the selector is missing because CSR or hydration has not finished, wait for the page to load and use the Source hint first. Preserve unrelated layout and behavior.'
   ].join('\n');
+};
+
+const getPromptLengthLabel = (value: string) => {
+  const length = value.length;
+  if (length <= 2000) return `${length} chars / Discord 2,000 OK`;
+  if (length <= 4000) return `${length} chars / Nitro 4,000 OK`;
+  return `${length} chars / attach as file`;
 };
 
 const formatDate = (value: string) => {
@@ -721,6 +898,8 @@ export const ReviewShell = ({
   pages,
   storageKey = getStorageKey(projectId),
   presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
+  ruler,
+  initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
 }: ReviewShellProps) => {
   const viewportPresets =
@@ -738,6 +917,9 @@ export const ReviewShell = ({
   );
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const frameScrollRef = useRef<HTMLDivElement | null>(null);
+  const rulerOverlayRef = useRef<HTMLDivElement | null>(null);
+  const rulerDragRectRef = useRef<DOMRect | null>(null);
+  const isRulerDraggingRef = useRef(false);
   const controllerRef = useRef<WebReviewKitController | null>(null);
   const cleanupTargetRef = useRef<(() => void) | null>(null);
   const pendingRestoreRef = useRef<ReviewItem | null>(null);
@@ -770,17 +952,54 @@ export const ReviewShell = ({
   const [reviewUserIdDraft, setReviewUserIdDraft] = useState(
     getStoredReviewUserId
   );
+  const [reviewTheme, setReviewTheme] = useState(getStoredReviewTheme);
+  const [reviewThemeDraft, setReviewThemeDraft] =
+    useState(getStoredReviewTheme);
+  const [systemReviewTheme, setSystemReviewTheme] =
+    useState(getSystemReviewTheme);
   const [figmaSettingsStatus, setFigmaSettingsStatus] = useState('');
   const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState(false);
+  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState(false);
   const [qaFilter, setQaFilter] = useState<ReviewQaFilter>('all');
+  const [isRulerVisible, setIsRulerVisible] = useState(false);
+  const [rulerStart, setRulerStart] = useState<ReviewRulerPoint | null>(null);
+  const [rulerPoint, setRulerPoint] = useState<ReviewRulerPoint | null>(null);
+  const [isRulerDragging, setIsRulerDragging] = useState(false);
   const [copyLabel, setCopyLabel] = useState('Copy URL');
-  const [copiedPromptItemId, setCopiedPromptItemId] = useState<string | null>(
-    null
-  );
+  const [promptItemId, setPromptItemId] = useState<string | null>(null);
+  const [promptTab, setPromptTab] = useState<ReviewPromptTab>('item');
+  const [copiedPromptKey, setCopiedPromptKey] = useState<string | null>(null);
   const targetRef = useRef(target);
   const sizeRef = useRef(size);
 
+  const effectiveReviewTheme =
+    reviewTheme === 'system' ? systemReviewTheme : reviewTheme;
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
+  const activeRulerFrame = useMemo(
+    () => getReviewRulerFrame(ruler, size),
+    [ruler, size]
+  );
+  const isRulerAvailable = Boolean(activeRulerFrame);
+  const rulerUnit = ruler?.unit ?? 'px';
+  const rulerScaleX = activeRulerFrame
+    ? size.width / activeRulerFrame.designWidth
+    : 1;
+  const rulerScaleY =
+    activeRulerFrame?.designHeight && activeRulerFrame.designHeight > 0
+      ? size.height / activeRulerFrame.designHeight
+      : rulerScaleX;
+  const rulerMeasure = useMemo(
+    () => getRulerMeasure(rulerStart, rulerPoint),
+    [rulerPoint, rulerStart]
+  );
+  const rulerMeasureLabel = useMemo(() => {
+    if (!rulerMeasure) return '';
+
+    const designWidth = formatRulerNumber(rulerMeasure.width / rulerScaleX);
+    const designHeight = formatRulerNumber(rulerMeasure.height / rulerScaleY);
+
+    return `Figma ${designWidth}x${designHeight}${rulerUnit}`;
+  }, [rulerMeasure, rulerScaleX, rulerScaleY, rulerUnit]);
   const targetSrc = useMemo(() => buildTargetSrc(target), [target]);
   const activeItems = useMemo(
     () =>
@@ -823,6 +1042,28 @@ export const ReviewShell = ({
 
     return counts;
   }, [items, reviewPathPrefix]);
+  const promptDialogNumberedItem = useMemo(
+    () =>
+      promptItemId
+        ? numberedActiveItems.find(
+            (numberedItem) => numberedItem.item.id === promptItemId
+          )
+        : undefined,
+    [numberedActiveItems, promptItemId]
+  );
+  const initialPromptText = initialPrompt.trim();
+  const promptDialogItemPrompt = promptDialogNumberedItem
+    ? buildReviewItemPrompt(promptDialogNumberedItem, reviewPathPrefix)
+    : '';
+  const promptDialogItemCopyKey = promptDialogNumberedItem
+    ? `dialog:${promptDialogNumberedItem.item.id}`
+    : 'dialog:item';
+  const promptDialogActiveText =
+    promptTab === 'initial' ? initialPromptText : promptDialogItemPrompt;
+  const promptDialogActiveLabel =
+    promptTab === 'initial' ? 'Initial prompt' : 'This QA prompt';
+  const promptDialogActiveCopyKey =
+    promptTab === 'initial' ? 'initial' : promptDialogItemCopyKey;
 
   const refreshItems = useCallback(async () => {
     const nextItems = await adapter.list({
@@ -971,6 +1212,57 @@ export const ReviewShell = ({
     return true;
   }, []);
 
+  const clearRulerMeasure = useCallback(() => {
+    rulerDragRectRef.current = null;
+    isRulerDraggingRef.current = false;
+    setRulerStart(null);
+    setRulerPoint(null);
+    setIsRulerDragging(false);
+  }, []);
+
+  const closeRuler = useCallback(() => {
+    if (!isRulerVisible) return false;
+
+    setIsRulerVisible(false);
+    clearRulerMeasure();
+    return true;
+  }, [clearRulerMeasure, isRulerVisible]);
+
+  const toggleRuler = useCallback(() => {
+    if (!isRulerAvailable) return;
+
+    cancelReviewMode();
+    setIsSitemapOpen(false);
+    setIsFigmaSettingsOpen(false);
+    setPromptItemId(null);
+    clearRulerMeasure();
+    setIsRulerVisible((current) => !current);
+  }, [cancelReviewMode, clearRulerMeasure, isRulerAvailable]);
+
+  const finishRulerDrag = useCallback((point?: ReviewRulerPoint) => {
+    if (point) {
+      setRulerPoint(point);
+    }
+
+    rulerDragRectRef.current = null;
+    isRulerDraggingRef.current = false;
+    setIsRulerDragging(false);
+  }, []);
+
+  const startRulerDrag = useCallback(
+    (clientX: number, clientY: number, rect: DOMRect) => {
+      const point = getRulerPointFromRect(clientX, clientY, rect);
+
+      rulerDragRectRef.current = rect;
+      isRulerDraggingRef.current = true;
+
+      setRulerStart(point);
+      setRulerPoint(point);
+      setIsRulerDragging(true);
+    },
+    []
+  );
+
   const reloadTargetFrame = useCallback(() => {
     try {
       iframeRef.current?.contentWindow?.location.reload();
@@ -982,29 +1274,48 @@ export const ReviewShell = ({
   const openFigmaSettings = useCallback(() => {
     cancelReviewMode();
     setIsSitemapOpen(false);
+    setPromptItemId(null);
     setFigmaTokenDraft(getStoredFigmaToken());
     setReviewUserIdDraft(getStoredReviewUserId());
+    setReviewThemeDraft(reviewTheme);
     setFigmaSettingsStatus('');
     setIsFigmaTokenVisible(false);
+    setIsFigmaTokenGuideOpen(false);
     setIsFigmaSettingsOpen(true);
-  }, [cancelReviewMode]);
+  }, [cancelReviewMode, reviewTheme]);
 
   const closeFigmaSettings = useCallback(() => {
     setIsFigmaSettingsOpen(false);
     setFigmaSettingsStatus('');
     setIsFigmaTokenVisible(false);
+    setIsFigmaTokenGuideOpen(false);
   }, []);
 
   const saveReviewSettings = useCallback(
-    (token: string, userId: string) => {
+    (token: string, userId: string, theme: ReviewShellTheme) => {
       const nextToken = token.trim();
       const nextUserId = userId.trim();
+      const nextTheme = normalizeReviewTheme(theme);
+      const shouldReload =
+        nextToken !== getStoredFigmaToken() ||
+        nextUserId !== getStoredReviewUserId();
+
       writeStoredFigmaToken(nextToken);
       writeStoredReviewUserId(nextUserId);
+      writeStoredReviewTheme(nextTheme);
       setFigmaTokenDraft(nextToken);
       setReviewUserIdDraft(nextUserId);
-      setFigmaSettingsStatus(nextToken || nextUserId ? 'Saved' : 'Cleared');
-      reloadTargetFrame();
+      setReviewTheme(nextTheme);
+      setReviewThemeDraft(nextTheme);
+      setFigmaSettingsStatus(
+        nextToken || nextUserId || nextTheme !== DEFAULT_REVIEW_THEME
+          ? 'Saved'
+          : 'Cleared'
+      );
+
+      if (shouldReload) {
+        reloadTargetFrame();
+      }
     },
     [reloadTargetFrame]
   );
@@ -1082,7 +1393,7 @@ export const ReviewShell = ({
 
     const handleFrameKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      if (!cancelReviewMode()) return;
+      if (!cancelReviewMode() && !closeRuler()) return;
 
       event.preventDefault();
       event.stopPropagation();
@@ -1144,6 +1455,7 @@ export const ReviewShell = ({
       viewports: {
         presets: reviewViewportPresets
       },
+      ruler,
       onRestoreItem: restoreReviewItem,
       onItemsChange: () => {
         void refreshItems();
@@ -1168,6 +1480,7 @@ export const ReviewShell = ({
     adapter,
     applyPendingRestore,
     cancelReviewMode,
+    closeRuler,
     destroyReviewKit,
     projectId,
     refreshItems,
@@ -1175,6 +1488,7 @@ export const ReviewShell = ({
     reviewViewportPresets,
     restoreInitialItem,
     restoreReviewItem,
+    ruler,
     reviewPathPrefix,
     syncShellTarget,
     syncTargetViewport
@@ -1187,12 +1501,70 @@ export const ReviewShell = ({
   }, [refreshItems]);
 
   useEffect(() => {
-    if (mode === 'idle' && !isSitemapOpen && !isFigmaSettingsOpen) return;
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+
+    const query = window.matchMedia('(prefers-color-scheme: light)');
+    const syncSystemTheme = () => {
+      setSystemReviewTheme(query.matches ? 'light' : 'dark');
+    };
+
+    syncSystemTheme();
+
+    if (query.addEventListener) {
+      query.addEventListener('change', syncSystemTheme);
+      return () => query.removeEventListener('change', syncSystemTheme);
+    }
+
+    query.addListener(syncSystemTheme);
+    return () => query.removeListener(syncSystemTheme);
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle(
+      'df-review-theme-light',
+      effectiveReviewTheme === 'light'
+    );
+    document.body.classList.toggle(
+      'df-review-theme-dark',
+      effectiveReviewTheme === 'dark'
+    );
+
+    return () => {
+      document.body.classList.remove(
+        'df-review-theme-light',
+        'df-review-theme-dark'
+      );
+    };
+  }, [effectiveReviewTheme]);
+
+  useEffect(() => {
+    if (
+      mode === 'idle' &&
+      !isRulerVisible &&
+      !promptItemId &&
+      !isSitemapOpen &&
+      !isFigmaSettingsOpen
+    ) {
+      return;
+    }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
 
       if (mode !== 'idle' && cancelReviewMode()) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      if (closeRuler()) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      if (promptItemId) {
+        setPromptItemId(null);
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -1212,9 +1584,12 @@ export const ReviewShell = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     cancelReviewMode,
+    closeRuler,
     closeFigmaSettings,
     isFigmaSettingsOpen,
+    isRulerVisible,
     isSitemapOpen,
+    promptItemId,
     mode
   ]);
 
@@ -1264,6 +1639,134 @@ export const ReviewShell = ({
     targetOverlayState.figma
   ]);
 
+  useEffect(() => {
+    if (!isRulerVisible || !isRulerAvailable) return undefined;
+
+    const getRulerEventClientPoint = (event: MouseEvent) => {
+      const frame = iframeRef.current;
+      let isFrameEvent = false;
+
+      try {
+        isFrameEvent =
+          Boolean(frame?.contentWindow) && event.view === frame?.contentWindow;
+
+        if (!isFrameEvent && frame?.contentDocument) {
+          const targetDocument = (
+            event.target as { ownerDocument?: Document } | null
+          )?.ownerDocument;
+          isFrameEvent = targetDocument === frame.contentDocument;
+        }
+      } catch {
+        isFrameEvent = false;
+      }
+
+      if (isFrameEvent && frame) {
+        const frameRect = frame.getBoundingClientRect();
+
+        return {
+          clientX: event.clientX + frameRect.left,
+          clientY: event.clientY + frameRect.top
+        };
+      }
+
+      return {
+        clientX: event.clientX,
+        clientY: event.clientY
+      };
+    };
+
+    const getActiveRulerPoint = (event: MouseEvent) => {
+      const rect =
+        rulerDragRectRef.current ??
+        rulerOverlayRef.current?.getBoundingClientRect();
+      if (!rect) return undefined;
+
+      const point = getRulerEventClientPoint(event);
+
+      return getRulerPointFromRect(point.clientX, point.clientY, rect);
+    };
+
+    const handleDragStart: EventListener = (event) => {
+      if (isRulerDraggingRef.current) return;
+
+      const mouseEvent = event as MouseEvent;
+      if (mouseEvent.button !== 0) return;
+
+      const overlay = rulerOverlayRef.current;
+      const target = mouseEvent.target;
+      if (!overlay || !(target instanceof Node) || !overlay.contains(target)) {
+        return;
+      }
+
+      event.preventDefault();
+      startRulerDrag(
+        mouseEvent.clientX,
+        mouseEvent.clientY,
+        overlay.getBoundingClientRect()
+      );
+    };
+
+    const handleDragMove: EventListener = (event) => {
+      if (!isRulerDraggingRef.current) return;
+
+      const point = getActiveRulerPoint(event as MouseEvent);
+      if (!point) return;
+
+      event.preventDefault();
+      setRulerPoint(point);
+    };
+
+    const handleDragEnd: EventListener = (event) => {
+      if (!isRulerDraggingRef.current) return;
+
+      const point = getActiveRulerPoint(event as MouseEvent);
+      event.preventDefault();
+      finishRulerDrag(point);
+    };
+
+    const handleWindowBlur = () => {
+      if (!isRulerDraggingRef.current) return;
+
+      finishRulerDrag();
+    };
+
+    const dragTargets = new Set<EventTarget>([window]);
+    const frame = iframeRef.current;
+
+    try {
+      if (frame?.contentWindow) dragTargets.add(frame.contentWindow);
+      if (frame?.contentDocument) dragTargets.add(frame.contentDocument);
+    } catch {
+      // Cross-origin frames cannot expose their document. Parent listeners still run.
+    }
+
+    dragTargets.forEach((target) => {
+      target.addEventListener('mousedown', handleDragStart, true);
+      target.addEventListener('mousemove', handleDragMove, true);
+      target.addEventListener('mouseup', handleDragEnd, true);
+    });
+
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      dragTargets.forEach((target) => {
+        target.removeEventListener('mousedown', handleDragStart, true);
+        target.removeEventListener('mousemove', handleDragMove, true);
+        target.removeEventListener('mouseup', handleDragEnd, true);
+      });
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, [finishRulerDrag, isRulerAvailable, isRulerVisible, startRulerDrag]);
+
+  useEffect(() => {
+    clearRulerMeasure();
+  }, [clearRulerMeasure, size.height, size.width, targetSrc]);
+
+  useEffect(() => {
+    if (!isRulerVisible || isRulerAvailable) return;
+    closeRuler();
+  }, [closeRuler, isRulerAvailable, isRulerVisible]);
+
   const applyTarget = () => {
     const normalizedTarget = normalizeTarget(draftTarget, reviewPathPrefix);
     clearSelectedItem();
@@ -1286,6 +1789,7 @@ export const ReviewShell = ({
   };
 
   const setReviewMode = (nextMode: ReviewMode) => {
+    closeRuler();
     controllerRef.current?.setMode(nextMode);
     setMode(controllerRef.current?.getMode() ?? 'idle');
   };
@@ -1304,16 +1808,21 @@ export const ReviewShell = ({
     await refreshReviewData();
   };
 
-  const copyDomPrompt = async (numberedItem: NumberedReviewItem) => {
-    await navigator.clipboard.writeText(
-      buildDomReviewPrompt(numberedItem, reviewPathPrefix)
-    );
-    setCopiedPromptItemId(numberedItem.item.id);
+  const copyPrompt = async (value: string, key: string) => {
+    if (!value) return;
+
+    await navigator.clipboard.writeText(value);
+    setCopiedPromptKey(key);
     window.setTimeout(() => {
-      setCopiedPromptItemId((current) =>
-        current === numberedItem.item.id ? null : current
-      );
+      setCopiedPromptKey((current) => (current === key ? null : current));
     }, 1200);
+  };
+
+  const copyItemPrompt = async (numberedItem: NumberedReviewItem) => {
+    await copyPrompt(
+      buildReviewItemPrompt(numberedItem, reviewPathPrefix),
+      `item:${numberedItem.item.id}`
+    );
   };
 
   const removeItem = async (item: ReviewItem) => {
@@ -1327,7 +1836,9 @@ export const ReviewShell = ({
 
   return (
     <div
-      className={`df-review-shell${isListVisible ? ' is-list-visible' : ''}`}
+      className={`df-review-shell is-theme-${effectiveReviewTheme}${
+        isListVisible ? ' is-list-visible' : ''
+      }`}
     >
       <header className="df-review-topbar">
         <form
@@ -1416,6 +1927,19 @@ export const ReviewShell = ({
             >
               <ImageIcon aria-hidden="true" />
             </button>
+            {isRulerAvailable && (
+              <button
+                aria-label="Toggle ruler"
+                className={`df-review-overlay-button is-ruler${
+                  isRulerVisible ? ' is-active' : ''
+                }`}
+                data-tooltip="Ruler"
+                type="button"
+                onClick={toggleRuler}
+              >
+                <RulerIcon aria-hidden="true" />
+              </button>
+            )}
             <button
               aria-label="Open settings"
               className="df-review-overlay-button is-settings"
@@ -1496,14 +2020,19 @@ export const ReviewShell = ({
             className="df-review-settings-dialog"
             onSubmit={(event) => {
               event.preventDefault();
-              saveReviewSettings(figmaTokenDraft, reviewUserIdDraft);
+              saveReviewSettings(
+                figmaTokenDraft,
+                reviewUserIdDraft,
+                reviewThemeDraft
+              );
             }}
           >
             <div className="df-review-settings-header">
               <div>
                 <strong>Settings</strong>
                 <span>
-                  {FIGMA_TOKEN_STORAGE_KEY} / {REVIEW_USER_ID_STORAGE_KEY}
+                  {FIGMA_TOKEN_STORAGE_KEY} / {REVIEW_USER_ID_STORAGE_KEY} /{' '}
+                  {REVIEW_THEME_STORAGE_KEY}
                 </span>
               </div>
               <button
@@ -1515,15 +2044,43 @@ export const ReviewShell = ({
               </button>
             </div>
             <div className="df-review-settings-body">
-              <label className="df-review-settings-field">
-                <span>Token</span>
+              <div className="df-review-settings-field">
+                <div className="df-review-settings-label-row">
+                  <label htmlFor="df-review-figma-token">Figma token</label>
+                  <button
+                    aria-controls={FIGMA_TOKEN_GUIDE_ID}
+                    aria-expanded={isFigmaTokenGuideOpen}
+                    aria-label="Show Figma token guide"
+                    className={`df-review-settings-help-button${
+                      isFigmaTokenGuideOpen ? ' is-active' : ''
+                    }`}
+                    type="button"
+                    onClick={() =>
+                      setIsFigmaTokenGuideOpen((current) => !current)
+                    }
+                  >
+                    <CircleHelpIcon aria-hidden="true" />
+                  </button>
+                </div>
                 <div className="df-review-settings-token-input">
                   <input
+                    id="df-review-figma-token"
                     aria-label="Figma token"
+                    aria-describedby={
+                      isFigmaTokenGuideOpen ? FIGMA_TOKEN_GUIDE_ID : undefined
+                    }
+                    autoCapitalize="off"
                     autoComplete="off"
-                    autoFocus
+                    autoCorrect="off"
+                    className={
+                      isFigmaTokenVisible ? undefined : 'is-token-masked'
+                    }
+                    data-1p-ignore="true"
+                    data-lpignore="true"
+                    inputMode="text"
+                    name="df-review-figma-access-key"
                     spellCheck={false}
-                    type={isFigmaTokenVisible ? 'text' : 'password'}
+                    type="text"
                     value={figmaTokenDraft}
                     onChange={(event) => {
                       setFigmaTokenDraft(event.target.value);
@@ -1549,7 +2106,20 @@ export const ReviewShell = ({
                     )}
                   </button>
                 </div>
-              </label>
+                {isFigmaTokenGuideOpen && (
+                  <div
+                    className="df-review-settings-guide"
+                    id={FIGMA_TOKEN_GUIDE_ID}
+                  >
+                    <ol>
+                      <li>Figma file browser에서 account menu를 열고 Settings로 이동</li>
+                      <li>Security 탭의 Personal access tokens로 이동</li>
+                      <li>Generate new token에서 이름과 scope를 정한 뒤 생성</li>
+                      <li>생성된 token을 복사해서 여기에 붙여넣기</li>
+                    </ol>
+                  </div>
+                )}
+              </div>
               <label className="df-review-settings-field">
                 <span>User ID</span>
                 <div className="df-review-settings-text-input">
@@ -1566,6 +2136,27 @@ export const ReviewShell = ({
                   />
                 </div>
               </label>
+              <label className="df-review-settings-field">
+                <span>Theme</span>
+                <div className="df-review-settings-select-input">
+                  <select
+                    aria-label="Review theme"
+                    value={reviewThemeDraft}
+                    onChange={(event) => {
+                      setReviewThemeDraft(
+                        normalizeReviewTheme(event.target.value)
+                      );
+                      setFigmaSettingsStatus('');
+                    }}
+                  >
+                    {REVIEW_THEME_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </label>
               {figmaSettingsStatus && (
                 <p className="df-review-settings-status">
                   {figmaSettingsStatus}
@@ -1574,7 +2165,9 @@ export const ReviewShell = ({
               <div className="df-review-settings-actions">
                 <button
                   type="button"
-                  onClick={() => saveReviewSettings('', '')}
+                  onClick={() =>
+                    saveReviewSettings('', '', DEFAULT_REVIEW_THEME)
+                  }
                 >
                   Clear
                 </button>
@@ -1586,6 +2179,90 @@ export const ReviewShell = ({
               </div>
             </div>
           </form>
+        </div>
+      )}
+
+      {promptDialogNumberedItem && (
+        <div
+          aria-label="Prompt"
+          aria-modal="true"
+          className="df-review-prompt-modal"
+          role="dialog"
+        >
+          <button
+            aria-label="Close prompt"
+            className="df-review-prompt-backdrop"
+            type="button"
+            onClick={() => setPromptItemId(null)}
+          />
+          <div className="df-review-prompt-dialog">
+            <div className="df-review-prompt-header">
+              <div>
+                <strong>Prompt</strong>
+                <span>
+                  {promptDialogNumberedItem.displayLabel} /{' '}
+                  {getItemTitle(promptDialogNumberedItem.item)}
+                </span>
+              </div>
+              <button
+                aria-label="Close prompt"
+                type="button"
+                onClick={() => setPromptItemId(null)}
+              >
+                x
+              </button>
+            </div>
+            <div className="df-review-prompt-body">
+              <div className="df-review-prompt-tabs" role="tablist">
+                <button
+                  aria-selected={promptTab === 'initial'}
+                  className={promptTab === 'initial' ? 'is-active' : ''}
+                  role="tab"
+                  type="button"
+                  onClick={() => setPromptTab('initial')}
+                >
+                  Initial prompt
+                </button>
+                <button
+                  aria-selected={promptTab === 'item'}
+                  className={promptTab === 'item' ? 'is-active' : ''}
+                  role="tab"
+                  type="button"
+                  onClick={() => setPromptTab('item')}
+                >
+                  This QA prompt
+                </button>
+              </div>
+              <section className="df-review-prompt-block" role="tabpanel">
+                <div className="df-review-prompt-block-header">
+                  <div>
+                    <strong>{promptDialogActiveLabel}</strong>
+                    <span>{getPromptLengthLabel(promptDialogActiveText)}</span>
+                  </div>
+                  <button
+                    disabled={!promptDialogActiveText}
+                    type="button"
+                    onClick={() =>
+                      void copyPrompt(promptDialogActiveText, promptDialogActiveCopyKey)
+                    }
+                  >
+                    <CopyIcon aria-hidden="true" />
+                    {copiedPromptKey === promptDialogActiveCopyKey
+                      ? 'Copied'
+                      : 'Copy'}
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  aria-label={promptDialogActiveLabel}
+                  value={
+                    promptDialogActiveText ||
+                    `${promptDialogActiveLabel} is not configured.`
+                  }
+                />
+              </section>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1698,16 +2375,35 @@ export const ReviewShell = ({
                       className="df-review-item-actions"
                       onClick={(event) => event.stopPropagation()}
                     >
-                      {numberedItem.scope === 'dom' && (
+                      <div className="df-review-item-prompt-actions">
                         <button
                           className="df-review-item-prompt"
                           type="button"
-                          onClick={() => void copyDomPrompt(numberedItem)}
+                          onClick={() => {
+                            setPromptTab('item');
+                            setPromptItemId(item.id);
+                          }}
+                        >
+                          Prompt
+                        </button>
+                        <button
+                          aria-label="Copy QA prompt"
+                          className={`df-review-item-prompt-copy${
+                            copiedPromptKey === `item:${item.id}`
+                              ? ' is-copied'
+                              : ''
+                          }`}
+                          data-tooltip={
+                            copiedPromptKey === `item:${item.id}`
+                              ? 'Copied'
+                              : 'Copy prompt'
+                          }
+                          type="button"
+                          onClick={() => void copyItemPrompt(numberedItem)}
                         >
                           <CopyIcon aria-hidden="true" />
-                          {copiedPromptItemId === item.id ? 'Copied' : 'Prompt'}
                         </button>
-                      )}
+                      </div>
                       <select
                         aria-label="Workflow status"
                         className="df-review-item-status-select"
@@ -1756,6 +2452,93 @@ export const ReviewShell = ({
                   title="Review target"
                   onLoad={initReviewKit}
                 />
+                {isRulerVisible && activeRulerFrame && (
+                  <div
+                    ref={rulerOverlayRef}
+                    aria-label="Ruler"
+                    className={`df-review-ruler-overlay${
+                      isRulerDragging ? ' is-dragging' : ''
+                    }`}
+                    role="application"
+                    style={
+                      {
+                        '--df-review-ruler-step-x': `${rulerScaleX * 10}px`,
+                        '--df-review-ruler-major-x': `${rulerScaleX * 100}px`,
+                        '--df-review-ruler-step-y': `${rulerScaleY * 10}px`,
+                        '--df-review-ruler-major-y': `${rulerScaleY * 100}px`
+                      } as React.CSSProperties
+                    }
+                  >
+                    <div
+                      className="df-review-ruler-axis is-x"
+                      aria-hidden="true"
+                    />
+                    <div
+                      className="df-review-ruler-axis is-y"
+                      aria-hidden="true"
+                    />
+                    {rulerPoint && (
+                      <>
+                        <div
+                          className="df-review-ruler-guide is-x"
+                          aria-hidden="true"
+                          style={{ top: `${rulerPoint.y}px` }}
+                        />
+                        <div
+                          className="df-review-ruler-guide is-y"
+                          aria-hidden="true"
+                          style={{ left: `${rulerPoint.x}px` }}
+                        />
+                      </>
+                    )}
+                    {rulerMeasure &&
+                      (rulerMeasure.width > 0 || rulerMeasure.height > 0) && (
+                        <>
+                          <div
+                            className="df-review-ruler-selection"
+                            aria-hidden="true"
+                            style={{
+                              left: `${rulerMeasure.left}px`,
+                              top: `${rulerMeasure.top}px`,
+                              width: `${rulerMeasure.width}px`,
+                              height: `${rulerMeasure.height}px`
+                            }}
+                          />
+                          <div
+                            className="df-review-ruler-label"
+                            style={{
+                              left: `${Math.min(
+                                Math.max(
+                                  rulerMeasure.left + rulerMeasure.width + 8,
+                                  8
+                                ),
+                                Math.max(8, size.width - 164)
+                              )}px`,
+                              top: `${Math.min(
+                                Math.max(
+                                  rulerMeasure.top + rulerMeasure.height + 8,
+                                  8
+                                ),
+                                Math.max(8, size.height - 34)
+                              )}px`
+                            }}
+                          >
+                            {rulerMeasureLabel}
+                          </div>
+                        </>
+                      )}
+                    <div className="df-review-ruler-info">
+                      <strong>{activeRulerFrame.label ?? size.label}</strong>
+                      <span>
+                        {activeRulerFrame.designWidth}
+                        {activeRulerFrame.designHeight
+                          ? `x${activeRulerFrame.designHeight}`
+                          : ''}
+                        {rulerUnit}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1816,7 +2599,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
     style.textContent = `
 	  * {
 	    box-sizing: border-box;
-	    scrollbar-color: rgba(237, 243, 251, 0.2) rgba(237, 243, 251, 0.04);
+	    scrollbar-color: var(--df-review-scrollbar-thumb, rgba(237, 243, 251, 0.2)) var(--df-review-scrollbar-track, rgba(237, 243, 251, 0.04));
 	    scrollbar-width: thin;
 	  }
 
@@ -1826,17 +2609,17 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	  }
 
 	  *::-webkit-scrollbar-track {
-	    background: rgba(237, 243, 251, 0.04);
+	    background: var(--df-review-scrollbar-track, rgba(237, 243, 251, 0.04));
 	  }
 
 	  *::-webkit-scrollbar-thumb {
-	    border: 2px solid rgba(15, 18, 24, 0.92);
+	    border: 2px solid var(--df-review-scrollbar-border, rgba(15, 18, 24, 0.92));
 	    border-radius: 999px;
-	    background: rgba(237, 243, 251, 0.18);
+	    background: var(--df-review-scrollbar-thumb, rgba(237, 243, 251, 0.18));
 	  }
 
 	  *::-webkit-scrollbar-thumb:hover {
-	    background: rgba(237, 243, 251, 0.28);
+	    background: var(--df-review-scrollbar-thumb-hover, rgba(237, 243, 251, 0.28));
 	  }
 
 	  *::-webkit-scrollbar-corner {
@@ -1871,6 +2654,14 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    --df-review-note-soft: rgba(243, 183, 95, 0.14);
 	    --df-review-capture: #63d7c7;
 	    --df-review-capture-soft: rgba(99, 215, 199, 0.14);
+	    --df-review-tooltip-bg: #0a0d12;
+	    --df-review-side-rail: #111722;
+	    --df-review-mode-bar: rgba(15, 18, 24, 0.86);
+	    --df-review-chip-bg: rgba(237, 243, 251, 0.06);
+	    --df-review-scrollbar-track: rgba(237, 243, 251, 0.04);
+	    --df-review-scrollbar-thumb: rgba(237, 243, 251, 0.18);
+	    --df-review-scrollbar-thumb-hover: rgba(237, 243, 251, 0.28);
+	    --df-review-scrollbar-border: rgba(15, 18, 24, 0.92);
 	    background: var(--df-review-bg);
 	    color: var(--df-review-text);
 	    font-family:
@@ -1878,10 +2669,41 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	      "Segoe UI", sans-serif;
 	  }
 
-  button,
-  input {
-    font: inherit;
-  }
+	  body.df-review-theme-light {
+	    --df-review-bg: #f4f6f9;
+	    --df-review-topbar: #ffffff;
+	    --df-review-panel: #ffffff;
+	    --df-review-panel-strong: #edf1f6;
+	    --df-review-control: #eef2f7;
+	    --df-review-control-hover: #e3e9f1;
+	    --df-review-line: rgba(16, 24, 40, 0.14);
+	    --df-review-line-soft: rgba(16, 24, 40, 0.08);
+	    --df-review-text: #17202c;
+	    --df-review-muted: rgba(23, 32, 44, 0.62);
+	    --df-review-subtle: rgba(23, 32, 44, 0.44);
+	    --df-review-accent: #1769aa;
+	    --df-review-accent-soft: rgba(23, 105, 170, 0.1);
+	    --df-review-accent-hover: rgba(23, 105, 170, 0.16);
+	    --df-review-note: #a76617;
+	    --df-review-note-soft: rgba(167, 102, 23, 0.12);
+	    --df-review-capture: #087f73;
+	    --df-review-capture-soft: rgba(8, 127, 115, 0.12);
+	    --df-review-tooltip-bg: #17202c;
+	    --df-review-side-rail: #edf1f6;
+	    --df-review-mode-bar: rgba(255, 255, 255, 0.9);
+	    --df-review-chip-bg: rgba(23, 32, 44, 0.06);
+	    --df-review-scrollbar-track: rgba(23, 32, 44, 0.06);
+	    --df-review-scrollbar-thumb: rgba(23, 32, 44, 0.24);
+	    --df-review-scrollbar-thumb-hover: rgba(23, 32, 44, 0.34);
+	    --df-review-scrollbar-border: rgba(244, 246, 249, 0.92);
+	  }
+
+	  button,
+	  input,
+	  select,
+	  textarea {
+	    font: inherit;
+	  }
 
   button {
     cursor: pointer;
@@ -1941,11 +2763,14 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		  .df-review-side-toggle,
 		  .df-review-presets button,
 		  .df-review-overlay-button,
-		  .df-review-mode-button,
-		  .df-review-settings-header button,
-		  .df-review-settings-actions button,
-		  .df-review-item-actions button,
-		  .df-review-item-status-select {
+			  .df-review-mode-button,
+			  .df-review-settings-header button,
+			  .df-review-prompt-header button,
+			  .df-review-settings-actions button,
+			  .df-review-prompt-tabs button,
+			  .df-review-prompt-block-header button,
+			  .df-review-item-actions button,
+			  .df-review-item-status-select {
 		    min-height: 34px;
 		    border: 1px solid var(--df-review-line);
 		    border-radius: 6px;
@@ -1959,10 +2784,14 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	  .df-review-side-toggle:hover,
 		  .df-review-presets button:hover,
 		  .df-review-overlay-button:hover,
-	  .df-review-mode-button:hover,
-	  .df-review-settings-header button:hover,
-	  .df-review-settings-actions button:hover,
-		  .df-review-item-actions button:hover,
+		  .df-review-mode-button:hover,
+		  .df-review-settings-header button:hover,
+		  .df-review-prompt-header button:hover,
+		  .df-review-settings-actions button:hover,
+		  .df-review-prompt-tabs button:hover,
+		  .df-review-prompt-tabs button.is-active,
+		  .df-review-prompt-block-header button:hover,
+			  .df-review-item-actions button:hover,
 		  .df-review-item-delete:hover,
 		  .df-review-item-status-select:hover,
 		  .df-review-presets button.is-active,
@@ -2005,7 +2834,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    border: 1px solid var(--df-review-line);
 	    border-radius: 5px;
 	    padding: 4px 7px;
-	    background: #0a0d12;
+	    background: var(--df-review-tooltip-bg);
 	    color: var(--df-review-text);
     font-size: 11px;
     font-weight: 800;
@@ -2027,7 +2856,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
     z-index: 1000;
     display: grid;
     place-items: center;
-    padding: 24px;
+				    padding: 18px;
   }
 
 	  .df-review-sitemap-backdrop {
@@ -2130,7 +2959,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	  .df-review-sitemap-path {
 	    min-width: 0;
 	    overflow-wrap: anywhere;
-	    color: rgba(237, 243, 251, 0.78);
+	    color: var(--df-review-text);
 	    font-size: 13px;
 	    font-weight: 800;
 	    line-height: 1.35;
@@ -2144,7 +2973,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    border: 1px solid var(--df-review-line);
 	    border-radius: 999px;
 	    padding: 0 8px;
-	    background: rgba(237, 243, 251, 0.06);
+	    background: var(--df-review-chip-bg);
 	    color: var(--df-review-muted);
 	    font-size: 12px;
 	    font-weight: 900;
@@ -2241,14 +3070,52 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		    gap: 7px;
 		  }
 
-		  .df-review-settings-field span {
-		    color: rgba(237, 243, 251, 0.78);
+		  .df-review-settings-field span,
+		  .df-review-settings-label-row label {
+		    color: var(--df-review-muted);
 		    font-size: 12px;
 		    font-weight: 800;
 		  }
 
+		  .df-review-settings-label-row {
+		    display: flex;
+		    align-items: center;
+		    gap: 6px;
+		  }
+
+		  .df-review-settings-help-button {
+		    display: inline-grid;
+		    place-items: center;
+		    width: 20px;
+		    min-width: 20px;
+		    min-height: 20px;
+		    border: 1px solid var(--df-review-line-soft);
+		    border-radius: 50%;
+		    padding: 0;
+		    background: transparent;
+		    color: var(--df-review-muted);
+		  }
+
+		  .df-review-settings-help-button:hover,
+		  .df-review-settings-help-button.is-active {
+		    border-color: var(--df-review-accent);
+		    background: var(--df-review-accent-soft);
+		    color: var(--df-review-accent);
+		  }
+
+		  .df-review-settings-help-button svg {
+		    width: 13px;
+		    height: 13px;
+		    fill: none;
+		    stroke: currentColor;
+		    stroke-linecap: round;
+		    stroke-linejoin: round;
+		    stroke-width: 2.1;
+		  }
+
 			  .df-review-settings-token-input,
-			  .df-review-settings-text-input {
+			  .df-review-settings-text-input,
+			  .df-review-settings-select-input {
 			    display: grid;
 			    align-items: stretch;
 			    overflow: hidden;
@@ -2261,18 +3128,21 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 			    grid-template-columns: minmax(0, 1fr) 38px;
 			  }
 
-			  .df-review-settings-text-input {
+			  .df-review-settings-text-input,
+			  .df-review-settings-select-input {
 			    grid-template-columns: minmax(0, 1fr);
 			  }
 
 			  .df-review-settings-token-input:focus-within,
-			  .df-review-settings-text-input:focus-within {
+			  .df-review-settings-text-input:focus-within,
+			  .df-review-settings-select-input:focus-within {
 			    outline: 2px solid rgba(124, 199, 255, 0.58);
 			    outline-offset: 1px;
 			  }
 
 			  .df-review-settings-token-input input,
-			  .df-review-settings-text-input input {
+			  .df-review-settings-text-input input,
+			  .df-review-settings-select-input select {
 			    min-width: 0;
 			    min-height: 38px;
 			    border: 0;
@@ -2283,8 +3153,18 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 			  }
 
 			  .df-review-settings-token-input input:focus,
-			  .df-review-settings-text-input input:focus {
+			  .df-review-settings-text-input input:focus,
+			  .df-review-settings-select-input select:focus {
 			    outline: 0;
+			  }
+
+			  .df-review-settings-token-input input.is-token-masked {
+			    -webkit-text-security: disc;
+			  }
+
+			  .df-review-settings-select-input select {
+			    appearance: none;
+			    cursor: pointer;
 			  }
 
 		  .df-review-settings-token-toggle {
@@ -2302,7 +3182,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		  }
 
 		  .df-review-settings-token-toggle:hover {
-		    background: rgba(237, 243, 251, 0.06);
+		    background: var(--df-review-chip-bg);
 		    color: var(--df-review-text);
 		  }
 
@@ -2314,6 +3194,25 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		    stroke-linecap: round;
 		    stroke-linejoin: round;
 		    stroke-width: 2;
+		  }
+
+		  .df-review-settings-guide {
+		    margin-top: -2px;
+		    border: 1px solid var(--df-review-line-soft);
+		    border-radius: 6px;
+		    padding: 9px 11px;
+		    background: var(--df-review-chip-bg);
+		    color: var(--df-review-muted);
+		    font-size: 11px;
+		    font-weight: 700;
+		    line-height: 1.55;
+		  }
+
+		  .df-review-settings-guide ol {
+		    display: grid;
+		    gap: 3px;
+		    margin: 0;
+		    padding-left: 17px;
 		  }
 
 		  .df-review-settings-status {
@@ -2335,13 +3234,200 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		    padding: 0 12px;
 		  }
 
-		  .df-review-settings-actions button[type='submit'] {
-		    border-color: var(--df-review-accent);
-		    background: var(--df-review-accent-soft);
-		    color: var(--df-review-accent);
-		  }
+			  .df-review-settings-actions button[type='submit'] {
+			    border-color: var(--df-review-accent);
+			    background: var(--df-review-accent-soft);
+			    color: var(--df-review-accent);
+			  }
 
-			  .df-review-tools {
+			  .df-review-prompt-modal {
+			    position: fixed;
+			    inset: 0;
+			    z-index: 1002;
+			    display: grid;
+			    place-items: center;
+			    padding: 24px;
+			  }
+
+			  .df-review-prompt-backdrop {
+			    position: absolute;
+			    inset: 0;
+			    min-height: 0;
+			    border: 0;
+			    border-radius: 0;
+			    padding: 0;
+			    background: rgba(2, 6, 12, 0.62);
+			  }
+
+			  .df-review-prompt-dialog {
+			    position: relative;
+			    z-index: 1;
+			    display: grid;
+			    grid-template-rows: auto minmax(0, 1fr);
+				    width: min(1040px, calc(100vw - 36px));
+				    max-height: min(900px, calc(100vh - 36px));
+			    overflow: hidden;
+			    border: 1px solid var(--df-review-line);
+			    border-radius: 8px;
+			    background: var(--df-review-panel);
+			    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+			  }
+
+			  .df-review-prompt-header {
+			    display: flex;
+			    align-items: center;
+			    justify-content: space-between;
+			    gap: 12px;
+			    min-height: 54px;
+			    padding: 0 14px 0 16px;
+			    border-bottom: 1px solid var(--df-review-line);
+			  }
+
+			  .df-review-prompt-header div {
+			    display: grid;
+			    gap: 2px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-header strong {
+			    color: var(--df-review-text);
+			    font-size: 14px;
+			  }
+
+			  .df-review-prompt-header span {
+			    overflow: hidden;
+			    color: var(--df-review-muted);
+			    font-size: 11px;
+			    font-weight: 800;
+			    text-overflow: ellipsis;
+			    white-space: nowrap;
+			  }
+
+			  .df-review-prompt-header button {
+			    display: grid;
+			    place-items: center;
+			    width: 34px;
+			    min-width: 34px;
+			    padding: 0;
+			    font-size: 13px;
+			    font-weight: 800;
+			  }
+
+			  .df-review-prompt-body {
+			    display: grid;
+			    gap: 12px;
+			    min-height: 0;
+			    overflow: auto;
+			    padding: 16px;
+			  }
+
+			  .df-review-prompt-tabs {
+			    display: grid;
+			    grid-template-columns: repeat(2, minmax(0, 1fr));
+			    gap: 4px;
+			    padding: 3px;
+			    border: 1px solid var(--df-review-line-soft);
+			    border-radius: 7px;
+			    background: var(--df-review-line-soft);
+			  }
+
+			  .df-review-prompt-tabs button {
+			    min-width: 0;
+			    min-height: 32px;
+			    padding: 0 10px;
+			    border-color: transparent;
+			    background: transparent;
+			    color: var(--df-review-muted);
+			    font-size: 11px;
+			    font-weight: 900;
+			  }
+
+			  .df-review-prompt-tabs button:hover,
+			  .df-review-prompt-tabs button.is-active {
+			    border-color: var(--df-review-line);
+			    background: var(--df-review-panel);
+			    color: var(--df-review-text);
+			  }
+
+			  .df-review-prompt-block {
+			    display: grid;
+			    gap: 8px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-block-header {
+			    display: flex;
+			    align-items: center;
+			    justify-content: space-between;
+			    gap: 12px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-block-header div {
+			    display: grid;
+			    gap: 2px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-block-header strong {
+			    color: var(--df-review-text);
+			    font-size: 12px;
+			    font-weight: 900;
+			  }
+
+			  .df-review-prompt-block-header span {
+			    color: var(--df-review-muted);
+			    font-size: 11px;
+			    font-weight: 800;
+			  }
+
+			  .df-review-prompt-block-header button {
+			    display: inline-flex;
+			    align-items: center;
+			    gap: 6px;
+			    min-height: 30px;
+			    padding: 0 10px;
+			  }
+
+			  .df-review-prompt-block-header button:disabled {
+			    cursor: not-allowed;
+			    opacity: 0.5;
+			  }
+
+			  .df-review-prompt-block-header svg {
+			    width: 13px;
+			    height: 13px;
+			    fill: none;
+			    stroke: currentColor;
+			    stroke-linecap: round;
+			    stroke-linejoin: round;
+			    stroke-width: 2;
+			  }
+
+				  .df-review-prompt-block textarea {
+				    width: 100%;
+				    height: min(520px, calc(100vh - 290px));
+				    min-height: 360px;
+				    max-height: calc(100vh - 290px);
+			    resize: vertical;
+			    border: 1px solid var(--df-review-line);
+			    border-radius: 6px;
+			    padding: 10px;
+			    background: var(--df-review-bg);
+			    color: var(--df-review-text);
+			    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+			    font-size: 11px;
+			    font-weight: 600;
+			    line-height: 1.5;
+			    white-space: pre;
+			  }
+
+			  .df-review-prompt-block textarea:focus {
+			    outline: 2px solid rgba(124, 199, 255, 0.58);
+			    outline-offset: 1px;
+			  }
+
+				  .df-review-tools {
 			    display: flex;
 			    align-items: center;
 		    justify-content: space-between;
@@ -2432,7 +3518,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    width: 38px;
 	    min-width: 38px;
 	    padding: 0;
-	    color: rgba(237, 243, 251, 0.86);
+	    color: var(--df-review-muted);
 	  }
 
   .df-review-overlay-button svg,
@@ -2472,6 +3558,19 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		    color: #ffd1bf;
 		  }
 
+		  .df-review-overlay-button.is-ruler {
+		    border-color: rgba(179, 149, 255, 0.46);
+		    background: rgba(179, 149, 255, 0.14);
+		    color: #c9b8ff;
+		  }
+
+		  .df-review-overlay-button.is-ruler:hover,
+		  .df-review-overlay-button.is-ruler.is-active {
+		    border-color: #b395ff;
+		    background: rgba(179, 149, 255, 0.24);
+		    color: #e1d8ff;
+		  }
+
 		  .df-review-overlay-button.is-settings {
 		    color: var(--df-review-muted);
 		  }
@@ -2484,7 +3583,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	  .df-review-overlay-button.is-disabled:hover {
 	    cursor: not-allowed;
 	    border-color: var(--df-review-line);
-	    background: rgba(237, 243, 251, 0.04);
+	    background: var(--df-review-line-soft);
 	    color: var(--df-review-subtle);
 	  }
 
@@ -2540,7 +3639,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    border: 1px solid var(--df-review-line);
 	    border-radius: 5px;
 	    padding: 4px 7px;
-	    background: #0a0d12;
+	    background: var(--df-review-tooltip-bg);
 	    color: var(--df-review-text);
     font-size: 11px;
     font-weight: 800;
@@ -2567,7 +3666,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    min-width: 0;
 	    min-height: 0;
 	    border-left: 1px solid var(--df-review-line);
-	    background: #111722;
+	    background: var(--df-review-side-rail);
 	  }
 
   .df-review-side-toggle {
@@ -2655,7 +3754,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		    min-height: 48px;
 		    padding: 8px 10px 8px 12px;
 		    border-bottom: 1px solid var(--df-review-line-soft);
-		    color: rgba(237, 243, 251, 0.76);
+		    color: var(--df-review-muted);
 		    font-size: 12px;
 		    font-weight: 800;
 		  }
@@ -2688,7 +3787,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		    border: 1px solid var(--df-review-line-soft);
 		    border-radius: 7px;
 		    padding: 2px;
-		    background: rgba(237, 243, 251, 0.035);
+		    background: var(--df-review-line-soft);
 		  }
 
 		  .df-review-filter-tab {
@@ -2707,7 +3806,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 
 		  .df-review-filter-tab:hover,
 		  .df-review-filter-tab.is-active {
-		    background: rgba(237, 243, 251, 0.08);
+		    background: var(--df-review-accent-soft);
 		    color: var(--df-review-text);
 		  }
 
@@ -2738,7 +3837,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		    border: 1px solid var(--df-review-line);
 		    border-radius: 5px;
 		    padding: 4px 7px;
-		    background: #0a0d12;
+		    background: var(--df-review-tooltip-bg);
 		    color: var(--df-review-text);
 		    font-size: 11px;
 		    font-weight: 800;
@@ -2866,13 +3965,13 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 
 	  .df-review-item-kind {
 	    color: var(--df-review-muted);
-    background: rgba(237, 243, 251, 0.05);
+    background: var(--df-review-line-soft);
   }
 
   .df-review-item-status-badge {
-    border-color: rgba(237, 243, 251, 0.16);
+    border-color: var(--df-review-line);
     color: var(--df-review-muted);
-    background: rgba(237, 243, 251, 0.04);
+    background: var(--df-review-line-soft);
   }
 
 	  .df-review-item-main img {
@@ -2881,7 +3980,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    border: 1px solid var(--df-review-line);
 	    border-radius: 6px;
 	    object-fit: cover;
-	    background: #111;
+	    background: var(--df-review-control);
   }
 
   .df-review-item-delete {
@@ -2904,27 +4003,87 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
     height: 14px;
   }
 
-  .df-review-item-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-  }
+	  .df-review-item-actions {
+	    display: flex;
+	    align-items: center;
+	    gap: 6px;
+	    min-width: 0;
+	  }
 
-  .df-review-item-prompt {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-height: 28px;
-    padding: 0 8px;
-    font-size: 10px;
-    text-transform: uppercase;
-  }
+	  .df-review-item-prompt-actions {
+	    display: inline-grid;
+	    grid-template-columns: auto 28px;
+	    align-items: stretch;
+	    min-width: 0;
+	  }
 
-  .df-review-item-prompt svg {
-    width: 12px;
-    height: 12px;
-  }
+	  .df-review-item-prompt {
+	    display: inline-flex;
+	    align-items: center;
+	    min-height: 28px;
+	    padding: 0 8px;
+	    border-top-right-radius: 0;
+	    border-bottom-right-radius: 0;
+	    font-size: 10px;
+	    text-transform: uppercase;
+	  }
+
+	  .df-review-item-prompt-copy {
+	    position: relative;
+	    display: inline-grid;
+	    place-items: center;
+	    width: 28px;
+	    min-width: 28px;
+	    min-height: 28px;
+	    border-left: 0;
+	    border-top-left-radius: 0;
+	    border-bottom-left-radius: 0;
+	    padding: 0;
+	  }
+
+	  .df-review-item-prompt-copy.is-copied {
+	    border-color: var(--df-review-accent);
+	    color: var(--df-review-accent);
+	  }
+
+	  .df-review-item-prompt-copy::after {
+	    content: attr(data-tooltip);
+	    position: absolute;
+	    right: 0;
+	    bottom: calc(100% + 7px);
+	    z-index: 5;
+	    pointer-events: none;
+	    opacity: 0;
+	    transform: translateY(2px);
+	    border: 1px solid var(--df-review-line);
+	    border-radius: 5px;
+	    padding: 4px 7px;
+	    background: var(--df-review-tooltip-bg);
+	    color: var(--df-review-text);
+	    font-size: 11px;
+	    font-weight: 800;
+	    text-transform: none;
+	    white-space: nowrap;
+	    transition:
+	      opacity 120ms ease,
+	      transform 120ms ease;
+	  }
+
+	  .df-review-item-prompt-copy:hover::after,
+	  .df-review-item-prompt-copy:focus-visible::after {
+	    opacity: 1;
+	    transform: translateY(0);
+	  }
+
+	  .df-review-item-prompt-copy svg {
+	    width: 12px;
+	    height: 12px;
+	    fill: none;
+	    stroke: currentColor;
+	    stroke-linecap: round;
+	    stroke-linejoin: round;
+	    stroke-width: 2;
+	  }
 
   .df-review-item-status-select {
     width: min(100%, 112px);
@@ -2959,7 +4118,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
     min-height: 56px;
     padding: 8px 40px 10px;
     border-top: 1px solid var(--df-review-line-soft);
-    background: rgba(15, 18, 24, 0.86);
+    background: var(--df-review-mode-bar);
   }
 
   .df-review-frame-actions .df-review-mode-button::after {
@@ -3005,6 +4164,158 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
     background: #fff;
   }
 
+  .df-review-ruler-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: inherit;
+    height: inherit;
+    z-index: 5;
+    cursor: crosshair;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    background:
+      linear-gradient(
+        to right,
+        rgba(179, 149, 255, 0.18) 1px,
+        transparent 1px
+      )
+      0 0 / var(--df-review-ruler-major-x) 100%,
+      linear-gradient(
+        to bottom,
+        rgba(179, 149, 255, 0.18) 1px,
+        transparent 1px
+      )
+      0 0 / 100% var(--df-review-ruler-major-y),
+      linear-gradient(
+        to right,
+        rgba(179, 149, 255, 0.08) 1px,
+        transparent 1px
+      )
+      0 0 / var(--df-review-ruler-step-x) 100%,
+      linear-gradient(
+        to bottom,
+        rgba(179, 149, 255, 0.08) 1px,
+        transparent 1px
+      )
+      0 0 / 100% var(--df-review-ruler-step-y);
+  }
+
+  .df-review-ruler-overlay.is-dragging {
+    cursor: crosshair;
+  }
+
+  .df-review-ruler-axis {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    border: 0 solid rgba(237, 243, 251, 0.18);
+    background: rgba(10, 13, 18, 0.76);
+    backdrop-filter: blur(5px);
+  }
+
+  .df-review-ruler-axis.is-x {
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 24px;
+    border-bottom-width: 1px;
+    background-image: linear-gradient(
+      to right,
+      rgba(237, 243, 251, 0.28) 1px,
+      transparent 1px
+    );
+    background-size: var(--df-review-ruler-step-x) 100%;
+  }
+
+  .df-review-ruler-axis.is-y {
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 24px;
+    border-right-width: 1px;
+    background-image: linear-gradient(
+      to bottom,
+      rgba(237, 243, 251, 0.28) 1px,
+      transparent 1px
+    );
+    background-size: 100% var(--df-review-ruler-step-y);
+  }
+
+  .df-review-ruler-guide {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.74);
+    box-shadow: 0 0 0 1px rgba(87, 55, 166, 0.45);
+  }
+
+  .df-review-ruler-guide.is-x {
+    left: 0;
+    right: 0;
+    height: 1px;
+  }
+
+  .df-review-ruler-guide.is-y {
+    top: 0;
+    bottom: 0;
+    width: 1px;
+  }
+
+  .df-review-ruler-selection {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    border: 1px solid #c9b8ff;
+    background: rgba(179, 149, 255, 0.16);
+    box-shadow:
+      inset 0 0 0 1px rgba(20, 12, 40, 0.38),
+      0 0 0 1px rgba(20, 12, 40, 0.38);
+  }
+
+  .df-review-ruler-label,
+  .df-review-ruler-info {
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+    border: 1px solid rgba(237, 243, 251, 0.22);
+    border-radius: 6px;
+    background: rgba(10, 13, 18, 0.9);
+    color: var(--df-review-text);
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
+  }
+
+  .df-review-ruler-label {
+    min-width: 156px;
+    padding: 7px 8px;
+    white-space: nowrap;
+  }
+
+  .df-review-ruler-info {
+    right: 8px;
+    top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 28px;
+    padding: 0 8px;
+  }
+
+  .df-review-ruler-info strong {
+    color: #e1d8ff;
+    font-size: 11px;
+  }
+
+  .df-review-ruler-info span {
+    color: var(--df-review-muted);
+    font-size: 10px;
+    font-weight: 900;
+  }
+
 	  @media (max-width: 860px) {
 	    .df-review-shell,
 	    .df-review-shell.is-list-visible {
@@ -3037,9 +4348,24 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	      padding: 8px 20px;
 	    }
 
-    .df-review-panel-body {
-      min-height: 0;
-    }
+		    .df-review-prompt-modal {
+		      padding: 12px;
+		    }
+
+		    .df-review-prompt-dialog {
+		      width: calc(100vw - 24px);
+		      max-height: calc(100vh - 24px);
+		    }
+
+		    .df-review-prompt-block textarea {
+		      height: min(360px, calc(100vh - 270px));
+		      min-height: 240px;
+		      max-height: calc(100vh - 270px);
+		    }
+
+	    .df-review-panel-body {
+	      min-height: 0;
+	    }
   }
     `;
     document.head.append(style);

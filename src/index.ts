@@ -3,11 +3,27 @@ export type ReviewItemScope = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'dom';
 export type ReviewWorkflowStatus = 'todo' | 'doing' | 'review' | 'hold' | 'done';
 export type ReviewItemStatus = 'open' | 'resolved' | ReviewWorkflowStatus;
 export type ReviewMode = 'idle' | 'text' | 'element' | 'capture';
+export type ReviewViewportScope = Exclude<ReviewItemScope, 'dom'>;
 export type DomAnchorStrategy =
   | 'configured-attribute'
   | 'id'
   | 'class'
   | 'dom-path';
+
+export interface ReviewRulerFrame {
+  label?: string;
+  scope?: ReviewViewportScope;
+  viewportWidth?: number;
+  viewportHeight?: number;
+  designWidth: number;
+  designHeight?: number;
+}
+
+export interface ReviewRulerConfig {
+  enabled?: boolean;
+  unit?: string;
+  frames?: ReviewRulerFrame[];
+}
 
 export interface DomAnchorCandidate {
   selector: string;
@@ -160,6 +176,7 @@ export interface WebReviewKitOptions {
   viewports?: {
     presets?: ReviewViewportPreset[];
   };
+  ruler?: ReviewRulerConfig;
   hotkeys?: {
     qa?: string;
   };
@@ -2050,9 +2067,32 @@ function getAnchorSourceElement(
 }
 
 function getElementHtmlSnippet(element: Element, maxLength = 1000) {
-  const html = element.outerHTML.replace(/\s+/g, ' ').trim();
+  const html = decodeHtmlEntities(element.outerHTML.replace(/\s+/g, ' ').trim());
   if (html.length <= maxLength) return html;
   return `${html.slice(0, maxLength - 3)}...`;
+}
+
+function decodeHtmlEntities(value: string) {
+  return value.replace(
+    /&(#\d+|#x[\da-f]+|lt|gt|quot|apos|amp);/gi,
+    (match, entity: string) => {
+      const normalized = entity.toLowerCase();
+
+      if (normalized === 'lt') return '<';
+      if (normalized === 'gt') return '>';
+      if (normalized === 'quot') return '"';
+      if (normalized === 'apos') return "'";
+      if (normalized === 'amp') return '&';
+
+      const codePoint = normalized.startsWith('#x')
+        ? Number.parseInt(normalized.slice(2), 16)
+        : Number.parseInt(normalized.slice(1), 10);
+
+      return Number.isFinite(codePoint)
+        ? String.fromCodePoint(codePoint)
+        : match;
+    }
+  );
 }
 
 function getDomSourceHint(target: Element): DomSourceHint | undefined {
@@ -3405,7 +3445,7 @@ function createStyleElement() {
     }
 
     .dfwr-text-layer {
-      cursor: text;
+      cursor: crosshair;
       background: rgba(0, 0, 0, 0.06);
     }
 

@@ -198,7 +198,7 @@ const ROOT_ID = 'df-web-review-kit-root';
 const INTERNAL_QUERY_PARAMS = ['__dfwr_target'];
 
 export const DEFAULT_REVIEW_VIEWPORTS: ReviewViewportPreset[] = [
-  { label: 'Mobile', width: 390, height: 844, scope: 'mobile' },
+  { label: 'Mobile', width: 390, height: 720, scope: 'mobile' },
   { label: 'Tablet', width: 768, height: 1024, scope: 'tablet' },
   { label: 'Desktop', width: 1440, height: 900, scope: 'desktop' },
   { label: 'Wide', width: 1940, height: 1080, scope: 'wide' },

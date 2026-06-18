@@ -67,7 +67,7 @@ type TargetOverlayKey = 'grid' | 'figma';
 type TargetOverlayState = Record<TargetOverlayKey, boolean>;
 
 export const DEFAULT_REVIEW_VIEWPORT_PRESETS: ReviewShellViewportPreset[] = [
-  { label: 'Mobile', width: 390, height: 844, kind: 'mobile' },
+  { label: 'Mobile', width: 390, height: 720, kind: 'mobile' },
   { label: 'Tablet', width: 768, height: 1024, kind: 'tablet' },
   { label: 'Desktop', width: 1440, height: 900, kind: 'desktop' },
   { label: 'Wide', width: 1940, height: 1080, kind: 'wide' },
@@ -384,6 +384,7 @@ export const ReviewShell = ({
     [storageKey]
   );
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const frameScrollRef = useRef<HTMLDivElement | null>(null);
   const controllerRef = useRef<WebReviewKitController | null>(null);
   const cleanupTargetRef = useRef<(() => void) | null>(null);
   const pendingRestoreRef = useRef<ReviewItem | null>(null);
@@ -767,6 +768,27 @@ export const ReviewShell = ({
   }, [size, syncTargetViewport]);
 
   useEffect(() => {
+    const frameScroll = frameScrollRef.current;
+    if (!frameScroll) return undefined;
+
+    const centerFrameScroll = () => {
+      frameScroll.scrollLeft = Math.max(
+        0,
+        (frameScroll.scrollWidth - frameScroll.clientWidth) / 2
+      );
+      frameScroll.scrollTop = 0;
+    };
+
+    const animationFrame = window.requestAnimationFrame(centerFrameScroll);
+    const transitionTimeout = window.setTimeout(centerFrameScroll, 180);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(transitionTimeout);
+    };
+  }, [isListVisible, size.height, size.width, targetSrc]);
+
+  useEffect(() => {
     if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
 
     dispatchTargetOverlayHotkey('figma');
@@ -827,7 +849,9 @@ export const ReviewShell = ({
   };
 
   return (
-    <div className='df-review-shell'>
+    <div
+      className={`df-review-shell${isListVisible ? ' is-list-visible' : ''}`}
+    >
       <header className='df-review-topbar'>
         <form
           className='df-review-address'
@@ -854,53 +878,69 @@ export const ReviewShell = ({
           <button type='button' onClick={() => void copyCurrentUrl()}>
             {copyLabel}
           </button>
-        </form>
+	        </form>
 
-        <div className='df-review-tools'>
-          <div className='df-review-presets' aria-label='Viewport presets'>
-            {viewportPresets.map((preset) => (
-              <button
-                key={preset.label}
-                className={preset.label === size.label ? 'is-active' : ''}
-                type='button'
-                onClick={() => setSize(preset)}
-              >
-                <ViewportPresetIcon preset={preset} />
-                <span className='df-review-preset-copy'>
-                  <strong>{preset.label}</strong>
-                  <span>
-                    {preset.width}x{preset.height}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
+	        <div className='df-review-tools'>
+	          <div className='df-review-tool-controls'>
+	            <div className='df-review-presets' aria-label='Viewport presets'>
+	              {viewportPresets.map((preset) => (
+	                <button
+	                  key={preset.label}
+	                  className={preset.label === size.label ? 'is-active' : ''}
+	                  type='button'
+	                  onClick={() => setSize(preset)}
+	                >
+	                  <ViewportPresetIcon preset={preset} />
+	                  <span className='df-review-preset-copy'>
+	                    <strong>{preset.label}</strong>
+	                  </span>
+	                </button>
+	              ))}
+	            </div>
 
-          <div className='df-review-mode'>
-            <button
-              aria-label='Note'
-              className={`df-review-mode-button is-note${
-                mode === 'text' ? ' is-active' : ''
-              }`}
-              data-tooltip='Note'
-              type='button'
-              onClick={() => setReviewMode('text')}
-            >
-              <StickyNoteIcon aria-hidden='true' />
-            </button>
-            <button
-              aria-label='Capture'
-              className={`df-review-mode-button is-capture${
-                mode === 'capture' ? ' is-active' : ''
-              }`}
-              data-tooltip='Capture'
-              type='button'
-              onClick={() => setReviewMode('capture')}
-            >
-              <ScanIcon aria-hidden='true' />
-            </button>
-          </div>
-        </div>
+	            <span className='df-review-tool-divider' aria-hidden='true'>
+	              |
+	            </span>
+
+	            <span className='df-review-active-size'>
+	              {size.width}x{size.height}
+	            </span>
+	          </div>
+
+	          <div className='df-review-overlays' aria-label='Target overlays'>
+	            <button
+	              aria-label='Toggle grid overlay'
+	              className={`df-review-overlay-button is-grid${
+	                targetOverlayState.grid ? ' is-active' : ''
+	              }`}
+	              data-tooltip='Grid'
+	              type='button'
+	              onClick={() => toggleTargetOverlay('grid')}
+	            >
+	              <LayoutGridIcon aria-hidden='true' />
+	            </button>
+	            <button
+	              aria-disabled={!isFigmaOverlayAvailable}
+	              aria-label={
+	                isFigmaOverlayAvailable
+	                  ? 'Toggle Figma overlay'
+	                  : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE
+	              }
+	              className={`df-review-overlay-button is-figma${
+	                targetOverlayState.figma ? ' is-active' : ''
+	              }${isFigmaOverlayAvailable ? '' : ' is-disabled'}`}
+	              data-tooltip={
+	                isFigmaOverlayAvailable
+	                  ? 'Figma'
+	                  : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE
+	              }
+	              type='button'
+	              onClick={() => toggleTargetOverlay('figma')}
+	            >
+	              <ImageIcon aria-hidden='true' />
+	            </button>
+	          </div>
+	        </div>
       </header>
 
       {isSitemapOpen && (
@@ -953,136 +993,88 @@ export const ReviewShell = ({
         </div>
       )}
 
-      <div
-        className={`df-review-workspace${isListVisible ? ' is-list-visible' : ''}`}
-      >
-        <div className='df-review-side-rail'>
-          <button
-            aria-label={isListVisible ? 'Hide QA list' : 'Show QA list'}
-            className='df-review-side-toggle'
-            type='button'
-            onClick={() => setIsListVisible((current) => !current)}
-          >
-            <span aria-hidden='true'>
-              <GripVerticalIcon />
-            </span>
-            <strong>QA</strong>
-          </button>
-        </div>
+      <div className='df-review-side-rail'>
+        <button
+          aria-label={isListVisible ? 'Hide QA list' : 'Show QA list'}
+          className='df-review-side-toggle'
+          type='button'
+          onClick={() => setIsListVisible((current) => !current)}
+        >
+          <span aria-hidden='true'>
+            <GripVerticalIcon />
+          </span>
+          <strong>QA</strong>
+        </button>
+      </div>
 
-        <aside className='df-review-qa-panel' aria-hidden={!isListVisible}>
-          <div className='df-review-panel-body'>
-            <section className='df-review-item-list'>
-              <div className='df-review-list-header'>
-                <span>Current page QA</span>
-                <strong>{activeItems.length}</strong>
-              </div>
-              <div className='df-review-list-scroll'>
-                {activeItems.length === 0 && (
-                  <p className='df-review-empty'>No open QA on this page.</p>
-                )}
-                {numberedActiveItems.map((numberedItem) => {
-                  const { item } = numberedItem;
-
-                  return (
-                    <article
-                      key={item.id}
-                      className={`df-review-item-card${
-                        item.id === selectedItemId ? ' is-active' : ''
-                      }`}
-                    >
-                      <button
-                        className='df-review-item-main'
-                        type='button'
-                        onClick={() => restoreReviewItem(item)}
-                        >
-                          <span className='df-review-item-badges'>
-                          <span
-                            className={`df-review-item-viewport is-scope-${numberedItem.scope}`}
-                          >
-                            <ReviewScopeIcon scope={numberedItem.scope} />
-                            {numberedItem.displayLabel}
-                          </span>
-                          <span className='df-review-item-kind'>
-                            {item.kind}
-                          </span>
-                        </span>
-                        <strong>{getItemTitle(item)}</strong>
-                        <small>{formatDate(item.createdAt)}</small>
-                        <small>{formatItemMeta(item)}</small>
-                        {item.screenshot && (
-                          <img src={item.screenshot.dataUrl} alt='' />
-                        )}
-                      </button>
-                      <div className='df-review-item-actions'>
-                        <button
-                          type='button'
-                          onClick={() => void resolveItem(item)}
-                        >
-                          ok
-                        </button>
-                        <button
-                          type='button'
-                          onClick={() => void removeItem(item)}
-                        >
-                          del
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-          </div>
-        </aside>
-
-        <main className='df-review-stage'>
-          <div className='df-review-frame'>
-            <div className='df-review-frame-toolbar'>
-              <div className='df-review-frame-meta'>
-                <ViewportPresetIcon preset={size} />
-                <div>
-                  <strong>{size.label}</strong>
-                  <span>
-                    {size.width}x{size.height}
-                  </span>
-                </div>
-              </div>
-              <div className='df-review-overlays' aria-label='Target overlays'>
-                <button
-                  aria-label='Toggle grid overlay'
-                  className={`df-review-overlay-button is-grid${
-                    targetOverlayState.grid ? ' is-active' : ''
-                  }`}
-                  data-tooltip='Grid'
-                  type='button'
-                  onClick={() => toggleTargetOverlay('grid')}
-                >
-                  <LayoutGridIcon aria-hidden='true' />
-                </button>
-                <button
-                  aria-disabled={!isFigmaOverlayAvailable}
-                  aria-label={
-                    isFigmaOverlayAvailable
-                      ? 'Toggle Figma overlay'
-                      : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE
-                  }
-                  className={`df-review-overlay-button is-figma${
-                    targetOverlayState.figma ? ' is-active' : ''
-                  }${isFigmaOverlayAvailable ? '' : ' is-disabled'}`}
-                  data-tooltip={
-                    isFigmaOverlayAvailable
-                      ? 'Figma'
-                      : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE
-                  }
-                  type='button'
-                  onClick={() => toggleTargetOverlay('figma')}
-                >
-                  <ImageIcon aria-hidden='true' />
-                </button>
-              </div>
+      <aside className='df-review-qa-panel' aria-hidden={!isListVisible}>
+        <div className='df-review-panel-body'>
+          <section className='df-review-item-list'>
+            <div className='df-review-list-header'>
+              <span>Current page QA</span>
+              <strong>{activeItems.length}</strong>
             </div>
-            <div className='df-review-frame-scroll'>
+            <div className='df-review-list-scroll'>
+              {activeItems.length === 0 && (
+                <p className='df-review-empty'>No open QA on this page.</p>
+              )}
+              {numberedActiveItems.map((numberedItem) => {
+                const { item } = numberedItem;
+
+                return (
+                  <article
+                    key={item.id}
+                    className={`df-review-item-card${
+                      item.id === selectedItemId ? ' is-active' : ''
+                    }`}
+                  >
+                    <button
+                      className='df-review-item-main'
+                      type='button'
+                      onClick={() => restoreReviewItem(item)}
+                    >
+                      <span className='df-review-item-badges'>
+                        <span
+                          className={`df-review-item-viewport is-scope-${numberedItem.scope}`}
+                        >
+                          <ReviewScopeIcon scope={numberedItem.scope} />
+                          {numberedItem.displayLabel}
+                        </span>
+                        <span className='df-review-item-kind'>{item.kind}</span>
+                      </span>
+                      <strong>{getItemTitle(item)}</strong>
+                      <small>{formatDate(item.createdAt)}</small>
+                      <small>{formatItemMeta(item)}</small>
+                      {item.screenshot && (
+                        <img src={item.screenshot.dataUrl} alt='' />
+                      )}
+                    </button>
+                    <div className='df-review-item-actions'>
+                      <button
+                        type='button'
+                        onClick={() => void resolveItem(item)}
+                      >
+                        ok
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => void removeItem(item)}
+                      >
+                        del
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <main className='df-review-stage'>
+        <div className='df-review-frame'>
+          <div className='df-review-frame-scroll' ref={frameScrollRef}>
+            <div className='df-review-frame-canvas'>
               <div
                 className='df-review-device'
                 style={{
@@ -1104,9 +1096,35 @@ export const ReviewShell = ({
               </div>
             </div>
           </div>
-        </main>
+          <div className='df-review-frame-actions'>
+            <div className='df-review-mode' aria-label='Add QA'>
+              <button
+                aria-label='Note'
+                className={`df-review-mode-button is-note${
+                  mode === 'text' ? ' is-active' : ''
+                }`}
+                data-tooltip='Note'
+                type='button'
+                onClick={() => setReviewMode('text')}
+              >
+                <StickyNoteIcon aria-hidden='true' />
+              </button>
+              <button
+                aria-label='Capture'
+                className={`df-review-mode-button is-capture${
+                  mode === 'capture' ? ' is-active' : ''
+                }`}
+                data-tooltip='Capture'
+                type='button'
+                onClick={() => setReviewMode('capture')}
+              >
+                <ScanIcon aria-hidden='true' />
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
       </div>
-    </div>
   );
 };
 
@@ -1169,24 +1187,37 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 
   .df-review-shell {
     display: grid;
+    grid-template-columns: minmax(0, 1fr) 0 32px;
     grid-template-rows: auto minmax(0, 1fr);
     width: 100%;
     height: 100%;
+    overflow: hidden;
+    transition: grid-template-columns 160ms ease;
+  }
+
+  .df-review-shell.is-list-visible {
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 420px) 32px;
   }
 
 	  .df-review-topbar {
+	    grid-column: 1;
+	    grid-row: 1;
 	    display: grid;
 	    gap: 10px;
+	    min-width: 0;
 	    padding: 12px 16px;
 	    border-bottom: 1px solid var(--df-review-line);
 	    background: var(--df-review-topbar);
 	  }
 
-	  .df-review-address {
-	    display: grid;
-	    grid-template-columns: auto minmax(0, 1fr) auto auto;
-	    gap: 8px;
-	  }
+		  .df-review-address {
+		    display: grid;
+		    grid-template-columns: auto minmax(0, 1fr) auto auto;
+		    gap: 8px;
+		    width: 100%;
+		    max-width: 1440px;
+		    margin: 0 auto;
+		  }
 
   .df-review-address input {
 	    width: 100%;
@@ -1422,34 +1453,62 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    color: var(--df-review-accent);
 	  }
 
-  .df-review-tools {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-    flex-wrap: wrap;
-  }
+		  .df-review-tools {
+		    display: flex;
+		    align-items: center;
+		    justify-content: space-between;
+		    gap: 12px;
+		    width: 100%;
+		    max-width: 1440px;
+		    min-width: 0;
+		    margin: 0 auto;
+		  }
 
-  .df-review-presets,
-  .df-review-mode {
+		  .df-review-tool-controls {
+		    display: flex;
+		    align-items: center;
+		    justify-content: flex-start;
+		    gap: 12px;
+		    min-width: 0;
+		    flex-wrap: wrap;
+	  }
+
+	  .df-review-presets,
+	  .df-review-mode,
+  .df-review-overlays {
     display: flex;
     gap: 6px;
   }
 
-  .df-review-mode {
-    margin-left: auto;
-  }
+  .df-review-tool-divider {
+    color: var(--df-review-line);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+	    user-select: none;
+	  }
 
-  .df-review-presets button {
-    display: inline-flex;
-    align-items: center;
+		  .df-review-active-size {
+		    flex: 0 0 auto;
+		    display: inline-flex;
+		    align-items: center;
+		    min-height: 38px;
+		    color: var(--df-review-muted);
+		    font-size: 12px;
+		    font-variant-numeric: tabular-nums;
+	    font-weight: 800;
+	    line-height: 1;
+	  }
+
+	  .df-review-presets button {
+	    display: inline-flex;
+	    align-items: center;
     gap: 7px;
     min-height: 38px;
     padding: 0 11px 0 9px;
   }
 
-  .df-review-presets button svg,
-  .df-review-frame-meta svg {
+  .df-review-presets button svg {
     width: 16px;
     height: 16px;
     flex: 0 0 auto;
@@ -1473,13 +1532,8 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
     font-size: 12px;
   }
 
-	  .df-review-preset-copy span {
-	    color: var(--df-review-muted);
-	    font-size: 11px;
-	  }
-
-  .df-review-overlay-button,
-  .df-review-mode-button {
+	  .df-review-overlay-button,
+	  .df-review-mode-button {
     position: relative;
     display: inline-grid;
     place-items: center;
@@ -1591,22 +1645,9 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
     transform: translateY(0);
   }
 
-		  .df-review-workspace {
-		    position: relative;
-		    display: grid;
-		    grid-template-columns: minmax(0, 1fr) 0 32px;
-		    min-height: 0;
-		    overflow: hidden;
-		    transition: grid-template-columns 160ms ease;
-		  }
-
-	  .df-review-workspace.is-list-visible {
-	    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 420px) 32px;
-	  }
-
 	  .df-review-side-rail {
 	    grid-column: 3;
-	    grid-row: 1;
+	    grid-row: 1 / span 2;
 	    display: flex;
 	    align-items: stretch;
 	    justify-content: center;
@@ -1664,7 +1705,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 
 	  .df-review-qa-panel {
 	    grid-column: 2;
-	    grid-row: 1;
+	    grid-row: 1 / span 2;
 	    display: grid;
 	    grid-template-rows: minmax(0, 1fr);
 	    min-width: 0;
@@ -1674,7 +1715,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    background: var(--df-review-panel);
 	  }
 
-	  .df-review-workspace:not(.is-list-visible) .df-review-qa-panel {
+	  .df-review-shell:not(.is-list-visible) .df-review-qa-panel {
 	    visibility: hidden;
 	    border-left: 0;
 	  }
@@ -1857,7 +1898,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 
 	  .df-review-stage {
 	    grid-column: 1;
-	    grid-row: 1;
+	    grid-row: 2;
 	    display: grid;
 	    min-width: 0;
 	    min-height: 0;
@@ -1866,64 +1907,41 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 
   .df-review-frame {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
     min-width: 0;
     min-height: 0;
   }
 
-  .df-review-frame-toolbar {
+  .df-review-frame-actions {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    min-height: 48px;
-    padding: 8px 40px;
-    border-bottom: 1px solid var(--df-review-line-soft);
+    min-height: 56px;
+    padding: 8px 40px 10px;
+    border-top: 1px solid var(--df-review-line-soft);
     background: rgba(15, 18, 24, 0.86);
   }
 
-  .df-review-frame-meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    min-height: 32px;
-    border: 1px solid var(--df-review-line);
-    border-radius: 6px;
-    padding: 0 10px;
-    background: var(--df-review-control);
-    color: var(--df-review-text);
+  .df-review-frame-actions .df-review-mode-button::after {
+    top: -30px;
+    bottom: auto;
   }
 
-  .df-review-frame-meta div {
-    display: grid;
-    gap: 1px;
-    line-height: 1.05;
-  }
+	  .df-review-frame-scroll {
+	    min-width: 0;
+	    min-height: 0;
+	    overflow: auto;
+	  }
 
-  .df-review-frame-meta strong {
-    font-size: 12px;
-  }
-
-  .df-review-frame-meta span {
-    color: var(--df-review-muted);
-    font-size: 11px;
-    font-weight: 800;
-  }
-
-  .df-review-overlays {
-    display: flex;
-    gap: 6px;
-  }
-
-  .df-review-frame-scroll {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    min-width: 0;
-    min-height: 0;
-    overflow: auto;
-    padding: 28px 40px;
-  }
+	  .df-review-frame-canvas {
+	    display: grid;
+	    place-items: center;
+	    width: max-content;
+	    height: max-content;
+	    min-width: 100%;
+	    min-height: 100%;
+	    padding: 8px 40px;
+	  }
 
   .df-review-device {
 	    box-sizing: border-box;
@@ -1948,13 +1966,13 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
   }
 
 	  @media (max-width: 860px) {
-	    .df-review-workspace,
-	    .df-review-workspace.is-list-visible {
+	    .df-review-shell,
+	    .df-review-shell.is-list-visible {
 	      grid-template-columns: minmax(0, 1fr) 0 32px;
-	      grid-template-rows: minmax(0, 1fr);
+	      grid-template-rows: auto minmax(0, 1fr);
 	    }
 
-	    .df-review-workspace.is-list-visible {
+	    .df-review-shell.is-list-visible {
 	      grid-template-columns: minmax(0, 1fr) minmax(260px, 70vw) 32px;
 	    }
 
@@ -1963,15 +1981,21 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	      border-bottom: 0;
 	    }
 
-    .df-review-frame-toolbar {
-      justify-content: flex-start;
-      padding: 8px 20px;
+	    .df-review-tools {
+	      flex-wrap: wrap;
+	    }
+
+	    .df-review-tool-controls {
+	      justify-content: flex-start;
+	    }
+
+    .df-review-frame-actions {
+      padding: 8px 20px 10px;
     }
 
-    .df-review-frame-scroll {
-      justify-content: flex-start;
-      padding: 20px;
-    }
+	    .df-review-frame-canvas {
+	      padding: 8px 20px;
+	    }
 
     .df-review-panel-body {
       min-height: 0;

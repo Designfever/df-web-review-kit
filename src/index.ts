@@ -1,15 +1,21 @@
 export type ReviewItemKind = 'text' | 'capture';
 export type ReviewItemStatus = 'open' | 'resolved';
+export type ReviewMode = 'idle' | 'text' | 'capture';
 export type DomAnchorStrategy =
   | 'configured-attribute'
   | 'id'
   | 'class'
   | 'dom-path';
 
-export interface DomAnchor {
+export interface DomAnchorCandidate {
   selector: string;
   strategy: DomAnchorStrategy;
   textFingerprint?: string;
+  confidence?: number;
+}
+
+export interface DomAnchor extends DomAnchorCandidate {
+  candidates?: DomAnchorCandidate[];
 }
 
 export interface RelativeSelection {
@@ -40,23 +46,31 @@ export interface ReviewScreenshot {
   height: number;
 }
 
+export interface ReviewSelection {
+  viewport: RelativeSelection;
+  relative?: RelativeSelection;
+}
+
 export interface ReviewItem {
   id: string;
   projectId: string;
+  routeKey: string;
   pageUrl: string;
+  originalUrl?: string;
   normalizedPath: string;
   kind: ReviewItemKind;
   title?: string;
   comment: string;
   status: ReviewItemStatus;
   viewport: ViewportSize;
+  devicePixelRatio?: number;
   scroll?: {
     x: number;
     y: number;
   };
   anchor?: DomAnchor;
   marker?: ReviewMarker;
-  selection?: RelativeSelection;
+  selection?: ReviewSelection;
   screenshot?: ReviewScreenshot;
   externalIssueId?: string;
   createdAt: string;
@@ -65,6 +79,7 @@ export interface ReviewItem {
 
 export interface ReviewItemQuery {
   projectId: string;
+  routeKey?: string;
   normalizedPath?: string;
   status?: ReviewItemStatus;
 }
@@ -93,6 +108,12 @@ export interface WebReviewKitOptions {
   anchors?: {
     attribute?: string;
   };
+  onRestoreItem?: (item: ReviewItem) => void | Promise<void>;
+  onItemsChange?: (items: ReviewItem[]) => void;
+  onModeChange?: (mode: ReviewMode) => void;
+  ui?: {
+    panel?: boolean;
+  };
   modules?: {
     qa?: boolean;
     grid?: boolean;
@@ -104,6 +125,11 @@ export interface WebReviewKitController {
   open(): void;
   close(): void;
   toggle(): void;
+  setMode(mode: ReviewMode): void;
+  getMode(): ReviewMode;
+  highlightItem(itemId: string): void;
+  reload(): Promise<ReviewItem[]>;
+  getItems(): ReviewItem[];
   destroy(): void;
 }
 
@@ -112,8 +138,6 @@ export interface WebReviewKitTarget {
   document: Document;
   getViewportRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 }
-
-type ReviewMode = 'idle' | 'text' | 'capture';
 
 interface ViewportSelection {
   left: number;
@@ -125,7 +149,8 @@ interface ViewportSelection {
 interface CaptureDraft {
   viewport: ViewportSize;
   anchor?: DomAnchor;
-  selection?: RelativeSelection;
+  marker?: ReviewMarker;
+  selection?: ReviewSelection;
   screenshot?: ReviewScreenshot;
   error?: string;
 }
@@ -179,9 +204,10 @@ export function localAdapter(
     async list(query) {
       return read().filter((item) => {
         if (item.projectId !== query.projectId) return false;
+        const queryRouteKey = query.routeKey ?? query.normalizedPath;
         if (
-          query.normalizedPath &&
-          item.normalizedPath !== query.normalizedPath
+          queryRouteKey &&
+          getItemRouteKey(item) !== queryRouteKey
         ) {
           return false;
         }
@@ -238,6 +264,11 @@ export function createWebReviewKit(
     open: () => app.open(),
     close: () => app.close(),
     toggle: () => app.toggle(),
+    setMode: (mode) => app.setMode(mode),
+    getMode: () => app.getMode(),
+    highlightItem: (itemId) => app.highlightItem(itemId),
+    reload: () => app.reload(),
+    getItems: () => app.getItems(),
     destroy: () => app.destroy(),
   };
 }
@@ -254,6 +285,8 @@ class WebReviewKitApp {
   private textDraft?: TextDraft;
   private captureDraft?: CaptureDraft;
   private isCapturing = false;
+  private highlightedItemId?: string;
+  private highlightClearTimer?: number;
   private renderFrame?: number;
 
   constructor(private readonly options: WebReviewKitOptions) {
@@ -288,6 +321,10 @@ class WebReviewKitApp {
       window.cancelAnimationFrame(this.renderFrame);
       this.renderFrame = undefined;
     }
+    if (this.highlightClearTimer) {
+      window.clearTimeout(this.highlightClearTimer);
+      this.highlightClearTimer = undefined;
+    }
     this.root?.remove();
     this.root = undefined;
     this.shadow = undefined;
@@ -302,7 +339,7 @@ class WebReviewKitApp {
 
   close() {
     this.isOpen = false;
-    this.mode = 'idle';
+    this.setModeState('idle');
     this.textDraft = undefined;
     this.captureDraft = undefined;
     this.isCapturing = false;
@@ -316,6 +353,52 @@ class WebReviewKitApp {
     }
 
     this.open();
+  }
+
+  setMode(mode: ReviewMode) {
+    if (!this.isOpen) {
+      this.isOpen = true;
+    }
+
+    this.setModeState(this.mode === mode ? 'idle' : mode);
+    this.textDraft = undefined;
+    this.captureDraft = undefined;
+    this.render();
+  }
+
+  getMode() {
+    return this.mode;
+  }
+
+  getItems() {
+    return this.items;
+  }
+
+  highlightItem(itemId: string) {
+    if (!this.isOpen) {
+      this.isOpen = true;
+    }
+
+    this.highlightedItemId = itemId;
+    if (this.highlightClearTimer) {
+      window.clearTimeout(this.highlightClearTimer);
+    }
+
+    this.highlightClearTimer = window.setTimeout(() => {
+      if (this.highlightedItemId !== itemId) return;
+
+      this.highlightedItemId = undefined;
+      this.highlightClearTimer = undefined;
+      this.render();
+    }, 2400);
+    this.render();
+  }
+
+  private setModeState(mode: ReviewMode) {
+    if (this.mode === mode) return;
+
+    this.mode = mode;
+    this.options.onModeChange?.(mode);
   }
 
   private readonly handleKeyDown = (event: KeyboardEvent) => {
@@ -377,15 +460,17 @@ class WebReviewKitApp {
     }
   }
 
-  private async reload() {
+  async reload() {
     const environment = this.getEnvironment();
-    if (!environment) return;
+    if (!environment) return this.items;
 
     this.items = await this.adapter.list({
       projectId: this.options.projectId,
-      normalizedPath: getNormalizedPath(environment),
+      routeKey: getRouteKey(environment),
       status: 'open',
     });
+    this.options.onItemsChange?.(this.items);
+    return this.items;
   }
 
   private render() {
@@ -398,19 +483,24 @@ class WebReviewKitApp {
     shell.className = `dfwr-shell${this.isOpen ? ' is-open' : ''}`;
     shell.setAttribute('aria-hidden', this.isOpen ? 'false' : 'true');
 
-    this.panel = document.createElement('div');
-    this.panel.className = 'dfwr-panel';
-    this.panel.setAttribute('role', 'dialog');
-    this.panel.setAttribute('aria-label', 'Web review kit');
+    if (this.options.ui?.panel !== false) {
+      this.panel = document.createElement('div');
+      this.panel.className = 'dfwr-panel';
+      this.panel.setAttribute('role', 'dialog');
+      this.panel.setAttribute('aria-label', 'Web review kit');
 
-    this.panel.append(
-      this.createHeader(),
-      this.createToolbar(),
-      this.createBody(),
-      this.createList()
-    );
+      this.panel.append(
+        this.createHeader(),
+        this.createToolbar(),
+        this.createBody(),
+        this.createList()
+      );
 
-    shell.append(this.panel);
+      shell.append(this.panel);
+    } else {
+      this.panel = undefined;
+    }
+
     shell.append(this.createMarkerLayer());
 
     if (this.isOpen && this.mode === 'text') {
@@ -423,6 +513,18 @@ class WebReviewKitApp {
 
     if (this.isOpen && this.mode === 'capture' && !this.captureDraft) {
       shell.append(this.createCaptureLayer());
+    }
+
+    if (
+      this.isOpen &&
+      this.mode === 'capture' &&
+      this.captureDraft &&
+      this.options.ui?.panel === false
+    ) {
+      if (this.captureDraft.selection) {
+        shell.append(this.createCaptureDraftOverlay(this.captureDraft));
+      }
+      shell.append(this.createCaptureDraftPopover());
     }
 
     this.shadow.append(shell);
@@ -438,7 +540,7 @@ class WebReviewKitApp {
 
     const meta = document.createElement('div');
     meta.className = 'dfwr-meta';
-    meta.textContent = getNormalizedPath(this.getEnvironment());
+    meta.textContent = getRouteKey(this.getEnvironment());
 
     const titleGroup = document.createElement('div');
     titleGroup.append(title, meta);
@@ -460,7 +562,7 @@ class WebReviewKitApp {
 
     toolbar.append(
       this.createToolbarButton('Text', this.mode === 'text', () => {
-        this.mode = this.mode === 'text' ? 'idle' : 'text';
+        this.setModeState(this.mode === 'text' ? 'idle' : 'text');
         this.textDraft = undefined;
         this.captureDraft = undefined;
         this.render();
@@ -469,7 +571,7 @@ class WebReviewKitApp {
         this.isCapturing ? 'Capturing' : 'Capture',
         this.mode === 'capture',
         () => {
-          this.mode = this.mode === 'capture' ? 'idle' : 'capture';
+          this.setModeState(this.mode === 'capture' ? 'idle' : 'capture');
           this.textDraft = undefined;
           this.captureDraft = undefined;
           this.render();
@@ -636,6 +738,7 @@ class WebReviewKitApp {
         comment,
         viewport: this.captureDraft.viewport,
         anchor: this.captureDraft.anchor,
+        marker: this.captureDraft.marker,
         selection: this.captureDraft.selection,
         screenshot: this.captureDraft.screenshot,
       });
@@ -643,6 +746,31 @@ class WebReviewKitApp {
 
     form.append(textarea, actions);
     return form;
+  }
+
+  private createCaptureDraftOverlay(draft: CaptureDraft) {
+    const layer = document.createElement('div');
+    layer.className = 'dfwr-capture-preview-layer';
+
+    const environment = this.getEnvironment();
+    if (!environment || !draft.selection) return layer;
+
+    const selection = toViewportSelection(draft.selection.viewport);
+    layer.append(this.createSelectionHighlight(selection, environment, true));
+
+    if (draft.marker) {
+      const hostPoint = toHostPoint(draft.marker.viewport, environment);
+      layer.append(this.createMarkerElement(hostPoint, '•', true, true));
+    }
+
+    return layer;
+  }
+
+  private createCaptureDraftPopover() {
+    const popover = document.createElement('div');
+    popover.className = 'dfwr-capture-draft';
+    popover.append(this.createCaptureForm());
+    return popover;
   }
 
   private createFormActions(saveLabel: string, onSave: () => void) {
@@ -660,7 +788,7 @@ class WebReviewKitApp {
     cancel.type = 'button';
     cancel.textContent = 'Cancel';
     cancel.addEventListener('click', () => {
-      this.mode = 'idle';
+      this.setModeState('idle');
       this.textDraft = undefined;
       this.captureDraft = undefined;
       this.render();
@@ -697,6 +825,21 @@ class WebReviewKitApp {
   private createListItem(item: ReviewItem) {
     const row = document.createElement('article');
     row.className = 'dfwr-item';
+    row.tabIndex = 0;
+    row.setAttribute('role', 'button');
+    row.setAttribute(
+      'aria-label',
+      `Restore review item: ${item.title ?? item.comment}`
+    );
+    row.addEventListener('click', () => {
+      void this.restoreItem(item);
+    });
+    row.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+
+      event.preventDefault();
+      void this.restoreItem(item);
+    });
 
     const body = document.createElement('div');
     body.className = 'dfwr-item-body';
@@ -726,13 +869,16 @@ class WebReviewKitApp {
 
     const actions = document.createElement('div');
     actions.className = 'dfwr-item-actions';
+    actions.addEventListener('click', (event) => event.stopPropagation());
+    actions.addEventListener('keydown', (event) => event.stopPropagation());
 
     const resolve = document.createElement('button');
     resolve.className = 'dfwr-icon-button';
     resolve.type = 'button';
     resolve.textContent = 'ok';
     resolve.setAttribute('aria-label', 'Resolve');
-    resolve.addEventListener('click', () => {
+    resolve.addEventListener('click', (event) => {
+      event.stopPropagation();
       void this.adapter
         .update(item.id, { status: 'resolved' })
         .then(() => this.reload())
@@ -744,7 +890,8 @@ class WebReviewKitApp {
     remove.type = 'button';
     remove.textContent = 'del';
     remove.setAttribute('aria-label', 'Delete');
-    remove.addEventListener('click', () => {
+    remove.addEventListener('click', (event) => {
+      event.stopPropagation();
       void this.adapter
         .remove(item.id)
         .then(() => this.reload())
@@ -763,25 +910,71 @@ class WebReviewKitApp {
     if (!environment) return layer;
 
     this.items.forEach((item, index) => {
+      const isHighlighted = item.id === this.highlightedItemId;
+      if (isHighlighted) {
+        const selection = getBoundSelection(item, environment);
+        if (selection && isSelectionInViewport(selection.viewport, environment)) {
+          layer.append(
+            this.createSelectionHighlight(selection.viewport, environment, false)
+          );
+        }
+      }
+
       const point = getBoundMarkerPoint(item, environment);
       if (!point || !isPointInViewport(point.viewport, environment)) return;
       const hostPoint = toHostPoint(point.viewport, environment);
-
-      const marker = document.createElement('div');
-      marker.className = `dfwr-bound-marker${
-        point.isBound ? ' is-bound' : ' is-fallback'
-      }`;
-      marker.style.left = `${hostPoint.x}px`;
-      marker.style.top = `${hostPoint.y}px`;
+      const marker = this.createMarkerElement(
+        hostPoint,
+        String(index + 1),
+        point.isBound,
+        isHighlighted
+      );
       marker.title = `${item.comment}\n${formatItemMeta(item)}`;
-
-      const label = document.createElement('span');
-      label.textContent = String(index + 1);
-      marker.append(label);
       layer.append(marker);
     });
 
     return layer;
+  }
+
+  private createSelectionHighlight(
+    selection: ViewportSelection,
+    environment: ReviewEnvironment,
+    isDraft: boolean
+  ) {
+    const rect = toHostSelection(selection, environment);
+    const highlight = document.createElement('div');
+    highlight.className = `dfwr-selection-highlight${
+      isDraft ? ' is-draft' : ''
+    }`;
+    highlight.style.left = `${rect.left}px`;
+    highlight.style.top = `${rect.top}px`;
+    highlight.style.width = `${rect.width}px`;
+    highlight.style.height = `${rect.height}px`;
+    return highlight;
+  }
+
+  private createMarkerElement(
+    hostPoint: ReviewPoint,
+    label: string,
+    isBound: boolean,
+    isHighlighted: boolean
+  ) {
+    const marker = document.createElement('div');
+    marker.className = [
+      'dfwr-bound-marker',
+      isBound ? 'is-bound' : 'is-fallback',
+      isHighlighted ? 'is-highlighted' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    marker.style.left = `${hostPoint.x}px`;
+    marker.style.top = `${hostPoint.y}px`;
+
+    const labelElement = document.createElement('span');
+    labelElement.textContent = label;
+    marker.append(labelElement);
+
+    return marker;
   }
 
   private attachDraftPinDrag(
@@ -893,7 +1086,7 @@ class WebReviewKitApp {
       const marker: ReviewMarker = {
         viewport: roundPoint(nextPoint),
         relative: anchor
-          ? getRelativePoint(nextPoint, anchor.selector, environment)
+          ? getRelativePoint(nextPoint, anchor, environment)
           : undefined,
       };
 
@@ -993,8 +1186,17 @@ class WebReviewKitApp {
           environment
         );
         const relativeSelection = anchor
-          ? getRelativeSelection(selection, anchor.selector, environment)
+          ? getRelativeSelection(selection, anchor, environment)
           : undefined;
+        const marker = createSelectionCenterMarker(
+          selection,
+          anchor,
+          environment
+        );
+        const reviewSelection: ReviewSelection = {
+          viewport: toPublicSelection(selection),
+          relative: relativeSelection,
+        };
 
         try {
           const screenshot = await captureSelection(selection, environment);
@@ -1002,14 +1204,16 @@ class WebReviewKitApp {
           return {
             viewport,
             anchor,
-            selection: relativeSelection,
+            marker,
+            selection: reviewSelection,
             screenshot,
           };
         } catch (error) {
           return {
             viewport,
             anchor,
-            selection: relativeSelection,
+            marker,
+            selection: reviewSelection,
             error:
               error instanceof Error
                 ? error.message
@@ -1029,7 +1233,7 @@ class WebReviewKitApp {
       };
     } finally {
       this.isCapturing = false;
-      this.mode = 'capture';
+      this.setModeState('capture');
       this.render();
     }
   }
@@ -1060,16 +1264,20 @@ class WebReviewKitApp {
     if (!environment) return;
 
     const now = new Date().toISOString();
+    const routeKey = getRouteKey(environment);
     const item: ReviewItem = {
       id: createId(),
       projectId: this.options.projectId,
+      routeKey,
       pageUrl: getPageUrl(environment),
-      normalizedPath: getNormalizedPath(environment),
+      originalUrl: getOriginalUrl(environment),
+      normalizedPath: routeKey,
       kind: input.kind,
       title: input.comment.split('\n')[0]?.slice(0, 80),
       comment: input.comment,
       status: 'open',
       viewport: input.viewport ?? getViewportSize(environment),
+      devicePixelRatio: environment.window.devicePixelRatio || 1,
       scroll: {
         x: environment.window.scrollX,
         y: environment.window.scrollY,
@@ -1083,10 +1291,33 @@ class WebReviewKitApp {
     };
 
     await this.adapter.create(item);
-    this.mode = 'idle';
+    this.setModeState('idle');
     this.textDraft = undefined;
     this.captureDraft = undefined;
+    this.highlightItem(item.id);
     await this.reload();
+    this.render();
+  }
+
+  private async restoreItem(item: ReviewItem) {
+    this.setModeState('idle');
+    this.textDraft = undefined;
+    this.captureDraft = undefined;
+
+    if (this.options.onRestoreItem) {
+      await this.options.onRestoreItem(item);
+      return;
+    }
+
+    const environment = this.getEnvironment();
+    if (!environment) return;
+
+    if (item.scroll) {
+      environment.window.scrollTo(item.scroll.x, item.scroll.y);
+      await waitForNextFrame(environment);
+    }
+
+    this.highlightItem(item.id);
     this.render();
   }
 }
@@ -1274,25 +1505,43 @@ function getDomAnchor(
   const target = environment.document.elementFromPoint(x, y);
   if (!target) return undefined;
 
+  const candidates = createAnchorCandidates(target, configuredAttribute);
+  const primary = candidates[0];
+  if (!primary) return undefined;
+
+  return {
+    ...primary,
+    candidates,
+  };
+}
+
+function createAnchorCandidates(
+  target: Element,
+  configuredAttribute: string
+): DomAnchorCandidate[] {
+  const candidates: DomAnchorCandidate[] = [];
+
   const anchoredByAttribute = target.closest(`[${configuredAttribute}]`);
   if (anchoredByAttribute) {
     const value = anchoredByAttribute.getAttribute(configuredAttribute);
     if (value) {
-      return {
+      candidates.push({
         selector: `[${configuredAttribute}="${cssEscape(value)}"]`,
         strategy: 'configured-attribute',
+        confidence: 0.98,
         textFingerprint: getTextFingerprint(anchoredByAttribute),
-      };
+      });
     }
   }
 
   const anchoredById = findClosest(target, (element) => Boolean(element.id));
   if (anchoredById?.id) {
-    return {
+    candidates.push({
       selector: `#${cssEscape(anchoredById.id)}`,
       strategy: 'id',
+      confidence: anchoredById === target ? 0.92 : 0.86,
       textFingerprint: getTextFingerprint(anchoredById),
-    };
+    });
   }
 
   const anchoredByClass = findClosest(target, (element) =>
@@ -1305,29 +1554,33 @@ function getDomAnchor(
     );
 
     if (className) {
-      return {
+      candidates.push({
         selector: `${anchoredByClass.tagName.toLowerCase()}.${cssEscape(
           className
         )}`,
         strategy: 'class',
+        confidence: 0.66,
         textFingerprint: getTextFingerprint(anchoredByClass),
-      };
+      });
     }
   }
 
-  return {
+  candidates.push({
     selector: getDomPath(target),
     strategy: 'dom-path',
+    confidence: 0.44,
     textFingerprint: getTextFingerprint(target),
-  };
+  });
+
+  return dedupeAnchorCandidates(candidates);
 }
 
 function getRelativeSelection(
   selection: ViewportSelection,
-  selector: string,
+  anchor: DomAnchor | string,
   environment: ReviewEnvironment
 ): RelativeSelection | undefined {
-  const element = queryAnchorElement(selector, environment);
+  const element = getAnchorElement(anchor, environment);
   if (!element) return undefined;
 
   const rect = element.getBoundingClientRect();
@@ -1343,10 +1596,10 @@ function getRelativeSelection(
 
 function getRelativePoint(
   point: ReviewPoint,
-  selector: string,
+  anchor: DomAnchor | string,
   environment: ReviewEnvironment
 ): ReviewPoint | undefined {
-  const element = queryAnchorElement(selector, environment);
+  const element = getAnchorElement(anchor, environment);
   if (!element) return undefined;
 
   const rect = element.getBoundingClientRect();
@@ -1362,10 +1615,12 @@ function getBoundMarkerPoint(
   item: ReviewItem,
   environment: ReviewEnvironment
 ) {
-  if (!item.marker) return undefined;
+  const marker = getItemMarker(item);
+  if (!marker) return undefined;
 
-  if (item.anchor && item.marker.relative) {
-    const element = queryAnchorElement(item.anchor.selector, environment);
+  if (item.anchor && marker.relative) {
+    const resolved = resolveAnchorElement(item.anchor, environment);
+    const element = resolved?.element;
 
     if (element) {
       const rect = element.getBoundingClientRect();
@@ -1373,10 +1628,12 @@ function getBoundMarkerPoint(
       if (rect.width > 0 && rect.height > 0) {
         return {
           viewport: roundPoint({
-            x: rect.left + rect.width * item.marker.relative.x,
-            y: rect.top + rect.height * item.marker.relative.y,
+            x: rect.left + rect.width * marker.relative.x,
+            y: rect.top + rect.height * marker.relative.y,
           }),
           isBound: true,
+          confidence: resolved.confidence,
+          selector: resolved.candidate.selector,
         };
       }
     }
@@ -1386,18 +1643,189 @@ function getBoundMarkerPoint(
 
   return {
     viewport: roundPoint({
-      x: item.marker.viewport.x + sourceScroll.x - environment.window.scrollX,
-      y: item.marker.viewport.y + sourceScroll.y - environment.window.scrollY,
+      x: marker.viewport.x + sourceScroll.x - environment.window.scrollX,
+      y: marker.viewport.y + sourceScroll.y - environment.window.scrollY,
     }),
     isBound: false,
+    confidence: 0,
   };
 }
 
+function getBoundSelection(item: ReviewItem, environment: ReviewEnvironment) {
+  const selection = getItemSelection(item);
+  if (!selection?.viewport) return undefined;
+
+  if (item.anchor && selection.relative) {
+    const resolved = resolveAnchorElement(item.anchor, environment);
+    const element = resolved?.element;
+
+    if (element) {
+      const rect = element.getBoundingClientRect();
+
+      if (rect.width > 0 && rect.height > 0) {
+        return {
+          viewport: {
+            left: rect.left + rect.width * selection.relative.x,
+            top: rect.top + rect.height * selection.relative.y,
+            width: rect.width * selection.relative.width,
+            height: rect.height * selection.relative.height,
+          },
+          isBound: true,
+          confidence: resolved.confidence,
+          selector: resolved.candidate.selector,
+        };
+      }
+    }
+  }
+
+  const sourceScroll = item.scroll ?? { x: 0, y: 0 };
+  const viewportSelection = toViewportSelection(selection.viewport);
+
+  return {
+    viewport: {
+      left: viewportSelection.left + sourceScroll.x - environment.window.scrollX,
+      top: viewportSelection.top + sourceScroll.y - environment.window.scrollY,
+      width: viewportSelection.width,
+      height: viewportSelection.height,
+    },
+    isBound: false,
+    confidence: 0,
+  };
+}
+
+function getItemMarker(item: ReviewItem): ReviewMarker | undefined {
+  if (item.marker) return item.marker;
+
+  const selection = getItemSelection(item);
+  if (!selection?.viewport) return undefined;
+
+  return {
+    viewport: roundPoint(getSelectionCenter(selection.viewport)),
+    relative: selection.relative
+      ? roundPoint(getSelectionCenter(selection.relative))
+      : undefined,
+  };
+}
+
+function getItemSelection(item: ReviewItem): ReviewSelection | undefined {
+  const value = item.selection as ReviewSelection | RelativeSelection | undefined;
+  if (!value) return undefined;
+
+  if ('viewport' in value && isRelativeSelection(value.viewport)) {
+    return value;
+  }
+
+  if (isRelativeSelection(value)) {
+    return {
+      viewport: value,
+    };
+  }
+
+  return undefined;
+}
+
+function createSelectionCenterMarker(
+  selection: ViewportSelection,
+  anchor: DomAnchor | undefined,
+  environment: ReviewEnvironment
+): ReviewMarker {
+  const centerPoint = getSelectionCenter(selection);
+
+  return {
+    viewport: roundPoint(centerPoint),
+    relative: anchor ? getRelativePoint(centerPoint, anchor, environment) : undefined,
+  };
+}
+
+function getAnchorElement(
+  anchor: DomAnchor | string,
+  environment: ReviewEnvironment
+) {
+  return typeof anchor === 'string'
+    ? queryAnchorElement(anchor, environment)
+    : resolveAnchorElement(anchor, environment)?.element;
+}
+
+function resolveAnchorElement(
+  anchor: DomAnchor,
+  environment: ReviewEnvironment
+) {
+  const matches = getAnchorCandidates(anchor).flatMap((candidate) => {
+    const match = queryBestAnchorCandidate(
+      candidate,
+      candidate.textFingerprint ?? anchor.textFingerprint,
+      environment
+    );
+
+    if (!match) return [];
+
+    const confidence = roundRatio(
+      (candidate.confidence ?? 0.5) * match.score
+    );
+
+    return [{
+      element: match.element,
+      candidate,
+      confidence,
+    }];
+  });
+
+  return matches.sort((a, b) => b.confidence - a.confidence)[0];
+}
+
+function getAnchorCandidates(anchor: DomAnchor) {
+  return dedupeAnchorCandidates([
+    anchor,
+    ...(anchor.candidates ?? []),
+  ]);
+}
+
+function dedupeAnchorCandidates(candidates: DomAnchorCandidate[]) {
+  const seen = new Set<string>();
+
+  return candidates.filter((candidate) => {
+    const key = `${candidate.strategy}:${candidate.selector}`;
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+}
+
+function queryBestAnchorCandidate(
+  candidate: DomAnchorCandidate,
+  textFingerprint: string | undefined,
+  environment: ReviewEnvironment
+) {
+  const elements = queryAnchorElements(candidate.selector, environment);
+  if (elements.length === 0) return undefined;
+  if (!textFingerprint) {
+    return {
+      element: elements[0],
+      score: 1,
+    };
+  }
+
+  return elements
+    .map((element) => ({
+      element,
+      score: getTextFingerprintScore(
+        textFingerprint,
+        getTextFingerprint(element)
+      ),
+    }))
+    .sort((a, b) => b.score - a.score)[0];
+}
+
 function queryAnchorElement(selector: string, environment: ReviewEnvironment) {
+  return queryAnchorElements(selector, environment)[0];
+}
+
+function queryAnchorElements(selector: string, environment: ReviewEnvironment) {
   try {
-    return environment.document.querySelector(selector);
+    return Array.from(environment.document.querySelectorAll(selector));
   } catch {
-    return undefined;
+    return [];
   }
 }
 
@@ -1408,6 +1836,52 @@ function getPointSelection(point: ReviewPoint): ViewportSelection {
     width: 1,
     height: 1,
   };
+}
+
+function toViewportSelection(selection: RelativeSelection): ViewportSelection {
+  return {
+    left: selection.x,
+    top: selection.y,
+    width: selection.width,
+    height: selection.height,
+  };
+}
+
+function toPublicSelection(selection: ViewportSelection): RelativeSelection {
+  return {
+    x: Math.round(selection.left),
+    y: Math.round(selection.top),
+    width: Math.round(selection.width),
+    height: Math.round(selection.height),
+  };
+}
+
+function getSelectionCenter(
+  selection: ViewportSelection | RelativeSelection
+): ReviewPoint {
+  if ('left' in selection) {
+    return {
+      x: selection.left + selection.width / 2,
+      y: selection.top + selection.height / 2,
+    };
+  }
+
+  return {
+    x: selection.x + selection.width / 2,
+    y: selection.y + selection.height / 2,
+  };
+}
+
+function isRelativeSelection(value: unknown): value is RelativeSelection {
+  if (!value || typeof value !== 'object') return false;
+
+  const selection = value as Partial<RelativeSelection>;
+  return (
+    typeof selection.x === 'number' &&
+    typeof selection.y === 'number' &&
+    typeof selection.width === 'number' &&
+    typeof selection.height === 'number'
+  );
 }
 
 function findClosest(
@@ -1458,6 +1932,28 @@ function getDomPath(element: Element) {
 function getTextFingerprint(element: Element) {
   const text = element.textContent?.replace(/\s+/g, ' ').trim();
   return text ? text.slice(0, 120) : undefined;
+}
+
+function getTextFingerprintScore(expected?: string, actual?: string) {
+  if (!expected) return 1;
+  if (!actual) return 0.5;
+  if (expected === actual) return 1;
+  if (actual.includes(expected) || expected.includes(actual)) return 0.82;
+
+  const expectedTokens = getFingerprintTokens(expected);
+  const actualTokens = new Set(getFingerprintTokens(actual));
+  if (expectedTokens.length === 0 || actualTokens.size === 0) return 0.5;
+
+  const matches = expectedTokens.filter((token) => actualTokens.has(token));
+  return clamp(matches.length / expectedTokens.length, 0.25, 0.76);
+}
+
+function getFingerprintTokens(value: string) {
+  return value
+    .toLowerCase()
+    .split(/[\s/|,.:;()[\]{}"'`~!?<>]+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length > 1);
 }
 
 function isMeaningfulClass(value: string) {
@@ -1521,13 +2017,35 @@ function getHotkeyCode(key: string) {
 
 function getPageUrl(environment?: ReviewEnvironment) {
   const location = environment?.window.location ?? window.location;
-  return `${location.origin}${location.pathname}${getPublicSearch(location)}`;
+  const search = getPublicSearch(location);
+  return `${location.origin}${location.pathname}${search}${location.hash}`;
+}
+
+function getOriginalUrl(environment?: ReviewEnvironment) {
+  const location = environment?.window.location ?? window.location;
+  const search = getPublicSearch(location);
+  return `${location.origin}${location.pathname}${search}${location.hash}`;
+}
+
+function getRouteKey(environment?: ReviewEnvironment) {
+  const location = environment?.window.location ?? window.location;
+  return normalizeRoutePath(location.pathname);
+}
+
+function getItemRouteKey(
+  item: Pick<ReviewItem, 'routeKey' | 'normalizedPath'>
+) {
+  return item.routeKey || normalizeRoutePath(item.normalizedPath);
 }
 
 function getNormalizedPath(environment?: ReviewEnvironment) {
-  const location = environment?.window.location ?? window.location;
-  const path = location.pathname.replace(/\/index\.html$/, '/');
-  return `${path}${getPublicSearch(location)}`;
+  return getRouteKey(environment);
+}
+
+function normalizeRoutePath(pathname: string) {
+  const [pathWithoutQuery] = pathname.split(/[?#]/);
+  const path = (pathWithoutQuery || '/').replace(/\/index\.html$/, '/');
+  return path.startsWith('/') ? path : `/${path}`;
 }
 
 function getPublicSearch(location: Location) {
@@ -1559,6 +2077,14 @@ function formatDate(value: string) {
 function formatCaptureDraftMeta(draft: CaptureDraft) {
   const parts = [`viewport ${formatSize(draft.viewport)}`];
 
+  if (draft.selection) {
+    parts.push(`rect ${formatSelection(draft.selection.viewport)}`);
+  }
+
+  if (draft.marker) {
+    parts.push(`point ${formatPoint(draft.marker.viewport)}`);
+  }
+
   if (draft.screenshot) {
     parts.push(`capture ${formatSize(draft.screenshot)}`);
   }
@@ -1573,7 +2099,7 @@ function formatTextDraftMeta(draft: TextDraft) {
   ];
 
   if (draft.anchor) {
-    parts.push(`dom ${draft.anchor.strategy}`);
+    parts.push(formatAnchorMeta(draft.anchor));
   }
 
   return parts.join(' / ');
@@ -1581,17 +2107,23 @@ function formatTextDraftMeta(draft: TextDraft) {
 
 function formatItemMeta(item: ReviewItem) {
   const parts = [formatDate(item.createdAt)];
+  const marker = getItemMarker(item);
+  const selection = getItemSelection(item);
 
   if (item.viewport) {
     parts.push(`viewport ${formatSize(item.viewport)}`);
   }
 
-  if (item.marker) {
-    parts.push(`point ${formatPoint(item.marker.viewport)}`);
+  if (marker) {
+    parts.push(`point ${formatPoint(marker.viewport)}`);
+  }
+
+  if (selection) {
+    parts.push(`rect ${formatSelection(selection.viewport)}`);
   }
 
   if (item.anchor) {
-    parts.push(`dom ${item.anchor.strategy}`);
+    parts.push(formatAnchorMeta(item.anchor));
   }
 
   if (item.screenshot) {
@@ -1607,6 +2139,30 @@ function formatSize(size: ViewportSize) {
 
 function formatPoint(point: ReviewPoint) {
   return `${Math.round(point.x)},${Math.round(point.y)}`;
+}
+
+function formatSelection(selection: RelativeSelection) {
+  return [
+    Math.round(selection.x),
+    Math.round(selection.y),
+    Math.round(selection.width),
+    Math.round(selection.height),
+  ].join(',');
+}
+
+function formatAnchorMeta(anchor: DomAnchor) {
+  const parts = [`dom ${anchor.strategy}`];
+
+  if (typeof anchor.confidence === 'number') {
+    parts.push(`${Math.round(anchor.confidence * 100)}%`);
+  }
+
+  const candidates = getAnchorCandidates(anchor);
+  if (candidates.length > 1) {
+    parts.push(`${candidates.length} candidates`);
+  }
+
+  return parts.join(' ');
 }
 
 function getViewportSize(environment?: ReviewEnvironment): ViewportSize {
@@ -1635,6 +2191,19 @@ function isPointInViewport(
     point.x <= viewport.width &&
     point.y <= viewport.height
   );
+}
+
+function isSelectionInViewport(
+  selection: ViewportSelection,
+  environment?: ReviewEnvironment
+) {
+  const viewport = getViewportSize(environment);
+  return rectanglesIntersect(selection, {
+    left: 0,
+    top: 0,
+    width: viewport.width,
+    height: viewport.height,
+  });
 }
 
 function clampPoint(point: ReviewPoint, environment?: ReviewEnvironment) {
@@ -1667,6 +2236,18 @@ function toHostPoint(point: ReviewPoint, environment?: ReviewEnvironment) {
   return {
     x: point.x + environment.viewportRect.left,
     y: point.y + environment.viewportRect.top,
+  };
+}
+
+function toHostSelection(
+  selection: ViewportSelection,
+  environment: ReviewEnvironment
+): ViewportSelection {
+  return {
+    left: selection.left + environment.viewportRect.left,
+    top: selection.top + environment.viewportRect.top,
+    width: selection.width,
+    height: selection.height,
   };
 }
 
@@ -1725,6 +2306,17 @@ function createNoopController(): WebReviewKitController {
     open() {},
     close() {},
     toggle() {},
+    setMode() {},
+    getMode() {
+      return 'idle';
+    },
+    highlightItem() {},
+    async reload() {
+      return [];
+    },
+    getItems() {
+      return [];
+    },
     destroy() {},
   };
 }
@@ -1867,8 +2459,39 @@ function createStyleElement() {
       pointer-events: none;
     }
 
+    .dfwr-capture-preview-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .dfwr-selection-highlight {
+      position: fixed;
+      z-index: 1;
+      border: 2px solid #d7ff5f;
+      border-radius: 3px;
+      background: rgba(215, 255, 95, 0.08);
+      box-shadow:
+        0 0 0 1px rgba(31, 36, 40, 0.72),
+        0 0 0 9999px rgba(0, 0, 0, 0.12),
+        0 10px 30px rgba(0, 0, 0, 0.22);
+      animation: dfwr-selection-pulse 900ms ease 0s 2;
+    }
+
+    .dfwr-selection-highlight.is-draft {
+      border-color: #63d7c7;
+      background: rgba(99, 215, 199, 0.1);
+      box-shadow:
+        0 0 0 1px rgba(31, 36, 40, 0.72),
+        0 0 0 9999px rgba(0, 0, 0, 0.08),
+        0 10px 30px rgba(0, 0, 0, 0.2);
+      animation: none;
+    }
+
     .dfwr-bound-marker {
       position: fixed;
+      z-index: 2;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1884,10 +2507,29 @@ function createStyleElement() {
       font-weight: 800;
     }
 
+    .dfwr-bound-marker.is-highlighted {
+      width: 26px;
+      height: 26px;
+      border-width: 2px;
+      box-shadow:
+        0 0 0 5px rgba(215, 255, 95, 0.22),
+        0 12px 26px rgba(0, 0, 0, 0.34);
+      animation: dfwr-marker-pulse 900ms ease 0s 2;
+    }
+
     .dfwr-bound-marker.is-fallback {
       border-color: #ffb7a7;
       box-shadow: 0 0 0 4px rgba(255, 183, 167, 0.18);
       color: #ffb7a7;
+    }
+
+    .dfwr-capture-preview-layer .dfwr-bound-marker {
+      border-color: #63d7c7;
+      background: #1f2428;
+      box-shadow:
+        0 0 0 5px rgba(99, 215, 199, 0.2),
+        0 12px 26px rgba(0, 0, 0, 0.3);
+      color: #63d7c7;
     }
 
     .dfwr-note-draft {
@@ -1932,7 +2574,28 @@ function createStyleElement() {
       box-shadow: 0 16px 38px rgba(0, 0, 0, 0.32);
     }
 
+    .dfwr-capture-draft {
+      position: fixed;
+      right: 16px;
+      top: 16px;
+      z-index: 4;
+      width: min(360px, calc(100vw - 32px));
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+      padding: 12px;
+      pointer-events: auto;
+      color: #f7f7f2;
+      background: #1f2428;
+      border: 1px solid rgba(215, 255, 95, 0.56);
+      border-radius: 8px;
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.32);
+    }
+
     .dfwr-note-popover .dfwr-actions {
+      padding: 0;
+    }
+
+    .dfwr-capture-draft .dfwr-actions {
       padding: 0;
     }
 
@@ -2004,10 +2667,16 @@ function createStyleElement() {
       justify-content: space-between;
       padding: 12px 0;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
     }
 
     .dfwr-item:first-of-type {
       border-top: 0;
+    }
+
+    .dfwr-item:focus-visible {
+      outline: 2px solid rgba(215, 255, 95, 0.72);
+      outline-offset: 4px;
     }
 
     .dfwr-item-body {
@@ -2070,6 +2739,30 @@ function createStyleElement() {
       border: 1px solid #d7ff5f;
       background: rgba(215, 255, 95, 0.16);
       box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.18);
+    }
+
+    @keyframes dfwr-marker-pulse {
+      0% {
+        transform: translate(-50%, -50%) scale(0.92);
+      }
+      45% {
+        transform: translate(-50%, -50%) scale(1.1);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    @keyframes dfwr-selection-pulse {
+      0% {
+        opacity: 0.72;
+      }
+      45% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0.86;
+      }
     }
 
     @media (max-width: 520px) {

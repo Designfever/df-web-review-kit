@@ -8,6 +8,7 @@ import React, {
 import {
   CircleHelp as CircleHelpIcon,
   Copy as CopyIcon,
+  ExternalLink as ExternalLinkIcon,
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
   GripVertical as GripVerticalIcon,
@@ -17,9 +18,12 @@ import {
   Map as MapIcon,
   Maximize2 as Maximize2Icon,
   Monitor as MonitorIcon,
+  Pencil as PencilIcon,
   RectangleHorizontal as TabletIcon,
+  RefreshCw as RefreshCwIcon,
   Ruler as RulerIcon,
   Scan as ScanIcon,
+  Send as SendIcon,
   Settings as SettingsIcon,
   Smartphone as SmartphoneIcon,
   SquareMousePointer as SquareMousePointerIcon,
@@ -28,20 +32,19 @@ import {
 } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import {
-  REVIEW_WORKFLOW_STATUS_OPTIONS,
   createWebReviewKit,
+  dfSheetAdapter,
   getNumberedReviewItems,
   localAdapter,
-  normalizeReviewItemStatus,
+  type DfSheetAdapterOptions,
   type NumberedReviewItem,
   type ReviewRulerConfig,
   type ReviewRulerFrame,
   type ReviewItemScope,
-  type ReviewItemStatus,
+  type ReviewSource,
   type ReviewViewportPreset,
   type ReviewItem,
   type ReviewMode,
-  type ReviewWorkflowStatus,
   type WebReviewKitController
 } from './index';
 
@@ -73,6 +76,7 @@ export interface ReviewShellProps {
   ruler?: ReviewRulerConfig;
   initialPrompt?: string;
   reviewPathPrefix?: string;
+  dfSheet?: DfSheetAdapterOptions;
 }
 
 export interface ReviewShellMountOptions extends ReviewShellProps {
@@ -244,11 +248,20 @@ const buildTargetSrc = (target: string) => {
   return `${url.pathname}${url.search}${url.hash}`;
 };
 
-const updateShellUrl = (target: string, size: ReviewShellViewportPreset) => {
+const updateShellUrl = (
+  target: string,
+  size: ReviewShellViewportPreset,
+  source: ReviewSource
+) => {
   const url = new URL(window.location.href);
   url.searchParams.set('target', target);
   url.searchParams.set('w', String(size.width));
   url.searchParams.set('h', String(size.height));
+  if (source === 'df-sheet') {
+    url.searchParams.set('source', source);
+  } else {
+    url.searchParams.delete('source');
+  }
   url.searchParams.delete('item');
   window.history.replaceState(null, '', `${url.pathname}${url.search}`);
 };
@@ -256,19 +269,33 @@ const updateShellUrl = (target: string, size: ReviewShellViewportPreset) => {
 const updateShellUrlForItem = (
   target: string,
   size: ReviewShellViewportPreset,
-  itemId: string
+  itemId: string,
+  source: ReviewSource
 ) => {
   const url = new URL(window.location.href);
   url.searchParams.set('target', target);
   url.searchParams.set('w', String(size.width));
   url.searchParams.set('h', String(size.height));
   url.searchParams.set('item', itemId);
+  if (source === 'df-sheet') {
+    url.searchParams.set('source', source);
+  } else {
+    url.searchParams.delete('source');
+  }
   window.history.replaceState(null, '', `${url.pathname}${url.search}`);
 };
 
 const getInitialItemId = () => {
   if (typeof window === 'undefined') return null;
   return new URLSearchParams(window.location.search).get('item');
+};
+
+const getInitialSource = (hasDfSheet: boolean): ReviewSource => {
+  if (typeof window === 'undefined' || !hasDfSheet) return 'local';
+  return new URLSearchParams(window.location.search).get('source') ===
+    'df-sheet'
+    ? 'df-sheet'
+    : 'local';
 };
 
 const getItemTarget = (
@@ -284,16 +311,6 @@ const getItemTarget = (
     return normalizeTarget(new URL(item.pageUrl).pathname, reviewPathPrefix);
   } catch {
     return '/';
-  }
-};
-
-const getStoredItem = (itemId: string, storageKey: string) => {
-  try {
-    const items = JSON.parse(window.localStorage.getItem(storageKey) || '[]');
-    if (!Array.isArray(items)) return undefined;
-    return items.find((item): item is ReviewItem => item?.id === itemId);
-  } catch {
-    return undefined;
   }
 };
 
@@ -602,7 +619,7 @@ const REVIEW_THEME_STORAGE_KEY = 'df-review-theme';
 const DEFAULT_REVIEW_THEME: ReviewShellTheme = 'dark';
 const FIGMA_TOKEN_GUIDE_ID = 'df-review-figma-token-guide';
 const DEFAULT_INITIAL_REVIEW_PROMPT =
-  'You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, coordinates, screenshot context, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.';
+  'You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, DOM metadata, coordinates, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.';
 
 const REVIEW_THEME_OPTIONS: Array<{
   value: ReviewShellTheme;
@@ -701,11 +718,6 @@ const getSystemReviewTheme = (): Exclude<ReviewShellTheme, 'system'> => {
 
 const getItemTitle = (item: ReviewItem) =>
   item.title || item.comment.split('\n')[0] || item.kind;
-
-const getReviewStatusLabel = (status: ReviewItemStatus | undefined) =>
-  REVIEW_WORKFLOW_STATUS_OPTIONS.find(
-    (option) => option.value === normalizeReviewItemStatus(status)
-  )?.label ?? REVIEW_WORKFLOW_STATUS_OPTIONS[0].label;
 
 const getTargetOverlayState = (
   targetDocument: Document | undefined
@@ -840,7 +852,6 @@ const buildReviewItemPrompt = (
     `Page: ${getItemTarget(item, reviewPathPrefix)}`,
     `URL: ${item.originalUrl ?? item.pageUrl}`,
     `QA item: ${numberedItem.displayLabel}`,
-    `Status: ${getReviewStatusLabel(item.status)}`,
     `Viewport: ${numberedItem.label} ${formatPromptViewport(item)}`,
     `Scroll: ${formatPromptPoint(item.scroll)}`,
     '',
@@ -863,7 +874,7 @@ const buildReviewItemPrompt = (
     '```html',
     anchor?.htmlSnippet
       ? decodePromptHtmlEntities(anchor.htmlSnippet)
-      : '(not captured)',
+      : '(not available)',
     '```',
     '',
     'Issue:',
@@ -900,7 +911,8 @@ export const ReviewShell = ({
   presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
   ruler,
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
-  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
+  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
+  dfSheet
 }: ReviewShellProps) => {
   const viewportPresets =
     presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
@@ -908,13 +920,31 @@ export const ReviewShell = ({
     () => toReviewViewportPresets(viewportPresets),
     [viewportPresets]
   );
-  const adapter = useMemo(
+  const localReviewAdapter = useMemo(
     () =>
       localAdapter({
         storageKey
       }),
     [storageKey]
   );
+  const remoteReviewAdapter = useMemo(
+    () =>
+      dfSheet
+        ? dfSheetAdapter({
+            ...dfSheet,
+            reviewProjectId: dfSheet.reviewProjectId ?? projectId,
+            reviewPathPrefix
+          })
+        : null,
+    [dfSheet, projectId, reviewPathPrefix]
+  );
+  const [source, setSource] = useState<ReviewSource>(() =>
+    getInitialSource(Boolean(remoteReviewAdapter))
+  );
+  const isRemoteSource = source === 'df-sheet' && Boolean(remoteReviewAdapter);
+  const adapter = isRemoteSource && remoteReviewAdapter
+    ? remoteReviewAdapter
+    : localReviewAdapter;
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const frameScrollRef = useRef<HTMLDivElement | null>(null);
   const rulerOverlayRef = useRef<HTMLDivElement | null>(null);
@@ -1067,11 +1097,13 @@ export const ReviewShell = ({
 
   const refreshItems = useCallback(async () => {
     const nextItems = await adapter.list({
-      projectId
+      projectId,
+      pageId: dfSheet?.pageId,
+      routeKey: isRemoteSource ? activeRoute : undefined
     });
     setItems(nextItems);
     return nextItems;
-  }, [adapter, projectId]);
+  }, [activeRoute, adapter, dfSheet?.pageId, isRemoteSource, projectId]);
 
   const refreshReviewData = useCallback(async () => {
     await controllerRef.current?.reload();
@@ -1153,13 +1185,14 @@ export const ReviewShell = ({
         updateShellUrlForItem(
           normalizedTarget,
           sizeRef.current,
-          selectedItemIdRef.current
+          selectedItemIdRef.current,
+          source
         );
       } else {
-        updateShellUrl(normalizedTarget, sizeRef.current);
+        updateShellUrl(normalizedTarget, sizeRef.current, source);
       }
     },
-    [clearSelectedItem, reviewPathPrefix]
+    [clearSelectedItem, reviewPathPrefix, source]
   );
 
   const applyItemScroll = useCallback(
@@ -1331,7 +1364,7 @@ export const ReviewShell = ({
       setActiveRoute(nextTarget);
       setDraftTarget(nextTarget);
       setSize(nextSize);
-      updateShellUrlForItem(nextTarget, nextSize, item.id);
+      updateShellUrlForItem(nextTarget, nextSize, item.id, source);
 
       if (targetRef.current !== nextTarget) {
         setTarget(nextTarget);
@@ -1340,20 +1373,20 @@ export const ReviewShell = ({
 
       applyPendingRestore();
     },
-    [applyPendingRestore, viewportPresets, reviewPathPrefix]
+    [applyPendingRestore, viewportPresets, reviewPathPrefix, source]
   );
 
-  const restoreInitialItem = useCallback(() => {
+  const restoreInitialItem = useCallback(async () => {
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
 
     pendingInitialItemIdRef.current = null;
 
-    const item = getStoredItem(itemId, storageKey);
+    const item = await adapter.get(itemId);
     if (item) {
       restoreReviewItem(item);
     }
-  }, [restoreReviewItem, storageKey]);
+  }, [adapter, restoreReviewItem]);
 
   const initReviewKit = useCallback(() => {
     destroyReviewKit();
@@ -1473,7 +1506,7 @@ export const ReviewShell = ({
     controllerRef.current.open();
     setMode(controllerRef.current.getMode());
     void refreshItems();
-    restoreInitialItem();
+    void restoreInitialItem();
     applyPendingRestore();
     refreshTargetOverlayState();
   }, [
@@ -1495,6 +1528,12 @@ export const ReviewShell = ({
   ]);
 
   useEffect(() => destroyReviewKit, [destroyReviewKit]);
+
+  useEffect(() => {
+    const frameDocument = iframeRef.current?.contentDocument;
+    if (!frameDocument || frameDocument.readyState !== 'complete') return;
+    initReviewKit();
+  }, [initReviewKit]);
 
   useEffect(() => {
     void refreshItems();
@@ -1601,12 +1640,17 @@ export const ReviewShell = ({
   useEffect(() => {
     sizeRef.current = size;
     if (selectedItemIdRef.current) {
-      updateShellUrlForItem(targetRef.current, size, selectedItemIdRef.current);
+      updateShellUrlForItem(
+        targetRef.current,
+        size,
+        selectedItemIdRef.current,
+        source
+      );
     } else {
-      updateShellUrl(targetRef.current, size);
+      updateShellUrl(targetRef.current, size, source);
     }
     syncTargetViewport();
-  }, [size, syncTargetViewport]);
+  }, [size, source, syncTargetViewport]);
 
   useEffect(() => {
     const frameScroll = frameScrollRef.current;
@@ -1774,7 +1818,7 @@ export const ReviewShell = ({
     setActiveRoute(normalizedTarget);
     setDraftTarget(normalizedTarget);
     setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, sizeRef.current);
+    updateShellUrl(normalizedTarget, sizeRef.current, source);
   };
 
   const selectPage = (href: string) => {
@@ -1784,11 +1828,12 @@ export const ReviewShell = ({
     setActiveRoute(normalizedTarget);
     setDraftTarget(normalizedTarget);
     setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, sizeRef.current);
+    updateShellUrl(normalizedTarget, sizeRef.current, source);
     setIsSitemapOpen(false);
   };
 
   const setReviewMode = (nextMode: ReviewMode) => {
+    if (isRemoteSource) return;
     closeRuler();
     controllerRef.current?.setMode(nextMode);
     setMode(controllerRef.current?.getMode() ?? 'idle');
@@ -1800,11 +1845,58 @@ export const ReviewShell = ({
     window.setTimeout(() => setCopyLabel('Copy URL'), 1200);
   };
 
-  const updateItemStatus = async (
-    item: ReviewItem,
-    status: ReviewWorkflowStatus
-  ) => {
-    await adapter.update(item.id, { status });
+  const changeReviewSource = (nextSource: ReviewSource) => {
+    if (nextSource === 'df-sheet' && !remoteReviewAdapter) return;
+
+    cancelReviewMode();
+    clearSelectedItem();
+    setItems([]);
+    setSource(nextSource);
+    updateShellUrl(targetRef.current, sizeRef.current, nextSource);
+  };
+
+  const editItem = async (item: ReviewItem) => {
+    if (isRemoteSource || item.submitStatus === 'submitted') return;
+
+    const nextComment = window.prompt('Edit QA note', item.comment);
+    if (nextComment === null) return;
+
+    const comment = nextComment.trim();
+    if (!comment) return;
+
+    await localReviewAdapter.update(item.id, {
+      comment,
+      title: comment.split('\n')[0]?.slice(0, 80)
+    });
+    await refreshReviewData();
+  };
+
+  const submitItem = async (item: ReviewItem) => {
+    if (!remoteReviewAdapter || item.submitStatus === 'submitted') return;
+
+    await localReviewAdapter.update(item.id, {
+      submitStatus: 'submitting',
+      submitError: undefined
+    });
+    await refreshReviewData();
+
+    try {
+      const submitted = await remoteReviewAdapter.create(item);
+      await localReviewAdapter.update(item.id, {
+        externalIssueId: submitted.externalIssueId ?? submitted.id,
+        externalIssueUrl: submitted.externalIssueUrl,
+        submittedAt: submitted.submittedAt ?? new Date().toISOString(),
+        submitStatus: 'submitted',
+        submitError: undefined
+      });
+    } catch (error) {
+      await localReviewAdapter.update(item.id, {
+        submitStatus: 'failed',
+        submitError:
+          error instanceof Error ? error.message : 'Failed to submit df-sheet'
+      });
+    }
+
     await refreshReviewData();
   };
 
@@ -1826,10 +1918,12 @@ export const ReviewShell = ({
   };
 
   const removeItem = async (item: ReviewItem) => {
-    await adapter.remove(item.id);
+    if (isRemoteSource || item.submitStatus === 'submitted') return;
+
+    await localReviewAdapter.remove(item.id);
     if (selectedItemIdRef.current === item.id) {
       clearSelectedItem();
-      updateShellUrl(targetRef.current, sizeRef.current);
+      updateShellUrl(targetRef.current, sizeRef.current, source);
     }
     await refreshReviewData();
   };
@@ -2285,11 +2379,37 @@ export const ReviewShell = ({
           <section className="df-review-item-list">
             <div className="df-review-list-header">
               <div className="df-review-list-title">
-                <span>Current page QA</span>
+                <span>
+                  {isRemoteSource ? 'df-sheet QA' : '내 작업 QA'}
+                </span>
                 <strong>
                   {filteredNumberedActiveItems.length}
                   {qaFilter === 'all' ? '' : `/${activeItems.length}`}
                 </strong>
+              </div>
+              <div className="df-review-list-controls">
+                <select
+                  aria-label="QA source"
+                  className="df-review-source-select"
+                  value={source}
+                  onChange={(event) =>
+                    changeReviewSource(event.currentTarget.value as ReviewSource)
+                  }
+                >
+                  <option value="local">내 작업</option>
+                  <option value="df-sheet" disabled={!remoteReviewAdapter}>
+                    df-sheet
+                  </option>
+                </select>
+                <button
+                  aria-label="Refresh QA"
+                  className="df-review-source-refresh"
+                  data-tooltip="Refresh"
+                  type="button"
+                  onClick={() => void refreshReviewData()}
+                >
+                  <RefreshCwIcon aria-hidden="true" />
+                </button>
               </div>
               <div className="df-review-filter-tabs" aria-label="QA filters">
                 {REVIEW_QA_FILTERS.map((filter) => {
@@ -2321,7 +2441,11 @@ export const ReviewShell = ({
             </div>
             <div className="df-review-list-scroll">
               {activeItems.length === 0 && (
-                <p className="df-review-empty">No QA on this page.</p>
+                <p className="df-review-empty">
+                  {isRemoteSource
+                    ? 'No df-sheet QA on this page.'
+                    : 'No QA on this page.'}
+                </p>
               )}
               {activeItems.length > 0 &&
                 filteredNumberedActiveItems.length === 0 && (
@@ -2329,6 +2453,9 @@ export const ReviewShell = ({
                 )}
               {filteredNumberedActiveItems.map((numberedItem) => {
                 const { item } = numberedItem;
+                const isSubmitted = item.submitStatus === 'submitted';
+                const isSubmitting = item.submitStatus === 'submitting';
+                const canEditLocal = !isRemoteSource && !isSubmitted && !isSubmitting;
 
                 return (
                   <article
@@ -2337,16 +2464,18 @@ export const ReviewShell = ({
                       item.id === selectedItemId ? ' is-active' : ''
                     }`}
                   >
-                    <button
-                      aria-label="Delete QA"
-                      className="df-review-item-delete"
-                      data-tooltip="Delete"
-                      title="Delete"
-                      type="button"
-                      onClick={() => void removeItem(item)}
-                    >
-                      <XIcon aria-hidden="true" />
-                    </button>
+                    {canEditLocal && (
+                      <button
+                        aria-label="Delete QA"
+                        className="df-review-item-delete"
+                        data-tooltip="Delete"
+                        title="Delete"
+                        type="button"
+                        onClick={() => void removeItem(item)}
+                      >
+                        <XIcon aria-hidden="true" />
+                      </button>
+                    )}
                     <button
                       className="df-review-item-main"
                       type="button"
@@ -2360,15 +2489,29 @@ export const ReviewShell = ({
                           {numberedItem.displayLabel}
                         </span>
                         <span className="df-review-item-kind">{item.kind}</span>
-                        <span className="df-review-item-status-badge">
-                          {getReviewStatusLabel(item.status)}
-                        </span>
+                        {isRemoteSource && (
+                          <span className="df-review-item-status-badge">
+                            df-sheet
+                          </span>
+                        )}
+                        {isSubmitted && (
+                          <span className="df-review-item-status-badge">
+                            Submitted
+                          </span>
+                        )}
+                        {item.submitStatus === 'failed' && (
+                          <span className="df-review-item-status-badge is-error">
+                            Failed
+                          </span>
+                        )}
                       </span>
                       <strong>{getItemTitle(item)}</strong>
                       <small>{formatDate(item.createdAt)}</small>
                       <small>{formatItemMeta(item)}</small>
-                      {item.screenshot && (
-                        <img src={item.screenshot.dataUrl} alt="" />
+                      {item.submitError && (
+                        <small className="df-review-item-error">
+                          {item.submitError}
+                        </small>
                       )}
                     </button>
                     <div
@@ -2404,23 +2547,47 @@ export const ReviewShell = ({
                           <CopyIcon aria-hidden="true" />
                         </button>
                       </div>
-                      <select
-                        aria-label="Workflow status"
-                        className="df-review-item-status-select"
-                        value={normalizeReviewItemStatus(item.status)}
-                        onChange={(event) =>
-                          void updateItemStatus(
-                            item,
-                            event.currentTarget.value as ReviewWorkflowStatus
-                          )
-                        }
-                      >
-                        {REVIEW_WORKFLOW_STATUS_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                      {canEditLocal && (
+                        <button
+                          aria-label="Edit QA"
+                          className="df-review-item-action-button"
+                          data-tooltip="Edit"
+                          type="button"
+                          onClick={() => void editItem(item)}
+                        >
+                          <PencilIcon aria-hidden="true" />
+                        </button>
+                      )}
+                      {!isRemoteSource && remoteReviewAdapter && (
+                        <button
+                          aria-label="Submit to df-sheet"
+                          className="df-review-item-action-button"
+                          data-tooltip={
+                            isSubmitted
+                              ? 'Submitted'
+                              : isSubmitting
+                                ? 'Submitting'
+                                : 'Submit to df-sheet'
+                          }
+                          disabled={isSubmitted || isSubmitting}
+                          type="button"
+                          onClick={() => void submitItem(item)}
+                        >
+                          <SendIcon aria-hidden="true" />
+                        </button>
+                      )}
+                      {item.externalIssueUrl && (
+                        <a
+                          aria-label="Open df-sheet issue"
+                          className="df-review-item-action-button"
+                          data-tooltip="Open df-sheet"
+                          href={item.externalIssueUrl}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <ExternalLinkIcon aria-hidden="true" />
+                        </a>
+                      )}
                     </div>
                   </article>
                 );
@@ -2543,44 +2710,46 @@ export const ReviewShell = ({
             </div>
           </div>
           <div className="df-review-frame-actions">
-            <div className="df-review-mode" aria-label="Add QA">
-              <button
-                aria-label="Element"
-                className={`df-review-mode-button is-element${
-                  mode === 'element' ? ' is-active' : ''
-                }`}
-                data-tooltip="Element"
-                type="button"
-                onClick={() => setReviewMode('element')}
-              >
-                <SquareMousePointerIcon aria-hidden="true" />
-              </button>
-              <span className="df-review-mode-divider" aria-hidden="true">
-                |
-              </span>
-              <button
-                aria-label="Note"
-                className={`df-review-mode-button is-note${
-                  mode === 'text' ? ' is-active' : ''
-                }`}
-                data-tooltip="Note"
-                type="button"
-                onClick={() => setReviewMode('text')}
-              >
-                <StickyNoteIcon aria-hidden="true" />
-              </button>
-              <button
-                aria-label="Capture"
-                className={`df-review-mode-button is-capture${
-                  mode === 'capture' ? ' is-active' : ''
-                }`}
-                data-tooltip="Capture"
-                type="button"
-                onClick={() => setReviewMode('capture')}
-              >
-                <ScanIcon aria-hidden="true" />
-              </button>
-            </div>
+            {!isRemoteSource && (
+              <div className="df-review-mode" aria-label="Add QA">
+                <button
+                  aria-label="Element"
+                  className={`df-review-mode-button is-element${
+                    mode === 'element' ? ' is-active' : ''
+                  }`}
+                  data-tooltip="Element"
+                  type="button"
+                  onClick={() => setReviewMode('element')}
+                >
+                  <SquareMousePointerIcon aria-hidden="true" />
+                </button>
+                <span className="df-review-mode-divider" aria-hidden="true">
+                  |
+                </span>
+                <button
+                  aria-label="Note"
+                  className={`df-review-mode-button is-note${
+                    mode === 'note' ? ' is-active' : ''
+                  }`}
+                  data-tooltip="Note"
+                  type="button"
+                  onClick={() => setReviewMode('note')}
+                >
+                  <StickyNoteIcon aria-hidden="true" />
+                </button>
+                <button
+                  aria-label="Area"
+                  className={`df-review-mode-button is-area${
+                    mode === 'area' ? ' is-active' : ''
+                  }`}
+                  data-tooltip="Area"
+                  type="button"
+                  onClick={() => setReviewMode('area')}
+                >
+                  <ScanIcon aria-hidden="true" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -2652,8 +2821,8 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    --df-review-accent-hover: rgba(124, 199, 255, 0.2);
 	    --df-review-note: #f3b75f;
 	    --df-review-note-soft: rgba(243, 183, 95, 0.14);
-	    --df-review-capture: #63d7c7;
-	    --df-review-capture-soft: rgba(99, 215, 199, 0.14);
+	    --df-review-area: #63d7c7;
+	    --df-review-area-soft: rgba(99, 215, 199, 0.14);
 	    --df-review-tooltip-bg: #0a0d12;
 	    --df-review-side-rail: #111722;
 	    --df-review-mode-bar: rgba(15, 18, 24, 0.86);
@@ -2686,8 +2855,8 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    --df-review-accent-hover: rgba(23, 105, 170, 0.16);
 	    --df-review-note: #a76617;
 	    --df-review-note-soft: rgba(167, 102, 23, 0.12);
-	    --df-review-capture: #087f73;
-	    --df-review-capture-soft: rgba(8, 127, 115, 0.12);
+	    --df-review-area: #087f73;
+	    --df-review-area-soft: rgba(8, 127, 115, 0.12);
 	    --df-review-tooltip-bg: #17202c;
 	    --df-review-side-rail: #edf1f6;
 	    --df-review-mode-bar: rgba(255, 255, 255, 0.9);
@@ -2769,8 +2938,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 			  .df-review-settings-actions button,
 			  .df-review-prompt-tabs button,
 			  .df-review-prompt-block-header button,
-			  .df-review-item-actions button,
-			  .df-review-item-status-select {
+			  .df-review-item-actions button {
 		    min-height: 34px;
 		    border: 1px solid var(--df-review-line);
 		    border-radius: 6px;
@@ -2793,7 +2961,6 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		  .df-review-prompt-block-header button:hover,
 			  .df-review-item-actions button:hover,
 		  .df-review-item-delete:hover,
-		  .df-review-item-status-select:hover,
 		  .df-review-presets button.is-active,
 			  .df-review-overlay-button.is-active,
 			  .df-review-mode-button.is-active {
@@ -3613,15 +3780,15 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		    color: #ffc3ad;
 		  }
 
-		  .df-review-mode-button.is-capture {
+		  .df-review-mode-button.is-area {
 		    border-color: rgba(99, 215, 199, 0.46);
-		    background: var(--df-review-capture-soft);
-	    color: var(--df-review-capture);
+		    background: var(--df-review-area-soft);
+	    color: var(--df-review-area);
 	  }
 
-	  .df-review-mode-button.is-capture:hover,
-	  .df-review-mode-button.is-capture.is-active {
-	    border-color: var(--df-review-capture);
+	  .df-review-mode-button.is-area:hover,
+	  .df-review-mode-button.is-area.is-active {
+	    border-color: var(--df-review-area);
 	    background: rgba(99, 215, 199, 0.24);
 	    color: #bdf4ed;
 	  }
@@ -3748,7 +3915,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 
 		  .df-review-list-header {
 		    display: grid;
-		    grid-template-columns: minmax(0, 1fr) auto;
+		    grid-template-columns: minmax(0, 1fr) auto auto;
 		    align-items: center;
 		    gap: 8px;
 		    min-height: 48px;
@@ -3778,6 +3945,43 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 		    color: var(--df-review-muted);
 		    font-size: 11px;
 		    font-variant-numeric: tabular-nums;
+		  }
+
+		  .df-review-list-controls {
+		    display: flex;
+		    align-items: center;
+		    gap: 4px;
+		  }
+
+		  .df-review-source-select {
+		    width: 98px;
+		    min-height: 30px;
+		    border: 1px solid var(--df-review-line-soft);
+		    border-radius: 6px;
+		    padding: 0 7px;
+		    color: var(--df-review-text);
+		    background: var(--df-review-control);
+		    font-size: 11px;
+		    font-weight: 800;
+		  }
+
+		  .df-review-source-refresh {
+		    position: relative;
+		    display: inline-grid;
+		    place-items: center;
+		    width: 30px;
+		    min-width: 30px;
+		    height: 30px;
+		    border: 1px solid var(--df-review-line-soft);
+		    border-radius: 6px;
+		    padding: 0;
+		    color: var(--df-review-muted);
+		    background: var(--df-review-control);
+		  }
+
+		  .df-review-source-refresh svg {
+		    width: 14px;
+		    height: 14px;
 		  }
 
 		  .df-review-filter-tabs {
@@ -3900,6 +4104,11 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    font-size: 11px;
 	  }
 
+  .df-review-item-error {
+    color: #ff8f61 !important;
+    overflow-wrap: anywhere;
+  }
+
   .df-review-item-badges {
     display: flex;
     align-items: center;
@@ -3927,7 +4136,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
   }
 
   .df-review-item-viewport.is-scope-tablet {
-    --df-review-scope: var(--df-review-capture);
+    --df-review-scope: var(--df-review-area);
     --df-review-scope-rgb: 99, 215, 199;
   }
 
@@ -3974,6 +4183,12 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
     background: var(--df-review-line-soft);
   }
 
+  .df-review-item-status-badge.is-error {
+    border-color: rgba(255, 143, 97, 0.36);
+    color: #ff8f61;
+    background: rgba(255, 143, 97, 0.12);
+  }
+
 	  .df-review-item-main img {
 	    width: 100%;
 	    max-height: 110px;
@@ -4008,6 +4223,7 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    align-items: center;
 	    gap: 6px;
 	    min-width: 0;
+	    flex-wrap: wrap;
 	  }
 
 	  .df-review-item-prompt-actions {
@@ -4085,14 +4301,70 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
 	    stroke-width: 2;
 	  }
 
-  .df-review-item-status-select {
-    width: min(100%, 112px);
-    min-height: 28px;
-    padding: 0 7px;
-    color: var(--df-review-text);
+  .df-review-item-action-button {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    min-width: 30px;
+    height: 28px;
+    border: 1px solid var(--df-review-line);
+    border-radius: 6px;
+    padding: 0;
+    color: var(--df-review-muted);
     background: var(--df-review-control);
+  }
+
+  .df-review-item-action-button:hover:not(:disabled) {
+    border-color: rgba(124, 199, 255, 0.42);
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+  }
+
+  .df-review-item-action-button:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  .df-review-item-action-button svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+  }
+
+  .df-review-item-action-button::after,
+  .df-review-source-refresh::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 7px);
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(2px);
+    border: 1px solid var(--df-review-line);
+    border-radius: 5px;
+    padding: 4px 7px;
+    background: var(--df-review-tooltip-bg);
+    color: var(--df-review-text);
     font-size: 11px;
     font-weight: 800;
+    white-space: nowrap;
+    transition:
+      opacity 120ms ease,
+      transform 120ms ease;
+  }
+
+  .df-review-item-action-button:hover::after,
+  .df-review-item-action-button:focus-visible::after,
+  .df-review-source-refresh:hover::after,
+  .df-review-source-refresh:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0);
   }
 
 	  .df-review-stage {

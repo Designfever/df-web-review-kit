@@ -1,218 +1,65 @@
-export type ReviewItemKind = 'text' | 'capture';
-export type ReviewItemScope = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'dom';
-export type ReviewWorkflowStatus = 'todo' | 'doing' | 'review' | 'hold' | 'done';
-export type ReviewItemStatus = 'open' | 'resolved' | ReviewWorkflowStatus;
-export type ReviewMode = 'idle' | 'text' | 'element' | 'capture';
-export type ReviewViewportScope = Exclude<ReviewItemScope, 'dom'>;
-export type DomAnchorStrategy =
-  | 'configured-attribute'
-  | 'id'
-  | 'class'
-  | 'dom-path';
+import { localAdapter } from './adapters/local';
+import { normalizeRoutePath } from './route';
+import type {
+  DomAnchor,
+  DomAnchorCandidate,
+  DomSourceHint,
+  NumberedReviewItem,
+  RelativeSelection,
+  ReviewItem,
+  ReviewItemScope,
+  ReviewMarker,
+  ReviewMode,
+  ReviewPoint,
+  ReviewSelection,
+  ReviewViewportPreset,
+  ViewportSize,
+  WebReviewKitAdapter,
+  WebReviewKitController,
+  WebReviewKitOptions,
+  WebReviewKitTarget,
+} from './types';
 
-export interface ReviewRulerFrame {
-  label?: string;
-  scope?: ReviewViewportScope;
-  viewportWidth?: number;
-  viewportHeight?: number;
-  designWidth: number;
-  designHeight?: number;
-}
-
-export interface ReviewRulerConfig {
-  enabled?: boolean;
-  unit?: string;
-  frames?: ReviewRulerFrame[];
-}
-
-export interface DomAnchorCandidate {
-  selector: string;
-  strategy: DomAnchorStrategy;
-  textFingerprint?: string;
-  confidence?: number;
-}
-
-export interface DomSourceHint {
-  component?: string;
-  file?: string;
-  sectionId?: string;
-  sectionIndex?: string;
-}
-
-export interface DomAnchor extends DomAnchorCandidate {
-  candidates?: DomAnchorCandidate[];
-  htmlSnippet?: string;
-  source?: DomSourceHint;
-}
-
-export interface RelativeSelection {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface ViewportSize {
-  width: number;
-  height: number;
-}
-
-export interface ReviewPoint {
-  x: number;
-  y: number;
-}
-
-export interface ReviewMarker {
-  viewport: ReviewPoint;
-  relative?: ReviewPoint;
-}
-
-export interface ReviewScreenshot {
-  dataUrl: string;
-  width: number;
-  height: number;
-}
-
-export interface ReviewSelection {
-  viewport: RelativeSelection;
-  relative?: RelativeSelection;
-}
-
-export interface ReviewItem {
-  id: string;
-  projectId: string;
-  routeKey: string;
-  pageUrl: string;
-  originalUrl?: string;
-  normalizedPath: string;
-  scope?: ReviewItemScope;
-  kind: ReviewItemKind;
-  title?: string;
-  comment: string;
-  status: ReviewItemStatus;
-  viewport: ViewportSize;
-  devicePixelRatio?: number;
-  scroll?: {
-    x: number;
-    y: number;
-  };
-  anchor?: DomAnchor;
-  marker?: ReviewMarker;
-  selection?: ReviewSelection;
-  screenshot?: ReviewScreenshot;
-  externalIssueId?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ReviewItemQuery {
-  projectId: string;
-  routeKey?: string;
-  normalizedPath?: string;
-  status?: ReviewItemStatus;
-}
-
-export interface WebReviewKitAdapter {
-  list(query: ReviewItemQuery): Promise<ReviewItem[]>;
-  create(item: ReviewItem): Promise<ReviewItem>;
-  update(
-    id: string,
-    patch: Partial<Omit<ReviewItem, 'id' | 'createdAt'>>
-  ): Promise<ReviewItem>;
-  remove(id: string): Promise<void>;
-}
-
-export interface LocalAdapterOptions {
-  storageKey?: string;
-}
-
-export interface ReviewViewportPreset {
-  label: string;
-  width: number;
-  height: number;
-  scope?: Exclude<ReviewItemScope, 'dom'>;
-}
-
-export interface NumberedReviewItem {
-  item: ReviewItem;
-  scope: ReviewItemScope;
-  label: string;
-  number: number;
-  displayLabel: string;
-}
-
-export const REVIEW_WORKFLOW_STATUS_OPTIONS: Array<{
-  value: ReviewWorkflowStatus;
-  label: string;
-}> = [
-  { value: 'todo', label: '작업전' },
-  { value: 'doing', label: '작업중' },
-  { value: 'review', label: '검토 필요' },
-  { value: 'hold', label: '보류' },
-  { value: 'done', label: '완료' },
-];
-
-export function normalizeReviewItemStatus(
-  status: ReviewItemStatus | undefined
-): ReviewWorkflowStatus {
-  if (status === 'resolved') return 'done';
-  if (status === 'open' || !status) return 'todo';
-  return status;
-}
-
-function matchesReviewItemStatus(
-  itemStatus: ReviewItemStatus | undefined,
-  queryStatus: ReviewItemStatus
-) {
-  return (
-    normalizeReviewItemStatus(itemStatus) === normalizeReviewItemStatus(queryStatus)
-  );
-}
-
-export interface WebReviewKitOptions {
-  projectId: string;
-  adapter?: WebReviewKitAdapter;
-  target?: WebReviewKitTarget | (() => WebReviewKitTarget | undefined);
-  viewports?: {
-    presets?: ReviewViewportPreset[];
-  };
-  ruler?: ReviewRulerConfig;
-  hotkeys?: {
-    qa?: string;
-  };
-  anchors?: {
-    attribute?: string;
-  };
-  onRestoreItem?: (item: ReviewItem) => void | Promise<void>;
-  onItemsChange?: (items: ReviewItem[]) => void;
-  onModeChange?: (mode: ReviewMode) => void;
-  ui?: {
-    panel?: boolean;
-  };
-  modules?: {
-    qa?: boolean;
-    grid?: boolean;
-    figma?: boolean;
-  };
-}
-
-export interface WebReviewKitController {
-  open(): void;
-  close(): void;
-  toggle(): void;
-  setMode(mode: ReviewMode): void;
-  getMode(): ReviewMode;
-  highlightItem(itemId: string): void;
-  reload(): Promise<ReviewItem[]>;
-  getItems(): ReviewItem[];
-  destroy(): void;
-}
-
-export interface WebReviewKitTarget {
-  window: Window;
-  document: Document;
-  getViewportRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
-}
+export { localAdapter } from './adapters/local';
+export {
+  DF_SHEET_REVIEW_SOURCE,
+  dfSheetAdapter,
+} from './adapters/df-sheet';
+export {
+  REVIEW_WORKFLOW_STATUS_OPTIONS,
+  normalizeReviewItemStatus,
+} from './status';
+export type {
+  DomAnchor,
+  DomAnchorCandidate,
+  DomAnchorStrategy,
+  DfSheetAdapterOptions,
+  DomSourceHint,
+  LocalAdapterOptions,
+  NumberedReviewItem,
+  RelativeSelection,
+  ReviewItem,
+  ReviewItemKind,
+  ReviewItemQuery,
+  ReviewItemScope,
+  ReviewItemStatus,
+  ReviewSource,
+  ReviewSubmitStatus,
+  ReviewMarker,
+  ReviewMode,
+  ReviewPoint,
+  ReviewRulerConfig,
+  ReviewRulerFrame,
+  ReviewSelection,
+  ReviewViewportPreset,
+  ReviewViewportScope,
+  ReviewWorkflowStatus,
+  ViewportSize,
+  WebReviewKitAdapter,
+  WebReviewKitController,
+  WebReviewKitOptions,
+  WebReviewKitTarget,
+} from './types';
 
 interface ViewportSelection {
   left: number;
@@ -221,16 +68,14 @@ interface ViewportSelection {
   height: number;
 }
 
-interface CaptureDraft {
+interface AreaDraft {
   viewport: ViewportSize;
   anchor?: DomAnchor;
   marker?: ReviewMarker;
   selection?: ReviewSelection;
-  screenshot?: ReviewScreenshot;
-  error?: string;
 }
 
-interface TextDraft {
+interface NoteDraft {
   viewport: ViewportSize;
   anchor?: DomAnchor;
   marker: ReviewMarker;
@@ -249,7 +94,6 @@ interface ReviewEnvironment {
   };
 }
 
-const DEFAULT_STORAGE_KEY = 'df-web-review-kit:items';
 const ROOT_ID = 'df-web-review-kit-root';
 const INTERNAL_QUERY_PARAMS = ['__dfwr_target'];
 
@@ -383,81 +227,6 @@ export function getNumberedReviewItems(
   });
 }
 
-export function localAdapter(
-  options: LocalAdapterOptions = {}
-): WebReviewKitAdapter {
-  const storageKey = options.storageKey ?? DEFAULT_STORAGE_KEY;
-
-  const read = (): ReviewItem[] => {
-    if (typeof window === 'undefined') return [];
-
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) return [];
-
-    try {
-      const value = JSON.parse(raw);
-      return Array.isArray(value) ? value : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const write = (items: ReviewItem[]) => {
-    window.localStorage.setItem(storageKey, JSON.stringify(items));
-  };
-
-  return {
-    async list(query) {
-      return read().filter((item) => {
-        if (item.projectId !== query.projectId) return false;
-        const queryRouteKey = query.routeKey ?? query.normalizedPath;
-        if (
-          queryRouteKey &&
-          getItemRouteKey(item) !== queryRouteKey
-        ) {
-          return false;
-        }
-        if (query.status && !matchesReviewItemStatus(item.status, query.status)) {
-          return false;
-        }
-        return true;
-      });
-    },
-
-    async create(item) {
-      const items = read();
-      items.unshift(item);
-      write(items);
-      return item;
-    },
-
-    async update(id, patch) {
-      const items = read();
-      const index = items.findIndex((item) => item.id === id);
-
-      if (index < 0) {
-        throw new Error(`Review item not found: ${id}`);
-      }
-
-      const next: ReviewItem = {
-        ...items[index],
-        ...patch,
-        id,
-        createdAt: items[index].createdAt,
-        updatedAt: new Date().toISOString(),
-      };
-
-      items[index] = next;
-      write(items);
-      return next;
-    },
-
-    async remove(id) {
-      write(read().filter((item) => item.id !== id));
-    },
-  };
-}
-
 export function createWebReviewKit(
   options: WebReviewKitOptions
 ): WebReviewKitController {
@@ -490,9 +259,9 @@ class WebReviewKitApp {
   private isOpen = false;
   private mode: ReviewMode = 'idle';
   private items: ReviewItem[] = [];
-  private textDraft?: TextDraft;
-  private captureDraft?: CaptureDraft;
-  private isCapturing = false;
+  private noteDraft?: NoteDraft;
+  private areaDraft?: AreaDraft;
+  private isSelectingArea = false;
   private highlightedItemId?: string;
   private highlightClearTimer?: number;
   private renderFrame?: number;
@@ -548,9 +317,9 @@ class WebReviewKitApp {
   close() {
     this.isOpen = false;
     this.setModeState('idle');
-    this.textDraft = undefined;
-    this.captureDraft = undefined;
-    this.isCapturing = false;
+    this.noteDraft = undefined;
+    this.areaDraft = undefined;
+    this.isSelectingArea = false;
     this.render();
   }
 
@@ -569,8 +338,8 @@ class WebReviewKitApp {
     }
 
     this.setModeState(this.mode === mode ? 'idle' : mode);
-    this.textDraft = undefined;
-    this.captureDraft = undefined;
+    this.noteDraft = undefined;
+    this.areaDraft = undefined;
     this.render();
   }
 
@@ -612,17 +381,17 @@ class WebReviewKitApp {
   private cancelMode() {
     if (
       this.mode === 'idle' &&
-      !this.textDraft &&
-      !this.captureDraft &&
-      !this.isCapturing
+      !this.noteDraft &&
+      !this.areaDraft &&
+      !this.isSelectingArea
     ) {
       return false;
     }
 
     this.setModeState('idle');
-    this.textDraft = undefined;
-    this.captureDraft = undefined;
-    this.isCapturing = false;
+    this.noteDraft = undefined;
+    this.areaDraft = undefined;
+    this.isSelectingArea = false;
     this.render();
     return true;
   }
@@ -734,30 +503,30 @@ class WebReviewKitApp {
 
     shell.append(this.createMarkerLayer());
 
-    if (this.isOpen && (this.mode === 'text' || this.mode === 'element')) {
+    if (this.isOpen && (this.mode === 'note' || this.mode === 'element')) {
       shell.append(
-        this.textDraft
-          ? this.createTextPopover(this.textDraft)
+        this.noteDraft
+          ? this.createNotePopover(this.noteDraft)
           : this.mode === 'element'
             ? this.createElementLayer()
-            : this.createTextLayer()
+            : this.createNoteLayer()
       );
     }
 
-    if (this.isOpen && this.mode === 'capture' && !this.captureDraft) {
-      shell.append(this.createCaptureLayer());
+    if (this.isOpen && this.mode === 'area' && !this.areaDraft) {
+      shell.append(this.createAreaLayer());
     }
 
     if (
       this.isOpen &&
-      this.mode === 'capture' &&
-      this.captureDraft &&
+      this.mode === 'area' &&
+      this.areaDraft &&
       this.options.ui?.panel === false
     ) {
-      if (this.captureDraft.selection) {
-        shell.append(this.createCaptureDraftOverlay(this.captureDraft));
+      if (this.areaDraft.selection) {
+        shell.append(this.createAreaDraftOverlay(this.areaDraft));
       }
-      shell.append(this.createCaptureDraftPopover());
+      shell.append(this.createAreaDraftPopover());
     }
 
     this.shadow.append(shell);
@@ -794,25 +563,25 @@ class WebReviewKitApp {
     toolbar.className = 'dfwr-toolbar';
 
     toolbar.append(
-      this.createToolbarButton('Text', this.mode === 'text', () => {
-        this.setModeState(this.mode === 'text' ? 'idle' : 'text');
-        this.textDraft = undefined;
-        this.captureDraft = undefined;
+      this.createToolbarButton('Note', this.mode === 'note', () => {
+        this.setModeState(this.mode === 'note' ? 'idle' : 'note');
+        this.noteDraft = undefined;
+        this.areaDraft = undefined;
         this.render();
       }),
       this.createToolbarButton('Element', this.mode === 'element', () => {
         this.setModeState(this.mode === 'element' ? 'idle' : 'element');
-        this.textDraft = undefined;
-        this.captureDraft = undefined;
+        this.noteDraft = undefined;
+        this.areaDraft = undefined;
         this.render();
       }),
       this.createToolbarButton(
-        this.isCapturing ? 'Capturing' : 'Capture',
-        this.mode === 'capture',
+        this.isSelectingArea ? 'Selecting' : 'Area',
+        this.mode === 'area',
         () => {
-          this.setModeState(this.mode === 'capture' ? 'idle' : 'capture');
-          this.textDraft = undefined;
-          this.captureDraft = undefined;
+          this.setModeState(this.mode === 'area' ? 'idle' : 'area');
+          this.noteDraft = undefined;
+          this.areaDraft = undefined;
           this.render();
         }
       ),
@@ -844,32 +613,32 @@ class WebReviewKitApp {
     if (this.mode === 'idle') {
       const empty = document.createElement('p');
       empty.className = 'dfwr-empty';
-      empty.textContent = 'Add a text note or capture an area.';
+      empty.textContent = 'Add a note or mark an area.';
       body.append(empty);
       return body;
     }
 
-    if (this.mode === 'text' || this.mode === 'element') {
-      body.append(this.createTextBody());
+    if (this.mode === 'note' || this.mode === 'element') {
+      body.append(this.createNoteBody());
       return body;
     }
 
-    body.append(this.createCaptureForm());
+    body.append(this.createAreaForm());
     return body;
   }
 
-  private createTextBody() {
+  private createNoteBody() {
     const empty = document.createElement('p');
     empty.className = 'dfwr-empty';
-    empty.textContent = this.textDraft
+    empty.textContent = this.noteDraft
       ? 'Write the note in the page box.'
       : this.mode === 'element'
         ? 'Click an element to add QA.'
-        : 'Click on the page to place a text note.';
+        : 'Click on the page to place a note.';
     return empty;
   }
 
-  private createTextPopover(draft: TextDraft) {
+  private createNotePopover(draft: NoteDraft) {
     const environment = this.getEnvironment();
     const group = document.createElement('div');
     group.className = 'dfwr-note-draft';
@@ -906,7 +675,7 @@ class WebReviewKitApp {
 
     const meta = document.createElement('div');
     meta.className = 'dfwr-item-date';
-    meta.textContent = formatTextDraftMeta(draft);
+    meta.textContent = formatNoteDraftMeta(draft);
 
     const textarea = document.createElement('textarea');
     textarea.className = 'dfwr-textarea';
@@ -914,18 +683,18 @@ class WebReviewKitApp {
     textarea.rows = 4;
     textarea.value = draft.comment ?? '';
     textarea.addEventListener('input', () => {
-      if (!this.textDraft) return;
-      this.textDraft = {
-        ...this.textDraft,
+      if (!this.noteDraft) return;
+      this.noteDraft = {
+        ...this.noteDraft,
         comment: textarea.value,
       };
     });
 
-    const actions = this.createFormActions('Save text', () => {
+    const actions = this.createFormActions('Save note', () => {
       const comment = textarea.value.trim();
       if (!comment) return;
       void this.createItem({
-        kind: 'text',
+        kind: 'note',
         comment,
         scope: this.mode === 'element' && draft.anchor ? 'dom' : undefined,
         viewport: draft.viewport,
@@ -946,11 +715,11 @@ class WebReviewKitApp {
     return group;
   }
 
-  private createCaptureForm() {
+  private createAreaForm() {
     const form = document.createElement('form');
     form.className = 'dfwr-form';
 
-    if (!this.captureDraft) {
+    if (!this.areaDraft) {
       const empty = document.createElement('p');
       empty.className = 'dfwr-empty';
       empty.textContent = 'Drag on the page to select an area.';
@@ -958,42 +727,26 @@ class WebReviewKitApp {
       return form;
     }
 
-    if (this.captureDraft.error) {
-      const error = document.createElement('p');
-      error.className = 'dfwr-error';
-      error.textContent = this.captureDraft.error;
-      form.append(error);
-    }
-
-    if (this.captureDraft.screenshot) {
-      const image = document.createElement('img');
-      image.className = 'dfwr-preview';
-      image.alt = '';
-      image.src = this.captureDraft.screenshot.dataUrl;
-      form.append(image);
-    }
-
     const meta = document.createElement('div');
     meta.className = 'dfwr-item-date';
-    meta.textContent = formatCaptureDraftMeta(this.captureDraft);
+    meta.textContent = formatAreaDraftMeta(this.areaDraft);
     form.append(meta);
 
     const textarea = document.createElement('textarea');
     textarea.className = 'dfwr-textarea';
-    textarea.placeholder = 'Capture comment';
+    textarea.placeholder = 'Area comment';
     textarea.rows = 4;
 
-    const actions = this.createFormActions('Save capture', () => {
+    const actions = this.createFormActions('Save area', () => {
       const comment = textarea.value.trim();
-      if (!comment || !this.captureDraft) return;
+      if (!comment || !this.areaDraft) return;
       void this.createItem({
-        kind: 'capture',
+        kind: 'area',
         comment,
-        viewport: this.captureDraft.viewport,
-        anchor: this.captureDraft.anchor,
-        marker: this.captureDraft.marker,
-        selection: this.captureDraft.selection,
-        screenshot: this.captureDraft.screenshot,
+        viewport: this.areaDraft.viewport,
+        anchor: this.areaDraft.anchor,
+        marker: this.areaDraft.marker,
+        selection: this.areaDraft.selection,
       });
     });
 
@@ -1001,9 +754,9 @@ class WebReviewKitApp {
     return form;
   }
 
-  private createCaptureDraftOverlay(draft: CaptureDraft) {
+  private createAreaDraftOverlay(draft: AreaDraft) {
     const layer = document.createElement('div');
-    layer.className = 'dfwr-capture-preview-layer';
+    layer.className = 'dfwr-area-preview-layer';
 
     const environment = this.getEnvironment();
     if (!environment || !draft.selection) return layer;
@@ -1030,10 +783,10 @@ class WebReviewKitApp {
     return layer;
   }
 
-  private createCaptureDraftPopover() {
+  private createAreaDraftPopover() {
     const popover = document.createElement('div');
-    popover.className = 'dfwr-capture-draft';
-    popover.append(this.createCaptureForm());
+    popover.className = 'dfwr-area-draft';
+    popover.append(this.createAreaForm());
     return popover;
   }
 
@@ -1053,8 +806,8 @@ class WebReviewKitApp {
     cancel.textContent = 'Cancel';
     cancel.addEventListener('click', () => {
       this.setModeState('idle');
-      this.textDraft = undefined;
-      this.captureDraft = undefined;
+      this.noteDraft = undefined;
+      this.areaDraft = undefined;
       this.render();
     });
 
@@ -1135,36 +888,10 @@ class WebReviewKitApp {
 
     body.append(badges, comment, date);
 
-    if (item.screenshot) {
-      const image = document.createElement('img');
-      image.className = 'dfwr-thumb';
-      image.alt = '';
-      image.src = item.screenshot.dataUrl;
-      body.append(image);
-    }
-
     const actions = document.createElement('div');
     actions.className = 'dfwr-item-actions';
     actions.addEventListener('click', (event) => event.stopPropagation());
     actions.addEventListener('keydown', (event) => event.stopPropagation());
-
-    const status = document.createElement('select');
-    status.className = 'dfwr-status-select';
-    status.setAttribute('aria-label', 'Workflow status');
-    REVIEW_WORKFLOW_STATUS_OPTIONS.forEach((option) => {
-      const itemOption = document.createElement('option');
-      itemOption.value = option.value;
-      itemOption.textContent = option.label;
-      status.append(itemOption);
-    });
-    status.value = normalizeReviewItemStatus(item.status);
-    status.addEventListener('change', (event) => {
-      event.stopPropagation();
-      void this.adapter
-        .update(item.id, { status: status.value as ReviewWorkflowStatus })
-        .then(() => this.reload())
-        .then(() => this.render());
-    });
 
     const remove = document.createElement('button');
     remove.className = 'dfwr-icon-button';
@@ -1179,7 +906,7 @@ class WebReviewKitApp {
         .then(() => this.render());
     });
 
-    actions.append(status, remove);
+    actions.append(remove);
     row.append(body, actions);
     return row;
   }
@@ -1303,17 +1030,17 @@ class WebReviewKitApp {
       popover.style.left = `${position.left}px`;
       popover.style.top = `${position.top}px`;
 
-      if (!this.textDraft) return;
+      if (!this.noteDraft) return;
 
-      this.textDraft = {
-        ...this.textDraft,
+      this.noteDraft = {
+        ...this.noteDraft,
         marker: {
-          ...this.textDraft.marker,
+          ...this.noteDraft.marker,
           viewport: roundPoint(nextPoint),
         },
         comment: textarea.value,
       };
-      meta.textContent = formatTextDraftMeta(this.textDraft);
+      meta.textContent = formatNoteDraftMeta(this.noteDraft);
     };
 
     pin.addEventListener('pointerdown', (event) => {
@@ -1346,11 +1073,11 @@ class WebReviewKitApp {
       const nextPoint = toTargetPointFromHostEvent(event, this.getEnvironment());
       void (this.mode === 'element'
         ? this.bindElementDraftToPoint(nextPoint, textarea.value)
-        : this.bindTextDraftToPoint(nextPoint, textarea.value));
+        : this.bindNoteDraftToPoint(nextPoint, textarea.value));
     });
   }
 
-  private createTextLayer() {
+  private createNoteLayer() {
     const layer = document.createElement('div');
     layer.className = 'dfwr-text-layer';
     const environment = this.getEnvironment();
@@ -1362,7 +1089,7 @@ class WebReviewKitApp {
     layer.addEventListener('pointerdown', (event) => {
       if (event.button !== 0) return;
       event.preventDefault();
-      void this.createTextDraft(
+      void this.createNoteDraft(
         toTargetPointFromHostEvent(event, this.getEnvironment())
       );
     });
@@ -1428,15 +1155,15 @@ class WebReviewKitApp {
     return layer;
   }
 
-  private async createTextDraft(point: ReviewPoint) {
-    await this.bindTextDraftToPoint(point);
+  private async createNoteDraft(point: ReviewPoint) {
+    await this.bindNoteDraftToPoint(point);
   }
 
   private async createElementDraft(point: ReviewPoint) {
     await this.bindElementDraftToPoint(point);
   }
 
-  private async bindTextDraftToPoint(point: ReviewPoint, comment?: string) {
+  private async bindNoteDraftToPoint(point: ReviewPoint, comment?: string) {
     const environment = this.getEnvironment();
     if (!environment) return;
 
@@ -1465,7 +1192,7 @@ class WebReviewKitApp {
       };
     });
 
-    this.textDraft = draft;
+    this.noteDraft = draft;
     this.render();
   }
 
@@ -1513,13 +1240,13 @@ class WebReviewKitApp {
       };
     });
 
-    this.textDraft = draft;
+    this.noteDraft = draft;
     this.render();
   }
 
-  private createCaptureLayer() {
+  private createAreaLayer() {
     const layer = document.createElement('div');
-    layer.className = 'dfwr-capture-layer';
+    layer.className = 'dfwr-area-layer';
     const environment = this.getEnvironment();
 
     if (environment) {
@@ -1527,7 +1254,7 @@ class WebReviewKitApp {
     }
 
     const box = document.createElement('div');
-    box.className = 'dfwr-capture-box';
+    box.className = 'dfwr-area-box';
     layer.append(box);
 
     let startX = 0;
@@ -1579,78 +1306,49 @@ class WebReviewKitApp {
 
       if (!selection || selection.width < 8 || selection.height < 8) return;
 
-      this.isCapturing = true;
+      this.isSelectingArea = true;
       this.render();
-      void this.createCaptureDraft(selection);
+      void this.createAreaDraft(selection);
     });
 
     return layer;
   }
 
-  private async createCaptureDraft(selection: ViewportSelection) {
+  private async createAreaDraft(selection: ViewportSelection) {
     const environment = this.getEnvironment();
     if (!environment) return;
 
     const viewport = getViewportSize(environment);
 
-    try {
-      const draft = await this.withOverlayHidden(async () => {
-        const anchor = getDomAnchor(
-          selection,
-          this.options.anchors?.attribute,
-          environment
-        );
-        const relativeSelection = anchor
-          ? getRelativeSelection(selection, anchor, environment)
-          : undefined;
-        const marker = createSelectionCenterMarker(
-          selection,
-          anchor,
-          environment
-        );
-        const reviewSelection: ReviewSelection = {
-          viewport: toPublicSelection(selection),
-          relative: relativeSelection,
-        };
-
-        try {
-          const screenshot = await captureSelection(selection, environment);
-
-          return {
-            viewport,
-            anchor,
-            marker,
-            selection: reviewSelection,
-            screenshot,
-          };
-        } catch (error) {
-          return {
-            viewport,
-            anchor,
-            marker,
-            selection: reviewSelection,
-            error:
-              error instanceof Error
-                ? error.message
-                : 'Capture failed. The selected area will be saved without an image.',
-          };
-        }
-      });
-
-      this.captureDraft = draft;
-    } catch (error) {
-      this.captureDraft = {
-        viewport,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Capture failed. Try a smaller area.',
+    this.areaDraft = await this.withOverlayHidden(() => {
+      const anchor = getDomAnchor(
+        selection,
+        this.options.anchors?.attribute,
+        environment
+      );
+      const relativeSelection = anchor
+        ? getRelativeSelection(selection, anchor, environment)
+        : undefined;
+      const marker = createSelectionCenterMarker(
+        selection,
+        anchor,
+        environment
+      );
+      const reviewSelection: ReviewSelection = {
+        viewport: toPublicSelection(selection),
+        relative: relativeSelection,
       };
-    } finally {
-      this.isCapturing = false;
-      this.setModeState('capture');
-      this.render();
-    }
+
+      return {
+        viewport,
+        anchor,
+        marker,
+        selection: reviewSelection,
+      };
+    });
+    this.isSelectingArea = false;
+    this.setModeState('area');
+    this.render();
   }
 
   private async withOverlayHidden<T>(callback: () => Promise<T> | T) {
@@ -1669,15 +1367,7 @@ class WebReviewKitApp {
   private async createItem(
     input: Pick<ReviewItem, 'kind' | 'comment'> &
       Partial<
-        Pick<
-          ReviewItem,
-          | 'scope'
-          | 'viewport'
-          | 'anchor'
-          | 'marker'
-          | 'selection'
-          | 'screenshot'
-        >
+        Pick<ReviewItem, 'scope' | 'viewport' | 'anchor' | 'marker' | 'selection'>
       >
   ) {
     const environment = this.getEnvironment();
@@ -1709,15 +1399,14 @@ class WebReviewKitApp {
       anchor: input.anchor,
       marker: input.marker,
       selection: input.selection,
-      screenshot: input.screenshot,
       createdAt: now,
       updatedAt: now,
     };
 
     await this.adapter.create(item);
     this.setModeState('idle');
-    this.textDraft = undefined;
-    this.captureDraft = undefined;
+    this.noteDraft = undefined;
+    this.areaDraft = undefined;
     this.highlightItem(item.id);
     await this.reload();
     this.render();
@@ -1725,8 +1414,8 @@ class WebReviewKitApp {
 
   private async restoreItem(item: ReviewItem) {
     this.setModeState('idle');
-    this.textDraft = undefined;
-    this.captureDraft = undefined;
+    this.noteDraft = undefined;
+    this.areaDraft = undefined;
 
     if (this.options.onRestoreItem) {
       await this.options.onRestoreItem(item);
@@ -1746,60 +1435,6 @@ class WebReviewKitApp {
   }
 }
 
-async function captureSelection(
-  selection: ViewportSelection,
-  environment: ReviewEnvironment
-): Promise<ReviewScreenshot> {
-  if (hasLiveMediaInSelection(selection, environment)) {
-    return captureSelectionFromDisplayMedia(selection, environment);
-  }
-
-  await waitForNextFrame(environment);
-
-  const { default: html2canvas } = await import('html2canvas');
-  const scale = Math.min(environment.window.devicePixelRatio || 1, 2);
-  const canvas = await html2canvas(environment.document.body, {
-    allowTaint: false,
-    backgroundColor: null,
-    foreignObjectRendering: true,
-    logging: false,
-    scale,
-    useCORS: true,
-    x: selection.left + environment.window.scrollX,
-    y: selection.top + environment.window.scrollY,
-    width: selection.width,
-    height: selection.height,
-    windowWidth: environment.document.documentElement.scrollWidth,
-    windowHeight: environment.document.documentElement.scrollHeight,
-  });
-
-  return {
-    dataUrl: canvas.toDataURL('image/png'),
-    width: selection.width,
-    height: selection.height,
-  };
-}
-
-function hasLiveMediaInSelection(
-  selection: ViewportSelection,
-  environment: ReviewEnvironment
-) {
-  const mediaElements = Array.from(
-    environment.document.querySelectorAll('video, canvas')
-  );
-  return mediaElements.some((element) => {
-    const rect = element.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return false;
-
-    return rectanglesIntersect(selection, {
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
-    });
-  });
-}
-
 function rectanglesIntersect(
   a: ViewportSelection,
   b: ViewportSelection
@@ -1810,107 +1445,6 @@ function rectanglesIntersect(
     a.top < b.top + b.height &&
     a.top + a.height > b.top
   );
-}
-
-async function captureSelectionFromDisplayMedia(
-  selection: ViewportSelection,
-  environment: ReviewEnvironment
-): Promise<ReviewScreenshot> {
-  if (!window.isSecureContext || !navigator.mediaDevices?.getDisplayMedia) {
-    throw new Error(
-      'Video/canvas capture needs HTTPS or localhost. Open the HTTPS Tailscale URL and try again.'
-    );
-  }
-
-  const stream = await navigator.mediaDevices.getDisplayMedia({
-    audio: false,
-    preferCurrentTab: true,
-    selfBrowserSurface: 'include',
-    surfaceSwitching: 'exclude',
-    video: {
-      displaySurface: 'browser',
-      frameRate: 1,
-    },
-  } as DisplayMediaStreamOptions);
-
-  try {
-    const video = document.createElement('video');
-    video.muted = true;
-    video.playsInline = true;
-    video.srcObject = stream;
-    await video.play();
-    await waitForVideoFrame(video);
-
-    const sourceWidth = video.videoWidth || window.innerWidth;
-    const sourceHeight = video.videoHeight || window.innerHeight;
-    const scaleX = sourceWidth / window.innerWidth;
-    const scaleY = sourceHeight / window.innerHeight;
-    const outputWidth = Math.max(1, Math.round(selection.width * scaleX));
-    const outputHeight = Math.max(1, Math.round(selection.height * scaleY));
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-
-    if (!context) {
-      throw new Error('Capture failed. Canvas is unavailable.');
-    }
-
-    canvas.width = outputWidth;
-    canvas.height = outputHeight;
-    context.drawImage(
-      video,
-      (environment.viewportRect.left + selection.left) * scaleX,
-      (environment.viewportRect.top + selection.top) * scaleY,
-      selection.width * scaleX,
-      selection.height * scaleY,
-      0,
-      0,
-      outputWidth,
-      outputHeight
-    );
-
-    return {
-      dataUrl: canvas.toDataURL('image/png'),
-      width: selection.width,
-      height: selection.height,
-    };
-  } finally {
-    stream.getTracks().forEach((track) => track.stop());
-  }
-}
-
-async function waitForVideoFrame(video: HTMLVideoElement) {
-  const videoWithFrameCallback = video as HTMLVideoElement & {
-    requestVideoFrameCallback?: (callback: () => void) => number;
-  };
-
-  if (typeof videoWithFrameCallback.requestVideoFrameCallback === 'function') {
-    await new Promise<void>((resolve) => {
-      videoWithFrameCallback.requestVideoFrameCallback?.(() => resolve());
-    });
-    return;
-  }
-
-  if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
-    await new Promise<void>((resolve, reject) => {
-      const cleanup = () => {
-        video.removeEventListener('loadeddata', handleLoadedData);
-        video.removeEventListener('error', handleError);
-      };
-      const handleLoadedData = () => {
-        cleanup();
-        resolve();
-      };
-      const handleError = () => {
-        cleanup();
-        reject(new Error('Capture failed. Display stream did not load.'));
-      };
-
-      video.addEventListener('loadeddata', handleLoadedData, { once: true });
-      video.addEventListener('error', handleError, { once: true });
-    });
-  }
-
-  await waitForNextFrame();
 }
 
 function waitForNextFrame(environment?: ReviewEnvironment) {
@@ -2609,20 +2143,8 @@ function getRouteKey(environment?: ReviewEnvironment) {
   return normalizeRoutePath(location.pathname);
 }
 
-function getItemRouteKey(
-  item: Pick<ReviewItem, 'routeKey' | 'normalizedPath'>
-) {
-  return item.routeKey || normalizeRoutePath(item.normalizedPath);
-}
-
 function getNormalizedPath(environment?: ReviewEnvironment) {
   return getRouteKey(environment);
-}
-
-function normalizeRoutePath(pathname: string) {
-  const [pathWithoutQuery] = pathname.split(/[?#]/);
-  const path = (pathWithoutQuery || '/').replace(/\/index\.html$/, '/');
-  return path.startsWith('/') ? path : `/${path}`;
 }
 
 function getPublicSearch(location: Location) {
@@ -2651,7 +2173,7 @@ function formatDate(value: string) {
   });
 }
 
-function formatCaptureDraftMeta(draft: CaptureDraft) {
+function formatAreaDraftMeta(draft: AreaDraft) {
   const parts = [`viewport ${formatSize(draft.viewport)}`];
 
   if (draft.selection) {
@@ -2662,14 +2184,10 @@ function formatCaptureDraftMeta(draft: CaptureDraft) {
     parts.push(`point ${formatPoint(draft.marker.viewport)}`);
   }
 
-  if (draft.screenshot) {
-    parts.push(`capture ${formatSize(draft.screenshot)}`);
-  }
-
   return parts.join(' / ');
 }
 
-function formatTextDraftMeta(draft: TextDraft) {
+function formatNoteDraftMeta(draft: NoteDraft) {
   const parts = [
     `viewport ${formatSize(draft.viewport)}`,
     `point ${formatPoint(draft.marker.viewport)}`,
@@ -2701,10 +2219,6 @@ function formatItemMeta(item: ReviewItem) {
 
   if (item.anchor) {
     parts.push(formatAnchorMeta(item.anchor));
-  }
-
-  if (item.screenshot) {
-    parts.push(`capture ${formatSize(item.screenshot)}`);
   }
 
   return parts.join(' / ');
@@ -3004,7 +2518,6 @@ function createStyleElement() {
 
     .dfwr-button:hover,
     .dfwr-icon-button:hover,
-    .dfwr-status-select:hover,
     .dfwr-button.is-active {
       border-color: rgba(255, 255, 255, 0.4);
       background: #3b444b;
@@ -3030,18 +2543,6 @@ function createStyleElement() {
       text-transform: uppercase;
     }
 
-    .dfwr-status-select {
-      min-height: 32px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 6px;
-      padding: 0 8px;
-      color: #f7f7f2;
-      background: #2a3137;
-      font: inherit;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
     .dfwr-marker-layer {
       position: fixed;
       inset: 0;
@@ -3049,7 +2550,7 @@ function createStyleElement() {
       pointer-events: none;
     }
 
-    .dfwr-capture-preview-layer {
+    .dfwr-area-preview-layer {
       position: fixed;
       inset: 0;
       z-index: 3;
@@ -3159,7 +2660,7 @@ function createStyleElement() {
       border-style: dashed;
     }
 
-    .dfwr-capture-preview-layer .dfwr-bound-marker {
+    .dfwr-area-preview-layer .dfwr-bound-marker {
       border-color: #63d7c7;
       background: #1f2428;
       box-shadow:
@@ -3271,7 +2772,7 @@ function createStyleElement() {
       box-shadow: 0 16px 38px rgba(0, 0, 0, 0.32);
     }
 
-    .dfwr-capture-draft {
+    .dfwr-area-draft {
       position: fixed;
       right: 16px;
       top: 16px;
@@ -3292,7 +2793,7 @@ function createStyleElement() {
       padding: 0;
     }
 
-    .dfwr-capture-draft .dfwr-actions {
+    .dfwr-area-draft .dfwr-actions {
       padding: 0;
     }
 
@@ -3437,7 +2938,7 @@ function createStyleElement() {
 
     .dfwr-text-layer,
     .dfwr-element-layer,
-    .dfwr-capture-layer {
+    .dfwr-area-layer {
       position: fixed;
       inset: 0;
       z-index: 1;
@@ -3454,12 +2955,12 @@ function createStyleElement() {
       background: rgba(0, 0, 0, 0.06);
     }
 
-    .dfwr-capture-layer {
+    .dfwr-area-layer {
       cursor: crosshair;
       background: rgba(0, 0, 0, 0.22);
     }
 
-    .dfwr-capture-box {
+    .dfwr-area-box {
       position: fixed;
       z-index: 2;
       width: 0;

@@ -161,6 +161,31 @@ const presence = supabaseClient
 
 그 다음 `mountReviewShell({ adapters, presence, ... })`에 넘긴다.
 
+## Local dev harness
+
+Package repo 안에서 host project 없이 local source 기준 smoke를 돌릴 수 있다.
+
+```bash
+pnpm dev:review
+```
+
+Open `http://127.0.0.1:5177/review/`.
+
+Fixture pages:
+
+- `/` — note, area, DOM marker 기본 생성 대상
+- `/components/` — button/input/panel spacing 대상
+- `/long-form/` — scroll restore와 anchor restore 대상
+
+Build/typecheck 검증:
+
+```bash
+pnpm typecheck:dev
+pnpm build:dev
+```
+
+이 harness는 package source(`src`)를 직접 import한다. host integration이나 Supabase remote 검증은 각 host project의 `/review` route에서 별도로 확인한다.
+
 ## Environment
 
 ```env

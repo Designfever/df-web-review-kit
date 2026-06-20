@@ -11,7 +11,6 @@ Designfever web page review overlay toolkit.
 - first route: `/review`
 - primary sources: `local`, `supabase`
 - optional remote direction: `df-sheet`
-- default overlay hotkey: `Shift+Q`
 
 ## Docs
 
@@ -137,6 +136,27 @@ mountReviewShell({
   reviewPathPrefix: REVIEW_PATH_PREFIX,
   presence,
 });
+```
+
+## Local dev review harness
+
+Package 자체 동작을 host project 없이 확인할 수 있는 Vite fixture가 포함되어 있다.
+
+```bash
+pnpm dev:review
+```
+
+Open `http://127.0.0.1:5177/review/` and use the built-in fixture pages:
+
+- `/` — note/area/DOM marker 기본 생성 확인
+- `/components/` — controls, input, panel spacing 확인
+- `/long-form/` — iframe scroll/anchor restore 확인
+
+검증용 commands:
+
+```bash
+pnpm typecheck:dev
+pnpm build:dev
 ```
 
 ## Package boundary

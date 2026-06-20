@@ -3,7 +3,7 @@ export type ReviewItemScope = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'dom';
 export type ReviewWorkflowStatus = 'todo' | 'doing' | 'review' | 'hold' | 'done';
 export type ReviewItemStatus = 'open' | 'resolved' | ReviewWorkflowStatus;
 export type ReviewMode = 'idle' | 'note' | 'element' | 'area';
-export type ReviewSource = 'local' | 'df-sheet';
+export type ReviewSource = 'local' | 'df-sheet' | 'supabase' | (string & {});
 export type ReviewSubmitStatus =
   | 'idle'
   | 'submitting'
@@ -16,19 +16,9 @@ export type DomAnchorStrategy =
   | 'class'
   | 'dom-path';
 
-export interface ReviewRulerFrame {
-  label?: string;
-  scope?: ReviewViewportScope;
-  viewportWidth?: number;
-  viewportHeight?: number;
-  designWidth: number;
-  designHeight?: number;
-}
-
 export interface ReviewRulerConfig {
   enabled?: boolean;
   unit?: string;
-  frames?: ReviewRulerFrame[];
 }
 
 export interface DomAnchorCandidate {
@@ -80,6 +70,7 @@ export interface ReviewSelection {
 
 export interface ReviewItem {
   id: string;
+  reviewNumber?: number;
   projectId: string;
   routeKey: string;
   pageUrl: string;
@@ -144,6 +135,21 @@ export interface DfSheetAdapterOptions {
   token?: string;
 }
 
+export interface SupabaseReviewClient {
+  from(table: string): any;
+  rpc?: (fn: string, args?: Record<string, unknown>) => any;
+}
+
+export interface SupabaseReviewAdapterOptions {
+  client: SupabaseReviewClient;
+  table?: string;
+  projectId: string;
+  source?: ReviewSource;
+  createRpc?: string;
+  reviewPathPrefix?: string;
+  unsafeClientReviewNumberFallback?: boolean;
+}
+
 export interface ReviewViewportPreset {
   label: string;
   width: number;
@@ -192,7 +198,8 @@ export interface WebReviewKitController {
   toggle(): void;
   setMode(mode: ReviewMode): void;
   getMode(): ReviewMode;
-  highlightItem(itemId: string): void;
+  highlightItem(itemId?: string): void;
+  setHiddenItemIds(itemIds?: string[]): void;
   reload(): Promise<ReviewItem[]>;
   getItems(): ReviewItem[];
   destroy(): void;
@@ -202,4 +209,5 @@ export interface WebReviewKitTarget {
   window: Window;
   document: Document;
   getViewportRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
+  getOverlayRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 }

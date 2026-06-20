@@ -1,22 +1,241 @@
 # df-web-review-kit
 
-Web page review overlay toolkit for Designfever projects.
+Designfever web page review overlay toolkit.
 
-```ts
-import { createWebReviewKit, localAdapter } from '@designfever/web-review-kit';
+`df-web-review-kit`는 프로젝트 안에 `/review` shell을 붙이고, iframe으로 실제 page를 띄운 뒤 QA note/area/DOM marker를 생성하는 검수 도구다. 각 프로젝트는 adapter만 바꿔서 local draft, df-sheet, Supabase 같은 저장소를 선택한다.
 
-createWebReviewKit({
-  projectId: 'lexus-official-v2026',
-  adapter: localAdapter({
-    storageKey: 'lexus-official-v2026-review-items',
-  }),
-  hotkeys: {
-    qa: 'Shift+Q',
-  },
-});
-```
+현재 Lexus pilot 기준:
+
+- package name: `@designfever/web-review-kit`
+- current version: `0.1.0`
+- first route: `/review`
+- primary sources: `local`, `supabase`
+- optional remote direction: `df-sheet`
+- default overlay hotkey: `Shift+Q`
 
 ## Docs
 
-- [Initial plan](docs/initial-plan.md)
-- [df-sheet adapter implementation plan](docs/df-sheet-adapter.md)
+- [Concept](docs/concept.md): 제품 컨셉, local draft와 remote canonical QA의 역할
+- [Installation](docs/installation.md): package 설치, `/review` mount, Vite/Lexus 예시
+- [Supabase setup](docs/supabase.md): Supabase item/presence 연결 절차
+- [Supabase review item SQL](docs/supabase-review-items.md): table, RPC, RLS, migration SQL
+- [Supabase presence](docs/supabase-presence.md): Realtime Presence adapter 구조
+- [Adapter handoff](docs/adapter-handoff.md): adapter contract와 분리 계획
+- [df-sheet next](docs/df-sheet-next.md): df-sheet를 remote destination으로 쓸 때의 방향
+
+`docs/initial-plan.md`는 초기 아이디어 기록이다. 현재 설치/운영 기준은 이 README와 위 문서를 우선한다.
+
+## Quick Start
+
+Host project에 package와 React peer dependency를 설치한다.
+
+```bash
+pnpm add @designfever/web-review-kit react react-dom
+```
+
+Supabase를 remote/presence로 쓰면 host project에 Supabase client도 설치한다.
+
+```bash
+pnpm add @supabase/supabase-js
+```
+
+Vite project 예시:
+
+```tsx
+import {
+  createFallbackPresenceAdapter,
+  createLocalPresenceAdapter,
+  createReviewPagesFromGlob,
+  createSupabasePresenceAdapter,
+  mountReviewShell,
+  type ReviewShellAdapter,
+  type SupabasePresenceClient,
+} from '@designfever/web-review-kit/react-shell';
+import {
+  REVIEW_WORKFLOW_STATUS_OPTIONS,
+  localAdapter,
+  supabaseAdapter,
+  type SupabaseReviewClient,
+} from '@designfever/web-review-kit';
+import { createClient } from '@supabase/supabase-js';
+
+const REVIEW_PROJECT_ID = 'lexus-official-v2026';
+const REVIEW_PATH_PREFIX = '/review';
+const pages = createReviewPagesFromGlob(import.meta.glob('/**/index.tsx'), {
+  exclude: (href) =>
+    href === '/review/' ||
+    href === '/guide/' ||
+    href.startsWith('/guide/'),
+});
+
+const local = localAdapter({
+  storageKey: `${REVIEW_PROJECT_ID}-review-items`,
+});
+
+const supabaseClient = import.meta.env.VITE_REVIEW_SUPABASE_ANON_KEY
+  ? createClient(
+      import.meta.env.VITE_REVIEW_SUPABASE_URL,
+      import.meta.env.VITE_REVIEW_SUPABASE_ANON_KEY
+    )
+  : null;
+
+const supabase = supabaseClient
+  ? supabaseAdapter({
+      client: supabaseClient as unknown as SupabaseReviewClient,
+      table: import.meta.env.VITE_REVIEW_SUPABASE_TABLE || 'review_items',
+      projectId: REVIEW_PROJECT_ID,
+      source: 'supabase',
+      reviewPathPrefix: REVIEW_PATH_PREFIX,
+    })
+  : null;
+
+const adapters = [
+  {
+    label: 'local',
+    get: (id) => local.get(id),
+    list: (query) => local.list(query),
+    create: (item) => local.create(item),
+    statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
+    updateStatus: ({ id, status }) => local.update(id, { status }),
+    syncSubmission: ({ id, patch }) => local.update(id, patch),
+    remove: (id) => local.remove(id),
+  },
+  ...(supabase
+    ? [
+        {
+          label: 'supabase',
+          get: (id) => supabase.get(id),
+          list: (query) => supabase.list(query),
+          create: (item) => supabase.create(item),
+          statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
+          updateStatus: ({ id, status }) => supabase.update(id, { status }),
+          remove: (id) => supabase.remove(id),
+        } satisfies ReviewShellAdapter,
+      ]
+    : []),
+] satisfies ReviewShellAdapter[];
+
+const localPresence = createLocalPresenceAdapter({
+  channelName: `${REVIEW_PROJECT_ID}:review-presence`,
+});
+
+const presence = supabaseClient
+  ? createFallbackPresenceAdapter(
+      createSupabasePresenceAdapter({
+        client: supabaseClient as unknown as SupabasePresenceClient,
+        channelPrefix: 'review-presence',
+        private: import.meta.env.VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE === 'true',
+      }),
+      localPresence
+    )
+  : localPresence;
+
+mountReviewShell({
+  projectId: REVIEW_PROJECT_ID,
+  pages,
+  adapters,
+  reviewPathPrefix: REVIEW_PATH_PREFIX,
+  presence,
+});
+```
+
+## Package boundary
+
+Public imports are limited to the export map:
+
+```ts
+import { createWebReviewKit, localAdapter } from '@designfever/web-review-kit';
+import { mountReviewShell } from '@designfever/web-review-kit/react-shell';
+```
+
+- `@designfever/web-review-kit`: core API, adapters, shared types.
+- `@designfever/web-review-kit/react-shell`: review shell UI, presence adapters, page glob helper.
+- `src/*` is not a public import path.
+- `react` and `react-dom` are peer dependencies.
+- `lucide-react` is currently bundled into the built shell output, not required from the host.
+- Published/packed files are `dist`, `docs`, and `README.md`; the Lexus `/review` page stays as a consumer smoke page outside the package surface.
+
+See [Package split checkpoint](docs/package-split-checkpoint.md) for the current split policy.
+
+## Environment
+
+```env
+VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
+VITE_REVIEW_SUPABASE_ANON_KEY=
+VITE_REVIEW_SUPABASE_TABLE=review_items
+VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE=false
+```
+
+Browser에는 Supabase `anon` key만 넣는다. `service_role` key는 넣지 않는다.
+
+## Current Lexus Commands
+
+Lexus repo 안에서 package를 검증할 때:
+
+```bash
+pnpm dev:review
+pnpm review-kit:typecheck
+pnpm typecheck:review
+pnpm review-kit:build
+pnpm build:review
+```
+
+- `pnpm dev:review`: review-kit build 후 package watch와 Vite dev server 실행
+- `pnpm review-kit:typecheck`: package typecheck
+- `pnpm typecheck:review`: package + Lexus typecheck
+- `pnpm review-kit:build`: package dist build 후 Lexus `node_modules` sync
+- `pnpm build:review`: package dist build 후 Lexus SEO build
+
+이 repo에서는 package를 file dependency로 소비한다.
+
+```json
+"@designfever/web-review-kit": "file:packages/df-web-review-kit"
+```
+
+package source를 바꾸면 commit 전에 `pnpm review-kit:build`로 `dist`도 같이 갱신한다.
+
+## Data Rules
+
+- local item `#id`는 개인 draft 번호다.
+- remote source에 등록하면 remote adapter가 새 canonical `reviewNumber`를 발급한다.
+- local에서 remote 등록이 성공하면 local draft는 삭제한다.
+- item model에는 screenshot data URL을 넣지 않는다.
+- deep link restore는 `source`, `target`, `w`, `h`, `item` query를 기준으로 한다.
+
+Example:
+
+```txt
+/review?source=supabase&target=/service/&w=540&h=1080&item=<remote-id>
+```
+
+## Verification
+
+Docs-only:
+
+```bash
+git diff --check
+```
+
+Package source:
+
+```bash
+pnpm review-kit:typecheck
+pnpm review-kit:build
+```
+
+Lexus integration:
+
+```bash
+pnpm typecheck:review
+pnpm build:review
+```
+
+Manual smoke:
+
+1. Open `/review`.
+2. Load a target page.
+3. Create local note, DOM note, and area item.
+4. Submit local item to remote.
+5. Confirm local draft is removed.
+6. Switch to remote source and open the remote item.
+7. Confirm route, viewport, scroll, marker, and prompt restore.

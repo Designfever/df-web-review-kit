@@ -92,7 +92,6 @@ export function dfSheetAdapter(
       const externalIssueUrl = buildIssueUrl(options, externalIssueId);
       const finalMetadata: ReviewMetadata = {
         ...metadata,
-        id: externalIssueId,
         externalIssueId,
         externalIssueUrl,
         reviewUrl: buildReviewUrl(item, options, externalIssueId),
@@ -144,6 +143,7 @@ function createReviewMetadata(
     version: REVIEW_METADATA_VERSION,
     reviewProjectId: options.reviewProjectId ?? item.projectId,
     id: item.id,
+    reviewNumber: item.reviewNumber,
     projectId: item.projectId,
     routeKey: item.routeKey,
     pageUrl: item.pageUrl,
@@ -178,6 +178,7 @@ function issueToReviewItem(
 
   return {
     id: issue.id,
+    reviewNumber: metadata.reviewNumber,
     projectId:
       metadata.reviewProjectId ?? metadata.projectId ?? options.reviewProjectId ?? options.projectId,
     routeKey,
@@ -259,15 +260,20 @@ function getDfSheetBaseUrl(options: DfSheetAdapterOptions) {
 }
 
 function buildIssueTitle(item: ReviewItem) {
+  const reviewId = formatReviewItemIndexId(item);
+  const idPrefix = reviewId ? `${reviewId} ` : '';
   const prefix = item.kind === 'area' ? '[Area]' : '[Note]';
   const summary = item.title || item.comment.split('\n')[0] || 'Review item';
-  return `${prefix} ${summary}`.slice(0, 120);
+  return `${idPrefix}${prefix} ${summary}`.slice(0, 120);
 }
 
 function buildIssueDescription(item: ReviewItem, metadata: ReviewMetadata) {
+  const reviewId = formatReviewItemIndexId(item);
+
   return [
     'df-web-review-kit issue',
     '',
+    reviewId ? `Review ID: ${reviewId}` : null,
     `Kind: ${item.kind}`,
     `Page: ${item.routeKey || item.normalizedPath || '/'}`,
     `Viewport: ${Math.round(item.viewport.width)}x${Math.round(item.viewport.height)}`,
@@ -286,6 +292,14 @@ function buildIssueDescription(item: ReviewItem, metadata: ReviewMetadata) {
   ]
     .filter((line): line is string => line !== null)
     .join('\n');
+}
+
+function formatReviewItemIndexId(item: Pick<ReviewItem, 'id' | 'reviewNumber'>) {
+  if (typeof item.reviewNumber === 'number' && item.reviewNumber > 0) {
+    return `#${item.reviewNumber}`;
+  }
+
+  return /^\d+$/.test(item.id) ? `#${item.id}` : undefined;
 }
 
 function buildReviewUrl(

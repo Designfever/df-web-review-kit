@@ -4,8 +4,9 @@ import type {
   ReviewItemScope,
   ReviewViewportPreset,
   ViewportSize,
-} from '../types';
+} from '../../types';
 
+/** Default viewport presets used when a host project does not provide its own. */
 export const DEFAULT_REVIEW_VIEWPORTS: ReviewViewportPreset[] = [
   { label: 'Mobile', width: 390, height: 720, scope: 'mobile' },
   { label: 'Tablet', width: 768, height: 1024, scope: 'tablet' },
@@ -67,6 +68,7 @@ const inferViewportScope = (
   return 'mobile';
 };
 
+/** Finds the nearest configured preset for a viewport size. */
 export function findReviewViewportPreset(
   viewport: ViewportSize,
   presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
@@ -86,6 +88,7 @@ export function findReviewViewportPreset(
   }, fallback);
 }
 
+/** Resolves a viewport size to the review scope used for item grouping. */
 export function getReviewViewportScope(
   viewport: ViewportSize,
   presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
@@ -93,6 +96,7 @@ export function getReviewViewportScope(
   return inferViewportScope(findReviewViewportPreset(viewport, presets));
 }
 
+/** Resolves an item's persisted scope, falling back to its captured viewport. */
 export function getReviewItemScope(
   item: ReviewItem,
   presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
@@ -102,6 +106,7 @@ export function getReviewItemScope(
   return getReviewViewportScope(item.viewport, presets);
 }
 
+/** Returns the display label for an item's resolved review scope. */
 export function getReviewItemScopeLabel(
   item: ReviewItem,
   presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
@@ -113,6 +118,7 @@ export function getReviewItemScopeLabel(
   return preset.label || REVIEW_SCOPE_LABELS[scope];
 }
 
+/** Adds scope-aware display labels to review items without mutating them. */
 export function getNumberedReviewItems(
   items: ReviewItem[],
   presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
@@ -147,6 +153,7 @@ export function getNumberedReviewItems(
   });
 }
 
+/** Reads a persisted review number when present. */
 export function getReviewItemNumber(item: Pick<ReviewItem, 'reviewNumber'>) {
   return normalizeReviewNumber(item.reviewNumber);
 }

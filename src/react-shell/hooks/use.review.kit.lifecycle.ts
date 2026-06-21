@@ -12,7 +12,7 @@ import type {
   WebReviewKitAdapter,
   WebReviewKitController,
 } from '../../types';
-import { createWebReviewKit } from '../../core/web-review-kit-app';
+import { createWebReviewKit } from '../../core/web.review.kit.app';
 import { setTargetScrollbarHidden } from '../target/target';
 import type { ReviewShellViewportPreset } from '../types';
 import { getViewportPresetKind } from '../viewport';

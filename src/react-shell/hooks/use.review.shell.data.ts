@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   getNumberedReviewItems,
-} from '../../core/review-scope';
+} from '../../core/review/scope';
 import type {
   ReviewItem,
   ReviewViewportPreset,

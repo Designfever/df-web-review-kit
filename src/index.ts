@@ -4,7 +4,7 @@ export {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   normalizeReviewItemStatus,
 } from './status';
-export { createWebReviewKit } from './core/web-review-kit-app';
+export { createWebReviewKit } from './core/web.review.kit.app';
 export {
   DEFAULT_REVIEW_VIEWPORTS,
   findReviewViewportPreset,
@@ -12,7 +12,7 @@ export {
   getReviewItemScope,
   getReviewItemScopeLabel,
   getReviewViewportScope,
-} from './core/review-scope';
+} from './core/review/scope';
 export type {
   DomAnchor,
   DomAnchorCandidate,

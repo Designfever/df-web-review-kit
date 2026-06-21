@@ -1,3 +1,4 @@
+/** Creates the shadow-root stylesheet for the standalone core overlay. */
 export function createStyleElement() {
   const style = document.createElement('style');
   style.textContent = `

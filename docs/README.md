@@ -6,13 +6,15 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 1. [Installation](installation.md)
 2. [DB setup](db-setup.md)
-3. [Figma overlay](figma-overlay.md)
-4. [Grid overlay](grid-overlay.md)
+3. [Architecture and runtime logic](architecture.md)
+4. [Figma overlay](figma-overlay.md)
+5. [Grid overlay](grid-overlay.md)
 
 ## Document Roles
 
 - `installation.md`: install the npm package, create the `/review` route, wire adapters, and run checks.
 - `db-setup.md`: optional Supabase review item table/RPC/RLS/presence setup.
+- `architecture.md`: core/runtime, React shell, coordinate, anchor, and feature boundary notes.
 - `figma-overlay.md`: host requirements for the Figma overlay toggle.
 - `grid-overlay.md`: host requirements for the grid/helper overlay toggle.
 

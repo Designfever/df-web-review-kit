@@ -5,7 +5,6 @@ import {
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
 } from 'lucide-react';
-import type { NumberedReviewItem } from '../index';
 import {
   DEFAULT_REVIEW_THEME,
   FIGMA_TOKEN_GUIDE_ID,
@@ -14,7 +13,7 @@ import {
   REVIEW_THEME_STORAGE_KEY,
   REVIEW_USER_ID_STORAGE_KEY,
 } from './constants';
-import { getItemTitle, getPromptLengthLabel } from './prompt';
+import { getPromptLengthLabel } from './prompt';
 import { normalizeReviewTheme } from './settings';
 import type {
   ReviewPresenceUser,
@@ -573,37 +572,51 @@ export const ReviewSettingsModal = ({
 };
 
 interface PromptModalProps {
-  numberedItem?: NumberedReviewItem;
   promptTab: ReviewPromptTab;
-  activeLabel: string;
-  activeText: string;
-  activeCopyKey: string;
+  initialPromptText: string;
   copiedPromptKey: string | null;
   onClose: () => void;
   onPromptTabChange: (tab: ReviewPromptTab) => void;
   onCopyPrompt: (text: string, key: string) => void;
 }
 
+const ABOUT_SECTIONS = [
+  {
+    title: 'Settings',
+    body:
+      'Figma token, User ID, theme 설정은 우측 상단 설정에서 저장해. Token은 Figma overlay를 쓸 때만 필요하고, User ID는 presence와 작업자 표시 이름으로 사용돼.',
+  },
+  {
+    title: 'Sitemap',
+    body:
+      'Sitemap은 등록된 route를 폴더 트리로 보여주고, Local / Remote QA 수와 Online 사용자를 한 번에 확인하는 창이야. 실제 page row를 누르면 해당 route로 이동해.',
+  },
+  {
+    title: 'List',
+    body:
+      'QA list는 현재 source의 review item을 보여줘. viewport 필터, 상태 변경, overlay 숨김, 삭제를 여기서 처리하고, Online pill은 같은 project/route를 보는 사용자를 표시해.',
+  },
+];
+
 export const PromptModal = ({
-  numberedItem,
   promptTab,
-  activeLabel,
-  activeText,
-  activeCopyKey,
+  initialPromptText,
   copiedPromptKey,
   onClose,
   onPromptTabChange,
   onCopyPrompt,
 }: PromptModalProps) => {
+  const isInitialPromptTab = promptTab === 'initial';
+
   return (
     <div
-      aria-label="Prompt"
+      aria-label="Review help"
       aria-modal="true"
       className="df-review-prompt-modal"
       role="dialog"
     >
       <button
-        aria-label="Close prompt"
+        aria-label="Close help"
         className="df-review-prompt-backdrop"
         type="button"
         onClick={onClose}
@@ -611,60 +624,68 @@ export const PromptModal = ({
       <div className="df-review-prompt-dialog">
         <div className="df-review-prompt-header">
           <div>
-            <strong>Prompt</strong>
-            <span>
-              {numberedItem
-                ? `${numberedItem.displayLabel} / ${getItemTitle(numberedItem.item)}`
-                : 'Initial prompt'}
-            </span>
+            <strong>Review shell help</strong>
+            <span>About / Initial prompt</span>
           </div>
-          <button aria-label="Close prompt" type="button" onClick={onClose}>
+          <button aria-label="Close help" type="button" onClick={onClose}>
             x
           </button>
         </div>
         <div className="df-review-prompt-body">
           <div className="df-review-prompt-tabs" role="tablist">
             <button
-              aria-selected={promptTab === 'initial'}
-              className={promptTab === 'initial' ? 'is-active' : ''}
+              aria-selected={promptTab === 'about'}
+              className={promptTab === 'about' ? 'is-active' : ''}
+              role="tab"
+              type="button"
+              onClick={() => onPromptTabChange('about')}
+            >
+              About
+            </button>
+            <button
+              aria-selected={isInitialPromptTab}
+              className={isInitialPromptTab ? 'is-active' : ''}
               role="tab"
               type="button"
               onClick={() => onPromptTabChange('initial')}
             >
               Initial prompt
             </button>
-            <button
-              aria-selected={promptTab === 'item'}
-              className={promptTab === 'item' ? 'is-active' : ''}
-              disabled={!numberedItem}
-              role="tab"
-              type="button"
-              onClick={() => onPromptTabChange('item')}
-            >
-              This QA prompt
-            </button>
           </div>
-          <section className="df-review-prompt-block" role="tabpanel">
-            <div className="df-review-prompt-block-header">
-              <div>
-                <strong>{activeLabel}</strong>
-                <span>{getPromptLengthLabel(activeText)}</span>
+          {isInitialPromptTab ? (
+            <section className="df-review-prompt-block" role="tabpanel">
+              <div className="df-review-prompt-block-header">
+                <div>
+                  <strong>Initial prompt</strong>
+                  <span>{getPromptLengthLabel(initialPromptText)}</span>
+                </div>
+                <button
+                  disabled={!initialPromptText}
+                  type="button"
+                  onClick={() => onCopyPrompt(initialPromptText, 'initial')}
+                >
+                  <CopyIcon aria-hidden="true" />
+                  {copiedPromptKey === 'initial' ? 'Copied' : 'Copy'}
+                </button>
               </div>
-              <button
-                disabled={!activeText}
-                type="button"
-                onClick={() => onCopyPrompt(activeText, activeCopyKey)}
-              >
-                <CopyIcon aria-hidden="true" />
-                {copiedPromptKey === activeCopyKey ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-            <textarea
-              readOnly
-              aria-label={activeLabel}
-              value={activeText || `${activeLabel} is not configured.`}
-            />
-          </section>
+              <textarea
+                readOnly
+                aria-label="Initial prompt"
+                value={
+                  initialPromptText || 'Initial prompt is not configured.'
+                }
+              />
+            </section>
+          ) : (
+            <section className="df-review-prompt-about" role="tabpanel">
+              {ABOUT_SECTIONS.map((section) => (
+                <article key={section.title}>
+                  <strong>{section.title}</strong>
+                  <p>{section.body}</p>
+                </article>
+              ))}
+            </section>
+          )}
         </div>
       </div>
     </div>

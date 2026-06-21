@@ -1519,6 +1519,35 @@ function ensureReviewShellStyle() {
 			    outline-offset: 1px;
 			  }
 
+			  .df-review-prompt-about {
+			    display: grid;
+			    gap: 10px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-about article {
+			    display: grid;
+			    gap: 6px;
+			    border: 1px solid var(--df-review-line);
+			    border-radius: var(--df-review-radius-md);
+			    padding: 12px;
+			    background: var(--df-review-surface);
+			  }
+
+			  .df-review-prompt-about strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: 900;
+			  }
+
+			  .df-review-prompt-about p {
+			    margin: 0;
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: 700;
+			    line-height: 1.55;
+			  }
+
 				  .df-review-tools {
 			    display: flex;
 			    align-items: center;
@@ -3319,97 +3348,6 @@ var getSystemReviewTheme = () => {
 
 // src/react-shell/prompt.ts
 var getItemTitle = (item) => item.title || item.comment.split("\n")[0] || item.kind;
-var formatPromptViewport = (item) => `${Math.round(item.viewport?.width ?? 0)}x${Math.round(
-  item.viewport?.height ?? 0
-)}`;
-var formatPromptPoint = (point) => point ? `x=${Math.round(point.x)}, y=${Math.round(point.y)}` : "(none)";
-var formatPromptSelection = (selection) => {
-  if (!selection) return "(none)";
-  const x = "x" in selection ? selection.x : selection.left;
-  const y = "y" in selection ? selection.y : selection.top;
-  return `x=${Math.round(x ?? 0)}, y=${Math.round(y ?? 0)}, width=${Math.round(
-    selection.width
-  )}, height=${Math.round(selection.height)}`;
-};
-var decodePromptHtmlEntities = (value) => value.replace(
-  /&(#\d+|#x[\da-f]+|lt|gt|quot|apos|amp);/gi,
-  (match, entity) => {
-    const normalized = entity.toLowerCase();
-    if (normalized === "lt") return "<";
-    if (normalized === "gt") return ">";
-    if (normalized === "quot") return '"';
-    if (normalized === "apos") return "'";
-    if (normalized === "amp") return "&";
-    const codePoint = normalized.startsWith("#x") ? Number.parseInt(normalized.slice(2), 16) : Number.parseInt(normalized.slice(1), 10);
-    return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
-  }
-);
-var getPromptAnchorCandidates = (item) => {
-  const anchor = item.anchor;
-  if (!anchor) return [];
-  const seen = /* @__PURE__ */ new Set();
-  return [anchor, ...anchor.candidates ?? []].filter((candidate) => {
-    const key = `${candidate.strategy}:${candidate.selector}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-};
-var formatPromptSourceHint = (item) => {
-  const source = item.anchor?.source;
-  if (!source) return "(none)";
-  return [
-    `Component: ${source.component ?? "(unknown)"}`,
-    `File: ${source.file ?? "(unknown)"}`,
-    `Section index: ${source.sectionIndex ?? "(unknown)"}`,
-    `Section id: ${source.sectionId ?? "(none)"}`
-  ].join("\n");
-};
-var buildReviewItemPrompt = (numberedItem, reviewPathPrefix) => {
-  const { item } = numberedItem;
-  const anchor = item.anchor;
-  const candidates = getPromptAnchorCandidates(item);
-  const candidateLines = candidates.length > 0 ? candidates.map((candidate, index) => {
-    const confidence = typeof candidate.confidence === "number" ? `, confidence=${Math.round(candidate.confidence * 100)}%` : "";
-    const fingerprint = candidate.textFingerprint ? `, text="${candidate.textFingerprint}"` : "";
-    return `${index + 1}. ${candidate.selector} (${candidate.strategy}${confidence}${fingerprint})`;
-  }).join("\n") : "(none)";
-  return [
-    "Fix this df-web-review-kit QA issue.",
-    "",
-    `Page: ${getItemTarget(item, reviewPathPrefix)}`,
-    `URL: ${item.originalUrl ?? item.pageUrl}`,
-    `QA item: ${numberedItem.displayLabel}`,
-    `Viewport: ${numberedItem.label} ${formatPromptViewport(item)}`,
-    `Scroll: ${formatPromptPoint(item.scroll)}`,
-    "",
-    "Target:",
-    `Primary selector: ${anchor?.selector ?? "(missing)"}`,
-    `Primary strategy: ${anchor?.strategy ?? "(missing)"}`,
-    `Text fingerprint: ${anchor?.textFingerprint ?? "(none)"}`,
-    "Selector candidates:",
-    candidateLines,
-    "",
-    "Source hint:",
-    formatPromptSourceHint(item),
-    "",
-    `Marker: ${formatPromptPoint(item.marker?.viewport)}`,
-    `Marker relative: ${formatPromptPoint(item.marker?.relative)}`,
-    `Selection: ${formatPromptSelection(item.selection?.viewport)}`,
-    `Selection relative: ${formatPromptSelection(item.selection?.relative)}`,
-    "",
-    "Element HTML snippet:",
-    "```html",
-    anchor?.htmlSnippet ? decodePromptHtmlEntities(anchor.htmlSnippet) : "(not available)",
-    "```",
-    "",
-    "Issue:",
-    item.comment,
-    "",
-    "Request:",
-    "Find the target element with the selector candidates above and apply the smallest UI/CSS/code change that fixes this QA issue. If the selector is missing because CSR or hydration has not finished, wait for the page to load and use the Source hint first. Preserve unrelated layout and behavior."
-  ].join("\n");
-};
 var getPromptLengthLabel = (value) => {
   const length = value.length;
   if (length <= 2e3) return `${length} chars / Discord 2,000 OK`;
@@ -3841,21 +3779,33 @@ var ReviewSettingsModal = ({
     }
   );
 };
+var ABOUT_SECTIONS = [
+  {
+    title: "Settings",
+    body: "Figma token, User ID, theme \uC124\uC815\uC740 \uC6B0\uCE21 \uC0C1\uB2E8 \uC124\uC815\uC5D0\uC11C \uC800\uC7A5\uD574. Token\uC740 Figma overlay\uB97C \uC4F8 \uB54C\uB9CC \uD544\uC694\uD558\uACE0, User ID\uB294 presence\uC640 \uC791\uC5C5\uC790 \uD45C\uC2DC \uC774\uB984\uC73C\uB85C \uC0AC\uC6A9\uB3FC."
+  },
+  {
+    title: "Sitemap",
+    body: "Sitemap\uC740 \uB4F1\uB85D\uB41C route\uB97C \uD3F4\uB354 \uD2B8\uB9AC\uB85C \uBCF4\uC5EC\uC8FC\uACE0, Local / Remote QA \uC218\uC640 Online \uC0AC\uC6A9\uC790\uB97C \uD55C \uBC88\uC5D0 \uD655\uC778\uD558\uB294 \uCC3D\uC774\uC57C. \uC2E4\uC81C page row\uB97C \uB204\uB974\uBA74 \uD574\uB2F9 route\uB85C \uC774\uB3D9\uD574."
+  },
+  {
+    title: "List",
+    body: "QA list\uB294 \uD604\uC7AC source\uC758 review item\uC744 \uBCF4\uC5EC\uC918. viewport \uD544\uD130, \uC0C1\uD0DC \uBCC0\uACBD, overlay \uC228\uAE40, \uC0AD\uC81C\uB97C \uC5EC\uAE30\uC11C \uCC98\uB9AC\uD558\uACE0, Online pill\uC740 \uAC19\uC740 project/route\uB97C \uBCF4\uB294 \uC0AC\uC6A9\uC790\uB97C \uD45C\uC2DC\uD574."
+  }
+];
 var PromptModal = ({
-  numberedItem,
   promptTab,
-  activeLabel,
-  activeText,
-  activeCopyKey,
+  initialPromptText,
   copiedPromptKey,
   onClose,
   onPromptTabChange,
   onCopyPrompt
 }) => {
+  const isInitialPromptTab = promptTab === "initial";
   return /* @__PURE__ */ jsxs(
     "div",
     {
-      "aria-label": "Prompt",
+      "aria-label": "Review help",
       "aria-modal": "true",
       className: "df-review-prompt-modal",
       role: "dialog",
@@ -3863,7 +3813,7 @@ var PromptModal = ({
         /* @__PURE__ */ jsx(
           "button",
           {
-            "aria-label": "Close prompt",
+            "aria-label": "Close help",
             className: "df-review-prompt-backdrop",
             type: "button",
             onClick: onClose
@@ -3872,52 +3822,51 @@ var PromptModal = ({
         /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-dialog", children: [
           /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-header", children: [
             /* @__PURE__ */ jsxs("div", { children: [
-              /* @__PURE__ */ jsx("strong", { children: "Prompt" }),
-              /* @__PURE__ */ jsx("span", { children: numberedItem ? `${numberedItem.displayLabel} / ${getItemTitle(numberedItem.item)}` : "Initial prompt" })
+              /* @__PURE__ */ jsx("strong", { children: "Review shell help" }),
+              /* @__PURE__ */ jsx("span", { children: "About / Initial prompt" })
             ] }),
-            /* @__PURE__ */ jsx("button", { "aria-label": "Close prompt", type: "button", onClick: onClose, children: "x" })
+            /* @__PURE__ */ jsx("button", { "aria-label": "Close help", type: "button", onClick: onClose, children: "x" })
           ] }),
           /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-body", children: [
             /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-tabs", role: "tablist", children: [
               /* @__PURE__ */ jsx(
                 "button",
                 {
-                  "aria-selected": promptTab === "initial",
-                  className: promptTab === "initial" ? "is-active" : "",
+                  "aria-selected": promptTab === "about",
+                  className: promptTab === "about" ? "is-active" : "",
                   role: "tab",
                   type: "button",
-                  onClick: () => onPromptTabChange("initial"),
-                  children: "Initial prompt"
+                  onClick: () => onPromptTabChange("about"),
+                  children: "About"
                 }
               ),
               /* @__PURE__ */ jsx(
                 "button",
                 {
-                  "aria-selected": promptTab === "item",
-                  className: promptTab === "item" ? "is-active" : "",
-                  disabled: !numberedItem,
+                  "aria-selected": isInitialPromptTab,
+                  className: isInitialPromptTab ? "is-active" : "",
                   role: "tab",
                   type: "button",
-                  onClick: () => onPromptTabChange("item"),
-                  children: "This QA prompt"
+                  onClick: () => onPromptTabChange("initial"),
+                  children: "Initial prompt"
                 }
               )
             ] }),
-            /* @__PURE__ */ jsxs("section", { className: "df-review-prompt-block", role: "tabpanel", children: [
+            isInitialPromptTab ? /* @__PURE__ */ jsxs("section", { className: "df-review-prompt-block", role: "tabpanel", children: [
               /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-block-header", children: [
                 /* @__PURE__ */ jsxs("div", { children: [
-                  /* @__PURE__ */ jsx("strong", { children: activeLabel }),
-                  /* @__PURE__ */ jsx("span", { children: getPromptLengthLabel(activeText) })
+                  /* @__PURE__ */ jsx("strong", { children: "Initial prompt" }),
+                  /* @__PURE__ */ jsx("span", { children: getPromptLengthLabel(initialPromptText) })
                 ] }),
                 /* @__PURE__ */ jsxs(
                   "button",
                   {
-                    disabled: !activeText,
+                    disabled: !initialPromptText,
                     type: "button",
-                    onClick: () => onCopyPrompt(activeText, activeCopyKey),
+                    onClick: () => onCopyPrompt(initialPromptText, "initial"),
                     children: [
                       /* @__PURE__ */ jsx(Copy, { "aria-hidden": "true" }),
-                      copiedPromptKey === activeCopyKey ? "Copied" : "Copy"
+                      copiedPromptKey === "initial" ? "Copied" : "Copy"
                     ]
                   }
                 )
@@ -3926,11 +3875,14 @@ var PromptModal = ({
                 "textarea",
                 {
                   readOnly: true,
-                  "aria-label": activeLabel,
-                  value: activeText || `${activeLabel} is not configured.`
+                  "aria-label": "Initial prompt",
+                  value: initialPromptText || "Initial prompt is not configured."
                 }
               )
-            ] })
+            ] }) : /* @__PURE__ */ jsx("section", { className: "df-review-prompt-about", role: "tabpanel", children: ABOUT_SECTIONS.map((section) => /* @__PURE__ */ jsxs("article", { children: [
+              /* @__PURE__ */ jsx("strong", { children: section.title }),
+              /* @__PURE__ */ jsx("p", { children: section.body })
+            ] }, section.title)) })
           ] })
         ] })
       ]
@@ -4420,8 +4372,7 @@ var ReviewShell = ({
   const [rulerPoint, setRulerPoint] = useState(null);
   const [rulerHover, setRulerHover] = useState(null);
   const [isRulerDragging, setIsRulerDragging] = useState(false);
-  const [promptItemId, setPromptItemId] = useState(null);
-  const [promptTab, setPromptTab] = useState("item");
+  const [promptTab, setPromptTab] = useState("about");
   const [copiedPromptKey, setCopiedPromptKey] = useState(null);
   const [presenceUsers, setPresenceUsers] = useState([]);
   const [presenceSessionVersion, setPresenceSessionVersion] = useState(0);
@@ -4513,12 +4464,6 @@ var ReviewShell = ({
     addItems("remote", sitemapItems.remote);
     return counts;
   }, [reviewPathPrefix, sitemapItems]);
-  const promptDialogNumberedItem = useMemo2(
-    () => promptItemId ? numberedActiveItems.find(
-      (numberedItem) => numberedItem.item.id === promptItemId
-    ) : void 0,
-    [numberedActiveItems, promptItemId]
-  );
   const selectedNumberedItem = useMemo2(
     () => selectedItemId ? numberedActiveItems.find(
       (numberedItem) => numberedItem.item.id === selectedItemId
@@ -4526,12 +4471,6 @@ var ReviewShell = ({
     [numberedActiveItems, selectedItemId]
   );
   const initialPromptText = initialPrompt.trim();
-  const promptDialogItemPrompt = promptDialogNumberedItem ? buildReviewItemPrompt(promptDialogNumberedItem, reviewPathPrefix) : "";
-  const promptDialogItemCopyKey = promptDialogNumberedItem ? `dialog:${promptDialogNumberedItem.item.id}` : "dialog:item";
-  const isPromptDialogInitial = promptTab === "initial" || !promptDialogNumberedItem;
-  const promptDialogActiveText = isPromptDialogInitial ? initialPromptText : promptDialogItemPrompt;
-  const promptDialogActiveLabel = isPromptDialogInitial ? "Initial prompt" : "This QA prompt";
-  const promptDialogActiveCopyKey = isPromptDialogInitial ? "initial" : promptDialogItemCopyKey;
   const normalizedReviewUserId = reviewUserId.trim();
   const presenceDisplayName = getReviewPresenceDisplayName(
     normalizedReviewUserId
@@ -4799,7 +4738,6 @@ var ReviewShell = ({
     cancelReviewMode();
     setIsSitemapOpen(false);
     setIsFigmaSettingsOpen(false);
-    setPromptItemId(null);
     clearRulerMeasure();
     setIsRulerVisible((current) => !current);
   }, [cancelReviewMode, clearRulerMeasure, isRulerAvailable]);
@@ -4833,7 +4771,6 @@ var ReviewShell = ({
     cancelReviewMode();
     setIsSitemapOpen(false);
     setIsInitialPromptOpen(false);
-    setPromptItemId(null);
     setFigmaTokenDraft(getStoredFigmaToken());
     setReviewUserIdDraft(getStoredReviewUserId());
     setReviewThemeDraft(reviewTheme);
@@ -5163,7 +5100,7 @@ var ReviewShell = ({
     };
   }, [effectiveReviewTheme]);
   useEffect(() => {
-    if (mode === "idle" && !isRulerVisible && !promptItemId && !isInitialPromptOpen && !isSitemapOpen && !isFigmaSettingsOpen) {
+    if (mode === "idle" && !isRulerVisible && !isInitialPromptOpen && !isSitemapOpen && !isFigmaSettingsOpen) {
       return;
     }
     const handleKeyDown = (event) => {
@@ -5174,12 +5111,6 @@ var ReviewShell = ({
         return;
       }
       if (closeRuler()) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      if (promptItemId) {
-        setPromptItemId(null);
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -5208,7 +5139,6 @@ var ReviewShell = ({
     isInitialPromptOpen,
     isRulerVisible,
     isSitemapOpen,
-    promptItemId,
     mode
   ]);
   useEffect(() => {
@@ -5482,14 +5412,7 @@ var ReviewShell = ({
       setCopiedPromptKey((current) => current === key ? null : current);
     }, 1200);
   };
-  const copyItemPrompt = async (numberedItem) => {
-    await copyPrompt(
-      buildReviewItemPrompt(numberedItem, reviewPathPrefix),
-      `item:${numberedItem.item.id}`
-    );
-  };
   const closePromptModal = () => {
-    setPromptItemId(null);
     setIsInitialPromptOpen(false);
   };
   const removeItem = async (item) => {
@@ -5552,8 +5475,7 @@ var ReviewShell = ({
             onToggleRuler: toggleRuler,
             onToggleTargetOverlay: toggleTargetOverlay,
             onOpenInitialPrompt: () => {
-              setPromptTab("initial");
-              setPromptItemId(null);
+              setPromptTab("about");
               setIsInitialPromptOpen(true);
             },
             onOpenSettings: openFigmaSettings
@@ -5590,14 +5512,11 @@ var ReviewShell = ({
             onSave: saveReviewSettings
           }
         ),
-        (promptDialogNumberedItem || isInitialPromptOpen) && /* @__PURE__ */ jsx3(
+        isInitialPromptOpen && /* @__PURE__ */ jsx3(
           PromptModal,
           {
-            numberedItem: promptDialogNumberedItem,
             promptTab,
-            activeLabel: promptDialogActiveLabel,
-            activeText: promptDialogActiveText,
-            activeCopyKey: promptDialogActiveCopyKey,
+            initialPromptText,
             copiedPromptKey,
             onClose: closePromptModal,
             onPromptTabChange: setPromptTab,
@@ -5749,38 +5668,6 @@ var ReviewShell = ({
                               children: [
                                 /* @__PURE__ */ jsx3(ReviewItemModeIcon, { mode: itemMode }),
                                 itemMode
-                              ]
-                            }
-                          ),
-                          /* @__PURE__ */ jsxs3(
-                            "span",
-                            {
-                              className: "df-review-item-prompt-actions",
-                              onClick: (event) => event.stopPropagation(),
-                              children: [
-                                /* @__PURE__ */ jsx3(
-                                  "button",
-                                  {
-                                    className: "df-review-item-prompt",
-                                    type: "button",
-                                    onClick: () => {
-                                      setIsInitialPromptOpen(false);
-                                      setPromptTab("item");
-                                      setPromptItemId(item.id);
-                                    },
-                                    children: "Prompt"
-                                  }
-                                ),
-                                /* @__PURE__ */ jsx3(
-                                  "button",
-                                  {
-                                    "aria-label": "Copy QA prompt",
-                                    className: `df-review-item-prompt-copy${copiedPromptKey === `item:${item.id}` ? " is-copied" : ""}`,
-                                    type: "button",
-                                    onClick: () => void copyItemPrompt(numberedItem),
-                                    children: /* @__PURE__ */ jsx3(Copy, { "aria-hidden": "true" })
-                                  }
-                                )
                               ]
                             }
                           )

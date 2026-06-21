@@ -161,7 +161,7 @@ export type ReviewQaFilter = 'all' | ReviewItemScope;
 
 export type ReviewShellTheme = 'dark' | 'light' | 'system';
 
-export type ReviewPromptTab = 'initial' | 'item';
+export type ReviewPromptTab = 'about' | 'initial';
 
 export type ReviewRulerPoint = {
   x: number;

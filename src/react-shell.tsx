@@ -6,7 +6,6 @@ import React, {
   useState
 } from 'react';
 import {
-  Copy as CopyIcon,
   ExternalLink as ExternalLinkIcon,
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
@@ -123,10 +122,8 @@ import {
   writeStoredReviewUserId,
 } from './react-shell/settings';
 import {
-  buildReviewItemPrompt,
   formatDate,
   getItemTitle,
-  getPromptLengthLabel,
 } from './react-shell/prompt';
 import {
   PromptModal,
@@ -385,8 +382,7 @@ export const ReviewShell = ({
   const [rulerPoint, setRulerPoint] = useState<ReviewRulerPoint | null>(null);
   const [rulerHover, setRulerHover] = useState<ReviewRulerPoint | null>(null);
   const [isRulerDragging, setIsRulerDragging] = useState(false);
-  const [promptItemId, setPromptItemId] = useState<string | null>(null);
-  const [promptTab, setPromptTab] = useState<ReviewPromptTab>('item');
+  const [promptTab, setPromptTab] = useState<ReviewPromptTab>('about');
   const [copiedPromptKey, setCopiedPromptKey] = useState<string | null>(null);
   const [presenceUsers, setPresenceUsers] = useState<ReviewPresenceUser[]>([]);
   const [presenceSessionVersion, setPresenceSessionVersion] = useState(0);
@@ -504,15 +500,6 @@ export const ReviewShell = ({
 
     return counts;
   }, [reviewPathPrefix, sitemapItems]);
-  const promptDialogNumberedItem = useMemo(
-    () =>
-      promptItemId
-        ? numberedActiveItems.find(
-            (numberedItem) => numberedItem.item.id === promptItemId
-          )
-        : undefined,
-    [numberedActiveItems, promptItemId]
-  );
   const selectedNumberedItem = useMemo(
     () =>
       selectedItemId
@@ -523,22 +510,6 @@ export const ReviewShell = ({
     [numberedActiveItems, selectedItemId]
   );
   const initialPromptText = initialPrompt.trim();
-  const promptDialogItemPrompt = promptDialogNumberedItem
-    ? buildReviewItemPrompt(promptDialogNumberedItem, reviewPathPrefix)
-    : '';
-  const promptDialogItemCopyKey = promptDialogNumberedItem
-    ? `dialog:${promptDialogNumberedItem.item.id}`
-    : 'dialog:item';
-  const isPromptDialogInitial = promptTab === 'initial' || !promptDialogNumberedItem;
-  const promptDialogActiveText = isPromptDialogInitial
-    ? initialPromptText
-    : promptDialogItemPrompt;
-  const promptDialogActiveLabel = isPromptDialogInitial
-    ? 'Initial prompt'
-    : 'This QA prompt';
-  const promptDialogActiveCopyKey = isPromptDialogInitial
-    ? 'initial'
-    : promptDialogItemCopyKey;
   const normalizedReviewUserId = reviewUserId.trim();
   const presenceDisplayName = getReviewPresenceDisplayName(
     normalizedReviewUserId
@@ -854,7 +825,6 @@ export const ReviewShell = ({
     cancelReviewMode();
     setIsSitemapOpen(false);
     setIsFigmaSettingsOpen(false);
-    setPromptItemId(null);
     clearRulerMeasure();
     setIsRulerVisible((current) => !current);
   }, [cancelReviewMode, clearRulerMeasure, isRulerAvailable]);
@@ -895,7 +865,6 @@ export const ReviewShell = ({
     cancelReviewMode();
     setIsSitemapOpen(false);
     setIsInitialPromptOpen(false);
-    setPromptItemId(null);
     setFigmaTokenDraft(getStoredFigmaToken());
     setReviewUserIdDraft(getStoredReviewUserId());
     setReviewThemeDraft(reviewTheme);
@@ -1285,7 +1254,6 @@ export const ReviewShell = ({
     if (
       mode === 'idle' &&
       !isRulerVisible &&
-      !promptItemId &&
       !isInitialPromptOpen &&
       !isSitemapOpen &&
       !isFigmaSettingsOpen
@@ -1303,13 +1271,6 @@ export const ReviewShell = ({
       }
 
       if (closeRuler()) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-
-      if (promptItemId) {
-        setPromptItemId(null);
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -1342,7 +1303,6 @@ export const ReviewShell = ({
     isInitialPromptOpen,
     isRulerVisible,
     isSitemapOpen,
-    promptItemId,
     mode
   ]);
 
@@ -1695,15 +1655,7 @@ export const ReviewShell = ({
     }, 1200);
   };
 
-  const copyItemPrompt = async (numberedItem: NumberedReviewItem) => {
-    await copyPrompt(
-      buildReviewItemPrompt(numberedItem, reviewPathPrefix),
-      `item:${numberedItem.item.id}`
-    );
-  };
-
   const closePromptModal = () => {
-    setPromptItemId(null);
     setIsInitialPromptOpen(false);
   };
 
@@ -1776,8 +1728,7 @@ export const ReviewShell = ({
         onToggleRuler={toggleRuler}
         onToggleTargetOverlay={toggleTargetOverlay}
         onOpenInitialPrompt={() => {
-          setPromptTab('initial');
-          setPromptItemId(null);
+          setPromptTab('about');
           setIsInitialPromptOpen(true);
         }}
         onOpenSettings={openFigmaSettings}
@@ -1818,13 +1769,10 @@ export const ReviewShell = ({
         />
       )}
 
-      {(promptDialogNumberedItem || isInitialPromptOpen) && (
+      {isInitialPromptOpen && (
         <PromptModal
-          numberedItem={promptDialogNumberedItem}
           promptTab={promptTab}
-          activeLabel={promptDialogActiveLabel}
-          activeText={promptDialogActiveText}
-          activeCopyKey={promptDialogActiveCopyKey}
+          initialPromptText={initialPromptText}
           copiedPromptKey={copiedPromptKey}
           onClose={closePromptModal}
           onPromptTabChange={setPromptTab}
@@ -2012,34 +1960,6 @@ export const ReviewShell = ({
                           >
                             <ReviewItemModeIcon mode={itemMode} />
                             {itemMode}
-                          </span>
-                          <span
-                            className="df-review-item-prompt-actions"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <button
-                              className="df-review-item-prompt"
-                              type="button"
-                              onClick={() => {
-                                setIsInitialPromptOpen(false);
-                                setPromptTab('item');
-                                setPromptItemId(item.id);
-                              }}
-                            >
-                              Prompt
-                            </button>
-                            <button
-                              aria-label="Copy QA prompt"
-                              className={`df-review-item-prompt-copy${
-                                copiedPromptKey === `item:${item.id}`
-                                  ? ' is-copied'
-                                  : ''
-                              }`}
-                              type="button"
-                              onClick={() => void copyItemPrompt(numberedItem)}
-                            >
-                              <CopyIcon aria-hidden="true" />
-                            </button>
                           </span>
                         </span>
                         <strong className="df-review-item-comment">

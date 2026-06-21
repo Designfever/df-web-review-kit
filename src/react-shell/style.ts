@@ -1030,6 +1030,35 @@ export function ensureReviewShellStyle() {
 			    outline-offset: 1px;
 			  }
 
+			  .df-review-prompt-about {
+			    display: grid;
+			    gap: 10px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-about article {
+			    display: grid;
+			    gap: 6px;
+			    border: 1px solid var(--df-review-line);
+			    border-radius: var(--df-review-radius-md);
+			    padding: 12px;
+			    background: var(--df-review-surface);
+			  }
+
+			  .df-review-prompt-about strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: 900;
+			  }
+
+			  .df-review-prompt-about p {
+			    margin: 0;
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: 700;
+			    line-height: 1.55;
+			  }
+
 				  .df-review-tools {
 			    display: flex;
 			    align-items: center;

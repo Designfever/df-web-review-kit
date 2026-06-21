@@ -36,13 +36,17 @@ local item의 `#id`는 개인 브라우저 안에서만 의미가 있다. 여러
 
 ### remote
 
-팀이 같이 보는 source of record다. 현재 검증 source는 `supabase`다.
+팀이 같이 보는 source of record다. remote source는 adapter로 교체 가능해야 한다.
+
+현재 Supabase adapter는 schema, status update, delete, canonical review number를 검증하기 위한 optional adapter다. 이것이 package의 기본 운영 backend라는 뜻은 아니다.
 
 local item을 remote에 등록하면 local id/number를 보존하지 않고 remote source가 새 id와 canonical `reviewNumber`를 발급한다. 등록 성공 후 local draft는 삭제한다.
 
 ### df-sheet
 
 df-sheet는 issue workflow와 연결되는 remote destination 후보다. review-kit이 df-sheet issue editor가 되면 안 되고, local QA를 issue로 등록하고 restore link를 제공하는 역할이 맞다.
+
+현재 df-sheet adapter 문서는 sample/reference로 본다. 실제 service API, auth, presence 제공 방식이 확정되기 전까지 필수 production backend로 취급하지 않는다.
 
 ## Item 종류
 
@@ -54,9 +58,11 @@ df-sheet는 issue workflow와 연결되는 remote destination 후보다. review-
 
 ## Presence
 
-Presence는 저장소가 아니다. 현재 접속한 사용자의 page/source/viewport 상태만 공유한다.
+Presence는 저장소가 아니다. 현재 접속한 사용자의 page/source/viewport/선택 항목 같은 임시 session state만 공유한다.
 
 현재 UI는 같은 page에 들어온 사용자 id만 page header 쪽에 보여준다. sitemap 같은 상위 화면에서는 page별 접속자 표시로 확장할 수 있다.
+
+Local presence는 기본 smoke path이고, Supabase Presence는 optional sample이다. 나중에 df-sheet 같은 service backend가 production presence를 맡더라도 package는 `ReviewPresenceAdapter` contract만 유지하면 된다.
 
 ## 패키지 경계
 
@@ -68,7 +74,7 @@ Package가 담당하는 것:
 - prompt generation
 - adapter contract
 - local adapter
-- Supabase adapter
+- optional adapter implementations or samples
 - presence adapter contract
 
 Host project가 담당하는 것:
@@ -80,6 +86,15 @@ Host project가 담당하는 것:
 - remote adapter env와 auth 결정
 - Supabase client 생성
 
+OpenClaw 또는 backend service가 담당하는 것:
+
+- 운영자용 QA 조회/상태 변경 CLI
+- service/operator secret 관리
+- project별 backend registry
+- production auth와 권한 정책
+
+따라서 `df-web-review-kit` public package에는 OpenClaw-only 운영 도구나 service role key가 들어가면 안 된다.
+
 ## 0.1 목표
 
 0.1은 완전한 review platform이 아니라, 프로젝트별로 붙여 쓸 수 있는 최소 안정 package다.
@@ -87,8 +102,8 @@ Host project가 담당하는 것:
 포함:
 
 - local draft
-- Supabase remote CRUD
-- Supabase Presence
+- optional Supabase remote CRUD 검증
+- optional Supabase Presence sample 검증
 - stable remote review number
 - prompt copy
 - route/viewport/scroll/marker restore
@@ -98,5 +113,5 @@ Host project가 담당하는 것:
 - screenshot upload
 - full df-sheet workflow
 - auth/member 기반 production RLS
-- sitemap presence dashboard
+- production presence service/dashboard
 - Chrome extension

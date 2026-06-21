@@ -6,7 +6,6 @@ import React, {
   useState
 } from 'react';
 import {
-  CircleHelp as CircleHelpIcon,
   Copy as CopyIcon,
   ExternalLink as ExternalLinkIcon,
   Eye as EyeIcon,
@@ -60,6 +59,7 @@ import type {
   ReviewShellTheme,
   ReviewShellViewportKind,
   ReviewShellViewportPreset,
+  ReviewShellWriteMode,
   TargetOverlayKey,
   TargetOverlayState,
 } from './react-shell/types';
@@ -180,6 +180,14 @@ const isDomReviewItem = (item: ReviewItem) =>
 const getReviewItemMode = (item: ReviewItem) =>
   isDomReviewItem(item) ? 'dom' : item.kind;
 
+const getReviewModeWriteMode = (
+  mode: ReviewMode
+): ReviewShellWriteMode | null => {
+  if (mode === 'element') return 'dom';
+  if (mode === 'note' || mode === 'area') return mode;
+  return null;
+};
+
 type SitemapItemsBySource = {
   local: ReviewItem[];
   remote: ReviewItem[];
@@ -294,15 +302,25 @@ export const ReviewShell = ({
   );
   const localAdapterEntry = normalizedAdapters.local;
   const remoteAdapterEntry = normalizedAdapters.remote;
-  const [source, setSource] = useState<ReviewSource>(() =>
-    getInitialSource(remoteAdapterEntry?.label)
-  );
+  const sourceEntries = normalizedAdapters.sources;
+  const defaultSource = sourceEntries[0]?.label ?? 'local';
+  const [source, setSource] = useState<ReviewSource>(() => {
+    const initialSource = getInitialSource(remoteAdapterEntry?.label);
+    return sourceEntries.some((entry) => entry.label === initialSource)
+      ? initialSource
+      : defaultSource;
+  });
   const remoteSource = remoteAdapterEntry?.label ?? null;
-  const isRemoteSource = Boolean(remoteSource && source === remoteSource);
   const activeAdapterEntry =
-    isRemoteSource && remoteAdapterEntry
-      ? remoteAdapterEntry
-      : localAdapterEntry;
+    sourceEntries.find((entry) => entry.label === source) ?? sourceEntries[0]!;
+  const isRemoteSource = Boolean(
+    remoteSource && activeAdapterEntry.label === remoteSource
+  );
+  const showSourceSelect = sourceEntries.length > 1;
+  const canWriteDom = activeAdapterEntry.writeModes.includes('dom');
+  const canWriteNote = activeAdapterEntry.writeModes.includes('note');
+  const canWriteArea = activeAdapterEntry.writeModes.includes('area');
+  const canWriteAny = canWriteDom || canWriteNote || canWriteArea;
   const adapter = activeAdapterEntry.adapter;
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const frameScrollRef = useRef<HTMLDivElement | null>(null);
@@ -355,6 +373,7 @@ export const ReviewShell = ({
   const [figmaSettingsStatus, setFigmaSettingsStatus] = useState('');
   const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState(false);
   const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState(false);
+  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState(false);
   const [qaFilter, setQaFilter] = useState<ReviewQaFilter>('all');
   const [copyLabel, setCopyLabel] = useState('Copy URL');
   const [sitemapItems, setSitemapItems] = useState<SitemapItemsBySource>(() => ({
@@ -510,12 +529,16 @@ export const ReviewShell = ({
   const promptDialogItemCopyKey = promptDialogNumberedItem
     ? `dialog:${promptDialogNumberedItem.item.id}`
     : 'dialog:item';
-  const promptDialogActiveText =
-    promptTab === 'initial' ? initialPromptText : promptDialogItemPrompt;
-  const promptDialogActiveLabel =
-    promptTab === 'initial' ? 'Initial prompt' : 'This QA prompt';
-  const promptDialogActiveCopyKey =
-    promptTab === 'initial' ? 'initial' : promptDialogItemCopyKey;
+  const isPromptDialogInitial = promptTab === 'initial' || !promptDialogNumberedItem;
+  const promptDialogActiveText = isPromptDialogInitial
+    ? initialPromptText
+    : promptDialogItemPrompt;
+  const promptDialogActiveLabel = isPromptDialogInitial
+    ? 'Initial prompt'
+    : 'This QA prompt';
+  const promptDialogActiveCopyKey = isPromptDialogInitial
+    ? 'initial'
+    : promptDialogItemCopyKey;
   const normalizedReviewUserId = reviewUserId.trim();
   const presenceDisplayName = getReviewPresenceDisplayName(
     normalizedReviewUserId
@@ -614,10 +637,12 @@ export const ReviewShell = ({
 
   const refreshSitemapItems = useCallback(async () => {
     const [localResult, remoteResult] = await Promise.allSettled([
-      localAdapterEntry.adapter.list({
-        projectId,
-        pageId: localAdapterEntry.pageId,
-      }),
+      localAdapterEntry
+        ? localAdapterEntry.adapter.list({
+            projectId,
+            pageId: localAdapterEntry.pageId,
+          })
+        : Promise.resolve([]),
       remoteAdapterEntry
         ? remoteAdapterEntry.adapter.list({
             projectId,
@@ -869,6 +894,7 @@ export const ReviewShell = ({
   const openFigmaSettings = useCallback(() => {
     cancelReviewMode();
     setIsSitemapOpen(false);
+    setIsInitialPromptOpen(false);
     setPromptItemId(null);
     setFigmaTokenDraft(getStoredFigmaToken());
     setReviewUserIdDraft(getStoredReviewUserId());
@@ -912,8 +938,9 @@ export const ReviewShell = ({
       if (shouldReload) {
         reloadTargetFrame();
       }
+      closeFigmaSettings();
     },
-    [reloadTargetFrame]
+    [closeFigmaSettings, reloadTargetFrame]
   );
 
   const restoreReviewItem = useCallback(
@@ -1259,6 +1286,7 @@ export const ReviewShell = ({
       mode === 'idle' &&
       !isRulerVisible &&
       !promptItemId &&
+      !isInitialPromptOpen &&
       !isSitemapOpen &&
       !isFigmaSettingsOpen
     ) {
@@ -1287,6 +1315,13 @@ export const ReviewShell = ({
         return;
       }
 
+      if (isInitialPromptOpen) {
+        setIsInitialPromptOpen(false);
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
       if (isSitemapOpen) {
         setIsSitemapOpen(false);
         return;
@@ -1304,6 +1339,7 @@ export const ReviewShell = ({
     closeRuler,
     closeFigmaSettings,
     isFigmaSettingsOpen,
+    isInitialPromptOpen,
     isRulerVisible,
     isSitemapOpen,
     promptItemId,
@@ -1548,7 +1584,8 @@ export const ReviewShell = ({
   };
 
   const setReviewMode = (nextMode: ReviewMode) => {
-    if (isRemoteSource) return;
+    const writeMode = getReviewModeWriteMode(nextMode);
+    if (writeMode && !activeAdapterEntry.writeModes.includes(writeMode)) return;
     closeRuler();
     if (nextMode === 'element') {
       closeTargetOverlay('figma');
@@ -1564,7 +1601,7 @@ export const ReviewShell = ({
   };
 
   const changeReviewSource = (nextSource: ReviewSource) => {
-    if (nextSource !== 'local' && nextSource !== remoteSource) return;
+    if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
 
     cancelReviewMode();
     clearSelectedItem();
@@ -1597,15 +1634,19 @@ export const ReviewShell = ({
 
   const submitItem = async (numberedItem: NumberedReviewItem) => {
     const { item } = numberedItem;
+    const localSubmitAdapter = localAdapterEntry;
+    const syncLocalSubmission = localSubmitAdapter?.syncSubmission;
     if (
       !remoteAdapterEntry ||
-      !localAdapterEntry.syncSubmission ||
+      !localSubmitAdapter ||
+      !syncLocalSubmission ||
       item.submitStatus === 'submitted'
     ) {
       return;
     }
 
-    await localAdapterEntry.syncSubmission({
+    const submitLocal = syncLocalSubmission;
+    await submitLocal({
       id: item.id,
       item,
       patch: {
@@ -1625,12 +1666,12 @@ export const ReviewShell = ({
         submitStatus: 'submitted',
         submitError: undefined
       });
-      await localAdapterEntry.adapter.remove(item.id);
+      await localSubmitAdapter.adapter.remove(item.id);
       if (selectedItemIdRef.current === item.id) {
         clearSelectedItem();
       }
     } catch (error) {
-      await localAdapterEntry.syncSubmission({
+      await submitLocal({
         id: item.id,
         item,
         patch: {
@@ -1659,6 +1700,11 @@ export const ReviewShell = ({
       buildReviewItemPrompt(numberedItem, reviewPathPrefix),
       `item:${numberedItem.item.id}`
     );
+  };
+
+  const closePromptModal = () => {
+    setPromptItemId(null);
+    setIsInitialPromptOpen(false);
   };
 
   const removeItem = async (item: ReviewItem) => {
@@ -1729,6 +1775,11 @@ export const ReviewShell = ({
         onSizeChange={setSize}
         onToggleRuler={toggleRuler}
         onToggleTargetOverlay={toggleTargetOverlay}
+        onOpenInitialPrompt={() => {
+          setPromptTab('initial');
+          setPromptItemId(null);
+          setIsInitialPromptOpen(true);
+        }}
         onOpenSettings={openFigmaSettings}
       />
 
@@ -1767,7 +1818,7 @@ export const ReviewShell = ({
         />
       )}
 
-      {promptDialogNumberedItem && (
+      {(promptDialogNumberedItem || isInitialPromptOpen) && (
         <PromptModal
           numberedItem={promptDialogNumberedItem}
           promptTab={promptTab}
@@ -1775,7 +1826,7 @@ export const ReviewShell = ({
           activeText={promptDialogActiveText}
           activeCopyKey={promptDialogActiveCopyKey}
           copiedPromptKey={copiedPromptKey}
-          onClose={() => setPromptItemId(null)}
+          onClose={closePromptModal}
           onPromptTabChange={setPromptTab}
           onCopyPrompt={(text, key) => void copyPrompt(text, key)}
         />
@@ -1801,21 +1852,22 @@ export const ReviewShell = ({
             <div className="df-review-list-header">
               <div className="df-review-list-toolbar">
                 <div className="df-review-list-controls">
-                  <select
-                    aria-label="QA source"
-                    className="df-review-source-select"
-                    value={source}
-                    onChange={(event) =>
-                      changeReviewSource(event.currentTarget.value as ReviewSource)
-                    }
-                  >
-                    <option value="local">local</option>
-                    {remoteAdapterEntry && (
-                      <option value={remoteAdapterEntry.label}>
-                        {remoteAdapterEntry.label}
-                      </option>
-                    )}
-                  </select>
+                  {showSourceSelect && (
+                    <select
+                      aria-label="QA source"
+                      className="df-review-source-select"
+                      value={source}
+                      onChange={(event) =>
+                        changeReviewSource(event.currentTarget.value as ReviewSource)
+                      }
+                    >
+                      {sourceEntries.map((entry) => (
+                        <option key={entry.label} value={entry.label}>
+                          {entry.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <button
                     aria-label="Refresh QA"
                     className="df-review-source-refresh"
@@ -1947,7 +1999,7 @@ export const ReviewShell = ({
                       <div className="df-review-item-main">
                         <span className="df-review-item-badges">
                           <span className="df-review-item-id">
-                            #{numberedItem.number}
+                            {numberedItem.displayLabel}
                           </span>
                           <span
                             className={`df-review-item-scope is-scope-${numberedItem.scope}`}
@@ -1961,36 +2013,34 @@ export const ReviewShell = ({
                             <ReviewItemModeIcon mode={itemMode} />
                             {itemMode}
                           </span>
-                          {currentStatusOption && (
-                            canUpdateStatus ? (
-                              <select
-                                aria-label="QA status"
-                                className="df-review-item-status-select"
-                                value={currentStatusOption.value}
-                                onClick={(event) => event.stopPropagation()}
-                                onChange={(event) =>
-                                  void changeItemStatus(
-                                    item,
-                                    event.currentTarget
-                                      .value as ReviewItemStatus
-                                  )
-                                }
-                              >
-                                {statusOptions.map((statusOption) => (
-                                  <option
-                                    key={statusOption.value}
-                                    value={statusOption.value}
-                                  >
-                                    {statusOption.label}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <span className="df-review-item-status-badge">
-                                {currentStatusOption.label}
-                              </span>
-                            )
-                          )}
+                          <span
+                            className="df-review-item-prompt-actions"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <button
+                              className="df-review-item-prompt"
+                              type="button"
+                              onClick={() => {
+                                setIsInitialPromptOpen(false);
+                                setPromptTab('item');
+                                setPromptItemId(item.id);
+                              }}
+                            >
+                              Prompt
+                            </button>
+                            <button
+                              aria-label="Copy QA prompt"
+                              className={`df-review-item-prompt-copy${
+                                copiedPromptKey === `item:${item.id}`
+                                  ? ' is-copied'
+                                  : ''
+                              }`}
+                              type="button"
+                              onClick={() => void copyItemPrompt(numberedItem)}
+                            >
+                              <CopyIcon aria-hidden="true" />
+                            </button>
+                          </span>
                         </span>
                         <strong className="df-review-item-comment">
                           {itemComment}
@@ -2037,33 +2087,39 @@ export const ReviewShell = ({
                       </div>
                     </div>
                     <div className="df-review-item-actions">
-                      <div
-                        className="df-review-item-prompt-actions"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <button
-                          className="df-review-item-prompt"
-                          type="button"
-                          onClick={() => {
-                            setPromptTab('item');
-                            setPromptItemId(item.id);
-                          }}
+                      {currentStatusOption && (
+                        <div
+                          className="df-review-item-status-actions"
+                          onClick={(event) => event.stopPropagation()}
                         >
-                          Prompt
-                        </button>
-                        <button
-                          aria-label="Copy QA prompt"
-                          className={`df-review-item-prompt-copy${
-                            copiedPromptKey === `item:${item.id}`
-                              ? ' is-copied'
-                              : ''
-                          }`}
-                          type="button"
-                          onClick={() => void copyItemPrompt(numberedItem)}
-                        >
-                          <CopyIcon aria-hidden="true" />
-                        </button>
-                      </div>
+                          {canUpdateStatus ? (
+                            <select
+                              aria-label="QA status"
+                              className="df-review-item-status-select"
+                              value={currentStatusOption.value}
+                              onChange={(event) =>
+                                void changeItemStatus(
+                                  item,
+                                  event.currentTarget.value as ReviewItemStatus
+                                )
+                              }
+                            >
+                              {statusOptions.map((statusOption) => (
+                                <option
+                                  key={statusOption.value}
+                                  value={statusOption.value}
+                                >
+                                  {statusOption.label}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="df-review-item-status-badge">
+                              {currentStatusOption.label}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       {hasRemoteActions && (
                         <div
                           className="df-review-item-remote-actions"
@@ -2255,41 +2311,49 @@ export const ReviewShell = ({
             </div>
           </div>
           <div className="df-review-frame-actions">
-            {!isRemoteSource && (
+            {canWriteAny && (
               <div className="df-review-mode" aria-label="Add QA">
-                <button
-                  aria-label="Element"
-                  className={`df-review-mode-button is-element${
-                    mode === 'element' ? ' is-active' : ''
-                  }`}
-                  type="button"
-                  onClick={() => setReviewMode('element')}
-                >
-                  <SquareMousePointerIcon aria-hidden="true" />
-                </button>
-                <span className="df-review-mode-divider" aria-hidden="true">
-                  |
-                </span>
-                <button
-                  aria-label="Note"
-                  className={`df-review-mode-button is-note${
-                    mode === 'note' ? ' is-active' : ''
-                  }`}
-                  type="button"
-                  onClick={() => setReviewMode('note')}
-                >
-                  <StickyNoteIcon aria-hidden="true" />
-                </button>
-                <button
-                  aria-label="Area"
-                  className={`df-review-mode-button is-area${
-                    mode === 'area' ? ' is-active' : ''
-                  }`}
-                  type="button"
-                  onClick={() => setReviewMode('area')}
-                >
-                  <ScanIcon aria-hidden="true" />
-                </button>
+                {canWriteDom && (
+                  <button
+                    aria-label="Element"
+                    className={`df-review-mode-button is-element${
+                      mode === 'element' ? ' is-active' : ''
+                    }`}
+                    type="button"
+                    onClick={() => setReviewMode('element')}
+                  >
+                    <SquareMousePointerIcon aria-hidden="true" />
+                  </button>
+                )}
+                {canWriteDom && (canWriteNote || canWriteArea) && (
+                  <span className="df-review-mode-divider" aria-hidden="true">
+                    |
+                  </span>
+                )}
+                {canWriteNote && (
+                  <button
+                    aria-label="Note"
+                    className={`df-review-mode-button is-note${
+                      mode === 'note' ? ' is-active' : ''
+                    }`}
+                    type="button"
+                    onClick={() => setReviewMode('note')}
+                  >
+                    <StickyNoteIcon aria-hidden="true" />
+                  </button>
+                )}
+                {canWriteArea && (
+                  <button
+                    aria-label="Area"
+                    className={`df-review-mode-button is-area${
+                      mode === 'area' ? ' is-active' : ''
+                    }`}
+                    type="button"
+                    onClick={() => setReviewMode('area')}
+                  >
+                    <ScanIcon aria-hidden="true" />
+                  </button>
+                )}
               </div>
             )}
           </div>

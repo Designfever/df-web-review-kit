@@ -1,25 +1,31 @@
-# df-sheet adapter implementation plan
+# df-sheet adapter reference
 
-## Goal
+## Purpose
 
-`dfSheetAdapter` connects df-web-review-kit QA items to df-sheet issues.
+This document keeps the df-sheet integration as adapter reference material for
+`df-web-review-kit`.
 
-The first production pilot is Lexus. Keep the adapter local and project-tested
-before exposing it as a package export.
+df-sheet is not the package's default backend yet. The current package should be
+understood as review UI, restore logic, and adapter contracts. df-sheet can later
+become a service backend when its API, auth, permissions, and optional presence
+contract are fixed.
 
-## Current decision
+## Current status
 
-- Use `issues.id` as the canonical QA item id.
-- Add only one df-sheet field: `issues.review_metadata jsonb null`.
-- Store human-readable QA content in `description`.
-- Store restore data in `review_metadata`.
-- Store screenshots through df-sheet `/api/upload`, then attach the returned URL
-  to `issues.attachments`.
-- Use a project/page scoped integration token, not an open unauthenticated API.
-- Publish the adapter only after the Lexus pilot validates create, list, update,
-  delete, upload, and deep-link restore.
+- The repo may keep `src/adapters/df-sheet.ts` as a reference implementation.
+- The adapter is not a stable public package API.
+- The root package export should not expose `dfSheetAdapter` until the df-sheet
+  service contract is stable.
+- Host projects should not treat this as a ready production backend.
 
-## Required df-sheet changes
+## Non-goals
+
+- Do not turn review-kit into a full df-sheet issue editor.
+- Do not expose broad issue CRUD from the browser.
+- Do not store restore metadata in a hidden block inside `description`.
+- Do not require df-sheet for normal package installation.
+
+## Expected df-sheet service contract
 
 ### Database
 
@@ -30,96 +36,86 @@ alter table issues
 add column if not exists review_metadata jsonb null;
 ```
 
+Human-readable QA content stays in `title` and `description`.
+Restore data stays in `review_metadata`.
+
 ### API
 
-Pass `review_metadata` through the existing issue APIs.
+Prefer review-kit-specific endpoints instead of widening the generic issue API.
 
-- `POST /api/issues`
-  - accept `body.review_metadata`
-  - insert it into `issues.review_metadata`
-- `PATCH /api/issues/:id`
-  - accept `body.review_metadata`
-  - update `issues.review_metadata`
-- `GET /api/issues`
-  - include `review_metadata` in list responses
-- `GET /api/issues/:id`
-  - include `review_metadata` in detail responses
+```txt
+GET    /api/review-kit/issues
+GET    /api/review-kit/issues/:id
+POST   /api/review-kit/issues
+PATCH  /api/review-kit/issues/:id/status
+```
 
-Do not hide adapter metadata in `description`. df-sheet uses Tiptap JSON there,
-so a hidden JSON block would be fragile.
+Optional:
+
+```txt
+DELETE /api/review-kit/issues/:id
+```
+
+Every response that is converted back into a review item must include
+`review_metadata`.
 
 ### Auth
 
-Add an integration token path for adapter calls.
+Use a narrow integration token or same-domain authenticated session.
 
-Recommended rules:
+Recommended integration-token scope:
 
-- token is sent with `Authorization: Bearer <token>`
-- token is scoped to one `project_id`
-- token is scoped to one `page_id`
-- token can only create/list/read/update/delete issues in that scope
-- token can upload attachments for those issues
+- one `project_id`
+- one `page_id`
+- allowed actions: `create`, `read`, optional `update_status`, optional `delete`
+- attachment upload only for issues in that scope
 
-Do not expose issue CRUD without auth.
+If the browser can see the token, assume it can leak and keep the scope small.
+For production service use, prefer a backend proxy or df-sheet domain auth.
 
-## Adapter config
+## Adapter options
 
 ```ts
 type DfSheetAdapterOptions = {
-  baseUrl: string;
+  baseUrl?: string;
   projectId: string;
   pageId: string;
-  token: string;
+  reviewProjectId?: string;
+  reviewPathPrefix?: string;
+  source?: string;
   issueType?: string;
-  issuePriority?: "low" | "medium" | "high" | "urgent";
+  priority?: string;
+  token?: string;
 };
 ```
 
-Example usage during the Lexus pilot:
+Reference host usage:
 
 ```ts
 createWebReviewKit({
-  projectId: "lexus-official-v2026",
-  adapter: createDfSheetAdapter({
-    baseUrl: "https://df-sheet.vercel.app",
-    projectId: "<df-sheet-project-id>",
-    pageId: "<df-sheet-page-id>",
-    token: "<integration-token>",
-    issueType: "task",
-    issuePriority: "medium",
+  projectId: 'my-project',
+  adapter: dfSheetAdapter({
+    baseUrl: 'https://df-sheet.example.com',
+    projectId: '<df-sheet-project-id>',
+    pageId: '<df-sheet-page-id>',
+    token: '<scoped-integration-token>',
+    reviewProjectId: 'my-project',
+    issueType: 'task',
+    priority: 'medium',
   }),
 });
 ```
 
-If the target project has no backend proxy, assume the browser can see this
-token. Keep the token project/page scoped so leakage impact is limited.
+## Adapter behavior
 
-## Adapter contract changes
+The df-sheet adapter should be narrow:
 
-Current adapter contract:
-
-```ts
-interface WebReviewKitAdapter {
-  list(query: ReviewItemQuery): Promise<ReviewItem[]>;
-  create(item: ReviewItem): Promise<ReviewItem>;
-  update(id: string, patch: Partial<Omit<ReviewItem, "id" | "createdAt">>): Promise<ReviewItem>;
-  remove(id: string): Promise<void>;
-}
-```
-
-Add `get(id)` for deep-link restore:
-
-```ts
-interface WebReviewKitAdapter {
-  get(id: string): Promise<ReviewItem | null>;
-  list(query: ReviewItemQuery): Promise<ReviewItem[]>;
-  create(item: ReviewItem): Promise<ReviewItem>;
-  update(id: string, patch: Partial<Omit<ReviewItem, "id" | "createdAt">>): Promise<ReviewItem>;
-  remove(id: string): Promise<void>;
-}
-```
-
-`localAdapter` should implement `get(id)` from local storage.
+- `create`: local QA item to df-sheet issue
+- `list`: df-sheet issue list to review items
+- `get`: df-sheet issue detail to review item for deep-link restore
+- `updateStatus`: optional, status-only
+- `remove`: optional, only if df-sheet service explicitly supports safe delete
+- generic `update`: avoid
 
 ## Status mapping
 
@@ -131,7 +127,7 @@ df-web-review-kit:
 - `hold`
 - `done`
 
-df-sheet:
+df-sheet example:
 
 - `todo`
 - `in_progress`
@@ -143,29 +139,32 @@ Mapping:
 
 ```ts
 const toDfSheetStatus = {
-  todo: "todo",
-  doing: "in_progress",
-  review: "review",
-  hold: "on_hold",
-  done: "done",
+  todo: 'todo',
+  doing: 'in_progress',
+  review: 'review',
+  hold: 'on_hold',
+  done: 'done',
 } as const;
 
 const fromDfSheetStatus = {
-  todo: "todo",
-  in_progress: "doing",
-  review: "review",
-  on_hold: "hold",
-  done: "done",
+  todo: 'todo',
+  in_progress: 'doing',
+  review: 'review',
+  on_hold: 'hold',
+  done: 'done',
 } as const;
 ```
 
-## Review metadata shape
+If df-sheet uses a different status vocabulary, keep that mapping inside the
+adapter.
+
+## Review metadata
 
 The metadata must be enough to rebuild a `ReviewItem` from a df-sheet issue.
 
 ```ts
 type DfSheetReviewMetadata = {
-  schema: "df-web-review-kit";
+  schema: 'df-web-review-kit';
   version: 1;
   reviewProjectId: string;
   routeKey: string;
@@ -176,10 +175,7 @@ type DfSheetReviewMetadata = {
   kind: ReviewItemKind;
   viewport: ViewportSize;
   devicePixelRatio?: number;
-  scroll?: {
-    x: number;
-    y: number;
-  };
+  scroll?: { x: number; y: number };
   anchor?: DomAnchor;
   marker?: ReviewMarker;
   selection?: ReviewSelection;
@@ -187,56 +183,9 @@ type DfSheetReviewMetadata = {
 };
 ```
 
-Avoid storing screenshot data URLs in metadata. Use `attachments`.
+Do not store screenshot data URLs in metadata. Use df-sheet attachments.
 
-## Issue mapping
-
-### ReviewItem to Issue
-
-```ts
-{
-  project_id: options.projectId,
-  page_id: options.pageId,
-  title: item.title || makeIssueTitle(item),
-  description: makeIssueDescription(item),
-  status: toDfSheetStatus[normalizeReviewItemStatus(item.status)],
-  priority: options.issuePriority ?? "medium",
-  type: options.issueType ?? "task",
-  attachments: item.screenshot ? [uploadedScreenshot] : [],
-  links: makeReviewUrl(item),
-  review_metadata: makeReviewMetadata(item),
-}
-```
-
-### Issue to ReviewItem
-
-```ts
-{
-  id: issue.id,
-  externalIssueId: issue.id,
-  projectId: metadata.reviewProjectId,
-  routeKey: metadata.routeKey,
-  pageUrl: metadata.pageUrl,
-  originalUrl: metadata.originalUrl,
-  normalizedPath: metadata.normalizedPath,
-  scope: metadata.scope,
-  kind: metadata.kind,
-  title: issue.title,
-  comment: extractComment(issue.description),
-  status: fromDfSheetStatus[issue.status],
-  viewport: metadata.viewport,
-  devicePixelRatio: metadata.devicePixelRatio,
-  scroll: metadata.scroll,
-  anchor: metadata.anchor,
-  marker: metadata.marker,
-  selection: metadata.selection,
-  screenshot: undefined,
-  createdAt: issue.created_at,
-  updatedAt: issue.updated_at ?? issue.created_at,
-}
-```
-
-## Deep link flow
+## Deep-link flow
 
 Target URL:
 
@@ -248,13 +197,13 @@ Flow:
 
 1. `ReviewShell` reads `item` from the query string.
 2. It calls `adapter.get(itemId)`.
-3. The adapter fetches `GET /api/issues/:id`.
+3. The adapter fetches `GET /api/review-kit/issues/:id`.
 4. It maps the df-sheet issue to `ReviewItem`.
 5. `ReviewShell` restores target route and viewport from the item metadata.
 6. It reloads the target iframe.
 7. It highlights the restored item after the target document is ready.
 
-The query params `target`, `w`, and `h` are hints for early shell rendering.
+The query params `target`, `w`, and `h` are early rendering hints.
 `adapter.get(item)` is the source of truth.
 
 ## List sync
@@ -262,75 +211,50 @@ The query params `target`, `w`, and `h` are hints for early shell rendering.
 MVP behavior:
 
 - load list on review shell mount
-- reload after create/update/delete
+- reload after create or status update
 - reload when target route changes
 - reload on manual refresh
 - optionally reload when the window regains focus
 
-Do not start with realtime sync. Add Supabase realtime later only if the Lexus
-pilot shows that multiple reviewers need live updates.
+Do not start with realtime sync. Add a df-sheet service presence/realtime
+adapter only if the service contract needs team live state.
 
-## Delete behavior
+## Package boundary
 
-Use the existing df-sheet delete API for the pilot:
+Keep df-sheet-specific code isolated.
+
+- public shell adapter contracts stay storage-agnostic
+- df-sheet endpoint names and payload types stay inside the adapter
+- root package export should not expose df-sheet as stable API yet
+- docs describe this as reference/sample material until the service contract is
+  fixed
+
+Possible later public path:
 
 ```txt
-DELETE /api/issues/:id
+@designfever/web-review-kit/adapters/df-sheet
 ```
 
-If teams want QA history preserved later, add an archive/hidden status in
-df-sheet instead of hard delete.
+Do not add that export until create/list/get/status/restore/auth are verified
+against the real df-sheet service contract.
 
-## Implementation phases
-
-### Phase 1: contract
-
-- add `adapter.get(id)`
-- update `localAdapter`
-- update review shell deep-link restore to use adapter data instead of local
-  storage only
-
-### Phase 2: df-sheet adapter
-
-- add `src/adapters/df-sheet.ts`
-- implement `createDfSheetAdapter(options)`
-- implement issue/status/metadata mapping helpers
-- implement screenshot upload helper
-- keep the adapter unexported or internally linked during Lexus pilot
-
-### Phase 3: Lexus pilot
-
-- configure Lexus review shell with df-sheet adapter options
-- test create/list/update/delete
-- test screenshot attachment upload
-- test `/review?...&item=<issue.id>` restore
-- test status changes from both review-kit and df-sheet
-
-### Phase 4: package export
-
-After the Lexus pilot is stable:
-
-- export as `@designfever/web-review-kit/adapters/df-sheet`
-- include adapter files in package build
-- update README with installation/config examples
-- publish npm package
-
-## Verification checklist
+## Verification before promotion
 
 - `pnpm typecheck`
 - `pnpm build`
-- create text QA from Lexus review page
-- create capture QA with screenshot
+- create text QA from a host review page
+- create capture QA with attachment upload
 - list reload shows created issues
-- status update maps both directions
-- delete removes item from list
+- status update maps both directions if enabled
 - deep link restores route, viewport, and highlighted QA
 - df-sheet issue detail shows title, description, status, attachment, and link
+- package export map exposes df-sheet only through the chosen adapter path
 
 ## Open questions
 
-- Lexus df-sheet `project_id`
-- Lexus df-sheet `page_id`
+- final df-sheet review-kit endpoint shape
 - integration token creation and rotation flow
-- whether df-sheet should expose an issue type dedicated to QA
-- whether delete should become archive after the pilot
+- cookie auth vs integration token
+- df-sheet issue type dedicated to QA
+- status vocabulary mapping
+- whether remote delete becomes archive instead of hard delete

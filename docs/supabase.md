@@ -1,13 +1,11 @@
 # Supabase setup
 
-Supabase는 `df-web-review-kit`의 remote QA 저장소와 team presence backend로 쓸 수 있다.
+Supabase는 `df-web-review-kit`에 붙일 수 있는 optional remote/presence adapter다. 기본 backend가 아니며, host project가 자기 Supabase project와 browser-safe env를 명시적으로 설정할 때만 사용한다.
 
-Lexus pilot:
+Sample values:
 
 ```txt
-Supabase project: bb-qa
-url: https://vhqnvfkamnpgyqclohso.supabase.co
-review project id: lexus-official-v2026
+review project id: my-project
 source: supabase
 ```
 
@@ -25,8 +23,9 @@ Supabase presence adapter:
 - 같은 review project 안의 접속자 상태 공유
 - shell UI에서는 현재 page에 있는 user id만 표시
 - sitemap에서는 page별 presence 표시로 확장 가능
+- 영속 QA item 동기화가 아니라 임시 session state 공유
 
-## Required env
+## Optional host env
 
 ```env
 VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
@@ -36,6 +35,7 @@ VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE=false
 ```
 
 `anon` key만 browser env에 넣는다. `service_role` key는 browser에 넣지 않는다.
+OpenClaw `KUKU_*` 운영 env와 host browser env를 섞지 않는다.
 
 ## Database setup
 
@@ -74,27 +74,27 @@ next create: #9
 
 ## RLS policy
 
-현재 Lexus pilot RLS는 dev 검증용이다.
+아래 RLS 방향은 sample/dev 검증용이다.
 
 ```txt
-project_id = 'lexus-official-v2026'
+project_id = 'my-project'
 role = anon
 ```
 
-이 방식은 anon key와 project id를 알면 row create/update/delete가 가능하다. production/package 운영에서는 다음 중 하나로 좁힌다.
+이 방식은 anon key와 project id를 알면 row create/update/delete가 가능하다. production host에서는 다음 중 하나로 좁힌다.
 
 - Supabase Auth + project member table 기반 RLS
 - Supabase Edge Function
 - project backend proxy
 - private deployment 내부 service endpoint
 
-여러 project를 같은 `bb-qa` DB에 넣는 것은 가능하다. `review_projects`와 `review_items.project_id`로 분리한다. 예:
+여러 project를 같은 Supabase DB에 넣는 것은 가능하다. `review_projects`와 `review_items.project_id`로 분리한다. 예:
 
 ```sql
 insert into public.review_projects (id, label)
 values
-  ('lexus-official-v2026', 'Lexus Official v2026'),
-  ('hdc-lab', 'HDC Lab')
+  ('my-project', 'My Project'),
+  ('another-project', 'Another Project')
 on conflict (id) do update
 set label = excluded.label;
 ```
@@ -116,7 +116,7 @@ import {
 } from '@designfever/web-review-kit';
 import { createClient } from '@supabase/supabase-js';
 
-const REVIEW_PROJECT_ID = 'lexus-official-v2026';
+const REVIEW_PROJECT_ID = 'my-project';
 const REVIEW_PATH_PREFIX = '/review';
 
 const supabaseClient = import.meta.env.VITE_REVIEW_SUPABASE_ANON_KEY
@@ -163,6 +163,8 @@ review-presence-<projectId>
 Adapter는 topic에 안전하지 않은 문자를 `-`로 normalize한다.
 
 `private=false`면 별도 Realtime RLS 없이 빠르게 검증할 수 있다. `private=true`로 바꾸려면 Supabase Realtime authorization policy가 필요하다.
+
+Presence 전략과 storage adapter 분리는 [Presence strategy](presence-handoff.md)를 먼저 본다.
 
 ## Validation
 

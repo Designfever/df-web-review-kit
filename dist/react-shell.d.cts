@@ -1,5 +1,5 @@
 import React from 'react';
-import { f as ReviewItemScope, s as ReviewSource, o as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, q as ReviewRulerConfig } from './types-D_mNjOHx.cjs';
+import { f as ReviewItemScope, r as ReviewSource, n as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, p as ReviewRulerConfig } from './types-Mk1TPvds.cjs';
 
 type ReviewShellViewportKind = Exclude<ReviewItemScope, 'dom'>;
 type ReviewShellViewportPreset = {
@@ -18,6 +18,7 @@ type ReviewShellStatusOption = {
     value: ReviewItemStatus;
     label: string;
 };
+type ReviewShellWriteMode = 'dom' | 'note' | 'area';
 type ReviewShellUpdateStatusInput = {
     id: string;
     item: ReviewItem;
@@ -36,8 +37,10 @@ type ReviewShellAdapter = {
     pageId?: string;
     get: WebReviewKitAdapter['get'];
     list: WebReviewKitAdapter['list'];
-    create: WebReviewKitAdapter['create'];
+    create?: WebReviewKitAdapter['create'];
+    update?: WebReviewKitAdapter['update'];
     statusOptions?: readonly ReviewShellStatusOption[];
+    canWrite?: boolean | readonly ReviewShellWriteMode[];
     updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<ReviewItem>;
     syncSubmission?: (input: ReviewShellSyncSubmissionInput) => Promise<ReviewItem>;
     remove?: WebReviewKitAdapter['remove'];

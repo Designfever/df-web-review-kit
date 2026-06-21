@@ -19,7 +19,6 @@ import type {
 } from '../types';
 import { createStyleElement } from './overlay-style';
 import {
-  getNextReviewItemNumber,
   getNumberedReviewItems,
   getReviewViewportScope,
 } from './review-scope';
@@ -1342,10 +1341,8 @@ class WebReviewKitApp {
     const now = new Date().toISOString();
     const routeKey = getRouteKey(environment);
     const viewport = input.viewport ?? getViewportSize(environment);
-    const reviewNumber = await this.getNextReviewNumber();
     const item: ReviewItem = {
       id: createId(),
-      reviewNumber,
       projectId: this.options.projectId,
       routeKey,
       pageUrl: getPageUrl(environment),
@@ -1377,13 +1374,6 @@ class WebReviewKitApp {
     this.areaDraft = undefined;
     this.highlightItem(item.id);
     await this.reload();
-  }
-
-  private async getNextReviewNumber() {
-    const items = await this.adapter.list({
-      projectId: this.options.projectId,
-    });
-    return getNextReviewItemNumber(items);
   }
 
   private async restoreItem(item: ReviewItem) {

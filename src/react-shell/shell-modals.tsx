@@ -76,6 +76,12 @@ export const SitemapModal = ({
           </button>
         </div>
         <div className="df-review-sitemap-list">
+          <div className="df-review-sitemap-table-head" aria-hidden="true">
+            <span>Page</span>
+            <span>Local</span>
+            <span>Remote</span>
+            <span>Online</span>
+          </div>
           {pages.map((page) => {
             const pageTarget = getPageTarget(page.href);
             const qaCount = pageQaCounts.get(pageTarget) ?? EMPTY_SITEMAP_QA_COUNT;
@@ -90,30 +96,14 @@ export const SitemapModal = ({
                 onClick={() => onSelectPage(page.href)}
               >
                 <span className="df-review-sitemap-path">{page.href}</span>
-                <span className="df-review-sitemap-meta">
-                  {pageUsers.length > 0 && (
-                    <span className="df-review-sitemap-users">
-                      {pageUsers.map((user) => (
-                        <span
-                          key={user.sessionId}
-                          className="df-review-sitemap-user"
-                          style={{
-                            '--df-review-presence-color': user.color,
-                          } as React.CSSProperties}
-                        >
-                          {user.userId}
-                        </span>
-                      ))}
-                    </span>
-                  )}
-                  <span className="df-review-sitemap-counts">
-                    <span className="df-review-sitemap-count is-local">
-                      L {qaCount.local}
-                    </span>
-                    <span className="df-review-sitemap-count is-remote">
-                      R {qaCount.remote}
-                    </span>
-                  </span>
+                <span className="df-review-sitemap-cell is-local">
+                  {qaCount.local}
+                </span>
+                <span className="df-review-sitemap-cell is-remote">
+                  {qaCount.remote}
+                </span>
+                <span className="df-review-sitemap-cell is-online">
+                  {pageUsers.length}
                 </span>
               </button>
             );
@@ -182,16 +172,33 @@ export const ReviewSettingsModal = ({
         }}
       >
         <div className="df-review-settings-header">
-          <div>
+          <div className="df-review-settings-title">
             <strong>Settings</strong>
             <span>
               {FIGMA_TOKEN_STORAGE_KEY} / {REVIEW_USER_ID_STORAGE_KEY} /{' '}
               {REVIEW_THEME_STORAGE_KEY}
             </span>
           </div>
-          <button aria-label="Close settings" type="button" onClick={onClose}>
-            x
-          </button>
+          <div className="df-review-settings-header-actions">
+            <select
+              aria-label="Review theme"
+              className="df-review-settings-theme-select"
+              value={reviewThemeDraft}
+              onChange={(event) => {
+                onReviewThemeDraftChange(normalizeReviewTheme(event.target.value));
+                onClearStatus();
+              }}
+            >
+              {REVIEW_THEME_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button aria-label="Close settings" type="button" onClick={onClose}>
+              x
+            </button>
+          </div>
         </div>
         <div className="df-review-settings-body">
           <div className="df-review-settings-field">
@@ -280,27 +287,7 @@ export const ReviewSettingsModal = ({
               />
             </div>
           </label>
-          <label className="df-review-settings-field">
-            <span>Theme</span>
-            <div className="df-review-settings-select-input">
-              <select
-                aria-label="Review theme"
-                value={reviewThemeDraft}
-                onChange={(event) => {
-                  onReviewThemeDraftChange(
-                    normalizeReviewTheme(event.target.value)
-                  );
-                  onClearStatus();
-                }}
-              >
-                {REVIEW_THEME_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </label>
+
           {figmaSettingsStatus && (
             <p className="df-review-settings-status">{figmaSettingsStatus}</p>
           )}
@@ -324,7 +311,7 @@ export const ReviewSettingsModal = ({
 };
 
 interface PromptModalProps {
-  numberedItem: NumberedReviewItem;
+  numberedItem?: NumberedReviewItem;
   promptTab: ReviewPromptTab;
   activeLabel: string;
   activeText: string;
@@ -364,7 +351,9 @@ export const PromptModal = ({
           <div>
             <strong>Prompt</strong>
             <span>
-              {numberedItem.displayLabel} / {getItemTitle(numberedItem.item)}
+              {numberedItem
+                ? `${numberedItem.displayLabel} / ${getItemTitle(numberedItem.item)}`
+                : 'Initial prompt'}
             </span>
           </div>
           <button aria-label="Close prompt" type="button" onClick={onClose}>
@@ -385,6 +374,7 @@ export const PromptModal = ({
             <button
               aria-selected={promptTab === 'item'}
               className={promptTab === 'item' ? 'is-active' : ''}
+              disabled={!numberedItem}
               role="tab"
               type="button"
               onClick={() => onPromptTabChange('item')}

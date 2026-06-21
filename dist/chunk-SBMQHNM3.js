@@ -45,10 +45,8 @@ function localAdapter(options = {}) {
         if (!normalized || normalized !== item) changed = true;
         return normalized ? [normalized] : [];
       });
-      const numberedItems = ensureStoredReviewNumbers(items);
-      if (numberedItems !== items) changed = true;
-      if (changed) write(numberedItems);
-      return numberedItems;
+      if (changed) write(items);
+      return items;
     } catch {
       return [];
     }
@@ -103,300 +101,14 @@ function normalizeStoredReviewItem(value) {
   const raw = value;
   const kind = raw.kind === "text" ? "note" : raw.kind === "capture" ? "area" : raw.kind;
   if (kind !== "note" && kind !== "area") return void 0;
-  const { screenshot: _screenshot, ...item } = raw;
-  if (kind === raw.kind && _screenshot === void 0) {
+  const { screenshot: _screenshot, reviewNumber: _reviewNumber, ...item } = raw;
+  if (kind === raw.kind && _screenshot === void 0 && _reviewNumber === void 0) {
     return raw;
   }
   return {
     ...item,
     kind
   };
-}
-function ensureStoredReviewNumbers(items) {
-  const usedNumbers = /* @__PURE__ */ new Set();
-  let maxNumber = 0;
-  let changed = false;
-  items.forEach((item) => {
-    const number = normalizeReviewNumber(item.reviewNumber);
-    if (!number) {
-      changed = true;
-      return;
-    }
-    if (usedNumbers.has(number)) {
-      changed = true;
-      return;
-    }
-    usedNumbers.add(number);
-    maxNumber = Math.max(maxNumber, number);
-  });
-  if (!changed) return items;
-  let nextNumber = maxNumber + 1;
-  const assignedNumbers = /* @__PURE__ */ new Set();
-  const numberById = /* @__PURE__ */ new Map();
-  [...items].sort((a, b) => {
-    const createdOrder = a.createdAt.localeCompare(b.createdAt);
-    if (createdOrder !== 0) return createdOrder;
-    return a.id.localeCompare(b.id);
-  }).forEach((item) => {
-    const storedNumber = normalizeReviewNumber(item.reviewNumber);
-    const reviewNumber = storedNumber && !assignedNumbers.has(storedNumber) ? storedNumber : nextNumber++;
-    assignedNumbers.add(reviewNumber);
-    numberById.set(item.id, reviewNumber);
-  });
-  return items.map((item) => {
-    const reviewNumber = numberById.get(item.id);
-    return item.reviewNumber === reviewNumber ? item : { ...item, reviewNumber };
-  });
-}
-function normalizeReviewNumber(value) {
-  if (typeof value !== "number") return void 0;
-  if (!Number.isInteger(value) || value < 1) return void 0;
-  return value;
-}
-
-// src/adapters/df-sheet.ts
-var DF_SHEET_REVIEW_SOURCE = "df-web-review-kit";
-var REVIEW_METADATA_VERSION = 1;
-function dfSheetAdapter(options) {
-  return {
-    async get(id) {
-      const issue = await requestDfSheet(
-        `/api/issues/${encodeURIComponent(id)}`,
-        options
-      );
-      return issueToReviewItem(issue, options);
-    },
-    async list(query) {
-      const params = new URLSearchParams();
-      params.set("project_id", options.projectId);
-      params.set("page_id", options.pageId);
-      params.set("review_source", options.source ?? DF_SHEET_REVIEW_SOURCE);
-      if (query.routeKey ?? query.normalizedPath) {
-        params.set("review_route_key", query.routeKey ?? query.normalizedPath ?? "");
-      }
-      const issues = await requestDfSheet(
-        `/api/issues?${params.toString()}`,
-        options
-      );
-      return issues.flatMap((issue) => {
-        const item = issueToReviewItem(issue, options);
-        return item ? [item] : [];
-      });
-    },
-    async create(item) {
-      const metadata = createReviewMetadata(item, options);
-      const draftDescription = buildIssueDescription(item, metadata);
-      const created = await requestDfSheet("/api/issues", options, {
-        method: "POST",
-        body: JSON.stringify({
-          project_id: options.projectId,
-          page_id: options.pageId,
-          title: buildIssueTitle(item),
-          description: draftDescription,
-          type: options.issueType ?? "task",
-          types: [options.issueType ?? "task"],
-          status: "todo",
-          priority: options.priority ?? "medium",
-          links: metadata.reviewUrl ?? null,
-          review_metadata: metadata
-        })
-      });
-      const externalIssueId = created.id;
-      const externalIssueUrl = buildIssueUrl(options, externalIssueId);
-      const finalMetadata = {
-        ...metadata,
-        externalIssueId,
-        externalIssueUrl,
-        reviewUrl: buildReviewUrl(item, options, externalIssueId),
-        submittedAt: (/* @__PURE__ */ new Date()).toISOString(),
-        submitStatus: "submitted"
-      };
-      const patched = await requestDfSheet(
-        `/api/issues/${encodeURIComponent(externalIssueId)}`,
-        options,
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            description: buildIssueDescription(item, finalMetadata),
-            links: finalMetadata.reviewUrl,
-            review_metadata: finalMetadata
-          })
-        }
-      );
-      return issueToReviewItem(patched, options) ?? {
-        ...item,
-        id: externalIssueId,
-        externalIssueId,
-        externalIssueUrl,
-        submittedAt: finalMetadata.submittedAt,
-        submitStatus: "submitted",
-        updatedAt: finalMetadata.submittedAt ?? item.updatedAt
-      };
-    },
-    async update() {
-      throw new Error("df-sheet review items are read-only in review-kit.");
-    },
-    async remove() {
-      throw new Error("df-sheet review items are read-only in review-kit.");
-    }
-  };
-}
-function createReviewMetadata(item, options) {
-  return {
-    source: options.source ?? DF_SHEET_REVIEW_SOURCE,
-    schema: DF_SHEET_REVIEW_SOURCE,
-    version: REVIEW_METADATA_VERSION,
-    reviewProjectId: options.reviewProjectId ?? item.projectId,
-    id: item.id,
-    reviewNumber: item.reviewNumber,
-    projectId: item.projectId,
-    routeKey: item.routeKey,
-    pageUrl: item.pageUrl,
-    originalUrl: item.originalUrl,
-    normalizedPath: item.normalizedPath,
-    scope: item.scope,
-    kind: item.kind,
-    title: item.title,
-    comment: item.comment,
-    status: item.status,
-    viewport: item.viewport,
-    devicePixelRatio: item.devicePixelRatio,
-    scroll: item.scroll,
-    anchor: item.anchor,
-    marker: item.marker,
-    selection: item.selection,
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-    reviewUrl: buildReviewUrl(item, options)
-  };
-}
-function issueToReviewItem(issue, options) {
-  const metadata = getReviewMetadata(issue);
-  if (!metadata) return null;
-  const routeKey = metadata.routeKey ?? metadata.normalizedPath ?? "/";
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  return {
-    id: issue.id,
-    reviewNumber: metadata.reviewNumber,
-    projectId: metadata.reviewProjectId ?? metadata.projectId ?? options.reviewProjectId ?? options.projectId,
-    routeKey,
-    pageUrl: metadata.pageUrl ?? metadata.originalUrl ?? toAbsoluteReviewUrl(routeKey),
-    originalUrl: metadata.originalUrl,
-    normalizedPath: metadata.normalizedPath ?? routeKey,
-    scope: metadata.scope,
-    kind: normalizeKind(metadata.kind),
-    title: metadata.title ?? issue.title,
-    comment: metadata.comment ?? issue.title,
-    status: mapIssueStatus(issue.status ?? metadata.status),
-    viewport: metadata.viewport ?? { width: 390, height: 720 },
-    devicePixelRatio: metadata.devicePixelRatio,
-    scroll: metadata.scroll,
-    anchor: metadata.anchor,
-    marker: metadata.marker,
-    selection: metadata.selection,
-    externalIssueId: issue.id,
-    externalIssueUrl: metadata.externalIssueUrl ?? buildIssueUrl(options, issue.id),
-    submittedAt: metadata.submittedAt ?? issue.created_at,
-    submitStatus: "submitted",
-    createdAt: metadata.createdAt ?? issue.created_at ?? now,
-    updatedAt: issue.updated_at ?? metadata.updatedAt ?? issue.created_at ?? now
-  };
-}
-function getReviewMetadata(issue) {
-  const metadata = issue.review_metadata;
-  if (!metadata || typeof metadata !== "object") return null;
-  const value = metadata;
-  if (value.source !== DF_SHEET_REVIEW_SOURCE) return null;
-  return value;
-}
-async function requestDfSheet(path, options, init = {}) {
-  const url = new URL(path, getDfSheetBaseUrl(options)).toString();
-  const headers = new Headers(init.headers);
-  headers.set("Accept", "application/json");
-  if (init.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-  if (options.token) {
-    headers.set("Authorization", `Bearer ${options.token}`);
-  }
-  const response = await fetch(url, {
-    ...init,
-    headers,
-    credentials: "include"
-  });
-  const json = await response.json().catch(() => null);
-  if (!response.ok || !json?.success || json.data === void 0) {
-    throw new Error(
-      json?.message ?? json?.error ?? `df-sheet request failed: ${response.status}`
-    );
-  }
-  return json.data;
-}
-function getDfSheetBaseUrl(options) {
-  const baseUrl = options.baseUrl?.trim();
-  if (baseUrl) return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-  if (typeof window !== "undefined") return window.location.origin;
-  return "http://localhost";
-}
-function buildIssueTitle(item) {
-  const reviewId = formatReviewItemIndexId(item);
-  const idPrefix = reviewId ? `${reviewId} ` : "";
-  const prefix = item.kind === "area" ? "[Area]" : "[Note]";
-  const summary = item.title || item.comment.split("\n")[0] || "Review item";
-  return `${idPrefix}${prefix} ${summary}`.slice(0, 120);
-}
-function buildIssueDescription(item, metadata) {
-  const reviewId = formatReviewItemIndexId(item);
-  return [
-    "df-web-review-kit issue",
-    "",
-    reviewId ? `Review ID: ${reviewId}` : null,
-    `Kind: ${item.kind}`,
-    `Page: ${item.routeKey || item.normalizedPath || "/"}`,
-    `Viewport: ${Math.round(item.viewport.width)}x${Math.round(item.viewport.height)}`,
-    item.scroll ? `Scroll: ${Math.round(item.scroll.x)},${Math.round(item.scroll.y)}` : null,
-    item.anchor?.selector ? `Selector: ${item.anchor.selector}` : null,
-    item.marker?.viewport ? `Point: ${Math.round(item.marker.viewport.x)},${Math.round(item.marker.viewport.y)}` : null,
-    item.selection?.viewport ? `Area: ${Math.round(item.selection.viewport.x)},${Math.round(item.selection.viewport.y)},${Math.round(item.selection.viewport.width)},${Math.round(item.selection.viewport.height)}` : null,
-    metadata.reviewUrl ? `Review link: ${metadata.reviewUrl}` : null,
-    "",
-    "Note:",
-    item.comment
-  ].filter((line) => line !== null).join("\n");
-}
-function formatReviewItemIndexId(item) {
-  if (typeof item.reviewNumber === "number" && item.reviewNumber > 0) {
-    return `#${item.reviewNumber}`;
-  }
-  return /^\d+$/.test(item.id) ? `#${item.id}` : void 0;
-}
-function buildReviewUrl(item, options, issueId) {
-  if (typeof window === "undefined") return void 0;
-  const prefix = options.reviewPathPrefix ?? "/review";
-  const url = new URL(prefix, window.location.origin);
-  url.searchParams.set("source", "df-sheet");
-  url.searchParams.set("target", item.routeKey || item.normalizedPath || "/");
-  url.searchParams.set("w", String(Math.round(item.viewport.width)));
-  url.searchParams.set("h", String(Math.round(item.viewport.height)));
-  if (issueId) url.searchParams.set("item", issueId);
-  return url.toString();
-}
-function buildIssueUrl(options, issueId) {
-  const path = `/projects/${options.projectId}/issues/${issueId}`;
-  return options.baseUrl ? new URL(path, getDfSheetBaseUrl(options)).toString() : path;
-}
-function toAbsoluteReviewUrl(path) {
-  if (typeof window === "undefined") return path;
-  return new URL(path, window.location.origin).toString();
-}
-function normalizeKind(value) {
-  return value === "area" ? "area" : "note";
-}
-function mapIssueStatus(value) {
-  if (value === "done" || value === "review" || value === "todo") return value;
-  if (value === "in_progress") return "doing";
-  if (value === "on_hold") return "hold";
-  return "todo";
 }
 
 // src/adapters/supabase.ts
@@ -439,11 +151,8 @@ function supabaseAdapter(options) {
     async create(item) {
       const nextItem = normalizeItemForSupabaseCreate(item, source, options);
       if (options.unsafeClientReviewNumberFallback) {
-        return createItemWithClientReviewNumber(
-          nextItem,
-          source,
-          options,
-          fromTable
+        throw new Error(
+          "supabase create review item: unsafeClientReviewNumberFallback is no longer supported. Use create_review_item RPC with database-backed review_number sequence."
         );
       }
       return createItemWithRpc(nextItem, source, options);
@@ -527,36 +236,6 @@ async function createItemWithRpc(item, source, options) {
   );
   return rowToReviewItem(row, options) ?? item;
 }
-async function createItemWithClientReviewNumber(item, source, options, fromTable) {
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const reviewNumber = await getNextReviewNumber(
-      options.projectId,
-      source,
-      fromTable
-    );
-    const nextItem = { ...item, reviewNumber };
-    const row = itemToRow(nextItem, source, options);
-    const created = await fromTable().insert(row).select("*").single();
-    if (!created.error) {
-      return rowToReviewItem(created.data, options) ?? nextItem;
-    }
-    if (created.error.code === "23505" && attempt < 4) {
-      continue;
-    }
-    throw new Error(
-      `supabase create review item: ${created.error.message ?? created.error.code ?? "failed"}`
-    );
-  }
-  throw new Error("supabase create review item: failed");
-}
-async function getNextReviewNumber(projectId, source, fromTable) {
-  const rows = await unwrapResponse(
-    fromTable().select("review_number").eq("project_id", projectId).eq("source", source).order("review_number", { ascending: false }).limit(1),
-    "supabase get next review number"
-  );
-  const maxNumber = normalizeReviewNumber2(rows?.[0]?.review_number) ?? 0;
-  return maxNumber + 1;
-}
 function itemToRow(item, source, options) {
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const updatedAt = item.updatedAt || now;
@@ -602,7 +281,7 @@ function rowToReviewItem(row, options) {
     reviewNumber: row.review_number ?? item.reviewNumber,
     projectId: row.project_id || item.projectId || options.projectId,
     routeKey,
-    pageUrl: item.pageUrl || toAbsoluteReviewUrl2(routeKey),
+    pageUrl: item.pageUrl || toAbsoluteReviewUrl(routeKey),
     normalizedPath: item.normalizedPath || routeKey,
     kind: item.kind === "area" ? "area" : "note",
     comment: item.comment || "",
@@ -639,14 +318,9 @@ function buildSupabaseReviewUrl(item, source, options, itemId) {
   if (itemId) url.searchParams.set("item", itemId);
   return url.toString();
 }
-function toAbsoluteReviewUrl2(path) {
+function toAbsoluteReviewUrl(path) {
   if (typeof window === "undefined") return path;
   return new URL(path, window.location.origin).toString();
-}
-function normalizeReviewNumber2(value) {
-  if (typeof value !== "number") return void 0;
-  if (!Number.isInteger(value) || value < 1) return void 0;
-  return value;
 }
 function createSupabaseReviewItemId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -1542,43 +1216,34 @@ function getReviewItemScopeLabel(item, presets = DEFAULT_REVIEW_VIEWPORTS) {
   return preset.label || REVIEW_SCOPE_LABELS[scope];
 }
 function getNumberedReviewItems(items, presets = DEFAULT_REVIEW_VIEWPORTS) {
-  const numbers = /* @__PURE__ */ new Map();
-  const usedNumbers = /* @__PURE__ */ new Set();
-  let nextNumber = getNextReviewItemNumber(items);
+  const draftLabels = /* @__PURE__ */ new Map();
+  let nextDraftNumber = 1;
   [...items].sort((a, b) => {
     const createdOrder = a.createdAt.localeCompare(b.createdAt);
     if (createdOrder !== 0) return createdOrder;
     return a.id.localeCompare(b.id);
   }).forEach((item) => {
-    const storedNumber = getReviewItemNumber(item);
-    const number = storedNumber && !usedNumbers.has(storedNumber) ? storedNumber : nextNumber++;
-    usedNumbers.add(number);
-    numbers.set(item.id, number);
+    if (!getReviewItemNumber(item)) {
+      draftLabels.set(item.id, `draft-${nextDraftNumber++}`);
+    }
   });
   return items.map((item) => {
     const scope = getReviewItemScope(item, presets);
     const label = getReviewItemScopeLabel(item, presets);
-    const number = numbers.get(item.id) ?? 0;
+    const number = getReviewItemNumber(item);
     return {
       item,
       scope,
       label,
       number,
-      displayLabel: `#${number}`
+      displayLabel: number ? `#${number}` : draftLabels.get(item.id) ?? "draft"
     };
   });
 }
 function getReviewItemNumber(item) {
-  return normalizeReviewNumber3(item.reviewNumber);
+  return normalizeReviewNumber(item.reviewNumber);
 }
-function getNextReviewItemNumber(items) {
-  const maxNumber = items.reduce((max, item) => {
-    const number = getReviewItemNumber(item);
-    return number ? Math.max(max, number) : max;
-  }, 0);
-  return maxNumber + 1;
-}
-function normalizeReviewNumber3(value) {
+function normalizeReviewNumber(value) {
   if (typeof value !== "number") return void 0;
   if (!Number.isInteger(value) || value < 1) return void 0;
   return value;
@@ -2574,10 +2239,8 @@ ${formatItemMeta(item)}`;
     const now = (/* @__PURE__ */ new Date()).toISOString();
     const routeKey = getRouteKey(environment);
     const viewport = input.viewport ?? getViewportSize(environment);
-    const reviewNumber = await this.getNextReviewNumber();
     const item = {
       id: createId(),
-      reviewNumber,
       projectId: this.options.projectId,
       routeKey,
       pageUrl: getPageUrl(environment),
@@ -2606,12 +2269,6 @@ ${formatItemMeta(item)}`;
     this.areaDraft = void 0;
     this.highlightItem(item.id);
     await this.reload();
-  }
-  async getNextReviewNumber() {
-    const items = await this.adapter.list({
-      projectId: this.options.projectId
-    });
-    return getNextReviewItemNumber(items);
   }
   async restoreItem(item) {
     this.setModeState("idle");
@@ -3472,8 +3129,6 @@ export {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   normalizeReviewItemStatus,
   localAdapter,
-  DF_SHEET_REVIEW_SOURCE,
-  dfSheetAdapter,
   supabaseAdapter,
   DEFAULT_REVIEW_VIEWPORTS,
   findReviewViewportPreset,
@@ -3483,4 +3138,4 @@ export {
   getNumberedReviewItems,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-U5K2YGGL.js.map
+//# sourceMappingURL=chunk-SBMQHNM3.js.map

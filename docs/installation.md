@@ -2,6 +2,8 @@
 
 Host project에 `df-web-review-kit`를 설치하고 `/review` route에서 `mountReviewShell()`을 호출한다.
 
+기본 설치는 local-only다. Remote/presence backend는 adapter로 선택해서 붙인다.
+
 ## Package install
 
 NPM package로 사용할 때:
@@ -10,13 +12,13 @@ NPM package로 사용할 때:
 pnpm add @designfever/web-review-kit react react-dom
 ```
 
-Supabase remote/presence를 쓰면 host project에 Supabase client도 설치한다.
+Supabase remote/presence는 optional adapter다. 이 adapter를 쓰는 host project만 Supabase client를 설치한다.
 
 ```bash
 pnpm add @supabase/supabase-js
 ```
 
-Lexus repo 안에서 검증할 때는 file dependency를 사용한다.
+Host repo 안에서 package source를 같이 검증할 때는 file dependency를 사용할 수 있다.
 
 ```json
 "@designfever/web-review-kit": "file:packages/df-web-review-kit"
@@ -75,7 +77,7 @@ mountReviewShell({
 
 ## Supabase remote example
 
-Supabase를 붙일 때는 host project에서 client를 만들고 package adapter에 주입한다.
+Supabase를 붙일 때는 host project에서 browser-safe client를 만들고 package adapter에 주입한다. 이 예시는 optional setup이며 package 기본 운영 backend가 아니다.
 
 ```tsx
 import {
@@ -93,7 +95,7 @@ import {
 } from '@designfever/web-review-kit';
 import { createClient } from '@supabase/supabase-js';
 
-const REVIEW_PROJECT_ID = 'lexus-official-v2026';
+const REVIEW_PROJECT_ID = 'my-project';
 const REVIEW_PATH_PREFIX = '/review';
 
 const local = localAdapter({
@@ -199,6 +201,7 @@ Rules:
 
 - browser env에는 Supabase `anon` key만 넣는다.
 - `service_role` key는 절대 browser env에 넣지 않는다.
+- OpenClaw/operator secret은 host browser env나 package 파일에 넣지 않는다.
 - package는 Supabase dependency를 직접 만들지 않는다. host project가 `createClient()`를 호출한다.
 
 ## Viewport preset
@@ -221,25 +224,25 @@ mountReviewShell({
 
 ## Development commands
 
-Lexus repo 기준:
+Package repo 기준:
 
 ```bash
 pnpm dev:review
-pnpm review-kit:typecheck
-pnpm typecheck:review
-pnpm review-kit:build
-pnpm build:review
+pnpm typecheck
+pnpm build
+pnpm typecheck:dev
+pnpm build:dev
 ```
 
-Package source를 수정하면 `pnpm review-kit:build`로 `dist`를 갱신한다.
+Host repo에서 file dependency로 검증한다면 host 쪽 script 이름에 맞춰 typecheck/build를 한 번 더 돌린다.
 
 ## Publish checklist
 
 0.1 package 배포 전 확인:
 
-- `packages/df-web-review-kit/package.json`의 `files`에 `dist`, `src`, `docs`, `README.md` 포함
-- `pnpm review-kit:typecheck`
-- `pnpm review-kit:build`
+- `package.json`의 `files`에 `dist`, `docs`, `README.md` 포함
+- `pnpm typecheck`
+- `pnpm build`
 - local source에서 note/dom/area 생성 확인
 - local item을 remote로 등록하면 local draft 삭제 확인
 - remote source에서 status update/delete 확인

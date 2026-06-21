@@ -161,7 +161,7 @@ export interface NumberedReviewItem {
   item: ReviewItem;
   scope: ReviewItemScope;
   label: string;
-  number: number;
+  number?: number;
   displayLabel: string;
 }
 

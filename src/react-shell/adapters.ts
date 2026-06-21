@@ -1,5 +1,6 @@
 import { REVIEW_WORKFLOW_STATUS_OPTIONS } from '../status';
 import type {
+  ReviewItem,
   ReviewSource,
   WebReviewKitAdapter,
 } from '../types';
@@ -10,7 +11,10 @@ import type {
   ReviewShellStatusOption,
   ReviewShellSyncSubmissionInput,
   ReviewShellUpdateStatusInput,
+  ReviewShellWriteMode,
 } from './types';
+
+const ALL_REVIEW_WRITE_MODES: ReviewShellWriteMode[] = ['dom', 'note', 'area'];
 
 export type NormalizedReviewShellAdapter = {
   label: ReviewSource;
@@ -18,30 +22,34 @@ export type NormalizedReviewShellAdapter = {
   statusOptions: ReviewShellStatusOption[];
   updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<unknown>;
   syncSubmission?: (input: ReviewShellSyncSubmissionInput) => Promise<unknown>;
+  writeModes: ReviewShellWriteMode[];
   canRemove: boolean;
   pageId?: string;
 };
 
 export type NormalizedReviewShellAdapters = {
-  local: NormalizedReviewShellAdapter;
+  local: NormalizedReviewShellAdapter | null;
   remote: NormalizedReviewShellAdapter | null;
+  sources: NormalizedReviewShellAdapter[];
 };
 
 export function normalizeReviewShellAdapters(
   adapters: ReviewShellAdapters
 ): NormalizedReviewShellAdapters {
   if (Array.isArray(adapters)) {
-    const local = adapters.find((adapter) => adapter.label === 'local');
+    const normalized = adapters.map((adapter) => normalizeShellAdapter(adapter));
+    const local = normalized.find((adapter) => adapter.label === 'local') ?? null;
     const remote =
-      adapters.find((adapter) => adapter.label !== 'local') ?? null;
+      normalized.find((adapter) => adapter.label !== 'local') ?? null;
 
-    if (!local) {
-      throw new Error('ReviewShell requires a local adapter.');
+    if (normalized.length === 0 || (!local && !remote)) {
+      throw new Error('ReviewShell requires at least one adapter.');
     }
 
     return {
-      local: normalizeShellAdapter(local),
-      remote: remote ? normalizeShellAdapter(remote) : null,
+      local,
+      remote,
+      sources: normalized,
     };
   }
 
@@ -51,61 +59,99 @@ export function normalizeReviewShellAdapters(
 function normalizeLegacyAdapterMap(
   adapters: ReviewShellAdapterMap
 ): NormalizedReviewShellAdapters {
+  const local = {
+    label: 'local',
+    adapter: adapters.local,
+    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+    updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
+    syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
+    writeModes: [...ALL_REVIEW_WRITE_MODES],
+    canRemove: true,
+  } satisfies NormalizedReviewShellAdapter;
+  const remote = adapters.remote
+    ? ({
+        label: 'df-sheet',
+        adapter: adapters.remote,
+        statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+        updateStatus: ({ id, status }) =>
+          adapters.remote?.update(id, { status }) ??
+          Promise.reject(new Error('Remote adapter is not available.')),
+        writeModes: [],
+        canRemove: false,
+        pageId: adapters.remotePageId,
+      } satisfies NormalizedReviewShellAdapter)
+    : null;
+
   return {
-    local: {
-      label: 'local',
-      adapter: adapters.local,
-      statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
-      updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
-      syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
-      canRemove: true,
-    },
-    remote: adapters.remote
-      ? {
-          label: 'df-sheet',
-          adapter: adapters.remote,
-          statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
-          canRemove: false,
-          pageId: adapters.remotePageId,
-        }
-      : null,
+    local,
+    remote,
+    sources: remote ? [local, remote] : [local],
   };
 }
 
 function normalizeShellAdapter(
   adapterConfig: ReviewShellAdapter
 ): NormalizedReviewShellAdapter {
+  const statusOptions = [
+    ...(adapterConfig.statusOptions ?? REVIEW_WORKFLOW_STATUS_OPTIONS),
+  ];
+  const updateAdapter = adapterConfig.update;
+  const updateStatus: NormalizedReviewShellAdapter['updateStatus'] =
+    adapterConfig.updateStatus
+      ? adapterConfig.updateStatus
+      : updateAdapter
+        ? ({ id, status }) => updateAdapter(id, { status })
+        : undefined;
+  const writeModes = normalizeWriteModes(
+    adapterConfig.create
+      ? adapterConfig.canWrite ?? adapterConfig.label === 'local'
+      : false
+  );
+
   return {
     label: adapterConfig.label,
     pageId: adapterConfig.pageId,
-    statusOptions: [...(adapterConfig.statusOptions ?? [])],
-    updateStatus: adapterConfig.updateStatus,
+    statusOptions,
+    updateStatus,
     syncSubmission: adapterConfig.syncSubmission,
+    writeModes,
     canRemove: Boolean(adapterConfig.remove),
     adapter: {
       get: adapterConfig.get,
       list: adapterConfig.list,
-      create: adapterConfig.create,
+      create: async (item) => {
+        if (!adapterConfig.create) {
+          throw new Error(
+            `Review adapter "${adapterConfig.label}" does not support create.`
+          );
+        }
+        return adapterConfig.create(item);
+      },
       update: async (id, patch) => {
         const nextStatus = patch.status;
-        if (nextStatus && adapterConfig.updateStatus) {
-          const statusIndex = (adapterConfig.statusOptions ?? []).findIndex(
+        if (nextStatus && updateStatus) {
+          const statusIndex = statusOptions.findIndex(
             (statusOption) => statusOption.value === nextStatus
           );
-          const statusOption = (adapterConfig.statusOptions ?? [])[statusIndex];
+          const statusOption = statusOptions[statusIndex];
 
           if (statusOption) {
             const item = await adapterConfig.get(id);
             if (!item) throw new Error(`Review item not found: ${id}`);
 
-            return adapterConfig.updateStatus({
+            const updated = await updateStatus({
               id,
               item,
               status: nextStatus,
               statusOption,
               statusIndex,
             });
+            return updated as ReviewItem;
           }
+        }
+
+        if (updateAdapter) {
+          return updateAdapter(id, patch);
         }
 
         if (!adapterConfig.syncSubmission) {
@@ -117,11 +163,14 @@ function normalizeShellAdapter(
         const item = await adapterConfig.get(id);
         if (!item) throw new Error(`Review item not found: ${id}`);
 
-        return adapterConfig.syncSubmission({
+        await adapterConfig.syncSubmission({
           id,
           item,
           patch,
         });
+        const updated = await adapterConfig.get(id);
+        if (!updated) throw new Error(`Review item not found after update: ${id}`);
+        return updated;
       },
       remove: async (id) => {
         if (!adapterConfig.remove) {
@@ -134,4 +183,17 @@ function normalizeShellAdapter(
       },
     },
   };
+}
+
+function normalizeWriteModes(
+  value: boolean | readonly ReviewShellWriteMode[] | undefined
+): ReviewShellWriteMode[] {
+  if (value === true) return [...ALL_REVIEW_WRITE_MODES];
+  if (Array.isArray(value)) {
+    const modes = value.filter((mode) =>
+      ALL_REVIEW_WRITE_MODES.includes(mode)
+    );
+    return Array.from(new Set(modes));
+  }
+  return [];
 }

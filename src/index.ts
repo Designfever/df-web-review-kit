@@ -1,8 +1,4 @@
 export { localAdapter } from './adapters/local';
-export {
-  DF_SHEET_REVIEW_SOURCE,
-  dfSheetAdapter,
-} from './adapters/df-sheet';
 export { supabaseAdapter } from './adapters/supabase';
 export {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
@@ -21,7 +17,6 @@ export type {
   DomAnchor,
   DomAnchorCandidate,
   DomAnchorStrategy,
-  DfSheetAdapterOptions,
   DomSourceHint,
   LocalAdapterOptions,
   NumberedReviewItem,

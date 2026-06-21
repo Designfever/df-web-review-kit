@@ -98,17 +98,6 @@ interface WebReviewKitAdapter {
 interface LocalAdapterOptions {
     storageKey?: string;
 }
-interface DfSheetAdapterOptions {
-    baseUrl?: string;
-    projectId: string;
-    pageId: string;
-    reviewProjectId?: string;
-    reviewPathPrefix?: string;
-    source?: string;
-    issueType?: string;
-    priority?: string;
-    token?: string;
-}
 interface SupabaseReviewClient {
     from(table: string): any;
     rpc?: (fn: string, args?: Record<string, unknown>) => any;
@@ -132,7 +121,7 @@ interface NumberedReviewItem {
     item: ReviewItem;
     scope: ReviewItemScope;
     label: string;
-    number: number;
+    number?: number;
     displayLabel: string;
 }
 interface WebReviewKitOptions {
@@ -180,4 +169,4 @@ interface WebReviewKitTarget {
     getOverlayRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 }
 
-export type { DfSheetAdapterOptions as D, LocalAdapterOptions as L, NumberedReviewItem as N, ReviewWorkflowStatus as R, SupabaseReviewAdapterOptions as S, ViewportSize as V, WebReviewKitAdapter as W, ReviewItemStatus as a, WebReviewKitOptions as b, WebReviewKitController as c, ReviewViewportPreset as d, ReviewItem as e, ReviewItemScope as f, DomAnchor as g, DomAnchorCandidate as h, DomAnchorStrategy as i, DomSourceHint as j, RelativeSelection as k, ReviewItemKind as l, ReviewItemQuery as m, ReviewMarker as n, ReviewMode as o, ReviewPoint as p, ReviewRulerConfig as q, ReviewSelection as r, ReviewSource as s, ReviewSubmitStatus as t, ReviewViewportScope as u, SupabaseReviewClient as v, WebReviewKitTarget as w };
+export type { DomAnchor as D, LocalAdapterOptions as L, NumberedReviewItem as N, ReviewWorkflowStatus as R, SupabaseReviewAdapterOptions as S, ViewportSize as V, WebReviewKitAdapter as W, ReviewItemStatus as a, WebReviewKitOptions as b, WebReviewKitController as c, ReviewViewportPreset as d, ReviewItem as e, ReviewItemScope as f, DomAnchorCandidate as g, DomAnchorStrategy as h, DomSourceHint as i, RelativeSelection as j, ReviewItemKind as k, ReviewItemQuery as l, ReviewMarker as m, ReviewMode as n, ReviewPoint as o, ReviewRulerConfig as p, ReviewSelection as q, ReviewSource as r, ReviewSubmitStatus as s, ReviewViewportScope as t, SupabaseReviewClient as u, WebReviewKitTarget as v };

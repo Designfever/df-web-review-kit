@@ -282,6 +282,7 @@ export function ensureReviewShellStyle() {
 			  .df-review-settings-actions button,
 			  .df-review-prompt-tabs button,
 			  .df-review-prompt-block-header button,
+			  .df-review-item-prompt-actions button,
 			  .df-review-item-actions button {
 		    min-height: var(--df-review-control-height-md);
 		    border: 1px solid var(--df-review-line);
@@ -305,6 +306,7 @@ export function ensureReviewShellStyle() {
 		  .df-review-prompt-tabs button:hover,
 		  .df-review-prompt-tabs button.is-active,
 		  .df-review-prompt-block-header button:hover,
+		  .df-review-item-prompt-actions button:hover,
 			  .df-review-item-actions button:hover,
 		  .df-review-item-visibility:hover,
 		  .df-review-item-delete:hover,
@@ -431,108 +433,88 @@ export function ensureReviewShellStyle() {
     padding: 8px;
   }
 
+  .df-review-sitemap-table-head,
   .df-review-sitemap-list button {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(160px, 1fr) 70px 78px 72px;
     align-items: center;
-    gap: 12px;
-    min-height: 40px;
-	    border: 0;
-	    border-radius: var(--df-review-radius-sm);
-	    padding: 8px 10px;
-	    background: transparent;
-	    color: var(--df-review-text);
-	    text-align: left;
-	  }
-
-	  .df-review-sitemap-list button:hover,
-	  .df-review-sitemap-list button.is-active {
-	    background: var(--df-review-accent-soft);
-	  }
-
-	  .df-review-sitemap-path {
-	    min-width: 0;
-	    overflow-wrap: anywhere;
-	    color: var(--df-review-text);
-	    font-size: var(--df-review-font-size-md);
-	    font-weight: 800;
-	    line-height: 1.35;
+    column-gap: 0;
   }
 
-  .df-review-sitemap-meta {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-    min-width: 0;
-  }
-
-  .df-review-sitemap-users {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 4px;
-    min-width: 0;
-    flex-wrap: wrap;
-  }
-
-  .df-review-sitemap-user {
-    --df-review-presence-color: var(--df-review-accent);
-    display: inline-flex;
-    align-items: center;
-    min-height: 22px;
-    border: 1px solid var(--df-review-presence-color);
-    border-radius: var(--df-review-radius-pill);
-    padding: 0 7px;
-    background: var(--df-review-chip-bg);
-    color: var(--df-review-text);
+  .df-review-sitemap-table-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    min-height: 32px;
+    border-bottom: 1px solid var(--df-review-line);
+    padding: 0 10px;
+    background: var(--df-review-surface);
+    color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
     font-weight: 900;
-    line-height: 1.1;
-    white-space: nowrap;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
-  .df-review-sitemap-counts {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 4px;
-    white-space: nowrap;
+  .df-review-sitemap-table-head span:not(:first-child) {
+    text-align: right;
   }
 
-  .df-review-sitemap-count {
-    display: inline-grid;
-	    place-items: center;
-	    min-width: 34px;
-	    height: 24px;
-	    border: 1px solid var(--df-review-line);
-	    border-radius: var(--df-review-radius-pill);
-	    padding: 0 7px;
-	    background: var(--df-review-chip-bg);
-	    color: var(--df-review-muted);
-	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 900;
-	  }
+  .df-review-sitemap-list button {
+    min-height: 42px;
+    border: 0;
+    border-bottom: 1px solid var(--df-review-line-soft);
+    border-radius: 0;
+    padding: 0 10px;
+    background: transparent;
+    color: var(--df-review-text);
+    text-align: left;
+  }
 
-  .df-review-sitemap-count.is-local {
-    border-color: var(--df-review-accent);
+  .df-review-sitemap-list button:last-child {
+    border-bottom: 0;
+  }
+
+  .df-review-sitemap-list button:hover,
+  .df-review-sitemap-list button.is-active {
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-sitemap-path {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-md);
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  .df-review-sitemap-cell {
+    min-width: 0;
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-sm);
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    line-height: 1;
+    text-align: right;
+  }
+
+  .df-review-sitemap-cell.is-local {
     color: var(--df-review-accent);
   }
 
-  .df-review-sitemap-count.is-remote {
-    border-color: var(--df-review-area);
+  .df-review-sitemap-cell.is-remote {
     color: var(--df-review-area);
   }
 
-	  .df-review-sitemap-list button:hover .df-review-sitemap-path,
-	  .df-review-sitemap-list button.is-active .df-review-sitemap-path {
-	    color: var(--df-review-text);
-	  }
+  .df-review-sitemap-cell.is-online {
+    color: var(--df-review-text);
+  }
 
-		  .df-review-sitemap-list button:hover .df-review-sitemap-count,
-		  .df-review-sitemap-list button.is-active .df-review-sitemap-count {
-		    background: var(--df-review-accent-hover);
-		  }
+  .df-review-sitemap-list button:hover .df-review-sitemap-path,
+  .df-review-sitemap-list button.is-active .df-review-sitemap-path {
+    color: var(--df-review-text);
+  }
 
 		  .df-review-settings-modal {
 		    position: fixed;
@@ -575,10 +557,35 @@ export function ensureReviewShellStyle() {
 		    border-bottom: 1px solid var(--df-review-line);
 		  }
 
-		  .df-review-settings-header div {
+		  .df-review-settings-title {
 		    display: grid;
 		    gap: 2px;
 		    min-width: 0;
+		  }
+
+		  .df-review-settings-header-actions {
+		    display: inline-flex;
+		    align-items: center;
+		    justify-content: flex-end;
+		    gap: 8px;
+		    min-width: 0;
+		  }
+
+		  .df-review-settings-theme-select {
+		    min-height: 34px;
+		    max-width: 118px;
+		    border: 1px solid var(--df-review-line);
+		    border-radius: var(--df-review-radius-sm);
+		    padding: 0 9px;
+		    color: var(--df-review-text);
+		    background: var(--df-review-control);
+		    font-size: var(--df-review-font-size-sm);
+		    font-weight: 800;
+		  }
+
+		  .df-review-settings-theme-select:focus-visible {
+		    outline: 2px solid var(--df-review-focus-ring);
+		    outline-offset: 1px;
 		  }
 
 		  .df-review-settings-header strong {
@@ -1734,6 +1741,14 @@ export function ensureReviewShellStyle() {
 			    display: inline-grid;
 			    grid-template-columns: auto 28px;
 		    align-items: stretch;
+			    min-width: 0;
+		    cursor: auto;
+			  }
+
+			  .df-review-item-status-actions {
+			    display: inline-flex;
+			    grid-column: 1;
+			    align-items: center;
 			    min-width: 0;
 		    cursor: auto;
 			  }

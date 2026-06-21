@@ -117,9 +117,8 @@ export function getNumberedReviewItems(
   items: ReviewItem[],
   presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
 ): NumberedReviewItem[] {
-  const numbers = new Map<string, number>();
-  const usedNumbers = new Set<number>();
-  let nextNumber = getNextReviewItemNumber(items);
+  const draftLabels = new Map<string, string>();
+  let nextDraftNumber = 1;
 
   [...items]
     .sort((a, b) => {
@@ -128,27 +127,22 @@ export function getNumberedReviewItems(
       return a.id.localeCompare(b.id);
     })
     .forEach((item) => {
-      const storedNumber = getReviewItemNumber(item);
-      const number =
-        storedNumber && !usedNumbers.has(storedNumber)
-          ? storedNumber
-          : nextNumber++;
-
-      usedNumbers.add(number);
-      numbers.set(item.id, number);
+      if (!getReviewItemNumber(item)) {
+        draftLabels.set(item.id, `draft-${nextDraftNumber++}`);
+      }
     });
 
   return items.map((item) => {
     const scope = getReviewItemScope(item, presets);
     const label = getReviewItemScopeLabel(item, presets);
-    const number = numbers.get(item.id) ?? 0;
+    const number = getReviewItemNumber(item);
 
     return {
       item,
       scope,
       label,
       number,
-      displayLabel: `#${number}`,
+      displayLabel: number ? `#${number}` : draftLabels.get(item.id) ?? 'draft',
     };
   });
 }
@@ -157,16 +151,6 @@ export function getReviewItemNumber(item: Pick<ReviewItem, 'reviewNumber'>) {
   return normalizeReviewNumber(item.reviewNumber);
 }
 
-export function getNextReviewItemNumber(
-  items: Array<Pick<ReviewItem, 'reviewNumber'>>
-) {
-  const maxNumber = items.reduce((max, item) => {
-    const number = getReviewItemNumber(item);
-    return number ? Math.max(max, number) : max;
-  }, 0);
-
-  return maxNumber + 1;
-}
 
 function normalizeReviewNumber(value: unknown) {
   if (typeof value !== 'number') return undefined;

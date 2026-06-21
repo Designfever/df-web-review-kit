@@ -2,14 +2,7 @@
 
 ## 목적
 
-`df-web-review-kit`의 `ReviewPresenceAdapter` contract를 Supabase Realtime Presence로 구현하고 운영하기 위한 문서다.
-
-Lexus pilot Supabase project:
-
-```txt
-name: bb-qa
-url: https://vhqnvfkamnpgyqclohso.supabase.co
-```
+`df-web-review-kit`의 `ReviewPresenceAdapter` contract를 Supabase Realtime Presence로 구현하는 optional adapter 문서다. Supabase를 선택한 host project가 자기 Supabase client를 주입할 때만 사용한다.
 
 공식 문서 기준:
 
@@ -18,11 +11,11 @@ url: https://vhqnvfkamnpgyqclohso.supabase.co
 - DB 변경 fan-out은 Broadcast가 scalability/security 측면에서 권장되고, Postgres Changes는 단순하지만 scale이 약하다: https://supabase.com/docs/guides/realtime/subscribing-to-database-changes
 - private Broadcast/Presence는 `realtime.messages` RLS policy와 `private: true` channel 설정이 필요하다: https://supabase.com/docs/guides/realtime/authorization
 
-## 현재 결론
+## Adapter position
 
-이번 presence 요구사항은 Supabase Presence가 맞다.
+Supabase Presence is an optional adapter sample for host projects that choose Supabase. It is not the default presence backend for the public package.
 
-목표는 "QA item이 바뀌면 실시간으로 동기화"가 아니라 "현재 누가 어떤 page/viewport/source를 보고 있는지"다. 따라서 Postgres Changes나 Broadcast보다 Presence가 먼저다.
+The goal is not "sync every QA item change in realtime." The goal is "show who is currently looking at which page/viewport/source." For that use case, Supabase Presence fits better than Postgres Changes. Broadcast can be considered later for event fan-out, but item persistence remains the storage adapter's job.
 
 현재 shell UI는 두 단계로 보여준다.
 
@@ -77,9 +70,9 @@ const presence = createSupabasePresenceAdapter({
 - public channel은 같은 Supabase project key를 가진 사용자가 topic을 알면 subscribe 가능하다.
 - dev smoke test까지만 허용한다.
 
-## Private production mode
+## Private mode
 
-production은 private channel을 권장한다.
+If a host uses Supabase Presence beyond local/dev smoke, private channels are recommended.
 
 ```ts
 const presence = createSupabasePresenceAdapter({
@@ -88,7 +81,7 @@ const presence = createSupabasePresenceAdapter({
 });
 ```
 
-client는 인증 세션을 가진 Supabase client여야 한다. private channel은 Realtime Authorization policy가 필요하다.
+The client must have an authenticated Supabase session. Private channels need Realtime Authorization policy.
 
 ## RLS sketch
 
@@ -168,15 +161,16 @@ RLS performance notes:
 
 ## Env
 
-Lexus pilot에 붙일 때 후보 env:
+Optional host env:
 
 ```txt
-VITE_REVIEW_SUPABASE_URL=https://vhqnvfkamnpgyqclohso.supabase.co
+VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
 VITE_REVIEW_SUPABASE_ANON_KEY=
 VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE=false
 ```
 
 브라우저에는 anon key만 둔다. service role key는 절대 넣지 않는다.
+OpenClaw `KUKU_*` 운영 env와 host browser env를 섞지 않는다.
 
 `VITE_REVIEW_SUPABASE_ANON_KEY`가 비어 있으면 shell은 local BroadcastChannel presence로 fallback한다.
 
@@ -193,6 +187,5 @@ VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE=false
 
 ## Open decisions
 
-- public dev mode를 package에 남길지.
-- private presence를 실제 production에서 쓸 때 auth/member policy를 어디까지 package 문서화할지.
+- private presence를 실제 host project에서 쓸 때 auth/member policy를 어디까지 package 문서화할지.
 - sitemap presence를 별도 dashboard로 키울지.

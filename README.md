@@ -4,23 +4,26 @@ Designfever web page review overlay toolkit.
 
 `df-web-review-kit`는 프로젝트 안에 `/review` shell을 붙이고, iframe으로 실제 page를 띄운 뒤 QA note/area/DOM marker를 생성하는 검수 도구다. 각 프로젝트는 adapter만 바꿔서 local draft, df-sheet, Supabase 같은 저장소를 선택한다.
 
-현재 Lexus pilot 기준:
+현재 기준:
 
 - package name: `@designfever/web-review-kit`
 - current version: `0.1.0`
-- first route: `/review`
-- primary sources: `local`, `supabase`
-- optional remote direction: `df-sheet`
+- default source: `local`
+- optional adapters/references: `supabase`, `df-sheet` sample
+- public package role: review UI, marker/restore logic, adapter contracts
+- internal operations role: OpenClaw `kuku` or a future backend/admin service
 
 ## Docs
 
 - [Concept](docs/concept.md): 제품 컨셉, local draft와 remote canonical QA의 역할
-- [Installation](docs/installation.md): package 설치, `/review` mount, Vite/Lexus 예시
-- [Supabase setup](docs/supabase.md): Supabase item/presence 연결 절차
+- [Operating boundary](docs/operating-boundary.md): public package, host project, OpenClaw 운영 도구의 경계
+- [Installation](docs/installation.md): package 설치, `/review` mount, Vite host 예시
+- [Supabase setup](docs/supabase.md): optional Supabase item/presence adapter 연결 절차
 - [Supabase review item SQL](docs/supabase-review-items.md): table, RPC, RLS, migration SQL
+- [Presence strategy](docs/presence-handoff.md): local/Supabase/future service presence 경계
 - [Supabase presence](docs/supabase-presence.md): Realtime Presence adapter 구조
 - [Adapter handoff](docs/adapter-handoff.md): adapter contract와 분리 계획
-- [df-sheet next](docs/df-sheet-next.md): df-sheet를 remote destination으로 쓸 때의 방향
+- [df-sheet next](docs/df-sheet-next.md): future df-sheet service/reference 방향
 
 `docs/initial-plan.md`는 초기 아이디어 기록이다. 현재 설치/운영 기준은 이 README와 위 문서를 우선한다.
 
@@ -32,7 +35,7 @@ Host project에 package와 React peer dependency를 설치한다.
 pnpm add @designfever/web-review-kit react react-dom
 ```
 
-Supabase를 remote/presence로 쓰면 host project에 Supabase client도 설치한다.
+기본 설치는 local-only다. Supabase를 optional remote/presence adapter로 쓰는 host만 Supabase client를 설치한다.
 
 ```bash
 pnpm add @supabase/supabase-js
@@ -58,7 +61,7 @@ import {
 } from '@designfever/web-review-kit';
 import { createClient } from '@supabase/supabase-js';
 
-const REVIEW_PROJECT_ID = 'lexus-official-v2026';
+const REVIEW_PROJECT_ID = 'my-project';
 const REVIEW_PATH_PREFIX = '/review';
 const pages = createReviewPagesFromGlob(import.meta.glob('/**/index.tsx'), {
   exclude: (href) =>
@@ -171,13 +174,16 @@ import { mountReviewShell } from '@designfever/web-review-kit/react-shell';
 - `@designfever/web-review-kit`: core API, adapters, shared types.
 - `@designfever/web-review-kit/react-shell`: review shell UI, presence adapters, page glob helper.
 - `src/*` is not a public import path.
+- OpenClaw-only operator tools such as `kuku` are not part of the package surface.
 - `react` and `react-dom` are peer dependencies.
 - `lucide-react` is currently bundled into the built shell output, not required from the host.
-- Published/packed files are `dist`, `docs`, and `README.md`; the Lexus `/review` page stays as a consumer smoke page outside the package surface.
+- Target published/packed files are `dist`, `docs`, and `README.md`; host `/review` pages stay as consumer smoke pages outside the package surface.
+- Direct DB/admin CLI artifacts are transitional during the `kuku` split and should not remain in the public package surface.
 
 See [Package split checkpoint](docs/package-split-checkpoint.md) for the current split policy.
+See [Operating boundary](docs/operating-boundary.md) for the public package vs internal operations split.
 
-## Environment
+## Optional Supabase Environment
 
 ```env
 VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
@@ -187,24 +193,25 @@ VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE=false
 ```
 
 Browser에는 Supabase `anon` key만 넣는다. `service_role` key는 넣지 않는다.
+Operator keys belong in OpenClaw or backend services, not in this package or host browser env.
 
-## Current Lexus Commands
+## Host Integration Commands
 
-Lexus repo 안에서 package를 검증할 때:
+Host repo 안에서 file dependency로 package를 검증할 때의 예시:
 
 ```bash
 pnpm dev:review
+pnpm review-kit:build
 pnpm review-kit:typecheck
 pnpm typecheck:review
-pnpm review-kit:build
 pnpm build:review
 ```
 
 - `pnpm dev:review`: review-kit build 후 package watch와 Vite dev server 실행
+- `pnpm review-kit:build`: package dist build 후 host `node_modules` sync
 - `pnpm review-kit:typecheck`: package typecheck
-- `pnpm typecheck:review`: package + Lexus typecheck
-- `pnpm review-kit:build`: package dist build 후 Lexus `node_modules` sync
-- `pnpm build:review`: package dist build 후 Lexus SEO build
+- `pnpm typecheck:review`: host review route typecheck
+- `pnpm build:review`: host build 또는 review integration build
 
 이 repo에서는 package를 file dependency로 소비한다.
 
@@ -239,11 +246,11 @@ git diff --check
 Package source:
 
 ```bash
-pnpm review-kit:typecheck
-pnpm review-kit:build
+pnpm typecheck
+pnpm build
 ```
 
-Lexus integration:
+Host integration:
 
 ```bash
 pnpm typecheck:review

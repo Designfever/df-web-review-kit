@@ -2,13 +2,13 @@
 
 ## Purpose
 
-`df-web-review-kit`의 remote QA 저장소를 Supabase table로 검증하기 위한 문서다.
+`df-web-review-kit`의 optional Supabase remote adapter를 검증하거나 직접 붙일 때 쓰는 sample schema/runbook이다.
 
-Lexus pilot:
+Sample values:
 
 ```txt
-project: bb-qa
-url: https://vhqnvfkamnpgyqclohso.supabase.co
+url: https://your-project.supabase.co
+review project id: my-project
 table: review_items
 source: supabase
 ```
@@ -16,13 +16,14 @@ source: supabase
 ## Environment
 
 ```env
-VITE_REVIEW_SUPABASE_URL=https://vhqnvfkamnpgyqclohso.supabase.co
+VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
 VITE_REVIEW_SUPABASE_ANON_KEY=
 VITE_REVIEW_SUPABASE_TABLE=review_items
 VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE=false
 ```
 
 `anon` key만 browser env에 넣는다. `service_role` key는 browser env에 넣지 않는다.
+OpenClaw `KUKU_*` 운영 env와 host browser env를 섞지 않는다.
 
 ## Schema
 
@@ -156,56 +157,56 @@ grant select, insert, update on public.review_project_counters to anon;
 alter table public.review_items enable row level security;
 alter table public.review_project_counters enable row level security;
 
-drop policy if exists review_items_lexus_read on public.review_items;
-create policy review_items_lexus_read
+drop policy if exists review_items_sample_read on public.review_items;
+create policy review_items_sample_read
   on public.review_items
   for select
   to anon
-  using (project_id = 'lexus-official-v2026');
+  using (project_id = 'my-project');
 
-drop policy if exists review_items_lexus_insert on public.review_items;
-create policy review_items_lexus_insert
+drop policy if exists review_items_sample_insert on public.review_items;
+create policy review_items_sample_insert
   on public.review_items
   for insert
   to anon
-  with check (project_id = 'lexus-official-v2026');
+  with check (project_id = 'my-project');
 
-drop policy if exists review_items_lexus_update on public.review_items;
-create policy review_items_lexus_update
+drop policy if exists review_items_sample_update on public.review_items;
+create policy review_items_sample_update
   on public.review_items
   for update
   to anon
-  using (project_id = 'lexus-official-v2026')
-  with check (project_id = 'lexus-official-v2026');
+  using (project_id = 'my-project')
+  with check (project_id = 'my-project');
 
-drop policy if exists review_items_lexus_delete on public.review_items;
-create policy review_items_lexus_delete
+drop policy if exists review_items_sample_delete on public.review_items;
+create policy review_items_sample_delete
   on public.review_items
   for delete
   to anon
-  using (project_id = 'lexus-official-v2026');
+  using (project_id = 'my-project');
 
-drop policy if exists review_project_counters_lexus_read on public.review_project_counters;
-create policy review_project_counters_lexus_read
+drop policy if exists review_project_counters_sample_read on public.review_project_counters;
+create policy review_project_counters_sample_read
   on public.review_project_counters
   for select
   to anon
-  using (project_id = 'lexus-official-v2026');
+  using (project_id = 'my-project');
 
-drop policy if exists review_project_counters_lexus_insert on public.review_project_counters;
-create policy review_project_counters_lexus_insert
+drop policy if exists review_project_counters_sample_insert on public.review_project_counters;
+create policy review_project_counters_sample_insert
   on public.review_project_counters
   for insert
   to anon
-  with check (project_id = 'lexus-official-v2026');
+  with check (project_id = 'my-project');
 
-drop policy if exists review_project_counters_lexus_update on public.review_project_counters;
-create policy review_project_counters_lexus_update
+drop policy if exists review_project_counters_sample_update on public.review_project_counters;
+create policy review_project_counters_sample_update
   on public.review_project_counters
   for update
   to anon
-  using (project_id = 'lexus-official-v2026')
-  with check (project_id = 'lexus-official-v2026');
+  using (project_id = 'my-project')
+  with check (project_id = 'my-project');
 ```
 
 ## Migration from max+1 RPC
@@ -316,27 +317,27 @@ grant select, insert, update on public.review_project_counters to anon;
 
 alter table public.review_project_counters enable row level security;
 
-drop policy if exists review_project_counters_lexus_read on public.review_project_counters;
-create policy review_project_counters_lexus_read
+drop policy if exists review_project_counters_sample_read on public.review_project_counters;
+create policy review_project_counters_sample_read
   on public.review_project_counters
   for select
   to anon
-  using (project_id = 'lexus-official-v2026');
+  using (project_id = 'my-project');
 
-drop policy if exists review_project_counters_lexus_insert on public.review_project_counters;
-create policy review_project_counters_lexus_insert
+drop policy if exists review_project_counters_sample_insert on public.review_project_counters;
+create policy review_project_counters_sample_insert
   on public.review_project_counters
   for insert
   to anon
-  with check (project_id = 'lexus-official-v2026');
+  with check (project_id = 'my-project');
 
-drop policy if exists review_project_counters_lexus_update on public.review_project_counters;
-create policy review_project_counters_lexus_update
+drop policy if exists review_project_counters_sample_update on public.review_project_counters;
+create policy review_project_counters_sample_update
   on public.review_project_counters
   for update
   to anon
-  using (project_id = 'lexus-official-v2026')
-  with check (project_id = 'lexus-official-v2026');
+  using (project_id = 'my-project')
+  with check (project_id = 'my-project');
 ```
 
 ## Current adapter behavior
@@ -348,9 +349,9 @@ create policy review_project_counters_lexus_update
 
 ## Security note
 
-위 RLS는 dev 검증용이다. 누구든 anon key와 project id를 알면 QA row를 만들고 수정할 수 있다.
+위 RLS는 optional adapter sample/dev 검증용이다. 누구든 anon key와 project id를 알면 QA row를 만들고 수정할 수 있다.
 
-package 배포 전에는 다음 중 하나로 좁히는 것을 권장한다.
+production host에서는 다음 중 하나로 좁히는 것을 권장한다.
 
 - authenticated user + project member table 기반 RLS
 - Supabase Edge Function 또는 project backend proxy

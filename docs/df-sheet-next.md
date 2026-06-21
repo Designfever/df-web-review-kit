@@ -1,14 +1,14 @@
-# df-sheet adapter next plan
+# df-sheet service next plan
 
 ## 목적
 
-df-sheet를 `df-web-review-kit`의 remote destination으로 계속 사용할 때의 역할과 필요한 df-sheet 쪽 변경을 분리해서 정리한다.
+df-sheet를 `df-web-review-kit`의 future remote destination으로 사용할 때의 역할과 필요한 df-sheet 쪽 변경을 분리해서 정리한다.
 
-Supabase 실험 문서는 adapter 구조 검증용이고, 이 문서는 df-sheet 제품/운영 흐름 기준이다.
+이 문서는 확정된 production backend 계약이 아니라 df-sheet service/API 후보 기준이다. 현재 public package의 기본 backend로 취급하지 않는다.
 
 ## 현재 위치
 
-현재 `dfSheetAdapter`는 review-kit item을 df-sheet issue로 보낸다.
+현재 repo의 `dfSheetAdapter`는 reference implementation이다. service 계약이 고정되기 전까지 stable public API로 취급하지 않는다.
 
 현재 동작:
 
@@ -21,9 +21,9 @@ Supabase 실험 문서는 adapter 구조 검증용이고, 이 문서는 df-sheet
 
 현재 shell adapter에서는 df-sheet config에 `updateStatus`와 `remove`를 넣지 않는다. 따라서 df-sheet source에서는 상태 변경 dropdown은 readonly badge로만 둘 수 있고, 삭제 버튼도 숨긴다.
 
-## 권장 역할
+## 후보 역할
 
-df-sheet는 source of record가 되어야 한다. review-kit은 다음 역할까지만 한다.
+df-sheet service가 붙는다면 source of record가 될 수 있다. review-kit은 다음 역할까지만 한다.
 
 - local에서 만든 QA를 df-sheet issue로 등록
 - df-sheet issue를 현재 page/viewport에서 restore
@@ -188,7 +188,7 @@ review-kit adapter는 이 응답을 `ReviewItem`으로 변환한다.
 
 ## package 관점
 
-df-sheet adapter를 package에 포함할 때도 df-sheet 전용 타입/설정은 adapter 내부에 묶는다.
+df-sheet adapter를 package에 포함하게 되더라도 df-sheet 전용 타입/설정은 adapter 내부에 묶는다.
 
 `ReviewShellAdapter`는 계속 storage-agnostic이어야 한다.
 
@@ -220,3 +220,4 @@ const REVIEW_ADAPTERS = [
 - integration token을 cookie auth와 병행할지.
 - df-sheet issue status vocabulary와 review-kit status value를 1:1로 맞출지.
 - remote delete를 허용할지.
+- public package export path를 언제 열지.

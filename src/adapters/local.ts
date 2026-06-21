@@ -33,11 +33,9 @@ export function localAdapter(
         if (!normalized || normalized !== item) changed = true;
         return normalized ? [normalized] : [];
       });
-      const numberedItems = ensureStoredReviewNumbers(items);
-      if (numberedItems !== items) changed = true;
 
-      if (changed) write(numberedItems);
-      return numberedItems;
+      if (changed) write(items);
+      return items;
     } catch {
       return [];
     }
@@ -104,6 +102,7 @@ function normalizeStoredReviewItem(value: unknown): ReviewItem | undefined {
 
   const raw = value as Omit<ReviewItem, 'kind'> & {
     kind?: string;
+    reviewNumber?: unknown;
     screenshot?: unknown;
   };
   const kind =
@@ -113,9 +112,13 @@ function normalizeStoredReviewItem(value: unknown): ReviewItem | undefined {
 
   if (kind !== 'note' && kind !== 'area') return undefined;
 
-  const { screenshot: _screenshot, ...item } = raw;
+  const { screenshot: _screenshot, reviewNumber: _reviewNumber, ...item } = raw;
 
-  if (kind === raw.kind && _screenshot === undefined) {
+  if (
+    kind === raw.kind &&
+    _screenshot === undefined &&
+    _reviewNumber === undefined
+  ) {
     return raw as ReviewItem;
   }
 
@@ -123,60 +126,4 @@ function normalizeStoredReviewItem(value: unknown): ReviewItem | undefined {
     ...item,
     kind,
   } as ReviewItem;
-}
-
-function ensureStoredReviewNumbers(items: ReviewItem[]) {
-  const usedNumbers = new Set<number>();
-  let maxNumber = 0;
-  let changed = false;
-
-  items.forEach((item) => {
-    const number = normalizeReviewNumber(item.reviewNumber);
-    if (!number) {
-      changed = true;
-      return;
-    }
-
-    if (usedNumbers.has(number)) {
-      changed = true;
-      return;
-    }
-
-    usedNumbers.add(number);
-    maxNumber = Math.max(maxNumber, number);
-  });
-
-  if (!changed) return items;
-
-  let nextNumber = maxNumber + 1;
-  const assignedNumbers = new Set<number>();
-  const numberById = new Map<string, number>();
-
-  [...items]
-    .sort((a, b) => {
-      const createdOrder = a.createdAt.localeCompare(b.createdAt);
-      if (createdOrder !== 0) return createdOrder;
-      return a.id.localeCompare(b.id);
-    })
-    .forEach((item) => {
-      const storedNumber = normalizeReviewNumber(item.reviewNumber);
-      const reviewNumber =
-        storedNumber && !assignedNumbers.has(storedNumber)
-          ? storedNumber
-          : nextNumber++;
-
-      assignedNumbers.add(reviewNumber);
-      numberById.set(item.id, reviewNumber);
-    });
-
-  return items.map((item) => {
-    const reviewNumber = numberById.get(item.id);
-    return item.reviewNumber === reviewNumber ? item : { ...item, reviewNumber };
-  });
-}
-
-function normalizeReviewNumber(value: unknown) {
-  if (typeof value !== 'number') return undefined;
-  if (!Number.isInteger(value) || value < 1) return undefined;
-  return value;
 }

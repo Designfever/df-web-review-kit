@@ -1,9 +1,7 @@
 import {
   DEFAULT_REVIEW_VIEWPORTS,
-  DF_SHEET_REVIEW_SOURCE,
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   createWebReviewKit,
-  dfSheetAdapter,
   findReviewViewportPreset,
   getNumberedReviewItems,
   getReviewItemScope,
@@ -12,13 +10,11 @@ import {
   localAdapter,
   normalizeReviewItemStatus,
   supabaseAdapter
-} from "./chunk-U5K2YGGL.js";
+} from "./chunk-SBMQHNM3.js";
 export {
   DEFAULT_REVIEW_VIEWPORTS,
-  DF_SHEET_REVIEW_SOURCE,
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   createWebReviewKit,
-  dfSheetAdapter,
   findReviewViewportPreset,
   getNumberedReviewItems,
   getReviewItemScope,

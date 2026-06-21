@@ -44,16 +44,16 @@ The package export map exposes:
 
 ## Host consumption policy
 
-The Lexus host imports the package through the same public package entrypoints it would use after a repo split:
+The host app imports the package through the same public package entrypoints it would use after a repo split:
 
 - `@designfever/web-review-kit`
 - `@designfever/web-review-kit/react-shell`
 
-Vite no longer aliases those package imports to `packages/df-web-review-kit/src` in dev. The host resolves the installed file dependency under `node_modules`, so `pnpm review-kit:build` must be run after package source changes to refresh `dist` and sync the installed package.
+Vite should not alias those package imports to `packages/df-web-review-kit/src` in dev. The host resolves the installed file dependency under `node_modules`, so package `dist` must be rebuilt after package source changes.
 
 ## Review/test page policy
 
-The Lexus `/review` page remains the integration smoke page. It is a consumer of the package, not part of the package surface.
+A host `/review` page can remain the integration smoke page. It is a consumer of the package, not part of the package surface.
 
 If this package is moved to a separate repo later, keep a small playground/example app outside the package publish files so review-shell behavior can still be manually verified.
 
@@ -62,11 +62,10 @@ If this package is moved to a separate repo later, keep a small playground/examp
 Before moving this item to review, run:
 
 ```bash
-pnpm review-kit:typecheck
-pnpm review-kit:build
-pnpm exec tsc --noEmit
-pnpm exec vite build --mode seo
-pnpm --dir packages/df-web-review-kit pack --pack-destination /tmp/df-web-review-kit-pack
+pnpm typecheck
+pnpm build
+pnpm typecheck:dev
+npm pack --dry-run --ignore-scripts --json
 ```
 
 Manual smoke:

@@ -1,5 +1,5 @@
-import type { NumberedReviewItem, ReviewItem } from '../types';
-import { getItemTarget } from './route';
+import type { NumberedReviewItem, ReviewItem } from '../../types';
+import { getItemTarget } from '../route';
 
 export const getItemTitle = (item: ReviewItem) =>
   item.title || item.comment.split('\n')[0] || item.kind;

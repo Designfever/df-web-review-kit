@@ -1,13 +1,3 @@
-// src/route.ts
-function getItemRouteKey(item) {
-  return item.routeKey || normalizeRoutePath(item.normalizedPath);
-}
-function normalizeRoutePath(pathname) {
-  const [pathWithoutQuery] = pathname.split(/[?#]/);
-  const path = (pathWithoutQuery || "/").replace(/\/index\.html$/, "/");
-  return path.startsWith("/") ? path : `/${path}`;
-}
-
 // src/status.ts
 var REVIEW_WORKFLOW_STATUS_OPTIONS = [
   { value: "todo", label: "\uC791\uC5C5\uC804" },
@@ -23,6 +13,16 @@ function normalizeReviewItemStatus(status) {
 }
 function matchesReviewItemStatus(itemStatus, queryStatus) {
   return normalizeReviewItemStatus(itemStatus) === normalizeReviewItemStatus(queryStatus);
+}
+
+// src/route.ts
+function getItemRouteKey(item) {
+  return item.routeKey || normalizeRoutePath(item.normalizedPath);
+}
+function normalizeRoutePath(pathname) {
+  const [pathWithoutQuery] = pathname.split(/[?#]/);
+  const path = (pathWithoutQuery || "/").replace(/\/index\.html$/, "/");
+  return path.startsWith("/") ? path : `/${path}`;
 }
 
 // src/adapters/local.ts
@@ -111,222 +111,100 @@ function normalizeStoredReviewItem(value) {
   };
 }
 
-// src/adapters/supabase.ts
-var DEFAULT_SUPABASE_REVIEW_TABLE = "review_items";
-var DEFAULT_SUPABASE_REVIEW_SOURCE = "supabase";
-var DEFAULT_SUPABASE_CREATE_REVIEW_ITEM_RPC = "create_review_item";
-function supabaseAdapter(options) {
-  const tableName = options.table ?? DEFAULT_SUPABASE_REVIEW_TABLE;
-  const source = options.source ?? DEFAULT_SUPABASE_REVIEW_SOURCE;
-  const fromTable = () => options.client.from(tableName);
-  return {
-    async get(id) {
-      const row = await unwrapResponse(
-        fromTable().select("*").eq("id", id).maybeSingle(),
-        "supabase get review item"
-      );
-      return row ? rowToReviewItem(row, options) : null;
-    },
-    async list(query) {
-      let request = fromTable().select("*").eq("project_id", query.projectId).eq("source", query.source ?? source);
-      const routeKey = query.routeKey ?? query.normalizedPath;
-      if (routeKey) {
-        request = request.eq("route_key", routeKey);
-      }
-      if (query.status) {
-        request = request.eq(
-          "status",
-          normalizeReviewItemStatus(query.status)
-        );
-      }
-      const rows = await unwrapResponse(
-        request.order("updated_at", { ascending: false }),
-        "supabase list review items"
-      );
-      return (rows ?? []).flatMap((row) => {
-        const item = rowToReviewItem(row, options);
-        return item ? [item] : [];
-      });
-    },
-    async create(item) {
-      const nextItem = normalizeItemForSupabaseCreate(item, source, options);
-      if (options.unsafeClientReviewNumberFallback) {
-        throw new Error(
-          "supabase create review item: unsafeClientReviewNumberFallback is no longer supported. Use create_review_item RPC with database-backed review_number sequence."
-        );
-      }
-      return createItemWithRpc(nextItem, source, options);
-    },
-    async update(id, patch) {
-      const current = await this.get(id);
-      if (!current) throw new Error(`Review item not found: ${id}`);
-      const nextStatus = patch.status ? normalizeReviewItemStatus(patch.status) : current.status;
-      const nextItem = {
-        ...current,
-        ...patch,
-        id,
-        status: nextStatus,
-        createdAt: current.createdAt,
-        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-      };
-      const patchRow = itemToRowPatch(nextItem, source, options);
-      const updated = await unwrapResponse(
-        fromTable().update(patchRow).eq("id", id).select("*").single(),
-        "supabase update review item"
-      );
-      return rowToReviewItem(updated, options) ?? nextItem;
-    },
-    async remove(id) {
-      await unwrapResponse(
-        fromTable().delete().eq("id", id),
-        "supabase delete review item"
-      );
+// src/core/review-scope.ts
+var DEFAULT_REVIEW_VIEWPORTS = [
+  { label: "Mobile", width: 390, height: 720, scope: "mobile" },
+  { label: "Tablet", width: 768, height: 1024, scope: "tablet" },
+  { label: "Desktop", width: 1440, height: 900, scope: "desktop" },
+  { label: "Wide", width: 1980, height: 1080, scope: "wide" }
+];
+var REVIEW_SCOPE_LABELS = {
+  mobile: "Mobile",
+  tablet: "Tablet",
+  desktop: "Desktop",
+  wide: "Wide",
+  dom: "Element"
+};
+var normalizeReviewItemScope = (value) => {
+  if (value === "element") return "dom";
+  if (value === "mobile" || value === "tablet" || value === "desktop" || value === "wide" || value === "dom") {
+    return value;
+  }
+  return void 0;
+};
+var getViewportPresetDistance = (preset, viewport) => Math.abs(preset.width - viewport.width) + Math.abs(preset.height - viewport.height);
+var inferViewportScope = (preset) => {
+  if (preset.scope) return preset.scope;
+  const label = preset.label.toLowerCase();
+  if (label.includes("mobile") || label.includes("phone")) return "mobile";
+  if (label.includes("tablet") || label.includes("pad")) return "tablet";
+  if (label.includes("wide") || label.includes("1980") || label.includes("1940") || label.includes("1920")) {
+    return "wide";
+  }
+  if (label.includes("desktop")) return "desktop";
+  if (preset.width >= 1800) return "wide";
+  if (preset.width >= 1e3) return "desktop";
+  if (preset.width >= 700) return "tablet";
+  return "mobile";
+};
+function findReviewViewportPreset(viewport, presets = DEFAULT_REVIEW_VIEWPORTS) {
+  const fallback = presets[0] ?? DEFAULT_REVIEW_VIEWPORTS[0];
+  const exact = presets.find(
+    (preset) => preset.width === viewport.width && preset.height === viewport.height
+  );
+  if (exact) return exact;
+  return presets.reduce((closest, preset) => {
+    const closestDistance = getViewportPresetDistance(closest, viewport);
+    const presetDistance = getViewportPresetDistance(preset, viewport);
+    return presetDistance < closestDistance ? preset : closest;
+  }, fallback);
+}
+function getReviewViewportScope(viewport, presets = DEFAULT_REVIEW_VIEWPORTS) {
+  return inferViewportScope(findReviewViewportPreset(viewport, presets));
+}
+function getReviewItemScope(item, presets = DEFAULT_REVIEW_VIEWPORTS) {
+  const scope = normalizeReviewItemScope(item.scope);
+  if (scope && scope !== "dom") return scope;
+  return getReviewViewportScope(item.viewport, presets);
+}
+function getReviewItemScopeLabel(item, presets = DEFAULT_REVIEW_VIEWPORTS) {
+  const scope = getReviewItemScope(item, presets);
+  if (scope === "dom") return REVIEW_SCOPE_LABELS.dom;
+  const preset = findReviewViewportPreset(item.viewport, presets);
+  return preset.label || REVIEW_SCOPE_LABELS[scope];
+}
+function getNumberedReviewItems(items, presets = DEFAULT_REVIEW_VIEWPORTS) {
+  const draftLabels = /* @__PURE__ */ new Map();
+  let nextDraftNumber = 1;
+  [...items].sort((a, b) => {
+    const createdOrder = a.createdAt.localeCompare(b.createdAt);
+    if (createdOrder !== 0) return createdOrder;
+    return a.id.localeCompare(b.id);
+  }).forEach((item) => {
+    if (!getReviewItemNumber(item)) {
+      draftLabels.set(item.id, `draft-${nextDraftNumber++}`);
     }
-  };
+  });
+  return items.map((item) => {
+    const scope = getReviewItemScope(item, presets);
+    const label = getReviewItemScopeLabel(item, presets);
+    const number = getReviewItemNumber(item);
+    return {
+      item,
+      scope,
+      label,
+      number,
+      displayLabel: number ? `#${number}` : draftLabels.get(item.id) ?? "draft"
+    };
+  });
 }
-function normalizeItemForSupabaseCreate(item, source, options) {
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  const id = createSupabaseReviewItemId();
-  const normalizedStatus = normalizeReviewItemStatus(item.status);
-  const routeKey = item.routeKey || item.normalizedPath || "/";
-  const viewport = item.viewport ?? { width: 390, height: 720 };
-  const nextItem = {
-    ...item,
-    id,
-    reviewNumber: void 0,
-    projectId: options.projectId,
-    routeKey,
-    normalizedPath: item.normalizedPath || routeKey,
-    viewport,
-    status: normalizedStatus,
-    externalIssueId: id,
-    externalIssueUrl: buildSupabaseReviewUrl(
-      { routeKey, normalizedPath: item.normalizedPath || routeKey, viewport },
-      source,
-      options,
-      id
-    ),
-    submittedAt: item.submittedAt ?? now,
-    submitStatus: item.submitStatus ?? "submitted",
-    createdAt: now,
-    updatedAt: now
-  };
-  return {
-    ...nextItem,
-    externalIssueUrl: nextItem.externalIssueUrl ?? buildSupabaseReviewUrl(nextItem, source, options)
-  };
+function getReviewItemNumber(item) {
+  return normalizeReviewNumber(item.reviewNumber);
 }
-async function createItemWithRpc(item, source, options) {
-  const rpcName = options.createRpc ?? DEFAULT_SUPABASE_CREATE_REVIEW_ITEM_RPC;
-  if (!options.client.rpc) {
-    throw new Error(
-      `supabase create review item: ${rpcName} rpc is required`
-    );
-  }
-  const row = await unwrapResponse(
-    options.client.rpc(rpcName, {
-      p_id: item.id,
-      p_project_id: options.projectId,
-      p_route_key: item.routeKey || item.normalizedPath || "/",
-      p_source: source,
-      p_status: normalizeReviewItemStatus(item.status),
-      p_item: item
-    }),
-    `supabase create review item rpc ${rpcName}`
-  );
-  return rowToReviewItem(row, options) ?? item;
-}
-function itemToRow(item, source, options) {
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  const updatedAt = item.updatedAt || now;
-  return {
-    id: item.id,
-    project_id: options.projectId,
-    route_key: item.routeKey || item.normalizedPath || "/",
-    source,
-    review_number: item.reviewNumber ?? null,
-    status: normalizeReviewItemStatus(item.status),
-    item: {
-      ...item,
-      projectId: options.projectId,
-      status: normalizeReviewItemStatus(item.status),
-      updatedAt
-    },
-    created_at: item.createdAt || now,
-    updated_at: updatedAt
-  };
-}
-function itemToRowPatch(item, source, options) {
-  const row = itemToRow(item, source, options);
-  return {
-    route_key: row.route_key,
-    review_number: row.review_number,
-    status: row.status,
-    item: row.item,
-    updated_at: row.updated_at
-  };
-}
-function rowToReviewItem(row, options) {
-  if (!row.item || typeof row.item !== "object") return null;
-  const item = row.item;
-  const status = normalizeReviewItemStatus(
-    row.status || item.status || "todo"
-  );
-  const routeKey = row.route_key || item.routeKey || item.normalizedPath || "/";
-  const viewport = item.viewport ?? { width: 390, height: 720 };
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  return {
-    ...item,
-    id: row.id,
-    reviewNumber: row.review_number ?? item.reviewNumber,
-    projectId: row.project_id || item.projectId || options.projectId,
-    routeKey,
-    pageUrl: item.pageUrl || toAbsoluteReviewUrl(routeKey),
-    normalizedPath: item.normalizedPath || routeKey,
-    kind: item.kind === "area" ? "area" : "note",
-    comment: item.comment || "",
-    status,
-    viewport,
-    externalIssueId: item.externalIssueId ?? row.id,
-    externalIssueUrl: item.externalIssueUrl ?? buildSupabaseReviewUrl(
-      { routeKey, normalizedPath: routeKey, viewport },
-      row.source,
-      options,
-      row.id
-    ),
-    submittedAt: item.submittedAt ?? row.created_at,
-    submitStatus: item.submitStatus ?? "submitted",
-    createdAt: item.createdAt ?? row.created_at ?? now,
-    updatedAt: row.updated_at ?? item.updatedAt ?? now
-  };
-}
-async function unwrapResponse(request, label) {
-  const { data, error } = await request;
-  if (error) {
-    throw new Error(`${label}: ${error.message ?? error.code ?? "failed"}`);
-  }
-  return data;
-}
-function buildSupabaseReviewUrl(item, source, options, itemId) {
-  if (typeof window === "undefined") return void 0;
-  const prefix = options.reviewPathPrefix ?? "/review";
-  const url = new URL(prefix, window.location.origin);
-  url.searchParams.set("source", source);
-  url.searchParams.set("target", item.routeKey || item.normalizedPath || "/");
-  url.searchParams.set("w", String(Math.round(item.viewport.width)));
-  url.searchParams.set("h", String(Math.round(item.viewport.height)));
-  if (itemId) url.searchParams.set("item", itemId);
-  return url.toString();
-}
-function toAbsoluteReviewUrl(path) {
-  if (typeof window === "undefined") return path;
-  return new URL(path, window.location.origin).toString();
-}
-function createSupabaseReviewItemId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `review-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+function normalizeReviewNumber(value) {
+  if (typeof value !== "number") return void 0;
+  if (!Number.isInteger(value) || value < 1) return void 0;
+  return value;
 }
 
 // src/core/overlay-style.ts
@@ -1151,102 +1029,6 @@ function createStyleElement() {
     }
   `;
   return style;
-}
-
-// src/core/review-scope.ts
-var DEFAULT_REVIEW_VIEWPORTS = [
-  { label: "Mobile", width: 390, height: 720, scope: "mobile" },
-  { label: "Tablet", width: 768, height: 1024, scope: "tablet" },
-  { label: "Desktop", width: 1440, height: 900, scope: "desktop" },
-  { label: "Wide", width: 1980, height: 1080, scope: "wide" }
-];
-var REVIEW_SCOPE_LABELS = {
-  mobile: "Mobile",
-  tablet: "Tablet",
-  desktop: "Desktop",
-  wide: "Wide",
-  dom: "Element"
-};
-var normalizeReviewItemScope = (value) => {
-  if (value === "element") return "dom";
-  if (value === "mobile" || value === "tablet" || value === "desktop" || value === "wide" || value === "dom") {
-    return value;
-  }
-  return void 0;
-};
-var getViewportPresetDistance = (preset, viewport) => Math.abs(preset.width - viewport.width) + Math.abs(preset.height - viewport.height);
-var inferViewportScope = (preset) => {
-  if (preset.scope) return preset.scope;
-  const label = preset.label.toLowerCase();
-  if (label.includes("mobile") || label.includes("phone")) return "mobile";
-  if (label.includes("tablet") || label.includes("pad")) return "tablet";
-  if (label.includes("wide") || label.includes("1980") || label.includes("1940") || label.includes("1920")) {
-    return "wide";
-  }
-  if (label.includes("desktop")) return "desktop";
-  if (preset.width >= 1800) return "wide";
-  if (preset.width >= 1e3) return "desktop";
-  if (preset.width >= 700) return "tablet";
-  return "mobile";
-};
-function findReviewViewportPreset(viewport, presets = DEFAULT_REVIEW_VIEWPORTS) {
-  const fallback = presets[0] ?? DEFAULT_REVIEW_VIEWPORTS[0];
-  const exact = presets.find(
-    (preset) => preset.width === viewport.width && preset.height === viewport.height
-  );
-  if (exact) return exact;
-  return presets.reduce((closest, preset) => {
-    const closestDistance = getViewportPresetDistance(closest, viewport);
-    const presetDistance = getViewportPresetDistance(preset, viewport);
-    return presetDistance < closestDistance ? preset : closest;
-  }, fallback);
-}
-function getReviewViewportScope(viewport, presets = DEFAULT_REVIEW_VIEWPORTS) {
-  return inferViewportScope(findReviewViewportPreset(viewport, presets));
-}
-function getReviewItemScope(item, presets = DEFAULT_REVIEW_VIEWPORTS) {
-  const scope = normalizeReviewItemScope(item.scope);
-  if (scope && scope !== "dom") return scope;
-  return getReviewViewportScope(item.viewport, presets);
-}
-function getReviewItemScopeLabel(item, presets = DEFAULT_REVIEW_VIEWPORTS) {
-  const scope = getReviewItemScope(item, presets);
-  if (scope === "dom") return REVIEW_SCOPE_LABELS.dom;
-  const preset = findReviewViewportPreset(item.viewport, presets);
-  return preset.label || REVIEW_SCOPE_LABELS[scope];
-}
-function getNumberedReviewItems(items, presets = DEFAULT_REVIEW_VIEWPORTS) {
-  const draftLabels = /* @__PURE__ */ new Map();
-  let nextDraftNumber = 1;
-  [...items].sort((a, b) => {
-    const createdOrder = a.createdAt.localeCompare(b.createdAt);
-    if (createdOrder !== 0) return createdOrder;
-    return a.id.localeCompare(b.id);
-  }).forEach((item) => {
-    if (!getReviewItemNumber(item)) {
-      draftLabels.set(item.id, `draft-${nextDraftNumber++}`);
-    }
-  });
-  return items.map((item) => {
-    const scope = getReviewItemScope(item, presets);
-    const label = getReviewItemScopeLabel(item, presets);
-    const number = getReviewItemNumber(item);
-    return {
-      item,
-      scope,
-      label,
-      number,
-      displayLabel: number ? `#${number}` : draftLabels.get(item.id) ?? "draft"
-    };
-  });
-}
-function getReviewItemNumber(item) {
-  return normalizeReviewNumber(item.reviewNumber);
-}
-function normalizeReviewNumber(value) {
-  if (typeof value !== "number") return void 0;
-  if (!Number.isInteger(value) || value < 1) return void 0;
-  return value;
 }
 
 // src/core/web-review-kit-app.ts
@@ -3129,7 +2911,6 @@ export {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   normalizeReviewItemStatus,
   localAdapter,
-  supabaseAdapter,
   DEFAULT_REVIEW_VIEWPORTS,
   findReviewViewportPreset,
   getReviewViewportScope,
@@ -3138,4 +2919,4 @@ export {
   getNumberedReviewItems,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-SBMQHNM3.js.map
+//# sourceMappingURL=chunk-4MNS3ELV.js.map

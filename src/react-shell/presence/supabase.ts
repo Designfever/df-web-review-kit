@@ -3,7 +3,7 @@ import type {
   ReviewPresenceContext,
   ReviewPresenceState,
   ReviewPresenceUser,
-} from './types';
+} from '../types';
 
 type SupabaseRealtimeStatus =
   | 'SUBSCRIBED'

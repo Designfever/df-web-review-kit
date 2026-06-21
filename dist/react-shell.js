@@ -3,489 +3,11 @@ import {
   createWebReviewKit,
   getNumberedReviewItems,
   normalizeReviewItemStatus
-} from "./chunk-SBMQHNM3.js";
+} from "./chunk-4MNS3ELV.js";
 
 // src/react-shell.tsx
-import React, {
-  useCallback,
-  useEffect,
-  useMemo as useMemo2,
-  useRef,
-  useState
-} from "react";
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
-import { forwardRef as forwardRef2, createElement as createElement3 } from "react";
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/shared/src/utils/mergeClasses.mjs
-var mergeClasses = (...classes) => classes.filter((className, index, array) => {
-  return Boolean(className) && className.trim() !== "" && array.indexOf(className) === index;
-}).join(" ").trim();
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/shared/src/utils/toKebabCase.mjs
-var toKebabCase = (string) => string.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/shared/src/utils/toCamelCase.mjs
-var toCamelCase = (string) => string.replace(
-  /^([A-Z])|[\s-_]+(\w)/g,
-  (match, p1, p2) => p2 ? p2.toUpperCase() : p1.toLowerCase()
-);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/shared/src/utils/toPascalCase.mjs
-var toPascalCase = (string) => {
-  const camelCase = toCamelCase(string);
-  return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
-};
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/Icon.mjs
-import { forwardRef, createElement as createElement2 } from "react";
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/defaultAttributes.mjs
-var defaultAttributes = {
-  xmlns: "http://www.w3.org/2000/svg",
-  width: 24,
-  height: 24,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round",
-  strokeLinejoin: "round"
-};
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/shared/src/utils/hasA11yProp.mjs
-var hasA11yProp = (props) => {
-  for (const prop in props) {
-    if (prop.startsWith("aria-") || prop === "role" || prop === "title") {
-      return true;
-    }
-  }
-  return false;
-};
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/context.mjs
-import { createContext, useContext, useMemo, createElement } from "react";
-var LucideContext = createContext({});
-var useLucideContext = () => useContext(LucideContext);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/Icon.mjs
-var Icon = forwardRef(
-  ({ color, size, strokeWidth, absoluteStrokeWidth, className = "", children, iconNode, ...rest }, ref) => {
-    const {
-      size: contextSize = 24,
-      strokeWidth: contextStrokeWidth = 2,
-      absoluteStrokeWidth: contextAbsoluteStrokeWidth = false,
-      color: contextColor = "currentColor",
-      className: contextClass = ""
-    } = useLucideContext() ?? {};
-    const calculatedStrokeWidth = absoluteStrokeWidth ?? contextAbsoluteStrokeWidth ? Number(strokeWidth ?? contextStrokeWidth) * 24 / Number(size ?? contextSize) : strokeWidth ?? contextStrokeWidth;
-    return createElement2(
-      "svg",
-      {
-        ref,
-        ...defaultAttributes,
-        width: size ?? contextSize ?? defaultAttributes.width,
-        height: size ?? contextSize ?? defaultAttributes.height,
-        stroke: color ?? contextColor,
-        strokeWidth: calculatedStrokeWidth,
-        className: mergeClasses("lucide", contextClass, className),
-        ...!children && !hasA11yProp(rest) && { "aria-hidden": "true" },
-        ...rest
-      },
-      [
-        ...iconNode.map(([tag, attrs]) => createElement2(tag, attrs)),
-        ...Array.isArray(children) ? children : [children]
-      ]
-    );
-  }
-);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
-var createLucideIcon = (iconName, iconNode) => {
-  const Component = forwardRef2(
-    ({ className, ...props }, ref) => createElement3(Icon, {
-      ref,
-      iconNode,
-      className: mergeClasses(
-        `lucide-${toKebabCase(toPascalCase(iconName))}`,
-        `lucide-${iconName}`,
-        className
-      ),
-      ...props
-    })
-  );
-  Component.displayName = toPascalCase(iconName);
-  return Component;
-};
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/circle-question-mark.mjs
-var __iconNode = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3", key: "1u773s" }],
-  ["path", { d: "M12 17h.01", key: "p32p05" }]
-];
-var CircleQuestionMark = createLucideIcon("circle-question-mark", __iconNode);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/copy.mjs
-var __iconNode2 = [
-  ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
-  ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
-];
-var Copy = createLucideIcon("copy", __iconNode2);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/external-link.mjs
-var __iconNode3 = [
-  ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
-  ["path", { d: "M10 14 21 3", key: "gplh6r" }],
-  ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
-];
-var ExternalLink = createLucideIcon("external-link", __iconNode3);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye-off.mjs
-var __iconNode4 = [
-  [
-    "path",
-    {
-      d: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",
-      key: "ct8e1f"
-    }
-  ],
-  ["path", { d: "M14.084 14.158a3 3 0 0 1-4.242-4.242", key: "151rxh" }],
-  [
-    "path",
-    {
-      d: "M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143",
-      key: "13bj9a"
-    }
-  ],
-  ["path", { d: "m2 2 20 20", key: "1ooewy" }]
-];
-var EyeOff = createLucideIcon("eye-off", __iconNode4);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye.mjs
-var __iconNode5 = [
-  [
-    "path",
-    {
-      d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",
-      key: "1nclc0"
-    }
-  ],
-  ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
-];
-var Eye = createLucideIcon("eye", __iconNode5);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/grip-vertical.mjs
-var __iconNode6 = [
-  ["circle", { cx: "9", cy: "12", r: "1", key: "1vctgf" }],
-  ["circle", { cx: "9", cy: "5", r: "1", key: "hp0tcf" }],
-  ["circle", { cx: "9", cy: "19", r: "1", key: "fkjjf6" }],
-  ["circle", { cx: "15", cy: "12", r: "1", key: "1tmaij" }],
-  ["circle", { cx: "15", cy: "5", r: "1", key: "19l28e" }],
-  ["circle", { cx: "15", cy: "19", r: "1", key: "f4zoj3" }]
-];
-var GripVertical = createLucideIcon("grip-vertical", __iconNode6);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
-var __iconNode7 = [
-  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
-  ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
-  ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
-];
-var Image = createLucideIcon("image", __iconNode7);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
-var __iconNode8 = [
-  ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
-  ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
-  ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
-  ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
-];
-var LayoutGrid = createLucideIcon("layout-grid", __iconNode8);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
-var __iconNode9 = [
-  ["path", { d: "M2 5h20", key: "1fs1ex" }],
-  ["path", { d: "M6 12h12", key: "8npq4p" }],
-  ["path", { d: "M9 19h6", key: "456am0" }]
-];
-var ListFilter = createLucideIcon("list-filter", __iconNode9);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
-var __iconNode10 = [
-  [
-    "path",
-    {
-      d: "M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z",
-      key: "169xi5"
-    }
-  ],
-  ["path", { d: "M15 5.764v15", key: "1pn4in" }],
-  ["path", { d: "M9 3.236v15", key: "1uimfh" }]
-];
-var Map2 = createLucideIcon("map", __iconNode10);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
-var __iconNode11 = [
-  ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
-  ["path", { d: "m21 3-7 7", key: "1l2asr" }],
-  ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
-  ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
-];
-var Maximize2 = createLucideIcon("maximize-2", __iconNode11);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
-var __iconNode12 = [
-  ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
-  ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
-  ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
-];
-var Monitor = createLucideIcon("monitor", __iconNode12);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
-var __iconNode13 = [
-  ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
-];
-var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode13);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
-var __iconNode14 = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
-];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode14);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
-var __iconNode15 = [
-  [
-    "path",
-    {
-      d: "M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z",
-      key: "icamh8"
-    }
-  ],
-  ["path", { d: "m14.5 12.5 2-2", key: "inckbg" }],
-  ["path", { d: "m11.5 9.5 2-2", key: "fmmyf7" }],
-  ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
-  ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
-];
-var Ruler = createLucideIcon("ruler", __iconNode15);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
-var __iconNode16 = [
-  ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
-  ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
-  ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
-  ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
-];
-var Scan = createLucideIcon("scan", __iconNode16);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
-var __iconNode17 = [
-  [
-    "path",
-    {
-      d: "M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915",
-      key: "1i5ecw"
-    }
-  ],
-  ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
-];
-var Settings = createLucideIcon("settings", __iconNode17);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
-var __iconNode18 = [
-  ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
-  ["path", { d: "M12 18h.01", key: "mhygvu" }]
-];
-var Smartphone = createLucideIcon("smartphone", __iconNode18);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode19 = [
-  [
-    "path",
-    {
-      d: "M12.034 12.681a.498.498 0 0 1 .647-.647l9 3.5a.5.5 0 0 1-.033.943l-3.444 1.068a1 1 0 0 0-.66.66l-1.067 3.443a.5.5 0 0 1-.943.033z",
-      key: "xwnzip"
-    }
-  ],
-  ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
-];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode19);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode20 = [
-  [
-    "path",
-    {
-      d: "M21 9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z",
-      key: "1dfntj"
-    }
-  ],
-  ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
-];
-var StickyNote = createLucideIcon("sticky-note", __iconNode20);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode21 = [
-  ["path", { d: "M12 3v12", key: "1x0j5s" }],
-  ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
-];
-var Upload = createLucideIcon("upload", __iconNode21);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/users.mjs
-var __iconNode22 = [
-  ["path", { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", key: "1yyitq" }],
-  ["path", { d: "M16 3.128a4 4 0 0 1 0 7.744", key: "16gr8j" }],
-  ["path", { d: "M22 21v-2a4 4 0 0 0-3-3.87", key: "kshegd" }],
-  ["circle", { cx: "9", cy: "7", r: "4", key: "nufk8" }]
-];
-var Users = createLucideIcon("users", __iconNode22);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode23 = [
-  ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
-  ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
-];
-var X = createLucideIcon("x", __iconNode23);
-
-// src/react-shell.tsx
+import React2 from "react";
 import { createRoot } from "react-dom/client";
-
-// src/react-shell/adapters.ts
-var ALL_REVIEW_WRITE_MODES = ["dom", "note", "area"];
-function normalizeReviewShellAdapters(adapters) {
-  if (Array.isArray(adapters)) {
-    const normalized = adapters.map((adapter) => normalizeShellAdapter(adapter));
-    const local = normalized.find((adapter) => adapter.label === "local") ?? null;
-    const remote = normalized.find((adapter) => adapter.label !== "local") ?? null;
-    if (normalized.length === 0 || !local && !remote) {
-      throw new Error("ReviewShell requires at least one adapter.");
-    }
-    return {
-      local,
-      remote,
-      sources: normalized
-    };
-  }
-  return normalizeLegacyAdapterMap(adapters);
-}
-function normalizeLegacyAdapterMap(adapters) {
-  const local = {
-    label: "local",
-    adapter: adapters.local,
-    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
-    updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
-    syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
-    writeModes: [...ALL_REVIEW_WRITE_MODES],
-    canRemove: true
-  };
-  const remote = adapters.remote ? {
-    label: "df-sheet",
-    adapter: adapters.remote,
-    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
-    updateStatus: ({ id, status }) => adapters.remote?.update(id, { status }) ?? Promise.reject(new Error("Remote adapter is not available.")),
-    writeModes: [],
-    canRemove: false,
-    pageId: adapters.remotePageId
-  } : null;
-  return {
-    local,
-    remote,
-    sources: remote ? [local, remote] : [local]
-  };
-}
-function normalizeShellAdapter(adapterConfig) {
-  const statusOptions = [
-    ...adapterConfig.statusOptions ?? REVIEW_WORKFLOW_STATUS_OPTIONS
-  ];
-  const updateAdapter = adapterConfig.update;
-  const updateStatus = adapterConfig.updateStatus ? adapterConfig.updateStatus : updateAdapter ? ({ id, status }) => updateAdapter(id, { status }) : void 0;
-  const writeModes = normalizeWriteModes(
-    adapterConfig.create ? adapterConfig.canWrite ?? adapterConfig.label === "local" : false
-  );
-  return {
-    label: adapterConfig.label,
-    pageId: adapterConfig.pageId,
-    statusOptions,
-    updateStatus,
-    syncSubmission: adapterConfig.syncSubmission,
-    writeModes,
-    canRemove: Boolean(adapterConfig.remove),
-    adapter: {
-      get: adapterConfig.get,
-      list: adapterConfig.list,
-      create: async (item) => {
-        if (!adapterConfig.create) {
-          throw new Error(
-            `Review adapter "${adapterConfig.label}" does not support create.`
-          );
-        }
-        return adapterConfig.create(item);
-      },
-      update: async (id, patch) => {
-        const nextStatus = patch.status;
-        if (nextStatus && updateStatus) {
-          const statusIndex = statusOptions.findIndex(
-            (statusOption2) => statusOption2.value === nextStatus
-          );
-          const statusOption = statusOptions[statusIndex];
-          if (statusOption) {
-            const item2 = await adapterConfig.get(id);
-            if (!item2) throw new Error(`Review item not found: ${id}`);
-            const updated2 = await updateStatus({
-              id,
-              item: item2,
-              status: nextStatus,
-              statusOption,
-              statusIndex
-            });
-            return updated2;
-          }
-        }
-        if (updateAdapter) {
-          return updateAdapter(id, patch);
-        }
-        if (!adapterConfig.syncSubmission) {
-          throw new Error(
-            `Review adapter "${adapterConfig.label}" does not support update.`
-          );
-        }
-        const item = await adapterConfig.get(id);
-        if (!item) throw new Error(`Review item not found: ${id}`);
-        await adapterConfig.syncSubmission({
-          id,
-          item,
-          patch
-        });
-        const updated = await adapterConfig.get(id);
-        if (!updated) throw new Error(`Review item not found after update: ${id}`);
-        return updated;
-      },
-      remove: async (id) => {
-        if (!adapterConfig.remove) {
-          throw new Error(
-            `Review adapter "${adapterConfig.label}" does not support remove.`
-          );
-        }
-        return adapterConfig.remove(id);
-      }
-    }
-  };
-}
-function normalizeWriteModes(value) {
-  if (value === true) return [...ALL_REVIEW_WRITE_MODES];
-  if (Array.isArray(value)) {
-    const modes = value.filter(
-      (mode) => ALL_REVIEW_WRITE_MODES.includes(mode)
-    );
-    return Array.from(new Set(modes));
-  }
-  return [];
-}
 
 // src/react-shell/style.ts
 var REVIEW_SHELL_STYLE_ID = "df-review-shell-style";
@@ -2673,7 +2195,2837 @@ function ensureReviewShellStyle() {
   }
 }
 
-// src/react-shell/presence.ts
+// src/react-shell/review/shell.tsx
+import {
+  useCallback as useCallback11,
+  useEffect as useEffect9
+} from "react";
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
+import { forwardRef as forwardRef2, createElement as createElement3 } from "react";
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/shared/src/utils/mergeClasses.mjs
+var mergeClasses = (...classes) => classes.filter((className, index, array) => {
+  return Boolean(className) && className.trim() !== "" && array.indexOf(className) === index;
+}).join(" ").trim();
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/shared/src/utils/toKebabCase.mjs
+var toKebabCase = (string) => string.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/shared/src/utils/toCamelCase.mjs
+var toCamelCase = (string) => string.replace(
+  /^([A-Z])|[\s-_]+(\w)/g,
+  (match, p1, p2) => p2 ? p2.toUpperCase() : p1.toLowerCase()
+);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/shared/src/utils/toPascalCase.mjs
+var toPascalCase = (string) => {
+  const camelCase = toCamelCase(string);
+  return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
+};
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/Icon.mjs
+import { forwardRef, createElement as createElement2 } from "react";
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/defaultAttributes.mjs
+var defaultAttributes = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: 24,
+  height: 24,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+};
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/shared/src/utils/hasA11yProp.mjs
+var hasA11yProp = (props) => {
+  for (const prop in props) {
+    if (prop.startsWith("aria-") || prop === "role" || prop === "title") {
+      return true;
+    }
+  }
+  return false;
+};
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/context.mjs
+import { createContext, useContext, useMemo, createElement } from "react";
+var LucideContext = createContext({});
+var useLucideContext = () => useContext(LucideContext);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/Icon.mjs
+var Icon = forwardRef(
+  ({ color, size, strokeWidth, absoluteStrokeWidth, className = "", children, iconNode, ...rest }, ref) => {
+    const {
+      size: contextSize = 24,
+      strokeWidth: contextStrokeWidth = 2,
+      absoluteStrokeWidth: contextAbsoluteStrokeWidth = false,
+      color: contextColor = "currentColor",
+      className: contextClass = ""
+    } = useLucideContext() ?? {};
+    const calculatedStrokeWidth = absoluteStrokeWidth ?? contextAbsoluteStrokeWidth ? Number(strokeWidth ?? contextStrokeWidth) * 24 / Number(size ?? contextSize) : strokeWidth ?? contextStrokeWidth;
+    return createElement2(
+      "svg",
+      {
+        ref,
+        ...defaultAttributes,
+        width: size ?? contextSize ?? defaultAttributes.width,
+        height: size ?? contextSize ?? defaultAttributes.height,
+        stroke: color ?? contextColor,
+        strokeWidth: calculatedStrokeWidth,
+        className: mergeClasses("lucide", contextClass, className),
+        ...!children && !hasA11yProp(rest) && { "aria-hidden": "true" },
+        ...rest
+      },
+      [
+        ...iconNode.map(([tag, attrs]) => createElement2(tag, attrs)),
+        ...Array.isArray(children) ? children : [children]
+      ]
+    );
+  }
+);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
+var createLucideIcon = (iconName, iconNode) => {
+  const Component = forwardRef2(
+    ({ className, ...props }, ref) => createElement3(Icon, {
+      ref,
+      iconNode,
+      className: mergeClasses(
+        `lucide-${toKebabCase(toPascalCase(iconName))}`,
+        `lucide-${iconName}`,
+        className
+      ),
+      ...props
+    })
+  );
+  Component.displayName = toPascalCase(iconName);
+  return Component;
+};
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/circle-question-mark.mjs
+var __iconNode = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3", key: "1u773s" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
+];
+var CircleQuestionMark = createLucideIcon("circle-question-mark", __iconNode);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/copy.mjs
+var __iconNode2 = [
+  ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
+  ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
+];
+var Copy = createLucideIcon("copy", __iconNode2);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/external-link.mjs
+var __iconNode3 = [
+  ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
+  ["path", { d: "M10 14 21 3", key: "gplh6r" }],
+  ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
+];
+var ExternalLink = createLucideIcon("external-link", __iconNode3);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye-off.mjs
+var __iconNode4 = [
+  [
+    "path",
+    {
+      d: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",
+      key: "ct8e1f"
+    }
+  ],
+  ["path", { d: "M14.084 14.158a3 3 0 0 1-4.242-4.242", key: "151rxh" }],
+  [
+    "path",
+    {
+      d: "M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143",
+      key: "13bj9a"
+    }
+  ],
+  ["path", { d: "m2 2 20 20", key: "1ooewy" }]
+];
+var EyeOff = createLucideIcon("eye-off", __iconNode4);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye.mjs
+var __iconNode5 = [
+  [
+    "path",
+    {
+      d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",
+      key: "1nclc0"
+    }
+  ],
+  ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
+];
+var Eye = createLucideIcon("eye", __iconNode5);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/grip-vertical.mjs
+var __iconNode6 = [
+  ["circle", { cx: "9", cy: "12", r: "1", key: "1vctgf" }],
+  ["circle", { cx: "9", cy: "5", r: "1", key: "hp0tcf" }],
+  ["circle", { cx: "9", cy: "19", r: "1", key: "fkjjf6" }],
+  ["circle", { cx: "15", cy: "12", r: "1", key: "1tmaij" }],
+  ["circle", { cx: "15", cy: "5", r: "1", key: "19l28e" }],
+  ["circle", { cx: "15", cy: "19", r: "1", key: "f4zoj3" }]
+];
+var GripVertical = createLucideIcon("grip-vertical", __iconNode6);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
+var __iconNode7 = [
+  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
+  ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
+  ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
+];
+var Image = createLucideIcon("image", __iconNode7);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
+var __iconNode8 = [
+  ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
+  ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
+  ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
+  ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
+];
+var LayoutGrid = createLucideIcon("layout-grid", __iconNode8);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
+var __iconNode9 = [
+  ["path", { d: "M2 5h20", key: "1fs1ex" }],
+  ["path", { d: "M6 12h12", key: "8npq4p" }],
+  ["path", { d: "M9 19h6", key: "456am0" }]
+];
+var ListFilter = createLucideIcon("list-filter", __iconNode9);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
+var __iconNode10 = [
+  [
+    "path",
+    {
+      d: "M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z",
+      key: "169xi5"
+    }
+  ],
+  ["path", { d: "M15 5.764v15", key: "1pn4in" }],
+  ["path", { d: "M9 3.236v15", key: "1uimfh" }]
+];
+var Map2 = createLucideIcon("map", __iconNode10);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
+var __iconNode11 = [
+  ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
+  ["path", { d: "m21 3-7 7", key: "1l2asr" }],
+  ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
+  ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
+];
+var Maximize2 = createLucideIcon("maximize-2", __iconNode11);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
+var __iconNode12 = [
+  ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
+  ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
+  ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
+];
+var Monitor = createLucideIcon("monitor", __iconNode12);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
+var __iconNode13 = [
+  ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
+];
+var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode13);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
+var __iconNode14 = [
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
+];
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode14);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
+var __iconNode15 = [
+  [
+    "path",
+    {
+      d: "M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z",
+      key: "icamh8"
+    }
+  ],
+  ["path", { d: "m14.5 12.5 2-2", key: "inckbg" }],
+  ["path", { d: "m11.5 9.5 2-2", key: "fmmyf7" }],
+  ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
+  ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
+];
+var Ruler = createLucideIcon("ruler", __iconNode15);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
+var __iconNode16 = [
+  ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
+  ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
+  ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
+  ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
+];
+var Scan = createLucideIcon("scan", __iconNode16);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
+var __iconNode17 = [
+  [
+    "path",
+    {
+      d: "M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915",
+      key: "1i5ecw"
+    }
+  ],
+  ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
+];
+var Settings = createLucideIcon("settings", __iconNode17);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
+var __iconNode18 = [
+  ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
+  ["path", { d: "M12 18h.01", key: "mhygvu" }]
+];
+var Smartphone = createLucideIcon("smartphone", __iconNode18);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
+var __iconNode19 = [
+  [
+    "path",
+    {
+      d: "M12.034 12.681a.498.498 0 0 1 .647-.647l9 3.5a.5.5 0 0 1-.033.943l-3.444 1.068a1 1 0 0 0-.66.66l-1.067 3.443a.5.5 0 0 1-.943.033z",
+      key: "xwnzip"
+    }
+  ],
+  ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
+];
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode19);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
+var __iconNode20 = [
+  [
+    "path",
+    {
+      d: "M21 9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z",
+      key: "1dfntj"
+    }
+  ],
+  ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
+];
+var StickyNote = createLucideIcon("sticky-note", __iconNode20);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
+var __iconNode21 = [
+  ["path", { d: "M12 3v12", key: "1x0j5s" }],
+  ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
+];
+var Upload = createLucideIcon("upload", __iconNode21);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/users.mjs
+var __iconNode22 = [
+  ["path", { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", key: "1yyitq" }],
+  ["path", { d: "M16 3.128a4 4 0 0 1 0 7.744", key: "16gr8j" }],
+  ["path", { d: "M22 21v-2a4 4 0 0 0-3-3.87", key: "kshegd" }],
+  ["circle", { cx: "9", cy: "7", r: "4", key: "nufk8" }]
+];
+var Users = createLucideIcon("users", __iconNode22);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
+var __iconNode23 = [
+  ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
+  ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
+];
+var X = createLucideIcon("x", __iconNode23);
+
+// src/react-shell/constants.ts
+var REVIEW_QA_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "mobile", label: "Mobile", scope: "mobile" },
+  { key: "tablet", label: "Tablet", scope: "tablet" },
+  { key: "desktop", label: "Desktop", scope: "desktop" },
+  { key: "wide", label: "Wide", scope: "wide" }
+];
+var FIGMA_OVERLAY_UNAVAILABLE_MESSAGE = "\uD53C\uADF8\uB9C8 \uC624\uBC84\uB808\uC774 \uB514\uBC84\uAE45\uC774 \uC548\uB418\uB294 \uD574\uC0C1\uB3C4";
+var FIGMA_TOKEN_STORAGE_KEY = "figma-token";
+var REVIEW_USER_ID_STORAGE_KEY = "user-id";
+var REVIEW_THEME_STORAGE_KEY = "df-review-theme";
+var DEFAULT_REVIEW_THEME = "dark";
+var FIGMA_TOKEN_GUIDE_ID = "df-review-figma-token-guide";
+var DEFAULT_INITIAL_REVIEW_PROMPT = "You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, DOM metadata, coordinates, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.";
+var REVIEW_THEME_OPTIONS = [
+  { value: "dark", label: "Dark" },
+  { value: "light", label: "Light" },
+  { value: "system", label: "System" }
+];
+
+// src/react-shell/route.ts
+var DEFAULT_REVIEW_PATH_PREFIX = "/review";
+var normalizeReviewPathPrefix = (value) => {
+  const raw = value.trim() || DEFAULT_REVIEW_PATH_PREFIX;
+  const prefix = raw.startsWith("/") ? raw : `/${raw}`;
+  return prefix.length > 1 && prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
+};
+var normalizeTarget = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  const raw = value.trim() || "/";
+  const [path] = raw.split(/[?#]/);
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const reviewPrefix = normalizeReviewPathPrefix(reviewPathPrefix);
+  return normalized === reviewPrefix || normalized.startsWith(`${reviewPrefix}/`) ? "/" : normalized;
+};
+var getInitialTarget = (reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  if (typeof window === "undefined") return "/";
+  const target = new URLSearchParams(window.location.search).get("target");
+  return target ? normalizeTarget(target, reviewPathPrefix) : "/";
+};
+var buildTargetSrc = (target) => {
+  const url = new URL(target || "/", window.location.origin);
+  url.searchParams.set("__dfwr_target", "1");
+  return `${url.pathname}${url.search}${url.hash}`;
+};
+var getHashRoutePath = (hash) => {
+  if (!hash.startsWith("#/")) return null;
+  const [path] = hash.slice(1).split(/[?#]/);
+  try {
+    return decodeURI(path || "/");
+  } catch {
+    return path || "/";
+  }
+};
+var getFrameRouteTarget = (targetWindow, reviewPathPrefix) => {
+  const hashPath = getHashRoutePath(targetWindow.location.hash);
+  return normalizeTarget(
+    hashPath ?? targetWindow.location.pathname,
+    reviewPathPrefix
+  );
+};
+var updateShellUrl = (target, size, source) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("target", target);
+  url.searchParams.set("w", String(size.width));
+  url.searchParams.set("h", String(size.height));
+  if (source !== "local") {
+    url.searchParams.set("source", source);
+  } else {
+    url.searchParams.delete("source");
+  }
+  url.searchParams.delete("item");
+  window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+};
+var updateShellUrlForItem = (target, size, itemId, source) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("target", target);
+  url.searchParams.set("w", String(size.width));
+  url.searchParams.set("h", String(size.height));
+  url.searchParams.set("item", itemId);
+  if (source !== "local") {
+    url.searchParams.set("source", source);
+  } else {
+    url.searchParams.delete("source");
+  }
+  window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+};
+var getInitialItemId = () => {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("item");
+};
+var getInitialSource = (remoteSource) => {
+  if (typeof window === "undefined" || !remoteSource) return "local";
+  return new URLSearchParams(window.location.search).get("source") === remoteSource ? remoteSource : "local";
+};
+var getItemTarget = (item, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  if (item.routeKey) return normalizeTarget(item.routeKey, reviewPathPrefix);
+  if (item.normalizedPath) {
+    return normalizeTarget(item.normalizedPath, reviewPathPrefix);
+  }
+  try {
+    return normalizeTarget(new URL(item.pageUrl).pathname, reviewPathPrefix);
+  } catch {
+    return "/";
+  }
+};
+
+// src/react-shell/viewport.ts
+var DEFAULT_REVIEW_VIEWPORT_PRESETS = [
+  { label: "Mobile", width: 390, height: 720, kind: "mobile" },
+  { label: "Tablet", width: 768, height: 1024, kind: "tablet" },
+  { label: "Desktop", width: 1440, height: 900, kind: "desktop" },
+  { label: "Wide", width: 1980, height: 1080, kind: "wide" }
+];
+var getFallbackPreset = (presets) => presets[0] ?? DEFAULT_REVIEW_VIEWPORT_PRESETS[0];
+var getViewportPresetDistance = (preset, width, height) => Math.abs(preset.width - width) + Math.abs(preset.height - height);
+var findViewportPreset = (presets, width, height) => {
+  const fallback = getFallbackPreset(presets);
+  const exact = presets.find(
+    (preset) => preset.width === width && preset.height === height
+  );
+  if (exact) return exact;
+  return presets.reduce((closest, preset) => {
+    const closestDistance = getViewportPresetDistance(closest, width, height);
+    const presetDistance = getViewportPresetDistance(preset, width, height);
+    return presetDistance < closestDistance ? preset : closest;
+  }, fallback);
+};
+var getInitialSize = (presets) => {
+  if (typeof window === "undefined") return getFallbackPreset(presets);
+  const params = new URLSearchParams(window.location.search);
+  const width = Number(params.get("w"));
+  const height = Number(params.get("h"));
+  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
+    return findViewportPreset(presets, width, height);
+  }
+  return getFallbackPreset(presets);
+};
+var getRestoredSize = (item, presets) => findViewportPreset(
+  presets,
+  Math.max(
+    240,
+    Math.round(item.viewport?.width ?? getFallbackPreset(presets).width)
+  ),
+  Math.max(
+    320,
+    Math.round(item.viewport?.height ?? getFallbackPreset(presets).height)
+  )
+);
+var getViewportPresetKind = (preset) => {
+  if (preset.kind) return preset.kind;
+  const label = preset.label.toLowerCase();
+  if (label.includes("mobile") || label.includes("phone")) return "mobile";
+  if (label.includes("tablet") || label.includes("pad")) return "tablet";
+  if (label.includes("wide") || label.includes("1980") || label.includes("1940") || label.includes("1920")) {
+    return "wide";
+  }
+  if (label.includes("desktop")) return "desktop";
+  if (preset.width >= 1800) return "wide";
+  if (preset.width >= 1e3) return "desktop";
+  if (preset.width >= 700) return "tablet";
+  return "mobile";
+};
+var toReviewViewportPresets = (presets) => presets.map((preset) => ({
+  label: preset.label,
+  width: preset.width,
+  height: preset.height,
+  scope: getViewportPresetKind(preset)
+}));
+var getIsFigmaOverlayAvailable = (preset) => {
+  const kind = getViewportPresetKind(preset);
+  return kind === "mobile" || kind === "wide";
+};
+
+// src/react-shell/prompt/prompt.ts
+var getItemTitle = (item) => item.title || item.comment.split("\n")[0] || item.kind;
+var getPromptLengthLabel = (value) => {
+  const length = value.length;
+  if (length <= 2e3) return `${length} chars / Discord 2,000 OK`;
+  if (length <= 4e3) return `${length} chars / Nitro 4,000 OK`;
+  return `${length} chars / attach as file`;
+};
+var formatDate = (value) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString(void 0, {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
+
+// src/react-shell/prompt/modal.tsx
+import { jsx, jsxs } from "react/jsx-runtime";
+var ABOUT_SECTIONS = [
+  {
+    title: "What this is",
+    body: "df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool."
+  },
+  {
+    title: "How to setup",
+    body: "Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration."
+  },
+  {
+    title: "Figma token",
+    body: "Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration."
+  },
+  {
+    title: "User ID",
+    body: "Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route."
+  },
+  {
+    title: "Remote",
+    body: "Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or \uB2F4\uB2F9 \uAC1C\uBC1C\uC790 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser."
+  }
+];
+var PromptModal = ({
+  initialPromptText,
+  copiedPromptKey,
+  onClose,
+  onCopyPrompt
+}) => {
+  return /* @__PURE__ */ jsxs(
+    "div",
+    {
+      "aria-label": "Review help",
+      "aria-modal": "true",
+      className: "df-review-prompt-modal",
+      role: "dialog",
+      children: [
+        /* @__PURE__ */ jsx(
+          "button",
+          {
+            "aria-label": "Close help",
+            className: "df-review-prompt-backdrop",
+            type: "button",
+            onClick: onClose
+          }
+        ),
+        /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-dialog", children: [
+          /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-header", children: [
+            /* @__PURE__ */ jsxs("div", { children: [
+              /* @__PURE__ */ jsx("strong", { children: "Review shell help" }),
+              /* @__PURE__ */ jsx("span", { children: "About / Initial prompt" })
+            ] }),
+            /* @__PURE__ */ jsx("button", { "aria-label": "Close help", type: "button", onClick: onClose, children: "x" })
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-body", children: [
+            /* @__PURE__ */ jsxs(
+              "section",
+              {
+                className: "df-review-prompt-about",
+                "aria-labelledby": "df-review-about-title",
+                children: [
+                  /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-section-header", children: [
+                    /* @__PURE__ */ jsx("strong", { id: "df-review-about-title", children: "About" }),
+                    /* @__PURE__ */ jsx("span", { children: "Program overview and setup notes" })
+                  ] }),
+                  /* @__PURE__ */ jsx("div", { className: "df-review-prompt-about-grid", children: ABOUT_SECTIONS.map((section) => /* @__PURE__ */ jsxs("article", { children: [
+                    /* @__PURE__ */ jsx("strong", { children: section.title }),
+                    /* @__PURE__ */ jsx("p", { children: section.body })
+                  ] }, section.title)) })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxs(
+              "section",
+              {
+                className: "df-review-prompt-block",
+                "aria-labelledby": "df-review-initial-prompt-title",
+                children: [
+                  /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-block-header", children: [
+                    /* @__PURE__ */ jsxs("div", { children: [
+                      /* @__PURE__ */ jsx("strong", { id: "df-review-initial-prompt-title", children: "Initial Prompt" }),
+                      /* @__PURE__ */ jsx("span", { children: getPromptLengthLabel(initialPromptText) })
+                    ] }),
+                    /* @__PURE__ */ jsxs(
+                      "button",
+                      {
+                        disabled: !initialPromptText,
+                        type: "button",
+                        onClick: () => onCopyPrompt(initialPromptText, "initial"),
+                        children: [
+                          /* @__PURE__ */ jsx(Copy, { "aria-hidden": "true" }),
+                          copiedPromptKey === "initial" ? "Copied" : "Copy"
+                        ]
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsx(
+                    "textarea",
+                    {
+                      readOnly: true,
+                      "aria-label": "Initial Prompt content",
+                      value: initialPromptText || "Initial prompt is not configured."
+                    }
+                  )
+                ]
+              }
+            )
+          ] })
+        ] })
+      ]
+    }
+  );
+};
+
+// src/react-shell/settings.ts
+var normalizeReviewTheme = (value) => value === "light" || value === "system" || value === "dark" ? value : DEFAULT_REVIEW_THEME;
+var getStoredFigmaToken = () => {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(FIGMA_TOKEN_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+var writeStoredFigmaToken = (token) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (token) {
+      window.localStorage.setItem(FIGMA_TOKEN_STORAGE_KEY, token);
+    } else {
+      window.localStorage.removeItem(FIGMA_TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    return;
+  }
+};
+var getStoredReviewUserId = () => {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(REVIEW_USER_ID_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+var writeStoredReviewUserId = (userId) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (userId) {
+      window.localStorage.setItem(REVIEW_USER_ID_STORAGE_KEY, userId);
+    } else {
+      window.localStorage.removeItem(REVIEW_USER_ID_STORAGE_KEY);
+    }
+  } catch {
+    return;
+  }
+};
+var getStoredReviewTheme = () => {
+  if (typeof window === "undefined") return DEFAULT_REVIEW_THEME;
+  try {
+    return normalizeReviewTheme(
+      window.localStorage.getItem(REVIEW_THEME_STORAGE_KEY)
+    );
+  } catch {
+    return DEFAULT_REVIEW_THEME;
+  }
+};
+var writeStoredReviewTheme = (theme) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (theme === DEFAULT_REVIEW_THEME) {
+      window.localStorage.removeItem(REVIEW_THEME_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(REVIEW_THEME_STORAGE_KEY, theme);
+    }
+  } catch {
+    return;
+  }
+};
+var getSystemReviewTheme = () => {
+  if (typeof window === "undefined" || !window.matchMedia) return "dark";
+  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+};
+
+// src/react-shell/review/settings.modal.tsx
+import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
+var ReviewSettingsModal = ({
+  figmaTokenDraft,
+  reviewUserIdDraft,
+  reviewThemeDraft,
+  figmaSettingsStatus,
+  isFigmaTokenVisible,
+  isFigmaTokenGuideOpen,
+  onClose,
+  onFigmaTokenDraftChange,
+  onReviewUserIdDraftChange,
+  onReviewThemeDraftChange,
+  onClearStatus,
+  onToggleFigmaTokenVisible,
+  onToggleFigmaTokenGuide,
+  onSave
+}) => {
+  return /* @__PURE__ */ jsxs2(
+    "div",
+    {
+      "aria-label": "Review settings",
+      "aria-modal": "true",
+      className: "df-review-settings-modal",
+      role: "dialog",
+      children: [
+        /* @__PURE__ */ jsx2(
+          "button",
+          {
+            "aria-label": "Close settings",
+            className: "df-review-settings-backdrop",
+            type: "button",
+            onClick: onClose
+          }
+        ),
+        /* @__PURE__ */ jsxs2(
+          "form",
+          {
+            className: "df-review-settings-dialog",
+            onSubmit: (event) => {
+              event.preventDefault();
+              onSave(figmaTokenDraft, reviewUserIdDraft, reviewThemeDraft);
+            },
+            children: [
+              /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-header", children: [
+                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-title", children: [
+                  /* @__PURE__ */ jsx2("strong", { children: "Settings" }),
+                  /* @__PURE__ */ jsxs2("span", { children: [
+                    FIGMA_TOKEN_STORAGE_KEY,
+                    " / ",
+                    REVIEW_USER_ID_STORAGE_KEY,
+                    " /",
+                    " ",
+                    REVIEW_THEME_STORAGE_KEY
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-header-actions", children: [
+                  /* @__PURE__ */ jsx2(
+                    "select",
+                    {
+                      "aria-label": "Review theme",
+                      className: "df-review-settings-theme-select",
+                      value: reviewThemeDraft,
+                      onChange: (event) => {
+                        onReviewThemeDraftChange(normalizeReviewTheme(event.target.value));
+                        onClearStatus();
+                      },
+                      children: REVIEW_THEME_OPTIONS.map((option) => /* @__PURE__ */ jsx2("option", { value: option.value, children: option.label }, option.value))
+                    }
+                  ),
+                  /* @__PURE__ */ jsx2("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-body", children: [
+                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-label-row", children: [
+                    /* @__PURE__ */ jsx2("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
+                    /* @__PURE__ */ jsx2(
+                      "button",
+                      {
+                        "aria-controls": FIGMA_TOKEN_GUIDE_ID,
+                        "aria-expanded": isFigmaTokenGuideOpen,
+                        "aria-label": "Show Figma token guide",
+                        className: `df-review-settings-help-button${isFigmaTokenGuideOpen ? " is-active" : ""}`,
+                        type: "button",
+                        onClick: onToggleFigmaTokenGuide,
+                        children: /* @__PURE__ */ jsx2(CircleQuestionMark, { "aria-hidden": "true" })
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-token-input", children: [
+                    /* @__PURE__ */ jsx2(
+                      "input",
+                      {
+                        id: "df-review-figma-token",
+                        "aria-label": "Figma token",
+                        "aria-describedby": isFigmaTokenGuideOpen ? FIGMA_TOKEN_GUIDE_ID : void 0,
+                        autoCapitalize: "off",
+                        autoComplete: "off",
+                        autoCorrect: "off",
+                        className: isFigmaTokenVisible ? void 0 : "is-token-masked",
+                        "data-1p-ignore": "true",
+                        "data-lpignore": "true",
+                        inputMode: "text",
+                        name: "df-review-figma-access-key",
+                        spellCheck: false,
+                        type: "text",
+                        value: figmaTokenDraft,
+                        onChange: (event) => {
+                          onFigmaTokenDraftChange(event.target.value);
+                          onClearStatus();
+                        }
+                      }
+                    ),
+                    /* @__PURE__ */ jsx2(
+                      "button",
+                      {
+                        "aria-label": isFigmaTokenVisible ? "Hide Figma token" : "Show Figma token",
+                        className: "df-review-settings-token-toggle",
+                        type: "button",
+                        onClick: onToggleFigmaTokenVisible,
+                        children: isFigmaTokenVisible ? /* @__PURE__ */ jsx2(EyeOff, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx2(Eye, { "aria-hidden": "true" })
+                      }
+                    )
+                  ] }),
+                  isFigmaTokenGuideOpen && /* @__PURE__ */ jsx2(
+                    "div",
+                    {
+                      className: "df-review-settings-guide",
+                      id: FIGMA_TOKEN_GUIDE_ID,
+                      children: /* @__PURE__ */ jsxs2("ol", { children: [
+                        /* @__PURE__ */ jsx2("li", { children: "Figma file browser\uC5D0\uC11C account menu\uB97C \uC5F4\uACE0 Settings\uB85C \uC774\uB3D9" }),
+                        /* @__PURE__ */ jsx2("li", { children: "Security \uD0ED\uC758 Personal access tokens\uB85C \uC774\uB3D9" }),
+                        /* @__PURE__ */ jsx2("li", { children: "Generate new token\uC5D0\uC11C \uC774\uB984\uACFC scope\uB97C \uC815\uD55C \uB4A4 \uC0DD\uC131" }),
+                        /* @__PURE__ */ jsx2("li", { children: "\uC0DD\uC131\uB41C token\uC744 \uBCF5\uC0AC\uD574\uC11C \uC5EC\uAE30\uC5D0 \uBD99\uC5EC\uB123\uAE30" })
+                      ] })
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxs2("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ jsx2("span", { children: "User ID" }),
+                  /* @__PURE__ */ jsx2("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ jsx2(
+                    "input",
+                    {
+                      "aria-label": "Review user ID",
+                      autoComplete: "off",
+                      spellCheck: false,
+                      type: "text",
+                      value: reviewUserIdDraft,
+                      onChange: (event) => {
+                        onReviewUserIdDraftChange(event.target.value);
+                        onClearStatus();
+                      }
+                    }
+                  ) })
+                ] }),
+                figmaSettingsStatus && /* @__PURE__ */ jsx2("p", { className: "df-review-settings-status", children: figmaSettingsStatus }),
+                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-actions", children: [
+                  /* @__PURE__ */ jsx2(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => onSave("", "", DEFAULT_REVIEW_THEME),
+                      children: "Clear"
+                    }
+                  ),
+                  /* @__PURE__ */ jsx2("span", {}),
+                  /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, children: "Cancel" }),
+                  /* @__PURE__ */ jsx2("button", { type: "submit", children: "Save" })
+                ] })
+              ] })
+            ]
+          }
+        )
+      ]
+    }
+  );
+};
+
+// src/react-shell/sitemap/tree.ts
+var EMPTY_SITEMAP_QA_COUNT = {
+  local: 0,
+  remote: 0
+};
+var normalizeSitemapHref = (href) => {
+  const [path = "/"] = href.split(/[?#]/);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return normalizedPath || "/";
+};
+var getSitemapSegments = (href) => normalizeSitemapHref(href).split("/").map((segment) => segment.trim()).filter(Boolean);
+var createSitemapNode = (href, label, isPage = false) => ({
+  href,
+  label,
+  isPage,
+  children: /* @__PURE__ */ new Map()
+});
+var mergeSitemapUsers = (users) => {
+  const userByKey = /* @__PURE__ */ new Map();
+  users.forEach((user) => {
+    const key = user.sessionId || user.userId;
+    const currentUser = userByKey.get(key);
+    if (!currentUser || Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)) {
+      userByKey.set(key, user);
+    }
+  });
+  return Array.from(userByKey.values());
+};
+var addSitemapQaCounts = (first, second) => ({
+  local: first.local + second.local,
+  remote: first.remote + second.remote
+});
+var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget) => {
+  const root = createSitemapNode("/", "/", false);
+  pages.forEach((page) => {
+    const pageHref = page.href.startsWith("/") ? page.href : `/${page.href}`;
+    const pathHref = normalizeSitemapHref(pageHref);
+    const segments = getSitemapSegments(pathHref);
+    if (segments.length === 0) {
+      root.href = pageHref;
+      root.isPage = true;
+      return;
+    }
+    let parent = root;
+    segments.forEach((segment, segmentIndex) => {
+      const isLastSegment = segmentIndex === segments.length - 1;
+      const segmentPath = `/${segments.slice(0, segmentIndex + 1).join("/")}`;
+      const segmentHref = isLastSegment ? pageHref : `${segmentPath}/`;
+      const segmentLabel = `${segment}${!isLastSegment || pathHref.endsWith("/") ? "/" : ""}`;
+      const existingNode = parent.children.get(segment);
+      const node = existingNode ?? createSitemapNode(segmentHref, segmentLabel, false);
+      node.href = isLastSegment ? pageHref : node.href;
+      node.label = isLastSegment ? segmentLabel : node.label;
+      node.isPage = node.isPage || isLastSegment;
+      parent.children.set(segment, node);
+      parent = node;
+    });
+  });
+  const getDirectCount = (node) => {
+    if (!node.isPage) return EMPTY_SITEMAP_QA_COUNT;
+    return pageQaCounts.get(getPageTarget(node.href)) ?? EMPTY_SITEMAP_QA_COUNT;
+  };
+  const getDirectUsers = (node) => {
+    if (!node.isPage) return [];
+    return pagePresenceUsers.get(getPageTarget(node.href)) ?? [];
+  };
+  const rows = [];
+  const appendNodeRows = (node, depth, ancestorLastList, isLastNode) => {
+    const children = Array.from(node.children.values());
+    const directCount = getDirectCount(node);
+    const directUsers = getDirectUsers(node);
+    let rowIndex = null;
+    if (node.isPage || depth > 0) {
+      const prefix = depth === 0 ? "" : `${ancestorLastList.map((isLast) => isLast ? "   " : "\u2502  ").join("")}${isLastNode ? "\u2514\u2500 " : "\u251C\u2500 "}`;
+      const pageTarget = node.isPage ? getPageTarget(node.href) : null;
+      rowIndex = rows.length;
+      rows.push({
+        href: node.href,
+        label: node.label,
+        prefix,
+        isPage: node.isPage,
+        isActive: pageTarget === activeRoute,
+        qaCount: directCount,
+        users: directUsers
+      });
+    }
+    const childAggregate = children.reduce(
+      (aggregate, child, childIndex) => {
+        const childResult = appendNodeRows(
+          child,
+          depth + 1,
+          depth === 0 ? [] : [...ancestorLastList, isLastNode],
+          childIndex === children.length - 1
+        );
+        return {
+          count: addSitemapQaCounts(aggregate.count, childResult.count),
+          users: mergeSitemapUsers([...aggregate.users, ...childResult.users])
+        };
+      },
+      { count: EMPTY_SITEMAP_QA_COUNT, users: [] }
+    );
+    if (rowIndex !== null && !node.isPage) {
+      rows[rowIndex] = {
+        ...rows[rowIndex],
+        qaCount: childAggregate.count,
+        users: childAggregate.users
+      };
+    }
+    return {
+      count: node.isPage ? addSitemapQaCounts(directCount, childAggregate.count) : childAggregate.count,
+      users: mergeSitemapUsers([...directUsers, ...childAggregate.users])
+    };
+  };
+  if (root.isPage) {
+    const directCount = getDirectCount(root);
+    const directUsers = getDirectUsers(root);
+    rows.push({
+      href: root.href,
+      label: root.label,
+      prefix: "",
+      isPage: true,
+      isActive: getPageTarget(root.href) === activeRoute,
+      qaCount: directCount,
+      users: directUsers
+    });
+  }
+  Array.from(root.children.values()).forEach((node, index, siblings) => {
+    appendNodeRows(node, 1, [], index === siblings.length - 1);
+  });
+  return rows;
+};
+
+// src/react-shell/sitemap/modal.tsx
+import { Fragment, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
+var SitemapModal = ({
+  pages,
+  activeRoute,
+  pageQaCounts,
+  pagePresenceUsers,
+  getPageTarget,
+  onClose,
+  onSelectPage
+}) => {
+  const sitemapRows = createSitemapRows(
+    pages,
+    activeRoute,
+    pageQaCounts,
+    pagePresenceUsers,
+    getPageTarget
+  );
+  return /* @__PURE__ */ jsxs3(
+    "div",
+    {
+      "aria-label": "Sitemap",
+      "aria-modal": "true",
+      className: "df-review-sitemap-modal",
+      role: "dialog",
+      children: [
+        /* @__PURE__ */ jsx3(
+          "button",
+          {
+            "aria-label": "Close sitemap",
+            className: "df-review-sitemap-backdrop",
+            type: "button",
+            onClick: onClose
+          }
+        ),
+        /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-dialog", children: [
+          /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-header", children: [
+            /* @__PURE__ */ jsxs3("div", { children: [
+              /* @__PURE__ */ jsx3("strong", { children: "Sitemap" }),
+              /* @__PURE__ */ jsxs3("span", { children: [
+                pages.length,
+                " pages"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsx3("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
+          ] }),
+          /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-list", children: [
+            /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-table-head", "aria-hidden": "true", children: [
+              /* @__PURE__ */ jsx3("span", { children: "Page" }),
+              /* @__PURE__ */ jsx3("span", { children: "Local" }),
+              /* @__PURE__ */ jsx3("span", { children: "Remote" }),
+              /* @__PURE__ */ jsx3("span", { children: "Online" })
+            ] }),
+            sitemapRows.map((row) => {
+              const rowClassName = [
+                "df-review-sitemap-row",
+                row.isPage ? "is-page" : "is-folder",
+                row.isActive ? "is-active" : ""
+              ].filter(Boolean).join(" ");
+              const rowContent = /* @__PURE__ */ jsxs3(Fragment, { children: [
+                /* @__PURE__ */ jsxs3("span", { className: "df-review-sitemap-path", children: [
+                  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-tree-prefix", children: row.prefix }),
+                  /* @__PURE__ */ jsx3("span", { children: row.label })
+                ] }),
+                /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-local", children: row.qaCount.local }),
+                /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-remote", children: row.qaCount.remote }),
+                /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-online", children: row.users.length > 0 ? /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-users", children: row.users.map((user) => /* @__PURE__ */ jsx3(
+                  "span",
+                  {
+                    className: "df-review-sitemap-user",
+                    style: {
+                      "--df-review-presence-color": user.color
+                    },
+                    children: user.userId
+                  },
+                  user.sessionId
+                )) }) : /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
+              ] });
+              if (!row.isPage) {
+                return /* @__PURE__ */ jsx3(
+                  "div",
+                  {
+                    "aria-label": `${row.href} group / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                    className: rowClassName,
+                    role: "row",
+                    children: rowContent
+                  },
+                  row.href
+                );
+              }
+              return /* @__PURE__ */ jsx3(
+                "button",
+                {
+                  "aria-label": `${row.href} / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                  className: rowClassName,
+                  type: "button",
+                  onClick: () => onSelectPage(row.href),
+                  children: rowContent
+                },
+                row.href
+              );
+            })
+          ] })
+        ] })
+      ]
+    }
+  );
+};
+
+// src/react-shell/qa/item.remote.actions.tsx
+import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
+var QaItemRemoteActions = ({
+  isRemoteSource,
+  isSubmitted,
+  isSubmitting,
+  item,
+  numberedItem,
+  remoteAdapterEntry,
+  onSubmitItem
+}) => {
+  const hasRemoteActions = !isRemoteSource && Boolean(remoteAdapterEntry) || Boolean(item.externalIssueUrl);
+  if (!hasRemoteActions) return null;
+  return /* @__PURE__ */ jsxs4(
+    "div",
+    {
+      className: "df-review-item-remote-actions",
+      onClick: (event) => event.stopPropagation(),
+      children: [
+        !isRemoteSource && remoteAdapterEntry && /* @__PURE__ */ jsxs4(
+          "button",
+          {
+            "aria-label": "Submit to remote",
+            className: "df-review-item-action-button df-review-item-submit-button",
+            disabled: isSubmitted || isSubmitting,
+            type: "button",
+            onClick: () => void onSubmitItem(numberedItem),
+            children: [
+              /* @__PURE__ */ jsx4(Upload, { "aria-hidden": "true" }),
+              /* @__PURE__ */ jsx4("span", { children: isSubmitted ? "\uB4F1\uB85D\uB428" : isSubmitting ? "\uB4F1\uB85D \uC911" : "remote \uB4F1\uB85D" })
+            ]
+          }
+        ),
+        item.externalIssueUrl && /* @__PURE__ */ jsx4(
+          "a",
+          {
+            "aria-label": "Open remote issue",
+            className: "df-review-item-action-button",
+            href: item.externalIssueUrl,
+            rel: "noreferrer",
+            target: "_blank",
+            children: /* @__PURE__ */ jsx4(ExternalLink, { "aria-hidden": "true" })
+          }
+        )
+      ]
+    }
+  );
+};
+
+// src/react-shell/qa/item.status.actions.tsx
+import { jsx as jsx5 } from "react/jsx-runtime";
+var getStatusOption = (status, statusOptions) => {
+  const normalizedStatus = normalizeReviewItemStatus(status);
+  return statusOptions.find((statusOption) => statusOption.value === status) ?? statusOptions.find(
+    (statusOption) => statusOption.value === normalizedStatus
+  ) ?? statusOptions[0];
+};
+var QaItemStatusActions = ({
+  canUpdateStatus,
+  item,
+  statusOptions,
+  onChangeItemStatus
+}) => {
+  const currentStatusOption = getStatusOption(item.status, statusOptions);
+  if (!currentStatusOption) return null;
+  return /* @__PURE__ */ jsx5(
+    "div",
+    {
+      className: "df-review-item-status-actions",
+      onClick: (event) => event.stopPropagation(),
+      children: canUpdateStatus ? /* @__PURE__ */ jsx5(
+        "select",
+        {
+          "aria-label": "QA status",
+          className: "df-review-item-status-select",
+          value: currentStatusOption.value,
+          onChange: (event) => void onChangeItemStatus(
+            item,
+            event.currentTarget.value
+          ),
+          children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx5("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
+        }
+      ) : /* @__PURE__ */ jsx5("span", { className: "df-review-item-status-badge", children: currentStatusOption.label })
+    }
+  );
+};
+
+// src/react-shell/anchor.restore.ts
+var isAnchorRestorableReviewItem = (item) => item.scope === "dom" || item.kind === "note" && Boolean(item.anchor && item.selection);
+var queryReviewItemAnchorElement = (targetDocument, item) => {
+  const anchor = item.anchor;
+  if (!anchor || !isAnchorRestorableReviewItem(item)) return void 0;
+  const expectedRect = getReviewItemExpectedDocumentRect(item);
+  const candidates = [anchor, ...anchor.candidates ?? []].filter(
+    (candidate) => Boolean(candidate.selector)
+  );
+  const matches = [];
+  candidates.forEach((candidate, index) => {
+    try {
+      targetDocument.querySelectorAll(candidate.selector).forEach((element) => {
+        if (!isScrollableReviewAnchorElement(element)) return;
+        matches.push({
+          element,
+          score: getReviewAnchorMatchScore(
+            element,
+            expectedRect,
+            candidate.textFingerprint ?? anchor.textFingerprint,
+            index
+          )
+        });
+      });
+    } catch {
+      return;
+    }
+  });
+  return matches.sort((a, b) => a.score - b.score)[0]?.element;
+};
+var getReviewItemRestoreScrollPosition = (targetWindow, targetDocument, item, anchorElement) => {
+  if (anchorElement) {
+    const rect = anchorElement.getBoundingClientRect();
+    return clampDocumentScrollPosition(targetDocument, {
+      left: targetWindow.scrollX + rect.left - Math.max(0, (targetWindow.innerWidth - rect.width) / 2),
+      top: targetWindow.scrollY + rect.top - Math.max(0, (targetWindow.innerHeight - rect.height) / 2)
+    });
+  }
+  return clampDocumentScrollPosition(targetDocument, {
+    left: item.scroll?.x ?? 0,
+    top: item.scroll?.y ?? 0
+  });
+};
+var setDocumentScrollInstantly = (targetWindow, targetDocument, position) => {
+  const scrollElement = targetDocument.scrollingElement;
+  if (scrollElement) {
+    scrollElement.scrollLeft = position.left;
+    scrollElement.scrollTop = position.top;
+    return;
+  }
+  targetWindow.scrollTo(position.left, position.top);
+};
+var getReviewItemExpectedDocumentRect = (item) => {
+  const scroll = item.scroll ?? { x: 0, y: 0 };
+  const selection = item.selection?.viewport;
+  if (selection && typeof selection.x === "number" && typeof selection.y === "number" && typeof selection.width === "number" && typeof selection.height === "number") {
+    return {
+      left: scroll.x + selection.x,
+      top: scroll.y + selection.y,
+      width: selection.width,
+      height: selection.height
+    };
+  }
+  const marker = item.marker?.viewport;
+  if (marker && typeof marker.x === "number" && typeof marker.y === "number") {
+    return {
+      left: scroll.x + marker.x,
+      top: scroll.y + marker.y,
+      width: 1,
+      height: 1
+    };
+  }
+  return void 0;
+};
+var getReviewAnchorMatchScore = (element, expectedRect, textFingerprint, candidateIndex) => {
+  const rect = getElementDocumentRect(element);
+  let score = candidateIndex * 25;
+  if (expectedRect) {
+    score += Math.abs(rect.top - expectedRect.top);
+    score += Math.abs(rect.left - expectedRect.left) * 0.25;
+    score += Math.abs(rect.width - expectedRect.width) * 0.1;
+    score += Math.abs(rect.height - expectedRect.height) * 0.1;
+  }
+  if (textFingerprint) {
+    score += (1 - getReviewTextFingerprintScore(textFingerprint, element)) * 100;
+  }
+  return score;
+};
+var getElementDocumentRect = (element) => {
+  const rect = element.getBoundingClientRect();
+  const view = element.ownerDocument.defaultView;
+  return {
+    left: rect.left + (view?.scrollX ?? 0),
+    top: rect.top + (view?.scrollY ?? 0),
+    width: rect.width,
+    height: rect.height
+  };
+};
+var clampDocumentScrollPosition = (targetDocument, position) => {
+  const scrollElement = targetDocument.scrollingElement;
+  const view = targetDocument.defaultView;
+  const maxLeft = Math.max(
+    0,
+    (scrollElement?.scrollWidth ?? 0) - (view?.innerWidth ?? 0)
+  );
+  const maxTop = Math.max(
+    0,
+    (scrollElement?.scrollHeight ?? 0) - (view?.innerHeight ?? 0)
+  );
+  return {
+    left: Math.min(Math.max(0, Math.round(position.left)), maxLeft),
+    top: Math.min(Math.max(0, Math.round(position.top)), maxTop)
+  };
+};
+var getReviewTextFingerprintScore = (expected, element) => {
+  const actual = element.textContent?.replace(/\s+/g, " ").trim();
+  if (!actual) return 0.5;
+  if (expected === actual) return 1;
+  if (actual.includes(expected) || expected.includes(actual)) return 0.82;
+  const expectedTokens = getReviewFingerprintTokens(expected);
+  const actualTokens = new Set(getReviewFingerprintTokens(actual));
+  if (expectedTokens.length === 0 || actualTokens.size === 0) return 0.5;
+  const matches = expectedTokens.filter((token) => actualTokens.has(token));
+  return Math.min(Math.max(matches.length / expectedTokens.length, 0.25), 0.76);
+};
+var getReviewFingerprintTokens = (value) => value.toLowerCase().split(/[\s/|,.:;()[\]{}"'`~!?<>]+/).map((token) => token.trim()).filter((token) => token.length > 1);
+var isScrollableReviewAnchorElement = (element) => {
+  const id = element.id.trim().toLowerCase();
+  if (element === element.ownerDocument.body || element === element.ownerDocument.documentElement || ["app", "main", "page", "root", "__next", "__nuxt"].includes(id)) {
+    return false;
+  }
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  const viewportHeight = element.ownerDocument.documentElement.clientHeight;
+  const scrollHeight = element.ownerDocument.documentElement.scrollHeight;
+  return !(scrollHeight > viewportHeight * 1.5 && rect.height > viewportHeight * 3);
+};
+
+// src/react-shell/review/item.icons.tsx
+import { jsx as jsx6 } from "react/jsx-runtime";
+var ReviewScopeIcon = ({ scope }) => {
+  if (scope === "mobile") return /* @__PURE__ */ jsx6(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ jsx6(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ jsx6(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ jsx6(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx6(Monitor, { "aria-hidden": "true" });
+};
+var getReviewItemMode = (item) => isAnchorRestorableReviewItem(item) ? "dom" : item.kind;
+var ReviewItemModeIcon = ({
+  mode
+}) => {
+  if (mode === "area") return /* @__PURE__ */ jsx6(Scan, { "aria-hidden": "true" });
+  if (mode === "dom") return /* @__PURE__ */ jsx6(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx6(StickyNote, { "aria-hidden": "true" });
+};
+
+// src/react-shell/qa/item.card.tsx
+import { jsx as jsx7, jsxs as jsxs5 } from "react/jsx-runtime";
+var QaItemCard = ({
+  activeAdapterEntry,
+  currentPresetScope,
+  getItemPresetScope,
+  isOverlayVisible,
+  isRemoteSource,
+  numberedItem,
+  remoteAdapterEntry,
+  selectedItemId,
+  onChangeItemStatus,
+  onRemoveItem,
+  onRestoreReviewItem,
+  onSubmitItem,
+  onToggleItemOverlayVisibility
+}) => {
+  const { item } = numberedItem;
+  const itemMode = getReviewItemMode(item);
+  const isSubmitted = item.submitStatus === "submitted";
+  const isSubmitting = item.submitStatus === "submitting";
+  const canRemoveItem = activeAdapterEntry.canRemove && !isSubmitting && (isRemoteSource || !isSubmitted);
+  const itemComment = item.comment.trim() || getItemTitle(item);
+  const statusOptions = activeAdapterEntry.statusOptions;
+  const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
+  return /* @__PURE__ */ jsxs5(
+    "article",
+    {
+      className: `df-review-item-card${item.id === selectedItemId ? " is-active" : ""}${getItemPresetScope(item) !== currentPresetScope ? " is-dim" : ""}${isOverlayVisible ? "" : " is-overlay-hidden"}`,
+      onClick: () => onRestoreReviewItem(item),
+      children: [
+        /* @__PURE__ */ jsxs5("div", { className: "df-review-item-header", children: [
+          /* @__PURE__ */ jsxs5("div", { className: "df-review-item-main", children: [
+            /* @__PURE__ */ jsxs5("span", { className: "df-review-item-badges", children: [
+              /* @__PURE__ */ jsx7("span", { className: "df-review-item-id", children: numberedItem.displayLabel }),
+              /* @__PURE__ */ jsxs5(
+                "span",
+                {
+                  className: `df-review-item-scope is-scope-${numberedItem.scope}`,
+                  children: [
+                    /* @__PURE__ */ jsx7(ReviewScopeIcon, { scope: numberedItem.scope }),
+                    numberedItem.label
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxs5("span", { className: `df-review-item-mode is-mode-${itemMode}`, children: [
+                /* @__PURE__ */ jsx7(ReviewItemModeIcon, { mode: itemMode }),
+                itemMode
+              ] })
+            ] }),
+            /* @__PURE__ */ jsx7("strong", { className: "df-review-item-comment", children: itemComment }),
+            /* @__PURE__ */ jsx7("small", { children: formatDate(item.createdAt) }),
+            item.submitError && /* @__PURE__ */ jsx7("small", { className: "df-review-item-error", children: item.submitError })
+          ] }),
+          /* @__PURE__ */ jsxs5(
+            "div",
+            {
+              className: "df-review-item-header-actions",
+              onClick: (event) => event.stopPropagation(),
+              children: [
+                /* @__PURE__ */ jsx7(
+                  "button",
+                  {
+                    "aria-label": isOverlayVisible ? "Hide QA overlay" : "Show QA overlay",
+                    className: `df-review-item-visibility${isOverlayVisible ? " is-visible" : " is-hidden"}`,
+                    type: "button",
+                    onClick: () => onToggleItemOverlayVisibility(item.id),
+                    children: isOverlayVisible ? /* @__PURE__ */ jsx7(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx7(EyeOff, { "aria-hidden": "true" })
+                  }
+                ),
+                canRemoveItem && /* @__PURE__ */ jsx7(
+                  "button",
+                  {
+                    "aria-label": "Delete QA",
+                    className: "df-review-item-delete",
+                    type: "button",
+                    onClick: () => void onRemoveItem(item),
+                    children: /* @__PURE__ */ jsx7(X, { "aria-hidden": "true" })
+                  }
+                )
+              ]
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs5("div", { className: "df-review-item-actions", children: [
+          /* @__PURE__ */ jsx7(
+            QaItemStatusActions,
+            {
+              canUpdateStatus,
+              item,
+              statusOptions,
+              onChangeItemStatus
+            }
+          ),
+          /* @__PURE__ */ jsx7(
+            QaItemRemoteActions,
+            {
+              isRemoteSource,
+              isSubmitted,
+              isSubmitting,
+              item,
+              numberedItem,
+              remoteAdapterEntry,
+              onSubmitItem
+            }
+          )
+        ] })
+      ]
+    }
+  );
+};
+
+// src/react-shell/presence/row.tsx
+import { jsx as jsx8, jsxs as jsxs6 } from "react/jsx-runtime";
+var PresenceRow = ({
+  presenceSessionId,
+  users
+}) => {
+  if (users.length === 0) return null;
+  return /* @__PURE__ */ jsxs6("div", { "aria-label": "Review presence", className: "df-review-presence-row", children: [
+    /* @__PURE__ */ jsxs6("span", { className: "df-review-presence-label", children: [
+      /* @__PURE__ */ jsx8(Users, { "aria-hidden": "true" }),
+      "online ",
+      users.length
+    ] }),
+    /* @__PURE__ */ jsx8("div", { className: "df-review-presence-list", children: users.map((user) => /* @__PURE__ */ jsxs6(
+      "span",
+      {
+        className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
+        style: {
+          "--df-review-presence-color": user.color
+        },
+        children: [
+          /* @__PURE__ */ jsx8("span", { className: "df-review-presence-dot", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsx8("span", { className: "df-review-presence-name", children: user.userId })
+        ]
+      },
+      user.sessionId
+    )) })
+  ] });
+};
+
+// src/react-shell/qa/panel.header.tsx
+import { jsx as jsx9, jsxs as jsxs7 } from "react/jsx-runtime";
+var QaPanelHeader = ({
+  activeItemCount,
+  currentPagePresenceUsers,
+  filteredItemCount,
+  label,
+  presenceSessionId,
+  qaFilter,
+  qaFilterCounts,
+  showSourceSelect,
+  source,
+  sourceEntries,
+  onChangeReviewSource,
+  onQaFilterChange,
+  onRefreshReviewData
+}) => {
+  return /* @__PURE__ */ jsxs7("div", { className: "df-review-list-header", children: [
+    /* @__PURE__ */ jsxs7("div", { className: "df-review-list-toolbar", children: [
+      /* @__PURE__ */ jsxs7("div", { className: "df-review-list-controls", children: [
+        showSourceSelect && /* @__PURE__ */ jsx9(
+          "select",
+          {
+            "aria-label": "QA source",
+            className: "df-review-source-select",
+            value: source,
+            onChange: (event) => onChangeReviewSource(event.currentTarget.value),
+            children: sourceEntries.map((entry) => /* @__PURE__ */ jsx9("option", { value: entry.label, children: entry.label }, entry.label))
+          }
+        ),
+        /* @__PURE__ */ jsx9(
+          "button",
+          {
+            "aria-label": "Refresh QA",
+            className: "df-review-source-refresh",
+            type: "button",
+            onClick: () => void onRefreshReviewData(),
+            children: /* @__PURE__ */ jsx9(RefreshCw, { "aria-hidden": "true" })
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsx9("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
+        const count = qaFilterCounts.get(filter.key) ?? 0;
+        const isActive = qaFilter === filter.key;
+        return /* @__PURE__ */ jsx9(
+          "button",
+          {
+            "aria-label": `${filter.label} QA (${count})`,
+            "aria-pressed": isActive,
+            className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
+            type: "button",
+            onClick: () => onQaFilterChange(filter.key),
+            children: /* @__PURE__ */ jsx9("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ jsx9(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ jsx9(ListFilter, { "aria-hidden": "true" }) })
+          },
+          filter.key
+        );
+      }) })
+    ] }),
+    /* @__PURE__ */ jsxs7("div", { className: "df-review-list-title", children: [
+      /* @__PURE__ */ jsxs7("span", { children: [
+        label,
+        " QA"
+      ] }),
+      /* @__PURE__ */ jsxs7("strong", { children: [
+        filteredItemCount,
+        qaFilter === "all" ? "" : `/${activeItemCount}`
+      ] })
+    ] }),
+    /* @__PURE__ */ jsx9(
+      PresenceRow,
+      {
+        presenceSessionId,
+        users: currentPagePresenceUsers
+      }
+    )
+  ] });
+};
+
+// src/react-shell/qa/panel.tsx
+import { jsx as jsx10, jsxs as jsxs8 } from "react/jsx-runtime";
+var ReviewQaPanel = ({
+  activeAdapterEntry,
+  activeItems,
+  currentPagePresenceUsers,
+  currentPresetScope,
+  filteredNumberedActiveItems,
+  getItemPresetScope,
+  hiddenOverlayItemIds,
+  isListVisible,
+  isRemoteSource,
+  presenceSessionId,
+  qaFilter,
+  qaFilterCounts,
+  remoteAdapterEntry,
+  selectedItemId,
+  showSourceSelect,
+  source,
+  sourceEntries,
+  onChangeItemStatus,
+  onChangeReviewSource,
+  onQaFilterChange,
+  onRefreshReviewData,
+  onRemoveItem,
+  onRestoreReviewItem,
+  onSubmitItem,
+  onToggleItemOverlayVisibility
+}) => {
+  return /* @__PURE__ */ jsx10("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: /* @__PURE__ */ jsx10("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs8("section", { className: "df-review-item-list", children: [
+    /* @__PURE__ */ jsx10(
+      QaPanelHeader,
+      {
+        activeItemCount: activeItems.length,
+        currentPagePresenceUsers,
+        filteredItemCount: filteredNumberedActiveItems.length,
+        label: activeAdapterEntry.label,
+        presenceSessionId,
+        qaFilter,
+        qaFilterCounts,
+        showSourceSelect,
+        source,
+        sourceEntries,
+        onChangeReviewSource,
+        onQaFilterChange,
+        onRefreshReviewData
+      }
+    ),
+    /* @__PURE__ */ jsxs8("div", { className: "df-review-list-scroll", children: [
+      activeItems.length === 0 && /* @__PURE__ */ jsx10("p", { className: "df-review-empty", children: isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page." }),
+      activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx10("p", { className: "df-review-empty", children: "No QA in this filter." }),
+      filteredNumberedActiveItems.map((numberedItem) => {
+        const { item } = numberedItem;
+        return /* @__PURE__ */ jsx10(
+          QaItemCard,
+          {
+            activeAdapterEntry,
+            currentPresetScope,
+            getItemPresetScope,
+            isOverlayVisible: !hiddenOverlayItemIds.has(item.id),
+            isRemoteSource,
+            numberedItem,
+            remoteAdapterEntry,
+            selectedItemId,
+            onChangeItemStatus,
+            onRemoveItem,
+            onRestoreReviewItem,
+            onSubmitItem,
+            onToggleItemOverlayVisibility
+          },
+          item.id
+        );
+      })
+    ] })
+  ] }) }) });
+};
+
+// src/react-shell/review/mode.toolbar.tsx
+import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
+var ReviewModeToolbar = ({
+  canWriteAny,
+  canWriteArea,
+  canWriteDom,
+  canWriteNote,
+  mode,
+  onSetReviewMode
+}) => {
+  if (!canWriteAny) return null;
+  return /* @__PURE__ */ jsxs9("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
+    canWriteDom && /* @__PURE__ */ jsx11(
+      "button",
+      {
+        "aria-label": "Element",
+        className: `df-review-mode-button is-element${mode === "element" ? " is-active" : ""}`,
+        type: "button",
+        onClick: () => onSetReviewMode("element"),
+        children: /* @__PURE__ */ jsx11(SquareMousePointer, { "aria-hidden": "true" })
+      }
+    ),
+    canWriteDom && (canWriteNote || canWriteArea) && /* @__PURE__ */ jsx11("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
+    canWriteNote && /* @__PURE__ */ jsx11(
+      "button",
+      {
+        "aria-label": "Note",
+        className: `df-review-mode-button is-note${mode === "note" ? " is-active" : ""}`,
+        type: "button",
+        onClick: () => onSetReviewMode("note"),
+        children: /* @__PURE__ */ jsx11(StickyNote, { "aria-hidden": "true" })
+      }
+    ),
+    canWriteArea && /* @__PURE__ */ jsx11(
+      "button",
+      {
+        "aria-label": "Area",
+        className: `df-review-mode-button is-area${mode === "area" ? " is-active" : ""}`,
+        type: "button",
+        onClick: () => onSetReviewMode("area"),
+        children: /* @__PURE__ */ jsx11(Scan, { "aria-hidden": "true" })
+      }
+    )
+  ] });
+};
+
+// src/react-shell/ruler/gutters.tsx
+import { Fragment as Fragment2, jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
+var RulerGutters = ({
+  rulerHover,
+  rulerScaleX,
+  rulerScaleY,
+  rulerUnit,
+  size
+}) => {
+  return /* @__PURE__ */ jsxs10(Fragment2, { children: [
+    /* @__PURE__ */ jsx12("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsxs10(
+      "div",
+      {
+        className: "df-review-ruler-gutter is-x",
+        style: {
+          "--df-review-ruler-step-x": `${rulerScaleX * 20}px`
+        },
+        children: [
+          /* @__PURE__ */ jsxs10("div", { className: "df-review-ruler-frame-label", children: [
+            /* @__PURE__ */ jsx12("strong", { children: size.label }),
+            /* @__PURE__ */ jsxs10("span", { children: [
+              size.designWidth,
+              size.designHeight ? `x${size.designHeight}` : "",
+              rulerUnit
+            ] })
+          ] }),
+          rulerHover && /* @__PURE__ */ jsx12(
+            "div",
+            {
+              className: "df-review-ruler-coord is-x",
+              style: { left: `${rulerHover.x}px` },
+              children: Math.round(rulerHover.x / rulerScaleX)
+            }
+          )
+        ]
+      }
+    ),
+    /* @__PURE__ */ jsx12(
+      "div",
+      {
+        className: "df-review-ruler-gutter is-y",
+        style: {
+          "--df-review-ruler-step-y": `${rulerScaleY * 20}px`
+        },
+        children: rulerHover && /* @__PURE__ */ jsx12(
+          "div",
+          {
+            className: "df-review-ruler-coord is-y",
+            style: { top: `${rulerHover.y}px` },
+            children: Math.round(rulerHover.y / rulerScaleY)
+          }
+        )
+      }
+    )
+  ] });
+};
+
+// src/react-shell/ruler/overlay.tsx
+import { Fragment as Fragment3, jsx as jsx13, jsxs as jsxs11 } from "react/jsx-runtime";
+var RulerOverlay = ({
+  iframeRef,
+  isRulerDragging,
+  rulerHover,
+  rulerMeasure,
+  rulerMeasureLabel,
+  rulerOverlayRef,
+  size
+}) => {
+  return /* @__PURE__ */ jsxs11(
+    "div",
+    {
+      ref: rulerOverlayRef,
+      "aria-label": "Ruler",
+      className: `df-review-ruler-overlay${isRulerDragging ? " is-dragging" : ""}`,
+      role: "application",
+      onWheel: (event) => {
+        iframeRef.current?.contentWindow?.scrollBy(
+          event.deltaX,
+          event.deltaY
+        );
+      },
+      children: [
+        rulerHover && /* @__PURE__ */ jsxs11(Fragment3, { children: [
+          /* @__PURE__ */ jsx13(
+            "div",
+            {
+              className: "df-review-ruler-guide is-x",
+              "aria-hidden": "true",
+              style: { top: `${rulerHover.y}px` }
+            }
+          ),
+          /* @__PURE__ */ jsx13(
+            "div",
+            {
+              className: "df-review-ruler-guide is-y",
+              "aria-hidden": "true",
+              style: { left: `${rulerHover.x}px` }
+            }
+          )
+        ] }),
+        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs11(Fragment3, { children: [
+          /* @__PURE__ */ jsx13(
+            "div",
+            {
+              className: "df-review-ruler-selection",
+              "aria-hidden": "true",
+              style: {
+                left: `${rulerMeasure.left}px`,
+                top: `${rulerMeasure.top}px`,
+                width: `${rulerMeasure.width}px`,
+                height: `${rulerMeasure.height}px`
+              }
+            }
+          ),
+          /* @__PURE__ */ jsx13(
+            "div",
+            {
+              className: "df-review-ruler-label",
+              style: {
+                left: `${Math.min(
+                  Math.max(rulerMeasure.left + rulerMeasure.width + 8, 8),
+                  Math.max(8, size.width - 164)
+                )}px`,
+                top: `${Math.min(
+                  Math.max(rulerMeasure.top + rulerMeasure.height + 8, 8),
+                  Math.max(8, size.height - 34)
+                )}px`
+              },
+              children: rulerMeasureLabel
+            }
+          )
+        ] })
+      ]
+    }
+  );
+};
+
+// src/react-shell/target/frame.tsx
+import { jsx as jsx14, jsxs as jsxs12 } from "react/jsx-runtime";
+var ReviewTargetFrame = ({
+  canWriteAny,
+  canWriteArea,
+  canWriteDom,
+  canWriteNote,
+  frameScrollRef,
+  iframeRef,
+  isRulerAvailable,
+  isRulerDragging,
+  isRulerVisible,
+  mode,
+  rulerHover,
+  rulerMeasure,
+  rulerMeasureLabel,
+  rulerOverlayRef,
+  rulerScaleX,
+  rulerScaleY,
+  rulerUnit,
+  size,
+  targetSrc,
+  onLoadTarget,
+  onSetReviewMode
+}) => {
+  const showRuler = isRulerVisible && isRulerAvailable;
+  return /* @__PURE__ */ jsx14("main", { className: "df-review-stage", children: /* @__PURE__ */ jsxs12("div", { className: "df-review-frame", children: [
+    /* @__PURE__ */ jsx14("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ jsx14("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ jsxs12(
+      "div",
+      {
+        className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
+        children: [
+          showRuler && /* @__PURE__ */ jsx14(
+            RulerGutters,
+            {
+              rulerHover,
+              rulerScaleX,
+              rulerScaleY,
+              rulerUnit,
+              size
+            }
+          ),
+          /* @__PURE__ */ jsxs12(
+            "div",
+            {
+              className: "df-review-device",
+              style: {
+                width: `${size.width}px`,
+                height: `${size.height}px`,
+                minWidth: `${size.width}px`,
+                minHeight: `${size.height}px`
+              },
+              children: [
+                /* @__PURE__ */ jsx14(
+                  "iframe",
+                  {
+                    ref: iframeRef,
+                    width: size.width,
+                    height: size.height,
+                    src: targetSrc,
+                    title: "Review target",
+                    onLoad: onLoadTarget
+                  },
+                  targetSrc
+                ),
+                showRuler && /* @__PURE__ */ jsx14(
+                  RulerOverlay,
+                  {
+                    iframeRef,
+                    isRulerDragging,
+                    rulerHover,
+                    rulerMeasure,
+                    rulerMeasureLabel,
+                    rulerOverlayRef,
+                    size
+                  }
+                )
+              ]
+            }
+          )
+        ]
+      }
+    ) }) }),
+    /* @__PURE__ */ jsx14("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ jsx14(
+      ReviewModeToolbar,
+      {
+        canWriteAny,
+        canWriteArea,
+        canWriteDom,
+        canWriteNote,
+        mode,
+        onSetReviewMode
+      }
+    ) })
+  ] }) });
+};
+
+// src/react-shell/topbar.tsx
+import { jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
+var ReviewScopeIcon2 = ({ scope }) => {
+  if (scope === "mobile") return /* @__PURE__ */ jsx15(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ jsx15(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ jsx15(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ jsx15(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx15(Monitor, { "aria-hidden": "true" });
+};
+var ViewportPresetIcon = ({
+  preset
+}) => {
+  return /* @__PURE__ */ jsx15(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
+};
+var ReviewTopbar = ({
+  draftTarget,
+  copyLabel,
+  viewportPresets,
+  size,
+  presetScopeCounts,
+  isRulerAvailable,
+  isRulerVisible,
+  targetOverlayState,
+  isFigmaOverlayAvailable,
+  onDraftTargetChange,
+  onApplyTarget,
+  onOpenSitemap,
+  onCopyCurrentUrl,
+  onSizeChange,
+  onToggleRuler,
+  onToggleTargetOverlay,
+  onOpenInitialPrompt,
+  onOpenSettings
+}) => {
+  return /* @__PURE__ */ jsxs13("header", { className: "df-review-topbar", children: [
+    /* @__PURE__ */ jsxs13(
+      "form",
+      {
+        className: "df-review-address",
+        onSubmit: (event) => {
+          event.preventDefault();
+          onApplyTarget();
+        },
+        children: [
+          /* @__PURE__ */ jsx15(
+            "button",
+            {
+              "aria-label": "Open sitemap",
+              className: "df-review-sitemap-button",
+              type: "button",
+              onClick: onOpenSitemap,
+              children: /* @__PURE__ */ jsx15(Map2, { "aria-hidden": "true" })
+            }
+          ),
+          /* @__PURE__ */ jsx15(
+            "input",
+            {
+              "aria-label": "Path",
+              value: draftTarget,
+              onChange: (event) => onDraftTargetChange(event.target.value)
+            }
+          ),
+          /* @__PURE__ */ jsx15("button", { type: "submit", children: "Load" }),
+          /* @__PURE__ */ jsx15("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
+        ]
+      }
+    ),
+    /* @__PURE__ */ jsxs13("div", { className: "df-review-tools", children: [
+      /* @__PURE__ */ jsxs13("div", { className: "df-review-tool-controls", children: [
+        /* @__PURE__ */ jsx15("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ jsxs13(
+          "button",
+          {
+            className: preset.label === size.label ? "is-active" : "",
+            type: "button",
+            onClick: () => onSizeChange(preset),
+            children: [
+              /* @__PURE__ */ jsx15(ViewportPresetIcon, { preset }),
+              /* @__PURE__ */ jsx15("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ jsx15("strong", { children: preset.label }) }),
+              /* @__PURE__ */ jsx15("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
+            ]
+          },
+          preset.label
+        )) }),
+        /* @__PURE__ */ jsx15("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+        /* @__PURE__ */ jsxs13("span", { className: "df-review-active-size", children: [
+          size.width,
+          "x",
+          size.height
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs13("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
+        isRulerAvailable && /* @__PURE__ */ jsx15(
+          "button",
+          {
+            "aria-label": "Toggle ruler",
+            className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
+            type: "button",
+            onClick: onToggleRuler,
+            children: /* @__PURE__ */ jsx15(Ruler, { "aria-hidden": "true" })
+          }
+        ),
+        /* @__PURE__ */ jsx15(
+          "button",
+          {
+            "aria-label": "Toggle grid overlay",
+            className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
+            type: "button",
+            onClick: () => onToggleTargetOverlay("grid"),
+            children: /* @__PURE__ */ jsx15(LayoutGrid, { "aria-hidden": "true" })
+          }
+        ),
+        /* @__PURE__ */ jsx15(
+          "button",
+          {
+            "aria-disabled": !isFigmaOverlayAvailable,
+            "aria-label": isFigmaOverlayAvailable ? "Toggle Figma overlay" : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
+            className: `df-review-overlay-button is-figma${targetOverlayState.figma ? " is-active" : ""}${isFigmaOverlayAvailable ? "" : " is-disabled"}`,
+            type: "button",
+            onClick: () => onToggleTargetOverlay("figma"),
+            children: /* @__PURE__ */ jsx15(Image, { "aria-hidden": "true" })
+          }
+        ),
+        /* @__PURE__ */ jsx15("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+        /* @__PURE__ */ jsx15(
+          "button",
+          {
+            "aria-label": "Open initial prompt",
+            className: "df-review-overlay-button is-prompt",
+            type: "button",
+            onClick: onOpenInitialPrompt,
+            children: /* @__PURE__ */ jsx15(CircleQuestionMark, { "aria-hidden": "true" })
+          }
+        ),
+        /* @__PURE__ */ jsx15(
+          "button",
+          {
+            "aria-label": "Open settings",
+            className: "df-review-overlay-button is-settings",
+            type: "button",
+            onClick: onOpenSettings,
+            children: /* @__PURE__ */ jsx15(Settings, { "aria-hidden": "true" })
+          }
+        )
+      ] })
+    ] })
+  ] });
+};
+
+// src/react-shell/hooks/use.review.controller.ts
+import {
+  useCallback as useCallback5
+} from "react";
+
+// src/react-shell/hooks/use.review.item.restore.ts
+import {
+  useCallback
+} from "react";
+function runWithAutoScrollBehavior(targetDocument, callback) {
+  const elements = [
+    targetDocument?.documentElement,
+    targetDocument?.body
+  ].filter((element) => Boolean(element));
+  const previousValues = elements.map((element) => element.style.scrollBehavior);
+  elements.forEach((element) => {
+    element.style.scrollBehavior = "auto";
+  });
+  try {
+    callback();
+  } finally {
+    elements.forEach((element, index) => {
+      element.style.scrollBehavior = previousValues[index] ?? "";
+    });
+  }
+}
+var useReviewItemRestore = ({
+  adapter,
+  controllerRef,
+  iframeRef,
+  pendingInitialItemIdRef,
+  pendingRestoreRef,
+  reviewPathPrefix,
+  selectedItemIdRef,
+  source,
+  targetRef,
+  viewportPresets,
+  onActiveRouteChange,
+  onDraftTargetChange,
+  onSelectedItemIdChange,
+  onSizeChange,
+  onSyncTargetViewport,
+  onTargetChange
+}) => {
+  const clearSelectedItem = useCallback(() => {
+    pendingRestoreRef.current = null;
+    selectedItemIdRef.current = null;
+    onSelectedItemIdChange(null);
+    controllerRef.current?.highlightItem(void 0);
+  }, [
+    controllerRef,
+    onSelectedItemIdChange,
+    pendingRestoreRef,
+    selectedItemIdRef
+  ]);
+  const applyItemScroll = useCallback(
+    (item) => {
+      if (selectedItemIdRef.current !== item.id) return;
+      const targetWindow = iframeRef.current?.contentWindow;
+      const targetDocument = iframeRef.current?.contentDocument;
+      if (!targetWindow) return;
+      const anchorElement = targetDocument ? queryReviewItemAnchorElement(targetDocument, item) : void 0;
+      runWithAutoScrollBehavior(targetDocument ?? void 0, () => {
+        if (!targetDocument) return;
+        setDocumentScrollInstantly(
+          targetWindow,
+          targetDocument,
+          getReviewItemRestoreScrollPosition(
+            targetWindow,
+            targetDocument,
+            item,
+            anchorElement
+          )
+        );
+      });
+      onSyncTargetViewport();
+      controllerRef.current?.highlightItem(item.id);
+    },
+    [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
+  );
+  const applyPendingRestore = useCallback(() => {
+    const item = pendingRestoreRef.current;
+    if (!item) return;
+    applyItemScroll(item);
+    pendingRestoreRef.current = null;
+  }, [applyItemScroll, pendingRestoreRef]);
+  const restoreReviewItem = useCallback(
+    (item) => {
+      const nextTarget = getItemTarget(item, reviewPathPrefix);
+      const nextSize = getRestoredSize(item, viewportPresets);
+      pendingRestoreRef.current = item;
+      selectedItemIdRef.current = item.id;
+      onSelectedItemIdChange(item.id);
+      onActiveRouteChange(nextTarget);
+      onDraftTargetChange(nextTarget);
+      onSizeChange(nextSize);
+      updateShellUrlForItem(nextTarget, nextSize, item.id, source);
+      if (targetRef.current !== nextTarget) {
+        onTargetChange(nextTarget);
+        return;
+      }
+      applyPendingRestore();
+    },
+    [
+      applyPendingRestore,
+      onActiveRouteChange,
+      onDraftTargetChange,
+      onSelectedItemIdChange,
+      onSizeChange,
+      onTargetChange,
+      pendingRestoreRef,
+      reviewPathPrefix,
+      selectedItemIdRef,
+      source,
+      targetRef,
+      viewportPresets
+    ]
+  );
+  const restoreInitialItem = useCallback(async () => {
+    const itemId = pendingInitialItemIdRef.current;
+    if (!itemId) return;
+    pendingInitialItemIdRef.current = null;
+    const item = await adapter.get(itemId);
+    if (item) {
+      restoreReviewItem(item);
+    }
+  }, [adapter, pendingInitialItemIdRef, restoreReviewItem]);
+  return {
+    applyPendingRestore,
+    clearSelectedItem,
+    restoreInitialItem,
+    restoreReviewItem
+  };
+};
+
+// src/react-shell/hooks/use.review.kit.lifecycle.ts
+import {
+  useCallback as useCallback2,
+  useEffect
+} from "react";
+
+// src/react-shell/target/target.ts
+var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
+var setTargetScrollbarHidden = (targetDocument, hidden) => {
+  if (!targetDocument) return;
+  const existing = targetDocument.getElementById(HIDE_SCROLLBAR_STYLE_ID);
+  if (hidden) {
+    if (existing) return;
+    const style = targetDocument.createElement("style");
+    style.id = HIDE_SCROLLBAR_STYLE_ID;
+    style.textContent = "html{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}";
+    targetDocument.head?.appendChild(style);
+  } else {
+    existing?.remove();
+  }
+};
+var isEditableEventTarget = (event) => {
+  const path = event.composedPath?.() ?? [];
+  const element = path[0] ?? event.target;
+  if (!element || typeof element.tagName !== "string") return false;
+  const tag = element.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || element.isContentEditable === true;
+};
+var getTargetOverlayState = (targetDocument) => ({
+  grid: Boolean(
+    targetDocument?.body.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow")
+  ),
+  figma: Boolean(
+    targetDocument?.querySelector(
+      ".helper-figma-root, .helper-figma-loading-backdrop"
+    )
+  )
+});
+
+// src/react-shell/hooks/review.frame.navigation.ts
+var bindReviewFrameNavigation = ({
+  pageTargets,
+  reviewPathPrefix,
+  targetDocument,
+  targetRef,
+  targetWindow,
+  onCancelReviewMode,
+  onCloseRuler,
+  onSyncShellTarget,
+  onSyncTargetViewport
+}) => {
+  const syncRouteFromFrame = () => {
+    const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
+    if (nextTarget !== targetRef.current && !pageTargets.has(nextTarget)) {
+      return;
+    }
+    onSyncShellTarget(nextTarget);
+  };
+  const handleClick = (event) => {
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    const targetElement = event.target;
+    if (!targetElement || !("closest" in targetElement)) return;
+    const link = targetElement.closest("a[href]");
+    const href = link?.getAttribute("href");
+    const linkTarget = link?.getAttribute("target");
+    if (!href || linkTarget && linkTarget !== "_self") return;
+    const url = new URL(href, targetWindow.location.href);
+    if (url.origin !== targetWindow.location.origin) return;
+    const nextTarget = normalizeTarget(url.pathname, reviewPathPrefix);
+    if (nextTarget === targetRef.current) return;
+    event.preventDefault();
+    onSyncShellTarget(nextTarget);
+  };
+  const handleFrameKeyDown = (event) => {
+    if (event.key !== "Escape") return;
+    if (!onCancelReviewMode() && !onCloseRuler()) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const history = targetWindow.history;
+  const originalPushState = history.pushState.bind(history);
+  const originalReplaceState = history.replaceState.bind(history);
+  history.pushState = (...args) => {
+    originalPushState(...args);
+    syncRouteFromFrame();
+  };
+  history.replaceState = (...args) => {
+    originalReplaceState(...args);
+    syncRouteFromFrame();
+  };
+  syncRouteFromFrame();
+  targetWindow.addEventListener("popstate", syncRouteFromFrame);
+  targetWindow.addEventListener("hashchange", syncRouteFromFrame);
+  targetWindow.addEventListener("keydown", handleFrameKeyDown, true);
+  targetDocument.addEventListener("click", handleClick, true);
+  targetWindow.addEventListener("scroll", onSyncTargetViewport, true);
+  targetWindow.addEventListener("resize", onSyncTargetViewport);
+  return () => {
+    history.pushState = originalPushState;
+    history.replaceState = originalReplaceState;
+    targetWindow.removeEventListener("popstate", syncRouteFromFrame);
+    targetWindow.removeEventListener("hashchange", syncRouteFromFrame);
+    targetWindow.removeEventListener("keydown", handleFrameKeyDown, true);
+    targetDocument.removeEventListener("click", handleClick, true);
+    targetWindow.removeEventListener("scroll", onSyncTargetViewport, true);
+    targetWindow.removeEventListener("resize", onSyncTargetViewport);
+  };
+};
+
+// src/react-shell/hooks/review.kit.target.ts
+var getReviewKitTarget = ({
+  frameScrollRef,
+  iframeRef
+}) => {
+  const frame = iframeRef.current;
+  const frameWindow = frame?.contentWindow;
+  const frameDocument = frame?.contentDocument;
+  if (!frame || !frameWindow || !frameDocument) return void 0;
+  return {
+    window: frameWindow,
+    document: frameDocument,
+    getViewportRect: () => frame.getBoundingClientRect(),
+    getOverlayRect: () => {
+      const frameRect = frame.getBoundingClientRect();
+      const scrollRect = frameScrollRef.current?.getBoundingClientRect();
+      if (!scrollRect) return frameRect;
+      const left = Math.max(frameRect.left, scrollRect.left);
+      const top = Math.max(frameRect.top, scrollRect.top);
+      const right = Math.min(
+        frameRect.left + frameRect.width,
+        scrollRect.left + scrollRect.width
+      );
+      const bottom = Math.min(
+        frameRect.top + frameRect.height,
+        scrollRect.top + scrollRect.height
+      );
+      return {
+        left,
+        top,
+        width: Math.max(0, right - left),
+        height: Math.max(0, bottom - top)
+      };
+    }
+  };
+};
+
+// src/react-shell/hooks/use.review.kit.lifecycle.ts
+var useReviewKitLifecycle = ({
+  adapter,
+  cleanupTargetRef,
+  controllerRef,
+  frameScrollRef,
+  hiddenOverlayItemIdList,
+  hiddenOverlayItemIdListRef,
+  iframeRef,
+  pageTargets,
+  projectId,
+  reviewPathPrefix,
+  reviewViewportPresets,
+  ruler,
+  sizeRef,
+  targetRef,
+  onApplyPendingRestore,
+  onCancelReviewMode,
+  onCloseRuler,
+  onItemsRefresh,
+  onModeChange,
+  onRefreshTargetOverlayState,
+  onRestoreInitialItem,
+  onRestoreReviewItem,
+  onSyncShellTarget,
+  onSyncTargetViewport
+}) => {
+  const destroyReviewKit = useCallback2(() => {
+    cleanupTargetRef.current?.();
+    cleanupTargetRef.current = null;
+    controllerRef.current?.destroy();
+    controllerRef.current = null;
+  }, [cleanupTargetRef, controllerRef]);
+  const initReviewKit = useCallback2(() => {
+    destroyReviewKit();
+    const iframe = iframeRef.current;
+    const targetWindow = iframe?.contentWindow;
+    const targetDocument = iframe?.contentDocument;
+    if (!iframe || !targetWindow || !targetDocument) return;
+    cleanupTargetRef.current = bindReviewFrameNavigation({
+      pageTargets,
+      reviewPathPrefix,
+      targetDocument,
+      targetRef,
+      targetWindow,
+      onCancelReviewMode,
+      onCloseRuler,
+      onSyncShellTarget,
+      onSyncTargetViewport
+    });
+    controllerRef.current = createWebReviewKit({
+      projectId,
+      adapter,
+      target: () => getReviewKitTarget({ frameScrollRef, iframeRef }),
+      hotkeys: {
+        qa: "Shift+Q"
+      },
+      anchors: {
+        attribute: "data-qa-id"
+      },
+      viewports: {
+        presets: reviewViewportPresets
+      },
+      ruler,
+      onRestoreItem: onRestoreReviewItem,
+      onItemsChange: () => {
+        void onItemsRefresh();
+      },
+      onModeChange,
+      ui: {
+        panel: false
+      },
+      modules: {
+        qa: true,
+        grid: false,
+        figma: false
+      }
+    });
+    controllerRef.current.open();
+    controllerRef.current.setHiddenItemIds(hiddenOverlayItemIdListRef.current);
+    onModeChange(controllerRef.current.getMode());
+    void onItemsRefresh();
+    void onRestoreInitialItem();
+    onApplyPendingRestore();
+    onRefreshTargetOverlayState();
+    setTargetScrollbarHidden(
+      targetDocument,
+      getViewportPresetKind(sizeRef.current) === "mobile"
+    );
+  }, [
+    adapter,
+    cleanupTargetRef,
+    controllerRef,
+    destroyReviewKit,
+    frameScrollRef,
+    hiddenOverlayItemIdListRef,
+    iframeRef,
+    onApplyPendingRestore,
+    onCancelReviewMode,
+    onCloseRuler,
+    onItemsRefresh,
+    onModeChange,
+    onRefreshTargetOverlayState,
+    onRestoreInitialItem,
+    onRestoreReviewItem,
+    onSyncShellTarget,
+    onSyncTargetViewport,
+    pageTargets,
+    projectId,
+    reviewPathPrefix,
+    reviewViewportPresets,
+    ruler,
+    sizeRef,
+    targetRef
+  ]);
+  const reloadReviewKit = useCallback2(async () => {
+    await controllerRef.current?.reload();
+  }, [controllerRef]);
+  const setControllerReviewMode = useCallback2(
+    (nextMode) => {
+      controllerRef.current?.setMode(nextMode);
+      onModeChange(controllerRef.current?.getMode() ?? "idle");
+    },
+    [controllerRef, onModeChange]
+  );
+  useEffect(() => destroyReviewKit, [destroyReviewKit]);
+  useEffect(() => {
+    const frameDocument = iframeRef.current?.contentDocument;
+    if (!frameDocument || frameDocument.readyState !== "complete") return;
+    initReviewKit();
+  }, [iframeRef, initReviewKit]);
+  useEffect(() => {
+    hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
+    controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
+  }, [controllerRef, hiddenOverlayItemIdList, hiddenOverlayItemIdListRef]);
+  return {
+    destroyReviewKit,
+    initReviewKit,
+    reloadReviewKit,
+    setControllerReviewMode
+  };
+};
+
+// src/react-shell/hooks/use.review.target.overlay.ts
+import { useCallback as useCallback3, useEffect as useEffect2 } from "react";
+var useReviewTargetOverlay = ({
+  iframeRef,
+  isFigmaOverlayAvailable,
+  targetOverlayState,
+  onTargetOverlayStateChange
+}) => {
+  const refreshTargetOverlayState = useCallback3(() => {
+    onTargetOverlayStateChange(
+      getTargetOverlayState(iframeRef.current?.contentDocument ?? void 0)
+    );
+  }, [iframeRef, onTargetOverlayStateChange]);
+  const dispatchTargetOverlayHotkey = useCallback3(
+    (overlay) => {
+      const targetWindow = iframeRef.current?.contentWindow;
+      if (!targetWindow) return false;
+      const code = overlay === "grid" ? "KeyG" : "KeyF";
+      targetWindow.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          code,
+          key: code.replace("Key", "").toLowerCase(),
+          shiftKey: true
+        })
+      );
+      window.setTimeout(refreshTargetOverlayState, 80);
+      return true;
+    },
+    [iframeRef, refreshTargetOverlayState]
+  );
+  const toggleTargetOverlay = useCallback3(
+    (overlay) => {
+      if (overlay === "figma" && !isFigmaOverlayAvailable) {
+        refreshTargetOverlayState();
+        return;
+      }
+      dispatchTargetOverlayHotkey(overlay);
+    },
+    [
+      dispatchTargetOverlayHotkey,
+      isFigmaOverlayAvailable,
+      refreshTargetOverlayState
+    ]
+  );
+  const closeTargetOverlay = useCallback3(
+    (overlay) => {
+      const currentState = getTargetOverlayState(
+        iframeRef.current?.contentDocument ?? void 0
+      );
+      onTargetOverlayStateChange(currentState);
+      if (!currentState[overlay]) return false;
+      return dispatchTargetOverlayHotkey(overlay);
+    },
+    [dispatchTargetOverlayHotkey, iframeRef, onTargetOverlayStateChange]
+  );
+  useEffect2(() => {
+    if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
+    closeTargetOverlay("figma");
+  }, [closeTargetOverlay, isFigmaOverlayAvailable, targetOverlayState.figma]);
+  return {
+    closeTargetOverlay,
+    refreshTargetOverlayState,
+    toggleTargetOverlay
+  };
+};
+
+// src/react-shell/hooks/use.review.target.sync.ts
+import {
+  useCallback as useCallback4,
+  useEffect as useEffect3
+} from "react";
+var useReviewTargetSync = ({
+  iframeRef,
+  reviewPathPrefix,
+  selectedItemIdRef,
+  size,
+  sizeRef,
+  source,
+  target,
+  targetRef,
+  onActiveRouteChange,
+  onClearSelectedItem,
+  onDraftTargetChange,
+  onSyncTargetViewport,
+  onTargetChange
+}) => {
+  const syncShellTarget = useCallback4(
+    (nextTarget) => {
+      const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
+      if (normalizedTarget !== targetRef.current) {
+        onClearSelectedItem();
+        targetRef.current = normalizedTarget;
+        onTargetChange(normalizedTarget);
+        onDraftTargetChange(normalizedTarget);
+        onActiveRouteChange(normalizedTarget);
+      }
+      if (selectedItemIdRef.current) {
+        updateShellUrlForItem(
+          normalizedTarget,
+          sizeRef.current,
+          selectedItemIdRef.current,
+          source
+        );
+      } else {
+        updateShellUrl(normalizedTarget, sizeRef.current, source);
+      }
+    },
+    [
+      onActiveRouteChange,
+      onClearSelectedItem,
+      onDraftTargetChange,
+      onTargetChange,
+      reviewPathPrefix,
+      selectedItemIdRef,
+      sizeRef,
+      source,
+      targetRef
+    ]
+  );
+  useEffect3(() => {
+    targetRef.current = target;
+    onActiveRouteChange(target);
+  }, [onActiveRouteChange, target, targetRef]);
+  useEffect3(() => {
+    sizeRef.current = size;
+    if (selectedItemIdRef.current) {
+      updateShellUrlForItem(
+        targetRef.current,
+        size,
+        selectedItemIdRef.current,
+        source
+      );
+    } else {
+      updateShellUrl(targetRef.current, size, source);
+    }
+    onSyncTargetViewport();
+    setTargetScrollbarHidden(
+      iframeRef.current?.contentDocument,
+      getViewportPresetKind(size) === "mobile"
+    );
+  }, [
+    iframeRef,
+    onSyncTargetViewport,
+    selectedItemIdRef,
+    size,
+    sizeRef,
+    source,
+    targetRef
+  ]);
+  return {
+    syncShellTarget
+  };
+};
+
+// src/react-shell/hooks/use.review.controller.ts
+var useReviewController = ({
+  adapter,
+  cleanupTargetRef,
+  controllerRef,
+  frameScrollRef,
+  hiddenOverlayItemIdList,
+  hiddenOverlayItemIdListRef,
+  iframeRef,
+  isFigmaOverlayAvailable,
+  pageTargets,
+  pendingInitialItemIdRef,
+  pendingRestoreRef,
+  projectId,
+  reviewPathPrefix,
+  reviewViewportPresets,
+  ruler,
+  selectedItemIdRef,
+  size,
+  sizeRef,
+  source,
+  target,
+  targetOverlayState,
+  targetRef,
+  viewportPresets,
+  onActiveRouteChange,
+  onCancelReviewMode,
+  onDraftTargetChange,
+  onItemsRefresh,
+  onModeChange,
+  onSelectedItemIdChange,
+  onSizeChange,
+  onTargetChange,
+  onTargetOverlayStateChange,
+  onCloseRuler
+}) => {
+  const syncTargetViewport = useCallback5(() => {
+    window.dispatchEvent(new Event("resize"));
+  }, []);
+  const {
+    closeTargetOverlay,
+    refreshTargetOverlayState,
+    toggleTargetOverlay
+  } = useReviewTargetOverlay({
+    iframeRef,
+    isFigmaOverlayAvailable,
+    targetOverlayState,
+    onTargetOverlayStateChange
+  });
+  const {
+    applyPendingRestore,
+    clearSelectedItem,
+    restoreInitialItem,
+    restoreReviewItem
+  } = useReviewItemRestore({
+    adapter,
+    controllerRef,
+    iframeRef,
+    pendingInitialItemIdRef,
+    pendingRestoreRef,
+    reviewPathPrefix,
+    selectedItemIdRef,
+    source,
+    targetRef,
+    viewportPresets,
+    onActiveRouteChange,
+    onDraftTargetChange,
+    onSelectedItemIdChange,
+    onSizeChange,
+    onSyncTargetViewport: syncTargetViewport,
+    onTargetChange
+  });
+  const { syncShellTarget } = useReviewTargetSync({
+    iframeRef,
+    reviewPathPrefix,
+    selectedItemIdRef,
+    size,
+    sizeRef,
+    source,
+    target,
+    targetRef,
+    onActiveRouteChange,
+    onClearSelectedItem: clearSelectedItem,
+    onDraftTargetChange,
+    onSyncTargetViewport: syncTargetViewport,
+    onTargetChange
+  });
+  const {
+    initReviewKit,
+    reloadReviewKit,
+    setControllerReviewMode
+  } = useReviewKitLifecycle({
+    adapter,
+    cleanupTargetRef,
+    controllerRef,
+    frameScrollRef,
+    hiddenOverlayItemIdList,
+    hiddenOverlayItemIdListRef,
+    iframeRef,
+    pageTargets,
+    projectId,
+    reviewPathPrefix,
+    reviewViewportPresets,
+    ruler,
+    sizeRef,
+    targetRef,
+    onApplyPendingRestore: applyPendingRestore,
+    onCancelReviewMode,
+    onCloseRuler,
+    onItemsRefresh,
+    onModeChange,
+    onRefreshTargetOverlayState: refreshTargetOverlayState,
+    onRestoreInitialItem: restoreInitialItem,
+    onRestoreReviewItem: restoreReviewItem,
+    onSyncShellTarget: syncShellTarget,
+    onSyncTargetViewport: syncTargetViewport
+  });
+  return {
+    clearSelectedItem,
+    closeTargetOverlay,
+    initReviewKit,
+    reloadReviewKit,
+    restoreReviewItem,
+    setControllerReviewMode,
+    toggleTargetOverlay
+  };
+};
+
+// src/react-shell/hooks/use.review.presence.ts
+import {
+  useCallback as useCallback6,
+  useEffect as useEffect4,
+  useMemo as useMemo2,
+  useRef,
+  useState
+} from "react";
+
+// src/react-shell/presence/presence.ts
 var REVIEW_PRESENCE_SESSION_KEY = "df-review-presence-session-id";
 var DEFAULT_LOCAL_PRESENCE_CHANNEL = "df-review-kit:presence";
 var DEFAULT_LOCAL_PRESENCE_HEARTBEAT_MS = 5e3;
@@ -2859,352 +5211,199 @@ var createFallbackPresenceAdapter = (primaryAdapter, fallbackAdapter) => ({
   }
 });
 
-// src/react-shell/constants.ts
-var REVIEW_QA_FILTERS = [
-  { key: "all", label: "All" },
-  { key: "mobile", label: "Mobile", scope: "mobile" },
-  { key: "tablet", label: "Tablet", scope: "tablet" },
-  { key: "desktop", label: "Desktop", scope: "desktop" },
-  { key: "wide", label: "Wide", scope: "wide" }
-];
-var FIGMA_OVERLAY_UNAVAILABLE_MESSAGE = "\uD53C\uADF8\uB9C8 \uC624\uBC84\uB808\uC774 \uB514\uBC84\uAE45\uC774 \uC548\uB418\uB294 \uD574\uC0C1\uB3C4";
-var FIGMA_TOKEN_STORAGE_KEY = "figma-token";
-var REVIEW_USER_ID_STORAGE_KEY = "user-id";
-var REVIEW_THEME_STORAGE_KEY = "df-review-theme";
-var DEFAULT_REVIEW_THEME = "dark";
-var FIGMA_TOKEN_GUIDE_ID = "df-review-figma-token-guide";
-var DEFAULT_INITIAL_REVIEW_PROMPT = "You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, DOM metadata, coordinates, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.";
-var REVIEW_THEME_OPTIONS = [
-  { value: "dark", label: "Dark" },
-  { value: "light", label: "Light" },
-  { value: "system", label: "System" }
-];
-
-// src/react-shell/route.ts
-var DEFAULT_REVIEW_PATH_PREFIX = "/review";
-var normalizeReviewPathPrefix = (value) => {
-  const raw = value.trim() || DEFAULT_REVIEW_PATH_PREFIX;
-  const prefix = raw.startsWith("/") ? raw : `/${raw}`;
-  return prefix.length > 1 && prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
-};
-var normalizeTarget = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
-  const raw = value.trim() || "/";
-  const [path] = raw.split(/[?#]/);
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  const reviewPrefix = normalizeReviewPathPrefix(reviewPathPrefix);
-  return normalized === reviewPrefix || normalized.startsWith(`${reviewPrefix}/`) ? "/" : normalized;
-};
-var getInitialTarget = (reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
-  if (typeof window === "undefined") return "/";
-  const target = new URLSearchParams(window.location.search).get("target");
-  return target ? normalizeTarget(target, reviewPathPrefix) : "/";
-};
-var buildTargetSrc = (target) => {
-  const url = new URL(target || "/", window.location.origin);
-  url.searchParams.set("__dfwr_target", "1");
-  return `${url.pathname}${url.search}${url.hash}`;
-};
-var getHashRoutePath = (hash) => {
-  if (!hash.startsWith("#/")) return null;
-  const [path] = hash.slice(1).split(/[?#]/);
-  try {
-    return decodeURI(path || "/");
-  } catch {
-    return path || "/";
-  }
-};
-var getFrameRouteTarget = (targetWindow, reviewPathPrefix) => {
-  const hashPath = getHashRoutePath(targetWindow.location.hash);
-  return normalizeTarget(
-    hashPath ?? targetWindow.location.pathname,
-    reviewPathPrefix
-  );
-};
-var updateShellUrl = (target, size, source) => {
-  const url = new URL(window.location.href);
-  url.searchParams.set("target", target);
-  url.searchParams.set("w", String(size.width));
-  url.searchParams.set("h", String(size.height));
-  if (source !== "local") {
-    url.searchParams.set("source", source);
-  } else {
-    url.searchParams.delete("source");
-  }
-  url.searchParams.delete("item");
-  window.history.replaceState(null, "", `${url.pathname}${url.search}`);
-};
-var updateShellUrlForItem = (target, size, itemId, source) => {
-  const url = new URL(window.location.href);
-  url.searchParams.set("target", target);
-  url.searchParams.set("w", String(size.width));
-  url.searchParams.set("h", String(size.height));
-  url.searchParams.set("item", itemId);
-  if (source !== "local") {
-    url.searchParams.set("source", source);
-  } else {
-    url.searchParams.delete("source");
-  }
-  window.history.replaceState(null, "", `${url.pathname}${url.search}`);
-};
-var getInitialItemId = () => {
-  if (typeof window === "undefined") return null;
-  return new URLSearchParams(window.location.search).get("item");
-};
-var getInitialSource = (remoteSource) => {
-  if (typeof window === "undefined" || !remoteSource) return "local";
-  return new URLSearchParams(window.location.search).get("source") === remoteSource ? remoteSource : "local";
-};
-var getItemTarget = (item, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
-  if (item.routeKey) return normalizeTarget(item.routeKey, reviewPathPrefix);
-  if (item.normalizedPath) {
-    return normalizeTarget(item.normalizedPath, reviewPathPrefix);
-  }
-  try {
-    return normalizeTarget(new URL(item.pageUrl).pathname, reviewPathPrefix);
-  } catch {
-    return "/";
-  }
-};
-
-// src/react-shell/viewport.ts
-var DEFAULT_REVIEW_VIEWPORT_PRESETS = [
-  { label: "Mobile", width: 390, height: 720, kind: "mobile" },
-  { label: "Tablet", width: 768, height: 1024, kind: "tablet" },
-  { label: "Desktop", width: 1440, height: 900, kind: "desktop" },
-  { label: "Wide", width: 1980, height: 1080, kind: "wide" }
-];
-var getFallbackPreset = (presets) => presets[0] ?? DEFAULT_REVIEW_VIEWPORT_PRESETS[0];
-var getViewportPresetDistance = (preset, width, height) => Math.abs(preset.width - width) + Math.abs(preset.height - height);
-var findViewportPreset = (presets, width, height) => {
-  const fallback = getFallbackPreset(presets);
-  const exact = presets.find(
-    (preset) => preset.width === width && preset.height === height
-  );
-  if (exact) return exact;
-  return presets.reduce((closest, preset) => {
-    const closestDistance = getViewportPresetDistance(closest, width, height);
-    const presetDistance = getViewportPresetDistance(preset, width, height);
-    return presetDistance < closestDistance ? preset : closest;
-  }, fallback);
-};
-var getInitialSize = (presets) => {
-  if (typeof window === "undefined") return getFallbackPreset(presets);
-  const params = new URLSearchParams(window.location.search);
-  const width = Number(params.get("w"));
-  const height = Number(params.get("h"));
-  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
-    return findViewportPreset(presets, width, height);
-  }
-  return getFallbackPreset(presets);
-};
-var getRestoredSize = (item, presets) => findViewportPreset(
-  presets,
-  Math.max(
-    240,
-    Math.round(item.viewport?.width ?? getFallbackPreset(presets).width)
-  ),
-  Math.max(
-    320,
-    Math.round(item.viewport?.height ?? getFallbackPreset(presets).height)
-  )
-);
-var getViewportPresetKind = (preset) => {
-  if (preset.kind) return preset.kind;
-  const label = preset.label.toLowerCase();
-  if (label.includes("mobile") || label.includes("phone")) return "mobile";
-  if (label.includes("tablet") || label.includes("pad")) return "tablet";
-  if (label.includes("wide") || label.includes("1980") || label.includes("1940") || label.includes("1920")) {
-    return "wide";
-  }
-  if (label.includes("desktop")) return "desktop";
-  if (preset.width >= 1800) return "wide";
-  if (preset.width >= 1e3) return "desktop";
-  if (preset.width >= 700) return "tablet";
-  return "mobile";
-};
-var toReviewViewportPresets = (presets) => presets.map((preset) => ({
-  label: preset.label,
-  width: preset.width,
-  height: preset.height,
-  scope: getViewportPresetKind(preset)
-}));
-var getIsFigmaOverlayAvailable = (preset) => {
-  const kind = getViewportPresetKind(preset);
-  return kind === "mobile" || kind === "wide";
-};
-
-// src/react-shell/anchor-restore.ts
-var isAnchorRestorableReviewItem = (item) => item.scope === "dom" || item.kind === "note" && Boolean(item.anchor && item.selection);
-var queryReviewItemAnchorElement = (targetDocument, item) => {
-  const anchor = item.anchor;
-  if (!anchor || !isAnchorRestorableReviewItem(item)) return void 0;
-  const expectedRect = getReviewItemExpectedDocumentRect(item);
-  const candidates = [anchor, ...anchor.candidates ?? []].filter(
-    (candidate) => Boolean(candidate.selector)
-  );
-  const matches = [];
-  candidates.forEach((candidate, index) => {
-    try {
-      targetDocument.querySelectorAll(candidate.selector).forEach((element) => {
-        if (!isScrollableReviewAnchorElement(element)) return;
-        matches.push({
-          element,
-          score: getReviewAnchorMatchScore(
-            element,
-            expectedRect,
-            candidate.textFingerprint ?? anchor.textFingerprint,
-            index
-          )
-        });
-      });
-    } catch {
-      return;
+// src/react-shell/hooks/use.review.presence.ts
+var getPresenceUserTarget = (user, reviewPathPrefix) => normalizeTarget(user.target || user.routeKey, reviewPathPrefix);
+var dedupePresenceUsersByPageAndId = (users, reviewPathPrefix) => {
+  const userByPageAndId = /* @__PURE__ */ new Map();
+  users.forEach((user) => {
+    const userId = user.userId.trim();
+    if (!userId) return;
+    const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
+    const key = `${userTarget}::${userId}`;
+    const currentUser = userByPageAndId.get(key);
+    if (!currentUser || Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)) {
+      userByPageAndId.set(key, user);
     }
   });
-  return matches.sort((a, b) => a.score - b.score)[0]?.element;
+  return Array.from(userByPageAndId.values());
 };
-var getReviewItemRestoreScrollPosition = (targetWindow, targetDocument, item, anchorElement) => {
-  if (anchorElement) {
-    const rect = anchorElement.getBoundingClientRect();
-    return clampDocumentScrollPosition(targetDocument, {
-      left: targetWindow.scrollX + rect.left - Math.max(0, (targetWindow.innerWidth - rect.width) / 2),
-      top: targetWindow.scrollY + rect.top - Math.max(0, (targetWindow.innerHeight - rect.height) / 2)
+var useReviewPresence = ({
+  activeRoute,
+  mode,
+  presence,
+  projectId,
+  reviewPathPrefix,
+  reviewUserId,
+  selectedNumberedItem,
+  size,
+  source
+}) => {
+  const presenceSessionRef = useRef(null);
+  const [presenceUsers, setPresenceUsers] = useState([]);
+  const [presenceSessionVersion, setPresenceSessionVersion] = useState(0);
+  const presenceSessionId = useMemo2(getReviewPresenceSessionId, []);
+  const normalizedReviewUserId = reviewUserId.trim();
+  const presenceDisplayName = getReviewPresenceDisplayName(
+    normalizedReviewUserId
+  );
+  const presenceColor = getReviewPresenceColor(
+    normalizedReviewUserId || presenceSessionId
+  );
+  const presenceViewport = useMemo2(
+    () => ({
+      label: size.label,
+      width: size.width,
+      height: size.height,
+      kind: getViewportPresetKind(size)
+    }),
+    [size]
+  );
+  const presenceStatus = mode === "idle" ? "reviewing" : "editing";
+  const visiblePresenceUsers = useMemo2(
+    () => {
+      const projectPresenceUsers = presenceUsers.filter(
+        (user) => user.projectId === projectId && user.userId.trim()
+      );
+      return dedupePresenceUsersByPageAndId(
+        projectPresenceUsers,
+        reviewPathPrefix
+      );
+    },
+    [presenceUsers, projectId, reviewPathPrefix]
+  );
+  const currentPagePresenceUsers = useMemo2(
+    () => visiblePresenceUsers.filter((user) => {
+      const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
+      return userTarget === activeRoute;
+    }),
+    [activeRoute, reviewPathPrefix, visiblePresenceUsers]
+  );
+  const pagePresenceUsers = useMemo2(() => {
+    const usersByTarget = /* @__PURE__ */ new Map();
+    visiblePresenceUsers.forEach((user) => {
+      const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
+      const pageUsers = usersByTarget.get(userTarget) ?? [];
+      pageUsers.push(user);
+      usersByTarget.set(userTarget, pageUsers);
     });
-  }
-  return clampDocumentScrollPosition(targetDocument, {
-    left: item.scroll?.x ?? 0,
-    top: item.scroll?.y ?? 0
-  });
-};
-var setDocumentScrollInstantly = (targetWindow, targetDocument, position) => {
-  const scrollElement = targetDocument.scrollingElement;
-  if (scrollElement) {
-    scrollElement.scrollLeft = position.left;
-    scrollElement.scrollTop = position.top;
-    return;
-  }
-  targetWindow.scrollTo(position.left, position.top);
-};
-var getReviewItemExpectedDocumentRect = (item) => {
-  const scroll = item.scroll ?? { x: 0, y: 0 };
-  const selection = item.selection?.viewport;
-  if (selection && typeof selection.x === "number" && typeof selection.y === "number" && typeof selection.width === "number" && typeof selection.height === "number") {
-    return {
-      left: scroll.x + selection.x,
-      top: scroll.y + selection.y,
-      width: selection.width,
-      height: selection.height
+    return usersByTarget;
+  }, [reviewPathPrefix, visiblePresenceUsers]);
+  const getCurrentPresenceState = useCallback6(
+    () => ({
+      projectId,
+      sessionId: presenceSessionId,
+      userId: normalizedReviewUserId,
+      displayName: presenceDisplayName,
+      color: presenceColor,
+      routeKey: activeRoute,
+      target: activeRoute,
+      source,
+      viewport: presenceViewport,
+      mode,
+      selectedItemId: selectedNumberedItem?.item.id ?? null,
+      selectedReviewNumber: selectedNumberedItem?.number ?? null,
+      status: presenceStatus,
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    }),
+    [
+      activeRoute,
+      mode,
+      normalizedReviewUserId,
+      presenceColor,
+      presenceDisplayName,
+      presenceSessionId,
+      presenceStatus,
+      presenceViewport,
+      projectId,
+      selectedNumberedItem,
+      source
+    ]
+  );
+  const getCurrentPresenceStateRef = useRef(getCurrentPresenceState);
+  getCurrentPresenceStateRef.current = getCurrentPresenceState;
+  useEffect4(() => {
+    if (!presence || !normalizedReviewUserId) {
+      const session = presenceSessionRef.current;
+      presenceSessionRef.current = null;
+      setPresenceUsers([]);
+      void session?.disconnect();
+      return void 0;
+    }
+    let isActive = true;
+    let unsubscribe;
+    const initialState = getCurrentPresenceStateRef.current();
+    void Promise.resolve(
+      presence.connect({
+        projectId,
+        sessionId: presenceSessionId,
+        userId: normalizedReviewUserId,
+        displayName: presenceDisplayName,
+        color: presenceColor,
+        initialState
+      })
+    ).then((session) => {
+      if (!isActive) {
+        void session.disconnect();
+        return;
+      }
+      presenceSessionRef.current = session;
+      unsubscribe = session.subscribe(setPresenceUsers);
+      setPresenceSessionVersion((current) => current + 1);
+      void session.update(initialState);
+    }).catch(() => {
+      if (!isActive) return;
+      presenceSessionRef.current = null;
+      setPresenceUsers([]);
+    });
+    return () => {
+      isActive = false;
+      unsubscribe?.();
+      const session = presenceSessionRef.current;
+      presenceSessionRef.current = null;
+      setPresenceUsers([]);
+      void session?.disconnect();
     };
-  }
-  const marker = item.marker?.viewport;
-  if (marker && typeof marker.x === "number" && typeof marker.y === "number") {
-    return {
-      left: scroll.x + marker.x,
-      top: scroll.y + marker.y,
-      width: 1,
-      height: 1
-    };
-  }
-  return void 0;
-};
-var getReviewAnchorMatchScore = (element, expectedRect, textFingerprint, candidateIndex) => {
-  const rect = getElementDocumentRect(element);
-  let score = candidateIndex * 25;
-  if (expectedRect) {
-    score += Math.abs(rect.top - expectedRect.top);
-    score += Math.abs(rect.left - expectedRect.left) * 0.25;
-    score += Math.abs(rect.width - expectedRect.width) * 0.1;
-    score += Math.abs(rect.height - expectedRect.height) * 0.1;
-  }
-  if (textFingerprint) {
-    score += (1 - getReviewTextFingerprintScore(textFingerprint, element)) * 100;
-  }
-  return score;
-};
-var getElementDocumentRect = (element) => {
-  const rect = element.getBoundingClientRect();
-  const view = element.ownerDocument.defaultView;
+  }, [
+    normalizedReviewUserId,
+    presence,
+    presenceColor,
+    presenceDisplayName,
+    presenceSessionId,
+    projectId
+  ]);
+  useEffect4(() => {
+    const session = presenceSessionRef.current;
+    if (!session || !normalizedReviewUserId) return;
+    void session.update(getCurrentPresenceState());
+  }, [
+    getCurrentPresenceState,
+    normalizedReviewUserId,
+    presenceSessionVersion
+  ]);
   return {
-    left: rect.left + (view?.scrollX ?? 0),
-    top: rect.top + (view?.scrollY ?? 0),
-    width: rect.width,
-    height: rect.height
+    currentPagePresenceUsers,
+    pagePresenceUsers,
+    presenceSessionId
   };
 };
-var clampDocumentScrollPosition = (targetDocument, position) => {
-  const scrollElement = targetDocument.scrollingElement;
-  const view = targetDocument.defaultView;
-  const maxLeft = Math.max(
-    0,
-    (scrollElement?.scrollWidth ?? 0) - (view?.innerWidth ?? 0)
-  );
-  const maxTop = Math.max(
-    0,
-    (scrollElement?.scrollHeight ?? 0) - (view?.innerHeight ?? 0)
-  );
-  return {
-    left: Math.min(Math.max(0, Math.round(position.left)), maxLeft),
-    top: Math.min(Math.max(0, Math.round(position.top)), maxTop)
-  };
-};
-var getReviewTextFingerprintScore = (expected, element) => {
-  const actual = element.textContent?.replace(/\s+/g, " ").trim();
-  if (!actual) return 0.5;
-  if (expected === actual) return 1;
-  if (actual.includes(expected) || expected.includes(actual)) return 0.82;
-  const expectedTokens = getReviewFingerprintTokens(expected);
-  const actualTokens = new Set(getReviewFingerprintTokens(actual));
-  if (expectedTokens.length === 0 || actualTokens.size === 0) return 0.5;
-  const matches = expectedTokens.filter((token) => actualTokens.has(token));
-  return Math.min(Math.max(matches.length / expectedTokens.length, 0.25), 0.76);
-};
-var getReviewFingerprintTokens = (value) => value.toLowerCase().split(/[\s/|,.:;()[\]{}"'`~!?<>]+/).map((token) => token.trim()).filter((token) => token.length > 1);
-var isScrollableReviewAnchorElement = (element) => {
-  const id = element.id.trim().toLowerCase();
-  if (element === element.ownerDocument.body || element === element.ownerDocument.documentElement || ["app", "main", "page", "root", "__next", "__nuxt"].includes(id)) {
-    return false;
-  }
-  const rect = element.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return false;
-  const viewportHeight = element.ownerDocument.documentElement.clientHeight;
-  const scrollHeight = element.ownerDocument.documentElement.scrollHeight;
-  return !(scrollHeight > viewportHeight * 1.5 && rect.height > viewportHeight * 3);
-};
 
-// src/react-shell/target.ts
-var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
-var setTargetScrollbarHidden = (targetDocument, hidden) => {
-  if (!targetDocument) return;
-  const existing = targetDocument.getElementById(HIDE_SCROLLBAR_STYLE_ID);
-  if (hidden) {
-    if (existing) return;
-    const style = targetDocument.createElement("style");
-    style.id = HIDE_SCROLLBAR_STYLE_ID;
-    style.textContent = "html{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}";
-    targetDocument.head?.appendChild(style);
-  } else {
-    existing?.remove();
-  }
-};
-var isEditableEventTarget = (event) => {
-  const path = event.composedPath?.() ?? [];
-  const element = path[0] ?? event.target;
-  if (!element || typeof element.tagName !== "string") return false;
-  const tag = element.tagName;
-  return tag === "INPUT" || tag === "TEXTAREA" || element.isContentEditable === true;
-};
-var getTargetOverlayState = (targetDocument) => ({
-  grid: Boolean(
-    targetDocument?.body.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow")
-  ),
-  figma: Boolean(
-    targetDocument?.querySelector(
-      ".helper-figma-root, .helper-figma-loading-backdrop"
-    )
-  )
-});
+// src/react-shell/hooks/use.review.ruler.ts
+import {
+  useCallback as useCallback8,
+  useEffect as useEffect6,
+  useState as useState3
+} from "react";
 
-// src/react-shell/ruler.ts
+// src/react-shell/hooks/use.review.ruler.drag.ts
+import {
+  useCallback as useCallback7,
+  useEffect as useEffect5,
+  useMemo as useMemo3,
+  useRef as useRef2,
+  useState as useState2
+} from "react";
+
+// src/react-shell/ruler/ruler.ts
 var getRulerPointFromRect = (clientX, clientY, rect) => {
   const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
   const y = Math.min(Math.max(clientY - rect.top, 0), rect.height);
@@ -3223,760 +5422,1533 @@ var getRulerMeasure = (start, end) => {
   };
 };
 
-// src/react-shell/settings.ts
-var normalizeReviewTheme = (value) => value === "light" || value === "system" || value === "dark" ? value : DEFAULT_REVIEW_THEME;
-var getStoredFigmaToken = () => {
-  if (typeof window === "undefined") return "";
-  try {
-    return window.localStorage.getItem(FIGMA_TOKEN_STORAGE_KEY) ?? "";
-  } catch {
-    return "";
-  }
-};
-var writeStoredFigmaToken = (token) => {
-  if (typeof window === "undefined") return;
-  try {
-    if (token) {
-      window.localStorage.setItem(FIGMA_TOKEN_STORAGE_KEY, token);
-    } else {
-      window.localStorage.removeItem(FIGMA_TOKEN_STORAGE_KEY);
-    }
-  } catch {
-    return;
-  }
-};
-var getStoredReviewUserId = () => {
-  if (typeof window === "undefined") return "";
-  try {
-    return window.localStorage.getItem(REVIEW_USER_ID_STORAGE_KEY) ?? "";
-  } catch {
-    return "";
-  }
-};
-var writeStoredReviewUserId = (userId) => {
-  if (typeof window === "undefined") return;
-  try {
-    if (userId) {
-      window.localStorage.setItem(REVIEW_USER_ID_STORAGE_KEY, userId);
-    } else {
-      window.localStorage.removeItem(REVIEW_USER_ID_STORAGE_KEY);
-    }
-  } catch {
-    return;
-  }
-};
-var getStoredReviewTheme = () => {
-  if (typeof window === "undefined") return DEFAULT_REVIEW_THEME;
-  try {
-    return normalizeReviewTheme(
-      window.localStorage.getItem(REVIEW_THEME_STORAGE_KEY)
-    );
-  } catch {
-    return DEFAULT_REVIEW_THEME;
-  }
-};
-var writeStoredReviewTheme = (theme) => {
-  if (typeof window === "undefined") return;
-  try {
-    if (theme === DEFAULT_REVIEW_THEME) {
-      window.localStorage.removeItem(REVIEW_THEME_STORAGE_KEY);
-    } else {
-      window.localStorage.setItem(REVIEW_THEME_STORAGE_KEY, theme);
-    }
-  } catch {
-    return;
-  }
-};
-var getSystemReviewTheme = () => {
-  if (typeof window === "undefined" || !window.matchMedia) return "dark";
-  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-};
-
-// src/react-shell/prompt.ts
-var getItemTitle = (item) => item.title || item.comment.split("\n")[0] || item.kind;
-var getPromptLengthLabel = (value) => {
-  const length = value.length;
-  if (length <= 2e3) return `${length} chars / Discord 2,000 OK`;
-  if (length <= 4e3) return `${length} chars / Nitro 4,000 OK`;
-  return `${length} chars / attach as file`;
-};
-var formatDate = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString(void 0, {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-};
-
-// src/react-shell/shell-modals.tsx
-import { Fragment, jsx, jsxs } from "react/jsx-runtime";
-var EMPTY_SITEMAP_QA_COUNT = {
-  local: 0,
-  remote: 0
-};
-var normalizeSitemapHref = (href) => {
-  const [path = "/"] = href.split(/[?#]/);
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return normalizedPath || "/";
-};
-var getSitemapSegments = (href) => normalizeSitemapHref(href).split("/").map((segment) => segment.trim()).filter(Boolean);
-var createSitemapNode = (href, label, isPage = false) => ({
-  href,
-  label,
-  isPage,
-  children: /* @__PURE__ */ new Map()
-});
-var mergeSitemapUsers = (users) => {
-  const userByKey = /* @__PURE__ */ new Map();
-  users.forEach((user) => {
-    const key = user.sessionId || user.userId;
-    const currentUser = userByKey.get(key);
-    if (!currentUser || Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)) {
-      userByKey.set(key, user);
-    }
-  });
-  return Array.from(userByKey.values());
-};
-var addSitemapQaCounts = (first, second) => ({
-  local: first.local + second.local,
-  remote: first.remote + second.remote
-});
-var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget) => {
-  const root = createSitemapNode("/", "/", false);
-  pages.forEach((page) => {
-    const pageHref = page.href.startsWith("/") ? page.href : `/${page.href}`;
-    const pathHref = normalizeSitemapHref(pageHref);
-    const segments = getSitemapSegments(pathHref);
-    if (segments.length === 0) {
-      root.href = pageHref;
-      root.isPage = true;
-      return;
-    }
-    let parent = root;
-    segments.forEach((segment, segmentIndex) => {
-      const isLastSegment = segmentIndex === segments.length - 1;
-      const segmentPath = `/${segments.slice(0, segmentIndex + 1).join("/")}`;
-      const segmentHref = isLastSegment ? pageHref : `${segmentPath}/`;
-      const segmentLabel = `${segment}${!isLastSegment || pathHref.endsWith("/") ? "/" : ""}`;
-      const existingNode = parent.children.get(segment);
-      const node = existingNode ?? createSitemapNode(segmentHref, segmentLabel, false);
-      node.href = isLastSegment ? pageHref : node.href;
-      node.label = isLastSegment ? segmentLabel : node.label;
-      node.isPage = node.isPage || isLastSegment;
-      parent.children.set(segment, node);
-      parent = node;
-    });
-  });
-  const getDirectCount = (node) => {
-    if (!node.isPage) return EMPTY_SITEMAP_QA_COUNT;
-    return pageQaCounts.get(getPageTarget(node.href)) ?? EMPTY_SITEMAP_QA_COUNT;
-  };
-  const getDirectUsers = (node) => {
-    if (!node.isPage) return [];
-    return pagePresenceUsers.get(getPageTarget(node.href)) ?? [];
-  };
-  const rows = [];
-  const appendNodeRows = (node, depth, ancestorLastList, isLastNode) => {
-    const children = Array.from(node.children.values());
-    const directCount = getDirectCount(node);
-    const directUsers = getDirectUsers(node);
-    let rowIndex = null;
-    if (node.isPage || depth > 0) {
-      const prefix = depth === 0 ? "" : `${ancestorLastList.map((isLast) => isLast ? "   " : "\u2502  ").join("")}${isLastNode ? "\u2514\u2500 " : "\u251C\u2500 "}`;
-      const pageTarget = node.isPage ? getPageTarget(node.href) : null;
-      rowIndex = rows.length;
-      rows.push({
-        href: node.href,
-        label: node.label,
-        prefix,
-        isPage: node.isPage,
-        isActive: pageTarget === activeRoute,
-        qaCount: directCount,
-        users: directUsers
-      });
-    }
-    const childAggregate = children.reduce(
-      (aggregate, child, childIndex) => {
-        const childResult = appendNodeRows(
-          child,
-          depth + 1,
-          depth === 0 ? [] : [...ancestorLastList, isLastNode],
-          childIndex === children.length - 1
-        );
-        return {
-          count: addSitemapQaCounts(aggregate.count, childResult.count),
-          users: mergeSitemapUsers([...aggregate.users, ...childResult.users])
-        };
-      },
-      { count: EMPTY_SITEMAP_QA_COUNT, users: [] }
-    );
-    if (rowIndex !== null && !node.isPage) {
-      rows[rowIndex] = {
-        ...rows[rowIndex],
-        qaCount: childAggregate.count,
-        users: childAggregate.users
-      };
-    }
-    return {
-      count: node.isPage ? addSitemapQaCounts(directCount, childAggregate.count) : childAggregate.count,
-      users: mergeSitemapUsers([...directUsers, ...childAggregate.users])
-    };
-  };
-  if (root.isPage) {
-    const directCount = getDirectCount(root);
-    const directUsers = getDirectUsers(root);
-    rows.push({
-      href: root.href,
-      label: root.label,
-      prefix: "",
-      isPage: true,
-      isActive: getPageTarget(root.href) === activeRoute,
-      qaCount: directCount,
-      users: directUsers
-    });
-  }
-  Array.from(root.children.values()).forEach((node, index, siblings) => {
-    appendNodeRows(node, 1, [], index === siblings.length - 1);
-  });
-  return rows;
-};
-var SitemapModal = ({
-  pages,
-  activeRoute,
-  pageQaCounts,
-  pagePresenceUsers,
-  getPageTarget,
-  onClose,
-  onSelectPage
-}) => {
-  const sitemapRows = createSitemapRows(
-    pages,
-    activeRoute,
-    pageQaCounts,
-    pagePresenceUsers,
-    getPageTarget
-  );
-  return /* @__PURE__ */ jsxs(
-    "div",
-    {
-      "aria-label": "Sitemap",
-      "aria-modal": "true",
-      className: "df-review-sitemap-modal",
-      role: "dialog",
-      children: [
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            "aria-label": "Close sitemap",
-            className: "df-review-sitemap-backdrop",
-            type: "button",
-            onClick: onClose
-          }
-        ),
-        /* @__PURE__ */ jsxs("div", { className: "df-review-sitemap-dialog", children: [
-          /* @__PURE__ */ jsxs("div", { className: "df-review-sitemap-header", children: [
-            /* @__PURE__ */ jsxs("div", { children: [
-              /* @__PURE__ */ jsx("strong", { children: "Sitemap" }),
-              /* @__PURE__ */ jsxs("span", { children: [
-                pages.length,
-                " pages"
-              ] })
-            ] }),
-            /* @__PURE__ */ jsx("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
-          ] }),
-          /* @__PURE__ */ jsxs("div", { className: "df-review-sitemap-list", children: [
-            /* @__PURE__ */ jsxs("div", { className: "df-review-sitemap-table-head", "aria-hidden": "true", children: [
-              /* @__PURE__ */ jsx("span", { children: "Page" }),
-              /* @__PURE__ */ jsx("span", { children: "Local" }),
-              /* @__PURE__ */ jsx("span", { children: "Remote" }),
-              /* @__PURE__ */ jsx("span", { children: "Online" })
-            ] }),
-            sitemapRows.map((row) => {
-              const rowClassName = [
-                "df-review-sitemap-row",
-                row.isPage ? "is-page" : "is-folder",
-                row.isActive ? "is-active" : ""
-              ].filter(Boolean).join(" ");
-              const rowContent = /* @__PURE__ */ jsxs(Fragment, { children: [
-                /* @__PURE__ */ jsxs("span", { className: "df-review-sitemap-path", children: [
-                  /* @__PURE__ */ jsx("span", { className: "df-review-sitemap-tree-prefix", children: row.prefix }),
-                  /* @__PURE__ */ jsx("span", { children: row.label })
-                ] }),
-                /* @__PURE__ */ jsx("span", { className: "df-review-sitemap-cell is-local", children: row.qaCount.local }),
-                /* @__PURE__ */ jsx("span", { className: "df-review-sitemap-cell is-remote", children: row.qaCount.remote }),
-                /* @__PURE__ */ jsx("span", { className: "df-review-sitemap-cell is-online", children: row.users.length > 0 ? /* @__PURE__ */ jsx("span", { className: "df-review-sitemap-users", children: row.users.map((user) => /* @__PURE__ */ jsx(
-                  "span",
-                  {
-                    className: "df-review-sitemap-user",
-                    style: {
-                      "--df-review-presence-color": user.color
-                    },
-                    children: user.userId
-                  },
-                  user.sessionId
-                )) }) : /* @__PURE__ */ jsx("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
-              ] });
-              if (!row.isPage) {
-                return /* @__PURE__ */ jsx(
-                  "div",
-                  {
-                    "aria-label": `${row.href} group / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
-                    className: rowClassName,
-                    role: "row",
-                    children: rowContent
-                  },
-                  row.href
-                );
-              }
-              return /* @__PURE__ */ jsx(
-                "button",
-                {
-                  "aria-label": `${row.href} / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
-                  className: rowClassName,
-                  type: "button",
-                  onClick: () => onSelectPage(row.href),
-                  children: rowContent
-                },
-                row.href
-              );
-            })
-          ] })
-        ] })
-      ]
-    }
-  );
-};
-var ReviewSettingsModal = ({
-  figmaTokenDraft,
-  reviewUserIdDraft,
-  reviewThemeDraft,
-  figmaSettingsStatus,
-  isFigmaTokenVisible,
-  isFigmaTokenGuideOpen,
-  onClose,
-  onFigmaTokenDraftChange,
-  onReviewUserIdDraftChange,
-  onReviewThemeDraftChange,
-  onClearStatus,
-  onToggleFigmaTokenVisible,
-  onToggleFigmaTokenGuide,
-  onSave
-}) => {
-  return /* @__PURE__ */ jsxs(
-    "div",
-    {
-      "aria-label": "Review settings",
-      "aria-modal": "true",
-      className: "df-review-settings-modal",
-      role: "dialog",
-      children: [
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            "aria-label": "Close settings",
-            className: "df-review-settings-backdrop",
-            type: "button",
-            onClick: onClose
-          }
-        ),
-        /* @__PURE__ */ jsxs(
-          "form",
-          {
-            className: "df-review-settings-dialog",
-            onSubmit: (event) => {
-              event.preventDefault();
-              onSave(figmaTokenDraft, reviewUserIdDraft, reviewThemeDraft);
-            },
-            children: [
-              /* @__PURE__ */ jsxs("div", { className: "df-review-settings-header", children: [
-                /* @__PURE__ */ jsxs("div", { className: "df-review-settings-title", children: [
-                  /* @__PURE__ */ jsx("strong", { children: "Settings" }),
-                  /* @__PURE__ */ jsxs("span", { children: [
-                    FIGMA_TOKEN_STORAGE_KEY,
-                    " / ",
-                    REVIEW_USER_ID_STORAGE_KEY,
-                    " /",
-                    " ",
-                    REVIEW_THEME_STORAGE_KEY
-                  ] })
-                ] }),
-                /* @__PURE__ */ jsxs("div", { className: "df-review-settings-header-actions", children: [
-                  /* @__PURE__ */ jsx(
-                    "select",
-                    {
-                      "aria-label": "Review theme",
-                      className: "df-review-settings-theme-select",
-                      value: reviewThemeDraft,
-                      onChange: (event) => {
-                        onReviewThemeDraftChange(normalizeReviewTheme(event.target.value));
-                        onClearStatus();
-                      },
-                      children: REVIEW_THEME_OPTIONS.map((option) => /* @__PURE__ */ jsx("option", { value: option.value, children: option.label }, option.value))
-                    }
-                  ),
-                  /* @__PURE__ */ jsx("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" })
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxs("div", { className: "df-review-settings-body", children: [
-                /* @__PURE__ */ jsxs("div", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ jsxs("div", { className: "df-review-settings-label-row", children: [
-                    /* @__PURE__ */ jsx("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
-                    /* @__PURE__ */ jsx(
-                      "button",
-                      {
-                        "aria-controls": FIGMA_TOKEN_GUIDE_ID,
-                        "aria-expanded": isFigmaTokenGuideOpen,
-                        "aria-label": "Show Figma token guide",
-                        className: `df-review-settings-help-button${isFigmaTokenGuideOpen ? " is-active" : ""}`,
-                        type: "button",
-                        onClick: onToggleFigmaTokenGuide,
-                        children: /* @__PURE__ */ jsx(CircleQuestionMark, { "aria-hidden": "true" })
-                      }
-                    )
-                  ] }),
-                  /* @__PURE__ */ jsxs("div", { className: "df-review-settings-token-input", children: [
-                    /* @__PURE__ */ jsx(
-                      "input",
-                      {
-                        id: "df-review-figma-token",
-                        "aria-label": "Figma token",
-                        "aria-describedby": isFigmaTokenGuideOpen ? FIGMA_TOKEN_GUIDE_ID : void 0,
-                        autoCapitalize: "off",
-                        autoComplete: "off",
-                        autoCorrect: "off",
-                        className: isFigmaTokenVisible ? void 0 : "is-token-masked",
-                        "data-1p-ignore": "true",
-                        "data-lpignore": "true",
-                        inputMode: "text",
-                        name: "df-review-figma-access-key",
-                        spellCheck: false,
-                        type: "text",
-                        value: figmaTokenDraft,
-                        onChange: (event) => {
-                          onFigmaTokenDraftChange(event.target.value);
-                          onClearStatus();
-                        }
-                      }
-                    ),
-                    /* @__PURE__ */ jsx(
-                      "button",
-                      {
-                        "aria-label": isFigmaTokenVisible ? "Hide Figma token" : "Show Figma token",
-                        className: "df-review-settings-token-toggle",
-                        type: "button",
-                        onClick: onToggleFigmaTokenVisible,
-                        children: isFigmaTokenVisible ? /* @__PURE__ */ jsx(EyeOff, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx(Eye, { "aria-hidden": "true" })
-                      }
-                    )
-                  ] }),
-                  isFigmaTokenGuideOpen && /* @__PURE__ */ jsx(
-                    "div",
-                    {
-                      className: "df-review-settings-guide",
-                      id: FIGMA_TOKEN_GUIDE_ID,
-                      children: /* @__PURE__ */ jsxs("ol", { children: [
-                        /* @__PURE__ */ jsx("li", { children: "Figma file browser\uC5D0\uC11C account menu\uB97C \uC5F4\uACE0 Settings\uB85C \uC774\uB3D9" }),
-                        /* @__PURE__ */ jsx("li", { children: "Security \uD0ED\uC758 Personal access tokens\uB85C \uC774\uB3D9" }),
-                        /* @__PURE__ */ jsx("li", { children: "Generate new token\uC5D0\uC11C \uC774\uB984\uACFC scope\uB97C \uC815\uD55C \uB4A4 \uC0DD\uC131" }),
-                        /* @__PURE__ */ jsx("li", { children: "\uC0DD\uC131\uB41C token\uC744 \uBCF5\uC0AC\uD574\uC11C \uC5EC\uAE30\uC5D0 \uBD99\uC5EC\uB123\uAE30" })
-                      ] })
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxs("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ jsx("span", { children: "User ID" }),
-                  /* @__PURE__ */ jsx("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ jsx(
-                    "input",
-                    {
-                      "aria-label": "Review user ID",
-                      autoComplete: "off",
-                      spellCheck: false,
-                      type: "text",
-                      value: reviewUserIdDraft,
-                      onChange: (event) => {
-                        onReviewUserIdDraftChange(event.target.value);
-                        onClearStatus();
-                      }
-                    }
-                  ) })
-                ] }),
-                figmaSettingsStatus && /* @__PURE__ */ jsx("p", { className: "df-review-settings-status", children: figmaSettingsStatus }),
-                /* @__PURE__ */ jsxs("div", { className: "df-review-settings-actions", children: [
-                  /* @__PURE__ */ jsx(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => onSave("", "", DEFAULT_REVIEW_THEME),
-                      children: "Clear"
-                    }
-                  ),
-                  /* @__PURE__ */ jsx("span", {}),
-                  /* @__PURE__ */ jsx("button", { type: "button", onClick: onClose, children: "Cancel" }),
-                  /* @__PURE__ */ jsx("button", { type: "submit", children: "Save" })
-                ] })
-              ] })
-            ]
-          }
-        )
-      ]
-    }
-  );
-};
-var ABOUT_SECTIONS = [
-  {
-    title: "What this is",
-    body: "df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool."
-  },
-  {
-    title: "How to setup",
-    body: "Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration."
-  },
-  {
-    title: "Figma token",
-    body: "Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration."
-  },
-  {
-    title: "User ID",
-    body: "Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route."
-  },
-  {
-    title: "Remote",
-    body: "Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or \uB2F4\uB2F9 \uAC1C\uBC1C\uC790 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser."
-  }
-];
-var PromptModal = ({
-  initialPromptText,
-  copiedPromptKey,
-  onClose,
-  onCopyPrompt
-}) => {
-  return /* @__PURE__ */ jsxs(
-    "div",
-    {
-      "aria-label": "Review help",
-      "aria-modal": "true",
-      className: "df-review-prompt-modal",
-      role: "dialog",
-      children: [
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            "aria-label": "Close help",
-            className: "df-review-prompt-backdrop",
-            type: "button",
-            onClick: onClose
-          }
-        ),
-        /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-dialog", children: [
-          /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-header", children: [
-            /* @__PURE__ */ jsxs("div", { children: [
-              /* @__PURE__ */ jsx("strong", { children: "Review shell help" }),
-              /* @__PURE__ */ jsx("span", { children: "About / Initial prompt" })
-            ] }),
-            /* @__PURE__ */ jsx("button", { "aria-label": "Close help", type: "button", onClick: onClose, children: "x" })
-          ] }),
-          /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-body", children: [
-            /* @__PURE__ */ jsxs("section", { className: "df-review-prompt-about", "aria-labelledby": "df-review-about-title", children: [
-              /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-section-header", children: [
-                /* @__PURE__ */ jsx("strong", { id: "df-review-about-title", children: "About" }),
-                /* @__PURE__ */ jsx("span", { children: "Program overview and setup notes" })
-              ] }),
-              /* @__PURE__ */ jsx("div", { className: "df-review-prompt-about-grid", children: ABOUT_SECTIONS.map((section) => /* @__PURE__ */ jsxs("article", { children: [
-                /* @__PURE__ */ jsx("strong", { children: section.title }),
-                /* @__PURE__ */ jsx("p", { children: section.body })
-              ] }, section.title)) })
-            ] }),
-            /* @__PURE__ */ jsxs(
-              "section",
-              {
-                className: "df-review-prompt-block",
-                "aria-labelledby": "df-review-initial-prompt-title",
-                children: [
-                  /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-block-header", children: [
-                    /* @__PURE__ */ jsxs("div", { children: [
-                      /* @__PURE__ */ jsx("strong", { id: "df-review-initial-prompt-title", children: "Initial Prompt" }),
-                      /* @__PURE__ */ jsx("span", { children: getPromptLengthLabel(initialPromptText) })
-                    ] }),
-                    /* @__PURE__ */ jsxs(
-                      "button",
-                      {
-                        disabled: !initialPromptText,
-                        type: "button",
-                        onClick: () => onCopyPrompt(initialPromptText, "initial"),
-                        children: [
-                          /* @__PURE__ */ jsx(Copy, { "aria-hidden": "true" }),
-                          copiedPromptKey === "initial" ? "Copied" : "Copy"
-                        ]
-                      }
-                    )
-                  ] }),
-                  /* @__PURE__ */ jsx(
-                    "textarea",
-                    {
-                      readOnly: true,
-                      "aria-label": "Initial Prompt content",
-                      value: initialPromptText || "Initial prompt is not configured."
-                    }
-                  )
-                ]
-              }
-            )
-          ] })
-        ] })
-      ]
-    }
-  );
-};
-
-// src/react-shell/topbar.tsx
-import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
-var ReviewScopeIcon = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ jsx2(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ jsx2(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ jsx2(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ jsx2(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx2(Monitor, { "aria-hidden": "true" });
-};
-var ViewportPresetIcon = ({
-  preset
-}) => {
-  return /* @__PURE__ */ jsx2(ReviewScopeIcon, { scope: getViewportPresetKind(preset) });
-};
-var ReviewTopbar = ({
-  draftTarget,
-  copyLabel,
-  viewportPresets,
-  size,
-  presetScopeCounts,
+// src/react-shell/hooks/use.review.ruler.drag.ts
+var useReviewRulerDrag = ({
+  iframeRef,
   isRulerAvailable,
   isRulerVisible,
-  targetOverlayState,
-  isFigmaOverlayAvailable,
-  onDraftTargetChange,
-  onApplyTarget,
-  onOpenSitemap,
-  onCopyCurrentUrl,
-  onSizeChange,
-  onToggleRuler,
-  onToggleTargetOverlay,
-  onOpenInitialPrompt,
-  onOpenSettings
+  size,
+  targetSrc
 }) => {
-  return /* @__PURE__ */ jsxs2("header", { className: "df-review-topbar", children: [
-    /* @__PURE__ */ jsxs2(
-      "form",
-      {
-        className: "df-review-address",
-        onSubmit: (event) => {
-          event.preventDefault();
-          onApplyTarget();
-        },
-        children: [
-          /* @__PURE__ */ jsx2(
-            "button",
-            {
-              "aria-label": "Open sitemap",
-              className: "df-review-sitemap-button",
-              type: "button",
-              onClick: onOpenSitemap,
-              children: /* @__PURE__ */ jsx2(Map2, { "aria-hidden": "true" })
-            }
-          ),
-          /* @__PURE__ */ jsx2(
-            "input",
-            {
-              "aria-label": "Path",
-              value: draftTarget,
-              onChange: (event) => onDraftTargetChange(event.target.value)
-            }
-          ),
-          /* @__PURE__ */ jsx2("button", { type: "submit", children: "Load" }),
-          /* @__PURE__ */ jsx2("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
-        ]
+  const rulerOverlayRef = useRef2(null);
+  const rulerDragRectRef = useRef2(null);
+  const isRulerDraggingRef = useRef2(false);
+  const sizeRef = useRef2(size);
+  const [rulerStart, setRulerStart] = useState2(null);
+  const [rulerPoint, setRulerPoint] = useState2(null);
+  const [rulerHover, setRulerHover] = useState2(null);
+  const [isRulerDragging, setIsRulerDragging] = useState2(false);
+  const rulerMeasure = useMemo3(
+    () => getRulerMeasure(rulerStart, rulerPoint),
+    [rulerPoint, rulerStart]
+  );
+  const clearRulerMeasure = useCallback7(() => {
+    rulerDragRectRef.current = null;
+    isRulerDraggingRef.current = false;
+    setRulerStart(null);
+    setRulerPoint(null);
+    setRulerHover(null);
+    setIsRulerDragging(false);
+  }, []);
+  const finishRulerDrag = useCallback7((point) => {
+    if (point) {
+      setRulerPoint(point);
+    }
+    rulerDragRectRef.current = null;
+    isRulerDraggingRef.current = false;
+    setIsRulerDragging(false);
+  }, []);
+  const startRulerDrag = useCallback7(
+    (clientX, clientY, rect) => {
+      const point = getRulerPointFromRect(clientX, clientY, rect);
+      rulerDragRectRef.current = rect;
+      isRulerDraggingRef.current = true;
+      setRulerStart(point);
+      setRulerPoint(point);
+      setIsRulerDragging(true);
+    },
+    []
+  );
+  useEffect5(() => {
+    sizeRef.current = size;
+  }, [size]);
+  useEffect5(() => {
+    if (!isRulerVisible || !isRulerAvailable) return void 0;
+    const getRulerEventClientPoint = (event) => {
+      const frame2 = iframeRef.current;
+      let isFrameEvent = false;
+      try {
+        isFrameEvent = Boolean(frame2?.contentWindow) && event.view === frame2?.contentWindow;
+        if (!isFrameEvent && frame2?.contentDocument) {
+          const targetDocument = event.target?.ownerDocument;
+          isFrameEvent = targetDocument === frame2.contentDocument;
+        }
+      } catch {
+        isFrameEvent = false;
       }
+      if (isFrameEvent && frame2) {
+        const frameRect = frame2.getBoundingClientRect();
+        return {
+          clientX: event.clientX + frameRect.left,
+          clientY: event.clientY + frameRect.top
+        };
+      }
+      return {
+        clientX: event.clientX,
+        clientY: event.clientY
+      };
+    };
+    const snapDesign = (screen, axis) => {
+      const current = sizeRef.current;
+      const scaleX = current.designWidth ? current.width / current.designWidth : 1;
+      const scale = axis === "y" ? current.designHeight ? current.height / current.designHeight : scaleX : scaleX;
+      return Math.round(Math.round(screen / scale) * scale);
+    };
+    const getActiveRulerPoint = (event) => {
+      const rect = rulerDragRectRef.current ?? rulerOverlayRef.current?.getBoundingClientRect();
+      if (!rect) return void 0;
+      const point = getRulerEventClientPoint(event);
+      const snapped = getRulerPointFromRect(point.clientX, point.clientY, rect);
+      return { x: snapDesign(snapped.x, "x"), y: snapDesign(snapped.y, "y") };
+    };
+    const getHoverRulerPoint = (event) => {
+      const rect = rulerOverlayRef.current?.getBoundingClientRect();
+      if (!rect) return null;
+      const { clientX, clientY } = getRulerEventClientPoint(event);
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
+      return { x: snapDesign(x, "x"), y: snapDesign(y, "y") };
+    };
+    const handleDragStart = (event) => {
+      if (isRulerDraggingRef.current) return;
+      const mouseEvent = event;
+      if (mouseEvent.button !== 0) return;
+      const overlay = rulerOverlayRef.current;
+      const target = mouseEvent.target;
+      if (!overlay || !(target instanceof Node) || !overlay.contains(target)) {
+        return;
+      }
+      event.preventDefault();
+      startRulerDrag(
+        mouseEvent.clientX,
+        mouseEvent.clientY,
+        overlay.getBoundingClientRect()
+      );
+    };
+    const handlePointerMove = (event) => {
+      const mouseEvent = event;
+      if (isRulerDraggingRef.current) {
+        const point = getActiveRulerPoint(mouseEvent);
+        if (!point) return;
+        mouseEvent.preventDefault();
+        setRulerPoint(point);
+        setRulerHover(point);
+        return;
+      }
+      setRulerHover(getHoverRulerPoint(mouseEvent));
+    };
+    const handleDragEnd = (event) => {
+      if (!isRulerDraggingRef.current) return;
+      const point = getActiveRulerPoint(event);
+      event.preventDefault();
+      finishRulerDrag(point);
+    };
+    const handleWindowBlur = () => {
+      if (!isRulerDraggingRef.current) return;
+      finishRulerDrag();
+    };
+    const dragTargets = /* @__PURE__ */ new Set([window]);
+    const frame = iframeRef.current;
+    try {
+      if (frame?.contentWindow) dragTargets.add(frame.contentWindow);
+      if (frame?.contentDocument) dragTargets.add(frame.contentDocument);
+    } catch {
+    }
+    dragTargets.forEach((target) => {
+      target.addEventListener("mousedown", handleDragStart, true);
+      target.addEventListener("mousemove", handlePointerMove, true);
+      target.addEventListener("mouseup", handleDragEnd, true);
+    });
+    window.addEventListener("blur", handleWindowBlur);
+    return () => {
+      dragTargets.forEach((target) => {
+        target.removeEventListener("mousedown", handleDragStart, true);
+        target.removeEventListener("mousemove", handlePointerMove, true);
+        target.removeEventListener("mouseup", handleDragEnd, true);
+      });
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [
+    finishRulerDrag,
+    iframeRef,
+    isRulerAvailable,
+    isRulerVisible,
+    startRulerDrag
+  ]);
+  useEffect5(() => {
+    clearRulerMeasure();
+  }, [clearRulerMeasure, size.height, size.width, targetSrc]);
+  return {
+    clearRulerMeasure,
+    isRulerDragging,
+    rulerHover,
+    rulerMeasure,
+    rulerOverlayRef
+  };
+};
+
+// src/react-shell/hooks/use.review.ruler.ts
+var useReviewRuler = ({
+  iframeRef,
+  ruler,
+  size,
+  targetSrc,
+  onCancelReviewMode,
+  onCloseTransientPanels
+}) => {
+  const [isRulerVisible, setIsRulerVisible] = useState3(false);
+  const isRulerAvailable = ruler?.enabled !== false && typeof size.designWidth === "number" && size.designWidth > 0;
+  const rulerUnit = ruler?.unit ?? "px";
+  const rulerScaleX = isRulerAvailable && size.designWidth ? size.width / size.designWidth : 1;
+  const rulerScaleY = size.designHeight && size.designHeight > 0 ? size.height / size.designHeight : rulerScaleX;
+  const {
+    clearRulerMeasure,
+    isRulerDragging,
+    rulerHover,
+    rulerMeasure,
+    rulerOverlayRef
+  } = useReviewRulerDrag({
+    iframeRef,
+    isRulerAvailable,
+    isRulerVisible,
+    size,
+    targetSrc
+  });
+  const rulerMeasureLabel = rulerMeasure ? `Figma ${Math.round(rulerMeasure.width / rulerScaleX)}x${Math.round(
+    rulerMeasure.height / rulerScaleY
+  )}${rulerUnit}` : "";
+  const closeRuler = useCallback8(() => {
+    if (!isRulerVisible) return false;
+    setIsRulerVisible(false);
+    clearRulerMeasure();
+    return true;
+  }, [clearRulerMeasure, isRulerVisible]);
+  const toggleRuler = useCallback8(() => {
+    if (!isRulerAvailable) return;
+    onCancelReviewMode();
+    onCloseTransientPanels();
+    clearRulerMeasure();
+    setIsRulerVisible((current) => !current);
+  }, [
+    clearRulerMeasure,
+    isRulerAvailable,
+    onCancelReviewMode,
+    onCloseTransientPanels
+  ]);
+  useEffect6(() => {
+    if (!isRulerVisible || isRulerAvailable) return;
+    closeRuler();
+  }, [closeRuler, isRulerAvailable, isRulerVisible]);
+  return {
+    closeRuler,
+    isRulerAvailable,
+    isRulerDragging,
+    isRulerVisible,
+    rulerHover,
+    rulerMeasure,
+    rulerMeasureLabel,
+    rulerOverlayRef,
+    rulerScaleX,
+    rulerScaleY,
+    rulerUnit,
+    toggleRuler
+  };
+};
+
+// src/react-shell/hooks/use.review.settings.ts
+import { useCallback as useCallback9, useEffect as useEffect7, useState as useState4 } from "react";
+var useReviewSettings = ({
+  onCancelReviewMode,
+  onCloseInitialPrompt,
+  onCloseSitemap,
+  onReloadTargetFrame
+}) => {
+  const [figmaTokenDraft, setFigmaTokenDraft] = useState4(getStoredFigmaToken);
+  const [reviewUserId, setReviewUserId] = useState4(getStoredReviewUserId);
+  const [reviewUserIdDraft, setReviewUserIdDraft] = useState4(
+    getStoredReviewUserId
+  );
+  const [reviewTheme, setReviewTheme] = useState4(getStoredReviewTheme);
+  const [reviewThemeDraft, setReviewThemeDraft] = useState4(getStoredReviewTheme);
+  const [systemReviewTheme, setSystemReviewTheme] = useState4(getSystemReviewTheme);
+  const [figmaSettingsStatus, setFigmaSettingsStatus] = useState4("");
+  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState4(false);
+  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState4(false);
+  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState4(false);
+  const effectiveReviewTheme = reviewTheme === "system" ? systemReviewTheme : reviewTheme;
+  const closeFigmaSettings = useCallback9(() => {
+    setIsFigmaSettingsOpen(false);
+    setFigmaSettingsStatus("");
+    setIsFigmaTokenVisible(false);
+    setIsFigmaTokenGuideOpen(false);
+  }, []);
+  const openFigmaSettings = useCallback9(() => {
+    onCancelReviewMode();
+    onCloseSitemap();
+    onCloseInitialPrompt();
+    setFigmaTokenDraft(getStoredFigmaToken());
+    setReviewUserIdDraft(getStoredReviewUserId());
+    setReviewThemeDraft(reviewTheme);
+    setFigmaSettingsStatus("");
+    setIsFigmaTokenVisible(false);
+    setIsFigmaTokenGuideOpen(false);
+    setIsFigmaSettingsOpen(true);
+  }, [
+    onCancelReviewMode,
+    onCloseInitialPrompt,
+    onCloseSitemap,
+    reviewTheme
+  ]);
+  const saveReviewSettings = useCallback9(
+    (token, userId, theme) => {
+      const nextToken = token.trim();
+      const nextUserId = userId.trim();
+      const nextTheme = normalizeReviewTheme(theme);
+      const shouldReload = nextToken !== getStoredFigmaToken() || nextUserId !== getStoredReviewUserId();
+      writeStoredFigmaToken(nextToken);
+      writeStoredReviewUserId(nextUserId);
+      writeStoredReviewTheme(nextTheme);
+      setFigmaTokenDraft(nextToken);
+      setReviewUserId(nextUserId);
+      setReviewUserIdDraft(nextUserId);
+      setReviewTheme(nextTheme);
+      setReviewThemeDraft(nextTheme);
+      setFigmaSettingsStatus(
+        nextToken || nextUserId || nextTheme !== DEFAULT_REVIEW_THEME ? "Saved" : "Cleared"
+      );
+      if (shouldReload) {
+        onReloadTargetFrame();
+      }
+      closeFigmaSettings();
+    },
+    [closeFigmaSettings, onReloadTargetFrame]
+  );
+  useEffect7(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return void 0;
+    const query = window.matchMedia("(prefers-color-scheme: light)");
+    const syncSystemTheme = () => {
+      setSystemReviewTheme(query.matches ? "light" : "dark");
+    };
+    syncSystemTheme();
+    if (query.addEventListener) {
+      query.addEventListener("change", syncSystemTheme);
+      return () => query.removeEventListener("change", syncSystemTheme);
+    }
+    query.addListener(syncSystemTheme);
+    return () => query.removeListener(syncSystemTheme);
+  }, []);
+  useEffect7(() => {
+    document.body.classList.toggle(
+      "df-review-theme-light",
+      effectiveReviewTheme === "light"
+    );
+    document.body.classList.toggle(
+      "df-review-theme-dark",
+      effectiveReviewTheme === "dark"
+    );
+    return () => {
+      document.body.classList.remove(
+        "df-review-theme-light",
+        "df-review-theme-dark"
+      );
+    };
+  }, [effectiveReviewTheme]);
+  return {
+    closeFigmaSettings,
+    effectiveReviewTheme,
+    figmaSettingsStatus,
+    figmaTokenDraft,
+    isFigmaSettingsOpen,
+    isFigmaTokenGuideOpen,
+    isFigmaTokenVisible,
+    openFigmaSettings,
+    reviewThemeDraft,
+    reviewUserId,
+    reviewUserIdDraft,
+    saveReviewSettings,
+    setFigmaSettingsStatus,
+    setFigmaTokenDraft,
+    setIsFigmaTokenGuideOpen,
+    setIsFigmaTokenVisible,
+    setReviewThemeDraft,
+    setReviewUserIdDraft
+  };
+};
+
+// src/react-shell/hooks/use.review.shell.data.ts
+import { useCallback as useCallback10, useMemo as useMemo4, useState as useState5 } from "react";
+var createEmptySitemapQaCount = () => ({
+  local: 0,
+  remote: 0
+});
+var useReviewShellData = ({
+  activeRoute,
+  pages,
+  reviewPathPrefix,
+  reviewViewportPresets,
+  selectedItemId,
+  size,
+  target,
+  viewportPresets
+}) => {
+  const [items, setItems] = useState5([]);
+  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = useState5(
+    () => /* @__PURE__ */ new Set()
+  );
+  const [qaFilter, setQaFilter] = useState5("all");
+  const [sitemapItems, setSitemapItems] = useState5(() => ({
+    local: [],
+    remote: []
+  }));
+  const targetSrc = useMemo4(() => buildTargetSrc(target), [target]);
+  const pageTargets = useMemo4(
+    () => new Set(
+      pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
     ),
-    /* @__PURE__ */ jsxs2("div", { className: "df-review-tools", children: [
-      /* @__PURE__ */ jsxs2("div", { className: "df-review-tool-controls", children: [
-        /* @__PURE__ */ jsx2("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ jsxs2(
+    [pages, reviewPathPrefix]
+  );
+  const activeItems = useMemo4(
+    () => items.filter((item) => getItemTarget(item, reviewPathPrefix) === activeRoute).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+    [activeRoute, items, reviewPathPrefix]
+  );
+  const numberedActiveItems = useMemo4(
+    () => getNumberedReviewItems(activeItems, reviewViewportPresets),
+    [activeItems, reviewViewportPresets]
+  );
+  const filteredNumberedActiveItems = useMemo4(
+    () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
+      (numberedItem) => numberedItem.scope === qaFilter
+    ),
+    [numberedActiveItems, qaFilter]
+  );
+  const hiddenOverlayItemIdList = useMemo4(
+    () => Array.from(hiddenOverlayItemIds),
+    [hiddenOverlayItemIds]
+  );
+  const qaFilterCounts = useMemo4(() => {
+    const counts = /* @__PURE__ */ new Map();
+    counts.set("all", numberedActiveItems.length);
+    numberedActiveItems.forEach((numberedItem) => {
+      counts.set(numberedItem.scope, (counts.get(numberedItem.scope) ?? 0) + 1);
+    });
+    return counts;
+  }, [numberedActiveItems]);
+  const getItemPresetScope = useCallback10(
+    (item) => getViewportPresetKind(
+      findViewportPreset(
+        viewportPresets,
+        item.viewport?.width ?? 0,
+        item.viewport?.height ?? 0
+      )
+    ),
+    [viewportPresets]
+  );
+  const presetScopeCounts = useMemo4(() => {
+    const counts = /* @__PURE__ */ new Map();
+    activeItems.forEach((item) => {
+      const scope = getItemPresetScope(item);
+      counts.set(scope, (counts.get(scope) ?? 0) + 1);
+    });
+    return counts;
+  }, [activeItems, getItemPresetScope]);
+  const currentPresetScope = getViewportPresetKind(size);
+  const pageQaCounts = useMemo4(() => {
+    const counts = /* @__PURE__ */ new Map();
+    const addItems = (sourceKey, sourceItems) => {
+      sourceItems.forEach((item) => {
+        const pageTarget = normalizeTarget(
+          getItemTarget(item, reviewPathPrefix),
+          reviewPathPrefix
+        );
+        const count = counts.get(pageTarget) ?? createEmptySitemapQaCount();
+        count[sourceKey] += 1;
+        counts.set(pageTarget, count);
+      });
+    };
+    addItems("local", sitemapItems.local);
+    addItems("remote", sitemapItems.remote);
+    return counts;
+  }, [reviewPathPrefix, sitemapItems]);
+  const selectedNumberedItem = useMemo4(
+    () => selectedItemId ? numberedActiveItems.find(
+      (numberedItem) => numberedItem.item.id === selectedItemId
+    ) : void 0,
+    [numberedActiveItems, selectedItemId]
+  );
+  return {
+    activeItems,
+    currentPresetScope,
+    filteredNumberedActiveItems,
+    getItemPresetScope,
+    hiddenOverlayItemIdList,
+    hiddenOverlayItemIds,
+    pageQaCounts,
+    pageTargets,
+    presetScopeCounts,
+    qaFilter,
+    qaFilterCounts,
+    selectedNumberedItem,
+    setHiddenOverlayItemIds,
+    setItems,
+    setQaFilter,
+    setSitemapItems,
+    targetSrc
+  };
+};
+
+// src/react-shell/hooks/use.review.shell.hotkeys.ts
+import { useEffect as useEffect8 } from "react";
+var useReviewShellHotkeys = ({
+  isFigmaSettingsOpen,
+  isInitialPromptOpen,
+  isRulerAvailable,
+  isRulerVisible,
+  isSitemapOpen,
+  mode,
+  onCancelReviewMode,
+  onCloseFigmaSettings,
+  onCloseInitialPrompt,
+  onCloseRuler,
+  onCloseSitemap,
+  onSetReviewMode,
+  onToggleRuler,
+  onToggleTargetOverlay
+}) => {
+  useEffect8(() => {
+    if (mode === "idle" && !isRulerVisible && !isInitialPromptOpen && !isSitemapOpen && !isFigmaSettingsOpen) {
+      return;
+    }
+    const handleKeyDown = (event) => {
+      if (event.key !== "Escape") return;
+      if (mode !== "idle" && onCancelReviewMode()) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (onCloseRuler()) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (isInitialPromptOpen) {
+        onCloseInitialPrompt();
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (isSitemapOpen) {
+        onCloseSitemap();
+        return;
+      }
+      if (isFigmaSettingsOpen) {
+        onCloseFigmaSettings();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    isFigmaSettingsOpen,
+    isInitialPromptOpen,
+    isRulerVisible,
+    isSitemapOpen,
+    mode,
+    onCancelReviewMode,
+    onCloseFigmaSettings,
+    onCloseInitialPrompt,
+    onCloseRuler,
+    onCloseSitemap
+  ]);
+  useEffect8(() => {
+    const handleHotkey = (event) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return;
+      }
+      if (isEditableEventTarget(event)) return;
+      const actions = {
+        r: () => {
+          if (isRulerAvailable) onToggleRuler();
+        },
+        g: () => onToggleTargetOverlay("grid"),
+        f: () => onToggleTargetOverlay("figma"),
+        n: () => onSetReviewMode("note"),
+        e: () => onSetReviewMode("element"),
+        a: () => onSetReviewMode("area")
+      };
+      const action = actions[event.key.toLowerCase()];
+      if (!action) return;
+      event.preventDefault();
+      action();
+    };
+    window.addEventListener("keydown", handleHotkey);
+    return () => window.removeEventListener("keydown", handleHotkey);
+  }, [
+    isRulerAvailable,
+    onSetReviewMode,
+    onToggleRuler,
+    onToggleTargetOverlay
+  ]);
+};
+
+// src/react-shell/hooks/use.review.shell.state.ts
+import {
+  useMemo as useMemo5,
+  useRef as useRef3,
+  useState as useState6
+} from "react";
+
+// src/react-shell/adapters.ts
+var ALL_REVIEW_WRITE_MODES = ["dom", "note", "area"];
+function normalizeReviewShellAdapters(adapters) {
+  if (Array.isArray(adapters)) {
+    const normalized = adapters.map((adapter) => normalizeShellAdapter(adapter));
+    const local = normalized.find((adapter) => adapter.label === "local") ?? null;
+    const remote = normalized.find((adapter) => adapter.label !== "local") ?? null;
+    if (normalized.length === 0 || !local && !remote) {
+      throw new Error("ReviewShell requires at least one adapter.");
+    }
+    return {
+      local,
+      remote,
+      sources: normalized
+    };
+  }
+  return normalizeLegacyAdapterMap(adapters);
+}
+function normalizeLegacyAdapterMap(adapters) {
+  const local = {
+    label: "local",
+    adapter: adapters.local,
+    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+    updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
+    syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
+    writeModes: [...ALL_REVIEW_WRITE_MODES],
+    canRemove: true
+  };
+  const remote = adapters.remote ? {
+    label: "df-sheet",
+    adapter: adapters.remote,
+    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+    updateStatus: ({ id, status }) => adapters.remote?.update(id, { status }) ?? Promise.reject(new Error("Remote adapter is not available.")),
+    writeModes: [],
+    canRemove: false,
+    pageId: adapters.remotePageId
+  } : null;
+  return {
+    local,
+    remote,
+    sources: remote ? [local, remote] : [local]
+  };
+}
+function normalizeShellAdapter(adapterConfig) {
+  const statusOptions = [
+    ...adapterConfig.statusOptions ?? REVIEW_WORKFLOW_STATUS_OPTIONS
+  ];
+  const updateAdapter = adapterConfig.update;
+  const updateStatus = adapterConfig.updateStatus ? adapterConfig.updateStatus : updateAdapter ? ({ id, status }) => updateAdapter(id, { status }) : void 0;
+  const writeModes = normalizeWriteModes(
+    adapterConfig.create ? adapterConfig.canWrite ?? adapterConfig.label === "local" : false
+  );
+  return {
+    label: adapterConfig.label,
+    pageId: adapterConfig.pageId,
+    statusOptions,
+    updateStatus,
+    syncSubmission: adapterConfig.syncSubmission,
+    writeModes,
+    canRemove: Boolean(adapterConfig.remove),
+    adapter: {
+      get: adapterConfig.get,
+      list: adapterConfig.list,
+      create: async (item) => {
+        if (!adapterConfig.create) {
+          throw new Error(
+            `Review adapter "${adapterConfig.label}" does not support create.`
+          );
+        }
+        return adapterConfig.create(item);
+      },
+      update: async (id, patch) => {
+        const nextStatus = patch.status;
+        if (nextStatus && updateStatus) {
+          const statusIndex = statusOptions.findIndex(
+            (statusOption2) => statusOption2.value === nextStatus
+          );
+          const statusOption = statusOptions[statusIndex];
+          if (statusOption) {
+            const item2 = await adapterConfig.get(id);
+            if (!item2) throw new Error(`Review item not found: ${id}`);
+            const updated2 = await updateStatus({
+              id,
+              item: item2,
+              status: nextStatus,
+              statusOption,
+              statusIndex
+            });
+            return updated2;
+          }
+        }
+        if (updateAdapter) {
+          return updateAdapter(id, patch);
+        }
+        if (!adapterConfig.syncSubmission) {
+          throw new Error(
+            `Review adapter "${adapterConfig.label}" does not support update.`
+          );
+        }
+        const item = await adapterConfig.get(id);
+        if (!item) throw new Error(`Review item not found: ${id}`);
+        await adapterConfig.syncSubmission({
+          id,
+          item,
+          patch
+        });
+        const updated = await adapterConfig.get(id);
+        if (!updated) throw new Error(`Review item not found after update: ${id}`);
+        return updated;
+      },
+      remove: async (id) => {
+        if (!adapterConfig.remove) {
+          throw new Error(
+            `Review adapter "${adapterConfig.label}" does not support remove.`
+          );
+        }
+        return adapterConfig.remove(id);
+      }
+    }
+  };
+}
+function normalizeWriteModes(value) {
+  if (value === true) return [...ALL_REVIEW_WRITE_MODES];
+  if (Array.isArray(value)) {
+    const modes = value.filter(
+      (mode) => ALL_REVIEW_WRITE_MODES.includes(mode)
+    );
+    return Array.from(new Set(modes));
+  }
+  return [];
+}
+
+// src/react-shell/hooks/use.review.shell.state.ts
+var useReviewShellState = ({
+  adapters,
+  presets,
+  reviewPathPrefix
+}) => {
+  const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
+  const reviewViewportPresets = useMemo5(
+    () => toReviewViewportPresets(viewportPresets),
+    [viewportPresets]
+  );
+  const normalizedAdapters = useMemo5(
+    () => normalizeReviewShellAdapters(adapters),
+    [adapters]
+  );
+  const localAdapterEntry = normalizedAdapters.local;
+  const remoteAdapterEntry = normalizedAdapters.remote;
+  const sourceEntries = normalizedAdapters.sources;
+  const defaultSource = sourceEntries[0]?.label ?? "local";
+  const [source, setSource] = useState6(() => {
+    const initialSource = getInitialSource(remoteAdapterEntry?.label);
+    return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
+  });
+  const remoteSource = remoteAdapterEntry?.label ?? null;
+  const activeAdapterEntry = sourceEntries.find((entry) => entry.label === source) ?? sourceEntries[0];
+  const isRemoteSource = Boolean(
+    remoteSource && activeAdapterEntry.label === remoteSource
+  );
+  const showSourceSelect = sourceEntries.length > 1;
+  const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
+  const canWriteNote = activeAdapterEntry.writeModes.includes("note");
+  const canWriteArea = activeAdapterEntry.writeModes.includes("area");
+  const canWriteAny = canWriteDom || canWriteNote || canWriteArea;
+  const adapter = activeAdapterEntry.adapter;
+  const iframeRef = useRef3(null);
+  const frameScrollRef = useRef3(null);
+  const controllerRef = useRef3(null);
+  const cleanupTargetRef = useRef3(null);
+  const pendingRestoreRef = useRef3(null);
+  const pendingInitialItemIdRef = useRef3(getInitialItemId());
+  const selectedItemIdRef = useRef3(getInitialItemId());
+  const hiddenOverlayItemIdListRef = useRef3([]);
+  const [target, setTarget] = useState6(
+    () => getInitialTarget(reviewPathPrefix)
+  );
+  const [draftTarget, setDraftTarget] = useState6(
+    () => getInitialTarget(reviewPathPrefix)
+  );
+  const [activeRoute, setActiveRoute] = useState6(
+    () => getInitialTarget(reviewPathPrefix)
+  );
+  const [size, setSize] = useState6(
+    () => getInitialSize(viewportPresets)
+  );
+  const [mode, setMode] = useState6("idle");
+  const [targetOverlayState, setTargetOverlayState] = useState6({
+    grid: false,
+    figma: false
+  });
+  const [selectedItemId, setSelectedItemId] = useState6(getInitialItemId());
+  const [isListVisible, setIsListVisible] = useState6(true);
+  const [isSitemapOpen, setIsSitemapOpen] = useState6(false);
+  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState6(false);
+  const [copyLabel, setCopyLabel] = useState6("Copy URL");
+  const [copiedPromptKey, setCopiedPromptKey] = useState6(null);
+  const targetRef = useRef3(target);
+  const sizeRef = useRef3(size);
+  const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
+  return {
+    activeAdapterEntry,
+    activeRoute,
+    adapter,
+    canWriteAny,
+    canWriteArea,
+    canWriteDom,
+    canWriteNote,
+    cleanupTargetRef,
+    controllerRef,
+    copiedPromptKey,
+    copyLabel,
+    draftTarget,
+    frameScrollRef,
+    hiddenOverlayItemIdListRef,
+    iframeRef,
+    isFigmaOverlayAvailable,
+    isInitialPromptOpen,
+    isListVisible,
+    isRemoteSource,
+    isSitemapOpen,
+    localAdapterEntry,
+    mode,
+    pendingInitialItemIdRef,
+    pendingRestoreRef,
+    remoteAdapterEntry,
+    reviewViewportPresets,
+    selectedItemId,
+    selectedItemIdRef,
+    setActiveRoute,
+    setCopiedPromptKey,
+    setCopyLabel,
+    setDraftTarget,
+    setIsInitialPromptOpen,
+    setIsListVisible,
+    setIsSitemapOpen,
+    setMode,
+    setSelectedItemId,
+    setSize,
+    setSource,
+    setTarget,
+    setTargetOverlayState,
+    showSourceSelect,
+    size,
+    sizeRef,
+    source,
+    sourceEntries,
+    target,
+    targetOverlayState,
+    targetRef,
+    viewportPresets
+  };
+};
+
+// src/react-shell/review/shell.actions.ts
+var listReviewItems = async ({
+  activeRoute,
+  adapter,
+  isRemoteSource,
+  pageId,
+  projectId
+}) => adapter.list({
+  projectId,
+  pageId,
+  routeKey: isRemoteSource ? activeRoute : void 0
+});
+var listSitemapReviewItems = async ({
+  localAdapterEntry,
+  projectId,
+  remoteAdapterEntry
+}) => {
+  const [localResult, remoteResult] = await Promise.allSettled([
+    localAdapterEntry ? localAdapterEntry.adapter.list({
+      projectId,
+      pageId: localAdapterEntry.pageId
+    }) : Promise.resolve([]),
+    remoteAdapterEntry ? remoteAdapterEntry.adapter.list({
+      projectId,
+      pageId: remoteAdapterEntry.pageId,
+      source: remoteAdapterEntry.label
+    }) : Promise.resolve([])
+  ]);
+  return {
+    local: localResult.status === "fulfilled" ? localResult.value : [],
+    remote: remoteResult.status === "fulfilled" ? remoteResult.value : []
+  };
+};
+var refreshReviewItems = async ({
+  onItemsChange,
+  ...listOptions
+}) => {
+  const nextItems = await listReviewItems(listOptions);
+  onItemsChange(nextItems);
+  return nextItems;
+};
+var refreshSitemapReviewItems = async ({
+  onSitemapItemsChange,
+  ...listOptions
+}) => {
+  const sitemapItems = await listSitemapReviewItems(listOptions);
+  onSitemapItemsChange(sitemapItems);
+};
+var copyCurrentReviewUrl = async ({
+  onCopyLabelChange
+}) => {
+  await navigator.clipboard.writeText(window.location.href);
+  onCopyLabelChange("Copied");
+  window.setTimeout(() => onCopyLabelChange("Copy URL"), 1200);
+};
+var refreshReviewData = async ({
+  onRefreshItems,
+  onRefreshSitemapItems,
+  onReloadReviewKit
+}) => {
+  await onReloadReviewKit();
+  await Promise.all([onRefreshItems(), onRefreshSitemapItems()]);
+};
+var updateReviewItemStatus = async ({
+  activeAdapterEntry,
+  item,
+  nextStatus,
+  onRefreshReviewData
+}) => {
+  if (!activeAdapterEntry.updateStatus) return;
+  const statusIndex = activeAdapterEntry.statusOptions.findIndex(
+    (statusOption2) => statusOption2.value === nextStatus
+  );
+  const statusOption = activeAdapterEntry.statusOptions[statusIndex];
+  if (!statusOption) return;
+  await activeAdapterEntry.updateStatus({
+    id: item.id,
+    item,
+    status: statusOption.value,
+    statusOption,
+    statusIndex
+  });
+  await onRefreshReviewData();
+};
+var submitReviewItem = async ({
+  localAdapterEntry,
+  numberedItem,
+  remoteAdapterEntry,
+  selectedItemIdRef,
+  onClearSelectedItem,
+  onRefreshReviewData
+}) => {
+  const { item } = numberedItem;
+  const syncLocalSubmission = localAdapterEntry?.syncSubmission;
+  if (!remoteAdapterEntry || !localAdapterEntry || !syncLocalSubmission || item.submitStatus === "submitted") {
+    return;
+  }
+  await syncLocalSubmission({
+    id: item.id,
+    item,
+    patch: {
+      submitStatus: "submitting",
+      submitError: void 0
+    }
+  });
+  await onRefreshReviewData();
+  try {
+    await remoteAdapterEntry.adapter.create({
+      ...item,
+      reviewNumber: void 0,
+      externalIssueId: void 0,
+      externalIssueUrl: void 0,
+      submittedAt: void 0,
+      submitStatus: "submitted",
+      submitError: void 0
+    });
+    await localAdapterEntry.adapter.remove(item.id);
+    if (selectedItemIdRef.current === item.id) {
+      onClearSelectedItem();
+    }
+  } catch (error) {
+    await syncLocalSubmission({
+      id: item.id,
+      item,
+      patch: {
+        submitStatus: "failed",
+        submitError: error instanceof Error ? error.message : "Failed to submit remote"
+      }
+    });
+  }
+  await onRefreshReviewData();
+};
+var copyReviewPrompt = async ({
+  key,
+  value,
+  onCopiedPromptKeyChange
+}) => {
+  if (!value) return;
+  await navigator.clipboard.writeText(value);
+  onCopiedPromptKeyChange(key);
+  window.setTimeout(() => {
+    onCopiedPromptKeyChange((current) => current === key ? null : current);
+  }, 1200);
+};
+var removeReviewItem = async ({
+  activeAdapterEntry,
+  isRemoteSource,
+  item,
+  selectedItemIdRef,
+  sizeRef,
+  source,
+  targetRef,
+  onClearSelectedItem,
+  onRefreshReviewData
+}) => {
+  if (!activeAdapterEntry.canRemove || item.submitStatus === "submitting" || !isRemoteSource && item.submitStatus === "submitted") {
+    return;
+  }
+  await activeAdapterEntry.adapter.remove(item.id);
+  if (selectedItemIdRef.current === item.id) {
+    onClearSelectedItem();
+    updateShellUrl(targetRef.current, sizeRef.current, source);
+  }
+  await onRefreshReviewData();
+};
+
+// src/react-shell/review/shell.tsx
+import { jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
+var getReviewModeWriteMode = (mode) => {
+  if (mode === "element") return "dom";
+  if (mode === "note" || mode === "area") return mode;
+  return null;
+};
+var ReviewShell = ({
+  projectId,
+  pages,
+  adapters,
+  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
+  ruler,
+  initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
+  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
+  presence
+}) => {
+  const {
+    activeAdapterEntry,
+    activeRoute,
+    adapter,
+    canWriteAny,
+    canWriteArea,
+    canWriteDom,
+    canWriteNote,
+    cleanupTargetRef,
+    controllerRef,
+    copiedPromptKey,
+    copyLabel,
+    draftTarget,
+    frameScrollRef,
+    hiddenOverlayItemIdListRef,
+    iframeRef,
+    isFigmaOverlayAvailable,
+    isInitialPromptOpen,
+    isListVisible,
+    isRemoteSource,
+    isSitemapOpen,
+    localAdapterEntry,
+    mode,
+    pendingInitialItemIdRef,
+    pendingRestoreRef,
+    remoteAdapterEntry,
+    reviewViewportPresets,
+    selectedItemId,
+    selectedItemIdRef,
+    setActiveRoute,
+    setCopiedPromptKey,
+    setCopyLabel,
+    setDraftTarget,
+    setIsInitialPromptOpen,
+    setIsListVisible,
+    setIsSitemapOpen,
+    setMode,
+    setSelectedItemId,
+    setSize,
+    setSource,
+    setTarget,
+    setTargetOverlayState,
+    showSourceSelect,
+    size,
+    sizeRef,
+    source,
+    sourceEntries,
+    target,
+    targetOverlayState,
+    targetRef,
+    viewportPresets
+  } = useReviewShellState({
+    adapters,
+    presets,
+    reviewPathPrefix
+  });
+  const {
+    activeItems,
+    currentPresetScope,
+    filteredNumberedActiveItems,
+    getItemPresetScope,
+    hiddenOverlayItemIdList,
+    hiddenOverlayItemIds,
+    pageQaCounts,
+    pageTargets,
+    presetScopeCounts,
+    qaFilter,
+    qaFilterCounts,
+    selectedNumberedItem,
+    setHiddenOverlayItemIds,
+    setItems,
+    setQaFilter,
+    setSitemapItems,
+    targetSrc
+  } = useReviewShellData({
+    activeRoute,
+    pages,
+    reviewPathPrefix,
+    reviewViewportPresets,
+    selectedItemId,
+    size,
+    target,
+    viewportPresets
+  });
+  const initialPromptText = initialPrompt.trim();
+  const refreshItems = useCallback11(
+    () => refreshReviewItems({
+      activeRoute,
+      adapter,
+      isRemoteSource,
+      pageId: activeAdapterEntry.pageId,
+      projectId,
+      onItemsChange: setItems
+    }),
+    [activeAdapterEntry.pageId, activeRoute, adapter, isRemoteSource, projectId]
+  );
+  const refreshSitemapItems = useCallback11(
+    () => refreshSitemapReviewItems({
+      localAdapterEntry,
+      projectId,
+      remoteAdapterEntry,
+      onSitemapItemsChange: setSitemapItems
+    }),
+    [localAdapterEntry, projectId, remoteAdapterEntry]
+  );
+  const cancelReviewMode = useCallback11(() => {
+    const controller = controllerRef.current;
+    if (!controller || controller.getMode() === "idle") return false;
+    controller.setMode("idle");
+    setMode(controller.getMode());
+    return true;
+  }, []);
+  const closePromptModal = useCallback11(() => {
+    setIsInitialPromptOpen(false);
+  }, []);
+  const closeSitemap = useCallback11(() => {
+    setIsSitemapOpen(false);
+  }, []);
+  const reloadTargetFrame = useCallback11(() => {
+    try {
+      iframeRef.current?.contentWindow?.location.reload();
+    } catch {
+      return;
+    }
+  }, []);
+  const {
+    closeFigmaSettings,
+    effectiveReviewTheme,
+    figmaSettingsStatus,
+    figmaTokenDraft,
+    isFigmaSettingsOpen,
+    isFigmaTokenGuideOpen,
+    isFigmaTokenVisible,
+    openFigmaSettings,
+    reviewThemeDraft,
+    reviewUserId,
+    reviewUserIdDraft,
+    saveReviewSettings,
+    setFigmaSettingsStatus,
+    setFigmaTokenDraft,
+    setIsFigmaTokenGuideOpen,
+    setIsFigmaTokenVisible,
+    setReviewThemeDraft,
+    setReviewUserIdDraft
+  } = useReviewSettings({
+    onCancelReviewMode: cancelReviewMode,
+    onCloseInitialPrompt: closePromptModal,
+    onCloseSitemap: closeSitemap,
+    onReloadTargetFrame: reloadTargetFrame
+  });
+  const {
+    currentPagePresenceUsers,
+    pagePresenceUsers,
+    presenceSessionId
+  } = useReviewPresence({
+    activeRoute,
+    mode,
+    presence,
+    projectId,
+    reviewPathPrefix,
+    reviewUserId,
+    selectedNumberedItem,
+    size,
+    source
+  });
+  const closeRulerPanels = useCallback11(() => {
+    closeSitemap();
+    closeFigmaSettings();
+  }, [closeFigmaSettings, closeSitemap]);
+  const {
+    closeRuler,
+    isRulerAvailable,
+    isRulerDragging,
+    isRulerVisible,
+    rulerHover,
+    rulerMeasure,
+    rulerMeasureLabel,
+    rulerOverlayRef,
+    rulerScaleX,
+    rulerScaleY,
+    rulerUnit,
+    toggleRuler
+  } = useReviewRuler({
+    iframeRef,
+    ruler,
+    size,
+    targetSrc,
+    onCancelReviewMode: cancelReviewMode,
+    onCloseTransientPanels: closeRulerPanels
+  });
+  const {
+    clearSelectedItem,
+    closeTargetOverlay,
+    initReviewKit,
+    reloadReviewKit,
+    restoreReviewItem,
+    setControllerReviewMode,
+    toggleTargetOverlay
+  } = useReviewController({
+    adapter,
+    cleanupTargetRef,
+    controllerRef,
+    frameScrollRef,
+    hiddenOverlayItemIdList,
+    hiddenOverlayItemIdListRef,
+    iframeRef,
+    isFigmaOverlayAvailable,
+    pageTargets,
+    pendingInitialItemIdRef,
+    pendingRestoreRef,
+    projectId,
+    reviewPathPrefix,
+    reviewViewportPresets,
+    ruler,
+    selectedItemIdRef,
+    size,
+    sizeRef,
+    source,
+    target,
+    targetOverlayState,
+    targetRef,
+    viewportPresets,
+    onActiveRouteChange: setActiveRoute,
+    onCancelReviewMode: cancelReviewMode,
+    onCloseRuler: closeRuler,
+    onDraftTargetChange: setDraftTarget,
+    onItemsRefresh: refreshItems,
+    onModeChange: setMode,
+    onSelectedItemIdChange: setSelectedItemId,
+    onSizeChange: setSize,
+    onTargetChange: setTarget,
+    onTargetOverlayStateChange: setTargetOverlayState
+  });
+  const refreshReviewData2 = useCallback11(() => {
+    return refreshReviewData({
+      onRefreshItems: refreshItems,
+      onRefreshSitemapItems: refreshSitemapItems,
+      onReloadReviewKit: reloadReviewKit
+    });
+  }, [refreshItems, refreshSitemapItems, reloadReviewKit]);
+  const toggleItemOverlayVisibility = useCallback11((itemId) => {
+    setHiddenOverlayItemIds((currentHiddenOverlayItemIds) => {
+      const nextHiddenItemIds = new Set(currentHiddenOverlayItemIds);
+      if (nextHiddenItemIds.has(itemId)) {
+        nextHiddenItemIds.delete(itemId);
+      } else {
+        nextHiddenItemIds.add(itemId);
+      }
+      return nextHiddenItemIds;
+    });
+  }, []);
+  useEffect9(() => {
+    void refreshItems();
+  }, [refreshItems]);
+  useEffect9(() => {
+    void refreshSitemapItems();
+  }, [refreshSitemapItems]);
+  useEffect9(() => {
+    if (!isSitemapOpen) return;
+    void refreshSitemapItems();
+  }, [isSitemapOpen, refreshSitemapItems]);
+  useEffect9(() => {
+    const frameScroll = frameScrollRef.current;
+    if (!frameScroll) return void 0;
+    const centerFrameScroll = () => {
+      frameScroll.scrollLeft = Math.max(
+        0,
+        (frameScroll.scrollWidth - frameScroll.clientWidth) / 2
+      );
+      frameScroll.scrollTop = 0;
+    };
+    const animationFrame = window.requestAnimationFrame(centerFrameScroll);
+    const transitionTimeout = window.setTimeout(centerFrameScroll, 180);
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(transitionTimeout);
+    };
+  }, [isListVisible, size.height, size.width, targetSrc]);
+  const applyTarget = () => {
+    const normalizedTarget = normalizeTarget(draftTarget, reviewPathPrefix);
+    clearSelectedItem();
+    targetRef.current = normalizedTarget;
+    setActiveRoute(normalizedTarget);
+    setDraftTarget(normalizedTarget);
+    setTarget(normalizedTarget);
+    updateShellUrl(normalizedTarget, sizeRef.current, source);
+  };
+  const selectPage = (href) => {
+    const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
+    clearSelectedItem();
+    targetRef.current = normalizedTarget;
+    setActiveRoute(normalizedTarget);
+    setDraftTarget(normalizedTarget);
+    setTarget(normalizedTarget);
+    updateShellUrl(normalizedTarget, sizeRef.current, source);
+    setIsSitemapOpen(false);
+  };
+  const setReviewMode = (nextMode) => {
+    const writeMode = getReviewModeWriteMode(nextMode);
+    if (writeMode && !activeAdapterEntry.writeModes.includes(writeMode)) return;
+    closeRuler();
+    if (nextMode === "element") {
+      closeTargetOverlay("figma");
+    }
+    setControllerReviewMode(nextMode);
+  };
+  useReviewShellHotkeys({
+    isFigmaSettingsOpen,
+    isInitialPromptOpen,
+    isRulerAvailable,
+    isRulerVisible,
+    isSitemapOpen,
+    mode,
+    onCancelReviewMode: cancelReviewMode,
+    onCloseFigmaSettings: closeFigmaSettings,
+    onCloseInitialPrompt: closePromptModal,
+    onCloseRuler: closeRuler,
+    onCloseSitemap: closeSitemap,
+    onSetReviewMode: setReviewMode,
+    onToggleRuler: toggleRuler,
+    onToggleTargetOverlay: toggleTargetOverlay
+  });
+  const copyCurrentUrl = () => copyCurrentReviewUrl({
+    onCopyLabelChange: setCopyLabel
+  });
+  const changeReviewSource = (nextSource) => {
+    if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
+    cancelReviewMode();
+    clearSelectedItem();
+    setItems([]);
+    setSource(nextSource);
+    updateShellUrl(targetRef.current, sizeRef.current, nextSource);
+  };
+  const changeItemStatus = (item, nextStatus) => updateReviewItemStatus({
+    activeAdapterEntry,
+    item,
+    nextStatus,
+    onRefreshReviewData: refreshReviewData2
+  });
+  const submitItem = (numberedItem) => submitReviewItem({
+    localAdapterEntry,
+    numberedItem,
+    remoteAdapterEntry,
+    selectedItemIdRef,
+    onClearSelectedItem: clearSelectedItem,
+    onRefreshReviewData: refreshReviewData2
+  });
+  const copyPrompt = (value, key) => copyReviewPrompt({
+    key,
+    value,
+    onCopiedPromptKeyChange: setCopiedPromptKey
+  });
+  const removeItem = (item) => removeReviewItem({
+    activeAdapterEntry,
+    isRemoteSource,
+    item,
+    selectedItemIdRef,
+    sizeRef,
+    source,
+    targetRef,
+    onClearSelectedItem: clearSelectedItem,
+    onRefreshReviewData: refreshReviewData2
+  });
+  return /* @__PURE__ */ jsxs14(
+    "div",
+    {
+      className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
+      children: [
+        /* @__PURE__ */ jsx16(
+          ReviewTopbar,
+          {
+            draftTarget,
+            copyLabel,
+            viewportPresets,
+            size,
+            presetScopeCounts,
+            isRulerAvailable,
+            isRulerVisible,
+            targetOverlayState,
+            isFigmaOverlayAvailable,
+            onDraftTargetChange: setDraftTarget,
+            onApplyTarget: applyTarget,
+            onOpenSitemap: () => setIsSitemapOpen(true),
+            onCopyCurrentUrl: () => void copyCurrentUrl(),
+            onSizeChange: setSize,
+            onToggleRuler: toggleRuler,
+            onToggleTargetOverlay: toggleTargetOverlay,
+            onOpenInitialPrompt: () => {
+              setIsInitialPromptOpen(true);
+            },
+            onOpenSettings: openFigmaSettings
+          }
+        ),
+        isSitemapOpen && /* @__PURE__ */ jsx16(
+          SitemapModal,
+          {
+            pages,
+            activeRoute,
+            pageQaCounts,
+            pagePresenceUsers,
+            getPageTarget: (href) => normalizeTarget(href, reviewPathPrefix),
+            onClose: () => setIsSitemapOpen(false),
+            onSelectPage: selectPage
+          }
+        ),
+        isFigmaSettingsOpen && /* @__PURE__ */ jsx16(
+          ReviewSettingsModal,
+          {
+            figmaTokenDraft,
+            reviewUserIdDraft,
+            reviewThemeDraft,
+            figmaSettingsStatus,
+            isFigmaTokenVisible,
+            isFigmaTokenGuideOpen,
+            onClose: closeFigmaSettings,
+            onFigmaTokenDraftChange: setFigmaTokenDraft,
+            onReviewUserIdDraftChange: setReviewUserIdDraft,
+            onReviewThemeDraftChange: setReviewThemeDraft,
+            onClearStatus: () => setFigmaSettingsStatus(""),
+            onToggleFigmaTokenVisible: () => setIsFigmaTokenVisible((current) => !current),
+            onToggleFigmaTokenGuide: () => setIsFigmaTokenGuideOpen((current) => !current),
+            onSave: saveReviewSettings
+          }
+        ),
+        isInitialPromptOpen && /* @__PURE__ */ jsx16(
+          PromptModal,
+          {
+            initialPromptText,
+            copiedPromptKey,
+            onClose: closePromptModal,
+            onCopyPrompt: (text, key) => void copyPrompt(text, key)
+          }
+        ),
+        /* @__PURE__ */ jsx16("div", { className: "df-review-side-rail", children: /* @__PURE__ */ jsxs14(
           "button",
           {
-            className: preset.label === size.label ? "is-active" : "",
+            "aria-label": isListVisible ? "Hide QA list" : "Show QA list",
+            className: "df-review-side-toggle",
             type: "button",
-            onClick: () => onSizeChange(preset),
+            onClick: () => setIsListVisible((current) => !current),
             children: [
-              /* @__PURE__ */ jsx2(ViewportPresetIcon, { preset }),
-              /* @__PURE__ */ jsx2("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ jsx2("strong", { children: preset.label }) }),
-              /* @__PURE__ */ jsx2("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
+              /* @__PURE__ */ jsx16("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx16(GripVertical, {}) }),
+              /* @__PURE__ */ jsx16("strong", { children: "QA" })
             ]
-          },
-          preset.label
-        )) }),
-        /* @__PURE__ */ jsx2("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ jsxs2("span", { className: "df-review-active-size", children: [
-          size.width,
-          "x",
-          size.height
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxs2("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
-        isRulerAvailable && /* @__PURE__ */ jsx2(
-          "button",
+          }
+        ) }),
+        /* @__PURE__ */ jsx16(
+          ReviewQaPanel,
           {
-            "aria-label": "Toggle ruler",
-            className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
-            type: "button",
-            onClick: onToggleRuler,
-            children: /* @__PURE__ */ jsx2(Ruler, { "aria-hidden": "true" })
+            activeAdapterEntry,
+            activeItems,
+            currentPagePresenceUsers,
+            currentPresetScope,
+            filteredNumberedActiveItems,
+            getItemPresetScope,
+            hiddenOverlayItemIds,
+            isListVisible,
+            isRemoteSource,
+            presenceSessionId,
+            qaFilter,
+            qaFilterCounts,
+            remoteAdapterEntry,
+            selectedItemId,
+            showSourceSelect,
+            source,
+            sourceEntries,
+            onChangeItemStatus: changeItemStatus,
+            onChangeReviewSource: changeReviewSource,
+            onQaFilterChange: setQaFilter,
+            onRefreshReviewData: refreshReviewData2,
+            onRemoveItem: removeItem,
+            onRestoreReviewItem: restoreReviewItem,
+            onSubmitItem: submitItem,
+            onToggleItemOverlayVisibility: toggleItemOverlayVisibility
           }
         ),
-        /* @__PURE__ */ jsx2(
-          "button",
+        /* @__PURE__ */ jsx16(
+          ReviewTargetFrame,
           {
-            "aria-label": "Toggle grid overlay",
-            className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
-            type: "button",
-            onClick: () => onToggleTargetOverlay("grid"),
-            children: /* @__PURE__ */ jsx2(LayoutGrid, { "aria-hidden": "true" })
-          }
-        ),
-        /* @__PURE__ */ jsx2(
-          "button",
-          {
-            "aria-disabled": !isFigmaOverlayAvailable,
-            "aria-label": isFigmaOverlayAvailable ? "Toggle Figma overlay" : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
-            className: `df-review-overlay-button is-figma${targetOverlayState.figma ? " is-active" : ""}${isFigmaOverlayAvailable ? "" : " is-disabled"}`,
-            type: "button",
-            onClick: () => onToggleTargetOverlay("figma"),
-            children: /* @__PURE__ */ jsx2(Image, { "aria-hidden": "true" })
-          }
-        ),
-        /* @__PURE__ */ jsx2("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ jsx2(
-          "button",
-          {
-            "aria-label": "Open initial prompt",
-            className: "df-review-overlay-button is-prompt",
-            type: "button",
-            onClick: onOpenInitialPrompt,
-            children: /* @__PURE__ */ jsx2(CircleQuestionMark, { "aria-hidden": "true" })
-          }
-        ),
-        /* @__PURE__ */ jsx2(
-          "button",
-          {
-            "aria-label": "Open settings",
-            className: "df-review-overlay-button is-settings",
-            type: "button",
-            onClick: onOpenSettings,
-            children: /* @__PURE__ */ jsx2(Settings, { "aria-hidden": "true" })
+            canWriteAny,
+            canWriteArea,
+            canWriteDom,
+            canWriteNote,
+            frameScrollRef,
+            iframeRef,
+            isRulerAvailable,
+            isRulerDragging,
+            isRulerVisible,
+            mode,
+            rulerHover,
+            rulerMeasure,
+            rulerMeasureLabel,
+            rulerOverlayRef,
+            rulerScaleX,
+            rulerScaleY,
+            rulerUnit,
+            size,
+            targetSrc,
+            onLoadTarget: initReviewKit,
+            onSetReviewMode: setReviewMode
           }
         )
-      ] })
-    ] })
-  ] });
+      ]
+    }
+  );
 };
 
 // src/react-shell/pages.ts
@@ -4000,7 +6972,7 @@ var createReviewPagesFromGlob = (entries, options = {}) => {
   }).filter((href) => !options.exclude?.(href)).sort((a, b) => sortReviewPages({ href: a }, { href: b })).map((href) => ({ href }));
 };
 
-// src/react-shell/supabase-presence.ts
+// src/react-shell/presence/supabase.ts
 var normalizeTopicPart = (value) => value.trim().replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "default";
 var getPresenceTopic = (channelPrefix, projectId) => `${normalizeTopicPart(channelPrefix)}-${normalizeTopicPart(projectId)}`;
 var PRESENCE_BRIDGE_KEY = "__dfReviewPresenceBridge";
@@ -4153,1759 +7125,7 @@ var createSupabasePresenceAdapter = ({
 });
 
 // src/react-shell.tsx
-import { Fragment as Fragment2, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
-var ReviewScopeIcon2 = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ jsx3(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ jsx3(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ jsx3(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ jsx3(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx3(Monitor, { "aria-hidden": "true" });
-};
-var isDomReviewItem = (item) => isAnchorRestorableReviewItem(item);
-var getReviewItemMode = (item) => isDomReviewItem(item) ? "dom" : item.kind;
-var getReviewModeWriteMode = (mode) => {
-  if (mode === "element") return "dom";
-  if (mode === "note" || mode === "area") return mode;
-  return null;
-};
-var createEmptySitemapQaCount = () => ({
-  local: 0,
-  remote: 0
-});
-var getStatusOption = (status, statusOptions) => {
-  const normalizedStatus = normalizeReviewItemStatus(status);
-  return statusOptions.find((statusOption) => statusOption.value === status) ?? statusOptions.find(
-    (statusOption) => statusOption.value === normalizedStatus
-  ) ?? statusOptions[0];
-};
-var ReviewItemModeIcon = ({
-  mode
-}) => {
-  if (mode === "area") return /* @__PURE__ */ jsx3(Scan, { "aria-hidden": "true" });
-  if (mode === "dom") return /* @__PURE__ */ jsx3(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx3(StickyNote, { "aria-hidden": "true" });
-};
-var getPresenceUserTarget = (user, reviewPathPrefix) => normalizeTarget(user.target || user.routeKey, reviewPathPrefix);
-var dedupePresenceUsersByPageAndId = (users, reviewPathPrefix) => {
-  const userByPageAndId = /* @__PURE__ */ new Map();
-  users.forEach((user) => {
-    const userId = user.userId.trim();
-    if (!userId) return;
-    const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
-    const key = `${userTarget}::${userId}`;
-    const currentUser = userByPageAndId.get(key);
-    if (!currentUser || Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)) {
-      userByPageAndId.set(key, user);
-    }
-  });
-  return Array.from(userByPageAndId.values());
-};
-function runWithAutoScrollBehavior(targetDocument, callback) {
-  const elements = [
-    targetDocument?.documentElement,
-    targetDocument?.body
-  ].filter((element) => Boolean(element));
-  const previousValues = elements.map((element) => element.style.scrollBehavior);
-  elements.forEach((element) => {
-    element.style.scrollBehavior = "auto";
-  });
-  try {
-    callback();
-  } finally {
-    elements.forEach((element, index) => {
-      element.style.scrollBehavior = previousValues[index] ?? "";
-    });
-  }
-}
-var ReviewShell = ({
-  projectId,
-  pages,
-  adapters,
-  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
-  ruler,
-  initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
-  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
-  presence
-}) => {
-  const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const reviewViewportPresets = useMemo2(
-    () => toReviewViewportPresets(viewportPresets),
-    [viewportPresets]
-  );
-  const normalizedAdapters = useMemo2(
-    () => normalizeReviewShellAdapters(adapters),
-    [adapters]
-  );
-  const localAdapterEntry = normalizedAdapters.local;
-  const remoteAdapterEntry = normalizedAdapters.remote;
-  const sourceEntries = normalizedAdapters.sources;
-  const defaultSource = sourceEntries[0]?.label ?? "local";
-  const [source, setSource] = useState(() => {
-    const initialSource = getInitialSource(remoteAdapterEntry?.label);
-    return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
-  });
-  const remoteSource = remoteAdapterEntry?.label ?? null;
-  const activeAdapterEntry = sourceEntries.find((entry) => entry.label === source) ?? sourceEntries[0];
-  const isRemoteSource = Boolean(
-    remoteSource && activeAdapterEntry.label === remoteSource
-  );
-  const showSourceSelect = sourceEntries.length > 1;
-  const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
-  const canWriteNote = activeAdapterEntry.writeModes.includes("note");
-  const canWriteArea = activeAdapterEntry.writeModes.includes("area");
-  const canWriteAny = canWriteDom || canWriteNote || canWriteArea;
-  const adapter = activeAdapterEntry.adapter;
-  const iframeRef = useRef(null);
-  const frameScrollRef = useRef(null);
-  const rulerOverlayRef = useRef(null);
-  const rulerDragRectRef = useRef(null);
-  const isRulerDraggingRef = useRef(false);
-  const controllerRef = useRef(null);
-  const cleanupTargetRef = useRef(null);
-  const presenceSessionRef = useRef(null);
-  const pendingRestoreRef = useRef(null);
-  const pendingInitialItemIdRef = useRef(getInitialItemId());
-  const selectedItemIdRef = useRef(getInitialItemId());
-  const hiddenOverlayItemIdListRef = useRef([]);
-  const [target, setTarget] = useState(
-    () => getInitialTarget(reviewPathPrefix)
-  );
-  const [draftTarget, setDraftTarget] = useState(
-    () => getInitialTarget(reviewPathPrefix)
-  );
-  const [activeRoute, setActiveRoute] = useState(
-    () => getInitialTarget(reviewPathPrefix)
-  );
-  const [size, setSize] = useState(
-    () => getInitialSize(viewportPresets)
-  );
-  const [items, setItems] = useState([]);
-  const [mode, setMode] = useState("idle");
-  const [targetOverlayState, setTargetOverlayState] = useState({
-    grid: false,
-    figma: false
-  });
-  const [selectedItemId, setSelectedItemId] = useState(getInitialItemId());
-  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = useState(() => /* @__PURE__ */ new Set());
-  const [isListVisible, setIsListVisible] = useState(true);
-  const [isSitemapOpen, setIsSitemapOpen] = useState(false);
-  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState(false);
-  const [figmaTokenDraft, setFigmaTokenDraft] = useState(getStoredFigmaToken);
-  const [reviewUserId, setReviewUserId] = useState(getStoredReviewUserId);
-  const [reviewUserIdDraft, setReviewUserIdDraft] = useState(
-    getStoredReviewUserId
-  );
-  const [reviewTheme, setReviewTheme] = useState(getStoredReviewTheme);
-  const [reviewThemeDraft, setReviewThemeDraft] = useState(getStoredReviewTheme);
-  const [systemReviewTheme, setSystemReviewTheme] = useState(getSystemReviewTheme);
-  const [figmaSettingsStatus, setFigmaSettingsStatus] = useState("");
-  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState(false);
-  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState(false);
-  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState(false);
-  const [qaFilter, setQaFilter] = useState("all");
-  const [copyLabel, setCopyLabel] = useState("Copy URL");
-  const [sitemapItems, setSitemapItems] = useState(() => ({
-    local: [],
-    remote: []
-  }));
-  const [isRulerVisible, setIsRulerVisible] = useState(false);
-  const [rulerStart, setRulerStart] = useState(null);
-  const [rulerPoint, setRulerPoint] = useState(null);
-  const [rulerHover, setRulerHover] = useState(null);
-  const [isRulerDragging, setIsRulerDragging] = useState(false);
-  const [copiedPromptKey, setCopiedPromptKey] = useState(null);
-  const [presenceUsers, setPresenceUsers] = useState([]);
-  const [presenceSessionVersion, setPresenceSessionVersion] = useState(0);
-  const presenceSessionId = useMemo2(getReviewPresenceSessionId, []);
-  const targetRef = useRef(target);
-  const sizeRef = useRef(size);
-  const effectiveReviewTheme = reviewTheme === "system" ? systemReviewTheme : reviewTheme;
-  const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
-  const isRulerAvailable = ruler?.enabled !== false && typeof size.designWidth === "number" && size.designWidth > 0;
-  const rulerUnit = ruler?.unit ?? "px";
-  const rulerScaleX = isRulerAvailable && size.designWidth ? size.width / size.designWidth : 1;
-  const rulerScaleY = size.designHeight && size.designHeight > 0 ? size.height / size.designHeight : rulerScaleX;
-  const rulerMeasure = useMemo2(
-    () => getRulerMeasure(rulerStart, rulerPoint),
-    [rulerPoint, rulerStart]
-  );
-  const rulerMeasureLabel = useMemo2(() => {
-    if (!rulerMeasure) return "";
-    const designWidth = Math.round(rulerMeasure.width / rulerScaleX);
-    const designHeight = Math.round(rulerMeasure.height / rulerScaleY);
-    return `Figma ${designWidth}x${designHeight}${rulerUnit}`;
-  }, [rulerMeasure, rulerScaleX, rulerScaleY, rulerUnit]);
-  const targetSrc = useMemo2(() => buildTargetSrc(target), [target]);
-  const pageTargets = useMemo2(
-    () => new Set(
-      pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
-    ),
-    [pages, reviewPathPrefix]
-  );
-  const activeItems = useMemo2(
-    () => items.filter((item) => getItemTarget(item, reviewPathPrefix) === activeRoute).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
-    [activeRoute, items, reviewPathPrefix]
-  );
-  const numberedActiveItems = useMemo2(
-    () => getNumberedReviewItems(activeItems, reviewViewportPresets),
-    [activeItems, reviewViewportPresets]
-  );
-  const filteredNumberedActiveItems = useMemo2(
-    () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
-      (numberedItem) => numberedItem.scope === qaFilter
-    ),
-    [numberedActiveItems, qaFilter]
-  );
-  const hiddenOverlayItemIdList = useMemo2(
-    () => Array.from(hiddenOverlayItemIds),
-    [hiddenOverlayItemIds]
-  );
-  const qaFilterCounts = useMemo2(() => {
-    const counts = /* @__PURE__ */ new Map();
-    counts.set("all", numberedActiveItems.length);
-    numberedActiveItems.forEach((numberedItem) => {
-      counts.set(numberedItem.scope, (counts.get(numberedItem.scope) ?? 0) + 1);
-    });
-    return counts;
-  }, [numberedActiveItems]);
-  const getItemPresetScope = useCallback(
-    (item) => getViewportPresetKind(
-      findViewportPreset(
-        viewportPresets,
-        item.viewport?.width ?? 0,
-        item.viewport?.height ?? 0
-      )
-    ),
-    [viewportPresets]
-  );
-  const presetScopeCounts = useMemo2(() => {
-    const counts = /* @__PURE__ */ new Map();
-    activeItems.forEach((item) => {
-      const scope = getItemPresetScope(item);
-      counts.set(scope, (counts.get(scope) ?? 0) + 1);
-    });
-    return counts;
-  }, [activeItems, getItemPresetScope]);
-  const currentPresetScope = getViewportPresetKind(size);
-  const pageQaCounts = useMemo2(() => {
-    const counts = /* @__PURE__ */ new Map();
-    const addItems = (sourceKey, sourceItems) => {
-      sourceItems.forEach((item) => {
-        const pageTarget = normalizeTarget(
-          getItemTarget(item, reviewPathPrefix),
-          reviewPathPrefix
-        );
-        const count = counts.get(pageTarget) ?? createEmptySitemapQaCount();
-        count[sourceKey] += 1;
-        counts.set(pageTarget, count);
-      });
-    };
-    addItems("local", sitemapItems.local);
-    addItems("remote", sitemapItems.remote);
-    return counts;
-  }, [reviewPathPrefix, sitemapItems]);
-  const selectedNumberedItem = useMemo2(
-    () => selectedItemId ? numberedActiveItems.find(
-      (numberedItem) => numberedItem.item.id === selectedItemId
-    ) : void 0,
-    [numberedActiveItems, selectedItemId]
-  );
-  const initialPromptText = initialPrompt.trim();
-  const normalizedReviewUserId = reviewUserId.trim();
-  const presenceDisplayName = getReviewPresenceDisplayName(
-    normalizedReviewUserId
-  );
-  const presenceColor = getReviewPresenceColor(
-    normalizedReviewUserId || presenceSessionId
-  );
-  const presenceViewport = useMemo2(
-    () => ({
-      label: size.label,
-      width: size.width,
-      height: size.height,
-      kind: getViewportPresetKind(size)
-    }),
-    [size]
-  );
-  const presenceStatus = mode === "idle" ? "reviewing" : "editing";
-  const visiblePresenceUsers = useMemo2(
-    () => {
-      const projectPresenceUsers = presenceUsers.filter(
-        (user) => user.projectId === projectId && user.userId.trim()
-      );
-      return dedupePresenceUsersByPageAndId(
-        projectPresenceUsers,
-        reviewPathPrefix
-      );
-    },
-    [presenceUsers, projectId, reviewPathPrefix]
-  );
-  const currentPagePresenceUsers = useMemo2(
-    () => visiblePresenceUsers.filter((user) => {
-      const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
-      return userTarget === activeRoute;
-    }),
-    [activeRoute, reviewPathPrefix, visiblePresenceUsers]
-  );
-  const pagePresenceUsers = useMemo2(() => {
-    const usersByTarget = /* @__PURE__ */ new Map();
-    visiblePresenceUsers.forEach((user) => {
-      const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
-      const pageUsers = usersByTarget.get(userTarget) ?? [];
-      pageUsers.push(user);
-      usersByTarget.set(userTarget, pageUsers);
-    });
-    return usersByTarget;
-  }, [reviewPathPrefix, visiblePresenceUsers]);
-  const getCurrentPresenceState = useCallback(
-    () => ({
-      projectId,
-      sessionId: presenceSessionId,
-      userId: normalizedReviewUserId,
-      displayName: presenceDisplayName,
-      color: presenceColor,
-      routeKey: activeRoute,
-      target: activeRoute,
-      source,
-      viewport: presenceViewport,
-      mode,
-      selectedItemId: selectedNumberedItem?.item.id ?? null,
-      selectedReviewNumber: selectedNumberedItem?.number ?? null,
-      status: presenceStatus,
-      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-    }),
-    [
-      activeRoute,
-      mode,
-      normalizedReviewUserId,
-      presenceColor,
-      presenceDisplayName,
-      presenceSessionId,
-      presenceStatus,
-      presenceViewport,
-      projectId,
-      selectedNumberedItem,
-      source
-    ]
-  );
-  const refreshItems = useCallback(async () => {
-    const nextItems = await adapter.list({
-      projectId,
-      pageId: activeAdapterEntry.pageId,
-      routeKey: isRemoteSource ? activeRoute : void 0
-    });
-    setItems(nextItems);
-    return nextItems;
-  }, [activeAdapterEntry.pageId, activeRoute, adapter, isRemoteSource, projectId]);
-  const refreshSitemapItems = useCallback(async () => {
-    const [localResult, remoteResult] = await Promise.allSettled([
-      localAdapterEntry ? localAdapterEntry.adapter.list({
-        projectId,
-        pageId: localAdapterEntry.pageId
-      }) : Promise.resolve([]),
-      remoteAdapterEntry ? remoteAdapterEntry.adapter.list({
-        projectId,
-        pageId: remoteAdapterEntry.pageId,
-        source: remoteAdapterEntry.label
-      }) : Promise.resolve([])
-    ]);
-    setSitemapItems({
-      local: localResult.status === "fulfilled" ? localResult.value : [],
-      remote: remoteResult.status === "fulfilled" ? remoteResult.value : []
-    });
-  }, [localAdapterEntry, projectId, remoteAdapterEntry]);
-  const refreshReviewData = useCallback(async () => {
-    await controllerRef.current?.reload();
-    await Promise.all([refreshItems(), refreshSitemapItems()]);
-  }, [refreshItems, refreshSitemapItems]);
-  const clearSelectedItem = useCallback(() => {
-    pendingRestoreRef.current = null;
-    selectedItemIdRef.current = null;
-    setSelectedItemId(null);
-    controllerRef.current?.highlightItem(void 0);
-  }, []);
-  const toggleItemOverlayVisibility = useCallback(
-    (itemId) => {
-      const nextHiddenItemIds = new Set(hiddenOverlayItemIds);
-      if (nextHiddenItemIds.has(itemId)) {
-        nextHiddenItemIds.delete(itemId);
-      } else {
-        nextHiddenItemIds.add(itemId);
-      }
-      const nextHiddenItemIdList = Array.from(nextHiddenItemIds);
-      setHiddenOverlayItemIds(nextHiddenItemIds);
-      const controller = controllerRef.current;
-      controller?.setHiddenItemIds(nextHiddenItemIdList);
-      hiddenOverlayItemIdListRef.current = nextHiddenItemIdList;
-    },
-    [hiddenOverlayItemIds]
-  );
-  const destroyReviewKit = useCallback(() => {
-    cleanupTargetRef.current?.();
-    cleanupTargetRef.current = null;
-    controllerRef.current?.destroy();
-    controllerRef.current = null;
-  }, []);
-  const syncTargetViewport = useCallback(() => {
-    window.dispatchEvent(new Event("resize"));
-  }, []);
-  const refreshTargetOverlayState = useCallback(() => {
-    setTargetOverlayState(
-      getTargetOverlayState(iframeRef.current?.contentDocument ?? void 0)
-    );
-  }, []);
-  const dispatchTargetOverlayHotkey = useCallback(
-    (overlay) => {
-      const targetWindow = iframeRef.current?.contentWindow;
-      if (!targetWindow) return false;
-      const code = overlay === "grid" ? "KeyG" : "KeyF";
-      targetWindow.dispatchEvent(
-        new KeyboardEvent("keydown", {
-          bubbles: true,
-          cancelable: true,
-          code,
-          key: code.replace("Key", "").toLowerCase(),
-          shiftKey: true
-        })
-      );
-      window.setTimeout(refreshTargetOverlayState, 80);
-      return true;
-    },
-    [refreshTargetOverlayState]
-  );
-  const toggleTargetOverlay = useCallback(
-    (overlay) => {
-      if (overlay === "figma" && !isFigmaOverlayAvailable) {
-        refreshTargetOverlayState();
-        return;
-      }
-      dispatchTargetOverlayHotkey(overlay);
-    },
-    [
-      dispatchTargetOverlayHotkey,
-      isFigmaOverlayAvailable,
-      refreshTargetOverlayState
-    ]
-  );
-  const closeTargetOverlay = useCallback(
-    (overlay) => {
-      const currentState = getTargetOverlayState(
-        iframeRef.current?.contentDocument ?? void 0
-      );
-      setTargetOverlayState(currentState);
-      if (!currentState[overlay]) return false;
-      return dispatchTargetOverlayHotkey(overlay);
-    },
-    [dispatchTargetOverlayHotkey]
-  );
-  const syncShellTarget = useCallback(
-    (nextTarget) => {
-      const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
-      if (normalizedTarget !== targetRef.current) {
-        clearSelectedItem();
-        targetRef.current = normalizedTarget;
-        setTarget(normalizedTarget);
-        setDraftTarget(normalizedTarget);
-        setActiveRoute(normalizedTarget);
-      }
-      if (selectedItemIdRef.current) {
-        updateShellUrlForItem(
-          normalizedTarget,
-          sizeRef.current,
-          selectedItemIdRef.current,
-          source
-        );
-      } else {
-        updateShellUrl(normalizedTarget, sizeRef.current, source);
-      }
-    },
-    [clearSelectedItem, reviewPathPrefix, source]
-  );
-  const applyItemScroll = useCallback(
-    (item) => {
-      if (selectedItemIdRef.current !== item.id) return;
-      const targetWindow = iframeRef.current?.contentWindow;
-      const targetDocument = iframeRef.current?.contentDocument;
-      if (!targetWindow) return;
-      const anchorElement = targetDocument ? queryReviewItemAnchorElement(targetDocument, item) : void 0;
-      runWithAutoScrollBehavior(targetDocument ?? void 0, () => {
-        if (!targetDocument) return;
-        setDocumentScrollInstantly(
-          targetWindow,
-          targetDocument,
-          getReviewItemRestoreScrollPosition(
-            targetWindow,
-            targetDocument,
-            item,
-            anchorElement
-          )
-        );
-      });
-      syncTargetViewport();
-      controllerRef.current?.highlightItem(item.id);
-    },
-    [syncTargetViewport]
-  );
-  const applyPendingRestore = useCallback(() => {
-    const item = pendingRestoreRef.current;
-    if (!item) return;
-    applyItemScroll(item);
-    pendingRestoreRef.current = null;
-  }, [applyItemScroll]);
-  const cancelReviewMode = useCallback(() => {
-    const controller = controllerRef.current;
-    if (!controller || controller.getMode() === "idle") return false;
-    controller.setMode("idle");
-    setMode(controller.getMode());
-    return true;
-  }, []);
-  const clearRulerMeasure = useCallback(() => {
-    rulerDragRectRef.current = null;
-    isRulerDraggingRef.current = false;
-    setRulerStart(null);
-    setRulerPoint(null);
-    setRulerHover(null);
-    setIsRulerDragging(false);
-  }, []);
-  const closeRuler = useCallback(() => {
-    if (!isRulerVisible) return false;
-    setIsRulerVisible(false);
-    clearRulerMeasure();
-    return true;
-  }, [clearRulerMeasure, isRulerVisible]);
-  const toggleRuler = useCallback(() => {
-    if (!isRulerAvailable) return;
-    cancelReviewMode();
-    setIsSitemapOpen(false);
-    setIsFigmaSettingsOpen(false);
-    clearRulerMeasure();
-    setIsRulerVisible((current) => !current);
-  }, [cancelReviewMode, clearRulerMeasure, isRulerAvailable]);
-  const finishRulerDrag = useCallback((point) => {
-    if (point) {
-      setRulerPoint(point);
-    }
-    rulerDragRectRef.current = null;
-    isRulerDraggingRef.current = false;
-    setIsRulerDragging(false);
-  }, []);
-  const startRulerDrag = useCallback(
-    (clientX, clientY, rect) => {
-      const point = getRulerPointFromRect(clientX, clientY, rect);
-      rulerDragRectRef.current = rect;
-      isRulerDraggingRef.current = true;
-      setRulerStart(point);
-      setRulerPoint(point);
-      setIsRulerDragging(true);
-    },
-    []
-  );
-  const reloadTargetFrame = useCallback(() => {
-    try {
-      iframeRef.current?.contentWindow?.location.reload();
-    } catch {
-      return;
-    }
-  }, []);
-  const openFigmaSettings = useCallback(() => {
-    cancelReviewMode();
-    setIsSitemapOpen(false);
-    setIsInitialPromptOpen(false);
-    setFigmaTokenDraft(getStoredFigmaToken());
-    setReviewUserIdDraft(getStoredReviewUserId());
-    setReviewThemeDraft(reviewTheme);
-    setFigmaSettingsStatus("");
-    setIsFigmaTokenVisible(false);
-    setIsFigmaTokenGuideOpen(false);
-    setIsFigmaSettingsOpen(true);
-  }, [cancelReviewMode, reviewTheme]);
-  const closeFigmaSettings = useCallback(() => {
-    setIsFigmaSettingsOpen(false);
-    setFigmaSettingsStatus("");
-    setIsFigmaTokenVisible(false);
-    setIsFigmaTokenGuideOpen(false);
-  }, []);
-  const saveReviewSettings = useCallback(
-    (token, userId, theme) => {
-      const nextToken = token.trim();
-      const nextUserId = userId.trim();
-      const nextTheme = normalizeReviewTheme(theme);
-      const shouldReload = nextToken !== getStoredFigmaToken() || nextUserId !== getStoredReviewUserId();
-      writeStoredFigmaToken(nextToken);
-      writeStoredReviewUserId(nextUserId);
-      writeStoredReviewTheme(nextTheme);
-      setFigmaTokenDraft(nextToken);
-      setReviewUserId(nextUserId);
-      setReviewUserIdDraft(nextUserId);
-      setReviewTheme(nextTheme);
-      setReviewThemeDraft(nextTheme);
-      setFigmaSettingsStatus(
-        nextToken || nextUserId || nextTheme !== DEFAULT_REVIEW_THEME ? "Saved" : "Cleared"
-      );
-      if (shouldReload) {
-        reloadTargetFrame();
-      }
-      closeFigmaSettings();
-    },
-    [closeFigmaSettings, reloadTargetFrame]
-  );
-  const restoreReviewItem = useCallback(
-    (item) => {
-      const nextTarget = getItemTarget(item, reviewPathPrefix);
-      const nextSize = getRestoredSize(item, viewportPresets);
-      pendingRestoreRef.current = item;
-      selectedItemIdRef.current = item.id;
-      setSelectedItemId(item.id);
-      setActiveRoute(nextTarget);
-      setDraftTarget(nextTarget);
-      setSize(nextSize);
-      updateShellUrlForItem(nextTarget, nextSize, item.id, source);
-      if (targetRef.current !== nextTarget) {
-        setTarget(nextTarget);
-        return;
-      }
-      applyPendingRestore();
-    },
-    [applyPendingRestore, viewportPresets, reviewPathPrefix, source]
-  );
-  const restoreInitialItem = useCallback(async () => {
-    const itemId = pendingInitialItemIdRef.current;
-    if (!itemId) return;
-    pendingInitialItemIdRef.current = null;
-    const item = await adapter.get(itemId);
-    if (item) {
-      restoreReviewItem(item);
-    }
-  }, [adapter, restoreReviewItem]);
-  const initReviewKit = useCallback(() => {
-    destroyReviewKit();
-    const iframe = iframeRef.current;
-    const targetWindow = iframe?.contentWindow;
-    const targetDocument = iframe?.contentDocument;
-    if (!iframe || !targetWindow || !targetDocument) return;
-    const syncRouteFromFrame = () => {
-      const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
-      if (nextTarget !== targetRef.current && !pageTargets.has(nextTarget)) {
-        return;
-      }
-      syncShellTarget(nextTarget);
-    };
-    const handleClick = (event) => {
-      if (event.defaultPrevented || event.button !== 0) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-        return;
-      }
-      const targetElement = event.target;
-      if (!targetElement || !("closest" in targetElement)) return;
-      const link = targetElement.closest("a[href]");
-      const href = link?.getAttribute("href");
-      const linkTarget = link?.getAttribute("target");
-      if (!href || linkTarget && linkTarget !== "_self") return;
-      const url = new URL(href, targetWindow.location.href);
-      if (url.origin !== targetWindow.location.origin) return;
-      const nextTarget = normalizeTarget(url.pathname, reviewPathPrefix);
-      if (nextTarget === targetRef.current) return;
-      event.preventDefault();
-      syncShellTarget(nextTarget);
-    };
-    const handleFrameKeyDown = (event) => {
-      if (event.key !== "Escape") return;
-      if (!cancelReviewMode() && !closeRuler()) return;
-      event.preventDefault();
-      event.stopPropagation();
-    };
-    const history = targetWindow.history;
-    const originalPushState = history.pushState.bind(history);
-    const originalReplaceState = history.replaceState.bind(history);
-    history.pushState = (...args) => {
-      originalPushState(...args);
-      syncRouteFromFrame();
-    };
-    history.replaceState = (...args) => {
-      originalReplaceState(...args);
-      syncRouteFromFrame();
-    };
-    syncRouteFromFrame();
-    targetWindow.addEventListener("popstate", syncRouteFromFrame);
-    targetWindow.addEventListener("hashchange", syncRouteFromFrame);
-    targetWindow.addEventListener("keydown", handleFrameKeyDown, true);
-    targetDocument.addEventListener("click", handleClick, true);
-    targetWindow.addEventListener("scroll", syncTargetViewport, true);
-    targetWindow.addEventListener("resize", syncTargetViewport);
-    cleanupTargetRef.current = () => {
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
-      targetWindow.removeEventListener("popstate", syncRouteFromFrame);
-      targetWindow.removeEventListener("hashchange", syncRouteFromFrame);
-      targetWindow.removeEventListener("keydown", handleFrameKeyDown, true);
-      targetDocument.removeEventListener("click", handleClick, true);
-      targetWindow.removeEventListener("scroll", syncTargetViewport, true);
-      targetWindow.removeEventListener("resize", syncTargetViewport);
-    };
-    controllerRef.current = createWebReviewKit({
-      projectId,
-      adapter,
-      target: () => {
-        const frame = iframeRef.current;
-        const frameWindow = frame?.contentWindow;
-        const frameDocument = frame?.contentDocument;
-        if (!frame || !frameWindow || !frameDocument) return void 0;
-        return {
-          window: frameWindow,
-          document: frameDocument,
-          getViewportRect: () => frame.getBoundingClientRect(),
-          getOverlayRect: () => {
-            const frameRect = frame.getBoundingClientRect();
-            const scrollRect = frameScrollRef.current?.getBoundingClientRect();
-            if (!scrollRect) return frameRect;
-            const left = Math.max(frameRect.left, scrollRect.left);
-            const top = Math.max(frameRect.top, scrollRect.top);
-            const right = Math.min(
-              frameRect.left + frameRect.width,
-              scrollRect.left + scrollRect.width
-            );
-            const bottom = Math.min(
-              frameRect.top + frameRect.height,
-              scrollRect.top + scrollRect.height
-            );
-            return {
-              left,
-              top,
-              width: Math.max(0, right - left),
-              height: Math.max(0, bottom - top)
-            };
-          }
-        };
-      },
-      hotkeys: {
-        qa: "Shift+Q"
-      },
-      anchors: {
-        attribute: "data-qa-id"
-      },
-      viewports: {
-        presets: reviewViewportPresets
-      },
-      ruler,
-      onRestoreItem: restoreReviewItem,
-      onItemsChange: () => {
-        void refreshItems();
-      },
-      onModeChange: setMode,
-      ui: {
-        panel: false
-      },
-      modules: {
-        qa: true,
-        grid: false,
-        figma: false
-      }
-    });
-    controllerRef.current.open();
-    controllerRef.current.setHiddenItemIds(hiddenOverlayItemIdListRef.current);
-    setMode(controllerRef.current.getMode());
-    void refreshItems();
-    void restoreInitialItem();
-    applyPendingRestore();
-    refreshTargetOverlayState();
-    setTargetScrollbarHidden(
-      targetDocument,
-      getViewportPresetKind(sizeRef.current) === "mobile"
-    );
-  }, [
-    adapter,
-    applyPendingRestore,
-    cancelReviewMode,
-    closeRuler,
-    destroyReviewKit,
-    projectId,
-    pageTargets,
-    refreshItems,
-    refreshTargetOverlayState,
-    reviewViewportPresets,
-    restoreInitialItem,
-    restoreReviewItem,
-    ruler,
-    reviewPathPrefix,
-    syncShellTarget,
-    syncTargetViewport
-  ]);
-  useEffect(() => destroyReviewKit, [destroyReviewKit]);
-  useEffect(() => {
-    if (!presence || !normalizedReviewUserId) {
-      const session = presenceSessionRef.current;
-      presenceSessionRef.current = null;
-      setPresenceUsers([]);
-      void session?.disconnect();
-      return void 0;
-    }
-    let isActive = true;
-    let unsubscribe;
-    const initialState = getCurrentPresenceState();
-    void Promise.resolve(
-      presence.connect({
-        projectId,
-        sessionId: presenceSessionId,
-        userId: normalizedReviewUserId,
-        displayName: presenceDisplayName,
-        color: presenceColor,
-        initialState
-      })
-    ).then((session) => {
-      if (!isActive) {
-        void session.disconnect();
-        return;
-      }
-      presenceSessionRef.current = session;
-      unsubscribe = session.subscribe(setPresenceUsers);
-      setPresenceSessionVersion((current) => current + 1);
-      void session.update(initialState);
-    }).catch(() => {
-      if (!isActive) return;
-      presenceSessionRef.current = null;
-      setPresenceUsers([]);
-    });
-    return () => {
-      isActive = false;
-      unsubscribe?.();
-      const session = presenceSessionRef.current;
-      presenceSessionRef.current = null;
-      setPresenceUsers([]);
-      void session?.disconnect();
-    };
-  }, [
-    normalizedReviewUserId,
-    presence,
-    presenceColor,
-    presenceDisplayName,
-    presenceSessionId,
-    projectId
-  ]);
-  useEffect(() => {
-    const session = presenceSessionRef.current;
-    if (!session || !normalizedReviewUserId) return;
-    void session.update(getCurrentPresenceState());
-  }, [
-    getCurrentPresenceState,
-    normalizedReviewUserId,
-    presenceSessionVersion
-  ]);
-  useEffect(() => {
-    const frameDocument = iframeRef.current?.contentDocument;
-    if (!frameDocument || frameDocument.readyState !== "complete") return;
-    initReviewKit();
-  }, [initReviewKit]);
-  useEffect(() => {
-    void refreshItems();
-  }, [refreshItems]);
-  useEffect(() => {
-    void refreshSitemapItems();
-  }, [refreshSitemapItems]);
-  useEffect(() => {
-    if (!isSitemapOpen) return;
-    void refreshSitemapItems();
-  }, [isSitemapOpen, refreshSitemapItems]);
-  useEffect(() => {
-    hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
-    controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
-  }, [hiddenOverlayItemIdList]);
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return void 0;
-    const query = window.matchMedia("(prefers-color-scheme: light)");
-    const syncSystemTheme = () => {
-      setSystemReviewTheme(query.matches ? "light" : "dark");
-    };
-    syncSystemTheme();
-    if (query.addEventListener) {
-      query.addEventListener("change", syncSystemTheme);
-      return () => query.removeEventListener("change", syncSystemTheme);
-    }
-    query.addListener(syncSystemTheme);
-    return () => query.removeListener(syncSystemTheme);
-  }, []);
-  useEffect(() => {
-    document.body.classList.toggle(
-      "df-review-theme-light",
-      effectiveReviewTheme === "light"
-    );
-    document.body.classList.toggle(
-      "df-review-theme-dark",
-      effectiveReviewTheme === "dark"
-    );
-    return () => {
-      document.body.classList.remove(
-        "df-review-theme-light",
-        "df-review-theme-dark"
-      );
-    };
-  }, [effectiveReviewTheme]);
-  useEffect(() => {
-    if (mode === "idle" && !isRulerVisible && !isInitialPromptOpen && !isSitemapOpen && !isFigmaSettingsOpen) {
-      return;
-    }
-    const handleKeyDown = (event) => {
-      if (event.key !== "Escape") return;
-      if (mode !== "idle" && cancelReviewMode()) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      if (closeRuler()) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      if (isInitialPromptOpen) {
-        setIsInitialPromptOpen(false);
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      if (isSitemapOpen) {
-        setIsSitemapOpen(false);
-        return;
-      }
-      if (isFigmaSettingsOpen) {
-        closeFigmaSettings();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    cancelReviewMode,
-    closeRuler,
-    closeFigmaSettings,
-    isFigmaSettingsOpen,
-    isInitialPromptOpen,
-    isRulerVisible,
-    isSitemapOpen,
-    mode
-  ]);
-  useEffect(() => {
-    targetRef.current = target;
-    setActiveRoute(target);
-  }, [target]);
-  useEffect(() => {
-    sizeRef.current = size;
-    if (selectedItemIdRef.current) {
-      updateShellUrlForItem(
-        targetRef.current,
-        size,
-        selectedItemIdRef.current,
-        source
-      );
-    } else {
-      updateShellUrl(targetRef.current, size, source);
-    }
-    syncTargetViewport();
-    setTargetScrollbarHidden(
-      iframeRef.current?.contentDocument,
-      getViewportPresetKind(size) === "mobile"
-    );
-  }, [size, source, syncTargetViewport]);
-  useEffect(() => {
-    const frameScroll = frameScrollRef.current;
-    if (!frameScroll) return void 0;
-    const centerFrameScroll = () => {
-      frameScroll.scrollLeft = Math.max(
-        0,
-        (frameScroll.scrollWidth - frameScroll.clientWidth) / 2
-      );
-      frameScroll.scrollTop = 0;
-    };
-    const animationFrame = window.requestAnimationFrame(centerFrameScroll);
-    const transitionTimeout = window.setTimeout(centerFrameScroll, 180);
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.clearTimeout(transitionTimeout);
-    };
-  }, [isListVisible, size.height, size.width, targetSrc]);
-  useEffect(() => {
-    if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
-    dispatchTargetOverlayHotkey("figma");
-  }, [
-    dispatchTargetOverlayHotkey,
-    isFigmaOverlayAvailable,
-    targetOverlayState.figma
-  ]);
-  useEffect(() => {
-    if (!isRulerVisible || !isRulerAvailable) return void 0;
-    const getRulerEventClientPoint = (event) => {
-      const frame2 = iframeRef.current;
-      let isFrameEvent = false;
-      try {
-        isFrameEvent = Boolean(frame2?.contentWindow) && event.view === frame2?.contentWindow;
-        if (!isFrameEvent && frame2?.contentDocument) {
-          const targetDocument = event.target?.ownerDocument;
-          isFrameEvent = targetDocument === frame2.contentDocument;
-        }
-      } catch {
-        isFrameEvent = false;
-      }
-      if (isFrameEvent && frame2) {
-        const frameRect = frame2.getBoundingClientRect();
-        return {
-          clientX: event.clientX + frameRect.left,
-          clientY: event.clientY + frameRect.top
-        };
-      }
-      return {
-        clientX: event.clientX,
-        clientY: event.clientY
-      };
-    };
-    const snapDesign = (screen, axis) => {
-      const current = sizeRef.current;
-      const scaleX = current.designWidth ? current.width / current.designWidth : 1;
-      const scale = axis === "y" ? current.designHeight ? current.height / current.designHeight : scaleX : scaleX;
-      return Math.round(Math.round(screen / scale) * scale);
-    };
-    const getActiveRulerPoint = (event) => {
-      const rect = rulerDragRectRef.current ?? rulerOverlayRef.current?.getBoundingClientRect();
-      if (!rect) return void 0;
-      const point = getRulerEventClientPoint(event);
-      const snapped = getRulerPointFromRect(point.clientX, point.clientY, rect);
-      return { x: snapDesign(snapped.x, "x"), y: snapDesign(snapped.y, "y") };
-    };
-    const getHoverRulerPoint = (event) => {
-      const rect = rulerOverlayRef.current?.getBoundingClientRect();
-      if (!rect) return null;
-      const { clientX, clientY } = getRulerEventClientPoint(event);
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
-      return { x: snapDesign(x, "x"), y: snapDesign(y, "y") };
-    };
-    const handleDragStart = (event) => {
-      if (isRulerDraggingRef.current) return;
-      const mouseEvent = event;
-      if (mouseEvent.button !== 0) return;
-      const overlay = rulerOverlayRef.current;
-      const target2 = mouseEvent.target;
-      if (!overlay || !(target2 instanceof Node) || !overlay.contains(target2)) {
-        return;
-      }
-      event.preventDefault();
-      startRulerDrag(
-        mouseEvent.clientX,
-        mouseEvent.clientY,
-        overlay.getBoundingClientRect()
-      );
-    };
-    const handlePointerMove = (event) => {
-      const mouseEvent = event;
-      if (isRulerDraggingRef.current) {
-        const point = getActiveRulerPoint(mouseEvent);
-        if (!point) return;
-        mouseEvent.preventDefault();
-        setRulerPoint(point);
-        setRulerHover(point);
-        return;
-      }
-      setRulerHover(getHoverRulerPoint(mouseEvent));
-    };
-    const handleDragEnd = (event) => {
-      if (!isRulerDraggingRef.current) return;
-      const point = getActiveRulerPoint(event);
-      event.preventDefault();
-      finishRulerDrag(point);
-    };
-    const handleWindowBlur = () => {
-      if (!isRulerDraggingRef.current) return;
-      finishRulerDrag();
-    };
-    const dragTargets = /* @__PURE__ */ new Set([window]);
-    const frame = iframeRef.current;
-    try {
-      if (frame?.contentWindow) dragTargets.add(frame.contentWindow);
-      if (frame?.contentDocument) dragTargets.add(frame.contentDocument);
-    } catch {
-    }
-    dragTargets.forEach((target2) => {
-      target2.addEventListener("mousedown", handleDragStart, true);
-      target2.addEventListener("mousemove", handlePointerMove, true);
-      target2.addEventListener("mouseup", handleDragEnd, true);
-    });
-    window.addEventListener("blur", handleWindowBlur);
-    return () => {
-      dragTargets.forEach((target2) => {
-        target2.removeEventListener("mousedown", handleDragStart, true);
-        target2.removeEventListener("mousemove", handlePointerMove, true);
-        target2.removeEventListener("mouseup", handleDragEnd, true);
-      });
-      window.removeEventListener("blur", handleWindowBlur);
-    };
-  }, [finishRulerDrag, isRulerAvailable, isRulerVisible, startRulerDrag]);
-  useEffect(() => {
-    clearRulerMeasure();
-  }, [clearRulerMeasure, size.height, size.width, targetSrc]);
-  useEffect(() => {
-    if (!isRulerVisible || isRulerAvailable) return;
-    closeRuler();
-  }, [closeRuler, isRulerAvailable, isRulerVisible]);
-  const applyTarget = () => {
-    const normalizedTarget = normalizeTarget(draftTarget, reviewPathPrefix);
-    clearSelectedItem();
-    targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
-    setDraftTarget(normalizedTarget);
-    setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, sizeRef.current, source);
-  };
-  const selectPage = (href) => {
-    const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
-    clearSelectedItem();
-    targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
-    setDraftTarget(normalizedTarget);
-    setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, sizeRef.current, source);
-    setIsSitemapOpen(false);
-  };
-  const setReviewMode = (nextMode) => {
-    const writeMode = getReviewModeWriteMode(nextMode);
-    if (writeMode && !activeAdapterEntry.writeModes.includes(writeMode)) return;
-    closeRuler();
-    if (nextMode === "element") {
-      closeTargetOverlay("figma");
-    }
-    controllerRef.current?.setMode(nextMode);
-    setMode(controllerRef.current?.getMode() ?? "idle");
-  };
-  const copyCurrentUrl = async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopyLabel("Copied");
-    window.setTimeout(() => setCopyLabel("Copy URL"), 1200);
-  };
-  const changeReviewSource = (nextSource) => {
-    if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
-    cancelReviewMode();
-    clearSelectedItem();
-    setItems([]);
-    setSource(nextSource);
-    updateShellUrl(targetRef.current, sizeRef.current, nextSource);
-  };
-  const changeItemStatus = async (item, nextStatus) => {
-    if (!activeAdapterEntry.updateStatus) return;
-    const statusIndex = activeAdapterEntry.statusOptions.findIndex(
-      (statusOption2) => statusOption2.value === nextStatus
-    );
-    const statusOption = activeAdapterEntry.statusOptions[statusIndex];
-    if (!statusOption) return;
-    await activeAdapterEntry.updateStatus({
-      id: item.id,
-      item,
-      status: statusOption.value,
-      statusOption,
-      statusIndex
-    });
-    await refreshReviewData();
-  };
-  const submitItem = async (numberedItem) => {
-    const { item } = numberedItem;
-    const localSubmitAdapter = localAdapterEntry;
-    const syncLocalSubmission = localSubmitAdapter?.syncSubmission;
-    if (!remoteAdapterEntry || !localSubmitAdapter || !syncLocalSubmission || item.submitStatus === "submitted") {
-      return;
-    }
-    const submitLocal = syncLocalSubmission;
-    await submitLocal({
-      id: item.id,
-      item,
-      patch: {
-        submitStatus: "submitting",
-        submitError: void 0
-      }
-    });
-    await refreshReviewData();
-    try {
-      await remoteAdapterEntry.adapter.create({
-        ...item,
-        reviewNumber: void 0,
-        externalIssueId: void 0,
-        externalIssueUrl: void 0,
-        submittedAt: void 0,
-        submitStatus: "submitted",
-        submitError: void 0
-      });
-      await localSubmitAdapter.adapter.remove(item.id);
-      if (selectedItemIdRef.current === item.id) {
-        clearSelectedItem();
-      }
-    } catch (error) {
-      await submitLocal({
-        id: item.id,
-        item,
-        patch: {
-          submitStatus: "failed",
-          submitError: error instanceof Error ? error.message : "Failed to submit remote"
-        }
-      });
-    }
-    await refreshReviewData();
-  };
-  const copyPrompt = async (value, key) => {
-    if (!value) return;
-    await navigator.clipboard.writeText(value);
-    setCopiedPromptKey(key);
-    window.setTimeout(() => {
-      setCopiedPromptKey((current) => current === key ? null : current);
-    }, 1200);
-  };
-  const closePromptModal = () => {
-    setIsInitialPromptOpen(false);
-  };
-  const removeItem = async (item) => {
-    if (!activeAdapterEntry.canRemove || item.submitStatus === "submitting" || !isRemoteSource && item.submitStatus === "submitted") {
-      return;
-    }
-    await activeAdapterEntry.adapter.remove(item.id);
-    if (selectedItemIdRef.current === item.id) {
-      clearSelectedItem();
-      updateShellUrl(targetRef.current, sizeRef.current, source);
-    }
-    await refreshReviewData();
-  };
-  useEffect(() => {
-    const handleHotkey = (event) => {
-      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
-        return;
-      }
-      if (isEditableEventTarget(event)) return;
-      const actions = {
-        r: () => {
-          if (isRulerAvailable) toggleRuler();
-        },
-        g: () => toggleTargetOverlay("grid"),
-        f: () => toggleTargetOverlay("figma"),
-        n: () => setReviewMode("note"),
-        e: () => setReviewMode("element"),
-        a: () => setReviewMode("area")
-      };
-      const action = actions[event.key.toLowerCase()];
-      if (!action) return;
-      event.preventDefault();
-      action();
-    };
-    window.addEventListener("keydown", handleHotkey);
-    return () => window.removeEventListener("keydown", handleHotkey);
-  }, [isRulerAvailable, toggleRuler, toggleTargetOverlay, setReviewMode]);
-  return /* @__PURE__ */ jsxs3(
-    "div",
-    {
-      className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
-      children: [
-        /* @__PURE__ */ jsx3(
-          ReviewTopbar,
-          {
-            draftTarget,
-            copyLabel,
-            viewportPresets,
-            size,
-            presetScopeCounts,
-            isRulerAvailable,
-            isRulerVisible,
-            targetOverlayState,
-            isFigmaOverlayAvailable,
-            onDraftTargetChange: setDraftTarget,
-            onApplyTarget: applyTarget,
-            onOpenSitemap: () => setIsSitemapOpen(true),
-            onCopyCurrentUrl: () => void copyCurrentUrl(),
-            onSizeChange: setSize,
-            onToggleRuler: toggleRuler,
-            onToggleTargetOverlay: toggleTargetOverlay,
-            onOpenInitialPrompt: () => {
-              setIsInitialPromptOpen(true);
-            },
-            onOpenSettings: openFigmaSettings
-          }
-        ),
-        isSitemapOpen && /* @__PURE__ */ jsx3(
-          SitemapModal,
-          {
-            pages,
-            activeRoute,
-            pageQaCounts,
-            pagePresenceUsers,
-            getPageTarget: (href) => normalizeTarget(href, reviewPathPrefix),
-            onClose: () => setIsSitemapOpen(false),
-            onSelectPage: selectPage
-          }
-        ),
-        isFigmaSettingsOpen && /* @__PURE__ */ jsx3(
-          ReviewSettingsModal,
-          {
-            figmaTokenDraft,
-            reviewUserIdDraft,
-            reviewThemeDraft,
-            figmaSettingsStatus,
-            isFigmaTokenVisible,
-            isFigmaTokenGuideOpen,
-            onClose: closeFigmaSettings,
-            onFigmaTokenDraftChange: setFigmaTokenDraft,
-            onReviewUserIdDraftChange: setReviewUserIdDraft,
-            onReviewThemeDraftChange: setReviewThemeDraft,
-            onClearStatus: () => setFigmaSettingsStatus(""),
-            onToggleFigmaTokenVisible: () => setIsFigmaTokenVisible((current) => !current),
-            onToggleFigmaTokenGuide: () => setIsFigmaTokenGuideOpen((current) => !current),
-            onSave: saveReviewSettings
-          }
-        ),
-        isInitialPromptOpen && /* @__PURE__ */ jsx3(
-          PromptModal,
-          {
-            initialPromptText,
-            copiedPromptKey,
-            onClose: closePromptModal,
-            onCopyPrompt: (text, key) => void copyPrompt(text, key)
-          }
-        ),
-        /* @__PURE__ */ jsx3("div", { className: "df-review-side-rail", children: /* @__PURE__ */ jsxs3(
-          "button",
-          {
-            "aria-label": isListVisible ? "Hide QA list" : "Show QA list",
-            className: "df-review-side-toggle",
-            type: "button",
-            onClick: () => setIsListVisible((current) => !current),
-            children: [
-              /* @__PURE__ */ jsx3("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx3(GripVertical, {}) }),
-              /* @__PURE__ */ jsx3("strong", { children: "QA" })
-            ]
-          }
-        ) }),
-        /* @__PURE__ */ jsx3("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: /* @__PURE__ */ jsx3("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs3("section", { className: "df-review-item-list", children: [
-          /* @__PURE__ */ jsxs3("div", { className: "df-review-list-header", children: [
-            /* @__PURE__ */ jsxs3("div", { className: "df-review-list-toolbar", children: [
-              /* @__PURE__ */ jsxs3("div", { className: "df-review-list-controls", children: [
-                showSourceSelect && /* @__PURE__ */ jsx3(
-                  "select",
-                  {
-                    "aria-label": "QA source",
-                    className: "df-review-source-select",
-                    value: source,
-                    onChange: (event) => changeReviewSource(event.currentTarget.value),
-                    children: sourceEntries.map((entry) => /* @__PURE__ */ jsx3("option", { value: entry.label, children: entry.label }, entry.label))
-                  }
-                ),
-                /* @__PURE__ */ jsx3(
-                  "button",
-                  {
-                    "aria-label": "Refresh QA",
-                    className: "df-review-source-refresh",
-                    type: "button",
-                    onClick: () => void refreshReviewData(),
-                    children: /* @__PURE__ */ jsx3(RefreshCw, { "aria-hidden": "true" })
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ jsx3("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
-                const count = qaFilterCounts.get(filter.key) ?? 0;
-                const isActive = qaFilter === filter.key;
-                return /* @__PURE__ */ jsx3(
-                  "button",
-                  {
-                    "aria-label": `${filter.label} QA (${count})`,
-                    "aria-pressed": isActive,
-                    className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
-                    type: "button",
-                    onClick: () => setQaFilter(filter.key),
-                    children: /* @__PURE__ */ jsx3("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ jsx3(ReviewScopeIcon2, { scope: filter.scope }) : /* @__PURE__ */ jsx3(ListFilter, { "aria-hidden": "true" }) })
-                  },
-                  filter.key
-                );
-              }) })
-            ] }),
-            /* @__PURE__ */ jsxs3("div", { className: "df-review-list-title", children: [
-              /* @__PURE__ */ jsxs3("span", { children: [
-                activeAdapterEntry.label,
-                " QA"
-              ] }),
-              /* @__PURE__ */ jsxs3("strong", { children: [
-                filteredNumberedActiveItems.length,
-                qaFilter === "all" ? "" : `/${activeItems.length}`
-              ] })
-            ] }),
-            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsxs3(
-              "div",
-              {
-                "aria-label": "Review presence",
-                className: "df-review-presence-row",
-                children: [
-                  /* @__PURE__ */ jsxs3("span", { className: "df-review-presence-label", children: [
-                    /* @__PURE__ */ jsx3(Users, { "aria-hidden": "true" }),
-                    "online ",
-                    currentPagePresenceUsers.length
-                  ] }),
-                  /* @__PURE__ */ jsx3("div", { className: "df-review-presence-list", children: currentPagePresenceUsers.map((user) => /* @__PURE__ */ jsxs3(
-                    "span",
-                    {
-                      className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
-                      style: {
-                        "--df-review-presence-color": user.color
-                      },
-                      children: [
-                        /* @__PURE__ */ jsx3(
-                          "span",
-                          {
-                            className: "df-review-presence-dot",
-                            "aria-hidden": "true"
-                          }
-                        ),
-                        /* @__PURE__ */ jsx3("span", { className: "df-review-presence-name", children: user.userId })
-                      ]
-                    },
-                    user.sessionId
-                  )) })
-                ]
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxs3("div", { className: "df-review-list-scroll", children: [
-            activeItems.length === 0 && /* @__PURE__ */ jsx3("p", { className: "df-review-empty", children: isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page." }),
-            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx3("p", { className: "df-review-empty", children: "No QA in this filter." }),
-            filteredNumberedActiveItems.map((numberedItem) => {
-              const { item } = numberedItem;
-              const itemMode = getReviewItemMode(item);
-              const isSubmitted = item.submitStatus === "submitted";
-              const isSubmitting = item.submitStatus === "submitting";
-              const canRemoveItem = activeAdapterEntry.canRemove && !isSubmitting && (isRemoteSource || !isSubmitted);
-              const hasRemoteActions = !isRemoteSource && Boolean(remoteAdapterEntry) || Boolean(item.externalIssueUrl);
-              const isItemOverlayVisible = !hiddenOverlayItemIds.has(item.id);
-              const itemComment = item.comment.trim() || getItemTitle(item);
-              const statusOptions = activeAdapterEntry.statusOptions;
-              const currentStatusOption = getStatusOption(
-                item.status,
-                statusOptions
-              );
-              const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
-              return /* @__PURE__ */ jsxs3(
-                "article",
-                {
-                  className: `df-review-item-card${item.id === selectedItemId ? " is-active" : ""}${getItemPresetScope(item) !== currentPresetScope ? " is-dim" : ""}${isItemOverlayVisible ? "" : " is-overlay-hidden"}`,
-                  onClick: () => restoreReviewItem(item),
-                  children: [
-                    /* @__PURE__ */ jsxs3("div", { className: "df-review-item-header", children: [
-                      /* @__PURE__ */ jsxs3("div", { className: "df-review-item-main", children: [
-                        /* @__PURE__ */ jsxs3("span", { className: "df-review-item-badges", children: [
-                          /* @__PURE__ */ jsx3("span", { className: "df-review-item-id", children: numberedItem.displayLabel }),
-                          /* @__PURE__ */ jsxs3(
-                            "span",
-                            {
-                              className: `df-review-item-scope is-scope-${numberedItem.scope}`,
-                              children: [
-                                /* @__PURE__ */ jsx3(ReviewScopeIcon2, { scope: numberedItem.scope }),
-                                numberedItem.label
-                              ]
-                            }
-                          ),
-                          /* @__PURE__ */ jsxs3(
-                            "span",
-                            {
-                              className: `df-review-item-mode is-mode-${itemMode}`,
-                              children: [
-                                /* @__PURE__ */ jsx3(ReviewItemModeIcon, { mode: itemMode }),
-                                itemMode
-                              ]
-                            }
-                          )
-                        ] }),
-                        /* @__PURE__ */ jsx3("strong", { className: "df-review-item-comment", children: itemComment }),
-                        /* @__PURE__ */ jsx3("small", { children: formatDate(item.createdAt) }),
-                        item.submitError && /* @__PURE__ */ jsx3("small", { className: "df-review-item-error", children: item.submitError })
-                      ] }),
-                      /* @__PURE__ */ jsxs3(
-                        "div",
-                        {
-                          className: "df-review-item-header-actions",
-                          onClick: (event) => event.stopPropagation(),
-                          children: [
-                            /* @__PURE__ */ jsx3(
-                              "button",
-                              {
-                                "aria-label": isItemOverlayVisible ? "Hide QA overlay" : "Show QA overlay",
-                                className: `df-review-item-visibility${isItemOverlayVisible ? " is-visible" : " is-hidden"}`,
-                                type: "button",
-                                onClick: () => toggleItemOverlayVisibility(item.id),
-                                children: isItemOverlayVisible ? /* @__PURE__ */ jsx3(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx3(EyeOff, { "aria-hidden": "true" })
-                              }
-                            ),
-                            canRemoveItem && /* @__PURE__ */ jsx3(
-                              "button",
-                              {
-                                "aria-label": "Delete QA",
-                                className: "df-review-item-delete",
-                                type: "button",
-                                onClick: () => void removeItem(item),
-                                children: /* @__PURE__ */ jsx3(X, { "aria-hidden": "true" })
-                              }
-                            )
-                          ]
-                        }
-                      )
-                    ] }),
-                    /* @__PURE__ */ jsxs3("div", { className: "df-review-item-actions", children: [
-                      currentStatusOption && /* @__PURE__ */ jsx3(
-                        "div",
-                        {
-                          className: "df-review-item-status-actions",
-                          onClick: (event) => event.stopPropagation(),
-                          children: canUpdateStatus ? /* @__PURE__ */ jsx3(
-                            "select",
-                            {
-                              "aria-label": "QA status",
-                              className: "df-review-item-status-select",
-                              value: currentStatusOption.value,
-                              onChange: (event) => void changeItemStatus(
-                                item,
-                                event.currentTarget.value
-                              ),
-                              children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx3(
-                                "option",
-                                {
-                                  value: statusOption.value,
-                                  children: statusOption.label
-                                },
-                                statusOption.value
-                              ))
-                            }
-                          ) : /* @__PURE__ */ jsx3("span", { className: "df-review-item-status-badge", children: currentStatusOption.label })
-                        }
-                      ),
-                      hasRemoteActions && /* @__PURE__ */ jsxs3(
-                        "div",
-                        {
-                          className: "df-review-item-remote-actions",
-                          onClick: (event) => event.stopPropagation(),
-                          children: [
-                            !isRemoteSource && remoteAdapterEntry && /* @__PURE__ */ jsxs3(
-                              "button",
-                              {
-                                "aria-label": "Submit to remote",
-                                className: "df-review-item-action-button df-review-item-submit-button",
-                                disabled: isSubmitted || isSubmitting,
-                                type: "button",
-                                onClick: () => void submitItem(numberedItem),
-                                children: [
-                                  /* @__PURE__ */ jsx3(Upload, { "aria-hidden": "true" }),
-                                  /* @__PURE__ */ jsx3("span", { children: isSubmitted ? "\uB4F1\uB85D\uB428" : isSubmitting ? "\uB4F1\uB85D \uC911" : "remote \uB4F1\uB85D" })
-                                ]
-                              }
-                            ),
-                            item.externalIssueUrl && /* @__PURE__ */ jsx3(
-                              "a",
-                              {
-                                "aria-label": "Open remote issue",
-                                className: "df-review-item-action-button",
-                                href: item.externalIssueUrl,
-                                rel: "noreferrer",
-                                target: "_blank",
-                                children: /* @__PURE__ */ jsx3(ExternalLink, { "aria-hidden": "true" })
-                              }
-                            )
-                          ]
-                        }
-                      )
-                    ] })
-                  ]
-                },
-                item.id
-              );
-            })
-          ] })
-        ] }) }) }),
-        /* @__PURE__ */ jsx3("main", { className: "df-review-stage", children: /* @__PURE__ */ jsxs3("div", { className: "df-review-frame", children: [
-          /* @__PURE__ */ jsx3("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ jsx3("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ jsxs3(
-            "div",
-            {
-              className: `df-review-device-frame${isRulerVisible && isRulerAvailable ? " is-ruler" : ""}`,
-              children: [
-                isRulerVisible && isRulerAvailable && /* @__PURE__ */ jsxs3(Fragment2, { children: [
-                  /* @__PURE__ */ jsx3("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
-                  /* @__PURE__ */ jsxs3(
-                    "div",
-                    {
-                      className: "df-review-ruler-gutter is-x",
-                      style: {
-                        "--df-review-ruler-step-x": `${rulerScaleX * 20}px`
-                      },
-                      children: [
-                        /* @__PURE__ */ jsxs3("div", { className: "df-review-ruler-frame-label", children: [
-                          /* @__PURE__ */ jsx3("strong", { children: size.label }),
-                          /* @__PURE__ */ jsxs3("span", { children: [
-                            size.designWidth,
-                            size.designHeight ? `x${size.designHeight}` : "",
-                            rulerUnit
-                          ] })
-                        ] }),
-                        rulerHover && /* @__PURE__ */ jsx3(
-                          "div",
-                          {
-                            className: "df-review-ruler-coord is-x",
-                            style: { left: `${rulerHover.x}px` },
-                            children: Math.round(rulerHover.x / rulerScaleX)
-                          }
-                        )
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsx3(
-                    "div",
-                    {
-                      className: "df-review-ruler-gutter is-y",
-                      style: {
-                        "--df-review-ruler-step-y": `${rulerScaleY * 20}px`
-                      },
-                      children: rulerHover && /* @__PURE__ */ jsx3(
-                        "div",
-                        {
-                          className: "df-review-ruler-coord is-y",
-                          style: { top: `${rulerHover.y}px` },
-                          children: Math.round(rulerHover.y / rulerScaleY)
-                        }
-                      )
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxs3(
-                  "div",
-                  {
-                    className: "df-review-device",
-                    style: {
-                      width: `${size.width}px`,
-                      height: `${size.height}px`,
-                      minWidth: `${size.width}px`,
-                      minHeight: `${size.height}px`
-                    },
-                    children: [
-                      /* @__PURE__ */ jsx3(
-                        "iframe",
-                        {
-                          ref: iframeRef,
-                          width: size.width,
-                          height: size.height,
-                          src: targetSrc,
-                          title: "Review target",
-                          onLoad: initReviewKit
-                        },
-                        targetSrc
-                      ),
-                      isRulerVisible && isRulerAvailable && /* @__PURE__ */ jsxs3(
-                        "div",
-                        {
-                          ref: rulerOverlayRef,
-                          "aria-label": "Ruler",
-                          className: `df-review-ruler-overlay${isRulerDragging ? " is-dragging" : ""}`,
-                          role: "application",
-                          onWheel: (event) => {
-                            iframeRef.current?.contentWindow?.scrollBy(
-                              event.deltaX,
-                              event.deltaY
-                            );
-                          },
-                          children: [
-                            rulerHover && /* @__PURE__ */ jsxs3(Fragment2, { children: [
-                              /* @__PURE__ */ jsx3(
-                                "div",
-                                {
-                                  className: "df-review-ruler-guide is-x",
-                                  "aria-hidden": "true",
-                                  style: { top: `${rulerHover.y}px` }
-                                }
-                              ),
-                              /* @__PURE__ */ jsx3(
-                                "div",
-                                {
-                                  className: "df-review-ruler-guide is-y",
-                                  "aria-hidden": "true",
-                                  style: { left: `${rulerHover.x}px` }
-                                }
-                              )
-                            ] }),
-                            rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs3(Fragment2, { children: [
-                              /* @__PURE__ */ jsx3(
-                                "div",
-                                {
-                                  className: "df-review-ruler-selection",
-                                  "aria-hidden": "true",
-                                  style: {
-                                    left: `${rulerMeasure.left}px`,
-                                    top: `${rulerMeasure.top}px`,
-                                    width: `${rulerMeasure.width}px`,
-                                    height: `${rulerMeasure.height}px`
-                                  }
-                                }
-                              ),
-                              /* @__PURE__ */ jsx3(
-                                "div",
-                                {
-                                  className: "df-review-ruler-label",
-                                  style: {
-                                    left: `${Math.min(
-                                      Math.max(
-                                        rulerMeasure.left + rulerMeasure.width + 8,
-                                        8
-                                      ),
-                                      Math.max(8, size.width - 164)
-                                    )}px`,
-                                    top: `${Math.min(
-                                      Math.max(
-                                        rulerMeasure.top + rulerMeasure.height + 8,
-                                        8
-                                      ),
-                                      Math.max(8, size.height - 34)
-                                    )}px`
-                                  },
-                                  children: rulerMeasureLabel
-                                }
-                              )
-                            ] })
-                          ]
-                        }
-                      )
-                    ]
-                  }
-                )
-              ]
-            }
-          ) }) }),
-          /* @__PURE__ */ jsx3("div", { className: "df-review-frame-actions", children: canWriteAny && /* @__PURE__ */ jsxs3("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
-            canWriteDom && /* @__PURE__ */ jsx3(
-              "button",
-              {
-                "aria-label": "Element",
-                className: `df-review-mode-button is-element${mode === "element" ? " is-active" : ""}`,
-                type: "button",
-                onClick: () => setReviewMode("element"),
-                children: /* @__PURE__ */ jsx3(SquareMousePointer, { "aria-hidden": "true" })
-              }
-            ),
-            canWriteDom && (canWriteNote || canWriteArea) && /* @__PURE__ */ jsx3("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
-            canWriteNote && /* @__PURE__ */ jsx3(
-              "button",
-              {
-                "aria-label": "Note",
-                className: `df-review-mode-button is-note${mode === "note" ? " is-active" : ""}`,
-                type: "button",
-                onClick: () => setReviewMode("note"),
-                children: /* @__PURE__ */ jsx3(StickyNote, { "aria-hidden": "true" })
-              }
-            ),
-            canWriteArea && /* @__PURE__ */ jsx3(
-              "button",
-              {
-                "aria-label": "Area",
-                className: `df-review-mode-button is-area${mode === "area" ? " is-active" : ""}`,
-                type: "button",
-                onClick: () => setReviewMode("area"),
-                children: /* @__PURE__ */ jsx3(Scan, { "aria-hidden": "true" })
-              }
-            )
-          ] }) })
-        ] }) })
-      ]
-    }
-  );
-};
+import { jsx as jsx17 } from "react/jsx-runtime";
 var mountReviewShell = (options) => {
   if (typeof document === "undefined" || !document.head) return;
   const { rootId = "root", ...shellProps } = options;
@@ -5916,7 +7136,7 @@ var mountReviewShell = (options) => {
   root.style.height = "100%";
   root.style.margin = "0";
   createRoot(root).render(
-    /* @__PURE__ */ jsx3(React.StrictMode, { children: /* @__PURE__ */ jsx3(ReviewShell, { ...shellProps }) })
+    /* @__PURE__ */ jsx17(React2.StrictMode, { children: /* @__PURE__ */ jsx17(ReviewShell, { ...shellProps }) })
   );
 };
 export {

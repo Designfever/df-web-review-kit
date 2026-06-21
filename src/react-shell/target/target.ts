@@ -1,4 +1,4 @@
-import type { TargetOverlayState } from './types';
+import type { TargetOverlayState } from '../types';
 
 export const HIDE_SCROLLBAR_STYLE_ID = 'df-review-hide-scrollbar';
 

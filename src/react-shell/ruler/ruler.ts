@@ -1,4 +1,4 @@
-import type { ReviewRulerMeasure, ReviewRulerPoint } from './types';
+import type { ReviewRulerMeasure, ReviewRulerPoint } from '../types';
 
 export const getRulerPointFromRect = (
   clientX: number,

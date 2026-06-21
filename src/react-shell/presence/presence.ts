@@ -3,7 +3,7 @@ import type {
   ReviewPresenceContext,
   ReviewPresenceState,
   ReviewPresenceUser,
-} from './types';
+} from '../types';
 
 const REVIEW_PRESENCE_SESSION_KEY = 'df-review-presence-session-id';
 const DEFAULT_LOCAL_PRESENCE_CHANNEL = 'df-review-kit:presence';

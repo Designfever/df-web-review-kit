@@ -1,0 +1,190 @@
+import {
+  useCallback,
+  type MutableRefObject,
+  type RefObject,
+} from 'react';
+import type {
+  ReviewItem,
+  ReviewSource,
+  WebReviewKitAdapter,
+  WebReviewKitController,
+} from '../../types';
+import {
+  getReviewItemRestoreScrollPosition,
+  queryReviewItemAnchorElement,
+  setDocumentScrollInstantly,
+} from '../anchor.restore';
+import {
+  getItemTarget,
+  updateShellUrlForItem,
+} from '../route';
+import type { ReviewShellViewportPreset } from '../types';
+import { getRestoredSize } from '../viewport';
+
+interface UseReviewItemRestoreOptions {
+  adapter: WebReviewKitAdapter;
+  controllerRef: MutableRefObject<WebReviewKitController | null>;
+  iframeRef: RefObject<HTMLIFrameElement | null>;
+  pendingInitialItemIdRef: MutableRefObject<string | null>;
+  pendingRestoreRef: MutableRefObject<ReviewItem | null>;
+  reviewPathPrefix: string;
+  selectedItemIdRef: MutableRefObject<string | null>;
+  source: ReviewSource;
+  targetRef: MutableRefObject<string>;
+  viewportPresets: ReviewShellViewportPreset[];
+  onActiveRouteChange: (target: string) => void;
+  onDraftTargetChange: (target: string) => void;
+  onSelectedItemIdChange: (itemId: string | null) => void;
+  onSizeChange: (size: ReviewShellViewportPreset) => void;
+  onSyncTargetViewport: () => void;
+  onTargetChange: (target: string) => void;
+}
+
+function runWithAutoScrollBehavior(
+  targetDocument: Document | undefined,
+  callback: () => void
+) {
+  const elements = [
+    targetDocument?.documentElement,
+    targetDocument?.body,
+  ].filter((element): element is HTMLElement => Boolean(element));
+  const previousValues = elements.map((element) => element.style.scrollBehavior);
+
+  elements.forEach((element) => {
+    element.style.scrollBehavior = 'auto';
+  });
+
+  try {
+    callback();
+  } finally {
+    elements.forEach((element, index) => {
+      element.style.scrollBehavior = previousValues[index] ?? '';
+    });
+  }
+}
+
+export const useReviewItemRestore = ({
+  adapter,
+  controllerRef,
+  iframeRef,
+  pendingInitialItemIdRef,
+  pendingRestoreRef,
+  reviewPathPrefix,
+  selectedItemIdRef,
+  source,
+  targetRef,
+  viewportPresets,
+  onActiveRouteChange,
+  onDraftTargetChange,
+  onSelectedItemIdChange,
+  onSizeChange,
+  onSyncTargetViewport,
+  onTargetChange,
+}: UseReviewItemRestoreOptions) => {
+  const clearSelectedItem = useCallback(() => {
+    pendingRestoreRef.current = null;
+    selectedItemIdRef.current = null;
+    onSelectedItemIdChange(null);
+    controllerRef.current?.highlightItem(undefined);
+  }, [
+    controllerRef,
+    onSelectedItemIdChange,
+    pendingRestoreRef,
+    selectedItemIdRef,
+  ]);
+
+  const applyItemScroll = useCallback(
+    (item: ReviewItem) => {
+      if (selectedItemIdRef.current !== item.id) return;
+
+      const targetWindow = iframeRef.current?.contentWindow;
+      const targetDocument = iframeRef.current?.contentDocument;
+      if (!targetWindow) return;
+
+      const anchorElement = targetDocument
+        ? queryReviewItemAnchorElement(targetDocument, item)
+        : undefined;
+
+      runWithAutoScrollBehavior(targetDocument ?? undefined, () => {
+        if (!targetDocument) return;
+
+        setDocumentScrollInstantly(
+          targetWindow,
+          targetDocument,
+          getReviewItemRestoreScrollPosition(
+            targetWindow,
+            targetDocument,
+            item,
+            anchorElement
+          )
+        );
+      });
+      onSyncTargetViewport();
+      controllerRef.current?.highlightItem(item.id);
+    },
+    [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
+  );
+
+  const applyPendingRestore = useCallback(() => {
+    const item = pendingRestoreRef.current;
+    if (!item) return;
+
+    applyItemScroll(item);
+    pendingRestoreRef.current = null;
+  }, [applyItemScroll, pendingRestoreRef]);
+
+  const restoreReviewItem = useCallback(
+    (item: ReviewItem) => {
+      const nextTarget = getItemTarget(item, reviewPathPrefix);
+      const nextSize = getRestoredSize(item, viewportPresets);
+
+      pendingRestoreRef.current = item;
+      selectedItemIdRef.current = item.id;
+      onSelectedItemIdChange(item.id);
+      onActiveRouteChange(nextTarget);
+      onDraftTargetChange(nextTarget);
+      onSizeChange(nextSize);
+      updateShellUrlForItem(nextTarget, nextSize, item.id, source);
+
+      if (targetRef.current !== nextTarget) {
+        onTargetChange(nextTarget);
+        return;
+      }
+
+      applyPendingRestore();
+    },
+    [
+      applyPendingRestore,
+      onActiveRouteChange,
+      onDraftTargetChange,
+      onSelectedItemIdChange,
+      onSizeChange,
+      onTargetChange,
+      pendingRestoreRef,
+      reviewPathPrefix,
+      selectedItemIdRef,
+      source,
+      targetRef,
+      viewportPresets,
+    ]
+  );
+
+  const restoreInitialItem = useCallback(async () => {
+    const itemId = pendingInitialItemIdRef.current;
+    if (!itemId) return;
+
+    pendingInitialItemIdRef.current = null;
+
+    const item = await adapter.get(itemId);
+    if (item) {
+      restoreReviewItem(item);
+    }
+  }, [adapter, pendingInitialItemIdRef, restoreReviewItem]);
+
+  return {
+    applyPendingRestore,
+    clearSelectedItem,
+    restoreInitialItem,
+    restoreReviewItem,
+  };
+};

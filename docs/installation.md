@@ -173,6 +173,7 @@ See [DB setup](db-setup.md) before enabling Supabase in a shared environment.
 ## Environment
 
 ```env
+VITE_REVIEW_PROJECT_ID=df-web-review-kit
 VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
 VITE_REVIEW_SUPABASE_ANON_KEY=
 VITE_REVIEW_SUPABASE_TABLE=review_items

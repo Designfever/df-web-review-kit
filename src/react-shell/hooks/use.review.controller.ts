@@ -35,6 +35,7 @@ interface UseReviewControllerOptions {
   pendingRestoreRef: MutableRefObject<ReviewItem | null>;
   projectId: string;
   reviewPathPrefix: string;
+  reviewUserId: string;
   reviewViewportPresets: ReviewViewportPreset[];
   ruler?: ReviewRulerConfig;
   selectedItemIdRef: MutableRefObject<string | null>;
@@ -71,6 +72,7 @@ export const useReviewController = ({
   pendingRestoreRef,
   projectId,
   reviewPathPrefix,
+  reviewUserId,
   reviewViewportPresets,
   ruler,
   selectedItemIdRef,
@@ -158,6 +160,7 @@ export const useReviewController = ({
     pageTargets,
     projectId,
     reviewPathPrefix,
+    reviewUserId,
     reviewViewportPresets,
     ruler,
     sizeRef,
@@ -181,6 +184,7 @@ export const useReviewController = ({
     reloadReviewKit,
     restoreReviewItem,
     setControllerReviewMode,
+    syncTargetViewport,
     toggleTargetOverlay,
   };
 };

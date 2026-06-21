@@ -33,6 +33,7 @@ import {
   ReviewSettingsModal,
   SitemapModal,
 } from '../shell.modals';
+import { buildReviewItemPrompt } from '../prompt/prompt';
 import { ReviewQaPanel } from '../qa/panel';
 import { ReviewTargetFrame } from '../target/frame';
 import { ReviewTopbar } from '../topbar';
@@ -122,7 +123,9 @@ export const ReviewShell = ({
     target,
     targetOverlayState,
     targetRef,
+    toastMessage,
     viewportPresets,
+    setToastMessage,
   } = useReviewShellState({
     adapters,
     presets,
@@ -282,6 +285,7 @@ export const ReviewShell = ({
     reloadReviewKit,
     restoreReviewItem,
     setControllerReviewMode,
+    syncTargetViewport,
     toggleTargetOverlay,
   } = useReviewController({
     adapter,
@@ -297,6 +301,7 @@ export const ReviewShell = ({
     pendingRestoreRef,
     projectId,
     reviewPathPrefix,
+    reviewUserId,
     reviewViewportPresets,
     ruler,
     selectedItemIdRef,
@@ -363,6 +368,7 @@ export const ReviewShell = ({
         (frameScroll.scrollWidth - frameScroll.clientWidth) / 2
       );
       frameScroll.scrollTop = 0;
+      syncTargetViewport();
     };
 
     const animationFrame = window.requestAnimationFrame(centerFrameScroll);
@@ -372,7 +378,7 @@ export const ReviewShell = ({
       window.cancelAnimationFrame(animationFrame);
       window.clearTimeout(transitionTimeout);
     };
-  }, [isListVisible, size.height, size.width, targetSrc]);
+  }, [isListVisible, size.height, size.width, syncTargetViewport, targetSrc]);
 
   const applyTarget = () => {
     const normalizedTarget = normalizeTarget(draftTarget, reviewPathPrefix);
@@ -427,6 +433,16 @@ export const ReviewShell = ({
       onCopyLabelChange: setCopyLabel,
     });
 
+  const showToast = useCallback(
+    (message: string) => {
+      setToastMessage(message);
+      window.setTimeout(() => {
+        setToastMessage((current) => (current === message ? '' : current));
+      }, 1600);
+    },
+    [setToastMessage]
+  );
+
   const changeReviewSource = (nextSource: ReviewSource) => {
     if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
 
@@ -446,6 +462,7 @@ export const ReviewShell = ({
       item,
       nextStatus,
       onRefreshReviewData: refreshReviewData,
+      onToast: showToast,
     });
 
   const submitItem = (numberedItem: NumberedReviewItem) =>
@@ -456,14 +473,28 @@ export const ReviewShell = ({
       selectedItemIdRef,
       onClearSelectedItem: clearSelectedItem,
       onRefreshReviewData: refreshReviewData,
+      onToast: showToast,
     });
 
-  const copyPrompt = (value: string, key: string) =>
+  const copyPrompt = (
+    value: string,
+    key: string,
+    toastMessage = 'Prompt copied'
+  ) =>
     copyReviewPrompt({
       key,
+      toastMessage,
       value,
       onCopiedPromptKeyChange: setCopiedPromptKey,
+      onToast: showToast,
     });
+
+  const copyItemPrompt = (numberedItem: NumberedReviewItem) =>
+    copyPrompt(
+      buildReviewItemPrompt(numberedItem, reviewPathPrefix),
+      `qa:${numberedItem.item.id}`,
+      'QA prompt copied'
+    );
 
   const removeItem = (item: ReviewItem) =>
     removeReviewItem({
@@ -476,6 +507,7 @@ export const ReviewShell = ({
       targetRef,
       onClearSelectedItem: clearSelectedItem,
       onRefreshReviewData: refreshReviewData,
+      onToast: showToast,
     });
 
   return (
@@ -551,6 +583,12 @@ export const ReviewShell = ({
         />
       )}
 
+      {toastMessage && (
+        <div className="df-review-copy-toast" role="status">
+          {toastMessage}
+        </div>
+      )}
+
       <div className="df-review-side-rail">
         <button
           aria-label={isListVisible ? 'Hide QA list' : 'Show QA list'}
@@ -576,6 +614,7 @@ export const ReviewShell = ({
         isListVisible={isListVisible}
         isRemoteSource={isRemoteSource}
         presenceSessionId={presenceSessionId}
+        copiedPromptKey={copiedPromptKey}
         qaFilter={qaFilter}
         qaFilterCounts={qaFilterCounts}
         remoteAdapterEntry={remoteAdapterEntry}
@@ -585,6 +624,7 @@ export const ReviewShell = ({
         sourceEntries={sourceEntries}
         onChangeItemStatus={changeItemStatus}
         onChangeReviewSource={changeReviewSource}
+        onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
         onQaFilterChange={setQaFilter}
         onRefreshReviewData={refreshReviewData}
         onRemoveItem={removeItem}

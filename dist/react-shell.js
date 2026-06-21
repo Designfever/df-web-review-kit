@@ -3,7 +3,7 @@ import {
   createWebReviewKit,
   getNumberedReviewItems,
   normalizeReviewItemStatus
-} from "./chunk-4PDU6TZE.js";
+} from "./chunk-ZPV3V3HW.js";
 
 // src/react-shell.tsx
 import React2 from "react";
@@ -244,6 +244,8 @@ function ensureReviewShellStyle() {
 	  .df-review-topbar {
 	    grid-column: 1;
 	    grid-row: 1;
+	    position: relative;
+	    z-index: 600;
 	    display: grid;
 	    gap: var(--df-review-space-2);
 	    container-type: inline-size;
@@ -315,6 +317,7 @@ function ensureReviewShellStyle() {
 		  .df-review-prompt-block-header button:hover,
 			  .df-review-item-actions button:hover,
 		  .df-review-item-visibility:hover,
+		  .df-review-item-prompt-copy:hover,
 		  .df-review-item-delete:hover,
 		  .df-review-presets button.is-active,
 			  .df-review-overlay-button.is-active,
@@ -630,23 +633,6 @@ function ensureReviewShellStyle() {
 		    min-width: 0;
 		  }
 
-		  .df-review-settings-theme-select {
-		    min-height: 34px;
-		    max-width: 118px;
-		    border: 1px solid var(--df-review-line);
-		    border-radius: var(--df-review-radius-sm);
-		    padding: 0 9px;
-		    color: var(--df-review-text);
-		    background: var(--df-review-control);
-		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 800;
-		  }
-
-		  .df-review-settings-theme-select:focus-visible {
-		    outline: 2px solid var(--df-review-focus-ring);
-		    outline-offset: 1px;
-		  }
-
 		  .df-review-settings-header strong {
 		    color: var(--df-review-text);
 		    font-size: var(--df-review-font-size-lg);
@@ -679,11 +665,56 @@ function ensureReviewShellStyle() {
 		    gap: 7px;
 		  }
 
+		  .df-review-settings-row {
+		    display: grid;
+		    grid-template-columns: minmax(0, 1fr) auto;
+		    align-items: center;
+		    gap: 12px;
+		  }
+
 		  .df-review-settings-field span,
+		  .df-review-settings-row > span,
 		  .df-review-settings-label-row label {
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-sm);
 		    font-weight: 800;
+		  }
+
+		  .df-review-settings-theme-options {
+		    display: inline-flex;
+		    justify-content: flex-end;
+		    gap: 6px;
+		    min-width: 0;
+		    flex-wrap: wrap;
+		  }
+
+		  .df-review-settings-theme-option {
+		    min-height: 30px;
+		    border: 1px solid var(--df-review-line);
+		    border-radius: var(--df-review-radius-sm);
+		    padding: 0 10px;
+		    color: var(--df-review-muted);
+		    background: var(--df-review-control);
+		    box-shadow: var(--df-review-shadow-control);
+		    font-size: var(--df-review-font-size-sm);
+		    font-weight: 800;
+		  }
+
+		  .df-review-settings-theme-option:hover {
+		    border-color: var(--df-review-accent);
+		    background: var(--df-review-control-hover);
+		    color: var(--df-review-text);
+		  }
+
+		  .df-review-settings-theme-option.is-active {
+		    border-color: var(--df-review-accent);
+		    background: var(--df-review-accent-soft);
+		    color: var(--df-review-accent);
+		  }
+
+		  .df-review-settings-theme-option:focus-visible {
+		    outline: 2px solid var(--df-review-focus-ring);
+		    outline-offset: 1px;
 		  }
 
 		  .df-review-settings-label-row {
@@ -881,6 +912,24 @@ function ensureReviewShellStyle() {
 			    background: var(--df-review-panel);
 			    box-shadow: var(--df-review-shadow-modal);
 			  }
+
+  .df-review-copy-toast {
+    position: fixed;
+    right: 52px;
+    bottom: 24px;
+    z-index: 1003;
+    max-width: min(320px, calc(100vw - 32px));
+    padding: 10px 13px;
+    border: 1px solid var(--df-review-accent-hover);
+    border-radius: var(--df-review-radius-md);
+    background: var(--df-review-panel);
+    box-shadow: var(--df-review-shadow-modal);
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 800;
+    line-height: 1.25;
+    pointer-events: none;
+  }
 
 			  .df-review-prompt-header {
 			    display: flex;
@@ -1247,6 +1296,8 @@ function ensureReviewShellStyle() {
 	  .df-review-side-rail {
 	    grid-column: 3;
 	    grid-row: 1 / span 2;
+	    position: relative;
+	    z-index: 600;
 	    display: flex;
 	    align-items: stretch;
 	    justify-content: center;
@@ -1305,6 +1356,8 @@ function ensureReviewShellStyle() {
 	  .df-review-qa-panel {
 	    grid-column: 2;
 	    grid-row: 1 / span 2;
+	    position: relative;
+	    z-index: 600;
 	    display: grid;
 	    grid-template-rows: minmax(0, 1fr);
 	    min-width: 0;
@@ -1589,30 +1642,23 @@ function ensureReviewShellStyle() {
 	  .df-review-item-card {
 		    position: relative;
 		    display: grid;
-		    gap: var(--df-review-space-2);
-		    padding: var(--df-review-space-3);
+		    gap: var(--df-review-space-2-5);
+		    padding: var(--df-review-space-3-5);
 		    border: 1px solid var(--df-review-line-soft);
 		    border-radius: var(--df-review-radius-lg);
 		    background: var(--df-review-card);
 		    cursor: pointer;
-		    transition: border-color 140ms ease, background 140ms ease, opacity 140ms ease, transform 140ms ease;
+		    transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 		  }
-
-	  .df-review-item-card:not(.is-dim) {
-    border-left: 3px solid var(--df-review-accent);
-    padding-left: calc(var(--df-review-space-3) - 2px);
-  }
 
   .df-review-item-card:not(.is-dim):hover {
     border-color: var(--df-review-line);
-    background: var(--df-review-card-hover);
-    transform: translateY(-1px);
   }
 
   .df-review-item-card.is-active {
 	    border-color: var(--df-review-accent);
-	    background: var(--df-review-accent-soft);
-	    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
+	    background: var(--df-review-card);
+	    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover), 0 0 0 3px rgba(124, 199, 255, 0.12);
 	  }
 
   .df-review-item-card.is-overlay-hidden .df-review-item-main {
@@ -1653,6 +1699,12 @@ function ensureReviewShellStyle() {
 	    color: var(--df-review-subtle);
 	    font-size: var(--df-review-font-size-xs);
 	  }
+
+  .df-review-item-meta {
+    display: block;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
 
   .df-review-item-error {
     color: var(--df-review-danger) !important;
@@ -1745,23 +1797,65 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-item-status-badge {
-    border-color: var(--df-review-line);
-    color: var(--df-review-muted);
-    background: var(--df-review-line-soft);
+    min-height: 30px;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 11px;
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 750;
+    text-transform: none;
   }
 
   .df-review-item-status-select {
-    max-width: 86px;
+    min-height: 30px;
+    min-width: 92px;
+    max-width: 118px;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 10px;
     cursor: pointer;
-    border-color: var(--df-review-line);
-    color: var(--df-review-text);
-    background: var(--df-review-control);
     outline: 0;
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 750;
+    text-transform: none;
   }
 
   .df-review-item-status-select:focus-visible {
     border-color: var(--df-review-accent);
     box-shadow: 0 0 0 2px var(--df-review-accent-soft);
+  }
+
+  .df-review-item-status-badge.is-status-todo,
+  .df-review-item-status-select.is-status-todo {
+    border-color: var(--df-review-line);
+    color: var(--df-review-muted);
+    background: var(--df-review-line-soft);
+  }
+
+  .df-review-item-status-badge.is-status-doing,
+  .df-review-item-status-select.is-status-doing {
+    border-color: rgba(124, 199, 255, 0.34);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-item-status-badge.is-status-review,
+  .df-review-item-status-select.is-status-review {
+    border-color: rgba(243, 183, 95, 0.34);
+    color: var(--df-review-note);
+    background: var(--df-review-note-soft);
+  }
+
+  .df-review-item-status-badge.is-status-hold,
+  .df-review-item-status-select.is-status-hold {
+    border-color: rgba(179, 149, 255, 0.32);
+    color: var(--df-review-purple);
+    background: var(--df-review-purple-soft);
+  }
+
+  .df-review-item-status-badge.is-status-done,
+  .df-review-item-status-select.is-status-done {
+    border-color: rgba(99, 215, 199, 0.34);
+    color: var(--df-review-area);
+    background: var(--df-review-area-soft);
   }
 
   .df-review-item-status-badge.is-error {
@@ -1783,21 +1877,36 @@ function ensureReviewShellStyle() {
 	    display: inline-flex;
 	    align-items: center;
 	    justify-content: flex-end;
-	    gap: 4px;
+	    gap: 2px;
 	    cursor: auto;
 	  }
 
   .df-review-item-delete,
+  .df-review-item-prompt-copy,
   .df-review-item-visibility {
     display: inline-grid;
     place-items: center;
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
     padding: 0;
     color: var(--df-review-muted);
     background: transparent;
+    transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+  }
+
+  .df-review-item-visibility:hover,
+  .df-review-item-prompt-copy:hover {
+    border-color: rgba(124, 199, 255, 0.34);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-item-delete:hover {
+    border-color: rgba(255, 143, 97, 0.34);
+    color: var(--df-review-danger);
+    background: var(--df-review-danger-soft);
   }
 
   .df-review-item-visibility.is-visible {
@@ -1809,7 +1918,12 @@ function ensureReviewShellStyle() {
     color: var(--df-review-subtle);
   }
 
+  .df-review-item-prompt-copy.is-copied {
+    color: var(--df-review-accent);
+  }
+
   .df-review-item-delete svg,
+  .df-review-item-prompt-copy svg,
   .df-review-item-visibility svg {
     width: 14px;
     height: 14px;
@@ -1821,6 +1935,7 @@ function ensureReviewShellStyle() {
 			    align-items: center;
 			    gap: 6px;
 			    min-width: 0;
+			    margin-top: 2px;
 			  }
 
 			  .df-review-item-status-actions {
@@ -1836,6 +1951,7 @@ function ensureReviewShellStyle() {
 			    grid-column: 3;
 			    align-items: center;
 			    justify-content: flex-end;
+			    justify-self: end;
 			    gap: 6px;
 			    min-width: 0;
 		    cursor: auto;
@@ -1845,9 +1961,9 @@ function ensureReviewShellStyle() {
     position: relative;
     display: inline-grid;
     place-items: center;
-    width: 30px;
-    min-width: 30px;
-    height: 28px;
+    width: 32px;
+    min-width: 32px;
+    height: 30px;
     border: 1px solid var(--df-review-line);
     border-radius: var(--df-review-radius-sm);
     padding: 0;
@@ -1861,26 +1977,30 @@ function ensureReviewShellStyle() {
 	    background: var(--df-review-control-hover);
 	  }
 
-		  .df-review-item-submit-button {
-		    display: inline-flex;
-		    align-items: center;
-		    gap: 6px;
-		    width: auto;
-		    min-width: 0;
-		    padding: 0 9px;
-		    border-color: rgba(124, 199, 255, 0.46);
-		    background: var(--df-review-accent-soft);
-		    color: var(--df-review-accent);
+			  .df-review-item-actions .df-review-item-submit-button {
+			    display: inline-flex;
+			    align-items: center;
+			    gap: 6px;
+			    min-height: 30px;
+			    height: 30px;
+			    width: auto;
+			    min-width: 0;
+			    border-radius: var(--df-review-radius-sm);
+			    padding: 0 11px;
+		    border-color: var(--df-review-line);
+		    background: var(--df-review-control);
+		    color: var(--df-review-text);
 		  }
 
 		  .df-review-item-submit-button span {
-		    font-size: var(--df-review-font-size-2xs);
-		    font-weight: 900;
+		    font-size: var(--df-review-font-size-xs);
+		    font-weight: 750;
 		    line-height: 1;
+		    text-transform: none;
 		    white-space: nowrap;
 		  }
 
-	  .df-review-item-submit-button:hover:not(:disabled) {
+	  .df-review-item-actions .df-review-item-submit-button:hover:not(:disabled) {
 	    border-color: var(--df-review-accent);
 	    background: var(--df-review-accent-hover);
 	    color: var(--df-review-text);
@@ -1918,6 +2038,8 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-frame-actions {
+    position: relative;
+    z-index: 600;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2715,21 +2837,102 @@ var getIsFigmaOverlayAvailable = (preset) => {
 
 // src/react-shell/prompt/prompt.ts
 var getItemTitle = (item) => item.title || item.comment.split("\n")[0] || item.kind;
+var formatPromptViewport = (item) => `${Math.round(item.viewport?.width ?? 0)}x${Math.round(
+  item.viewport?.height ?? 0
+)}`;
+var formatPromptPoint = (point) => point ? `x=${Math.round(point.x)}, y=${Math.round(point.y)}` : "(none)";
+var formatPromptSelection = (selection) => {
+  if (!selection) return "(none)";
+  const x = "x" in selection ? selection.x : selection.left;
+  const y = "y" in selection ? selection.y : selection.top;
+  return `x=${Math.round(x ?? 0)}, y=${Math.round(y ?? 0)}, width=${Math.round(
+    selection.width
+  )}, height=${Math.round(selection.height)}`;
+};
+var decodePromptHtmlEntities = (value) => value.replace(
+  /&(#\d+|#x[\da-f]+|lt|gt|quot|apos|amp);/gi,
+  (match, entity) => {
+    const normalized = entity.toLowerCase();
+    if (normalized === "lt") return "<";
+    if (normalized === "gt") return ">";
+    if (normalized === "quot") return '"';
+    if (normalized === "apos") return "'";
+    if (normalized === "amp") return "&";
+    const codePoint = normalized.startsWith("#x") ? Number.parseInt(normalized.slice(2), 16) : Number.parseInt(normalized.slice(1), 10);
+    return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+  }
+);
+var getPromptAnchorCandidates = (item) => {
+  const anchor = item.anchor;
+  if (!anchor) return [];
+  const seen = /* @__PURE__ */ new Set();
+  return [anchor, ...anchor.candidates ?? []].filter((candidate) => {
+    const key = `${candidate.strategy}:${candidate.selector}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+var formatPromptSourceHint = (item) => {
+  const source = item.anchor?.source;
+  if (!source) return "(none)";
+  return [
+    `Component: ${source.component ?? "(unknown)"}`,
+    `File: ${source.file ?? "(unknown)"}`,
+    `Section index: ${source.sectionIndex ?? "(unknown)"}`,
+    `Section id: ${source.sectionId ?? "(none)"}`
+  ].join("\n");
+};
+var buildReviewItemPrompt = (numberedItem, reviewPathPrefix) => {
+  const { item } = numberedItem;
+  const anchor = item.anchor;
+  const candidates = getPromptAnchorCandidates(item);
+  const candidateLines = candidates.length > 0 ? candidates.map((candidate, index) => {
+    const confidence = typeof candidate.confidence === "number" ? `, confidence=${Math.round(candidate.confidence * 100)}%` : "";
+    const fingerprint = candidate.textFingerprint ? `, text="${candidate.textFingerprint}"` : "";
+    return `${index + 1}. ${candidate.selector} (${candidate.strategy}${confidence}${fingerprint})`;
+  }).join("\n") : "(none)";
+  return [
+    "Fix this df-web-review-kit QA issue.",
+    "",
+    `Page: ${getItemTarget(item, reviewPathPrefix)}`,
+    `URL: ${item.originalUrl ?? item.pageUrl}`,
+    `QA item: ${numberedItem.displayLabel}`,
+    `Viewport: ${numberedItem.label} ${formatPromptViewport(item)}`,
+    `Scroll: ${formatPromptPoint(item.scroll)}`,
+    "",
+    "Target:",
+    `Primary selector: ${anchor?.selector ?? "(missing)"}`,
+    `Primary strategy: ${anchor?.strategy ?? "(missing)"}`,
+    `Text fingerprint: ${anchor?.textFingerprint ?? "(none)"}`,
+    "Selector candidates:",
+    candidateLines,
+    "",
+    "Source hint:",
+    formatPromptSourceHint(item),
+    "",
+    `Marker: ${formatPromptPoint(item.marker?.viewport)}`,
+    `Marker relative: ${formatPromptPoint(item.marker?.relative)}`,
+    `Selection: ${formatPromptSelection(item.selection?.viewport)}`,
+    `Selection relative: ${formatPromptSelection(item.selection?.relative)}`,
+    "",
+    "Element HTML snippet:",
+    "```html",
+    anchor?.htmlSnippet ? decodePromptHtmlEntities(anchor.htmlSnippet) : "(not available)",
+    "```",
+    "",
+    "Issue:",
+    item.comment,
+    "",
+    "Request:",
+    "Find the target element with the selector candidates above and apply the smallest UI/CSS/code change that fixes this QA issue. If the selector is missing because CSR or hydration has not finished, wait for the page to load and use the Source hint first. Preserve unrelated layout and behavior."
+  ].join("\n");
+};
 var getPromptLengthLabel = (value) => {
   const length = value.length;
   if (length <= 2e3) return `${length} chars / Discord 2,000 OK`;
   if (length <= 4e3) return `${length} chars / Nitro 4,000 OK`;
   return `${length} chars / attach as file`;
-};
-var formatDate = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString(void 0, {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
 };
 
 // src/react-shell/prompt/modal.tsx
@@ -2972,24 +3175,26 @@ var ReviewSettingsModal = ({
                     REVIEW_THEME_STORAGE_KEY
                   ] })
                 ] }),
-                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-header-actions", children: [
-                  /* @__PURE__ */ jsx2(
-                    "select",
-                    {
-                      "aria-label": "Review theme",
-                      className: "df-review-settings-theme-select",
-                      value: reviewThemeDraft,
-                      onChange: (event) => {
-                        onReviewThemeDraftChange(normalizeReviewTheme(event.target.value));
-                        onClearStatus();
-                      },
-                      children: REVIEW_THEME_OPTIONS.map((option) => /* @__PURE__ */ jsx2("option", { value: option.value, children: option.label }, option.value))
-                    }
-                  ),
-                  /* @__PURE__ */ jsx2("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" })
-                ] })
+                /* @__PURE__ */ jsx2("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ jsx2("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" }) })
               ] }),
               /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-body", children: [
+                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-row", children: [
+                  /* @__PURE__ */ jsx2("span", { children: "Theme" }),
+                  /* @__PURE__ */ jsx2("div", { className: "df-review-settings-theme-options", children: REVIEW_THEME_OPTIONS.map((option) => /* @__PURE__ */ jsx2(
+                    "button",
+                    {
+                      "aria-pressed": reviewThemeDraft === option.value,
+                      className: `df-review-settings-theme-option${reviewThemeDraft === option.value ? " is-active" : ""}`,
+                      type: "button",
+                      onClick: () => {
+                        onReviewThemeDraftChange(normalizeReviewTheme(option.value));
+                        onClearStatus();
+                      },
+                      children: option.label
+                    },
+                    option.value
+                  )) })
+                ] }),
                 /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-field", children: [
                   /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-label-row", children: [
                     /* @__PURE__ */ jsx2("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
@@ -3347,7 +3552,9 @@ var QaItemRemoteActions = ({
   remoteAdapterEntry,
   onSubmitItem
 }) => {
-  const hasRemoteActions = !isRemoteSource && Boolean(remoteAdapterEntry) || Boolean(item.externalIssueUrl);
+  const canSubmitToRemote = !isRemoteSource && Boolean(remoteAdapterEntry);
+  const canOpenRemoteIssue = !isRemoteSource && Boolean(item.externalIssueUrl);
+  const hasRemoteActions = canSubmitToRemote || canOpenRemoteIssue;
   if (!hasRemoteActions) return null;
   return /* @__PURE__ */ jsxs4(
     "div",
@@ -3355,7 +3562,7 @@ var QaItemRemoteActions = ({
       className: "df-review-item-remote-actions",
       onClick: (event) => event.stopPropagation(),
       children: [
-        !isRemoteSource && remoteAdapterEntry && /* @__PURE__ */ jsxs4(
+        canSubmitToRemote && remoteAdapterEntry && /* @__PURE__ */ jsxs4(
           "button",
           {
             "aria-label": "Submit to remote",
@@ -3365,11 +3572,11 @@ var QaItemRemoteActions = ({
             onClick: () => void onSubmitItem(numberedItem),
             children: [
               /* @__PURE__ */ jsx4(Upload, { "aria-hidden": "true" }),
-              /* @__PURE__ */ jsx4("span", { children: isSubmitted ? "\uB4F1\uB85D\uB428" : isSubmitting ? "\uB4F1\uB85D \uC911" : "remote \uB4F1\uB85D" })
+              /* @__PURE__ */ jsx4("span", { children: isSubmitted ? "Submitted" : isSubmitting ? "Submitting" : "Submit" })
             ]
           }
         ),
-        item.externalIssueUrl && /* @__PURE__ */ jsx4(
+        canOpenRemoteIssue && /* @__PURE__ */ jsx4(
           "a",
           {
             "aria-label": "Open remote issue",
@@ -3401,6 +3608,9 @@ var QaItemStatusActions = ({
 }) => {
   const currentStatusOption = getStatusOption(item.status, statusOptions);
   if (!currentStatusOption) return null;
+  const statusClassName = `is-status-${normalizeReviewItemStatus(
+    currentStatusOption.value
+  )}`;
   return /* @__PURE__ */ jsx5(
     "div",
     {
@@ -3410,7 +3620,7 @@ var QaItemStatusActions = ({
         "select",
         {
           "aria-label": "QA status",
-          className: "df-review-item-status-select",
+          className: `df-review-item-status-select ${statusClassName}`,
           value: currentStatusOption.value,
           onChange: (event) => void onChangeItemStatus(
             item,
@@ -3418,7 +3628,7 @@ var QaItemStatusActions = ({
           ),
           children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx5("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
         }
-      ) : /* @__PURE__ */ jsx5("span", { className: "df-review-item-status-badge", children: currentStatusOption.label })
+      ) : /* @__PURE__ */ jsx5("span", { className: `df-review-item-status-badge ${statusClassName}`, children: currentStatusOption.label })
     }
   );
 };
@@ -3581,6 +3791,16 @@ var ReviewItemModeIcon = ({
 
 // src/react-shell/qa/item.card.tsx
 import { jsx as jsx7, jsxs as jsxs5 } from "react/jsx-runtime";
+var formatItemCardDate = (value) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short"
+  }).format(date);
+};
 var QaItemCard = ({
   activeAdapterEntry,
   currentPresetScope,
@@ -3589,9 +3809,11 @@ var QaItemCard = ({
   isRemoteSource,
   numberedItem,
   remoteAdapterEntry,
+  copiedPromptKey,
   selectedItemId,
   onChangeItemStatus,
   onRemoveItem,
+  onCopyItemPrompt,
   onRestoreReviewItem,
   onSubmitItem,
   onToggleItemOverlayVisibility
@@ -3602,8 +3824,12 @@ var QaItemCard = ({
   const isSubmitting = item.submitStatus === "submitting";
   const canRemoveItem = activeAdapterEntry.canRemove && !isSubmitting && (isRemoteSource || !isSubmitted);
   const itemComment = item.comment.trim() || getItemTitle(item);
+  const itemAuthor = item.createdBy?.trim();
+  const promptCopyKey = `qa:${item.id}`;
+  const isPromptCopied = copiedPromptKey === promptCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
   const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
+  const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor].filter(Boolean).join(" | ");
   return /* @__PURE__ */ jsxs5(
     "article",
     {
@@ -3630,7 +3856,7 @@ var QaItemCard = ({
               ] })
             ] }),
             /* @__PURE__ */ jsx7("strong", { className: "df-review-item-comment", children: itemComment }),
-            /* @__PURE__ */ jsx7("small", { children: formatDate(item.createdAt) }),
+            /* @__PURE__ */ jsx7("small", { className: "df-review-item-meta", children: itemMeta }),
             item.submitError && /* @__PURE__ */ jsx7("small", { className: "df-review-item-error", children: item.submitError })
           ] }),
           /* @__PURE__ */ jsxs5(
@@ -3647,6 +3873,17 @@ var QaItemCard = ({
                     type: "button",
                     onClick: () => onToggleItemOverlayVisibility(item.id),
                     children: isOverlayVisible ? /* @__PURE__ */ jsx7(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx7(EyeOff, { "aria-hidden": "true" })
+                  }
+                ),
+                /* @__PURE__ */ jsx7(
+                  "button",
+                  {
+                    "aria-label": isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
+                    className: `df-review-item-prompt-copy${isPromptCopied ? " is-copied" : ""}`,
+                    title: isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
+                    type: "button",
+                    onClick: () => onCopyItemPrompt(numberedItem),
+                    children: /* @__PURE__ */ jsx7(Copy, { "aria-hidden": "true" })
                   }
                 ),
                 canRemoveItem && /* @__PURE__ */ jsx7(
@@ -3812,6 +4049,7 @@ var ReviewQaPanel = ({
   isListVisible,
   isRemoteSource,
   presenceSessionId,
+  copiedPromptKey,
   qaFilter,
   qaFilterCounts,
   remoteAdapterEntry,
@@ -3821,6 +4059,7 @@ var ReviewQaPanel = ({
   sourceEntries,
   onChangeItemStatus,
   onChangeReviewSource,
+  onCopyItemPrompt,
   onQaFilterChange,
   onRefreshReviewData,
   onRemoveItem,
@@ -3862,8 +4101,10 @@ var ReviewQaPanel = ({
             isRemoteSource,
             numberedItem,
             remoteAdapterEntry,
+            copiedPromptKey,
             selectedItemId,
             onChangeItemStatus,
+            onCopyItemPrompt,
             onRemoveItem,
             onRestoreReviewItem,
             onSubmitItem,
@@ -4601,6 +4842,7 @@ var useReviewKitLifecycle = ({
   pageTargets,
   projectId,
   reviewPathPrefix,
+  reviewUserId,
   reviewViewportPresets,
   ruler,
   sizeRef,
@@ -4641,6 +4883,7 @@ var useReviewKitLifecycle = ({
     });
     controllerRef.current = createWebReviewKit({
       projectId,
+      userId: reviewUserId.trim() || void 0,
       adapter,
       target: () => getReviewKitTarget({ frameScrollRef, iframeRef }),
       hotkeys: {
@@ -4699,6 +4942,7 @@ var useReviewKitLifecycle = ({
     pageTargets,
     projectId,
     reviewPathPrefix,
+    reviewUserId,
     reviewViewportPresets,
     ruler,
     sizeRef,
@@ -4903,6 +5147,7 @@ var useReviewController = ({
   pendingRestoreRef,
   projectId,
   reviewPathPrefix,
+  reviewUserId,
   reviewViewportPresets,
   ruler,
   selectedItemIdRef,
@@ -4990,6 +5235,7 @@ var useReviewController = ({
     pageTargets,
     projectId,
     reviewPathPrefix,
+    reviewUserId,
     reviewViewportPresets,
     ruler,
     sizeRef,
@@ -5012,6 +5258,7 @@ var useReviewController = ({
     reloadReviewKit,
     restoreReviewItem,
     setControllerReviewMode,
+    syncTargetViewport,
     toggleTargetOverlay
   };
 };
@@ -6203,6 +6450,7 @@ var useReviewShellState = ({
   const [isSitemapOpen, setIsSitemapOpen] = useState6(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState6(false);
   const [copyLabel, setCopyLabel] = useState6("Copy URL");
+  const [toastMessage, setToastMessage] = useState6("");
   const [copiedPromptKey, setCopiedPromptKey] = useState6(null);
   const targetRef = useRef3(target);
   const sizeRef = useRef3(size);
@@ -6257,11 +6505,43 @@ var useReviewShellState = ({
     target,
     targetOverlayState,
     targetRef,
-    viewportPresets
+    toastMessage,
+    viewportPresets,
+    setToastMessage
   };
 };
 
 // src/react-shell/review/shell.actions.ts
+var writeClipboardText = async (value) => {
+  try {
+    await navigator.clipboard.writeText(value);
+    return;
+  } catch {
+    const selection = document.getSelection();
+    const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const ranges = selection ? Array.from(
+      { length: selection.rangeCount },
+      (_, index) => selection.getRangeAt(index)
+    ) : [];
+    const textarea = document.createElement("textarea");
+    textarea.value = value;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const isCopied = document.execCommand("copy");
+    textarea.remove();
+    selection?.removeAllRanges();
+    ranges.forEach((range) => selection?.addRange(range));
+    activeElement?.focus();
+    if (!isCopied) {
+      throw new Error("Failed to copy to clipboard");
+    }
+  }
+};
 var listReviewItems = async ({
   activeRoute,
   adapter,
@@ -6312,7 +6592,7 @@ var refreshSitemapReviewItems = async ({
 var copyCurrentReviewUrl = async ({
   onCopyLabelChange
 }) => {
-  await navigator.clipboard.writeText(window.location.href);
+  await writeClipboardText(window.location.href);
   onCopyLabelChange("Copied");
   window.setTimeout(() => onCopyLabelChange("Copy URL"), 1200);
 };
@@ -6328,7 +6608,8 @@ var updateReviewItemStatus = async ({
   activeAdapterEntry,
   item,
   nextStatus,
-  onRefreshReviewData
+  onRefreshReviewData,
+  onToast
 }) => {
   if (!activeAdapterEntry.updateStatus) return;
   const statusIndex = activeAdapterEntry.statusOptions.findIndex(
@@ -6344,6 +6625,7 @@ var updateReviewItemStatus = async ({
     statusIndex
   });
   await onRefreshReviewData();
+  onToast?.("QA status updated");
 };
 var submitReviewItem = async ({
   localAdapterEntry,
@@ -6351,7 +6633,8 @@ var submitReviewItem = async ({
   remoteAdapterEntry,
   selectedItemIdRef,
   onClearSelectedItem,
-  onRefreshReviewData
+  onRefreshReviewData,
+  onToast
 }) => {
   const { item } = numberedItem;
   const syncLocalSubmission = localAdapterEntry?.syncSubmission;
@@ -6367,6 +6650,7 @@ var submitReviewItem = async ({
     }
   });
   await onRefreshReviewData();
+  let toastMessage;
   try {
     await remoteAdapterEntry.adapter.create({
       ...item,
@@ -6381,6 +6665,7 @@ var submitReviewItem = async ({
     if (selectedItemIdRef.current === item.id) {
       onClearSelectedItem();
     }
+    toastMessage = "Remote submitted";
   } catch (error) {
     await syncLocalSubmission({
       id: item.id,
@@ -6390,17 +6675,22 @@ var submitReviewItem = async ({
         submitError: error instanceof Error ? error.message : "Failed to submit remote"
       }
     });
+    toastMessage = "Remote submit failed";
   }
   await onRefreshReviewData();
+  onToast?.(toastMessage);
 };
 var copyReviewPrompt = async ({
   key,
+  toastMessage = "Copied",
   value,
-  onCopiedPromptKeyChange
+  onCopiedPromptKeyChange,
+  onToast
 }) => {
   if (!value) return;
-  await navigator.clipboard.writeText(value);
+  await writeClipboardText(value);
   onCopiedPromptKeyChange(key);
+  onToast?.(toastMessage);
   window.setTimeout(() => {
     onCopiedPromptKeyChange((current) => current === key ? null : current);
   }, 1200);
@@ -6414,7 +6704,8 @@ var removeReviewItem = async ({
   source,
   targetRef,
   onClearSelectedItem,
-  onRefreshReviewData
+  onRefreshReviewData,
+  onToast
 }) => {
   if (!activeAdapterEntry.canRemove || item.submitStatus === "submitting" || !isRemoteSource && item.submitStatus === "submitted") {
     return;
@@ -6425,6 +6716,7 @@ var removeReviewItem = async ({
     updateShellUrl(targetRef.current, sizeRef.current, source);
   }
   await onRefreshReviewData();
+  onToast?.("QA deleted");
 };
 
 // src/react-shell/review/shell.tsx
@@ -6494,7 +6786,9 @@ var ReviewShell = ({
     target,
     targetOverlayState,
     targetRef,
-    viewportPresets
+    toastMessage,
+    viewportPresets,
+    setToastMessage
   } = useReviewShellState({
     adapters,
     presets,
@@ -6641,6 +6935,7 @@ var ReviewShell = ({
     reloadReviewKit,
     restoreReviewItem,
     setControllerReviewMode,
+    syncTargetViewport,
     toggleTargetOverlay
   } = useReviewController({
     adapter,
@@ -6656,6 +6951,7 @@ var ReviewShell = ({
     pendingRestoreRef,
     projectId,
     reviewPathPrefix,
+    reviewUserId,
     reviewViewportPresets,
     ruler,
     selectedItemIdRef,
@@ -6714,6 +7010,7 @@ var ReviewShell = ({
         (frameScroll.scrollWidth - frameScroll.clientWidth) / 2
       );
       frameScroll.scrollTop = 0;
+      syncTargetViewport();
     };
     const animationFrame = window.requestAnimationFrame(centerFrameScroll);
     const transitionTimeout = window.setTimeout(centerFrameScroll, 180);
@@ -6721,7 +7018,7 @@ var ReviewShell = ({
       window.cancelAnimationFrame(animationFrame);
       window.clearTimeout(transitionTimeout);
     };
-  }, [isListVisible, size.height, size.width, targetSrc]);
+  }, [isListVisible, size.height, size.width, syncTargetViewport, targetSrc]);
   const applyTarget = () => {
     const normalizedTarget = normalizeTarget(draftTarget, reviewPathPrefix);
     clearSelectedItem();
@@ -6769,6 +7066,15 @@ var ReviewShell = ({
   const copyCurrentUrl = () => copyCurrentReviewUrl({
     onCopyLabelChange: setCopyLabel
   });
+  const showToast = useCallback11(
+    (message) => {
+      setToastMessage(message);
+      window.setTimeout(() => {
+        setToastMessage((current) => current === message ? "" : current);
+      }, 1600);
+    },
+    [setToastMessage]
+  );
   const changeReviewSource = (nextSource) => {
     if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
     cancelReviewMode();
@@ -6781,7 +7087,8 @@ var ReviewShell = ({
     activeAdapterEntry,
     item,
     nextStatus,
-    onRefreshReviewData: refreshReviewData2
+    onRefreshReviewData: refreshReviewData2,
+    onToast: showToast
   });
   const submitItem = (numberedItem) => submitReviewItem({
     localAdapterEntry,
@@ -6789,13 +7096,21 @@ var ReviewShell = ({
     remoteAdapterEntry,
     selectedItemIdRef,
     onClearSelectedItem: clearSelectedItem,
-    onRefreshReviewData: refreshReviewData2
+    onRefreshReviewData: refreshReviewData2,
+    onToast: showToast
   });
-  const copyPrompt = (value, key) => copyReviewPrompt({
+  const copyPrompt = (value, key, toastMessage2 = "Prompt copied") => copyReviewPrompt({
     key,
+    toastMessage: toastMessage2,
     value,
-    onCopiedPromptKeyChange: setCopiedPromptKey
+    onCopiedPromptKeyChange: setCopiedPromptKey,
+    onToast: showToast
   });
+  const copyItemPrompt = (numberedItem) => copyPrompt(
+    buildReviewItemPrompt(numberedItem, reviewPathPrefix),
+    `qa:${numberedItem.item.id}`,
+    "QA prompt copied"
+  );
   const removeItem = (item) => removeReviewItem({
     activeAdapterEntry,
     isRemoteSource,
@@ -6805,7 +7120,8 @@ var ReviewShell = ({
     source,
     targetRef,
     onClearSelectedItem: clearSelectedItem,
-    onRefreshReviewData: refreshReviewData2
+    onRefreshReviewData: refreshReviewData2,
+    onToast: showToast
   });
   return /* @__PURE__ */ jsxs14(
     "div",
@@ -6877,6 +7193,7 @@ var ReviewShell = ({
             onCopyPrompt: (text, key) => void copyPrompt(text, key)
           }
         ),
+        toastMessage && /* @__PURE__ */ jsx16("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
         /* @__PURE__ */ jsx16("div", { className: "df-review-side-rail", children: /* @__PURE__ */ jsxs14(
           "button",
           {
@@ -6903,6 +7220,7 @@ var ReviewShell = ({
             isListVisible,
             isRemoteSource,
             presenceSessionId,
+            copiedPromptKey,
             qaFilter,
             qaFilterCounts,
             remoteAdapterEntry,
@@ -6912,6 +7230,7 @@ var ReviewShell = ({
             sourceEntries,
             onChangeItemStatus: changeItemStatus,
             onChangeReviewSource: changeReviewSource,
+            onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
             onQaFilterChange: setQaFilter,
             onRefreshReviewData: refreshReviewData2,
             onRemoveItem: removeItem,

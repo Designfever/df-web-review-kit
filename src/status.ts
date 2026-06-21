@@ -4,11 +4,11 @@ export const REVIEW_WORKFLOW_STATUS_OPTIONS: Array<{
   value: ReviewWorkflowStatus;
   label: string;
 }> = [
-  { value: 'todo', label: '작업전' },
-  { value: 'doing', label: '작업중' },
-  { value: 'review', label: '검토 필요' },
-  { value: 'hold', label: '보류' },
-  { value: 'done', label: '완료' },
+  { value: 'todo', label: 'Todo' },
+  { value: 'doing', label: 'Doing' },
+  { value: 'review', label: 'Review' },
+  { value: 'hold', label: 'Hold' },
+  { value: 'done', label: 'Done' },
 ];
 
 export function normalizeReviewItemStatus(

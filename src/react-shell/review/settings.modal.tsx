@@ -80,27 +80,33 @@ export const ReviewSettingsModal = ({
             </span>
           </div>
           <div className="df-review-settings-header-actions">
-            <select
-              aria-label="Review theme"
-              className="df-review-settings-theme-select"
-              value={reviewThemeDraft}
-              onChange={(event) => {
-                onReviewThemeDraftChange(normalizeReviewTheme(event.target.value));
-                onClearStatus();
-              }}
-            >
-              {REVIEW_THEME_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
             <button aria-label="Close settings" type="button" onClick={onClose}>
               x
             </button>
           </div>
         </div>
         <div className="df-review-settings-body">
+          <div className="df-review-settings-row">
+            <span>Theme</span>
+            <div className="df-review-settings-theme-options">
+              {REVIEW_THEME_OPTIONS.map((option) => (
+                <button
+                  aria-pressed={reviewThemeDraft === option.value}
+                  className={`df-review-settings-theme-option${
+                    reviewThemeDraft === option.value ? ' is-active' : ''
+                  }`}
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onReviewThemeDraftChange(normalizeReviewTheme(option.value));
+                    onClearStatus();
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="df-review-settings-field">
             <div className="df-review-settings-label-row">
               <label htmlFor="df-review-figma-token">Figma token</label>

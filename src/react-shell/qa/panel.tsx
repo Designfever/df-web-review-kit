@@ -24,6 +24,7 @@ interface ReviewQaPanelProps {
   isListVisible: boolean;
   isRemoteSource: boolean;
   presenceSessionId: string;
+  copiedPromptKey: string | null;
   qaFilter: ReviewQaFilter;
   qaFilterCounts: ReadonlyMap<ReviewQaFilter, number>;
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
@@ -36,6 +37,7 @@ interface ReviewQaPanelProps {
     nextStatus: ReviewItemStatus
   ) => Promise<void>;
   onChangeReviewSource: (nextSource: ReviewSource) => void;
+  onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onQaFilterChange: (filter: ReviewQaFilter) => void;
   onRefreshReviewData: () => Promise<void>;
   onRemoveItem: (item: ReviewItem) => Promise<void>;
@@ -55,6 +57,7 @@ export const ReviewQaPanel = ({
   isListVisible,
   isRemoteSource,
   presenceSessionId,
+  copiedPromptKey,
   qaFilter,
   qaFilterCounts,
   remoteAdapterEntry,
@@ -64,6 +67,7 @@ export const ReviewQaPanel = ({
   sourceEntries,
   onChangeItemStatus,
   onChangeReviewSource,
+  onCopyItemPrompt,
   onQaFilterChange,
   onRefreshReviewData,
   onRemoveItem,
@@ -115,8 +119,10 @@ export const ReviewQaPanel = ({
                   isRemoteSource={isRemoteSource}
                   numberedItem={numberedItem}
                   remoteAdapterEntry={remoteAdapterEntry}
+                  copiedPromptKey={copiedPromptKey}
                   selectedItemId={selectedItemId}
                   onChangeItemStatus={onChangeItemStatus}
+                  onCopyItemPrompt={onCopyItemPrompt}
                   onRemoveItem={onRemoveItem}
                   onRestoreReviewItem={onRestoreReviewItem}
                   onSubmitItem={onSubmitItem}

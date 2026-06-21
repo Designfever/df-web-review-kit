@@ -80,6 +80,7 @@ export interface ReviewItem {
   kind: ReviewItemKind;
   title?: string;
   comment: string;
+  createdBy?: string;
   status: ReviewItemStatus;
   viewport: ViewportSize;
   devicePixelRatio?: number;
@@ -167,6 +168,7 @@ export interface NumberedReviewItem {
 
 export interface WebReviewKitOptions {
   projectId: string;
+  userId?: string;
   adapter?: WebReviewKitAdapter;
   target?: WebReviewKitTarget | (() => WebReviewKitTarget | undefined);
   viewports?: {

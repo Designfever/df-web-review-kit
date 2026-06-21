@@ -5,6 +5,7 @@ Supabase is an optional backend adapter. A host project may use it for canonical
 ## Environment
 
 ```env
+VITE_REVIEW_PROJECT_ID=df-web-review-kit
 VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
 VITE_REVIEW_SUPABASE_ANON_KEY=
 VITE_REVIEW_SUPABASE_TABLE=review_items
@@ -15,7 +16,7 @@ Use only an `anon` key in browser env. Keep `service_role`, OpenClaw `KUKU_*`, a
 
 ## Review Item Schema
 
-Run this in the Supabase SQL editor. Replace `my-project` in the RLS policies with the host project's `projectId`.
+Run this in the Supabase SQL editor to create the tables, indexes, RPC, and grants.
 
 ```sql
 create table if not exists public.review_items (
@@ -141,7 +142,13 @@ grant execute on function public.create_review_item(
 
 grant select, insert, update, delete on public.review_items to anon;
 grant select, insert, update on public.review_project_counters to anon;
+```
 
+## RLS Policies
+
+Run this after the schema SQL. Replace `df-web-review-kit` if `VITE_REVIEW_PROJECT_ID` uses a different value.
+
+```sql
 alter table public.review_items enable row level security;
 alter table public.review_project_counters enable row level security;
 
@@ -150,51 +157,51 @@ create policy review_items_sample_read
   on public.review_items
   for select
   to anon
-  using (project_id = 'my-project');
+  using (project_id = 'df-web-review-kit');
 
 drop policy if exists review_items_sample_insert on public.review_items;
 create policy review_items_sample_insert
   on public.review_items
   for insert
   to anon
-  with check (project_id = 'my-project');
+  with check (project_id = 'df-web-review-kit');
 
 drop policy if exists review_items_sample_update on public.review_items;
 create policy review_items_sample_update
   on public.review_items
   for update
   to anon
-  using (project_id = 'my-project')
-  with check (project_id = 'my-project');
+  using (project_id = 'df-web-review-kit')
+  with check (project_id = 'df-web-review-kit');
 
 drop policy if exists review_items_sample_delete on public.review_items;
 create policy review_items_sample_delete
   on public.review_items
   for delete
   to anon
-  using (project_id = 'my-project');
+  using (project_id = 'df-web-review-kit');
 
 drop policy if exists review_project_counters_sample_read on public.review_project_counters;
 create policy review_project_counters_sample_read
   on public.review_project_counters
   for select
   to anon
-  using (project_id = 'my-project');
+  using (project_id = 'df-web-review-kit');
 
 drop policy if exists review_project_counters_sample_insert on public.review_project_counters;
 create policy review_project_counters_sample_insert
   on public.review_project_counters
   for insert
   to anon
-  with check (project_id = 'my-project');
+  with check (project_id = 'df-web-review-kit');
 
 drop policy if exists review_project_counters_sample_update on public.review_project_counters;
 create policy review_project_counters_sample_update
   on public.review_project_counters
   for update
   to anon
-  using (project_id = 'my-project')
-  with check (project_id = 'my-project');
+  using (project_id = 'df-web-review-kit')
+  with check (project_id = 'df-web-review-kit');
 ```
 
 ## Adapter Behavior

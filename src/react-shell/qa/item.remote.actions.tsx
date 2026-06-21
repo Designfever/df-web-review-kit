@@ -24,9 +24,9 @@ export const QaItemRemoteActions = ({
   remoteAdapterEntry,
   onSubmitItem,
 }: QaItemRemoteActionsProps) => {
-  const hasRemoteActions =
-    (!isRemoteSource && Boolean(remoteAdapterEntry)) ||
-    Boolean(item.externalIssueUrl);
+  const canSubmitToRemote = !isRemoteSource && Boolean(remoteAdapterEntry);
+  const canOpenRemoteIssue = !isRemoteSource && Boolean(item.externalIssueUrl);
+  const hasRemoteActions = canSubmitToRemote || canOpenRemoteIssue;
 
   if (!hasRemoteActions) return null;
 
@@ -35,7 +35,7 @@ export const QaItemRemoteActions = ({
       className="df-review-item-remote-actions"
       onClick={(event) => event.stopPropagation()}
     >
-      {!isRemoteSource && remoteAdapterEntry && (
+      {canSubmitToRemote && remoteAdapterEntry && (
         <button
           aria-label="Submit to remote"
           className="df-review-item-action-button df-review-item-submit-button"
@@ -46,14 +46,14 @@ export const QaItemRemoteActions = ({
           <UploadIcon aria-hidden="true" />
           <span>
             {isSubmitted
-              ? '등록됨'
+              ? 'Submitted'
               : isSubmitting
-                ? '등록 중'
-                : 'remote 등록'}
+                ? 'Submitting'
+                : 'Submit'}
           </span>
         </button>
       )}
-      {item.externalIssueUrl && (
+      {canOpenRemoteIssue && (
         <a
           aria-label="Open remote issue"
           className="df-review-item-action-button"

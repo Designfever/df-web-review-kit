@@ -62,6 +62,7 @@ interface ReviewItem {
     kind: ReviewItemKind;
     title?: string;
     comment: string;
+    createdBy?: string;
     status: ReviewItemStatus;
     viewport: ViewportSize;
     devicePixelRatio?: number;
@@ -126,6 +127,7 @@ interface NumberedReviewItem {
 }
 interface WebReviewKitOptions {
     projectId: string;
+    userId?: string;
     adapter?: WebReviewKitAdapter;
     target?: WebReviewKitTarget | (() => WebReviewKitTarget | undefined);
     viewports?: {

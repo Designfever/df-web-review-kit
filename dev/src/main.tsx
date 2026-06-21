@@ -1,21 +1,30 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { createClient } from '@supabase/supabase-js';
 import {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   localAdapter,
+  supabaseAdapter,
+  type SupabaseReviewClient,
 } from '../../src';
 import {
+  createFallbackPresenceAdapter,
   createLocalPresenceAdapter,
+  createSupabasePresenceAdapter,
   mountReviewShell,
   type ReviewShellAdapter,
   type ReviewShellPage,
   type ReviewShellViewportPreset,
+  type SupabasePresenceClient,
 } from '../../src/react-shell';
 import './style.css';
 
-const REVIEW_PROJECT_ID = 'df-web-review-kit-dev';
+const REVIEW_PROJECT_ID =
+  import.meta.env.VITE_REVIEW_PROJECT_ID || 'df-web-review-kit';
 const REVIEW_PATH_PREFIX = '/review';
 const REVIEW_STORAGE_KEY = `${REVIEW_PROJECT_ID}:items`;
+const REVIEW_SUPABASE_TABLE =
+  import.meta.env.VITE_REVIEW_SUPABASE_TABLE || 'review_items';
 
 const pages: ReviewShellPage[] = [
   { href: '/' },
@@ -31,6 +40,21 @@ const presets: ReviewShellViewportPreset[] = [
 ];
 
 const local = localAdapter({ storageKey: REVIEW_STORAGE_KEY });
+const supabaseUrl = import.meta.env.VITE_REVIEW_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_REVIEW_SUPABASE_ANON_KEY;
+const supabaseClient =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : null;
+const remote = supabaseClient
+  ? supabaseAdapter({
+      client: supabaseClient as unknown as SupabaseReviewClient,
+      table: REVIEW_SUPABASE_TABLE,
+      projectId: REVIEW_PROJECT_ID,
+      source: 'supabase',
+      reviewPathPrefix: REVIEW_PATH_PREFIX,
+    })
+  : null;
 
 const adapters: ReviewShellAdapter[] = [
   {
@@ -43,11 +67,35 @@ const adapters: ReviewShellAdapter[] = [
     syncSubmission: ({ id, patch }) => local.update(id, patch),
     remove: (id) => local.remove(id),
   },
+  ...(remote
+    ? [
+        {
+          label: 'supabase',
+          get: (id) => remote.get(id),
+          list: (query) => remote.list(query),
+          create: (item) => remote.create(item),
+          canWrite: true,
+          statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
+          updateStatus: ({ id, status }) => remote.update(id, { status }),
+          remove: (id) => remote.remove(id),
+        } satisfies ReviewShellAdapter,
+      ]
+    : []),
 ];
 
-const presence = createLocalPresenceAdapter({
+const localPresence = createLocalPresenceAdapter({
   channelName: `${REVIEW_PROJECT_ID}:presence`,
 });
+const presence = supabaseClient
+  ? createFallbackPresenceAdapter(
+      createSupabasePresenceAdapter({
+        client: supabaseClient as unknown as SupabasePresenceClient,
+        channelPrefix: 'review-presence',
+        private: import.meta.env.VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE === 'true',
+      }),
+      localPresence
+    )
+  : localPresence;
 
 const initialPrompt = [
   'You are reviewing the df-web-review-kit local dev fixture.',

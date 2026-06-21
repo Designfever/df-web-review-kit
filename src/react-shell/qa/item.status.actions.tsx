@@ -34,6 +34,9 @@ export const QaItemStatusActions = ({
 }: QaItemStatusActionsProps) => {
   const currentStatusOption = getStatusOption(item.status, statusOptions);
   if (!currentStatusOption) return null;
+  const statusClassName = `is-status-${normalizeReviewItemStatus(
+    currentStatusOption.value
+  )}`;
 
   return (
     <div
@@ -43,7 +46,7 @@ export const QaItemStatusActions = ({
       {canUpdateStatus ? (
         <select
           aria-label="QA status"
-          className="df-review-item-status-select"
+          className={`df-review-item-status-select ${statusClassName}`}
           value={currentStatusOption.value}
           onChange={(event) =>
             void onChangeItemStatus(
@@ -59,7 +62,7 @@ export const QaItemStatusActions = ({
           ))}
         </select>
       ) : (
-        <span className="df-review-item-status-badge">
+        <span className={`df-review-item-status-badge ${statusClassName}`}>
           {currentStatusOption.label}
         </span>
       )}

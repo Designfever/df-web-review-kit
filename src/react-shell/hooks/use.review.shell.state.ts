@@ -102,6 +102,7 @@ export const useReviewShellState = ({
   const [isSitemapOpen, setIsSitemapOpen] = useState(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState(false);
   const [copyLabel, setCopyLabel] = useState('Copy URL');
+  const [toastMessage, setToastMessage] = useState('');
   const [copiedPromptKey, setCopiedPromptKey] = useState<string | null>(null);
   const targetRef = useRef(target);
   const sizeRef = useRef(size);
@@ -157,6 +158,8 @@ export const useReviewShellState = ({
     target,
     targetOverlayState,
     targetRef,
+    toastMessage,
     viewportPresets,
+    setToastMessage,
   };
 };

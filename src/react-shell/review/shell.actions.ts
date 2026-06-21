@@ -53,6 +53,7 @@ interface UpdateReviewItemStatusOptions {
   item: ReviewItem;
   nextStatus: ReviewItemStatus;
   onRefreshReviewData: () => Promise<void>;
+  onToast?: (message: string) => void;
 }
 
 interface SubmitReviewItemOptions {
@@ -62,12 +63,15 @@ interface SubmitReviewItemOptions {
   selectedItemIdRef: MutableRefObject<string | null>;
   onClearSelectedItem: () => void;
   onRefreshReviewData: () => Promise<void>;
+  onToast?: (message: string) => void;
 }
 
 interface CopyReviewPromptOptions {
   key: string;
+  toastMessage?: string;
   value: string;
   onCopiedPromptKeyChange: Dispatch<SetStateAction<string | null>>;
+  onToast?: (message: string) => void;
 }
 
 interface RemoveReviewItemOptions {
@@ -80,7 +84,46 @@ interface RemoveReviewItemOptions {
   targetRef: MutableRefObject<string>;
   onClearSelectedItem: () => void;
   onRefreshReviewData: () => Promise<void>;
+  onToast?: (message: string) => void;
 }
+
+const writeClipboardText = async (value: string) => {
+  try {
+    await navigator.clipboard.writeText(value);
+    return;
+  } catch {
+    const selection = document.getSelection();
+    const activeElement = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const ranges = selection
+      ? Array.from({ length: selection.rangeCount }, (_, index) =>
+          selection.getRangeAt(index)
+        )
+      : [];
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '0';
+
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    const isCopied = document.execCommand('copy');
+    textarea.remove();
+
+    selection?.removeAllRanges();
+    ranges.forEach((range) => selection?.addRange(range));
+    activeElement?.focus();
+
+    if (!isCopied) {
+      throw new Error('Failed to copy to clipboard');
+    }
+  }
+};
 
 export const listReviewItems = async ({
   activeRoute,
@@ -142,7 +185,7 @@ export const refreshSitemapReviewItems = async ({
 export const copyCurrentReviewUrl = async ({
   onCopyLabelChange,
 }: CopyCurrentReviewUrlOptions) => {
-  await navigator.clipboard.writeText(window.location.href);
+  await writeClipboardText(window.location.href);
   onCopyLabelChange('Copied');
   window.setTimeout(() => onCopyLabelChange('Copy URL'), 1200);
 };
@@ -161,6 +204,7 @@ export const updateReviewItemStatus = async ({
   item,
   nextStatus,
   onRefreshReviewData,
+  onToast,
 }: UpdateReviewItemStatusOptions) => {
   if (!activeAdapterEntry.updateStatus) return;
 
@@ -178,6 +222,7 @@ export const updateReviewItemStatus = async ({
     statusIndex,
   });
   await onRefreshReviewData();
+  onToast?.('QA status updated');
 };
 
 export const submitReviewItem = async ({
@@ -187,6 +232,7 @@ export const submitReviewItem = async ({
   selectedItemIdRef,
   onClearSelectedItem,
   onRefreshReviewData,
+  onToast,
 }: SubmitReviewItemOptions) => {
   const { item } = numberedItem;
   const syncLocalSubmission = localAdapterEntry?.syncSubmission;
@@ -209,6 +255,7 @@ export const submitReviewItem = async ({
   });
   await onRefreshReviewData();
 
+  let toastMessage: string;
   try {
     await remoteAdapterEntry.adapter.create({
       ...item,
@@ -223,6 +270,7 @@ export const submitReviewItem = async ({
     if (selectedItemIdRef.current === item.id) {
       onClearSelectedItem();
     }
+    toastMessage = 'Remote submitted';
   } catch (error) {
     await syncLocalSubmission({
       id: item.id,
@@ -233,20 +281,25 @@ export const submitReviewItem = async ({
           error instanceof Error ? error.message : 'Failed to submit remote',
       },
     });
+    toastMessage = 'Remote submit failed';
   }
 
   await onRefreshReviewData();
+  onToast?.(toastMessage);
 };
 
 export const copyReviewPrompt = async ({
   key,
+  toastMessage = 'Copied',
   value,
   onCopiedPromptKeyChange,
+  onToast,
 }: CopyReviewPromptOptions) => {
   if (!value) return;
 
-  await navigator.clipboard.writeText(value);
+  await writeClipboardText(value);
   onCopiedPromptKeyChange(key);
+  onToast?.(toastMessage);
   window.setTimeout(() => {
     onCopiedPromptKeyChange((current) => (current === key ? null : current));
   }, 1200);
@@ -262,6 +315,7 @@ export const removeReviewItem = async ({
   targetRef,
   onClearSelectedItem,
   onRefreshReviewData,
+  onToast,
 }: RemoveReviewItemOptions) => {
   if (
     !activeAdapterEntry.canRemove ||
@@ -277,4 +331,5 @@ export const removeReviewItem = async ({
     updateShellUrl(targetRef.current, sizeRef.current, source);
   }
   await onRefreshReviewData();
+  onToast?.('QA deleted');
 };

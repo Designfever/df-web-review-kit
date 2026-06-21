@@ -1,4 +1,5 @@
 import {
+  Copy as CopyIcon,
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
   X as XIcon,
@@ -9,7 +10,7 @@ import type {
   ReviewItemStatus,
 } from '../../types';
 import type { NormalizedReviewShellAdapter } from '../adapters';
-import { formatDate, getItemTitle } from '../prompt/prompt';
+import { getItemTitle } from '../prompt/prompt';
 import { QaItemRemoteActions } from './item.remote.actions';
 import { QaItemStatusActions } from './item.status.actions';
 import {
@@ -27,16 +28,30 @@ interface QaItemCardProps {
   isRemoteSource: boolean;
   numberedItem: NumberedReviewItem;
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
+  copiedPromptKey: string | null;
   selectedItemId: string | null;
   onChangeItemStatus: (
     item: ReviewItem,
     nextStatus: ReviewItemStatus
   ) => Promise<void>;
   onRemoveItem: (item: ReviewItem) => Promise<void>;
+  onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onRestoreReviewItem: (item: ReviewItem) => void;
   onSubmitItem: (numberedItem: NumberedReviewItem) => Promise<void>;
   onToggleItemOverlayVisibility: (itemId: string) => void;
 }
+
+const formatItemCardDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat('en', {
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    month: 'short',
+  }).format(date);
+};
 
 export const QaItemCard = ({
   activeAdapterEntry,
@@ -46,9 +61,11 @@ export const QaItemCard = ({
   isRemoteSource,
   numberedItem,
   remoteAdapterEntry,
+  copiedPromptKey,
   selectedItemId,
   onChangeItemStatus,
   onRemoveItem,
+  onCopyItemPrompt,
   onRestoreReviewItem,
   onSubmitItem,
   onToggleItemOverlayVisibility,
@@ -62,11 +79,17 @@ export const QaItemCard = ({
     !isSubmitting &&
     (isRemoteSource || !isSubmitted);
   const itemComment = item.comment.trim() || getItemTitle(item);
+  const itemAuthor = item.createdBy?.trim();
+  const promptCopyKey = `qa:${item.id}`;
+  const isPromptCopied = copiedPromptKey === promptCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
   const canUpdateStatus =
     Boolean(activeAdapterEntry.updateStatus) &&
     statusOptions.length > 0 &&
     !isSubmitting;
+  const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor]
+    .filter(Boolean)
+    .join(' | ');
 
   return (
     <article
@@ -95,7 +118,7 @@ export const QaItemCard = ({
             </span>
           </span>
           <strong className="df-review-item-comment">{itemComment}</strong>
-          <small>{formatDate(item.createdAt)}</small>
+          <small className="df-review-item-meta">{itemMeta}</small>
           {item.submitError && (
             <small className="df-review-item-error">{item.submitError}</small>
           )}
@@ -117,6 +140,17 @@ export const QaItemCard = ({
             ) : (
               <EyeOffIcon aria-hidden="true" />
             )}
+          </button>
+          <button
+            aria-label={isPromptCopied ? 'Copied QA prompt' : 'Copy QA prompt'}
+            className={`df-review-item-prompt-copy${
+              isPromptCopied ? ' is-copied' : ''
+            }`}
+            title={isPromptCopied ? 'Copied QA prompt' : 'Copy QA prompt'}
+            type="button"
+            onClick={() => onCopyItemPrompt(numberedItem)}
+          >
+            <CopyIcon aria-hidden="true" />
           </button>
           {canRemoveItem && (
             <button

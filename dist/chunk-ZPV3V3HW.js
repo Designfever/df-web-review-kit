@@ -1,10 +1,10 @@
 // src/status.ts
 var REVIEW_WORKFLOW_STATUS_OPTIONS = [
-  { value: "todo", label: "\uC791\uC5C5\uC804" },
-  { value: "doing", label: "\uC791\uC5C5\uC911" },
-  { value: "review", label: "\uAC80\uD1A0 \uD544\uC694" },
-  { value: "hold", label: "\uBCF4\uB958" },
-  { value: "done", label: "\uC644\uB8CC" }
+  { value: "todo", label: "Todo" },
+  { value: "doing", label: "Doing" },
+  { value: "review", label: "Review" },
+  { value: "hold", label: "Hold" },
+  { value: "done", label: "Done" }
 ];
 function normalizeReviewItemStatus(status) {
   if (status === "resolved") return "done";
@@ -2895,6 +2895,7 @@ var WebReviewKitApp = class {
     const now = (/* @__PURE__ */ new Date()).toISOString();
     const routeKey = getRouteKey(environment);
     const viewport = input.viewport ?? getViewportSize(environment);
+    const createdBy = this.options.userId?.trim();
     const item = {
       id: createId(),
       projectId: this.options.projectId,
@@ -2906,6 +2907,7 @@ var WebReviewKitApp = class {
       kind: input.kind,
       title: input.comment.split("\n")[0]?.slice(0, 80),
       comment: input.comment,
+      createdBy: createdBy || void 0,
       status: "todo",
       viewport,
       devicePixelRatio: environment.window.devicePixelRatio || 1,
@@ -2987,4 +2989,4 @@ export {
   getNumberedReviewItems,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-4PDU6TZE.js.map
+//# sourceMappingURL=chunk-ZPV3V3HW.js.map

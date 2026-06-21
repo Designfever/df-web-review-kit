@@ -30,6 +30,7 @@ interface UseReviewKitLifecycleOptions {
   pageTargets: ReadonlySet<string>;
   projectId: string;
   reviewPathPrefix: string;
+  reviewUserId: string;
   reviewViewportPresets: ReviewViewportPreset[];
   ruler?: ReviewRulerConfig;
   sizeRef: MutableRefObject<ReviewShellViewportPreset>;
@@ -57,6 +58,7 @@ export const useReviewKitLifecycle = ({
   pageTargets,
   projectId,
   reviewPathPrefix,
+  reviewUserId,
   reviewViewportPresets,
   ruler,
   sizeRef,
@@ -101,6 +103,7 @@ export const useReviewKitLifecycle = ({
 
     controllerRef.current = createWebReviewKit({
       projectId,
+      userId: reviewUserId.trim() || undefined,
       adapter,
       target: () => getReviewKitTarget({ frameScrollRef, iframeRef }),
       hotkeys: {
@@ -159,6 +162,7 @@ export const useReviewKitLifecycle = ({
     pageTargets,
     projectId,
     reviewPathPrefix,
+    reviewUserId,
     reviewViewportPresets,
     ruler,
     sizeRef,

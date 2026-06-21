@@ -533,6 +533,7 @@ class WebReviewKitApp {
     const now = new Date().toISOString();
     const routeKey = getRouteKey(environment);
     const viewport = input.viewport ?? getViewportSize(environment);
+    const createdBy = this.options.userId?.trim();
     const item: ReviewItem = {
       id: createId(),
       projectId: this.options.projectId,
@@ -546,6 +547,7 @@ class WebReviewKitApp {
       kind: input.kind,
       title: input.comment.split('\n')[0]?.slice(0, 80),
       comment: input.comment,
+      createdBy: createdBy || undefined,
       status: 'todo',
       viewport,
       devicePixelRatio: environment.window.devicePixelRatio || 1,

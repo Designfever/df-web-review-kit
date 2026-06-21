@@ -43,6 +43,217 @@ const EMPTY_SITEMAP_QA_COUNT: SitemapQaCount = {
   remote: 0,
 };
 
+type SitemapTreeNode = {
+  href: string;
+  label: string;
+  isPage: boolean;
+  children: Map<string, SitemapTreeNode>;
+};
+
+type SitemapTreeRow = {
+  href: string;
+  label: string;
+  prefix: string;
+  isPage: boolean;
+  isActive: boolean;
+  qaCount: SitemapQaCount;
+  users: ReviewPresenceUser[];
+};
+
+const normalizeSitemapHref = (href: string) => {
+  const [path = '/'] = href.split(/[?#]/);
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  return normalizedPath || '/';
+};
+
+const getSitemapSegments = (href: string) =>
+  normalizeSitemapHref(href)
+    .split('/')
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+const createSitemapNode = (
+  href: string,
+  label: string,
+  isPage = false
+): SitemapTreeNode => ({
+  href,
+  label,
+  isPage,
+  children: new Map(),
+});
+
+const mergeSitemapUsers = (users: ReviewPresenceUser[]) => {
+  const userByKey = new Map<string, ReviewPresenceUser>();
+
+  users.forEach((user) => {
+    const key = user.sessionId || user.userId;
+    const currentUser = userByKey.get(key);
+
+    if (
+      !currentUser ||
+      Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)
+    ) {
+      userByKey.set(key, user);
+    }
+  });
+
+  return Array.from(userByKey.values());
+};
+
+const addSitemapQaCounts = (
+  first: SitemapQaCount,
+  second: SitemapQaCount
+): SitemapQaCount => ({
+  local: first.local + second.local,
+  remote: first.remote + second.remote,
+});
+
+const createSitemapRows = (
+  pages: ReviewShellPage[],
+  activeRoute: string,
+  pageQaCounts: ReadonlyMap<string, SitemapQaCount>,
+  pagePresenceUsers: ReadonlyMap<string, ReviewPresenceUser[]>,
+  getPageTarget: (href: string) => string
+) => {
+  const root = createSitemapNode('/', '/', false);
+
+  pages.forEach((page) => {
+    const pageHref = page.href.startsWith('/') ? page.href : `/${page.href}`;
+    const pathHref = normalizeSitemapHref(pageHref);
+    const segments = getSitemapSegments(pathHref);
+
+    if (segments.length === 0) {
+      root.href = pageHref;
+      root.isPage = true;
+      return;
+    }
+
+    let parent = root;
+
+    segments.forEach((segment, segmentIndex) => {
+      const isLastSegment = segmentIndex === segments.length - 1;
+      const segmentPath = `/${segments.slice(0, segmentIndex + 1).join('/')}`;
+      const segmentHref = isLastSegment
+        ? pageHref
+        : `${segmentPath}/`;
+      const segmentLabel = `${segment}${
+        !isLastSegment || pathHref.endsWith('/') ? '/' : ''
+      }`;
+      const existingNode = parent.children.get(segment);
+      const node =
+        existingNode ?? createSitemapNode(segmentHref, segmentLabel, false);
+
+      node.href = isLastSegment ? pageHref : node.href;
+      node.label = isLastSegment ? segmentLabel : node.label;
+      node.isPage = node.isPage || isLastSegment;
+      parent.children.set(segment, node);
+      parent = node;
+    });
+  });
+
+  const getDirectCount = (node: SitemapTreeNode) => {
+    if (!node.isPage) return EMPTY_SITEMAP_QA_COUNT;
+
+    return pageQaCounts.get(getPageTarget(node.href)) ?? EMPTY_SITEMAP_QA_COUNT;
+  };
+
+  const getDirectUsers = (node: SitemapTreeNode) => {
+    if (!node.isPage) return [];
+
+    return pagePresenceUsers.get(getPageTarget(node.href)) ?? [];
+  };
+
+  const rows: SitemapTreeRow[] = [];
+
+  const appendNodeRows = (
+    node: SitemapTreeNode,
+    depth: number,
+    ancestorLastList: boolean[],
+    isLastNode: boolean
+  ): { count: SitemapQaCount; users: ReviewPresenceUser[] } => {
+    const children = Array.from(node.children.values());
+    const directCount = getDirectCount(node);
+    const directUsers = getDirectUsers(node);
+    let rowIndex: number | null = null;
+
+    if (node.isPage || depth > 0) {
+      const prefix =
+        depth === 0
+          ? ''
+          : `${ancestorLastList.map((isLast) => (isLast ? '   ' : '│  ')).join('')}${
+              isLastNode ? '└─ ' : '├─ '
+            }`;
+      const pageTarget = node.isPage ? getPageTarget(node.href) : null;
+
+      rowIndex = rows.length;
+      rows.push({
+        href: node.href,
+        label: node.label,
+        prefix,
+        isPage: node.isPage,
+        isActive: pageTarget === activeRoute,
+        qaCount: directCount,
+        users: directUsers,
+      });
+    }
+
+    const childAggregate = children.reduce(
+      (aggregate, child, childIndex) => {
+        const childResult = appendNodeRows(
+          child,
+          depth + 1,
+          depth === 0 ? [] : [...ancestorLastList, isLastNode],
+          childIndex === children.length - 1
+        );
+
+        return {
+          count: addSitemapQaCounts(aggregate.count, childResult.count),
+          users: mergeSitemapUsers([...aggregate.users, ...childResult.users]),
+        };
+      },
+      { count: EMPTY_SITEMAP_QA_COUNT, users: [] as ReviewPresenceUser[] }
+    );
+
+    if (rowIndex !== null && !node.isPage) {
+      rows[rowIndex] = {
+        ...rows[rowIndex],
+        qaCount: childAggregate.count,
+        users: childAggregate.users,
+      };
+    }
+
+    return {
+      count: node.isPage
+        ? addSitemapQaCounts(directCount, childAggregate.count)
+        : childAggregate.count,
+      users: mergeSitemapUsers([...directUsers, ...childAggregate.users]),
+    };
+  };
+
+  if (root.isPage) {
+    const directCount = getDirectCount(root);
+    const directUsers = getDirectUsers(root);
+
+    rows.push({
+      href: root.href,
+      label: root.label,
+      prefix: '',
+      isPage: true,
+      isActive: getPageTarget(root.href) === activeRoute,
+      qaCount: directCount,
+      users: directUsers,
+    });
+  }
+
+  Array.from(root.children.values()).forEach((node, index, siblings) => {
+    appendNodeRows(node, 1, [], index === siblings.length - 1);
+  });
+
+  return rows;
+};
+
 export const SitemapModal = ({
   pages,
   activeRoute,
@@ -52,6 +263,14 @@ export const SitemapModal = ({
   onClose,
   onSelectPage,
 }: SitemapModalProps) => {
+  const sitemapRows = createSitemapRows(
+    pages,
+    activeRoute,
+    pageQaCounts,
+    pagePresenceUsers,
+    getPageTarget
+  );
+
   return (
     <div
       aria-label="Sitemap"
@@ -82,29 +301,72 @@ export const SitemapModal = ({
             <span>Remote</span>
             <span>Online</span>
           </div>
-          {pages.map((page) => {
-            const pageTarget = getPageTarget(page.href);
-            const qaCount = pageQaCounts.get(pageTarget) ?? EMPTY_SITEMAP_QA_COUNT;
-            const pageUsers = pagePresenceUsers.get(pageTarget) ?? [];
+          {sitemapRows.map((row) => {
+            const rowClassName = [
+              'df-review-sitemap-row',
+              row.isPage ? 'is-page' : 'is-folder',
+              row.isActive ? 'is-active' : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
+            const rowContent = (
+              <>
+                <span className="df-review-sitemap-path">
+                  <span className="df-review-sitemap-tree-prefix">
+                    {row.prefix}
+                  </span>
+                  <span>{row.label}</span>
+                </span>
+                <span className="df-review-sitemap-cell is-local">
+                  {row.qaCount.local}
+                </span>
+                <span className="df-review-sitemap-cell is-remote">
+                  {row.qaCount.remote}
+                </span>
+                <span className="df-review-sitemap-cell is-online">
+                  {row.users.length > 0 ? (
+                    <span className="df-review-sitemap-users">
+                      {row.users.map((user) => (
+                        <span
+                          key={user.sessionId}
+                          className="df-review-sitemap-user"
+                          style={{
+                            '--df-review-presence-color': user.color,
+                          } as React.CSSProperties}
+                        >
+                          {user.userId}
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="df-review-sitemap-online-empty">0</span>
+                  )}
+                </span>
+              </>
+            );
+
+            if (!row.isPage) {
+              return (
+                <div
+                  key={row.href}
+                  aria-label={`${row.href} group / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`}
+                  className={rowClassName}
+                  role="row"
+                >
+                  {rowContent}
+                </div>
+              );
+            }
 
             return (
               <button
-                key={page.href}
-                aria-label={`${page.href} / local ${qaCount.local} QA / remote ${qaCount.remote} QA / ${pageUsers.length} online`}
-                className={pageTarget === activeRoute ? 'is-active' : ''}
+                key={row.href}
+                aria-label={`${row.href} / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`}
+                className={rowClassName}
                 type="button"
-                onClick={() => onSelectPage(page.href)}
+                onClick={() => onSelectPage(row.href)}
               >
-                <span className="df-review-sitemap-path">{page.href}</span>
-                <span className="df-review-sitemap-cell is-local">
-                  {qaCount.local}
-                </span>
-                <span className="df-review-sitemap-cell is-remote">
-                  {qaCount.remote}
-                </span>
-                <span className="df-review-sitemap-cell is-online">
-                  {pageUsers.length}
-                </span>
+                {rowContent}
               </button>
             );
           })}

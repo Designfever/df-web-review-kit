@@ -967,9 +967,9 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-sitemap-table-head,
-  .df-review-sitemap-list button {
+  .df-review-sitemap-row {
     display: grid;
-    grid-template-columns: minmax(160px, 1fr) 70px 78px 72px;
+    grid-template-columns: minmax(160px, 1fr) 70px 78px minmax(96px, 140px);
     align-items: center;
     column-gap: 0;
   }
@@ -993,7 +993,7 @@ function ensureReviewShellStyle() {
     text-align: right;
   }
 
-  .df-review-sitemap-list button {
+  .df-review-sitemap-row {
     min-height: 42px;
     border: 0;
     border-bottom: 1px solid var(--df-review-line-soft);
@@ -1004,22 +1004,44 @@ function ensureReviewShellStyle() {
     text-align: left;
   }
 
-  .df-review-sitemap-list button:last-child {
+  button.df-review-sitemap-row {
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-row.is-folder {
+    cursor: default;
+  }
+
+  .df-review-sitemap-row:last-child {
     border-bottom: 0;
   }
 
-  .df-review-sitemap-list button:hover,
-  .df-review-sitemap-list button.is-active {
+  button.df-review-sitemap-row:hover,
+  .df-review-sitemap-row.is-active {
     background: var(--df-review-accent-soft);
   }
 
   .df-review-sitemap-path {
+    display: inline-flex;
+    align-items: center;
     min-width: 0;
     overflow-wrap: anywhere;
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-md);
     font-weight: 800;
     line-height: 1.35;
+  }
+
+  .df-review-sitemap-row.is-folder .df-review-sitemap-path {
+    color: var(--df-review-muted);
+  }
+
+  .df-review-sitemap-tree-prefix {
+    flex: 0 0 auto;
+    color: var(--df-review-muted);
+    font-family: var(--df-review-font-mono);
+    font-weight: 700;
+    white-space: pre;
   }
 
   .df-review-sitemap-cell {
@@ -1041,11 +1063,42 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-sitemap-cell.is-online {
+    display: flex;
+    justify-content: flex-end;
     color: var(--df-review-text);
   }
 
-  .df-review-sitemap-list button:hover .df-review-sitemap-path,
-  .df-review-sitemap-list button.is-active .df-review-sitemap-path {
+  .df-review-sitemap-users {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .df-review-sitemap-user {
+    --df-review-presence-color: var(--df-review-accent);
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    border: 1px solid var(--df-review-presence-color);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 7px;
+    background: var(--df-review-chip-bg);
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 900;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .df-review-sitemap-online-empty {
+    color: var(--df-review-muted);
+  }
+
+  button.df-review-sitemap-row:hover .df-review-sitemap-path,
+  .df-review-sitemap-row.is-active .df-review-sitemap-path {
     color: var(--df-review-text);
   }
 
@@ -6316,6 +6369,132 @@ var EMPTY_SITEMAP_QA_COUNT = {
   local: 0,
   remote: 0
 };
+var normalizeSitemapHref = (href) => {
+  const [path = "/"] = href.split(/[?#]/);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return normalizedPath || "/";
+};
+var getSitemapSegments = (href) => normalizeSitemapHref(href).split("/").map((segment) => segment.trim()).filter(Boolean);
+var createSitemapNode = (href, label, isPage = false) => ({
+  href,
+  label,
+  isPage,
+  children: /* @__PURE__ */ new Map()
+});
+var mergeSitemapUsers = (users) => {
+  const userByKey = /* @__PURE__ */ new Map();
+  users.forEach((user) => {
+    const key = user.sessionId || user.userId;
+    const currentUser = userByKey.get(key);
+    if (!currentUser || Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)) {
+      userByKey.set(key, user);
+    }
+  });
+  return Array.from(userByKey.values());
+};
+var addSitemapQaCounts = (first, second) => ({
+  local: first.local + second.local,
+  remote: first.remote + second.remote
+});
+var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget) => {
+  const root = createSitemapNode("/", "/", false);
+  pages.forEach((page) => {
+    const pageHref = page.href.startsWith("/") ? page.href : `/${page.href}`;
+    const pathHref = normalizeSitemapHref(pageHref);
+    const segments = getSitemapSegments(pathHref);
+    if (segments.length === 0) {
+      root.href = pageHref;
+      root.isPage = true;
+      return;
+    }
+    let parent = root;
+    segments.forEach((segment, segmentIndex) => {
+      const isLastSegment = segmentIndex === segments.length - 1;
+      const segmentPath = `/${segments.slice(0, segmentIndex + 1).join("/")}`;
+      const segmentHref = isLastSegment ? pageHref : `${segmentPath}/`;
+      const segmentLabel = `${segment}${!isLastSegment || pathHref.endsWith("/") ? "/" : ""}`;
+      const existingNode = parent.children.get(segment);
+      const node = existingNode ?? createSitemapNode(segmentHref, segmentLabel, false);
+      node.href = isLastSegment ? pageHref : node.href;
+      node.label = isLastSegment ? segmentLabel : node.label;
+      node.isPage = node.isPage || isLastSegment;
+      parent.children.set(segment, node);
+      parent = node;
+    });
+  });
+  const getDirectCount = (node) => {
+    if (!node.isPage) return EMPTY_SITEMAP_QA_COUNT;
+    return pageQaCounts.get(getPageTarget(node.href)) ?? EMPTY_SITEMAP_QA_COUNT;
+  };
+  const getDirectUsers = (node) => {
+    if (!node.isPage) return [];
+    return pagePresenceUsers.get(getPageTarget(node.href)) ?? [];
+  };
+  const rows = [];
+  const appendNodeRows = (node, depth, ancestorLastList, isLastNode) => {
+    const children = Array.from(node.children.values());
+    const directCount = getDirectCount(node);
+    const directUsers = getDirectUsers(node);
+    let rowIndex = null;
+    if (node.isPage || depth > 0) {
+      const prefix = depth === 0 ? "" : `${ancestorLastList.map((isLast) => isLast ? "   " : "\u2502  ").join("")}${isLastNode ? "\u2514\u2500 " : "\u251C\u2500 "}`;
+      const pageTarget = node.isPage ? getPageTarget(node.href) : null;
+      rowIndex = rows.length;
+      rows.push({
+        href: node.href,
+        label: node.label,
+        prefix,
+        isPage: node.isPage,
+        isActive: pageTarget === activeRoute,
+        qaCount: directCount,
+        users: directUsers
+      });
+    }
+    const childAggregate = children.reduce(
+      (aggregate, child, childIndex) => {
+        const childResult = appendNodeRows(
+          child,
+          depth + 1,
+          depth === 0 ? [] : [...ancestorLastList, isLastNode],
+          childIndex === children.length - 1
+        );
+        return {
+          count: addSitemapQaCounts(aggregate.count, childResult.count),
+          users: mergeSitemapUsers([...aggregate.users, ...childResult.users])
+        };
+      },
+      { count: EMPTY_SITEMAP_QA_COUNT, users: [] }
+    );
+    if (rowIndex !== null && !node.isPage) {
+      rows[rowIndex] = {
+        ...rows[rowIndex],
+        qaCount: childAggregate.count,
+        users: childAggregate.users
+      };
+    }
+    return {
+      count: node.isPage ? addSitemapQaCounts(directCount, childAggregate.count) : childAggregate.count,
+      users: mergeSitemapUsers([...directUsers, ...childAggregate.users])
+    };
+  };
+  if (root.isPage) {
+    const directCount = getDirectCount(root);
+    const directUsers = getDirectUsers(root);
+    rows.push({
+      href: root.href,
+      label: root.label,
+      prefix: "",
+      isPage: true,
+      isActive: getPageTarget(root.href) === activeRoute,
+      qaCount: directCount,
+      users: directUsers
+    });
+  }
+  Array.from(root.children.values()).forEach((node, index, siblings) => {
+    appendNodeRows(node, 1, [], index === siblings.length - 1);
+  });
+  return rows;
+};
 var SitemapModal = ({
   pages,
   activeRoute,
@@ -6325,6 +6504,13 @@ var SitemapModal = ({
   onClose,
   onSelectPage
 }) => {
+  const sitemapRows = createSitemapRows(
+    pages,
+    activeRoute,
+    pageQaCounts,
+    pagePresenceUsers,
+    getPageTarget
+  );
   return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
     "div",
     {
@@ -6360,25 +6546,53 @@ var SitemapModal = ({
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Remote" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Online" })
             ] }),
-            pages.map((page) => {
-              const pageTarget = getPageTarget(page.href);
-              const qaCount = pageQaCounts.get(pageTarget) ?? EMPTY_SITEMAP_QA_COUNT;
-              const pageUsers = pagePresenceUsers.get(pageTarget) ?? [];
-              return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+            sitemapRows.map((row) => {
+              const rowClassName = [
+                "df-review-sitemap-row",
+                row.isPage ? "is-page" : "is-folder",
+                row.isActive ? "is-active" : ""
+              ].filter(Boolean).join(" ");
+              const rowContent = /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "df-review-sitemap-path", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "df-review-sitemap-tree-prefix", children: row.prefix }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: row.label })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "df-review-sitemap-cell is-local", children: row.qaCount.local }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "df-review-sitemap-cell is-remote", children: row.qaCount.remote }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "df-review-sitemap-cell is-online", children: row.users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "df-review-sitemap-users", children: row.users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "span",
+                  {
+                    className: "df-review-sitemap-user",
+                    style: {
+                      "--df-review-presence-color": user.color
+                    },
+                    children: user.userId
+                  },
+                  user.sessionId
+                )) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
+              ] });
+              if (!row.isPage) {
+                return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "div",
+                  {
+                    "aria-label": `${row.href} group / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                    className: rowClassName,
+                    role: "row",
+                    children: rowContent
+                  },
+                  row.href
+                );
+              }
+              return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                 "button",
                 {
-                  "aria-label": `${page.href} / local ${qaCount.local} QA / remote ${qaCount.remote} QA / ${pageUsers.length} online`,
-                  className: pageTarget === activeRoute ? "is-active" : "",
+                  "aria-label": `${row.href} / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                  className: rowClassName,
                   type: "button",
-                  onClick: () => onSelectPage(page.href),
-                  children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "df-review-sitemap-path", children: page.href }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "df-review-sitemap-cell is-local", children: qaCount.local }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "df-review-sitemap-cell is-remote", children: qaCount.remote }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "df-review-sitemap-cell is-online", children: pageUsers.length })
-                  ]
+                  onClick: () => onSelectPage(row.href),
+                  children: rowContent
                 },
-                page.href
+                row.href
               );
             })
           ] })

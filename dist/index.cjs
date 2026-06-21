@@ -1887,7 +1887,7 @@ var WebReviewKitApp = class {
       this.items,
       this.options.viewports?.presets
     ).forEach((numberedItem) => {
-      const { item, scope, number, displayLabel } = numberedItem;
+      const { item, scope, displayLabel } = numberedItem;
       if (!shouldShowMarkerForScope(scope, currentScope)) {
         return;
       }
@@ -1901,7 +1901,7 @@ var WebReviewKitApp = class {
               selection.viewport,
               environment,
               item,
-              String(number),
+              displayLabel,
               selection.isBound,
               isHighlighted
             )
@@ -1917,7 +1917,7 @@ var WebReviewKitApp = class {
       const marker = this.createMarkerElement(
         item.id,
         hostPoint,
-        String(number),
+        displayLabel,
         scope,
         point.isBound,
         isHighlighted,
@@ -1950,7 +1950,7 @@ ${formatItemMeta(item)}`;
       `is-mode-${mode}`,
       isHighlighted ? "is-highlighted" : ""
     ].filter(Boolean).join(" ");
-    labelElement.textContent = `#${label}`;
+    labelElement.textContent = label;
     labelElement.style.left = `${Math.max(4, rect.left)}px`;
     labelElement.style.top = `${Math.max(4, rect.top - 24)}px`;
     labelElement.dataset.reviewItemId = item.id;
@@ -1987,7 +1987,7 @@ ${formatItemMeta(item)}`;
     iconElement.setAttribute("aria-hidden", "true");
     const labelElement = document.createElement("span");
     labelElement.className = "dfwr-bound-marker-number";
-    labelElement.textContent = isNoteCallout ? `#${label}` : label;
+    labelElement.textContent = label;
     marker.append(iconElement, labelElement);
     return marker;
   }

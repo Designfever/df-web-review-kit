@@ -280,9 +280,7 @@ export function ensureReviewShellStyle() {
 			  .df-review-settings-header button,
 			  .df-review-prompt-header button,
 			  .df-review-settings-actions button,
-			  .df-review-prompt-tabs button,
 			  .df-review-prompt-block-header button,
-			  .df-review-item-prompt-actions button,
 			  .df-review-item-actions button {
 		    min-height: var(--df-review-control-height-md);
 		    border: 1px solid var(--df-review-line);
@@ -303,10 +301,7 @@ export function ensureReviewShellStyle() {
 		  .df-review-settings-header button:hover,
 		  .df-review-prompt-header button:hover,
 		  .df-review-settings-actions button:hover,
-		  .df-review-prompt-tabs button:hover,
-		  .df-review-prompt-tabs button.is-active,
 		  .df-review-prompt-block-header button:hover,
-		  .df-review-item-prompt-actions button:hover,
 			  .df-review-item-actions button:hover,
 		  .df-review-item-visibility:hover,
 		  .df-review-item-delete:hover,
@@ -918,38 +913,10 @@ export function ensureReviewShellStyle() {
 
 			  .df-review-prompt-body {
 			    display: grid;
-			    gap: 12px;
+			    gap: 14px;
 			    min-height: 0;
 			    overflow: auto;
 			    padding: 16px;
-			  }
-
-			  .df-review-prompt-tabs {
-			    display: grid;
-			    grid-template-columns: repeat(2, minmax(0, 1fr));
-			    gap: 4px;
-			    padding: 3px;
-			    border: 1px solid var(--df-review-line-soft);
-			    border-radius: 7px;
-			    background: var(--df-review-line-soft);
-			  }
-
-			  .df-review-prompt-tabs button {
-			    min-width: 0;
-			    min-height: 32px;
-			    padding: 0 10px;
-			    border-color: transparent;
-			    background: transparent;
-			    color: var(--df-review-muted);
-			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 900;
-			  }
-
-			  .df-review-prompt-tabs button:hover,
-			  .df-review-prompt-tabs button.is-active {
-			    border-color: var(--df-review-line);
-			    background: var(--df-review-panel);
-			    color: var(--df-review-text);
 			  }
 
 			  .df-review-prompt-block {
@@ -1009,9 +976,9 @@ export function ensureReviewShellStyle() {
 
 				  .df-review-prompt-block textarea {
 				    width: 100%;
-				    height: min(520px, calc(100vh - 290px));
-				    min-height: 360px;
-				    max-height: calc(100vh - 290px);
+				    height: clamp(170px, calc(100vh - 520px), 260px);
+				    min-height: 170px;
+				    max-height: 320px;
 			    resize: vertical;
 			    border: 1px solid var(--df-review-line);
 			    border-radius: var(--df-review-radius-sm);
@@ -1030,14 +997,40 @@ export function ensureReviewShellStyle() {
 			    outline-offset: 1px;
 			  }
 
+			  .df-review-prompt-section-header {
+			    display: grid;
+			    gap: 2px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-section-header strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-md);
+			    font-weight: 900;
+			  }
+
+			  .df-review-prompt-section-header span {
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-xs);
+			    font-weight: 800;
+			  }
+
 			  .df-review-prompt-about {
 			    display: grid;
 			    gap: 10px;
 			    min-width: 0;
 			  }
 
-			  .df-review-prompt-about article {
+			  .df-review-prompt-about-grid {
 			    display: grid;
+			    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+			    gap: 10px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-about-grid article {
+			    display: grid;
+			    align-content: start;
 			    gap: 6px;
 			    border: 1px solid var(--df-review-line);
 			    border-radius: var(--df-review-radius-md);
@@ -1045,13 +1038,13 @@ export function ensureReviewShellStyle() {
 			    background: var(--df-review-surface);
 			  }
 
-			  .df-review-prompt-about strong {
+			  .df-review-prompt-about-grid strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-sm);
 			    font-weight: 900;
 			  }
 
-			  .df-review-prompt-about p {
+			  .df-review-prompt-about-grid p {
 			    margin: 0;
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-sm);
@@ -1819,14 +1812,6 @@ export function ensureReviewShellStyle() {
 			    min-width: 0;
 			  }
 
-			  .df-review-item-prompt-actions {
-			    display: inline-grid;
-			    grid-template-columns: auto 28px;
-		    align-items: stretch;
-			    min-width: 0;
-		    cursor: auto;
-			  }
-
 			  .df-review-item-status-actions {
 			    display: inline-flex;
 			    grid-column: 1;
@@ -1844,45 +1829,6 @@ export function ensureReviewShellStyle() {
 			    min-width: 0;
 		    cursor: auto;
 			  }
-
-	  .df-review-item-prompt {
-	    display: inline-flex;
-	    align-items: center;
-	    min-height: 28px;
-	    padding: 0 8px;
-	    border-top-right-radius: 0;
-	    border-bottom-right-radius: 0;
-	    font-size: var(--df-review-font-size-2xs);
-	    text-transform: uppercase;
-	  }
-
-	  .df-review-item-prompt-copy {
-	    position: relative;
-	    display: inline-grid;
-	    place-items: center;
-	    width: 28px;
-	    min-width: 28px;
-	    min-height: 28px;
-	    border-left: 0;
-	    border-top-left-radius: 0;
-	    border-bottom-left-radius: 0;
-	    padding: 0;
-	  }
-
-	  .df-review-item-prompt-copy.is-copied {
-	    border-color: var(--df-review-accent);
-	    color: var(--df-review-accent);
-	  }
-
-	  .df-review-item-prompt-copy svg {
-	    width: 12px;
-	    height: 12px;
-	    fill: none;
-	    stroke: currentColor;
-	    stroke-linecap: round;
-	    stroke-linejoin: round;
-	    stroke-width: 2;
-	  }
 
   .df-review-item-action-button {
     position: relative;

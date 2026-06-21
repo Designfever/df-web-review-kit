@@ -45,7 +45,6 @@ import {
 } from './index';
 
 import type {
-  ReviewPromptTab,
   ReviewPresenceSession,
   ReviewPresenceState,
   ReviewPresenceStatus,
@@ -382,7 +381,6 @@ export const ReviewShell = ({
   const [rulerPoint, setRulerPoint] = useState<ReviewRulerPoint | null>(null);
   const [rulerHover, setRulerHover] = useState<ReviewRulerPoint | null>(null);
   const [isRulerDragging, setIsRulerDragging] = useState(false);
-  const [promptTab, setPromptTab] = useState<ReviewPromptTab>('about');
   const [copiedPromptKey, setCopiedPromptKey] = useState<string | null>(null);
   const [presenceUsers, setPresenceUsers] = useState<ReviewPresenceUser[]>([]);
   const [presenceSessionVersion, setPresenceSessionVersion] = useState(0);
@@ -1728,7 +1726,6 @@ export const ReviewShell = ({
         onToggleRuler={toggleRuler}
         onToggleTargetOverlay={toggleTargetOverlay}
         onOpenInitialPrompt={() => {
-          setPromptTab('about');
           setIsInitialPromptOpen(true);
         }}
         onOpenSettings={openFigmaSettings}
@@ -1771,11 +1768,9 @@ export const ReviewShell = ({
 
       {isInitialPromptOpen && (
         <PromptModal
-          promptTab={promptTab}
           initialPromptText={initialPromptText}
           copiedPromptKey={copiedPromptKey}
           onClose={closePromptModal}
-          onPromptTabChange={setPromptTab}
           onCopyPrompt={(text, key) => void copyPrompt(text, key)}
         />
       )}

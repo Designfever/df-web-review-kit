@@ -769,9 +769,7 @@ function ensureReviewShellStyle() {
 			  .df-review-settings-header button,
 			  .df-review-prompt-header button,
 			  .df-review-settings-actions button,
-			  .df-review-prompt-tabs button,
 			  .df-review-prompt-block-header button,
-			  .df-review-item-prompt-actions button,
 			  .df-review-item-actions button {
 		    min-height: var(--df-review-control-height-md);
 		    border: 1px solid var(--df-review-line);
@@ -792,10 +790,7 @@ function ensureReviewShellStyle() {
 		  .df-review-settings-header button:hover,
 		  .df-review-prompt-header button:hover,
 		  .df-review-settings-actions button:hover,
-		  .df-review-prompt-tabs button:hover,
-		  .df-review-prompt-tabs button.is-active,
 		  .df-review-prompt-block-header button:hover,
-		  .df-review-item-prompt-actions button:hover,
 			  .df-review-item-actions button:hover,
 		  .df-review-item-visibility:hover,
 		  .df-review-item-delete:hover,
@@ -1407,38 +1402,10 @@ function ensureReviewShellStyle() {
 
 			  .df-review-prompt-body {
 			    display: grid;
-			    gap: 12px;
+			    gap: 14px;
 			    min-height: 0;
 			    overflow: auto;
 			    padding: 16px;
-			  }
-
-			  .df-review-prompt-tabs {
-			    display: grid;
-			    grid-template-columns: repeat(2, minmax(0, 1fr));
-			    gap: 4px;
-			    padding: 3px;
-			    border: 1px solid var(--df-review-line-soft);
-			    border-radius: 7px;
-			    background: var(--df-review-line-soft);
-			  }
-
-			  .df-review-prompt-tabs button {
-			    min-width: 0;
-			    min-height: 32px;
-			    padding: 0 10px;
-			    border-color: transparent;
-			    background: transparent;
-			    color: var(--df-review-muted);
-			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 900;
-			  }
-
-			  .df-review-prompt-tabs button:hover,
-			  .df-review-prompt-tabs button.is-active {
-			    border-color: var(--df-review-line);
-			    background: var(--df-review-panel);
-			    color: var(--df-review-text);
 			  }
 
 			  .df-review-prompt-block {
@@ -1498,9 +1465,9 @@ function ensureReviewShellStyle() {
 
 				  .df-review-prompt-block textarea {
 				    width: 100%;
-				    height: min(520px, calc(100vh - 290px));
-				    min-height: 360px;
-				    max-height: calc(100vh - 290px);
+				    height: clamp(170px, calc(100vh - 520px), 260px);
+				    min-height: 170px;
+				    max-height: 320px;
 			    resize: vertical;
 			    border: 1px solid var(--df-review-line);
 			    border-radius: var(--df-review-radius-sm);
@@ -1519,14 +1486,40 @@ function ensureReviewShellStyle() {
 			    outline-offset: 1px;
 			  }
 
+			  .df-review-prompt-section-header {
+			    display: grid;
+			    gap: 2px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-section-header strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-md);
+			    font-weight: 900;
+			  }
+
+			  .df-review-prompt-section-header span {
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-xs);
+			    font-weight: 800;
+			  }
+
 			  .df-review-prompt-about {
 			    display: grid;
 			    gap: 10px;
 			    min-width: 0;
 			  }
 
-			  .df-review-prompt-about article {
+			  .df-review-prompt-about-grid {
 			    display: grid;
+			    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+			    gap: 10px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-about-grid article {
+			    display: grid;
+			    align-content: start;
 			    gap: 6px;
 			    border: 1px solid var(--df-review-line);
 			    border-radius: var(--df-review-radius-md);
@@ -1534,13 +1527,13 @@ function ensureReviewShellStyle() {
 			    background: var(--df-review-surface);
 			  }
 
-			  .df-review-prompt-about strong {
+			  .df-review-prompt-about-grid strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-sm);
 			    font-weight: 900;
 			  }
 
-			  .df-review-prompt-about p {
+			  .df-review-prompt-about-grid p {
 			    margin: 0;
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-sm);
@@ -2308,14 +2301,6 @@ function ensureReviewShellStyle() {
 			    min-width: 0;
 			  }
 
-			  .df-review-item-prompt-actions {
-			    display: inline-grid;
-			    grid-template-columns: auto 28px;
-		    align-items: stretch;
-			    min-width: 0;
-		    cursor: auto;
-			  }
-
 			  .df-review-item-status-actions {
 			    display: inline-flex;
 			    grid-column: 1;
@@ -2333,45 +2318,6 @@ function ensureReviewShellStyle() {
 			    min-width: 0;
 		    cursor: auto;
 			  }
-
-	  .df-review-item-prompt {
-	    display: inline-flex;
-	    align-items: center;
-	    min-height: 28px;
-	    padding: 0 8px;
-	    border-top-right-radius: 0;
-	    border-bottom-right-radius: 0;
-	    font-size: var(--df-review-font-size-2xs);
-	    text-transform: uppercase;
-	  }
-
-	  .df-review-item-prompt-copy {
-	    position: relative;
-	    display: inline-grid;
-	    place-items: center;
-	    width: 28px;
-	    min-width: 28px;
-	    min-height: 28px;
-	    border-left: 0;
-	    border-top-left-radius: 0;
-	    border-bottom-left-radius: 0;
-	    padding: 0;
-	  }
-
-	  .df-review-item-prompt-copy.is-copied {
-	    border-color: var(--df-review-accent);
-	    color: var(--df-review-accent);
-	  }
-
-	  .df-review-item-prompt-copy svg {
-	    width: 12px;
-	    height: 12px;
-	    fill: none;
-	    stroke: currentColor;
-	    stroke-linecap: round;
-	    stroke-linejoin: round;
-	    stroke-width: 2;
-	  }
 
   .df-review-item-action-button {
     position: relative;
@@ -3781,27 +3727,32 @@ var ReviewSettingsModal = ({
 };
 var ABOUT_SECTIONS = [
   {
-    title: "Settings",
-    body: "Figma token, User ID, theme \uC124\uC815\uC740 \uC6B0\uCE21 \uC0C1\uB2E8 \uC124\uC815\uC5D0\uC11C \uC800\uC7A5\uD574. Token\uC740 Figma overlay\uB97C \uC4F8 \uB54C\uB9CC \uD544\uC694\uD558\uACE0, User ID\uB294 presence\uC640 \uC791\uC5C5\uC790 \uD45C\uC2DC \uC774\uB984\uC73C\uB85C \uC0AC\uC6A9\uB3FC."
+    title: "What this is",
+    body: "df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool."
   },
   {
-    title: "Sitemap",
-    body: "Sitemap\uC740 \uB4F1\uB85D\uB41C route\uB97C \uD3F4\uB354 \uD2B8\uB9AC\uB85C \uBCF4\uC5EC\uC8FC\uACE0, Local / Remote QA \uC218\uC640 Online \uC0AC\uC6A9\uC790\uB97C \uD55C \uBC88\uC5D0 \uD655\uC778\uD558\uB294 \uCC3D\uC774\uC57C. \uC2E4\uC81C page row\uB97C \uB204\uB974\uBA74 \uD574\uB2F9 route\uB85C \uC774\uB3D9\uD574."
+    title: "How to setup",
+    body: "Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration."
   },
   {
-    title: "List",
-    body: "QA list\uB294 \uD604\uC7AC source\uC758 review item\uC744 \uBCF4\uC5EC\uC918. viewport \uD544\uD130, \uC0C1\uD0DC \uBCC0\uACBD, overlay \uC228\uAE40, \uC0AD\uC81C\uB97C \uC5EC\uAE30\uC11C \uCC98\uB9AC\uD558\uACE0, Online pill\uC740 \uAC19\uC740 project/route\uB97C \uBCF4\uB294 \uC0AC\uC6A9\uC790\uB97C \uD45C\uC2DC\uD574."
+    title: "Figma token",
+    body: "Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration."
+  },
+  {
+    title: "User ID",
+    body: "Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route."
+  },
+  {
+    title: "Remote",
+    body: "Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or \uB2F4\uB2F9 \uAC1C\uBC1C\uC790 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser."
   }
 ];
 var PromptModal = ({
-  promptTab,
   initialPromptText,
   copiedPromptKey,
   onClose,
-  onPromptTabChange,
   onCopyPrompt
 }) => {
-  const isInitialPromptTab = promptTab === "initial";
   return /* @__PURE__ */ jsxs(
     "div",
     {
@@ -3828,61 +3779,51 @@ var PromptModal = ({
             /* @__PURE__ */ jsx("button", { "aria-label": "Close help", type: "button", onClick: onClose, children: "x" })
           ] }),
           /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-body", children: [
-            /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-tabs", role: "tablist", children: [
-              /* @__PURE__ */ jsx(
-                "button",
-                {
-                  "aria-selected": promptTab === "about",
-                  className: promptTab === "about" ? "is-active" : "",
-                  role: "tab",
-                  type: "button",
-                  onClick: () => onPromptTabChange("about"),
-                  children: "About"
-                }
-              ),
-              /* @__PURE__ */ jsx(
-                "button",
-                {
-                  "aria-selected": isInitialPromptTab,
-                  className: isInitialPromptTab ? "is-active" : "",
-                  role: "tab",
-                  type: "button",
-                  onClick: () => onPromptTabChange("initial"),
-                  children: "Initial prompt"
-                }
-              )
-            ] }),
-            isInitialPromptTab ? /* @__PURE__ */ jsxs("section", { className: "df-review-prompt-block", role: "tabpanel", children: [
-              /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-block-header", children: [
-                /* @__PURE__ */ jsxs("div", { children: [
-                  /* @__PURE__ */ jsx("strong", { children: "Initial prompt" }),
-                  /* @__PURE__ */ jsx("span", { children: getPromptLengthLabel(initialPromptText) })
-                ] }),
-                /* @__PURE__ */ jsxs(
-                  "button",
-                  {
-                    disabled: !initialPromptText,
-                    type: "button",
-                    onClick: () => onCopyPrompt(initialPromptText, "initial"),
-                    children: [
-                      /* @__PURE__ */ jsx(Copy, { "aria-hidden": "true" }),
-                      copiedPromptKey === "initial" ? "Copied" : "Copy"
-                    ]
-                  }
-                )
+            /* @__PURE__ */ jsxs("section", { className: "df-review-prompt-about", "aria-labelledby": "df-review-about-title", children: [
+              /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-section-header", children: [
+                /* @__PURE__ */ jsx("strong", { id: "df-review-about-title", children: "About" }),
+                /* @__PURE__ */ jsx("span", { children: "Program overview and setup notes" })
               ] }),
-              /* @__PURE__ */ jsx(
-                "textarea",
-                {
-                  readOnly: true,
-                  "aria-label": "Initial prompt",
-                  value: initialPromptText || "Initial prompt is not configured."
-                }
-              )
-            ] }) : /* @__PURE__ */ jsx("section", { className: "df-review-prompt-about", role: "tabpanel", children: ABOUT_SECTIONS.map((section) => /* @__PURE__ */ jsxs("article", { children: [
-              /* @__PURE__ */ jsx("strong", { children: section.title }),
-              /* @__PURE__ */ jsx("p", { children: section.body })
-            ] }, section.title)) })
+              /* @__PURE__ */ jsx("div", { className: "df-review-prompt-about-grid", children: ABOUT_SECTIONS.map((section) => /* @__PURE__ */ jsxs("article", { children: [
+                /* @__PURE__ */ jsx("strong", { children: section.title }),
+                /* @__PURE__ */ jsx("p", { children: section.body })
+              ] }, section.title)) })
+            ] }),
+            /* @__PURE__ */ jsxs(
+              "section",
+              {
+                className: "df-review-prompt-block",
+                "aria-labelledby": "df-review-initial-prompt-title",
+                children: [
+                  /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-block-header", children: [
+                    /* @__PURE__ */ jsxs("div", { children: [
+                      /* @__PURE__ */ jsx("strong", { id: "df-review-initial-prompt-title", children: "Initial Prompt" }),
+                      /* @__PURE__ */ jsx("span", { children: getPromptLengthLabel(initialPromptText) })
+                    ] }),
+                    /* @__PURE__ */ jsxs(
+                      "button",
+                      {
+                        disabled: !initialPromptText,
+                        type: "button",
+                        onClick: () => onCopyPrompt(initialPromptText, "initial"),
+                        children: [
+                          /* @__PURE__ */ jsx(Copy, { "aria-hidden": "true" }),
+                          copiedPromptKey === "initial" ? "Copied" : "Copy"
+                        ]
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsx(
+                    "textarea",
+                    {
+                      readOnly: true,
+                      "aria-label": "Initial Prompt content",
+                      value: initialPromptText || "Initial prompt is not configured."
+                    }
+                  )
+                ]
+              }
+            )
           ] })
         ] })
       ]
@@ -4372,7 +4313,6 @@ var ReviewShell = ({
   const [rulerPoint, setRulerPoint] = useState(null);
   const [rulerHover, setRulerHover] = useState(null);
   const [isRulerDragging, setIsRulerDragging] = useState(false);
-  const [promptTab, setPromptTab] = useState("about");
   const [copiedPromptKey, setCopiedPromptKey] = useState(null);
   const [presenceUsers, setPresenceUsers] = useState([]);
   const [presenceSessionVersion, setPresenceSessionVersion] = useState(0);
@@ -5475,7 +5415,6 @@ var ReviewShell = ({
             onToggleRuler: toggleRuler,
             onToggleTargetOverlay: toggleTargetOverlay,
             onOpenInitialPrompt: () => {
-              setPromptTab("about");
               setIsInitialPromptOpen(true);
             },
             onOpenSettings: openFigmaSettings
@@ -5515,11 +5454,9 @@ var ReviewShell = ({
         isInitialPromptOpen && /* @__PURE__ */ jsx3(
           PromptModal,
           {
-            promptTab,
             initialPromptText,
             copiedPromptKey,
             onClose: closePromptModal,
-            onPromptTabChange: setPromptTab,
             onCopyPrompt: (text, key) => void copyPrompt(text, key)
           }
         ),

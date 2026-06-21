@@ -17,7 +17,6 @@ import { getPromptLengthLabel } from './prompt';
 import { normalizeReviewTheme } from './settings';
 import type {
   ReviewPresenceUser,
-  ReviewPromptTab,
   ReviewShellPage,
   ReviewShellTheme,
 } from './types';
@@ -572,42 +571,46 @@ export const ReviewSettingsModal = ({
 };
 
 interface PromptModalProps {
-  promptTab: ReviewPromptTab;
   initialPromptText: string;
   copiedPromptKey: string | null;
   onClose: () => void;
-  onPromptTabChange: (tab: ReviewPromptTab) => void;
   onCopyPrompt: (text: string, key: string) => void;
 }
 
 const ABOUT_SECTIONS = [
   {
-    title: 'Settings',
+    title: 'What this is',
     body:
-      'Figma token, User ID, theme 설정은 우측 상단 설정에서 저장해. Token은 Figma overlay를 쓸 때만 필요하고, User ID는 presence와 작업자 표시 이름으로 사용돼.',
+      'df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool.',
   },
   {
-    title: 'Sitemap',
+    title: 'How to setup',
     body:
-      'Sitemap은 등록된 route를 폴더 트리로 보여주고, Local / Remote QA 수와 Online 사용자를 한 번에 확인하는 창이야. 실제 page row를 누르면 해당 route로 이동해.',
+      'Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration.',
   },
   {
-    title: 'List',
+    title: 'Figma token',
     body:
-      'QA list는 현재 source의 review item을 보여줘. viewport 필터, 상태 변경, overlay 숨김, 삭제를 여기서 처리하고, Online pill은 같은 project/route를 보는 사용자를 표시해.',
+      'Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration.',
+  },
+  {
+    title: 'User ID',
+    body:
+      'Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route.',
+  },
+  {
+    title: 'Remote',
+    body:
+      'Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or 담당 개발자 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser.',
   },
 ];
 
 export const PromptModal = ({
-  promptTab,
   initialPromptText,
   copiedPromptKey,
   onClose,
-  onPromptTabChange,
   onCopyPrompt,
 }: PromptModalProps) => {
-  const isInitialPromptTab = promptTab === 'initial';
-
   return (
     <div
       aria-label="Review help"
@@ -632,60 +635,46 @@ export const PromptModal = ({
           </button>
         </div>
         <div className="df-review-prompt-body">
-          <div className="df-review-prompt-tabs" role="tablist">
-            <button
-              aria-selected={promptTab === 'about'}
-              className={promptTab === 'about' ? 'is-active' : ''}
-              role="tab"
-              type="button"
-              onClick={() => onPromptTabChange('about')}
-            >
-              About
-            </button>
-            <button
-              aria-selected={isInitialPromptTab}
-              className={isInitialPromptTab ? 'is-active' : ''}
-              role="tab"
-              type="button"
-              onClick={() => onPromptTabChange('initial')}
-            >
-              Initial prompt
-            </button>
-          </div>
-          {isInitialPromptTab ? (
-            <section className="df-review-prompt-block" role="tabpanel">
-              <div className="df-review-prompt-block-header">
-                <div>
-                  <strong>Initial prompt</strong>
-                  <span>{getPromptLengthLabel(initialPromptText)}</span>
-                </div>
-                <button
-                  disabled={!initialPromptText}
-                  type="button"
-                  onClick={() => onCopyPrompt(initialPromptText, 'initial')}
-                >
-                  <CopyIcon aria-hidden="true" />
-                  {copiedPromptKey === 'initial' ? 'Copied' : 'Copy'}
-                </button>
-              </div>
-              <textarea
-                readOnly
-                aria-label="Initial prompt"
-                value={
-                  initialPromptText || 'Initial prompt is not configured.'
-                }
-              />
-            </section>
-          ) : (
-            <section className="df-review-prompt-about" role="tabpanel">
+          <section className="df-review-prompt-about" aria-labelledby="df-review-about-title">
+            <div className="df-review-prompt-section-header">
+              <strong id="df-review-about-title">About</strong>
+              <span>Program overview and setup notes</span>
+            </div>
+            <div className="df-review-prompt-about-grid">
               {ABOUT_SECTIONS.map((section) => (
                 <article key={section.title}>
                   <strong>{section.title}</strong>
                   <p>{section.body}</p>
                 </article>
               ))}
-            </section>
-          )}
+            </div>
+          </section>
+          <section
+            className="df-review-prompt-block"
+            aria-labelledby="df-review-initial-prompt-title"
+          >
+            <div className="df-review-prompt-block-header">
+              <div>
+                <strong id="df-review-initial-prompt-title">
+                  Initial Prompt
+                </strong>
+                <span>{getPromptLengthLabel(initialPromptText)}</span>
+              </div>
+              <button
+                disabled={!initialPromptText}
+                type="button"
+                onClick={() => onCopyPrompt(initialPromptText, 'initial')}
+              >
+                <CopyIcon aria-hidden="true" />
+                {copiedPromptKey === 'initial' ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+            <textarea
+              readOnly
+              aria-label="Initial Prompt content"
+              value={initialPromptText || 'Initial prompt is not configured.'}
+            />
+          </section>
         </div>
       </div>
     </div>

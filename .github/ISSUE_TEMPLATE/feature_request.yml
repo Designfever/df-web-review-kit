@@ -1,0 +1,69 @@
+name: Feature request
+description: Suggest an improvement or new workflow for df-web-review-kit.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for workflow improvements, new controls, adapters, QA automation, or documentation ideas.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the kit would this improve?
+      options:
+        - Review shell
+        - Core overlay runtime
+        - QA item workflow
+        - Adapter / storage
+        - AI / test runner
+        - Figma / grid overlay
+        - Documentation
+        - Developer experience
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or workflow gap
+      description: What is hard, slow, confusing, or missing today?
+      placeholder: Reviewers need a faster way to submit local draft items to a shared issue tracker...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the behavior you want.
+      placeholder: Add a batch submit action that creates one issue per local item...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this for real project usage?
+      options:
+        - Nice to have
+        - Important for team usage
+        - Blocking real project usage
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workaround or different solution you already tried?
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context
+      description: Add screenshots, sketches, links, or related issues.

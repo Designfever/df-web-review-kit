@@ -56,6 +56,14 @@ interface UpdateReviewItemStatusOptions {
   onToast?: (message: string) => void;
 }
 
+interface UpdateReviewItemCommentOptions {
+  activeAdapterEntry: NormalizedReviewShellAdapter;
+  item: ReviewItem;
+  comment: string;
+  onRefreshReviewData: () => Promise<void>;
+  onToast?: (message: string) => void;
+}
+
 interface SubmitReviewItemOptions {
   localAdapterEntry: NormalizedReviewShellAdapter | null;
   numberedItem: NumberedReviewItem;
@@ -223,6 +231,34 @@ export const updateReviewItemStatus = async ({
   });
   await onRefreshReviewData();
   onToast?.('QA status updated');
+};
+
+export const updateReviewItemComment = async ({
+  activeAdapterEntry,
+  item,
+  comment,
+  onRefreshReviewData,
+  onToast,
+}: UpdateReviewItemCommentOptions) => {
+  const nextComment = comment.trim();
+  if (!nextComment) throw new Error('Comment is required.');
+  if (!activeAdapterEntry.canUpdate) {
+    throw new Error(
+      `Review adapter "${activeAdapterEntry.label}" does not support edit.`
+    );
+  }
+
+  if (nextComment === item.comment.trim()) {
+    onToast?.('No QA comment changes');
+    return item;
+  }
+
+  const updated = await activeAdapterEntry.adapter.update(item.id, {
+    comment: nextComment,
+  });
+  await onRefreshReviewData();
+  onToast?.('QA comment updated');
+  return updated;
 };
 
 export const submitReviewItem = async ({

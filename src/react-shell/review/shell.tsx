@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useRef,
+  useState,
 } from 'react';
 import {
   GripVertical as GripVerticalIcon,
@@ -35,6 +36,7 @@ import {
   SitemapModal,
 } from '../shell.modals';
 import { buildReviewItemPrompt } from '../prompt/prompt';
+import { QaItemEditModal } from '../qa/item.edit.modal';
 import { ReviewQaPanel } from '../qa/panel';
 import {
   getElementSourceHint,
@@ -58,6 +60,7 @@ import {
   refreshSitemapReviewItems,
   refreshReviewData as refreshReviewDataAction,
   submitReviewItem,
+  updateReviewItemComment,
   updateReviewItemStatus,
 } from './shell.actions';
 
@@ -167,6 +170,7 @@ export const ReviewShell = ({
     target,
     viewportPresets,
   });
+  const [editingItem, setEditingItem] = useState<ReviewItem | null>(null);
   const initialPromptText = initialPrompt.trim();
   const refreshItems = useCallback(
     () =>
@@ -647,6 +651,17 @@ export const ReviewShell = ({
       onToast: showToast,
     });
 
+  const saveItemComment = async (item: ReviewItem, comment: string) => {
+    await updateReviewItemComment({
+      activeAdapterEntry,
+      item,
+      comment,
+      onRefreshReviewData: refreshReviewData,
+      onToast: showToast,
+    });
+    setEditingItem(null);
+  };
+
   const submitItem = (numberedItem: NumberedReviewItem) =>
     submitReviewItem({
       localAdapterEntry,
@@ -765,6 +780,14 @@ export const ReviewShell = ({
         />
       )}
 
+      {editingItem && (
+        <QaItemEditModal
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSave={saveItemComment}
+        />
+      )}
+
       {toastMessage && (
         <div className="df-review-copy-toast" role="status">
           {toastMessage}
@@ -809,6 +832,7 @@ export const ReviewShell = ({
         onClearSelectedItem={clearSelectedReviewItem}
         onChangeReviewSource={changeReviewSource}
         onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
+        onEditItem={setEditingItem}
         onQaFilterChange={setQaFilter}
         onRefreshReviewData={refreshReviewData}
         onRemoveItem={removeItem}

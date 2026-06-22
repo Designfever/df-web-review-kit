@@ -51,9 +51,9 @@ export const useReviewRuler = ({
     targetSrc,
   });
   const rulerMeasureLabel = rulerMeasure
-    ? `Figma ${Math.round(rulerMeasure.width / rulerScaleX)}x${Math.round(
+    ? `${Math.round(rulerMeasure.width / rulerScaleX)} × ${Math.round(
         rulerMeasure.height / rulerScaleY
-      )}${rulerUnit}`
+      )} ${rulerUnit}`
     : '';
 
   const closeRuler = useCallback(() => {

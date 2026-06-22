@@ -3,6 +3,7 @@ import {
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
   FileCode2 as FileCode2Icon,
+  Pencil as PencilIcon,
   X as XIcon,
 } from 'lucide-react';
 import type {
@@ -40,6 +41,7 @@ interface QaItemCardProps {
   onClearSelectedItem: () => void;
   onRemoveItem: (item: ReviewItem) => Promise<void>;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
+  onEditItem: (item: ReviewItem) => void;
   onRestoreReviewItem: (item: ReviewItem) => void;
   onSubmitItem: (numberedItem: NumberedReviewItem) => Promise<void>;
   onToggleItemOverlayVisibility: (itemId: string) => void;
@@ -72,6 +74,7 @@ export const QaItemCard = ({
   onClearSelectedItem,
   onRemoveItem,
   onCopyItemPrompt,
+  onEditItem,
   onRestoreReviewItem,
   onSubmitItem,
   onToggleItemOverlayVisibility,
@@ -94,6 +97,7 @@ export const QaItemCard = ({
     Boolean(activeAdapterEntry.updateStatus) &&
     statusOptions.length > 0 &&
     !isSubmitting;
+  const canEditItem = activeAdapterEntry.canUpdate && !isSubmitting;
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor]
     .filter(Boolean)
     .join(' | ');
@@ -177,6 +181,17 @@ export const QaItemCard = ({
           >
             <CopyIcon aria-hidden="true" />
           </button>
+          {canEditItem && (
+            <button
+              aria-label="Edit QA comment"
+              className="df-review-item-edit"
+              title="Edit QA comment"
+              type="button"
+              onClick={() => onEditItem(item)}
+            >
+              <PencilIcon aria-hidden="true" />
+            </button>
+          )}
           {canRemoveItem && (
             <button
               aria-label="Delete QA"

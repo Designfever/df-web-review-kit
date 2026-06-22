@@ -117,17 +117,20 @@ export function ensureReviewShellStyle() {
 	    --df-review-color-scrollbar-border: rgba(15, 18, 24, 0.92);
 	    --df-review-color-backdrop: rgba(2, 6, 12, 0.62);
 	    --df-review-color-ruler-surface: transparent;
-	    --df-review-color-ruler-label: transparent;
-	    --df-review-color-ruler-label-text: #e1d8ff;
-	    --df-review-color-ruler-tick-major: rgba(179, 149, 255, 0.75);
+	    --df-review-color-ruler-label: rgba(15, 18, 24, 0.9);
+	    --df-review-color-ruler-label-text: #f4efff;
+	    --df-review-color-ruler-tick-major: rgba(201, 184, 255, 0.9);
 	    --df-review-color-ruler-tick-minor: rgba(237, 243, 251, 0.2);
-	    --df-review-color-ruler-guide: rgba(255, 255, 255, 0.74);
+	    --df-review-color-ruler-guide: rgba(255, 255, 255, 0.86);
 	    --df-review-color-ruler-measure-border: #c9b8ff;
-	    --df-review-color-ruler-measure-bg: rgba(179, 149, 255, 0.16);
-	    --df-review-color-ruler-measure-shadow: rgba(20, 12, 40, 0.38);
-	    --df-review-color-ruler-popover-border: rgba(237, 243, 251, 0.22);
-	    --df-review-color-ruler-popover-bg: transparent;
-	    --df-review-color-ruler-popover-shadow: transparent;
+	    --df-review-color-ruler-measure-bg: rgba(179, 149, 255, 0.18);
+	    --df-review-color-ruler-measure-shadow: rgba(20, 12, 40, 0.52);
+	    --df-review-color-ruler-popover-border: rgba(255, 255, 255, 0.34);
+	    --df-review-color-ruler-popover-bg: rgba(15, 18, 24, 0.94);
+	    --df-review-color-ruler-popover-text: #ffffff;
+	    --df-review-color-ruler-popover-shadow: rgba(0, 0, 0, 0.42);
+	    --df-review-color-ruler-coord-bg: #d7c9ff;
+	    --df-review-color-ruler-coord-text: #14111f;
 	    --df-review-focus-ring: rgba(124, 199, 255, 0.58);
 	    --df-review-shadow-card: 0 14px 36px rgba(0, 0, 0, 0.34);
 	    --df-review-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -209,17 +212,20 @@ export function ensureReviewShellStyle() {
 	    --df-review-color-scrollbar-border: rgba(244, 246, 249, 0.92);
 	    --df-review-color-backdrop: rgba(15, 23, 42, 0.32);
 	    --df-review-color-ruler-surface: transparent;
-	    --df-review-color-ruler-label: transparent;
-	    --df-review-color-ruler-label-text: #6543b8;
-	    --df-review-color-ruler-tick-major: rgba(101, 67, 184, 0.58);
+	    --df-review-color-ruler-label: rgba(255, 255, 255, 0.94);
+	    --df-review-color-ruler-label-text: #3b247e;
+	    --df-review-color-ruler-tick-major: rgba(80, 46, 158, 0.74);
 	    --df-review-color-ruler-tick-minor: rgba(23, 32, 44, 0.24);
-	    --df-review-color-ruler-guide: rgba(101, 67, 184, 0.58);
-	    --df-review-color-ruler-measure-border: #6543b8;
-	    --df-review-color-ruler-measure-bg: rgba(101, 67, 184, 0.1);
-	    --df-review-color-ruler-measure-shadow: rgba(101, 67, 184, 0.22);
-	    --df-review-color-ruler-popover-border: rgba(23, 32, 44, 0.16);
-	    --df-review-color-ruler-popover-bg: transparent;
-	    --df-review-color-ruler-popover-shadow: transparent;
+	    --df-review-color-ruler-guide: rgba(80, 46, 158, 0.72);
+	    --df-review-color-ruler-measure-border: #502e9e;
+	    --df-review-color-ruler-measure-bg: rgba(101, 67, 184, 0.12);
+	    --df-review-color-ruler-measure-shadow: rgba(80, 46, 158, 0.28);
+	    --df-review-color-ruler-popover-border: rgba(80, 46, 158, 0.28);
+	    --df-review-color-ruler-popover-bg: rgba(255, 255, 255, 0.96);
+	    --df-review-color-ruler-popover-text: #17202c;
+	    --df-review-color-ruler-popover-shadow: rgba(15, 23, 42, 0.18);
+	    --df-review-color-ruler-coord-bg: #502e9e;
+	    --df-review-color-ruler-coord-text: #ffffff;
 	    --df-review-focus-ring: rgba(23, 105, 170, 0.42);
 	    --df-review-shadow-card: 0 14px 36px rgba(15, 23, 42, 0.14);
 	    --df-review-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.72);
@@ -893,6 +899,110 @@ export function ensureReviewShellStyle() {
 			    background: var(--df-review-accent-soft);
 			    color: var(--df-review-accent);
 			  }
+
+  .df-review-edit-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1003;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+
+  .df-review-edit-dialog {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: min(520px, calc(100vw - 48px));
+    overflow: hidden;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-lg);
+    background: var(--df-review-panel);
+    box-shadow: var(--df-review-shadow-modal);
+  }
+
+  .df-review-edit-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 54px;
+    padding: 0 14px 0 16px;
+    border-bottom: 1px solid var(--df-review-line);
+  }
+
+  .df-review-edit-close {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+    font-size: var(--df-review-font-size-md);
+    font-weight: 800;
+  }
+
+  .df-review-edit-body {
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .df-review-edit-field {
+    display: grid;
+    gap: 7px;
+  }
+
+  .df-review-edit-field span {
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 800;
+  }
+
+  .df-review-edit-field textarea {
+    width: 100%;
+    min-height: 160px;
+    resize: vertical;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 10px 11px;
+    color: var(--df-review-text);
+    background: var(--df-review-bg);
+    font: inherit;
+    font-size: var(--df-review-font-size-md);
+    line-height: 1.5;
+  }
+
+  .df-review-edit-field textarea:focus {
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 1px;
+  }
+
+  .df-review-edit-error {
+    margin: 0;
+    color: var(--df-review-danger);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 800;
+  }
+
+  .df-review-edit-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 0 16px 16px;
+  }
+
+  .df-review-edit-cancel,
+  .df-review-edit-save {
+    min-height: var(--df-review-control-height-md);
+    padding: 0 13px;
+  }
+
+  .df-review-edit-save {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    color: var(--df-review-accent);
+  }
 
 			  .df-review-prompt-modal {
 			    position: fixed;
@@ -1896,6 +2006,7 @@ export function ensureReviewShellStyle() {
 	  }
 
   .df-review-item-delete,
+  .df-review-item-edit,
   .df-review-item-prompt-copy,
   .df-review-item-source-open,
   .df-review-item-visibility {
@@ -1913,6 +2024,7 @@ export function ensureReviewShellStyle() {
   }
 
   .df-review-item-visibility:hover,
+  .df-review-item-edit:hover,
   .df-review-item-source-open:hover,
   .df-review-item-prompt-copy:hover {
     border-color: rgba(124, 199, 255, 0.34);
@@ -1940,6 +2052,7 @@ export function ensureReviewShellStyle() {
   }
 
   .df-review-item-delete svg,
+  .df-review-item-edit svg,
   .df-review-item-prompt-copy svg,
   .df-review-item-source-open svg,
   .df-review-item-visibility svg {
@@ -2187,37 +2300,42 @@ export function ensureReviewShellStyle() {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 3px 7px;
-    border-radius: 5px;
+    padding: 4px 8px;
+    border: 1px solid var(--df-review-color-ruler-popover-border);
+    border-radius: var(--df-review-radius-sm);
     background: var(--df-review-color-ruler-label);
     line-height: 1;
     white-space: nowrap;
+    box-shadow: 0 6px 18px var(--df-review-color-ruler-popover-shadow);
   }
 
   .df-review-ruler-frame-label strong {
     color: var(--df-review-color-ruler-label-text);
-    font-size: var(--df-review-font-size-2xs);
+    font-size: var(--df-review-font-size-xs);
     font-weight: 900;
   }
 
   .df-review-ruler-frame-label span {
-    color: var(--df-review-muted);
-    font-size: var(--df-review-font-size-2xs);
+    color: var(--df-review-color-ruler-label-text);
+    font-size: var(--df-review-font-size-xs);
     font-weight: 900;
+    opacity: 0.78;
   }
 
   .df-review-ruler-coord {
     position: absolute;
     z-index: 7;
-    padding: 2px 4px;
-    border-radius: 4px;
-    background: #b395ff;
-    color: #14111f;
-    font-size: var(--df-review-font-size-3xs);
+    padding: 4px 6px;
+    border: 1px solid var(--df-review-color-ruler-popover-border);
+    border-radius: var(--df-review-radius-xs);
+    background: var(--df-review-color-ruler-coord-bg);
+    color: var(--df-review-color-ruler-coord-text);
+    font-size: var(--df-review-font-size-xs);
     font-weight: 900;
     line-height: 1;
     white-space: nowrap;
     pointer-events: none;
+    box-shadow: 0 6px 18px var(--df-review-color-ruler-popover-shadow);
   }
 
   .df-review-ruler-coord.is-x {
@@ -2252,7 +2370,7 @@ export function ensureReviewShellStyle() {
     z-index: 2;
     pointer-events: none;
     background: var(--df-review-color-ruler-guide);
-    box-shadow: 0 0 0 1px rgba(87, 55, 166, 0.45);
+    box-shadow: 0 0 0 1px var(--df-review-color-ruler-measure-shadow);
   }
 
   .df-review-ruler-guide.is-x {
@@ -2271,7 +2389,7 @@ export function ensureReviewShellStyle() {
     position: absolute;
     z-index: 3;
     pointer-events: none;
-    border: 1px solid var(--df-review-color-ruler-measure-border);
+    border: 2px solid var(--df-review-color-ruler-measure-border);
     background: var(--df-review-color-ruler-measure-bg);
     box-shadow:
       inset 0 0 0 1px var(--df-review-color-ruler-measure-shadow),
@@ -2282,17 +2400,22 @@ export function ensureReviewShellStyle() {
     position: absolute;
     z-index: 4;
     pointer-events: none;
-    min-width: 156px;
-    padding: 7px 8px;
+    min-width: 124px;
+    padding: 9px 11px;
     border: 1px solid var(--df-review-color-ruler-popover-border);
-    border-radius: var(--df-review-radius-sm);
+    border-radius: var(--df-review-radius-md);
     background: var(--df-review-color-ruler-popover-bg);
-    color: var(--df-review-text);
-    font-size: var(--df-review-font-size-xs);
+    color: var(--df-review-color-ruler-popover-text);
+    font-family: var(--df-review-font-mono);
+    font-size: var(--df-review-font-size-lg);
     font-weight: 900;
     line-height: 1;
     white-space: nowrap;
-    box-shadow: 0 8px 22px var(--df-review-color-ruler-popover-shadow);
+    letter-spacing: -0.02em;
+    text-align: center;
+    box-shadow:
+      0 10px 26px var(--df-review-color-ruler-popover-shadow),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
   }
 
 	  @media (max-width: 860px) {

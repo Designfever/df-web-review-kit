@@ -23,6 +23,7 @@ export type NormalizedReviewShellAdapter = {
   updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<unknown>;
   syncSubmission?: (input: ReviewShellSyncSubmissionInput) => Promise<unknown>;
   writeModes: ReviewShellWriteMode[];
+  canUpdate: boolean;
   canRemove: boolean;
   pageId?: string;
 };
@@ -66,6 +67,7 @@ function normalizeLegacyAdapterMap(
     updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
     syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
     writeModes: [...ALL_REVIEW_WRITE_MODES],
+    canUpdate: true,
     canRemove: true,
   } satisfies NormalizedReviewShellAdapter;
   const remote = adapters.remote
@@ -77,6 +79,7 @@ function normalizeLegacyAdapterMap(
           adapters.remote?.update(id, { status }) ??
           Promise.reject(new Error('Remote adapter is not available.')),
         writeModes: [],
+        canUpdate: true,
         canRemove: false,
         pageId: adapters.remotePageId,
       } satisfies NormalizedReviewShellAdapter)
@@ -115,6 +118,7 @@ function normalizeShellAdapter(
     updateStatus,
     syncSubmission: adapterConfig.syncSubmission,
     writeModes,
+    canUpdate: Boolean(updateAdapter),
     canRemove: Boolean(adapterConfig.remove),
     adapter: {
       get: adapterConfig.get,

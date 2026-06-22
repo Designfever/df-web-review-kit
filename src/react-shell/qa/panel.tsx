@@ -40,6 +40,7 @@ interface ReviewQaPanelProps {
   onClearSelectedItem: () => void;
   onChangeReviewSource: (nextSource: ReviewSource) => void;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
+  onEditItem: (item: ReviewItem) => void;
   onQaFilterChange: (filter: ReviewQaFilter) => void;
   onRefreshReviewData: () => Promise<void>;
   onRemoveItem: (item: ReviewItem) => Promise<void>;
@@ -72,6 +73,7 @@ export const ReviewQaPanel = ({
   onClearSelectedItem,
   onChangeReviewSource,
   onCopyItemPrompt,
+  onEditItem,
   onQaFilterChange,
   onRefreshReviewData,
   onRemoveItem,
@@ -136,6 +138,7 @@ export const ReviewQaPanel = ({
                   onChangeItemStatus={onChangeItemStatus}
                   onClearSelectedItem={onClearSelectedItem}
                   onCopyItemPrompt={onCopyItemPrompt}
+                  onEditItem={onEditItem}
                   onRemoveItem={onRemoveItem}
                   onRestoreReviewItem={onRestoreReviewItem}
                   onSubmitItem={onSubmitItem}

@@ -52,6 +52,20 @@ import {
 
 const ROOT_ID = 'df-web-review-kit-root';
 
+function isEditableEventTarget(event: KeyboardEvent) {
+  const path = event.composedPath?.() ?? [];
+  const element = (path[0] ?? event.target) as HTMLElement | null;
+  if (!element || typeof element.tagName !== 'string') return false;
+
+  const tag = element.tagName;
+  return (
+    tag === 'INPUT' ||
+    tag === 'TEXTAREA' ||
+    tag === 'SELECT' ||
+    element.isContentEditable === true
+  );
+}
+
 /** Creates the vanilla runtime controller that mounts review overlays on a target page. */
 export function createWebReviewKit(
   options: WebReviewKitOptions
@@ -302,7 +316,7 @@ class WebReviewKitApp {
       return;
     }
 
-    if (!isHotkey(event, this.hotkey)) return;
+    if (isEditableEventTarget(event) || !isHotkey(event, this.hotkey)) return;
 
     event.preventDefault();
     event.stopPropagation();

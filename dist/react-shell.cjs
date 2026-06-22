@@ -7289,6 +7289,13 @@ ${formatItemMeta(item)}`;
 
 // src/core/web.review.kit.app.ts
 var ROOT_ID = "df-web-review-kit-root";
+function isEditableEventTarget(event) {
+  const path = event.composedPath?.() ?? [];
+  const element = path[0] ?? event.target;
+  if (!element || typeof element.tagName !== "string") return false;
+  const tag = element.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || element.isContentEditable === true;
+}
 function createWebReviewKit(options) {
   if (typeof window === "undefined" || typeof document === "undefined") {
     return createNoopController();
@@ -7321,7 +7328,7 @@ var WebReviewKitApp = class {
         event.stopPropagation();
         return;
       }
-      if (!isHotkey(event, this.hotkey)) return;
+      if (isEditableEventTarget(event) || !isHotkey(event, this.hotkey)) return;
       event.preventDefault();
       event.stopPropagation();
       this.toggle();
@@ -7757,7 +7764,7 @@ var setTargetScrollbarHidden = (targetDocument, hidden) => {
     existing?.remove();
   }
 };
-var isEditableEventTarget = (event) => {
+var isEditableEventTarget2 = (event) => {
   const path = event.composedPath?.() ?? [];
   const element = path[0] ?? event.target;
   if (!element || typeof element.tagName !== "string") return false;
@@ -9261,7 +9268,7 @@ var useReviewShellHotkeys = ({
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
         return;
       }
-      if (isEditableEventTarget(event)) return;
+      if (isEditableEventTarget2(event)) return;
       const actions = {
         r: () => {
           if (isRulerAvailable) onToggleRuler();

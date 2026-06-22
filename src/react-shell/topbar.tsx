@@ -1,4 +1,5 @@
 import {
+  CircleHelp as CircleHelpIcon,
   Image as ImageIcon,
   LayoutGrid as LayoutGridIcon,
   Map as MapIcon,
@@ -36,6 +37,7 @@ interface ReviewTopbarProps {
   onSizeChange: (preset: ReviewShellViewportPreset) => void;
   onToggleRuler: () => void;
   onToggleTargetOverlay: (key: TargetOverlayKey) => void;
+  onOpenInitialPrompt: () => void;
   onOpenSettings: () => void;
 }
 
@@ -72,6 +74,7 @@ export const ReviewTopbar = ({
   onSizeChange,
   onToggleRuler,
   onToggleTargetOverlay,
+  onOpenInitialPrompt,
   onOpenSettings,
 }: ReviewTopbarProps) => {
   return (
@@ -173,6 +176,14 @@ export const ReviewTopbar = ({
           <span className="df-review-tool-divider" aria-hidden="true">
             |
           </span>
+          <button
+            aria-label="Open initial prompt"
+            className="df-review-overlay-button is-prompt"
+            type="button"
+            onClick={onOpenInitialPrompt}
+          >
+            <CircleHelpIcon aria-hidden="true" />
+          </button>
           <button
             aria-label="Open settings"
             className="df-review-overlay-button is-settings"

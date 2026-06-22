@@ -1,30 +1,29 @@
 # Installation
 
-Host project에 `df-web-review-kit`를 설치하고 `/review` route에서 `mountReviewShell()`을 호출한다.
+Install `df-web-review-kit` in a host project and mount the review shell on a `/review` route.
 
-## Package install
+The default setup is local-only. Remote DB and presence are optional adapters.
 
-NPM package로 사용할 때:
+## Package Install
 
 ```bash
 pnpm add @designfever/web-review-kit react react-dom
 ```
 
-Supabase remote/presence를 쓰면 host project에 Supabase client도 설치한다.
+Supabase is optional. Install it only in host projects that use the Supabase adapter.
 
 ```bash
 pnpm add @supabase/supabase-js
 ```
 
-Lexus repo 안에서 검증할 때는 file dependency를 사용한다.
+## Vite Route
 
-```json
-"@designfever/web-review-kit": "file:packages/df-web-review-kit"
+Create a review entry such as:
+
+```txt
+page/review/index.html
+page/review/index.tsx
 ```
-
-## Vite route
-
-Vite project에서는 `page/review/index.html`과 `page/review/index.tsx` 같은 review entry를 만든다.
 
 Minimal `index.html`:
 
@@ -33,7 +32,7 @@ Minimal `index.html`:
 <script type="module" src="./index.tsx"></script>
 ```
 
-Minimal `index.tsx`:
+Minimal local-only `index.tsx`:
 
 ```tsx
 import {
@@ -46,6 +45,8 @@ import {
 } from '@designfever/web-review-kit';
 
 const REVIEW_PROJECT_ID = 'my-project';
+const REVIEW_PATH_PREFIX = '/review';
+
 const local = localAdapter({
   storageKey: `${REVIEW_PROJECT_ID}-review-items`,
 });
@@ -69,13 +70,13 @@ mountReviewShell({
       remove: (id) => local.remove(id),
     },
   ],
-  reviewPathPrefix: '/review',
+  reviewPathPrefix: REVIEW_PATH_PREFIX,
 });
 ```
 
-## Supabase remote example
+## Supabase Adapter
 
-Supabase를 붙일 때는 host project에서 client를 만들고 package adapter에 주입한다.
+Host projects that choose Supabase create the client themselves and pass it into the package adapter.
 
 ```tsx
 import {
@@ -93,7 +94,7 @@ import {
 } from '@designfever/web-review-kit';
 import { createClient } from '@supabase/supabase-js';
 
-const REVIEW_PROJECT_ID = 'lexus-official-v2026';
+const REVIEW_PROJECT_ID = 'my-project';
 const REVIEW_PATH_PREFIX = '/review';
 
 const local = localAdapter({
@@ -157,38 +158,35 @@ const presence = supabaseClient
       localPresence
     )
   : localPresence;
+
+mountReviewShell({
+  projectId: REVIEW_PROJECT_ID,
+  pages,
+  adapters,
+  presence,
+  reviewPathPrefix: REVIEW_PATH_PREFIX,
+});
 ```
 
-그 다음 `mountReviewShell({ adapters, presence, ... })`에 넘긴다.
+See [DB setup](db-setup.md) before enabling Supabase in a shared environment.
 
-## Local dev harness
+## Custom Adapter
 
-Package repo 안에서 host project 없이 local source 기준 smoke를 돌릴 수 있다.
+If a team or host project owns its own QA backend, keep that adapter in the host project or in a separate package. Start from [adaptor.sample.ts](adaptor.sample.ts) and map its `WebReviewKitAdapter` methods to your backend API.
 
-```bash
-pnpm dev:review
-```
+The sample explains the main interfaces:
 
-Open `http://127.0.0.1:5177/review/`.
+- `ReviewItem`: the full QA payload to persist as structured JSON.
+- `ReviewItemQuery`: filters used by page lists and sitemap counts.
+- `WebReviewKitAdapter`: core CRUD contract.
+- `ReviewShellAdapter`: React shell wiring for source labels, write modes, status updates, and delete actions.
 
-Fixture pages:
-
-- `/` — note, area, DOM marker 기본 생성 대상
-- `/components/` — button/input/panel spacing 대상
-- `/long-form/` — scroll restore와 anchor restore 대상
-
-Build/typecheck 검증:
-
-```bash
-pnpm typecheck:dev
-pnpm build:dev
-```
-
-이 harness는 package source(`src`)를 직접 import한다. host integration이나 Supabase remote 검증은 각 host project의 `/review` route에서 별도로 확인한다.
+Private keys, admin credentials, canonical numbering, and permission checks should stay in your backend, not in browser code.
 
 ## Environment
 
 ```env
+VITE_REVIEW_PROJECT_ID=df-web-review-kit
 VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
 VITE_REVIEW_SUPABASE_ANON_KEY=
 VITE_REVIEW_SUPABASE_TABLE=review_items
@@ -197,13 +195,13 @@ VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE=false
 
 Rules:
 
-- browser env에는 Supabase `anon` key만 넣는다.
-- `service_role` key는 절대 browser env에 넣지 않는다.
-- package는 Supabase dependency를 직접 만들지 않는다. host project가 `createClient()`를 호출한다.
+- Browser env uses a Supabase `anon` key only.
+- Never expose `service_role` in browser env.
+- OpenClaw/operator secrets stay outside the host browser and outside this package.
 
-## Viewport preset
+## Viewport Presets
 
-Project별 design width가 다르면 `presets`를 넘긴다.
+Pass `presets` when a project has custom design widths.
 
 ```tsx
 mountReviewShell({
@@ -219,29 +217,41 @@ mountReviewShell({
 });
 ```
 
-## Development commands
-
-Lexus repo 기준:
+## Local Dev Harness
 
 ```bash
 pnpm dev:review
-pnpm review-kit:typecheck
-pnpm typecheck:review
-pnpm review-kit:build
-pnpm build:review
 ```
 
-Package source를 수정하면 `pnpm review-kit:build`로 `dist`를 갱신한다.
+Open `http://127.0.0.1:5177/review/`.
 
-## Publish checklist
+Fixture pages:
 
-0.1 package 배포 전 확인:
+- `/`: note, area, and DOM marker creation
+- `/components/`: controls and panel spacing
+- `/long-form/`: scroll and anchor restore
 
-- `packages/df-web-review-kit/package.json`의 `files`에 `dist`, `src`, `docs`, `README.md` 포함
-- `pnpm review-kit:typecheck`
-- `pnpm review-kit:build`
-- local source에서 note/dom/area 생성 확인
-- local item을 remote로 등록하면 local draft 삭제 확인
-- remote source에서 status update/delete 확인
-- `/review?source=supabase&target=...&item=...` restore 확인
-- Supabase `reviewNumber`가 삭제 후 재사용되지 않는지 확인
+## Checks
+
+Package repo:
+
+```bash
+pnpm typecheck
+pnpm build
+pnpm typecheck:dev
+pnpm build:dev
+```
+
+Host repo:
+
+```bash
+pnpm typecheck
+pnpm build
+```
+
+Manual smoke:
+
+1. Open `/review`.
+2. Create local note, DOM marker, and area marker.
+3. If Supabase is enabled, submit a local item to remote.
+4. Confirm local draft removal, remote list display, status update, delete, and deep-link restore.

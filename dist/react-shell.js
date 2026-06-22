@@ -3,15 +3,2364 @@ import {
   createWebReviewKit,
   getNumberedReviewItems,
   normalizeReviewItemStatus
-} from "./chunk-U5K2YGGL.js";
+} from "./chunk-EJDROXJM.js";
 
 // src/react-shell.tsx
-import React, {
-  useCallback,
-  useEffect,
-  useMemo as useMemo2,
-  useRef,
-  useState
+import React2 from "react";
+import { createRoot } from "react-dom/client";
+
+// src/react-shell/style.ts
+var REVIEW_SHELL_STYLE_ID = "df-review-shell-style";
+function ensureReviewShellStyle() {
+  if (!document.getElementById(REVIEW_SHELL_STYLE_ID)) {
+    const style = document.createElement("style");
+    style.id = REVIEW_SHELL_STYLE_ID;
+    style.textContent = `
+	  * {
+	    box-sizing: border-box;
+	    scrollbar-color: var(--df-review-scrollbar-thumb, rgba(237, 243, 251, 0.2)) var(--df-review-scrollbar-track, rgba(237, 243, 251, 0.04));
+	    scrollbar-width: thin;
+	  }
+
+	  *::-webkit-scrollbar {
+	    width: 10px;
+	    height: 10px;
+	  }
+
+	  *::-webkit-scrollbar-track {
+	    background: var(--df-review-scrollbar-track, rgba(237, 243, 251, 0.04));
+	  }
+
+	  *::-webkit-scrollbar-thumb {
+	    border: 2px solid var(--df-review-scrollbar-border, rgba(15, 18, 24, 0.92));
+	    border-radius: var(--df-review-radius-pill);
+	    background: var(--df-review-scrollbar-thumb, rgba(237, 243, 251, 0.18));
+	  }
+
+	  *::-webkit-scrollbar-thumb:hover {
+	    background: var(--df-review-scrollbar-thumb-hover, rgba(237, 243, 251, 0.28));
+	  }
+
+	  *::-webkit-scrollbar-corner {
+	    background: transparent;
+	  }
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+
+	  body {
+	    overflow: hidden;
+	    color-scheme: dark;
+
+	    /* df-review-token layer. Keep these names internal to review-kit. */
+	    --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	    --df-review-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	    --df-review-font-size-3xs: 9px;
+	    --df-review-font-size-2xs: 10px;
+	    --df-review-font-size-xs: 11px;
+	    --df-review-font-size-sm: 12px;
+	    --df-review-font-size-md: 13px;
+	    --df-review-font-size-lg: 14px;
+	    --df-review-font-size-xl: 15px;
+	    --df-review-font-size-2xl: 18px;
+	    --df-review-font-weight-medium: 650;
+	    --df-review-font-weight-bold: 700;
+	    --df-review-font-weight-strong: 800;
+	    --df-review-font-weight-heavy: 900;
+	    --df-review-line-height-tight: 1.25;
+	    --df-review-line-height-base: 1.42;
+	    --df-review-line-height-relaxed: 1.55;
+	    --df-review-space-0: 0;
+	    --df-review-space-1: 4px;
+	    --df-review-space-1-5: 6px;
+	    --df-review-space-2: 8px;
+	    --df-review-space-2-5: 10px;
+	    --df-review-space-3: 12px;
+	    --df-review-space-3-5: 14px;
+	    --df-review-space-4: 16px;
+	    --df-review-space-5: 20px;
+	    --df-review-space-6: 24px;
+	    --df-review-space-8: 32px;
+	    --df-review-control-height-sm: 32px;
+	    --df-review-control-height-md: 34px;
+	    --df-review-control-height-lg: 38px;
+	    --df-review-radius-xs: 3px;
+	    --df-review-radius-sm: 6px;
+	    --df-review-radius-md: 8px;
+	    --df-review-radius-lg: 12px;
+	    --df-review-radius-pill: 999px;
+	    --df-review-color-canvas: #0f1218;
+	    --df-review-color-surface: #171c24;
+	    --df-review-color-panel: #131821;
+	    --df-review-color-panel-strong: #1b2430;
+	    --df-review-color-card: rgba(237, 243, 251, 0.035);
+	    --df-review-color-card-hover: rgba(237, 243, 251, 0.065);
+	    --df-review-color-control: #202938;
+	    --df-review-color-control-hover: #273345;
+	    --df-review-color-border: rgba(226, 233, 245, 0.14);
+	    --df-review-color-border-soft: rgba(226, 233, 245, 0.08);
+	    --df-review-color-text: #edf3fb;
+	    --df-review-color-text-muted: rgba(237, 243, 251, 0.58);
+	    --df-review-color-text-subtle: rgba(237, 243, 251, 0.42);
+	    --df-review-color-accent: #7cc7ff;
+	    --df-review-color-accent-contrast: #0f1218;
+	    --df-review-color-accent-soft: rgba(124, 199, 255, 0.12);
+	    --df-review-color-accent-hover: rgba(124, 199, 255, 0.2);
+	    --df-review-color-danger: #ff8f61;
+	    --df-review-color-danger-soft: rgba(255, 143, 97, 0.12);
+	    --df-review-color-purple: #b395ff;
+	    --df-review-color-purple-soft: rgba(179, 149, 255, 0.16);
+	    --df-review-color-note: #f3b75f;
+	    --df-review-color-note-soft: rgba(243, 183, 95, 0.14);
+	    --df-review-color-area: #63d7c7;
+	    --df-review-color-area-soft: rgba(99, 215, 199, 0.14);
+	    --df-review-color-side-rail: #111722;
+	    --df-review-color-mode-bar: rgba(15, 18, 24, 0.86);
+	    --df-review-color-chip: rgba(237, 243, 251, 0.06);
+	    --df-review-color-scrollbar-track: rgba(237, 243, 251, 0.04);
+	    --df-review-color-scrollbar-thumb: rgba(237, 243, 251, 0.18);
+	    --df-review-color-scrollbar-thumb-hover: rgba(237, 243, 251, 0.28);
+	    --df-review-color-scrollbar-border: rgba(15, 18, 24, 0.92);
+	    --df-review-color-backdrop: rgba(2, 6, 12, 0.62);
+	    --df-review-color-ruler-surface: transparent;
+	    --df-review-color-ruler-label: transparent;
+	    --df-review-color-ruler-label-text: #e1d8ff;
+	    --df-review-color-ruler-tick-major: rgba(179, 149, 255, 0.75);
+	    --df-review-color-ruler-tick-minor: rgba(237, 243, 251, 0.2);
+	    --df-review-color-ruler-guide: rgba(255, 255, 255, 0.74);
+	    --df-review-color-ruler-measure-border: #c9b8ff;
+	    --df-review-color-ruler-measure-bg: rgba(179, 149, 255, 0.16);
+	    --df-review-color-ruler-measure-shadow: rgba(20, 12, 40, 0.38);
+	    --df-review-color-ruler-popover-border: rgba(237, 243, 251, 0.22);
+	    --df-review-color-ruler-popover-bg: transparent;
+	    --df-review-color-ruler-popover-shadow: transparent;
+	    --df-review-focus-ring: rgba(124, 199, 255, 0.58);
+	    --df-review-shadow-card: 0 14px 36px rgba(0, 0, 0, 0.34);
+	    --df-review-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+	    --df-review-shadow-device: 0 24px 60px rgba(0, 0, 0, 0.38);
+	    --df-review-shadow-panel: 0 18px 48px rgba(0, 0, 0, 0.38);
+	    --df-review-shadow-modal: 0 24px 70px rgba(0, 0, 0, 0.48);
+
+	    /* Semantic aliases consumed by the existing shell chrome. */
+	    --df-review-bg: var(--df-review-color-canvas);
+	    --df-review-topbar: var(--df-review-color-surface);
+	    --df-review-panel: var(--df-review-color-panel);
+	    --df-review-panel-strong: var(--df-review-color-panel-strong);
+	    --df-review-card: var(--df-review-color-card);
+	    --df-review-card-hover: var(--df-review-color-card-hover);
+	    --df-review-control: var(--df-review-color-control);
+	    --df-review-control-hover: var(--df-review-color-control-hover);
+	    --df-review-line: var(--df-review-color-border);
+	    --df-review-line-soft: var(--df-review-color-border-soft);
+	    --df-review-text: var(--df-review-color-text);
+	    --df-review-muted: var(--df-review-color-text-muted);
+	    --df-review-subtle: var(--df-review-color-text-subtle);
+	    --df-review-accent: var(--df-review-color-accent);
+	    --df-review-accent-contrast: var(--df-review-color-accent-contrast);
+	    --df-review-accent-soft: var(--df-review-color-accent-soft);
+	    --df-review-accent-hover: var(--df-review-color-accent-hover);
+	    --df-review-danger: var(--df-review-color-danger);
+	    --df-review-danger-soft: var(--df-review-color-danger-soft);
+	    --df-review-purple: var(--df-review-color-purple);
+	    --df-review-purple-soft: var(--df-review-color-purple-soft);
+	    --df-review-note: var(--df-review-color-note);
+	    --df-review-note-soft: var(--df-review-color-note-soft);
+	    --df-review-area: var(--df-review-color-area);
+	    --df-review-area-soft: var(--df-review-color-area-soft);
+	    --df-review-side-rail: var(--df-review-color-side-rail);
+	    --df-review-mode-bar: var(--df-review-color-mode-bar);
+	    --df-review-chip-bg: var(--df-review-color-chip);
+	    --df-review-scrollbar-track: var(--df-review-color-scrollbar-track);
+	    --df-review-scrollbar-thumb: var(--df-review-color-scrollbar-thumb);
+	    --df-review-scrollbar-thumb-hover: var(--df-review-color-scrollbar-thumb-hover);
+	    --df-review-scrollbar-border: var(--df-review-color-scrollbar-border);
+	    background: var(--df-review-bg);
+	    color: var(--df-review-text);
+	    font-family: var(--df-review-font-sans);
+	  }
+
+	  body.df-review-theme-light {
+	    color-scheme: light;
+	    --df-review-color-canvas: #f4f6f9;
+	    --df-review-color-surface: #ffffff;
+	    --df-review-color-panel: #ffffff;
+	    --df-review-color-panel-strong: #edf1f6;
+	    --df-review-color-card: rgba(23, 32, 44, 0.035);
+	    --df-review-color-card-hover: rgba(23, 32, 44, 0.065);
+	    --df-review-color-control: #eef2f7;
+	    --df-review-color-control-hover: #e3e9f1;
+	    --df-review-color-border: rgba(16, 24, 40, 0.14);
+	    --df-review-color-border-soft: rgba(16, 24, 40, 0.08);
+	    --df-review-color-text: #17202c;
+	    --df-review-color-text-muted: rgba(23, 32, 44, 0.62);
+	    --df-review-color-text-subtle: rgba(23, 32, 44, 0.44);
+	    --df-review-color-accent: #1769aa;
+	    --df-review-color-accent-contrast: #ffffff;
+	    --df-review-color-accent-soft: rgba(23, 105, 170, 0.1);
+	    --df-review-color-accent-hover: rgba(23, 105, 170, 0.16);
+	    --df-review-color-danger: #b94418;
+	    --df-review-color-danger-soft: rgba(185, 68, 24, 0.1);
+	    --df-review-color-purple: #6543b8;
+	    --df-review-color-purple-soft: rgba(101, 67, 184, 0.12);
+	    --df-review-color-note: #a76617;
+	    --df-review-color-note-soft: rgba(167, 102, 23, 0.12);
+	    --df-review-color-area: #087f73;
+	    --df-review-color-area-soft: rgba(8, 127, 115, 0.12);
+	    --df-review-color-side-rail: #edf1f6;
+	    --df-review-color-mode-bar: rgba(255, 255, 255, 0.9);
+	    --df-review-color-chip: rgba(23, 32, 44, 0.06);
+	    --df-review-color-scrollbar-track: rgba(23, 32, 44, 0.06);
+	    --df-review-color-scrollbar-thumb: rgba(23, 32, 44, 0.24);
+	    --df-review-color-scrollbar-thumb-hover: rgba(23, 32, 44, 0.34);
+	    --df-review-color-scrollbar-border: rgba(244, 246, 249, 0.92);
+	    --df-review-color-backdrop: rgba(15, 23, 42, 0.32);
+	    --df-review-color-ruler-surface: transparent;
+	    --df-review-color-ruler-label: transparent;
+	    --df-review-color-ruler-label-text: #6543b8;
+	    --df-review-color-ruler-tick-major: rgba(101, 67, 184, 0.58);
+	    --df-review-color-ruler-tick-minor: rgba(23, 32, 44, 0.24);
+	    --df-review-color-ruler-guide: rgba(101, 67, 184, 0.58);
+	    --df-review-color-ruler-measure-border: #6543b8;
+	    --df-review-color-ruler-measure-bg: rgba(101, 67, 184, 0.1);
+	    --df-review-color-ruler-measure-shadow: rgba(101, 67, 184, 0.22);
+	    --df-review-color-ruler-popover-border: rgba(23, 32, 44, 0.16);
+	    --df-review-color-ruler-popover-bg: transparent;
+	    --df-review-color-ruler-popover-shadow: transparent;
+	    --df-review-focus-ring: rgba(23, 105, 170, 0.42);
+	    --df-review-shadow-card: 0 14px 36px rgba(15, 23, 42, 0.14);
+	    --df-review-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+	    --df-review-shadow-device: 0 24px 60px rgba(15, 23, 42, 0.18);
+	    --df-review-shadow-panel: 0 18px 48px rgba(15, 23, 42, 0.18);
+	    --df-review-shadow-modal: 0 24px 70px rgba(15, 23, 42, 0.2);
+	  }
+
+	  button,
+	  input,
+	  select,
+	  textarea {
+	    font: inherit;
+	  }
+
+  button {
+    cursor: pointer;
+  }
+
+  .df-review-shell {
+    --df-review-frame-gutter-x: var(--df-review-space-4);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 0 32px;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transition: grid-template-columns 160ms ease;
+  }
+
+  .df-review-shell.is-list-visible {
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 420px) 32px;
+  }
+
+	  .df-review-topbar {
+	    grid-column: 1;
+	    grid-row: 1;
+	    position: relative;
+	    z-index: 600;
+	    display: grid;
+	    gap: var(--df-review-space-2);
+	    container-type: inline-size;
+	    min-width: 0;
+	    padding: var(--df-review-space-3) var(--df-review-frame-gutter-x);
+	    border-bottom: 1px solid var(--df-review-line-soft);
+	    background:
+	      linear-gradient(180deg, var(--df-review-topbar), var(--df-review-panel));
+	    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.025);
+	  }
+
+		  .df-review-address {
+		    display: grid;
+		    grid-template-columns: auto minmax(160px, 1fr) auto auto;
+		    align-items: stretch;
+		    gap: var(--df-review-space-2);
+		    width: 100%;
+		    max-width: 1440px;
+		    margin: 0 auto;
+		  }
+
+  .df-review-address input {
+	    width: 100%;
+	    min-height: var(--df-review-control-height-md);
+	    border: 1px solid var(--df-review-line);
+	    border-radius: var(--df-review-radius-sm);
+	    padding: 0 11px;
+	    color: var(--df-review-text);
+	    background: var(--df-review-bg);
+	    box-shadow: var(--df-review-shadow-control);
+	    font-size: var(--df-review-font-size-md);
+	    transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+	  }
+
+	  .df-review-address input:focus {
+	    outline: 2px solid var(--df-review-focus-ring);
+	    outline-offset: 1px;
+	  }
+
+		  .df-review-address button,
+		  .df-review-side-toggle,
+		  .df-review-presets button,
+		  .df-review-overlay-button,
+			  .df-review-mode-button,
+			  .df-review-settings-header button,
+			  .df-review-prompt-header button,
+			  .df-review-settings-actions button,
+			  .df-review-prompt-block-header button,
+			  .df-review-item-actions button {
+		    min-height: var(--df-review-control-height-md);
+		    border: 1px solid var(--df-review-line);
+		    border-radius: var(--df-review-radius-sm);
+		    background: var(--df-review-control);
+	    box-shadow: var(--df-review-shadow-control);
+	    color: var(--df-review-text);
+	    font-size: var(--df-review-font-size-sm);
+	    font-weight: 700;
+	    transition: border-color 140ms ease, background 140ms ease, color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+	  }
+
+		  .df-review-address button:hover,
+	  .df-review-side-toggle:hover,
+		  .df-review-presets button:hover,
+		  .df-review-overlay-button:hover,
+		  .df-review-mode-button:hover,
+		  .df-review-settings-header button:hover,
+		  .df-review-prompt-header button:hover,
+		  .df-review-settings-actions button:hover,
+		  .df-review-prompt-block-header button:hover,
+			  .df-review-item-actions button:hover,
+		  .df-review-item-visibility:hover,
+		  .df-review-item-prompt-copy:hover,
+		  .df-review-item-delete:hover,
+		  .df-review-presets button.is-active,
+			  .df-review-overlay-button.is-active,
+			  .df-review-mode-button.is-active {
+		    border-color: var(--df-review-accent);
+		    background: var(--df-review-control-hover);
+		  }
+
+	  .df-review-overlay-button.is-active,
+  .df-review-mode-button.is-active {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
+    color: var(--df-review-accent);
+  }
+
+  .df-review-sitemap-button {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+	    width: 38px;
+	    min-width: 38px;
+	    padding: 0;
+	    color: var(--df-review-accent);
+	  }
+
+  .df-review-sitemap-button svg,
+  .df-review-sitemap-header button svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  .df-review-sitemap-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+				    padding: 18px;
+  }
+
+	  .df-review-sitemap-backdrop {
+	    position: absolute;
+	    inset: 0;
+	    min-height: 0;
+	    border: 0;
+	    border-radius: 0;
+	    padding: 0;
+	    background: var(--df-review-color-backdrop);
+	  }
+
+  .df-review-sitemap-dialog {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+	    width: min(760px, calc(100vw - 48px));
+	    max-height: min(720px, calc(100vh - 48px));
+	    overflow: hidden;
+	    border: 1px solid var(--df-review-line);
+	    border-radius: var(--df-review-radius-lg);
+	    background: var(--df-review-panel);
+	    box-shadow: var(--df-review-shadow-modal);
+	  }
+
+  .df-review-sitemap-header {
+    display: flex;
+    align-items: center;
+	    justify-content: space-between;
+	    gap: 12px;
+	    min-height: 54px;
+	    padding: 0 14px 0 16px;
+	    border-bottom: 1px solid var(--df-review-line);
+	  }
+
+  .df-review-sitemap-header div {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .df-review-sitemap-header strong {
+    font-size: var(--df-review-font-size-lg);
+  }
+
+	  .df-review-sitemap-header span {
+	    color: var(--df-review-muted);
+	    font-size: var(--df-review-font-size-sm);
+	    font-weight: 700;
+	  }
+
+  .df-review-sitemap-header button {
+    display: grid;
+    place-items: center;
+	    width: 34px;
+	    min-width: 34px;
+	    min-height: var(--df-review-control-height-md);
+	    border: 1px solid var(--df-review-line);
+	    border-radius: var(--df-review-radius-sm);
+	    background: var(--df-review-control);
+	    color: var(--df-review-text);
+	    font-size: var(--df-review-font-size-md);
+	    font-weight: 800;
+	  }
+
+	  .df-review-sitemap-header button:hover {
+	    border-color: var(--df-review-accent);
+	    background: var(--df-review-control-hover);
+	  }
+
+  .df-review-sitemap-list {
+    display: grid;
+    align-content: start;
+    min-height: 0;
+    overflow: auto;
+    padding: 8px;
+  }
+
+  .df-review-sitemap-table-head,
+  .df-review-sitemap-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) 70px 78px minmax(96px, 140px);
+    align-items: center;
+    column-gap: 0;
+  }
+
+  .df-review-sitemap-table-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    min-height: 32px;
+    border-bottom: 1px solid var(--df-review-line);
+    padding: 0 10px;
+    background: var(--df-review-surface);
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .df-review-sitemap-table-head span:not(:first-child) {
+    text-align: right;
+  }
+
+  .df-review-sitemap-row {
+    min-height: 42px;
+    border: 0;
+    border-bottom: 1px solid var(--df-review-line-soft);
+    border-radius: 0;
+    padding: 0 10px;
+    background: transparent;
+    color: var(--df-review-text);
+    text-align: left;
+  }
+
+  button.df-review-sitemap-row {
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-row.is-folder {
+    cursor: default;
+  }
+
+  .df-review-sitemap-row:last-child {
+    border-bottom: 0;
+  }
+
+  button.df-review-sitemap-row:hover,
+  .df-review-sitemap-row.is-active {
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-sitemap-path {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-md);
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  .df-review-sitemap-row.is-folder .df-review-sitemap-path {
+    color: var(--df-review-muted);
+  }
+
+  .df-review-sitemap-tree-prefix {
+    flex: 0 0 auto;
+    color: var(--df-review-muted);
+    font-family: var(--df-review-font-mono);
+    font-weight: 700;
+    white-space: pre;
+  }
+
+  .df-review-sitemap-cell {
+    min-width: 0;
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-sm);
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    line-height: 1;
+    text-align: right;
+  }
+
+  .df-review-sitemap-cell.is-local {
+    color: var(--df-review-accent);
+  }
+
+  .df-review-sitemap-cell.is-remote {
+    color: var(--df-review-area);
+  }
+
+  .df-review-sitemap-cell.is-online {
+    display: flex;
+    justify-content: flex-end;
+    color: var(--df-review-text);
+  }
+
+  .df-review-sitemap-users {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .df-review-sitemap-user {
+    --df-review-presence-color: var(--df-review-accent);
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    border: 1px solid var(--df-review-presence-color);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 7px;
+    background: var(--df-review-chip-bg);
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 900;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .df-review-sitemap-online-empty {
+    color: var(--df-review-muted);
+  }
+
+  button.df-review-sitemap-row:hover .df-review-sitemap-path,
+  .df-review-sitemap-row.is-active .df-review-sitemap-path {
+    color: var(--df-review-text);
+  }
+
+		  .df-review-settings-modal {
+		    position: fixed;
+		    inset: 0;
+		    z-index: 1001;
+		    display: grid;
+		    place-items: center;
+		    padding: 24px;
+		  }
+
+		  .df-review-settings-backdrop {
+		    position: absolute;
+		    inset: 0;
+		    min-height: 0;
+		    border: 0;
+		    border-radius: 0;
+		    padding: 0;
+		    background: var(--df-review-color-backdrop);
+		  }
+
+		  .df-review-settings-dialog {
+		    position: relative;
+		    z-index: 1;
+		    display: grid;
+		    width: min(460px, calc(100vw - 48px));
+		    overflow: hidden;
+		    border: 1px solid var(--df-review-line);
+		    border-radius: var(--df-review-radius-lg);
+		    background: var(--df-review-panel);
+		    box-shadow: var(--df-review-shadow-modal);
+		  }
+
+		  .df-review-settings-header {
+		    display: flex;
+		    align-items: center;
+		    justify-content: space-between;
+		    gap: 12px;
+		    min-height: 54px;
+		    padding: 0 14px 0 16px;
+		    border-bottom: 1px solid var(--df-review-line);
+		  }
+
+		  .df-review-settings-title {
+		    display: grid;
+		    gap: 2px;
+		    min-width: 0;
+		  }
+
+		  .df-review-settings-header-actions {
+		    display: inline-flex;
+		    align-items: center;
+		    justify-content: flex-end;
+		    gap: 8px;
+		    min-width: 0;
+		  }
+
+		  .df-review-settings-header strong {
+		    color: var(--df-review-text);
+		    font-size: var(--df-review-font-size-lg);
+		  }
+
+		  .df-review-settings-header span {
+		    color: var(--df-review-muted);
+		    font-size: var(--df-review-font-size-xs);
+		    font-weight: 800;
+		  }
+
+		  .df-review-settings-header button {
+		    display: grid;
+		    place-items: center;
+		    width: 34px;
+		    min-width: 34px;
+		    padding: 0;
+		    font-size: var(--df-review-font-size-md);
+		    font-weight: 800;
+		  }
+
+		  .df-review-settings-body {
+		    display: grid;
+		    gap: 12px;
+		    padding: 16px;
+		  }
+
+		  .df-review-settings-field {
+		    display: grid;
+		    gap: 7px;
+		  }
+
+		  .df-review-settings-row {
+		    display: grid;
+		    grid-template-columns: minmax(0, 1fr) auto;
+		    align-items: center;
+		    gap: 12px;
+		  }
+
+		  .df-review-settings-field span,
+		  .df-review-settings-row > span,
+		  .df-review-settings-label-row label {
+		    color: var(--df-review-muted);
+		    font-size: var(--df-review-font-size-sm);
+		    font-weight: 800;
+		  }
+
+		  .df-review-settings-theme-options {
+		    display: inline-flex;
+		    justify-content: flex-end;
+		    gap: 6px;
+		    min-width: 0;
+		    flex-wrap: wrap;
+		  }
+
+		  .df-review-settings-theme-option {
+		    min-height: 30px;
+		    border: 1px solid var(--df-review-line);
+		    border-radius: var(--df-review-radius-sm);
+		    padding: 0 10px;
+		    color: var(--df-review-muted);
+		    background: var(--df-review-control);
+		    box-shadow: var(--df-review-shadow-control);
+		    font-size: var(--df-review-font-size-sm);
+		    font-weight: 800;
+		  }
+
+		  .df-review-settings-theme-option:hover {
+		    border-color: var(--df-review-accent);
+		    background: var(--df-review-control-hover);
+		    color: var(--df-review-text);
+		  }
+
+		  .df-review-settings-theme-option.is-active {
+		    border-color: var(--df-review-accent);
+		    background: var(--df-review-accent-soft);
+		    color: var(--df-review-accent);
+		  }
+
+		  .df-review-settings-theme-option:focus-visible {
+		    outline: 2px solid var(--df-review-focus-ring);
+		    outline-offset: 1px;
+		  }
+
+		  .df-review-settings-label-row {
+		    display: flex;
+		    align-items: center;
+		    gap: 6px;
+		  }
+
+		  .df-review-settings-help-button {
+		    display: inline-grid;
+		    place-items: center;
+		    width: 20px;
+		    min-width: 20px;
+		    min-height: 20px;
+		    border: 1px solid var(--df-review-line-soft);
+		    border-radius: 50%;
+		    padding: 0;
+		    background: transparent;
+		    color: var(--df-review-muted);
+		  }
+
+		  .df-review-settings-help-button:hover,
+		  .df-review-settings-help-button.is-active {
+		    border-color: var(--df-review-accent);
+		    background: var(--df-review-accent-soft);
+		    color: var(--df-review-accent);
+		  }
+
+		  .df-review-settings-help-button svg {
+		    width: 13px;
+		    height: 13px;
+		    fill: none;
+		    stroke: currentColor;
+		    stroke-linecap: round;
+		    stroke-linejoin: round;
+		    stroke-width: 2.1;
+		  }
+
+			  .df-review-settings-token-input,
+			  .df-review-settings-text-input,
+			  .df-review-settings-select-input {
+			    display: grid;
+			    align-items: stretch;
+			    overflow: hidden;
+			    border: 1px solid var(--df-review-line);
+		    border-radius: var(--df-review-radius-sm);
+			    background: var(--df-review-bg);
+			  }
+
+			  .df-review-settings-token-input {
+			    grid-template-columns: minmax(0, 1fr) 38px;
+			  }
+
+			  .df-review-settings-text-input,
+			  .df-review-settings-select-input {
+			    grid-template-columns: minmax(0, 1fr);
+			  }
+
+			  .df-review-settings-token-input:focus-within,
+			  .df-review-settings-text-input:focus-within,
+			  .df-review-settings-select-input:focus-within {
+			    outline: 2px solid var(--df-review-focus-ring);
+			    outline-offset: 1px;
+			  }
+
+			  .df-review-settings-token-input input,
+			  .df-review-settings-text-input input,
+			  .df-review-settings-select-input select {
+			    min-width: 0;
+			    min-height: var(--df-review-control-height-lg);
+			    border: 0;
+		    padding: 0 10px;
+		    background: transparent;
+		    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-md);
+			  }
+
+			  .df-review-settings-token-input input:focus,
+			  .df-review-settings-text-input input:focus,
+			  .df-review-settings-select-input select:focus {
+			    outline: 0;
+			  }
+
+			  .df-review-settings-token-input input.is-token-masked {
+			    -webkit-text-security: disc;
+			  }
+
+			  .df-review-settings-select-input select {
+			    appearance: none;
+			    cursor: pointer;
+			  }
+
+		  .df-review-settings-token-toggle {
+		    display: grid;
+		    place-items: center;
+		    width: 38px;
+		    min-width: 38px;
+		    min-height: var(--df-review-control-height-lg);
+		    border: 0;
+		    border-left: 1px solid var(--df-review-line-soft);
+		    border-radius: 0;
+		    padding: 0;
+		    background: transparent;
+		    color: var(--df-review-muted);
+		  }
+
+		  .df-review-settings-token-toggle:hover {
+		    background: var(--df-review-chip-bg);
+		    color: var(--df-review-text);
+		  }
+
+		  .df-review-settings-token-toggle svg {
+		    width: 16px;
+		    height: 16px;
+		    fill: none;
+		    stroke: currentColor;
+		    stroke-linecap: round;
+		    stroke-linejoin: round;
+		    stroke-width: 2;
+		  }
+
+		  .df-review-settings-guide {
+		    margin-top: -2px;
+		    border: 1px solid var(--df-review-line-soft);
+		    border-radius: var(--df-review-radius-sm);
+		    padding: 9px 11px;
+		    background: var(--df-review-chip-bg);
+		    color: var(--df-review-muted);
+		    font-size: var(--df-review-font-size-xs);
+		    font-weight: 700;
+		    line-height: 1.55;
+		  }
+
+		  .df-review-settings-guide ol {
+		    display: grid;
+		    gap: 3px;
+		    margin: 0;
+		    padding-left: 17px;
+		  }
+
+		  .df-review-settings-status {
+		    min-height: 20px;
+		    margin: 0;
+		    color: var(--df-review-accent);
+		    font-size: var(--df-review-font-size-sm);
+		    font-weight: 800;
+		  }
+
+		  .df-review-settings-actions {
+		    display: grid;
+		    grid-template-columns: auto minmax(0, 1fr) auto auto;
+		    gap: 8px;
+		    align-items: center;
+		  }
+
+		  .df-review-settings-actions button {
+		    padding: 0 12px;
+		  }
+
+			  .df-review-settings-actions button[type='submit'] {
+			    border-color: var(--df-review-accent);
+			    background: var(--df-review-accent-soft);
+			    color: var(--df-review-accent);
+			  }
+
+			  .df-review-prompt-modal {
+			    position: fixed;
+			    inset: 0;
+			    z-index: 1002;
+			    display: grid;
+			    place-items: center;
+			    padding: 24px;
+			  }
+
+			  .df-review-prompt-backdrop {
+			    position: absolute;
+			    inset: 0;
+			    min-height: 0;
+			    border: 0;
+			    border-radius: 0;
+			    padding: 0;
+			    background: var(--df-review-color-backdrop);
+			  }
+
+			  .df-review-prompt-dialog {
+			    position: relative;
+			    z-index: 1;
+			    display: grid;
+			    grid-template-rows: auto minmax(0, 1fr);
+				    width: min(1040px, calc(100vw - 36px));
+				    max-height: min(900px, calc(100vh - 36px));
+			    overflow: hidden;
+			    border: 1px solid var(--df-review-line);
+			    border-radius: var(--df-review-radius-lg);
+			    background: var(--df-review-panel);
+			    box-shadow: var(--df-review-shadow-modal);
+			  }
+
+  .df-review-copy-toast {
+    position: fixed;
+    right: 52px;
+    bottom: 24px;
+    z-index: 1003;
+    max-width: min(320px, calc(100vw - 32px));
+    padding: 10px 13px;
+    border: 1px solid var(--df-review-accent-hover);
+    border-radius: var(--df-review-radius-md);
+    background: var(--df-review-panel);
+    box-shadow: var(--df-review-shadow-modal);
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 800;
+    line-height: 1.25;
+    pointer-events: none;
+  }
+
+			  .df-review-prompt-header {
+			    display: flex;
+			    align-items: center;
+			    justify-content: space-between;
+			    gap: 12px;
+			    min-height: 54px;
+			    padding: 0 14px 0 16px;
+			    border-bottom: 1px solid var(--df-review-line);
+			  }
+
+			  .df-review-prompt-header div {
+			    display: grid;
+			    gap: 2px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-header strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-lg);
+			  }
+
+			  .df-review-prompt-header span {
+			    overflow: hidden;
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-xs);
+			    font-weight: 800;
+			    text-overflow: ellipsis;
+			    white-space: nowrap;
+			  }
+
+			  .df-review-prompt-header button {
+			    display: grid;
+			    place-items: center;
+			    width: 34px;
+			    min-width: 34px;
+			    padding: 0;
+			    font-size: var(--df-review-font-size-md);
+			    font-weight: 800;
+			  }
+
+			  .df-review-prompt-body {
+			    display: grid;
+			    gap: 14px;
+			    min-height: 0;
+			    overflow: auto;
+			    padding: 16px;
+			  }
+
+			  .df-review-prompt-block {
+			    display: grid;
+			    gap: 8px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-block-header {
+			    display: flex;
+			    align-items: center;
+			    justify-content: space-between;
+			    gap: 12px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-block-header div {
+			    display: grid;
+			    gap: 2px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-block-header strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: 900;
+			  }
+
+			  .df-review-prompt-block-header span {
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-xs);
+			    font-weight: 800;
+			  }
+
+			  .df-review-prompt-block-header button {
+			    display: inline-flex;
+			    align-items: center;
+			    gap: 6px;
+			    min-height: 30px;
+			    padding: 0 10px;
+			  }
+
+			  .df-review-prompt-block-header button:disabled {
+			    cursor: not-allowed;
+			    opacity: 0.5;
+			  }
+
+			  .df-review-prompt-block-header svg {
+			    width: 13px;
+			    height: 13px;
+			    fill: none;
+			    stroke: currentColor;
+			    stroke-linecap: round;
+			    stroke-linejoin: round;
+			    stroke-width: 2;
+			  }
+
+				  .df-review-prompt-block textarea {
+				    width: 100%;
+				    height: clamp(170px, calc(100vh - 520px), 260px);
+				    min-height: 170px;
+				    max-height: 320px;
+			    resize: vertical;
+			    border: 1px solid var(--df-review-line);
+			    border-radius: var(--df-review-radius-sm);
+			    padding: 10px;
+			    background: var(--df-review-bg);
+			    color: var(--df-review-text);
+			    font-family: var(--df-review-font-mono);
+			    font-size: var(--df-review-font-size-xs);
+			    font-weight: 600;
+			    line-height: 1.5;
+			    white-space: pre;
+			  }
+
+			  .df-review-prompt-block textarea:focus {
+			    outline: 2px solid var(--df-review-focus-ring);
+			    outline-offset: 1px;
+			  }
+
+			  .df-review-prompt-section-header {
+			    display: grid;
+			    gap: 2px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-section-header strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-md);
+			    font-weight: 900;
+			  }
+
+			  .df-review-prompt-section-header span {
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-xs);
+			    font-weight: 800;
+			  }
+
+			  .df-review-prompt-about {
+			    display: grid;
+			    gap: 10px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-about-grid {
+			    display: grid;
+			    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+			    gap: 10px;
+			    min-width: 0;
+			  }
+
+			  .df-review-prompt-about-grid article {
+			    display: grid;
+			    align-content: start;
+			    gap: 6px;
+			    border: 1px solid var(--df-review-line);
+			    border-radius: var(--df-review-radius-md);
+			    padding: 12px;
+			    background: var(--df-review-surface);
+			  }
+
+			  .df-review-prompt-about-grid strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: 900;
+			  }
+
+			  .df-review-prompt-about-grid p {
+			    margin: 0;
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: 700;
+			    line-height: 1.55;
+			  }
+
+				  .df-review-tools {
+			    display: flex;
+			    align-items: center;
+		    justify-content: space-between;
+		    gap: 12px;
+		    width: 100%;
+		    max-width: 1440px;
+		    min-width: 0;
+		    margin: 0 auto;
+		  }
+
+		  .df-review-tool-controls {
+		    display: flex;
+		    align-items: center;
+		    justify-content: flex-start;
+		    gap: 12px;
+		    min-width: 0;
+		    flex-wrap: wrap;
+	  }
+
+		  .df-review-presets,
+		  .df-review-mode,
+	  .df-review-overlays {
+	    display: flex;
+	    align-items: center;
+	    gap: var(--df-review-space-1-5);
+	    min-height: calc(var(--df-review-control-height-lg) + 6px);
+	    padding: 3px;
+	    border: 1px solid var(--df-review-line-soft);
+	    border-radius: var(--df-review-radius-md);
+	    background: var(--df-review-card);
+	  }
+
+		  .df-review-tool-divider,
+		  .df-review-mode-divider {
+		    display: inline-flex;
+		    align-items: center;
+		    color: var(--df-review-line);
+		    font-size: var(--df-review-font-size-2xl);
+		    font-weight: 700;
+	    line-height: 1;
+		    user-select: none;
+	  }
+
+		  .df-review-active-size {
+		    flex: 0 0 auto;
+		    display: inline-flex;
+		    align-items: center;
+		    min-height: var(--df-review-control-height-lg);
+		    color: var(--df-review-muted);
+		    font-size: var(--df-review-font-size-sm);
+		    font-variant-numeric: tabular-nums;
+	    font-weight: 800;
+	    line-height: 1;
+	  }
+
+	  .df-review-presets button {
+	    display: inline-flex;
+	    align-items: center;
+    gap: 7px;
+    min-height: var(--df-review-control-height-lg);
+    padding: 0 11px 0 9px;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .df-review-presets button svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+  }
+
+  .df-review-preset-count {
+    min-width: 16px;
+    padding: 0 5px;
+    border-radius: var(--df-review-radius-pill);
+    background: var(--df-review-line-soft);
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: 800;
+    line-height: 16px;
+    text-align: center;
+  }
+
+  .df-review-presets button.is-active .df-review-preset-count {
+    background: var(--df-review-accent-hover);
+    color: var(--df-review-accent);
+  }
+
+  .df-review-presets button.is-active {
+    color: var(--df-review-accent);
+    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
+  }
+
+  .df-review-preset-copy {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+    text-align: left;
+    line-height: 1.05;
+  }
+
+  .df-review-preset-copy strong {
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-sm);
+  }
+
+	  .df-review-overlay-button,
+	  .df-review-mode-button {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+	    width: 38px;
+	    min-width: 38px;
+	    padding: 0;
+	    border-color: transparent;
+	    background: transparent;
+	    box-shadow: none;
+	    color: var(--df-review-muted);
+	  }
+
+  .df-review-overlay-button svg,
+  .df-review-mode-button svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+	  }
+
+
+
+
+
+
+
+		  .df-review-overlay-button.is-settings {
+		    color: var(--df-review-muted);
+		  }
+
+		  .df-review-overlay-button.is-settings:hover {
+		    color: var(--df-review-text);
+		  }
+
+	  .df-review-overlay-button.is-disabled,
+	  .df-review-overlay-button.is-disabled:hover {
+	    cursor: not-allowed;
+	    border-color: var(--df-review-line);
+	    background: var(--df-review-line-soft);
+	    color: var(--df-review-subtle);
+	  }
+
+	  @container (max-width: 1040px) {
+	    .df-review-tools {
+	      flex-direction: column;
+	      align-items: stretch;
+	      justify-content: flex-start;
+	    }
+
+	    .df-review-tool-controls {
+	      width: 100%;
+	    }
+
+	    .df-review-presets {
+	      flex-wrap: wrap;
+	    }
+
+	    .df-review-overlays {
+	      width: 100%;
+	      justify-content: flex-start;
+	    }
+	  }
+
+	  .df-review-side-rail {
+	    grid-column: 3;
+	    grid-row: 1 / span 2;
+	    position: relative;
+	    z-index: 600;
+	    display: flex;
+	    align-items: stretch;
+	    justify-content: center;
+	    min-width: 0;
+	    min-height: 0;
+	    border-left: 1px solid var(--df-review-line);
+	    background: var(--df-review-side-rail);
+	  }
+
+  .df-review-side-toggle {
+    display: grid;
+    grid-template-rows: 28px auto;
+    align-items: start;
+    justify-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 100%;
+    border: 0;
+	    border-radius: 0;
+	    padding: 10px 0;
+	    background: transparent;
+	    color: var(--df-review-muted);
+	  }
+
+	  .df-review-side-toggle:hover {
+	    background: var(--df-review-accent-soft);
+	    color: var(--df-review-text);
+	  }
+
+  .df-review-side-toggle span {
+    display: grid;
+    place-items: center;
+	    width: 20px;
+	    height: 24px;
+	    line-height: 1;
+	  }
+
+	  .df-review-side-toggle svg {
+	    width: 18px;
+	    height: 18px;
+	    fill: none;
+	    stroke: currentColor;
+	    stroke-linecap: round;
+	    stroke-width: 2;
+	  }
+
+  .df-review-side-toggle strong {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    color: inherit;
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+  }
+
+	  .df-review-qa-panel {
+	    grid-column: 2;
+	    grid-row: 1 / span 2;
+	    position: relative;
+	    z-index: 600;
+	    display: grid;
+	    grid-template-rows: minmax(0, 1fr);
+	    min-width: 0;
+	    min-height: 0;
+	    overflow: hidden;
+	    border-left: 1px solid var(--df-review-line-soft);
+	    background:
+	      linear-gradient(180deg, var(--df-review-panel), var(--df-review-bg));
+	  }
+
+	  .df-review-shell:not(.is-list-visible) .df-review-qa-panel {
+	    visibility: hidden;
+	    border-left: 0;
+	  }
+
+	  .df-review-panel-body {
+	    display: grid;
+	    min-width: 0;
+	    min-height: 0;
+	    overflow: hidden;
+	  }
+
+  .df-review-item-list {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
+  }
+
+			  .df-review-list-header {
+			    display: grid;
+			    grid-template-rows: auto auto;
+			    gap: var(--df-review-space-2);
+			    padding: var(--df-review-space-3) var(--df-review-frame-gutter-x);
+			    border-bottom: 1px solid var(--df-review-line-soft);
+			    background: var(--df-review-card);
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: 800;
+			  }
+
+			  .df-review-list-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+			  .df-review-list-title {
+			    display: flex;
+			    align-items: center;
+			    gap: 8px;
+		    min-width: 0;
+		  }
+
+		  .df-review-list-title span {
+		    min-width: 0;
+		    overflow: hidden;
+		    text-overflow: ellipsis;
+		    white-space: nowrap;
+		  }
+
+		  .df-review-list-title strong {
+		    flex: 0 0 auto;
+		    color: var(--df-review-muted);
+		    font-size: var(--df-review-font-size-xs);
+		    font-variant-numeric: tabular-nums;
+		  }
+
+  .df-review-presence-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .df-review-presence-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .df-review-presence-label svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+  }
+
+  .df-review-presence-list {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .df-review-presence-chip {
+    --df-review-presence-color: var(--df-review-accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    flex: 0 1 auto;
+    min-height: 22px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 7px;
+    color: var(--df-review-text);
+    background: var(--df-review-chip-bg);
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: 900;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .df-review-presence-chip.is-self {
+    border-color: var(--df-review-presence-color);
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-presence-dot {
+    width: 7px;
+    min-width: 7px;
+    height: 7px;
+    border-radius: var(--df-review-radius-pill);
+    background: var(--df-review-presence-color);
+  }
+
+  .df-review-presence-name {
+    min-width: 0;
+  }
+
+		  .df-review-list-controls {
+		    display: flex;
+		    align-items: center;
+		    gap: 4px;
+		  }
+
+		  .df-review-source-select {
+		    width: 104px;
+		    min-height: 30px;
+		    border: 1px solid var(--df-review-line-soft);
+		    border-radius: var(--df-review-radius-sm);
+		    padding: 0 24px 0 8px;
+		    color: var(--df-review-text);
+		    background: var(--df-review-control);
+		    box-shadow: var(--df-review-shadow-control);
+		    font-size: var(--df-review-font-size-xs);
+		    font-weight: 800;
+		  }
+
+		  .df-review-source-refresh {
+		    position: relative;
+		    display: inline-grid;
+		    place-items: center;
+		    width: 30px;
+		    min-width: 30px;
+		    height: 30px;
+		    border: 1px solid var(--df-review-line-soft);
+		    border-radius: var(--df-review-radius-sm);
+		    padding: 0;
+		    color: var(--df-review-muted);
+		    background: var(--df-review-control);
+		    box-shadow: var(--df-review-shadow-control);
+		  }
+
+		  .df-review-source-refresh svg {
+		    width: 14px;
+		    height: 14px;
+		  }
+
+			  .df-review-filter-tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 30px;
+    padding: 2px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-md);
+    background: var(--df-review-card);
+    box-shadow: var(--df-review-shadow-control);
+  }
+
+				  .df-review-filter-tab {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    min-width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--df-review-subtle);
+  }
+
+				  .df-review-filter-icon {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+				  .df-review-filter-separator {
+				    display: block;
+				    width: 18px;
+				    height: 1px;
+				    border-radius: var(--df-review-radius-pill);
+				    background: currentColor;
+				    opacity: 0.42;
+				  }
+
+		  .df-review-filter-tab:hover,
+		  .df-review-filter-tab.is-active {
+		    background: var(--df-review-accent-soft);
+		    color: var(--df-review-text);
+		  }
+
+		  .df-review-filter-tab.is-active {
+		    box-shadow: inset 0 0 0 1px rgba(124, 199, 255, 0.42);
+		    color: var(--df-review-accent);
+		  }
+
+				  .df-review-filter-icon svg {
+				    width: 15px;
+				    height: 15px;
+		    fill: none;
+		    stroke: currentColor;
+		    stroke-linecap: round;
+		    stroke-linejoin: round;
+			    stroke-width: 2;
+			  }
+
+			  .df-review-filter-count {
+			    color: currentColor;
+			    font-size: var(--df-review-font-size-3xs);
+			    font-weight: 900;
+			    font-variant-numeric: tabular-nums;
+			    line-height: 1;
+			  }
+
+  .df-review-list-scroll {
+    display: grid;
+    align-content: start;
+    gap: var(--df-review-space-2);
+    min-height: 0;
+    overflow: auto;
+    padding: var(--df-review-space-2);
+  }
+
+	  .df-review-empty {
+	    margin: 0;
+	    padding: var(--df-review-space-5) var(--df-review-space-4);
+	    border: 1px dashed var(--df-review-line);
+	    border-radius: var(--df-review-radius-lg);
+	    background: var(--df-review-card);
+	    color: var(--df-review-subtle);
+	    font-size: var(--df-review-font-size-sm);
+	    line-height: 1.45;
+	  }
+
+  .df-review-item-card.is-dim {
+    opacity: 0.4;
+  }
+
+  .df-review-item-card.is-dim:hover {
+    opacity: 0.72;
+  }
+
+	  .df-review-item-card {
+		    position: relative;
+		    display: grid;
+		    gap: var(--df-review-space-2-5);
+		    padding: var(--df-review-space-3-5);
+		    border: 1px solid var(--df-review-line-soft);
+		    border-radius: var(--df-review-radius-lg);
+		    background: var(--df-review-card);
+		    cursor: pointer;
+		    transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+		  }
+
+  .df-review-item-card:not(.is-dim):hover {
+    border-color: var(--df-review-line);
+  }
+
+  .df-review-item-card.is-active {
+	    border-color: var(--df-review-accent);
+	    background: var(--df-review-card);
+	    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover), 0 0 0 3px rgba(124, 199, 255, 0.12);
+	  }
+
+  .df-review-item-card.is-overlay-hidden .df-review-item-main {
+    opacity: 0.68;
+  }
+
+  .df-review-item-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .df-review-item-main {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+	    border: 0;
+	    padding: 0;
+	    text-align: left;
+	    background: transparent;
+	    color: var(--df-review-text);
+	  }
+
+  .df-review-item-main strong {
+    overflow-wrap: anywhere;
+    font-size: var(--df-review-font-size-md);
+    line-height: 1.35;
+  }
+
+  .df-review-item-comment {
+    padding: 5px 0;
+    white-space: pre-wrap;
+  }
+
+	  .df-review-item-main small {
+	    color: var(--df-review-subtle);
+	    font-size: var(--df-review-font-size-xs);
+	  }
+
+  .df-review-item-meta {
+    display: block;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+
+  .df-review-item-error {
+    color: var(--df-review-danger) !important;
+    overflow-wrap: anywhere;
+  }
+
+  .df-review-item-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .df-review-item-id,
+  .df-review-item-scope,
+  .df-review-item-mode,
+  .df-review-item-status-badge,
+  .df-review-item-status-select {
+    --df-review-scope: var(--df-review-accent);
+    --df-review-scope-rgb: 124, 199, 255;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 20px;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 7px;
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .df-review-item-id {
+    border-color: var(--df-review-line);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--df-review-text);
+  }
+
+  .df-review-item-scope {
+    border-color: rgba(var(--df-review-scope-rgb), 0.36);
+    background: rgba(var(--df-review-scope-rgb), 0.12);
+    color: var(--df-review-scope);
+  }
+
+  .df-review-item-scope.is-scope-tablet {
+    --df-review-scope: var(--df-review-area);
+    --df-review-scope-rgb: 99, 215, 199;
+  }
+
+  .df-review-item-scope.is-scope-desktop {
+    --df-review-scope: var(--df-review-note);
+    --df-review-scope-rgb: 243, 183, 95;
+  }
+
+  .df-review-item-scope.is-scope-wide {
+    --df-review-scope: var(--df-review-purple);
+    --df-review-scope-rgb: 201, 156, 255;
+  }
+
+  .df-review-item-scope.is-scope-dom {
+    --df-review-scope: var(--df-review-danger);
+    --df-review-scope-rgb: 255, 143, 97;
+  }
+
+  .df-review-item-scope svg,
+  .df-review-item-mode svg {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+  }
+
+	  .df-review-item-mode {
+	    color: var(--df-review-muted);
+    background: var(--df-review-line-soft);
+  }
+
+  .df-review-item-mode.is-mode-area {
+    color: var(--df-review-area);
+  }
+
+  .df-review-item-mode.is-mode-dom {
+    color: var(--df-review-danger);
+  }
+
+  .df-review-item-status-badge {
+    min-height: 30px;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 11px;
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 750;
+    text-transform: none;
+  }
+
+  .df-review-item-status-select {
+    min-height: 30px;
+    min-width: 92px;
+    max-width: 118px;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 10px;
+    cursor: pointer;
+    outline: 0;
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 750;
+    text-transform: none;
+  }
+
+  .df-review-item-status-select:focus-visible {
+    border-color: var(--df-review-accent);
+    box-shadow: 0 0 0 2px var(--df-review-accent-soft);
+  }
+
+  .df-review-item-status-badge.is-status-todo,
+  .df-review-item-status-select.is-status-todo {
+    border-color: var(--df-review-line);
+    color: var(--df-review-muted);
+    background: var(--df-review-line-soft);
+  }
+
+  .df-review-item-status-badge.is-status-doing,
+  .df-review-item-status-select.is-status-doing {
+    border-color: rgba(124, 199, 255, 0.34);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-item-status-badge.is-status-review,
+  .df-review-item-status-select.is-status-review {
+    border-color: rgba(243, 183, 95, 0.34);
+    color: var(--df-review-note);
+    background: var(--df-review-note-soft);
+  }
+
+  .df-review-item-status-badge.is-status-hold,
+  .df-review-item-status-select.is-status-hold {
+    border-color: rgba(179, 149, 255, 0.32);
+    color: var(--df-review-purple);
+    background: var(--df-review-purple-soft);
+  }
+
+  .df-review-item-status-badge.is-status-done,
+  .df-review-item-status-select.is-status-done {
+    border-color: rgba(99, 215, 199, 0.34);
+    color: var(--df-review-area);
+    background: var(--df-review-area-soft);
+  }
+
+  .df-review-item-status-badge.is-error {
+    border-color: rgba(255, 143, 97, 0.36);
+    color: var(--df-review-danger);
+    background: var(--df-review-danger-soft);
+  }
+
+	  .df-review-item-main img {
+	    width: 100%;
+	    max-height: 110px;
+	    border: 1px solid var(--df-review-line);
+	    border-radius: var(--df-review-radius-sm);
+	    object-fit: cover;
+	    background: var(--df-review-control);
+  }
+
+	  .df-review-item-header-actions {
+	    display: inline-flex;
+	    align-items: center;
+	    justify-content: flex-end;
+	    gap: 2px;
+	    cursor: auto;
+	  }
+
+  .df-review-item-delete,
+  .df-review-item-prompt-copy,
+  .df-review-item-visibility {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid transparent;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-muted);
+    background: transparent;
+    transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+  }
+
+  .df-review-item-visibility:hover,
+  .df-review-item-prompt-copy:hover {
+    border-color: rgba(124, 199, 255, 0.34);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-item-delete:hover {
+    border-color: rgba(255, 143, 97, 0.34);
+    color: var(--df-review-danger);
+    background: var(--df-review-danger-soft);
+  }
+
+  .df-review-item-visibility.is-visible {
+    color: var(--df-review-accent);
+  }
+
+  .df-review-item-visibility.is-hidden {
+    opacity: 0.7;
+    color: var(--df-review-subtle);
+  }
+
+  .df-review-item-prompt-copy.is-copied {
+    color: var(--df-review-accent);
+  }
+
+  .df-review-item-delete svg,
+  .df-review-item-prompt-copy svg,
+  .df-review-item-visibility svg {
+    width: 14px;
+    height: 14px;
+  }
+
+				  .df-review-item-actions {
+				    display: grid;
+				    grid-template-columns: auto minmax(0, 1fr) auto;
+			    align-items: center;
+			    gap: 6px;
+			    min-width: 0;
+			    margin-top: 2px;
+			  }
+
+			  .df-review-item-status-actions {
+			    display: inline-flex;
+			    grid-column: 1;
+			    align-items: center;
+			    min-width: 0;
+		    cursor: auto;
+			  }
+
+			  .df-review-item-remote-actions {
+			    display: inline-flex;
+			    grid-column: 3;
+			    align-items: center;
+			    justify-content: flex-end;
+			    justify-self: end;
+			    gap: 6px;
+			    min-width: 0;
+		    cursor: auto;
+			  }
+
+  .df-review-item-action-button {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    min-width: 32px;
+    height: 30px;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-muted);
+    background: var(--df-review-control);
+  }
+
+	  .df-review-item-action-button:hover:not(:disabled) {
+	    border-color: rgba(124, 199, 255, 0.42);
+	    color: var(--df-review-text);
+	    background: var(--df-review-control-hover);
+	  }
+
+			  .df-review-item-actions .df-review-item-submit-button {
+			    display: inline-flex;
+			    align-items: center;
+			    gap: 6px;
+			    min-height: 30px;
+			    height: 30px;
+			    width: auto;
+			    min-width: 0;
+			    border-radius: var(--df-review-radius-sm);
+			    padding: 0 11px;
+		    border-color: var(--df-review-line);
+		    background: var(--df-review-control);
+		    color: var(--df-review-text);
+		  }
+
+		  .df-review-item-submit-button span {
+		    font-size: var(--df-review-font-size-xs);
+		    font-weight: 750;
+		    line-height: 1;
+		    text-transform: none;
+		    white-space: nowrap;
+		  }
+
+	  .df-review-item-actions .df-review-item-submit-button:hover:not(:disabled) {
+	    border-color: var(--df-review-accent);
+	    background: var(--df-review-accent-hover);
+	    color: var(--df-review-text);
+	  }
+
+  .df-review-item-action-button:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  .df-review-item-action-button svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+  }
+
+	  .df-review-stage {
+	    grid-column: 1;
+	    grid-row: 2;
+	    display: grid;
+	    min-width: 0;
+	    min-height: 0;
+	    overflow: hidden;
+	  }
+
+  .df-review-frame {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .df-review-frame-actions {
+    position: relative;
+    z-index: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    padding: 8px 40px 10px;
+    border-top: 1px solid var(--df-review-line-soft);
+    background: var(--df-review-mode-bar);
+  }
+
+	  .df-review-frame-scroll {
+	    min-width: 0;
+	    min-height: 0;
+	    overflow: auto;
+	  }
+
+	  .df-review-frame-canvas {
+	    display: grid;
+	    place-items: center;
+	    width: max-content;
+	    height: max-content;
+	    min-width: 100%;
+	    min-height: 100%;
+	    padding: 34px 40px 12px;
+	  }
+
+  .df-review-device {
+	    box-sizing: border-box;
+	    flex: 0 0 auto;
+	    position: relative;
+	    margin: 0;
+	    overflow: hidden;
+	    border: 1px solid var(--df-review-line);
+	    border-radius: var(--df-review-radius-lg);
+	    background: #fff;
+	    box-shadow: var(--df-review-shadow-device);
+  }
+
+  .df-review-device iframe {
+    display: block;
+    width: inherit;
+    height: inherit;
+    min-width: inherit;
+    min-height: inherit;
+    border: 0;
+    background: #fff;
+  }
+
+  .df-review-device-frame {
+    position: relative;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+  }
+
+  .df-review-ruler-corner {
+    position: absolute;
+    left: -26px;
+    top: -26px;
+    width: 26px;
+    height: 26px;
+    z-index: 6;
+    border-right: 1px solid var(--df-review-line-soft);
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background: var(--df-review-color-ruler-surface);
+  }
+
+  .df-review-ruler-gutter {
+    position: absolute;
+    z-index: 6;
+    background: var(--df-review-color-ruler-surface);
+    color: var(--df-review-muted);
+    user-select: none;
+  }
+
+  .df-review-ruler-gutter.is-x {
+    left: 0;
+    right: 0;
+    top: -26px;
+    height: 26px;
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background-image:
+      linear-gradient(
+        to right,
+        var(--df-review-color-ruler-tick-major) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to right,
+        var(--df-review-color-ruler-tick-minor) 1px,
+        transparent 1px
+      );
+    background-size:
+      calc(var(--df-review-ruler-step-x) * 5) 11px,
+      var(--df-review-ruler-step-x) 6px;
+    background-position: left bottom;
+    background-repeat: repeat-x;
+  }
+
+  .df-review-ruler-gutter.is-y {
+    left: -26px;
+    top: 0;
+    bottom: 0;
+    width: 26px;
+    border-right: 1px solid var(--df-review-line-soft);
+    background-image:
+      linear-gradient(
+        to bottom,
+        var(--df-review-color-ruler-tick-major) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        var(--df-review-color-ruler-tick-minor) 1px,
+        transparent 1px
+      );
+    background-size:
+      11px calc(var(--df-review-ruler-step-y) * 5),
+      6px var(--df-review-ruler-step-y);
+    background-position: right top;
+    background-repeat: repeat-y;
+  }
+
+  .df-review-ruler-frame-label {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 7px;
+    border-radius: 5px;
+    background: var(--df-review-color-ruler-label);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .df-review-ruler-frame-label strong {
+    color: var(--df-review-color-ruler-label-text);
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: 900;
+  }
+
+  .df-review-ruler-frame-label span {
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: 900;
+  }
+
+  .df-review-ruler-coord {
+    position: absolute;
+    z-index: 7;
+    padding: 2px 4px;
+    border-radius: 4px;
+    background: #b395ff;
+    color: #14111f;
+    font-size: var(--df-review-font-size-3xs);
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .df-review-ruler-coord.is-x {
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .df-review-ruler-coord.is-y {
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .df-review-ruler-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: inherit;
+    height: inherit;
+    z-index: 5;
+    cursor: crosshair;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .df-review-ruler-overlay.is-dragging {
+    cursor: crosshair;
+  }
+
+  .df-review-ruler-guide {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    background: var(--df-review-color-ruler-guide);
+    box-shadow: 0 0 0 1px rgba(87, 55, 166, 0.45);
+  }
+
+  .df-review-ruler-guide.is-x {
+    left: 0;
+    right: 0;
+    height: 1px;
+  }
+
+  .df-review-ruler-guide.is-y {
+    top: 0;
+    bottom: 0;
+    width: 1px;
+  }
+
+  .df-review-ruler-selection {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    border: 1px solid var(--df-review-color-ruler-measure-border);
+    background: var(--df-review-color-ruler-measure-bg);
+    box-shadow:
+      inset 0 0 0 1px var(--df-review-color-ruler-measure-shadow),
+      0 0 0 1px var(--df-review-color-ruler-measure-shadow);
+  }
+
+  .df-review-ruler-label {
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+    min-width: 156px;
+    padding: 7px 8px;
+    border: 1px solid var(--df-review-color-ruler-popover-border);
+    border-radius: var(--df-review-radius-sm);
+    background: var(--df-review-color-ruler-popover-bg);
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: 0 8px 22px var(--df-review-color-ruler-popover-shadow);
+  }
+
+	  @media (max-width: 860px) {
+	    .df-review-shell,
+	    .df-review-shell.is-list-visible {
+	      grid-template-columns: minmax(0, 1fr) 0 32px;
+	      grid-template-rows: auto minmax(0, 1fr);
+	    }
+
+	    .df-review-shell.is-list-visible {
+	      grid-template-columns: minmax(0, 1fr) minmax(260px, 70vw) 32px;
+	    }
+
+	    .df-review-qa-panel {
+	      border-left: 1px solid var(--df-review-line);
+	      border-bottom: 0;
+	    }
+
+	    .df-review-tools {
+	      flex-wrap: wrap;
+	    }
+
+	    .df-review-tool-controls {
+	      justify-content: flex-start;
+	    }
+
+    .df-review-frame-actions {
+      padding: 8px 20px 10px;
+    }
+
+	    .df-review-frame-canvas {
+	      padding: 34px 28px 12px;
+	    }
+
+		    .df-review-prompt-modal {
+		      padding: 12px;
+		    }
+
+		    .df-review-prompt-dialog {
+		      width: calc(100vw - 24px);
+		      max-height: calc(100vh - 24px);
+		    }
+
+		    .df-review-prompt-block textarea {
+		      height: min(360px, calc(100vh - 270px));
+		      min-height: 240px;
+		      max-height: calc(100vh - 270px);
+		    }
+
+	    .df-review-panel-body {
+	      min-height: 0;
+	    }
+  }
+    `;
+    document.head.append(style);
+  }
+}
+
+// src/react-shell/review/shell.tsx
+import {
+  useCallback as useCallback11,
+  useEffect as useEffect9
 } from "react";
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
@@ -352,2243 +2701,2643 @@ var __iconNode23 = [
 ];
 var X = createLucideIcon("x", __iconNode23);
 
-// src/react-shell.tsx
-import { createRoot } from "react-dom/client";
+// src/react-shell/constants.ts
+var REVIEW_QA_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "mobile", label: "Mobile", scope: "mobile" },
+  { key: "tablet", label: "Tablet", scope: "tablet" },
+  { key: "desktop", label: "Desktop", scope: "desktop" },
+  { key: "wide", label: "Wide", scope: "wide" }
+];
+var FIGMA_OVERLAY_UNAVAILABLE_MESSAGE = "\uD53C\uADF8\uB9C8 \uC624\uBC84\uB808\uC774 \uB514\uBC84\uAE45\uC774 \uC548\uB418\uB294 \uD574\uC0C1\uB3C4";
+var FIGMA_TOKEN_STORAGE_KEY = "figma-token";
+var REVIEW_USER_ID_STORAGE_KEY = "user-id";
+var REVIEW_THEME_STORAGE_KEY = "df-review-theme";
+var DEFAULT_REVIEW_THEME = "dark";
+var FIGMA_TOKEN_GUIDE_ID = "df-review-figma-token-guide";
+var DEFAULT_INITIAL_REVIEW_PROMPT = "You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, DOM metadata, coordinates, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.";
+var REVIEW_THEME_OPTIONS = [
+  { value: "dark", label: "Dark" },
+  { value: "light", label: "Light" },
+  { value: "system", label: "System" }
+];
 
-// src/react-shell/adapters.ts
-function normalizeReviewShellAdapters(adapters) {
-  if (Array.isArray(adapters)) {
-    const local = adapters.find((adapter) => adapter.label === "local");
-    const remote = adapters.find((adapter) => adapter.label !== "local") ?? null;
-    if (!local) {
-      throw new Error("ReviewShell requires a local adapter.");
+// src/react-shell/route.ts
+var DEFAULT_REVIEW_PATH_PREFIX = "/review";
+var normalizeReviewPathPrefix = (value) => {
+  const raw = value.trim() || DEFAULT_REVIEW_PATH_PREFIX;
+  const prefix = raw.startsWith("/") ? raw : `/${raw}`;
+  return prefix.length > 1 && prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
+};
+var normalizeTarget = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  const raw = value.trim() || "/";
+  const [path] = raw.split(/[?#]/);
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const reviewPrefix = normalizeReviewPathPrefix(reviewPathPrefix);
+  return normalized === reviewPrefix || normalized.startsWith(`${reviewPrefix}/`) ? "/" : normalized;
+};
+var getInitialTarget = (reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  if (typeof window === "undefined") return "/";
+  const target = new URLSearchParams(window.location.search).get("target");
+  return target ? normalizeTarget(target, reviewPathPrefix) : "/";
+};
+var buildTargetSrc = (target) => {
+  const url = new URL(target || "/", window.location.origin);
+  url.searchParams.set("__dfwr_target", "1");
+  return `${url.pathname}${url.search}${url.hash}`;
+};
+var getHashRoutePath = (hash) => {
+  if (!hash.startsWith("#/")) return null;
+  const [path] = hash.slice(1).split(/[?#]/);
+  try {
+    return decodeURI(path || "/");
+  } catch {
+    return path || "/";
+  }
+};
+var getFrameRouteTarget = (targetWindow, reviewPathPrefix) => {
+  const hashPath = getHashRoutePath(targetWindow.location.hash);
+  return normalizeTarget(
+    hashPath ?? targetWindow.location.pathname,
+    reviewPathPrefix
+  );
+};
+var updateShellUrl = (target, size, source) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("target", target);
+  url.searchParams.set("w", String(size.width));
+  url.searchParams.set("h", String(size.height));
+  if (source !== "local") {
+    url.searchParams.set("source", source);
+  } else {
+    url.searchParams.delete("source");
+  }
+  url.searchParams.delete("item");
+  window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+};
+var updateShellUrlForItem = (target, size, itemId, source) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("target", target);
+  url.searchParams.set("w", String(size.width));
+  url.searchParams.set("h", String(size.height));
+  url.searchParams.set("item", itemId);
+  if (source !== "local") {
+    url.searchParams.set("source", source);
+  } else {
+    url.searchParams.delete("source");
+  }
+  window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+};
+var getInitialItemId = () => {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("item");
+};
+var getInitialSource = (remoteSource) => {
+  if (typeof window === "undefined" || !remoteSource) return "local";
+  return new URLSearchParams(window.location.search).get("source") === remoteSource ? remoteSource : "local";
+};
+var getItemTarget = (item, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  if (item.routeKey) return normalizeTarget(item.routeKey, reviewPathPrefix);
+  if (item.normalizedPath) {
+    return normalizeTarget(item.normalizedPath, reviewPathPrefix);
+  }
+  try {
+    return normalizeTarget(new URL(item.pageUrl).pathname, reviewPathPrefix);
+  } catch {
+    return "/";
+  }
+};
+
+// src/react-shell/viewport.ts
+var DEFAULT_REVIEW_VIEWPORT_PRESETS = [
+  { label: "Mobile", width: 390, height: 720, kind: "mobile" },
+  { label: "Tablet", width: 768, height: 1024, kind: "tablet" },
+  { label: "Desktop", width: 1440, height: 900, kind: "desktop" },
+  { label: "Wide", width: 1980, height: 1080, kind: "wide" }
+];
+var getFallbackPreset = (presets) => presets[0] ?? DEFAULT_REVIEW_VIEWPORT_PRESETS[0];
+var getViewportPresetDistance = (preset, width, height) => Math.abs(preset.width - width) + Math.abs(preset.height - height);
+var findViewportPreset = (presets, width, height) => {
+  const fallback = getFallbackPreset(presets);
+  const exact = presets.find(
+    (preset) => preset.width === width && preset.height === height
+  );
+  if (exact) return exact;
+  return presets.reduce((closest, preset) => {
+    const closestDistance = getViewportPresetDistance(closest, width, height);
+    const presetDistance = getViewportPresetDistance(preset, width, height);
+    return presetDistance < closestDistance ? preset : closest;
+  }, fallback);
+};
+var getInitialSize = (presets) => {
+  if (typeof window === "undefined") return getFallbackPreset(presets);
+  const params = new URLSearchParams(window.location.search);
+  const width = Number(params.get("w"));
+  const height = Number(params.get("h"));
+  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
+    return findViewportPreset(presets, width, height);
+  }
+  return getFallbackPreset(presets);
+};
+var getRestoredSize = (item, presets) => findViewportPreset(
+  presets,
+  Math.max(
+    240,
+    Math.round(item.viewport?.width ?? getFallbackPreset(presets).width)
+  ),
+  Math.max(
+    320,
+    Math.round(item.viewport?.height ?? getFallbackPreset(presets).height)
+  )
+);
+var getViewportPresetKind = (preset) => {
+  if (preset.kind) return preset.kind;
+  const label = preset.label.toLowerCase();
+  if (label.includes("mobile") || label.includes("phone")) return "mobile";
+  if (label.includes("tablet") || label.includes("pad")) return "tablet";
+  if (label.includes("wide") || label.includes("1980") || label.includes("1940") || label.includes("1920")) {
+    return "wide";
+  }
+  if (label.includes("desktop")) return "desktop";
+  if (preset.width >= 1800) return "wide";
+  if (preset.width >= 1e3) return "desktop";
+  if (preset.width >= 700) return "tablet";
+  return "mobile";
+};
+var toReviewViewportPresets = (presets) => presets.map((preset) => ({
+  label: preset.label,
+  width: preset.width,
+  height: preset.height,
+  scope: getViewportPresetKind(preset)
+}));
+var getIsFigmaOverlayAvailable = (preset) => {
+  const kind = getViewportPresetKind(preset);
+  return kind === "mobile" || kind === "wide";
+};
+
+// src/react-shell/prompt/prompt.ts
+var getItemTitle = (item) => item.title || item.comment.split("\n")[0] || item.kind;
+var formatPromptViewport = (item) => `${Math.round(item.viewport?.width ?? 0)}x${Math.round(
+  item.viewport?.height ?? 0
+)}`;
+var formatPromptPoint = (point) => point ? `x=${Math.round(point.x)}, y=${Math.round(point.y)}` : "(none)";
+var formatPromptSelection = (selection) => {
+  if (!selection) return "(none)";
+  const x = "x" in selection ? selection.x : selection.left;
+  const y = "y" in selection ? selection.y : selection.top;
+  return `x=${Math.round(x ?? 0)}, y=${Math.round(y ?? 0)}, width=${Math.round(
+    selection.width
+  )}, height=${Math.round(selection.height)}`;
+};
+var decodePromptHtmlEntities = (value) => value.replace(
+  /&(#\d+|#x[\da-f]+|lt|gt|quot|apos|amp);/gi,
+  (match, entity) => {
+    const normalized = entity.toLowerCase();
+    if (normalized === "lt") return "<";
+    if (normalized === "gt") return ">";
+    if (normalized === "quot") return '"';
+    if (normalized === "apos") return "'";
+    if (normalized === "amp") return "&";
+    const codePoint = normalized.startsWith("#x") ? Number.parseInt(normalized.slice(2), 16) : Number.parseInt(normalized.slice(1), 10);
+    return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+  }
+);
+var getPromptAnchorCandidates = (item) => {
+  const anchor = item.anchor;
+  if (!anchor) return [];
+  const seen = /* @__PURE__ */ new Set();
+  return [anchor, ...anchor.candidates ?? []].filter((candidate) => {
+    const key = `${candidate.strategy}:${candidate.selector}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+var formatPromptSourceHint = (item) => {
+  const source = item.anchor?.source;
+  if (!source) return "(none)";
+  return [
+    `Component: ${source.component ?? "(unknown)"}`,
+    `File: ${source.file ?? "(unknown)"}`,
+    `Section index: ${source.sectionIndex ?? "(unknown)"}`,
+    `Section id: ${source.sectionId ?? "(none)"}`
+  ].join("\n");
+};
+var buildReviewItemPrompt = (numberedItem, reviewPathPrefix) => {
+  const { item } = numberedItem;
+  const anchor = item.anchor;
+  const candidates = getPromptAnchorCandidates(item);
+  const candidateLines = candidates.length > 0 ? candidates.map((candidate, index) => {
+    const confidence = typeof candidate.confidence === "number" ? `, confidence=${Math.round(candidate.confidence * 100)}%` : "";
+    const fingerprint = candidate.textFingerprint ? `, text="${candidate.textFingerprint}"` : "";
+    return `${index + 1}. ${candidate.selector} (${candidate.strategy}${confidence}${fingerprint})`;
+  }).join("\n") : "(none)";
+  return [
+    "Fix this df-web-review-kit QA issue.",
+    "",
+    `Page: ${getItemTarget(item, reviewPathPrefix)}`,
+    `URL: ${item.originalUrl ?? item.pageUrl}`,
+    `QA item: ${numberedItem.displayLabel}`,
+    `Viewport: ${numberedItem.label} ${formatPromptViewport(item)}`,
+    `Scroll: ${formatPromptPoint(item.scroll)}`,
+    "",
+    "Target:",
+    `Primary selector: ${anchor?.selector ?? "(missing)"}`,
+    `Primary strategy: ${anchor?.strategy ?? "(missing)"}`,
+    `Text fingerprint: ${anchor?.textFingerprint ?? "(none)"}`,
+    "Selector candidates:",
+    candidateLines,
+    "",
+    "Source hint:",
+    formatPromptSourceHint(item),
+    "",
+    `Marker: ${formatPromptPoint(item.marker?.viewport)}`,
+    `Marker relative: ${formatPromptPoint(item.marker?.relative)}`,
+    `Selection: ${formatPromptSelection(item.selection?.viewport)}`,
+    `Selection relative: ${formatPromptSelection(item.selection?.relative)}`,
+    "",
+    "Element HTML snippet:",
+    "```html",
+    anchor?.htmlSnippet ? decodePromptHtmlEntities(anchor.htmlSnippet) : "(not available)",
+    "```",
+    "",
+    "Issue:",
+    item.comment,
+    "",
+    "Request:",
+    "Find the target element with the selector candidates above and apply the smallest UI/CSS/code change that fixes this QA issue. If the selector is missing because CSR or hydration has not finished, wait for the page to load and use the Source hint first. Preserve unrelated layout and behavior."
+  ].join("\n");
+};
+var getPromptLengthLabel = (value) => {
+  const length = value.length;
+  if (length <= 2e3) return `${length} chars / Discord 2,000 OK`;
+  if (length <= 4e3) return `${length} chars / Nitro 4,000 OK`;
+  return `${length} chars / attach as file`;
+};
+
+// src/react-shell/prompt/modal.tsx
+import { jsx, jsxs } from "react/jsx-runtime";
+var ABOUT_SECTIONS = [
+  {
+    title: "What this is",
+    body: "df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool."
+  },
+  {
+    title: "How to setup",
+    body: "Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration."
+  },
+  {
+    title: "Figma token",
+    body: "Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration."
+  },
+  {
+    title: "User ID",
+    body: "Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route."
+  },
+  {
+    title: "Remote",
+    body: "Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or \uB2F4\uB2F9 \uAC1C\uBC1C\uC790 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser."
+  }
+];
+var PromptModal = ({
+  initialPromptText,
+  copiedPromptKey,
+  onClose,
+  onCopyPrompt
+}) => {
+  return /* @__PURE__ */ jsxs(
+    "div",
+    {
+      "aria-label": "Review help",
+      "aria-modal": "true",
+      className: "df-review-prompt-modal",
+      role: "dialog",
+      children: [
+        /* @__PURE__ */ jsx(
+          "button",
+          {
+            "aria-label": "Close help",
+            className: "df-review-prompt-backdrop",
+            type: "button",
+            onClick: onClose
+          }
+        ),
+        /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-dialog", children: [
+          /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-header", children: [
+            /* @__PURE__ */ jsxs("div", { children: [
+              /* @__PURE__ */ jsx("strong", { children: "Review shell help" }),
+              /* @__PURE__ */ jsx("span", { children: "About / Initial prompt" })
+            ] }),
+            /* @__PURE__ */ jsx("button", { "aria-label": "Close help", type: "button", onClick: onClose, children: "x" })
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-body", children: [
+            /* @__PURE__ */ jsxs(
+              "section",
+              {
+                className: "df-review-prompt-about",
+                "aria-labelledby": "df-review-about-title",
+                children: [
+                  /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-section-header", children: [
+                    /* @__PURE__ */ jsx("strong", { id: "df-review-about-title", children: "About" }),
+                    /* @__PURE__ */ jsx("span", { children: "Program overview and setup notes" })
+                  ] }),
+                  /* @__PURE__ */ jsx("div", { className: "df-review-prompt-about-grid", children: ABOUT_SECTIONS.map((section) => /* @__PURE__ */ jsxs("article", { children: [
+                    /* @__PURE__ */ jsx("strong", { children: section.title }),
+                    /* @__PURE__ */ jsx("p", { children: section.body })
+                  ] }, section.title)) })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxs(
+              "section",
+              {
+                className: "df-review-prompt-block",
+                "aria-labelledby": "df-review-initial-prompt-title",
+                children: [
+                  /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-block-header", children: [
+                    /* @__PURE__ */ jsxs("div", { children: [
+                      /* @__PURE__ */ jsx("strong", { id: "df-review-initial-prompt-title", children: "Initial Prompt" }),
+                      /* @__PURE__ */ jsx("span", { children: getPromptLengthLabel(initialPromptText) })
+                    ] }),
+                    /* @__PURE__ */ jsxs(
+                      "button",
+                      {
+                        disabled: !initialPromptText,
+                        type: "button",
+                        onClick: () => onCopyPrompt(initialPromptText, "initial"),
+                        children: [
+                          /* @__PURE__ */ jsx(Copy, { "aria-hidden": "true" }),
+                          copiedPromptKey === "initial" ? "Copied" : "Copy"
+                        ]
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsx(
+                    "textarea",
+                    {
+                      readOnly: true,
+                      "aria-label": "Initial Prompt content",
+                      value: initialPromptText || "Initial prompt is not configured."
+                    }
+                  )
+                ]
+              }
+            )
+          ] })
+        ] })
+      ]
+    }
+  );
+};
+
+// src/react-shell/settings.ts
+var normalizeReviewTheme = (value) => value === "light" || value === "system" || value === "dark" ? value : DEFAULT_REVIEW_THEME;
+var getStoredFigmaToken = () => {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(FIGMA_TOKEN_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+var writeStoredFigmaToken = (token) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (token) {
+      window.localStorage.setItem(FIGMA_TOKEN_STORAGE_KEY, token);
+    } else {
+      window.localStorage.removeItem(FIGMA_TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    return;
+  }
+};
+var getStoredReviewUserId = () => {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(REVIEW_USER_ID_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+var writeStoredReviewUserId = (userId) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (userId) {
+      window.localStorage.setItem(REVIEW_USER_ID_STORAGE_KEY, userId);
+    } else {
+      window.localStorage.removeItem(REVIEW_USER_ID_STORAGE_KEY);
+    }
+  } catch {
+    return;
+  }
+};
+var getStoredReviewTheme = () => {
+  if (typeof window === "undefined") return DEFAULT_REVIEW_THEME;
+  try {
+    return normalizeReviewTheme(
+      window.localStorage.getItem(REVIEW_THEME_STORAGE_KEY)
+    );
+  } catch {
+    return DEFAULT_REVIEW_THEME;
+  }
+};
+var writeStoredReviewTheme = (theme) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (theme === DEFAULT_REVIEW_THEME) {
+      window.localStorage.removeItem(REVIEW_THEME_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(REVIEW_THEME_STORAGE_KEY, theme);
+    }
+  } catch {
+    return;
+  }
+};
+var getSystemReviewTheme = () => {
+  if (typeof window === "undefined" || !window.matchMedia) return "dark";
+  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+};
+
+// src/react-shell/review/settings.modal.tsx
+import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
+var ReviewSettingsModal = ({
+  figmaTokenDraft,
+  reviewUserIdDraft,
+  reviewThemeDraft,
+  figmaSettingsStatus,
+  isFigmaTokenVisible,
+  isFigmaTokenGuideOpen,
+  onClose,
+  onFigmaTokenDraftChange,
+  onReviewUserIdDraftChange,
+  onReviewThemeDraftChange,
+  onClearStatus,
+  onToggleFigmaTokenVisible,
+  onToggleFigmaTokenGuide,
+  onSave
+}) => {
+  return /* @__PURE__ */ jsxs2(
+    "div",
+    {
+      "aria-label": "Review settings",
+      "aria-modal": "true",
+      className: "df-review-settings-modal",
+      role: "dialog",
+      children: [
+        /* @__PURE__ */ jsx2(
+          "button",
+          {
+            "aria-label": "Close settings",
+            className: "df-review-settings-backdrop",
+            type: "button",
+            onClick: onClose
+          }
+        ),
+        /* @__PURE__ */ jsxs2(
+          "form",
+          {
+            className: "df-review-settings-dialog",
+            onSubmit: (event) => {
+              event.preventDefault();
+              onSave(figmaTokenDraft, reviewUserIdDraft, reviewThemeDraft);
+            },
+            children: [
+              /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-header", children: [
+                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-title", children: [
+                  /* @__PURE__ */ jsx2("strong", { children: "Settings" }),
+                  /* @__PURE__ */ jsxs2("span", { children: [
+                    FIGMA_TOKEN_STORAGE_KEY,
+                    " / ",
+                    REVIEW_USER_ID_STORAGE_KEY,
+                    " /",
+                    " ",
+                    REVIEW_THEME_STORAGE_KEY
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsx2("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ jsx2("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" }) })
+              ] }),
+              /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-body", children: [
+                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-row", children: [
+                  /* @__PURE__ */ jsx2("span", { children: "Theme" }),
+                  /* @__PURE__ */ jsx2("div", { className: "df-review-settings-theme-options", children: REVIEW_THEME_OPTIONS.map((option) => /* @__PURE__ */ jsx2(
+                    "button",
+                    {
+                      "aria-pressed": reviewThemeDraft === option.value,
+                      className: `df-review-settings-theme-option${reviewThemeDraft === option.value ? " is-active" : ""}`,
+                      type: "button",
+                      onClick: () => {
+                        onReviewThemeDraftChange(normalizeReviewTheme(option.value));
+                        onClearStatus();
+                      },
+                      children: option.label
+                    },
+                    option.value
+                  )) })
+                ] }),
+                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-label-row", children: [
+                    /* @__PURE__ */ jsx2("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
+                    /* @__PURE__ */ jsx2(
+                      "button",
+                      {
+                        "aria-controls": FIGMA_TOKEN_GUIDE_ID,
+                        "aria-expanded": isFigmaTokenGuideOpen,
+                        "aria-label": "Show Figma token guide",
+                        className: `df-review-settings-help-button${isFigmaTokenGuideOpen ? " is-active" : ""}`,
+                        type: "button",
+                        onClick: onToggleFigmaTokenGuide,
+                        children: /* @__PURE__ */ jsx2(CircleQuestionMark, { "aria-hidden": "true" })
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-token-input", children: [
+                    /* @__PURE__ */ jsx2(
+                      "input",
+                      {
+                        id: "df-review-figma-token",
+                        "aria-label": "Figma token",
+                        "aria-describedby": isFigmaTokenGuideOpen ? FIGMA_TOKEN_GUIDE_ID : void 0,
+                        autoCapitalize: "off",
+                        autoComplete: "off",
+                        autoCorrect: "off",
+                        className: isFigmaTokenVisible ? void 0 : "is-token-masked",
+                        "data-1p-ignore": "true",
+                        "data-lpignore": "true",
+                        inputMode: "text",
+                        name: "df-review-figma-access-key",
+                        spellCheck: false,
+                        type: "text",
+                        value: figmaTokenDraft,
+                        onChange: (event) => {
+                          onFigmaTokenDraftChange(event.target.value);
+                          onClearStatus();
+                        }
+                      }
+                    ),
+                    /* @__PURE__ */ jsx2(
+                      "button",
+                      {
+                        "aria-label": isFigmaTokenVisible ? "Hide Figma token" : "Show Figma token",
+                        className: "df-review-settings-token-toggle",
+                        type: "button",
+                        onClick: onToggleFigmaTokenVisible,
+                        children: isFigmaTokenVisible ? /* @__PURE__ */ jsx2(EyeOff, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx2(Eye, { "aria-hidden": "true" })
+                      }
+                    )
+                  ] }),
+                  isFigmaTokenGuideOpen && /* @__PURE__ */ jsx2(
+                    "div",
+                    {
+                      className: "df-review-settings-guide",
+                      id: FIGMA_TOKEN_GUIDE_ID,
+                      children: /* @__PURE__ */ jsxs2("ol", { children: [
+                        /* @__PURE__ */ jsx2("li", { children: "Figma file browser\uC5D0\uC11C account menu\uB97C \uC5F4\uACE0 Settings\uB85C \uC774\uB3D9" }),
+                        /* @__PURE__ */ jsx2("li", { children: "Security \uD0ED\uC758 Personal access tokens\uB85C \uC774\uB3D9" }),
+                        /* @__PURE__ */ jsx2("li", { children: "Generate new token\uC5D0\uC11C \uC774\uB984\uACFC scope\uB97C \uC815\uD55C \uB4A4 \uC0DD\uC131" }),
+                        /* @__PURE__ */ jsx2("li", { children: "\uC0DD\uC131\uB41C token\uC744 \uBCF5\uC0AC\uD574\uC11C \uC5EC\uAE30\uC5D0 \uBD99\uC5EC\uB123\uAE30" })
+                      ] })
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxs2("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ jsx2("span", { children: "User ID" }),
+                  /* @__PURE__ */ jsx2("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ jsx2(
+                    "input",
+                    {
+                      "aria-label": "Review user ID",
+                      autoComplete: "off",
+                      spellCheck: false,
+                      type: "text",
+                      value: reviewUserIdDraft,
+                      onChange: (event) => {
+                        onReviewUserIdDraftChange(event.target.value);
+                        onClearStatus();
+                      }
+                    }
+                  ) })
+                ] }),
+                figmaSettingsStatus && /* @__PURE__ */ jsx2("p", { className: "df-review-settings-status", children: figmaSettingsStatus }),
+                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-actions", children: [
+                  /* @__PURE__ */ jsx2(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => onSave("", "", DEFAULT_REVIEW_THEME),
+                      children: "Clear"
+                    }
+                  ),
+                  /* @__PURE__ */ jsx2("span", {}),
+                  /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, children: "Cancel" }),
+                  /* @__PURE__ */ jsx2("button", { type: "submit", children: "Save" })
+                ] })
+              ] })
+            ]
+          }
+        )
+      ]
+    }
+  );
+};
+
+// src/react-shell/sitemap/tree.ts
+var EMPTY_SITEMAP_QA_COUNT = {
+  local: 0,
+  remote: 0
+};
+var normalizeSitemapHref = (href) => {
+  const [path = "/"] = href.split(/[?#]/);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return normalizedPath || "/";
+};
+var getSitemapSegments = (href) => normalizeSitemapHref(href).split("/").map((segment) => segment.trim()).filter(Boolean);
+var createSitemapNode = (href, label, isPage = false) => ({
+  href,
+  label,
+  isPage,
+  children: /* @__PURE__ */ new Map()
+});
+var mergeSitemapUsers = (users) => {
+  const userByKey = /* @__PURE__ */ new Map();
+  users.forEach((user) => {
+    const key = user.sessionId || user.userId;
+    const currentUser = userByKey.get(key);
+    if (!currentUser || Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)) {
+      userByKey.set(key, user);
+    }
+  });
+  return Array.from(userByKey.values());
+};
+var addSitemapQaCounts = (first, second) => ({
+  local: first.local + second.local,
+  remote: first.remote + second.remote
+});
+var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget) => {
+  const root = createSitemapNode("/", "/", false);
+  pages.forEach((page) => {
+    const pageHref = page.href.startsWith("/") ? page.href : `/${page.href}`;
+    const pathHref = normalizeSitemapHref(pageHref);
+    const segments = getSitemapSegments(pathHref);
+    if (segments.length === 0) {
+      root.href = pageHref;
+      root.isPage = true;
+      return;
+    }
+    let parent = root;
+    segments.forEach((segment, segmentIndex) => {
+      const isLastSegment = segmentIndex === segments.length - 1;
+      const segmentPath = `/${segments.slice(0, segmentIndex + 1).join("/")}`;
+      const segmentHref = isLastSegment ? pageHref : `${segmentPath}/`;
+      const segmentLabel = `${segment}${!isLastSegment || pathHref.endsWith("/") ? "/" : ""}`;
+      const existingNode = parent.children.get(segment);
+      const node = existingNode ?? createSitemapNode(segmentHref, segmentLabel, false);
+      node.href = isLastSegment ? pageHref : node.href;
+      node.label = isLastSegment ? segmentLabel : node.label;
+      node.isPage = node.isPage || isLastSegment;
+      parent.children.set(segment, node);
+      parent = node;
+    });
+  });
+  const getDirectCount = (node) => {
+    if (!node.isPage) return EMPTY_SITEMAP_QA_COUNT;
+    return pageQaCounts.get(getPageTarget(node.href)) ?? EMPTY_SITEMAP_QA_COUNT;
+  };
+  const getDirectUsers = (node) => {
+    if (!node.isPage) return [];
+    return pagePresenceUsers.get(getPageTarget(node.href)) ?? [];
+  };
+  const rows = [];
+  const appendNodeRows = (node, depth, ancestorLastList, isLastNode) => {
+    const children = Array.from(node.children.values());
+    const directCount = getDirectCount(node);
+    const directUsers = getDirectUsers(node);
+    let rowIndex = null;
+    if (node.isPage || depth > 0) {
+      const prefix = depth === 0 ? "" : `${ancestorLastList.map((isLast) => isLast ? "   " : "\u2502  ").join("")}${isLastNode ? "\u2514\u2500 " : "\u251C\u2500 "}`;
+      const pageTarget = node.isPage ? getPageTarget(node.href) : null;
+      rowIndex = rows.length;
+      rows.push({
+        href: node.href,
+        label: node.label,
+        prefix,
+        isPage: node.isPage,
+        isActive: pageTarget === activeRoute,
+        qaCount: directCount,
+        users: directUsers
+      });
+    }
+    const childAggregate = children.reduce(
+      (aggregate, child, childIndex) => {
+        const childResult = appendNodeRows(
+          child,
+          depth + 1,
+          depth === 0 ? [] : [...ancestorLastList, isLastNode],
+          childIndex === children.length - 1
+        );
+        return {
+          count: addSitemapQaCounts(aggregate.count, childResult.count),
+          users: mergeSitemapUsers([...aggregate.users, ...childResult.users])
+        };
+      },
+      { count: EMPTY_SITEMAP_QA_COUNT, users: [] }
+    );
+    if (rowIndex !== null && !node.isPage) {
+      rows[rowIndex] = {
+        ...rows[rowIndex],
+        qaCount: childAggregate.count,
+        users: childAggregate.users
+      };
     }
     return {
-      local: normalizeShellAdapter(local),
-      remote: remote ? normalizeShellAdapter(remote) : null
+      count: node.isPage ? addSitemapQaCounts(directCount, childAggregate.count) : childAggregate.count,
+      users: mergeSitemapUsers([...directUsers, ...childAggregate.users])
+    };
+  };
+  if (root.isPage) {
+    const directCount = getDirectCount(root);
+    const directUsers = getDirectUsers(root);
+    rows.push({
+      href: root.href,
+      label: root.label,
+      prefix: "",
+      isPage: true,
+      isActive: getPageTarget(root.href) === activeRoute,
+      qaCount: directCount,
+      users: directUsers
+    });
+  }
+  Array.from(root.children.values()).forEach((node, index, siblings) => {
+    appendNodeRows(node, 1, [], index === siblings.length - 1);
+  });
+  return rows;
+};
+
+// src/react-shell/sitemap/modal.tsx
+import { Fragment, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
+var SitemapModal = ({
+  pages,
+  activeRoute,
+  pageQaCounts,
+  pagePresenceUsers,
+  getPageTarget,
+  onClose,
+  onSelectPage
+}) => {
+  const sitemapRows = createSitemapRows(
+    pages,
+    activeRoute,
+    pageQaCounts,
+    pagePresenceUsers,
+    getPageTarget
+  );
+  return /* @__PURE__ */ jsxs3(
+    "div",
+    {
+      "aria-label": "Sitemap",
+      "aria-modal": "true",
+      className: "df-review-sitemap-modal",
+      role: "dialog",
+      children: [
+        /* @__PURE__ */ jsx3(
+          "button",
+          {
+            "aria-label": "Close sitemap",
+            className: "df-review-sitemap-backdrop",
+            type: "button",
+            onClick: onClose
+          }
+        ),
+        /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-dialog", children: [
+          /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-header", children: [
+            /* @__PURE__ */ jsxs3("div", { children: [
+              /* @__PURE__ */ jsx3("strong", { children: "Sitemap" }),
+              /* @__PURE__ */ jsxs3("span", { children: [
+                pages.length,
+                " pages"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsx3("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
+          ] }),
+          /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-list", children: [
+            /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-table-head", "aria-hidden": "true", children: [
+              /* @__PURE__ */ jsx3("span", { children: "Page" }),
+              /* @__PURE__ */ jsx3("span", { children: "Local" }),
+              /* @__PURE__ */ jsx3("span", { children: "Remote" }),
+              /* @__PURE__ */ jsx3("span", { children: "Online" })
+            ] }),
+            sitemapRows.map((row) => {
+              const rowClassName = [
+                "df-review-sitemap-row",
+                row.isPage ? "is-page" : "is-folder",
+                row.isActive ? "is-active" : ""
+              ].filter(Boolean).join(" ");
+              const rowContent = /* @__PURE__ */ jsxs3(Fragment, { children: [
+                /* @__PURE__ */ jsxs3("span", { className: "df-review-sitemap-path", children: [
+                  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-tree-prefix", children: row.prefix }),
+                  /* @__PURE__ */ jsx3("span", { children: row.label })
+                ] }),
+                /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-local", children: row.qaCount.local }),
+                /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-remote", children: row.qaCount.remote }),
+                /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-online", children: row.users.length > 0 ? /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-users", children: row.users.map((user) => /* @__PURE__ */ jsx3(
+                  "span",
+                  {
+                    className: "df-review-sitemap-user",
+                    style: {
+                      "--df-review-presence-color": user.color
+                    },
+                    children: user.userId
+                  },
+                  user.sessionId
+                )) }) : /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
+              ] });
+              if (!row.isPage) {
+                return /* @__PURE__ */ jsx3(
+                  "div",
+                  {
+                    "aria-label": `${row.href} group / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                    className: rowClassName,
+                    role: "row",
+                    children: rowContent
+                  },
+                  row.href
+                );
+              }
+              return /* @__PURE__ */ jsx3(
+                "button",
+                {
+                  "aria-label": `${row.href} / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                  className: rowClassName,
+                  type: "button",
+                  onClick: () => onSelectPage(row.href),
+                  children: rowContent
+                },
+                row.href
+              );
+            })
+          ] })
+        ] })
+      ]
+    }
+  );
+};
+
+// src/react-shell/qa/item.remote.actions.tsx
+import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
+var QaItemRemoteActions = ({
+  isRemoteSource,
+  isSubmitted,
+  isSubmitting,
+  item,
+  numberedItem,
+  remoteAdapterEntry,
+  onSubmitItem
+}) => {
+  const canSubmitToRemote = !isRemoteSource && Boolean(remoteAdapterEntry);
+  const canOpenRemoteIssue = !isRemoteSource && Boolean(item.externalIssueUrl);
+  const hasRemoteActions = canSubmitToRemote || canOpenRemoteIssue;
+  if (!hasRemoteActions) return null;
+  return /* @__PURE__ */ jsxs4(
+    "div",
+    {
+      className: "df-review-item-remote-actions",
+      onClick: (event) => event.stopPropagation(),
+      children: [
+        canSubmitToRemote && remoteAdapterEntry && /* @__PURE__ */ jsxs4(
+          "button",
+          {
+            "aria-label": "Submit to remote",
+            className: "df-review-item-action-button df-review-item-submit-button",
+            disabled: isSubmitted || isSubmitting,
+            type: "button",
+            onClick: () => void onSubmitItem(numberedItem),
+            children: [
+              /* @__PURE__ */ jsx4(Upload, { "aria-hidden": "true" }),
+              /* @__PURE__ */ jsx4("span", { children: isSubmitted ? "Submitted" : isSubmitting ? "Submitting" : "Submit" })
+            ]
+          }
+        ),
+        canOpenRemoteIssue && /* @__PURE__ */ jsx4(
+          "a",
+          {
+            "aria-label": "Open remote issue",
+            className: "df-review-item-action-button",
+            href: item.externalIssueUrl,
+            rel: "noreferrer",
+            target: "_blank",
+            children: /* @__PURE__ */ jsx4(ExternalLink, { "aria-hidden": "true" })
+          }
+        )
+      ]
+    }
+  );
+};
+
+// src/react-shell/qa/item.status.actions.tsx
+import { jsx as jsx5 } from "react/jsx-runtime";
+var getStatusOption = (status, statusOptions) => {
+  const normalizedStatus = normalizeReviewItemStatus(status);
+  return statusOptions.find((statusOption) => statusOption.value === status) ?? statusOptions.find(
+    (statusOption) => statusOption.value === normalizedStatus
+  ) ?? statusOptions[0];
+};
+var QaItemStatusActions = ({
+  canUpdateStatus,
+  item,
+  statusOptions,
+  onChangeItemStatus
+}) => {
+  const currentStatusOption = getStatusOption(item.status, statusOptions);
+  if (!currentStatusOption) return null;
+  const statusClassName = `is-status-${normalizeReviewItemStatus(
+    currentStatusOption.value
+  )}`;
+  return /* @__PURE__ */ jsx5(
+    "div",
+    {
+      className: "df-review-item-status-actions",
+      onClick: (event) => event.stopPropagation(),
+      children: canUpdateStatus ? /* @__PURE__ */ jsx5(
+        "select",
+        {
+          "aria-label": "QA status",
+          className: `df-review-item-status-select ${statusClassName}`,
+          value: currentStatusOption.value,
+          onChange: (event) => void onChangeItemStatus(
+            item,
+            event.currentTarget.value
+          ),
+          children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx5("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
+        }
+      ) : /* @__PURE__ */ jsx5("span", { className: `df-review-item-status-badge ${statusClassName}`, children: currentStatusOption.label })
+    }
+  );
+};
+
+// src/react-shell/anchor.restore.ts
+var isAnchorRestorableReviewItem = (item) => item.scope === "dom" || item.kind === "note" && Boolean(item.anchor && item.selection);
+var queryReviewItemAnchorElement = (targetDocument, item) => {
+  const anchor = item.anchor;
+  if (!anchor || !isAnchorRestorableReviewItem(item)) return void 0;
+  const expectedRect = getReviewItemExpectedDocumentRect(item);
+  const candidates = [anchor, ...anchor.candidates ?? []].filter(
+    (candidate) => Boolean(candidate.selector)
+  );
+  const matches = [];
+  candidates.forEach((candidate, index) => {
+    try {
+      targetDocument.querySelectorAll(candidate.selector).forEach((element) => {
+        if (!isScrollableReviewAnchorElement(element)) return;
+        matches.push({
+          element,
+          score: getReviewAnchorMatchScore(
+            element,
+            expectedRect,
+            candidate.textFingerprint ?? anchor.textFingerprint,
+            index
+          )
+        });
+      });
+    } catch {
+      return;
+    }
+  });
+  return matches.sort((a, b) => a.score - b.score)[0]?.element;
+};
+var getReviewItemRestoreScrollPosition = (targetWindow, targetDocument, item, anchorElement) => {
+  if (anchorElement) {
+    const rect = anchorElement.getBoundingClientRect();
+    return clampDocumentScrollPosition(targetDocument, {
+      left: targetWindow.scrollX + rect.left - Math.max(0, (targetWindow.innerWidth - rect.width) / 2),
+      top: targetWindow.scrollY + rect.top - Math.max(0, (targetWindow.innerHeight - rect.height) / 2)
+    });
+  }
+  return clampDocumentScrollPosition(targetDocument, {
+    left: item.scroll?.x ?? 0,
+    top: item.scroll?.y ?? 0
+  });
+};
+var setDocumentScrollInstantly = (targetWindow, targetDocument, position) => {
+  const scrollElement = targetDocument.scrollingElement;
+  if (scrollElement) {
+    scrollElement.scrollLeft = position.left;
+    scrollElement.scrollTop = position.top;
+    return;
+  }
+  targetWindow.scrollTo(position.left, position.top);
+};
+var getReviewItemExpectedDocumentRect = (item) => {
+  const scroll = item.scroll ?? { x: 0, y: 0 };
+  const selection = item.selection?.viewport;
+  if (selection && typeof selection.x === "number" && typeof selection.y === "number" && typeof selection.width === "number" && typeof selection.height === "number") {
+    return {
+      left: scroll.x + selection.x,
+      top: scroll.y + selection.y,
+      width: selection.width,
+      height: selection.height
     };
   }
-  return normalizeLegacyAdapterMap(adapters);
-}
-function normalizeLegacyAdapterMap(adapters) {
+  const marker = item.marker?.viewport;
+  if (marker && typeof marker.x === "number" && typeof marker.y === "number") {
+    return {
+      left: scroll.x + marker.x,
+      top: scroll.y + marker.y,
+      width: 1,
+      height: 1
+    };
+  }
+  return void 0;
+};
+var getReviewAnchorMatchScore = (element, expectedRect, textFingerprint, candidateIndex) => {
+  const rect = getElementDocumentRect(element);
+  let score = candidateIndex * 25;
+  if (expectedRect) {
+    score += Math.abs(rect.top - expectedRect.top);
+    score += Math.abs(rect.left - expectedRect.left) * 0.25;
+    score += Math.abs(rect.width - expectedRect.width) * 0.1;
+    score += Math.abs(rect.height - expectedRect.height) * 0.1;
+  }
+  if (textFingerprint) {
+    score += (1 - getReviewTextFingerprintScore(textFingerprint, element)) * 100;
+  }
+  return score;
+};
+var getElementDocumentRect = (element) => {
+  const rect = element.getBoundingClientRect();
+  const view = element.ownerDocument.defaultView;
   return {
-    local: {
-      label: "local",
-      adapter: adapters.local,
-      statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
-      updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
-      syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
-      canRemove: true
-    },
-    remote: adapters.remote ? {
-      label: "df-sheet",
-      adapter: adapters.remote,
-      statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
-      canRemove: false,
-      pageId: adapters.remotePageId
-    } : null
+    left: rect.left + (view?.scrollX ?? 0),
+    top: rect.top + (view?.scrollY ?? 0),
+    width: rect.width,
+    height: rect.height
   };
-}
-function normalizeShellAdapter(adapterConfig) {
+};
+var clampDocumentScrollPosition = (targetDocument, position) => {
+  const scrollElement = targetDocument.scrollingElement;
+  const view = targetDocument.defaultView;
+  const maxLeft = Math.max(
+    0,
+    (scrollElement?.scrollWidth ?? 0) - (view?.innerWidth ?? 0)
+  );
+  const maxTop = Math.max(
+    0,
+    (scrollElement?.scrollHeight ?? 0) - (view?.innerHeight ?? 0)
+  );
   return {
-    label: adapterConfig.label,
-    pageId: adapterConfig.pageId,
-    statusOptions: [...adapterConfig.statusOptions ?? []],
-    updateStatus: adapterConfig.updateStatus,
-    syncSubmission: adapterConfig.syncSubmission,
-    canRemove: Boolean(adapterConfig.remove),
-    adapter: {
-      get: adapterConfig.get,
-      list: adapterConfig.list,
-      create: adapterConfig.create,
-      update: async (id, patch) => {
-        const nextStatus = patch.status;
-        if (nextStatus && adapterConfig.updateStatus) {
-          const statusIndex = (adapterConfig.statusOptions ?? []).findIndex(
-            (statusOption2) => statusOption2.value === nextStatus
-          );
-          const statusOption = (adapterConfig.statusOptions ?? [])[statusIndex];
-          if (statusOption) {
-            const item2 = await adapterConfig.get(id);
-            if (!item2) throw new Error(`Review item not found: ${id}`);
-            return adapterConfig.updateStatus({
-              id,
-              item: item2,
-              status: nextStatus,
-              statusOption,
-              statusIndex
-            });
-          }
+    left: Math.min(Math.max(0, Math.round(position.left)), maxLeft),
+    top: Math.min(Math.max(0, Math.round(position.top)), maxTop)
+  };
+};
+var getReviewTextFingerprintScore = (expected, element) => {
+  const actual = element.textContent?.replace(/\s+/g, " ").trim();
+  if (!actual) return 0.5;
+  if (expected === actual) return 1;
+  if (actual.includes(expected) || expected.includes(actual)) return 0.82;
+  const expectedTokens = getReviewFingerprintTokens(expected);
+  const actualTokens = new Set(getReviewFingerprintTokens(actual));
+  if (expectedTokens.length === 0 || actualTokens.size === 0) return 0.5;
+  const matches = expectedTokens.filter((token) => actualTokens.has(token));
+  return Math.min(Math.max(matches.length / expectedTokens.length, 0.25), 0.76);
+};
+var getReviewFingerprintTokens = (value) => value.toLowerCase().split(/[\s/|,.:;()[\]{}"'`~!?<>]+/).map((token) => token.trim()).filter((token) => token.length > 1);
+var isScrollableReviewAnchorElement = (element) => {
+  const id = element.id.trim().toLowerCase();
+  if (element === element.ownerDocument.body || element === element.ownerDocument.documentElement || ["app", "main", "page", "root", "__next", "__nuxt"].includes(id)) {
+    return false;
+  }
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  const viewportHeight = element.ownerDocument.documentElement.clientHeight;
+  const scrollHeight = element.ownerDocument.documentElement.scrollHeight;
+  return !(scrollHeight > viewportHeight * 1.5 && rect.height > viewportHeight * 3);
+};
+
+// src/react-shell/review/item.icons.tsx
+import { jsx as jsx6 } from "react/jsx-runtime";
+var ReviewScopeIcon = ({ scope }) => {
+  if (scope === "mobile") return /* @__PURE__ */ jsx6(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ jsx6(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ jsx6(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ jsx6(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx6(Monitor, { "aria-hidden": "true" });
+};
+var getReviewItemMode = (item) => isAnchorRestorableReviewItem(item) ? "dom" : item.kind;
+var ReviewItemModeIcon = ({
+  mode
+}) => {
+  if (mode === "area") return /* @__PURE__ */ jsx6(Scan, { "aria-hidden": "true" });
+  if (mode === "dom") return /* @__PURE__ */ jsx6(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx6(StickyNote, { "aria-hidden": "true" });
+};
+
+// src/react-shell/qa/item.card.tsx
+import { jsx as jsx7, jsxs as jsxs5 } from "react/jsx-runtime";
+var formatItemCardDate = (value) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short"
+  }).format(date);
+};
+var QaItemCard = ({
+  activeAdapterEntry,
+  currentPresetScope,
+  getItemPresetScope,
+  isOverlayVisible,
+  isRemoteSource,
+  numberedItem,
+  remoteAdapterEntry,
+  copiedPromptKey,
+  selectedItemId,
+  onChangeItemStatus,
+  onClearSelectedItem,
+  onRemoveItem,
+  onCopyItemPrompt,
+  onRestoreReviewItem,
+  onSubmitItem,
+  onToggleItemOverlayVisibility
+}) => {
+  const { item } = numberedItem;
+  const itemMode = getReviewItemMode(item);
+  const isSubmitted = item.submitStatus === "submitted";
+  const isSubmitting = item.submitStatus === "submitting";
+  const canRemoveItem = activeAdapterEntry.canRemove && !isSubmitting && (isRemoteSource || !isSubmitted);
+  const itemComment = item.comment.trim() || getItemTitle(item);
+  const itemAuthor = item.createdBy?.trim();
+  const promptCopyKey = `qa:${item.id}`;
+  const isPromptCopied = copiedPromptKey === promptCopyKey;
+  const statusOptions = activeAdapterEntry.statusOptions;
+  const isActive = item.id === selectedItemId;
+  const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
+  const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor].filter(Boolean).join(" | ");
+  return /* @__PURE__ */ jsxs5(
+    "article",
+    {
+      className: `df-review-item-card${isActive ? " is-active" : ""}${getItemPresetScope(item) !== currentPresetScope ? " is-dim" : ""}${isOverlayVisible ? "" : " is-overlay-hidden"}`,
+      onClick: () => {
+        if (isActive) {
+          onClearSelectedItem();
+          return;
         }
-        if (!adapterConfig.syncSubmission) {
-          throw new Error(
-            `Review adapter "${adapterConfig.label}" does not support update.`
-          );
-        }
-        const item = await adapterConfig.get(id);
-        if (!item) throw new Error(`Review item not found: ${id}`);
-        return adapterConfig.syncSubmission({
-          id,
-          item,
-          patch
-        });
+        onRestoreReviewItem(item);
       },
-      remove: async (id) => {
-        if (!adapterConfig.remove) {
-          throw new Error(
-            `Review adapter "${adapterConfig.label}" does not support remove.`
-          );
-        }
-        return adapterConfig.remove(id);
+      children: [
+        /* @__PURE__ */ jsxs5("div", { className: "df-review-item-header", children: [
+          /* @__PURE__ */ jsxs5("div", { className: "df-review-item-main", children: [
+            /* @__PURE__ */ jsxs5("span", { className: "df-review-item-badges", children: [
+              /* @__PURE__ */ jsx7("span", { className: "df-review-item-id", children: numberedItem.displayLabel }),
+              /* @__PURE__ */ jsxs5(
+                "span",
+                {
+                  className: `df-review-item-scope is-scope-${numberedItem.scope}`,
+                  children: [
+                    /* @__PURE__ */ jsx7(ReviewScopeIcon, { scope: numberedItem.scope }),
+                    numberedItem.label
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxs5("span", { className: `df-review-item-mode is-mode-${itemMode}`, children: [
+                /* @__PURE__ */ jsx7(ReviewItemModeIcon, { mode: itemMode }),
+                itemMode
+              ] })
+            ] }),
+            /* @__PURE__ */ jsx7("strong", { className: "df-review-item-comment", children: itemComment }),
+            /* @__PURE__ */ jsx7("small", { className: "df-review-item-meta", children: itemMeta }),
+            item.submitError && /* @__PURE__ */ jsx7("small", { className: "df-review-item-error", children: item.submitError })
+          ] }),
+          /* @__PURE__ */ jsxs5(
+            "div",
+            {
+              className: "df-review-item-header-actions",
+              onClick: (event) => event.stopPropagation(),
+              children: [
+                /* @__PURE__ */ jsx7(
+                  "button",
+                  {
+                    "aria-label": isOverlayVisible ? "Hide QA overlay" : "Show QA overlay",
+                    className: `df-review-item-visibility${isOverlayVisible ? " is-visible" : " is-hidden"}`,
+                    type: "button",
+                    onClick: () => onToggleItemOverlayVisibility(item.id),
+                    children: isOverlayVisible ? /* @__PURE__ */ jsx7(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx7(EyeOff, { "aria-hidden": "true" })
+                  }
+                ),
+                /* @__PURE__ */ jsx7(
+                  "button",
+                  {
+                    "aria-label": isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
+                    className: `df-review-item-prompt-copy${isPromptCopied ? " is-copied" : ""}`,
+                    title: isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
+                    type: "button",
+                    onClick: () => onCopyItemPrompt(numberedItem),
+                    children: /* @__PURE__ */ jsx7(Copy, { "aria-hidden": "true" })
+                  }
+                ),
+                canRemoveItem && /* @__PURE__ */ jsx7(
+                  "button",
+                  {
+                    "aria-label": "Delete QA",
+                    className: "df-review-item-delete",
+                    type: "button",
+                    onClick: () => void onRemoveItem(item),
+                    children: /* @__PURE__ */ jsx7(X, { "aria-hidden": "true" })
+                  }
+                )
+              ]
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs5("div", { className: "df-review-item-actions", children: [
+          /* @__PURE__ */ jsx7(
+            QaItemStatusActions,
+            {
+              canUpdateStatus,
+              item,
+              statusOptions,
+              onChangeItemStatus
+            }
+          ),
+          /* @__PURE__ */ jsx7(
+            QaItemRemoteActions,
+            {
+              isRemoteSource,
+              isSubmitted,
+              isSubmitting,
+              item,
+              numberedItem,
+              remoteAdapterEntry,
+              onSubmitItem
+            }
+          )
+        ] })
+      ]
+    }
+  );
+};
+
+// src/react-shell/presence/row.tsx
+import { jsx as jsx8, jsxs as jsxs6 } from "react/jsx-runtime";
+var PresenceRow = ({
+  presenceSessionId,
+  users
+}) => {
+  if (users.length === 0) return null;
+  return /* @__PURE__ */ jsxs6("div", { "aria-label": "Review presence", className: "df-review-presence-row", children: [
+    /* @__PURE__ */ jsxs6("span", { className: "df-review-presence-label", children: [
+      /* @__PURE__ */ jsx8(Users, { "aria-hidden": "true" }),
+      "online ",
+      users.length
+    ] }),
+    /* @__PURE__ */ jsx8("div", { className: "df-review-presence-list", children: users.map((user) => /* @__PURE__ */ jsxs6(
+      "span",
+      {
+        className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
+        style: {
+          "--df-review-presence-color": user.color
+        },
+        children: [
+          /* @__PURE__ */ jsx8("span", { className: "df-review-presence-dot", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsx8("span", { className: "df-review-presence-name", children: user.userId })
+        ]
+      },
+      user.sessionId
+    )) })
+  ] });
+};
+
+// src/react-shell/qa/panel.header.tsx
+import { jsx as jsx9, jsxs as jsxs7 } from "react/jsx-runtime";
+var QaPanelHeader = ({
+  activeItemCount,
+  currentPagePresenceUsers,
+  filteredItemCount,
+  label,
+  presenceSessionId,
+  qaFilter,
+  qaFilterCounts,
+  showSourceSelect,
+  source,
+  sourceEntries,
+  onChangeReviewSource,
+  onQaFilterChange,
+  onRefreshReviewData
+}) => {
+  return /* @__PURE__ */ jsxs7("div", { className: "df-review-list-header", children: [
+    /* @__PURE__ */ jsxs7("div", { className: "df-review-list-toolbar", children: [
+      /* @__PURE__ */ jsxs7("div", { className: "df-review-list-controls", children: [
+        showSourceSelect && /* @__PURE__ */ jsx9(
+          "select",
+          {
+            "aria-label": "QA source",
+            className: "df-review-source-select",
+            value: source,
+            onChange: (event) => onChangeReviewSource(event.currentTarget.value),
+            children: sourceEntries.map((entry) => /* @__PURE__ */ jsx9("option", { value: entry.label, children: entry.label }, entry.label))
+          }
+        ),
+        /* @__PURE__ */ jsx9(
+          "button",
+          {
+            "aria-label": "Refresh QA",
+            className: "df-review-source-refresh",
+            type: "button",
+            onClick: () => void onRefreshReviewData(),
+            children: /* @__PURE__ */ jsx9(RefreshCw, { "aria-hidden": "true" })
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsx9("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
+        const count = qaFilterCounts.get(filter.key) ?? 0;
+        const isActive = qaFilter === filter.key;
+        return /* @__PURE__ */ jsx9(
+          "button",
+          {
+            "aria-label": `${filter.label} QA (${count})`,
+            "aria-pressed": isActive,
+            className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
+            type: "button",
+            onClick: () => onQaFilterChange(filter.key),
+            children: /* @__PURE__ */ jsx9("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ jsx9(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ jsx9(ListFilter, { "aria-hidden": "true" }) })
+          },
+          filter.key
+        );
+      }) })
+    ] }),
+    /* @__PURE__ */ jsxs7("div", { className: "df-review-list-title", children: [
+      /* @__PURE__ */ jsxs7("span", { children: [
+        label,
+        " QA"
+      ] }),
+      /* @__PURE__ */ jsxs7("strong", { children: [
+        filteredItemCount,
+        qaFilter === "all" ? "" : `/${activeItemCount}`
+      ] })
+    ] }),
+    /* @__PURE__ */ jsx9(
+      PresenceRow,
+      {
+        presenceSessionId,
+        users: currentPagePresenceUsers
       }
+    )
+  ] });
+};
+
+// src/react-shell/qa/panel.tsx
+import { jsx as jsx10, jsxs as jsxs8 } from "react/jsx-runtime";
+var ReviewQaPanel = ({
+  activeAdapterEntry,
+  activeItems,
+  currentPagePresenceUsers,
+  currentPresetScope,
+  filteredNumberedActiveItems,
+  getItemPresetScope,
+  hiddenOverlayItemIds,
+  isListVisible,
+  isRemoteSource,
+  presenceSessionId,
+  copiedPromptKey,
+  qaFilter,
+  qaFilterCounts,
+  remoteAdapterEntry,
+  selectedItemId,
+  showSourceSelect,
+  source,
+  sourceEntries,
+  onChangeItemStatus,
+  onClearSelectedItem,
+  onChangeReviewSource,
+  onCopyItemPrompt,
+  onQaFilterChange,
+  onRefreshReviewData,
+  onRemoveItem,
+  onRestoreReviewItem,
+  onSubmitItem,
+  onToggleItemOverlayVisibility
+}) => {
+  return /* @__PURE__ */ jsx10("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: /* @__PURE__ */ jsx10("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs8("section", { className: "df-review-item-list", children: [
+    /* @__PURE__ */ jsx10(
+      QaPanelHeader,
+      {
+        activeItemCount: activeItems.length,
+        currentPagePresenceUsers,
+        filteredItemCount: filteredNumberedActiveItems.length,
+        label: activeAdapterEntry.label,
+        presenceSessionId,
+        qaFilter,
+        qaFilterCounts,
+        showSourceSelect,
+        source,
+        sourceEntries,
+        onChangeReviewSource,
+        onQaFilterChange,
+        onRefreshReviewData
+      }
+    ),
+    /* @__PURE__ */ jsxs8(
+      "div",
+      {
+        className: "df-review-list-scroll",
+        onClick: (event) => {
+          if (event.target === event.currentTarget) {
+            onClearSelectedItem();
+          }
+        },
+        children: [
+          activeItems.length === 0 && /* @__PURE__ */ jsx10("p", { className: "df-review-empty", children: isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page." }),
+          activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx10("p", { className: "df-review-empty", children: "No QA in this filter." }),
+          filteredNumberedActiveItems.map((numberedItem) => {
+            const { item } = numberedItem;
+            return /* @__PURE__ */ jsx10(
+              QaItemCard,
+              {
+                activeAdapterEntry,
+                currentPresetScope,
+                getItemPresetScope,
+                isOverlayVisible: !hiddenOverlayItemIds.has(item.id),
+                isRemoteSource,
+                numberedItem,
+                remoteAdapterEntry,
+                copiedPromptKey,
+                selectedItemId,
+                onChangeItemStatus,
+                onClearSelectedItem,
+                onCopyItemPrompt,
+                onRemoveItem,
+                onRestoreReviewItem,
+                onSubmitItem,
+                onToggleItemOverlayVisibility
+              },
+              item.id
+            );
+          })
+        ]
+      }
+    )
+  ] }) }) });
+};
+
+// src/react-shell/review/mode.toolbar.tsx
+import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
+var ReviewModeToolbar = ({
+  canWriteAny,
+  canWriteArea,
+  canWriteDom,
+  canWriteNote,
+  mode,
+  onSetReviewMode
+}) => {
+  if (!canWriteAny) return null;
+  return /* @__PURE__ */ jsxs9("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
+    canWriteDom && /* @__PURE__ */ jsx11(
+      "button",
+      {
+        "aria-label": "Element",
+        className: `df-review-mode-button is-element${mode === "element" ? " is-active" : ""}`,
+        type: "button",
+        onClick: () => onSetReviewMode("element"),
+        children: /* @__PURE__ */ jsx11(SquareMousePointer, { "aria-hidden": "true" })
+      }
+    ),
+    canWriteDom && (canWriteNote || canWriteArea) && /* @__PURE__ */ jsx11("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
+    canWriteNote && /* @__PURE__ */ jsx11(
+      "button",
+      {
+        "aria-label": "Note",
+        className: `df-review-mode-button is-note${mode === "note" ? " is-active" : ""}`,
+        type: "button",
+        onClick: () => onSetReviewMode("note"),
+        children: /* @__PURE__ */ jsx11(StickyNote, { "aria-hidden": "true" })
+      }
+    ),
+    canWriteArea && /* @__PURE__ */ jsx11(
+      "button",
+      {
+        "aria-label": "Area",
+        className: `df-review-mode-button is-area${mode === "area" ? " is-active" : ""}`,
+        type: "button",
+        onClick: () => onSetReviewMode("area"),
+        children: /* @__PURE__ */ jsx11(Scan, { "aria-hidden": "true" })
+      }
+    )
+  ] });
+};
+
+// src/react-shell/ruler/gutters.tsx
+import { Fragment as Fragment2, jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
+var RulerGutters = ({
+  rulerHover,
+  rulerScaleX,
+  rulerScaleY,
+  rulerUnit,
+  size
+}) => {
+  return /* @__PURE__ */ jsxs10(Fragment2, { children: [
+    /* @__PURE__ */ jsx12("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsxs10(
+      "div",
+      {
+        className: "df-review-ruler-gutter is-x",
+        style: {
+          "--df-review-ruler-step-x": `${rulerScaleX * 20}px`
+        },
+        children: [
+          /* @__PURE__ */ jsxs10("div", { className: "df-review-ruler-frame-label", children: [
+            /* @__PURE__ */ jsx12("strong", { children: size.label }),
+            /* @__PURE__ */ jsxs10("span", { children: [
+              size.designWidth,
+              size.designHeight ? `x${size.designHeight}` : "",
+              rulerUnit
+            ] })
+          ] }),
+          rulerHover && /* @__PURE__ */ jsx12(
+            "div",
+            {
+              className: "df-review-ruler-coord is-x",
+              style: { left: `${rulerHover.x}px` },
+              children: Math.round(rulerHover.x / rulerScaleX)
+            }
+          )
+        ]
+      }
+    ),
+    /* @__PURE__ */ jsx12(
+      "div",
+      {
+        className: "df-review-ruler-gutter is-y",
+        style: {
+          "--df-review-ruler-step-y": `${rulerScaleY * 20}px`
+        },
+        children: rulerHover && /* @__PURE__ */ jsx12(
+          "div",
+          {
+            className: "df-review-ruler-coord is-y",
+            style: { top: `${rulerHover.y}px` },
+            children: Math.round(rulerHover.y / rulerScaleY)
+          }
+        )
+      }
+    )
+  ] });
+};
+
+// src/react-shell/ruler/overlay.tsx
+import { Fragment as Fragment3, jsx as jsx13, jsxs as jsxs11 } from "react/jsx-runtime";
+var RulerOverlay = ({
+  iframeRef,
+  isRulerDragging,
+  rulerHover,
+  rulerMeasure,
+  rulerMeasureLabel,
+  rulerOverlayRef,
+  size
+}) => {
+  return /* @__PURE__ */ jsxs11(
+    "div",
+    {
+      ref: rulerOverlayRef,
+      "aria-label": "Ruler",
+      className: `df-review-ruler-overlay${isRulerDragging ? " is-dragging" : ""}`,
+      role: "application",
+      onWheel: (event) => {
+        iframeRef.current?.contentWindow?.scrollBy(
+          event.deltaX,
+          event.deltaY
+        );
+      },
+      children: [
+        rulerHover && /* @__PURE__ */ jsxs11(Fragment3, { children: [
+          /* @__PURE__ */ jsx13(
+            "div",
+            {
+              className: "df-review-ruler-guide is-x",
+              "aria-hidden": "true",
+              style: { top: `${rulerHover.y}px` }
+            }
+          ),
+          /* @__PURE__ */ jsx13(
+            "div",
+            {
+              className: "df-review-ruler-guide is-y",
+              "aria-hidden": "true",
+              style: { left: `${rulerHover.x}px` }
+            }
+          )
+        ] }),
+        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs11(Fragment3, { children: [
+          /* @__PURE__ */ jsx13(
+            "div",
+            {
+              className: "df-review-ruler-selection",
+              "aria-hidden": "true",
+              style: {
+                left: `${rulerMeasure.left}px`,
+                top: `${rulerMeasure.top}px`,
+                width: `${rulerMeasure.width}px`,
+                height: `${rulerMeasure.height}px`
+              }
+            }
+          ),
+          /* @__PURE__ */ jsx13(
+            "div",
+            {
+              className: "df-review-ruler-label",
+              style: {
+                left: `${Math.min(
+                  Math.max(rulerMeasure.left + rulerMeasure.width + 8, 8),
+                  Math.max(8, size.width - 164)
+                )}px`,
+                top: `${Math.min(
+                  Math.max(rulerMeasure.top + rulerMeasure.height + 8, 8),
+                  Math.max(8, size.height - 34)
+                )}px`
+              },
+              children: rulerMeasureLabel
+            }
+          )
+        ] })
+      ]
+    }
+  );
+};
+
+// src/react-shell/target/frame.tsx
+import { jsx as jsx14, jsxs as jsxs12 } from "react/jsx-runtime";
+var ReviewTargetFrame = ({
+  canWriteAny,
+  canWriteArea,
+  canWriteDom,
+  canWriteNote,
+  frameScrollRef,
+  iframeRef,
+  isRulerAvailable,
+  isRulerDragging,
+  isRulerVisible,
+  mode,
+  rulerHover,
+  rulerMeasure,
+  rulerMeasureLabel,
+  rulerOverlayRef,
+  rulerScaleX,
+  rulerScaleY,
+  rulerUnit,
+  size,
+  targetSrc,
+  onLoadTarget,
+  onSetReviewMode
+}) => {
+  const showRuler = isRulerVisible && isRulerAvailable;
+  return /* @__PURE__ */ jsx14("main", { className: "df-review-stage", children: /* @__PURE__ */ jsxs12("div", { className: "df-review-frame", children: [
+    /* @__PURE__ */ jsx14("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ jsx14("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ jsxs12(
+      "div",
+      {
+        className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
+        children: [
+          showRuler && /* @__PURE__ */ jsx14(
+            RulerGutters,
+            {
+              rulerHover,
+              rulerScaleX,
+              rulerScaleY,
+              rulerUnit,
+              size
+            }
+          ),
+          /* @__PURE__ */ jsxs12(
+            "div",
+            {
+              className: "df-review-device",
+              style: {
+                width: `${size.width}px`,
+                height: `${size.height}px`,
+                minWidth: `${size.width}px`,
+                minHeight: `${size.height}px`
+              },
+              children: [
+                /* @__PURE__ */ jsx14(
+                  "iframe",
+                  {
+                    ref: iframeRef,
+                    width: size.width,
+                    height: size.height,
+                    src: targetSrc,
+                    title: "Review target",
+                    onLoad: onLoadTarget
+                  },
+                  targetSrc
+                ),
+                showRuler && /* @__PURE__ */ jsx14(
+                  RulerOverlay,
+                  {
+                    iframeRef,
+                    isRulerDragging,
+                    rulerHover,
+                    rulerMeasure,
+                    rulerMeasureLabel,
+                    rulerOverlayRef,
+                    size
+                  }
+                )
+              ]
+            }
+          )
+        ]
+      }
+    ) }) }),
+    /* @__PURE__ */ jsx14("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ jsx14(
+      ReviewModeToolbar,
+      {
+        canWriteAny,
+        canWriteArea,
+        canWriteDom,
+        canWriteNote,
+        mode,
+        onSetReviewMode
+      }
+    ) })
+  ] }) });
+};
+
+// src/react-shell/topbar.tsx
+import { jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
+var ReviewScopeIcon2 = ({ scope }) => {
+  if (scope === "mobile") return /* @__PURE__ */ jsx15(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ jsx15(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ jsx15(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ jsx15(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx15(Monitor, { "aria-hidden": "true" });
+};
+var ViewportPresetIcon = ({
+  preset
+}) => {
+  return /* @__PURE__ */ jsx15(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
+};
+var ReviewTopbar = ({
+  draftTarget,
+  copyLabel,
+  viewportPresets,
+  size,
+  presetScopeCounts,
+  isRulerAvailable,
+  isRulerVisible,
+  targetOverlayState,
+  isFigmaOverlayAvailable,
+  onDraftTargetChange,
+  onApplyTarget,
+  onOpenSitemap,
+  onCopyCurrentUrl,
+  onSizeChange,
+  onToggleRuler,
+  onToggleTargetOverlay,
+  onOpenInitialPrompt,
+  onOpenSettings
+}) => {
+  return /* @__PURE__ */ jsxs13("header", { className: "df-review-topbar", children: [
+    /* @__PURE__ */ jsxs13(
+      "form",
+      {
+        className: "df-review-address",
+        onSubmit: (event) => {
+          event.preventDefault();
+          onApplyTarget();
+        },
+        children: [
+          /* @__PURE__ */ jsx15(
+            "button",
+            {
+              "aria-label": "Open sitemap",
+              className: "df-review-sitemap-button",
+              type: "button",
+              onClick: onOpenSitemap,
+              children: /* @__PURE__ */ jsx15(Map2, { "aria-hidden": "true" })
+            }
+          ),
+          /* @__PURE__ */ jsx15(
+            "input",
+            {
+              "aria-label": "Path",
+              value: draftTarget,
+              onChange: (event) => onDraftTargetChange(event.target.value)
+            }
+          ),
+          /* @__PURE__ */ jsx15("button", { type: "submit", children: "Load" }),
+          /* @__PURE__ */ jsx15("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
+        ]
+      }
+    ),
+    /* @__PURE__ */ jsxs13("div", { className: "df-review-tools", children: [
+      /* @__PURE__ */ jsxs13("div", { className: "df-review-tool-controls", children: [
+        /* @__PURE__ */ jsx15("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ jsxs13(
+          "button",
+          {
+            className: preset.label === size.label ? "is-active" : "",
+            type: "button",
+            onClick: () => onSizeChange(preset),
+            children: [
+              /* @__PURE__ */ jsx15(ViewportPresetIcon, { preset }),
+              /* @__PURE__ */ jsx15("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ jsx15("strong", { children: preset.label }) }),
+              /* @__PURE__ */ jsx15("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
+            ]
+          },
+          preset.label
+        )) }),
+        /* @__PURE__ */ jsx15("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+        /* @__PURE__ */ jsxs13("span", { className: "df-review-active-size", children: [
+          size.width,
+          "x",
+          size.height
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs13("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
+        isRulerAvailable && /* @__PURE__ */ jsx15(
+          "button",
+          {
+            "aria-label": "Toggle ruler",
+            className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
+            type: "button",
+            onClick: onToggleRuler,
+            children: /* @__PURE__ */ jsx15(Ruler, { "aria-hidden": "true" })
+          }
+        ),
+        /* @__PURE__ */ jsx15(
+          "button",
+          {
+            "aria-label": "Toggle grid overlay",
+            className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
+            type: "button",
+            onClick: () => onToggleTargetOverlay("grid"),
+            children: /* @__PURE__ */ jsx15(LayoutGrid, { "aria-hidden": "true" })
+          }
+        ),
+        /* @__PURE__ */ jsx15(
+          "button",
+          {
+            "aria-disabled": !isFigmaOverlayAvailable,
+            "aria-label": isFigmaOverlayAvailable ? "Toggle Figma overlay" : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
+            className: `df-review-overlay-button is-figma${targetOverlayState.figma ? " is-active" : ""}${isFigmaOverlayAvailable ? "" : " is-disabled"}`,
+            type: "button",
+            onClick: () => onToggleTargetOverlay("figma"),
+            children: /* @__PURE__ */ jsx15(Image, { "aria-hidden": "true" })
+          }
+        ),
+        /* @__PURE__ */ jsx15("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+        /* @__PURE__ */ jsx15(
+          "button",
+          {
+            "aria-label": "Open initial prompt",
+            className: "df-review-overlay-button is-prompt",
+            type: "button",
+            onClick: onOpenInitialPrompt,
+            children: /* @__PURE__ */ jsx15(CircleQuestionMark, { "aria-hidden": "true" })
+          }
+        ),
+        /* @__PURE__ */ jsx15(
+          "button",
+          {
+            "aria-label": "Open settings",
+            className: "df-review-overlay-button is-settings",
+            type: "button",
+            onClick: onOpenSettings,
+            children: /* @__PURE__ */ jsx15(Settings, { "aria-hidden": "true" })
+          }
+        )
+      ] })
+    ] })
+  ] });
+};
+
+// src/react-shell/hooks/use.review.controller.ts
+import {
+  useCallback as useCallback5
+} from "react";
+
+// src/react-shell/hooks/use.review.item.restore.ts
+import {
+  useCallback
+} from "react";
+function runWithAutoScrollBehavior(targetDocument, callback) {
+  const elements = [
+    targetDocument?.documentElement,
+    targetDocument?.body
+  ].filter((element) => Boolean(element));
+  const previousValues = elements.map((element) => element.style.scrollBehavior);
+  elements.forEach((element) => {
+    element.style.scrollBehavior = "auto";
+  });
+  try {
+    callback();
+  } finally {
+    elements.forEach((element, index) => {
+      element.style.scrollBehavior = previousValues[index] ?? "";
+    });
+  }
+}
+var useReviewItemRestore = ({
+  adapter,
+  controllerRef,
+  iframeRef,
+  pendingInitialItemIdRef,
+  pendingRestoreRef,
+  reviewPathPrefix,
+  selectedItemIdRef,
+  source,
+  targetRef,
+  viewportPresets,
+  onActiveRouteChange,
+  onDraftTargetChange,
+  onSelectedItemIdChange,
+  onSizeChange,
+  onSyncTargetViewport,
+  onTargetChange
+}) => {
+  const clearSelectedItem = useCallback(() => {
+    pendingRestoreRef.current = null;
+    selectedItemIdRef.current = null;
+    onSelectedItemIdChange(null);
+    controllerRef.current?.highlightItem(void 0);
+  }, [
+    controllerRef,
+    onSelectedItemIdChange,
+    pendingRestoreRef,
+    selectedItemIdRef
+  ]);
+  const applyItemScroll = useCallback(
+    (item) => {
+      if (selectedItemIdRef.current !== item.id) return;
+      const targetWindow = iframeRef.current?.contentWindow;
+      const targetDocument = iframeRef.current?.contentDocument;
+      if (!targetWindow) return;
+      const anchorElement = targetDocument ? queryReviewItemAnchorElement(targetDocument, item) : void 0;
+      runWithAutoScrollBehavior(targetDocument ?? void 0, () => {
+        if (!targetDocument) return;
+        setDocumentScrollInstantly(
+          targetWindow,
+          targetDocument,
+          getReviewItemRestoreScrollPosition(
+            targetWindow,
+            targetDocument,
+            item,
+            anchorElement
+          )
+        );
+      });
+      onSyncTargetViewport();
+      controllerRef.current?.highlightItem(item.id);
+    },
+    [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
+  );
+  const applyPendingRestore = useCallback(() => {
+    const item = pendingRestoreRef.current;
+    if (!item) return;
+    applyItemScroll(item);
+    pendingRestoreRef.current = null;
+  }, [applyItemScroll, pendingRestoreRef]);
+  const restoreReviewItem = useCallback(
+    (item) => {
+      const nextTarget = getItemTarget(item, reviewPathPrefix);
+      const nextSize = getRestoredSize(item, viewportPresets);
+      pendingRestoreRef.current = item;
+      selectedItemIdRef.current = item.id;
+      onSelectedItemIdChange(item.id);
+      onActiveRouteChange(nextTarget);
+      onDraftTargetChange(nextTarget);
+      onSizeChange(nextSize);
+      updateShellUrlForItem(nextTarget, nextSize, item.id, source);
+      if (targetRef.current !== nextTarget) {
+        onTargetChange(nextTarget);
+        return;
+      }
+      applyPendingRestore();
+    },
+    [
+      applyPendingRestore,
+      onActiveRouteChange,
+      onDraftTargetChange,
+      onSelectedItemIdChange,
+      onSizeChange,
+      onTargetChange,
+      pendingRestoreRef,
+      reviewPathPrefix,
+      selectedItemIdRef,
+      source,
+      targetRef,
+      viewportPresets
+    ]
+  );
+  const restoreInitialItem = useCallback(async () => {
+    const itemId = pendingInitialItemIdRef.current;
+    if (!itemId) return;
+    pendingInitialItemIdRef.current = null;
+    const item = await adapter.get(itemId);
+    if (item) {
+      restoreReviewItem(item);
+    }
+  }, [adapter, pendingInitialItemIdRef, restoreReviewItem]);
+  return {
+    applyPendingRestore,
+    clearSelectedItem,
+    restoreInitialItem,
+    restoreReviewItem
+  };
+};
+
+// src/react-shell/hooks/use.review.kit.lifecycle.ts
+import {
+  useCallback as useCallback2,
+  useEffect
+} from "react";
+
+// src/react-shell/target/target.ts
+var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
+var setTargetScrollbarHidden = (targetDocument, hidden) => {
+  if (!targetDocument) return;
+  const existing = targetDocument.getElementById(HIDE_SCROLLBAR_STYLE_ID);
+  if (hidden) {
+    if (existing) return;
+    const style = targetDocument.createElement("style");
+    style.id = HIDE_SCROLLBAR_STYLE_ID;
+    style.textContent = "html{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}";
+    targetDocument.head?.appendChild(style);
+  } else {
+    existing?.remove();
+  }
+};
+var isEditableEventTarget = (event) => {
+  const path = event.composedPath?.() ?? [];
+  const element = path[0] ?? event.target;
+  if (!element || typeof element.tagName !== "string") return false;
+  const tag = element.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || element.isContentEditable === true;
+};
+var getTargetOverlayState = (targetDocument) => ({
+  grid: Boolean(
+    targetDocument?.body.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow")
+  ),
+  figma: Boolean(
+    targetDocument?.querySelector(
+      ".helper-figma-root, .helper-figma-loading-backdrop"
+    )
+  )
+});
+
+// src/react-shell/hooks/review.frame.navigation.ts
+var bindReviewFrameNavigation = ({
+  pageTargets,
+  reviewPathPrefix,
+  targetDocument,
+  targetRef,
+  targetWindow,
+  onCancelReviewMode,
+  onCloseRuler,
+  onSyncShellTarget,
+  onSyncTargetViewport
+}) => {
+  const syncRouteFromFrame = () => {
+    const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
+    if (nextTarget !== targetRef.current && !pageTargets.has(nextTarget)) {
+      return;
+    }
+    onSyncShellTarget(nextTarget);
+  };
+  const handleClick = (event) => {
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    const targetElement = event.target;
+    if (!targetElement || !("closest" in targetElement)) return;
+    const link = targetElement.closest("a[href]");
+    const href = link?.getAttribute("href");
+    const linkTarget = link?.getAttribute("target");
+    if (!href || linkTarget && linkTarget !== "_self") return;
+    const url = new URL(href, targetWindow.location.href);
+    if (url.origin !== targetWindow.location.origin) return;
+    const nextTarget = normalizeTarget(url.pathname, reviewPathPrefix);
+    if (nextTarget === targetRef.current) return;
+    event.preventDefault();
+    onSyncShellTarget(nextTarget);
+  };
+  const handleFrameKeyDown = (event) => {
+    if (event.key !== "Escape") return;
+    if (!onCancelReviewMode() && !onCloseRuler()) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const history = targetWindow.history;
+  const originalPushState = history.pushState.bind(history);
+  const originalReplaceState = history.replaceState.bind(history);
+  history.pushState = (...args) => {
+    originalPushState(...args);
+    syncRouteFromFrame();
+  };
+  history.replaceState = (...args) => {
+    originalReplaceState(...args);
+    syncRouteFromFrame();
+  };
+  syncRouteFromFrame();
+  targetWindow.addEventListener("popstate", syncRouteFromFrame);
+  targetWindow.addEventListener("hashchange", syncRouteFromFrame);
+  targetWindow.addEventListener("keydown", handleFrameKeyDown, true);
+  targetDocument.addEventListener("click", handleClick, true);
+  targetWindow.addEventListener("scroll", onSyncTargetViewport, true);
+  targetWindow.addEventListener("resize", onSyncTargetViewport);
+  return () => {
+    history.pushState = originalPushState;
+    history.replaceState = originalReplaceState;
+    targetWindow.removeEventListener("popstate", syncRouteFromFrame);
+    targetWindow.removeEventListener("hashchange", syncRouteFromFrame);
+    targetWindow.removeEventListener("keydown", handleFrameKeyDown, true);
+    targetDocument.removeEventListener("click", handleClick, true);
+    targetWindow.removeEventListener("scroll", onSyncTargetViewport, true);
+    targetWindow.removeEventListener("resize", onSyncTargetViewport);
+  };
+};
+
+// src/react-shell/hooks/review.kit.target.ts
+var getReviewKitTarget = ({
+  frameScrollRef,
+  iframeRef
+}) => {
+  const frame = iframeRef.current;
+  const frameWindow = frame?.contentWindow;
+  const frameDocument = frame?.contentDocument;
+  if (!frame || !frameWindow || !frameDocument) return void 0;
+  return {
+    window: frameWindow,
+    document: frameDocument,
+    getViewportRect: () => frame.getBoundingClientRect(),
+    getOverlayRect: () => {
+      const frameRect = frame.getBoundingClientRect();
+      const scrollRect = frameScrollRef.current?.getBoundingClientRect();
+      if (!scrollRect) return frameRect;
+      const left = Math.max(frameRect.left, scrollRect.left);
+      const top = Math.max(frameRect.top, scrollRect.top);
+      const right = Math.min(
+        frameRect.left + frameRect.width,
+        scrollRect.left + scrollRect.width
+      );
+      const bottom = Math.min(
+        frameRect.top + frameRect.height,
+        scrollRect.top + scrollRect.height
+      );
+      return {
+        left,
+        top,
+        width: Math.max(0, right - left),
+        height: Math.max(0, bottom - top)
+      };
     }
   };
-}
-
-// src/react-shell/style.ts
-var REVIEW_SHELL_STYLE_ID = "df-review-shell-style";
-function ensureReviewShellStyle() {
-  if (!document.getElementById(REVIEW_SHELL_STYLE_ID)) {
-    const style = document.createElement("style");
-    style.id = REVIEW_SHELL_STYLE_ID;
-    style.textContent = `
-	  * {
-	    box-sizing: border-box;
-	    scrollbar-color: var(--df-review-scrollbar-thumb, rgba(237, 243, 251, 0.2)) var(--df-review-scrollbar-track, rgba(237, 243, 251, 0.04));
-	    scrollbar-width: thin;
-	  }
-
-	  *::-webkit-scrollbar {
-	    width: 10px;
-	    height: 10px;
-	  }
-
-	  *::-webkit-scrollbar-track {
-	    background: var(--df-review-scrollbar-track, rgba(237, 243, 251, 0.04));
-	  }
-
-	  *::-webkit-scrollbar-thumb {
-	    border: 2px solid var(--df-review-scrollbar-border, rgba(15, 18, 24, 0.92));
-	    border-radius: var(--df-review-radius-pill);
-	    background: var(--df-review-scrollbar-thumb, rgba(237, 243, 251, 0.18));
-	  }
-
-	  *::-webkit-scrollbar-thumb:hover {
-	    background: var(--df-review-scrollbar-thumb-hover, rgba(237, 243, 251, 0.28));
-	  }
-
-	  *::-webkit-scrollbar-corner {
-	    background: transparent;
-	  }
-
-  html,
-  body,
-  #root {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-  }
-
-	  body {
-	    overflow: hidden;
-	    color-scheme: dark;
-
-	    /* df-review-token layer. Keep these names internal to review-kit. */
-	    --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	    --df-review-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-	    --df-review-font-size-3xs: 9px;
-	    --df-review-font-size-2xs: 10px;
-	    --df-review-font-size-xs: 11px;
-	    --df-review-font-size-sm: 12px;
-	    --df-review-font-size-md: 13px;
-	    --df-review-font-size-lg: 14px;
-	    --df-review-font-size-xl: 15px;
-	    --df-review-font-size-2xl: 18px;
-	    --df-review-font-weight-medium: 650;
-	    --df-review-font-weight-bold: 700;
-	    --df-review-font-weight-strong: 800;
-	    --df-review-font-weight-heavy: 900;
-	    --df-review-line-height-tight: 1.25;
-	    --df-review-line-height-base: 1.42;
-	    --df-review-line-height-relaxed: 1.55;
-	    --df-review-space-0: 0;
-	    --df-review-space-1: 4px;
-	    --df-review-space-1-5: 6px;
-	    --df-review-space-2: 8px;
-	    --df-review-space-2-5: 10px;
-	    --df-review-space-3: 12px;
-	    --df-review-space-3-5: 14px;
-	    --df-review-space-4: 16px;
-	    --df-review-space-5: 20px;
-	    --df-review-space-6: 24px;
-	    --df-review-space-8: 32px;
-	    --df-review-control-height-sm: 32px;
-	    --df-review-control-height-md: 34px;
-	    --df-review-control-height-lg: 38px;
-	    --df-review-radius-xs: 3px;
-	    --df-review-radius-sm: 6px;
-	    --df-review-radius-md: 8px;
-	    --df-review-radius-lg: 12px;
-	    --df-review-radius-pill: 999px;
-	    --df-review-color-canvas: #0f1218;
-	    --df-review-color-surface: #171c24;
-	    --df-review-color-panel: #131821;
-	    --df-review-color-panel-strong: #1b2430;
-	    --df-review-color-card: rgba(237, 243, 251, 0.035);
-	    --df-review-color-card-hover: rgba(237, 243, 251, 0.065);
-	    --df-review-color-control: #202938;
-	    --df-review-color-control-hover: #273345;
-	    --df-review-color-border: rgba(226, 233, 245, 0.14);
-	    --df-review-color-border-soft: rgba(226, 233, 245, 0.08);
-	    --df-review-color-text: #edf3fb;
-	    --df-review-color-text-muted: rgba(237, 243, 251, 0.58);
-	    --df-review-color-text-subtle: rgba(237, 243, 251, 0.42);
-	    --df-review-color-accent: #7cc7ff;
-	    --df-review-color-accent-contrast: #0f1218;
-	    --df-review-color-accent-soft: rgba(124, 199, 255, 0.12);
-	    --df-review-color-accent-hover: rgba(124, 199, 255, 0.2);
-	    --df-review-color-danger: #ff8f61;
-	    --df-review-color-danger-soft: rgba(255, 143, 97, 0.12);
-	    --df-review-color-purple: #b395ff;
-	    --df-review-color-purple-soft: rgba(179, 149, 255, 0.16);
-	    --df-review-color-note: #f3b75f;
-	    --df-review-color-note-soft: rgba(243, 183, 95, 0.14);
-	    --df-review-color-area: #63d7c7;
-	    --df-review-color-area-soft: rgba(99, 215, 199, 0.14);
-	    --df-review-color-side-rail: #111722;
-	    --df-review-color-mode-bar: rgba(15, 18, 24, 0.86);
-	    --df-review-color-chip: rgba(237, 243, 251, 0.06);
-	    --df-review-color-scrollbar-track: rgba(237, 243, 251, 0.04);
-	    --df-review-color-scrollbar-thumb: rgba(237, 243, 251, 0.18);
-	    --df-review-color-scrollbar-thumb-hover: rgba(237, 243, 251, 0.28);
-	    --df-review-color-scrollbar-border: rgba(15, 18, 24, 0.92);
-	    --df-review-color-backdrop: rgba(2, 6, 12, 0.62);
-	    --df-review-focus-ring: rgba(124, 199, 255, 0.58);
-	    --df-review-shadow-card: 0 14px 36px rgba(0, 0, 0, 0.34);
-	    --df-review-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-	    --df-review-shadow-device: 0 24px 60px rgba(0, 0, 0, 0.38);
-	    --df-review-shadow-panel: 0 18px 48px rgba(0, 0, 0, 0.38);
-	    --df-review-shadow-modal: 0 24px 70px rgba(0, 0, 0, 0.48);
-
-	    /* Semantic aliases consumed by the existing shell chrome. */
-	    --df-review-bg: var(--df-review-color-canvas);
-	    --df-review-topbar: var(--df-review-color-surface);
-	    --df-review-panel: var(--df-review-color-panel);
-	    --df-review-panel-strong: var(--df-review-color-panel-strong);
-	    --df-review-card: var(--df-review-color-card);
-	    --df-review-card-hover: var(--df-review-color-card-hover);
-	    --df-review-control: var(--df-review-color-control);
-	    --df-review-control-hover: var(--df-review-color-control-hover);
-	    --df-review-line: var(--df-review-color-border);
-	    --df-review-line-soft: var(--df-review-color-border-soft);
-	    --df-review-text: var(--df-review-color-text);
-	    --df-review-muted: var(--df-review-color-text-muted);
-	    --df-review-subtle: var(--df-review-color-text-subtle);
-	    --df-review-accent: var(--df-review-color-accent);
-	    --df-review-accent-contrast: var(--df-review-color-accent-contrast);
-	    --df-review-accent-soft: var(--df-review-color-accent-soft);
-	    --df-review-accent-hover: var(--df-review-color-accent-hover);
-	    --df-review-danger: var(--df-review-color-danger);
-	    --df-review-danger-soft: var(--df-review-color-danger-soft);
-	    --df-review-purple: var(--df-review-color-purple);
-	    --df-review-purple-soft: var(--df-review-color-purple-soft);
-	    --df-review-note: var(--df-review-color-note);
-	    --df-review-note-soft: var(--df-review-color-note-soft);
-	    --df-review-area: var(--df-review-color-area);
-	    --df-review-area-soft: var(--df-review-color-area-soft);
-	    --df-review-side-rail: var(--df-review-color-side-rail);
-	    --df-review-mode-bar: var(--df-review-color-mode-bar);
-	    --df-review-chip-bg: var(--df-review-color-chip);
-	    --df-review-scrollbar-track: var(--df-review-color-scrollbar-track);
-	    --df-review-scrollbar-thumb: var(--df-review-color-scrollbar-thumb);
-	    --df-review-scrollbar-thumb-hover: var(--df-review-color-scrollbar-thumb-hover);
-	    --df-review-scrollbar-border: var(--df-review-color-scrollbar-border);
-	    background: var(--df-review-bg);
-	    color: var(--df-review-text);
-	    font-family: var(--df-review-font-sans);
-	  }
-
-	  body.df-review-theme-light {
-	    color-scheme: light;
-	    --df-review-color-canvas: #f4f6f9;
-	    --df-review-color-surface: #ffffff;
-	    --df-review-color-panel: #ffffff;
-	    --df-review-color-panel-strong: #edf1f6;
-	    --df-review-color-card: rgba(23, 32, 44, 0.035);
-	    --df-review-color-card-hover: rgba(23, 32, 44, 0.065);
-	    --df-review-color-control: #eef2f7;
-	    --df-review-color-control-hover: #e3e9f1;
-	    --df-review-color-border: rgba(16, 24, 40, 0.14);
-	    --df-review-color-border-soft: rgba(16, 24, 40, 0.08);
-	    --df-review-color-text: #17202c;
-	    --df-review-color-text-muted: rgba(23, 32, 44, 0.62);
-	    --df-review-color-text-subtle: rgba(23, 32, 44, 0.44);
-	    --df-review-color-accent: #1769aa;
-	    --df-review-color-accent-contrast: #ffffff;
-	    --df-review-color-accent-soft: rgba(23, 105, 170, 0.1);
-	    --df-review-color-accent-hover: rgba(23, 105, 170, 0.16);
-	    --df-review-color-danger: #b94418;
-	    --df-review-color-danger-soft: rgba(185, 68, 24, 0.1);
-	    --df-review-color-purple: #6543b8;
-	    --df-review-color-purple-soft: rgba(101, 67, 184, 0.12);
-	    --df-review-color-note: #a76617;
-	    --df-review-color-note-soft: rgba(167, 102, 23, 0.12);
-	    --df-review-color-area: #087f73;
-	    --df-review-color-area-soft: rgba(8, 127, 115, 0.12);
-	    --df-review-color-side-rail: #edf1f6;
-	    --df-review-color-mode-bar: rgba(255, 255, 255, 0.9);
-	    --df-review-color-chip: rgba(23, 32, 44, 0.06);
-	    --df-review-color-scrollbar-track: rgba(23, 32, 44, 0.06);
-	    --df-review-color-scrollbar-thumb: rgba(23, 32, 44, 0.24);
-	    --df-review-color-scrollbar-thumb-hover: rgba(23, 32, 44, 0.34);
-	    --df-review-color-scrollbar-border: rgba(244, 246, 249, 0.92);
-	    --df-review-color-backdrop: rgba(15, 23, 42, 0.32);
-	    --df-review-focus-ring: rgba(23, 105, 170, 0.42);
-	    --df-review-shadow-card: 0 14px 36px rgba(15, 23, 42, 0.14);
-	    --df-review-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-	    --df-review-shadow-device: 0 24px 60px rgba(15, 23, 42, 0.18);
-	    --df-review-shadow-panel: 0 18px 48px rgba(15, 23, 42, 0.18);
-	    --df-review-shadow-modal: 0 24px 70px rgba(15, 23, 42, 0.2);
-	  }
-
-	  button,
-	  input,
-	  select,
-	  textarea {
-	    font: inherit;
-	  }
-
-  button {
-    cursor: pointer;
-  }
-
-  .df-review-shell {
-    --df-review-frame-gutter-x: var(--df-review-space-4);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 0 32px;
-    grid-template-rows: auto minmax(0, 1fr);
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    transition: grid-template-columns 160ms ease;
-  }
-
-  .df-review-shell.is-list-visible {
-    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 420px) 32px;
-  }
-
-	  .df-review-topbar {
-	    grid-column: 1;
-	    grid-row: 1;
-	    display: grid;
-	    gap: var(--df-review-space-2);
-	    container-type: inline-size;
-	    min-width: 0;
-	    padding: var(--df-review-space-3) var(--df-review-frame-gutter-x);
-	    border-bottom: 1px solid var(--df-review-line-soft);
-	    background:
-	      linear-gradient(180deg, var(--df-review-topbar), var(--df-review-panel));
-	    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.025);
-	  }
-
-		  .df-review-address {
-		    display: grid;
-		    grid-template-columns: auto minmax(160px, 1fr) auto auto;
-		    align-items: stretch;
-		    gap: var(--df-review-space-2);
-		    width: 100%;
-		    max-width: 1440px;
-		    margin: 0 auto;
-		  }
-
-  .df-review-address input {
-	    width: 100%;
-	    min-height: var(--df-review-control-height-md);
-	    border: 1px solid var(--df-review-line);
-	    border-radius: var(--df-review-radius-sm);
-	    padding: 0 11px;
-	    color: var(--df-review-text);
-	    background: var(--df-review-bg);
-	    box-shadow: var(--df-review-shadow-control);
-	    font-size: var(--df-review-font-size-md);
-	    transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
-	  }
-
-	  .df-review-address input:focus {
-	    outline: 2px solid var(--df-review-focus-ring);
-	    outline-offset: 1px;
-	  }
-
-		  .df-review-address button,
-		  .df-review-side-toggle,
-		  .df-review-presets button,
-		  .df-review-overlay-button,
-			  .df-review-mode-button,
-			  .df-review-settings-header button,
-			  .df-review-prompt-header button,
-			  .df-review-settings-actions button,
-			  .df-review-prompt-tabs button,
-			  .df-review-prompt-block-header button,
-			  .df-review-item-actions button {
-		    min-height: var(--df-review-control-height-md);
-		    border: 1px solid var(--df-review-line);
-		    border-radius: var(--df-review-radius-sm);
-		    background: var(--df-review-control);
-	    box-shadow: var(--df-review-shadow-control);
-	    color: var(--df-review-text);
-	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 700;
-	    transition: border-color 140ms ease, background 140ms ease, color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
-	  }
-
-		  .df-review-address button:hover,
-	  .df-review-side-toggle:hover,
-		  .df-review-presets button:hover,
-		  .df-review-overlay-button:hover,
-		  .df-review-mode-button:hover,
-		  .df-review-settings-header button:hover,
-		  .df-review-prompt-header button:hover,
-		  .df-review-settings-actions button:hover,
-		  .df-review-prompt-tabs button:hover,
-		  .df-review-prompt-tabs button.is-active,
-		  .df-review-prompt-block-header button:hover,
-			  .df-review-item-actions button:hover,
-		  .df-review-item-visibility:hover,
-		  .df-review-item-delete:hover,
-		  .df-review-presets button.is-active,
-			  .df-review-overlay-button.is-active,
-			  .df-review-mode-button.is-active {
-		    border-color: var(--df-review-accent);
-		    background: var(--df-review-control-hover);
-		  }
-
-	  .df-review-overlay-button.is-active,
-  .df-review-mode-button.is-active {
-    border-color: var(--df-review-accent);
-    background: var(--df-review-accent-soft);
-    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
-    color: var(--df-review-accent);
-  }
-
-  .df-review-sitemap-button {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-	    width: 38px;
-	    min-width: 38px;
-	    padding: 0;
-	    color: var(--df-review-accent);
-	  }
-
-  .df-review-sitemap-button svg,
-  .df-review-sitemap-header button svg {
-    width: 18px;
-    height: 18px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.8;
-  }
-
-  .df-review-sitemap-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: grid;
-    place-items: center;
-				    padding: 18px;
-  }
-
-	  .df-review-sitemap-backdrop {
-	    position: absolute;
-	    inset: 0;
-	    min-height: 0;
-	    border: 0;
-	    border-radius: 0;
-	    padding: 0;
-	    background: var(--df-review-color-backdrop);
-	  }
-
-  .df-review-sitemap-dialog {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-	    width: min(760px, calc(100vw - 48px));
-	    max-height: min(720px, calc(100vh - 48px));
-	    overflow: hidden;
-	    border: 1px solid var(--df-review-line);
-	    border-radius: var(--df-review-radius-lg);
-	    background: var(--df-review-panel);
-	    box-shadow: var(--df-review-shadow-modal);
-	  }
-
-  .df-review-sitemap-header {
-    display: flex;
-    align-items: center;
-	    justify-content: space-between;
-	    gap: 12px;
-	    min-height: 54px;
-	    padding: 0 14px 0 16px;
-	    border-bottom: 1px solid var(--df-review-line);
-	  }
-
-  .df-review-sitemap-header div {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    min-width: 0;
-  }
-
-  .df-review-sitemap-header strong {
-    font-size: var(--df-review-font-size-lg);
-  }
-
-	  .df-review-sitemap-header span {
-	    color: var(--df-review-muted);
-	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 700;
-	  }
-
-  .df-review-sitemap-header button {
-    display: grid;
-    place-items: center;
-	    width: 34px;
-	    min-width: 34px;
-	    min-height: var(--df-review-control-height-md);
-	    border: 1px solid var(--df-review-line);
-	    border-radius: var(--df-review-radius-sm);
-	    background: var(--df-review-control);
-	    color: var(--df-review-text);
-	    font-size: var(--df-review-font-size-md);
-	    font-weight: 800;
-	  }
-
-	  .df-review-sitemap-header button:hover {
-	    border-color: var(--df-review-accent);
-	    background: var(--df-review-control-hover);
-	  }
-
-  .df-review-sitemap-list {
-    display: grid;
-    align-content: start;
-    min-height: 0;
-    overflow: auto;
-    padding: 8px;
-  }
-
-  .df-review-sitemap-list button {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 12px;
-    min-height: 40px;
-	    border: 0;
-	    border-radius: var(--df-review-radius-sm);
-	    padding: 8px 10px;
-	    background: transparent;
-	    color: var(--df-review-text);
-	    text-align: left;
-	  }
-
-	  .df-review-sitemap-list button:hover,
-	  .df-review-sitemap-list button.is-active {
-	    background: var(--df-review-accent-soft);
-	  }
-
-	  .df-review-sitemap-path {
-	    min-width: 0;
-	    overflow-wrap: anywhere;
-	    color: var(--df-review-text);
-	    font-size: var(--df-review-font-size-md);
-	    font-weight: 800;
-	    line-height: 1.35;
-  }
-
-  .df-review-sitemap-meta {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-    min-width: 0;
-  }
-
-  .df-review-sitemap-users {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 4px;
-    min-width: 0;
-    flex-wrap: wrap;
-  }
-
-  .df-review-sitemap-user {
-    --df-review-presence-color: var(--df-review-accent);
-    display: inline-flex;
-    align-items: center;
-    min-height: 22px;
-    border: 1px solid var(--df-review-presence-color);
-    border-radius: var(--df-review-radius-pill);
-    padding: 0 7px;
-    background: var(--df-review-chip-bg);
-    color: var(--df-review-text);
-    font-size: var(--df-review-font-size-xs);
-    font-weight: 900;
-    line-height: 1.1;
-    white-space: nowrap;
-  }
-
-  .df-review-sitemap-counts {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 4px;
-    white-space: nowrap;
-  }
-
-  .df-review-sitemap-count {
-    display: inline-grid;
-	    place-items: center;
-	    min-width: 34px;
-	    height: 24px;
-	    border: 1px solid var(--df-review-line);
-	    border-radius: var(--df-review-radius-pill);
-	    padding: 0 7px;
-	    background: var(--df-review-chip-bg);
-	    color: var(--df-review-muted);
-	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 900;
-	  }
-
-  .df-review-sitemap-count.is-local {
-    border-color: var(--df-review-accent);
-    color: var(--df-review-accent);
-  }
-
-  .df-review-sitemap-count.is-remote {
-    border-color: var(--df-review-area);
-    color: var(--df-review-area);
-  }
-
-	  .df-review-sitemap-list button:hover .df-review-sitemap-path,
-	  .df-review-sitemap-list button.is-active .df-review-sitemap-path {
-	    color: var(--df-review-text);
-	  }
-
-		  .df-review-sitemap-list button:hover .df-review-sitemap-count,
-		  .df-review-sitemap-list button.is-active .df-review-sitemap-count {
-		    background: var(--df-review-accent-hover);
-		  }
-
-		  .df-review-settings-modal {
-		    position: fixed;
-		    inset: 0;
-		    z-index: 1001;
-		    display: grid;
-		    place-items: center;
-		    padding: 24px;
-		  }
-
-		  .df-review-settings-backdrop {
-		    position: absolute;
-		    inset: 0;
-		    min-height: 0;
-		    border: 0;
-		    border-radius: 0;
-		    padding: 0;
-		    background: var(--df-review-color-backdrop);
-		  }
-
-		  .df-review-settings-dialog {
-		    position: relative;
-		    z-index: 1;
-		    display: grid;
-		    width: min(460px, calc(100vw - 48px));
-		    overflow: hidden;
-		    border: 1px solid var(--df-review-line);
-		    border-radius: var(--df-review-radius-lg);
-		    background: var(--df-review-panel);
-		    box-shadow: var(--df-review-shadow-modal);
-		  }
-
-		  .df-review-settings-header {
-		    display: flex;
-		    align-items: center;
-		    justify-content: space-between;
-		    gap: 12px;
-		    min-height: 54px;
-		    padding: 0 14px 0 16px;
-		    border-bottom: 1px solid var(--df-review-line);
-		  }
-
-		  .df-review-settings-header div {
-		    display: grid;
-		    gap: 2px;
-		    min-width: 0;
-		  }
-
-		  .df-review-settings-header strong {
-		    color: var(--df-review-text);
-		    font-size: var(--df-review-font-size-lg);
-		  }
-
-		  .df-review-settings-header span {
-		    color: var(--df-review-muted);
-		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 800;
-		  }
-
-		  .df-review-settings-header button {
-		    display: grid;
-		    place-items: center;
-		    width: 34px;
-		    min-width: 34px;
-		    padding: 0;
-		    font-size: var(--df-review-font-size-md);
-		    font-weight: 800;
-		  }
-
-		  .df-review-settings-body {
-		    display: grid;
-		    gap: 12px;
-		    padding: 16px;
-		  }
-
-		  .df-review-settings-field {
-		    display: grid;
-		    gap: 7px;
-		  }
-
-		  .df-review-settings-field span,
-		  .df-review-settings-label-row label {
-		    color: var(--df-review-muted);
-		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 800;
-		  }
-
-		  .df-review-settings-label-row {
-		    display: flex;
-		    align-items: center;
-		    gap: 6px;
-		  }
-
-		  .df-review-settings-help-button {
-		    display: inline-grid;
-		    place-items: center;
-		    width: 20px;
-		    min-width: 20px;
-		    min-height: 20px;
-		    border: 1px solid var(--df-review-line-soft);
-		    border-radius: 50%;
-		    padding: 0;
-		    background: transparent;
-		    color: var(--df-review-muted);
-		  }
-
-		  .df-review-settings-help-button:hover,
-		  .df-review-settings-help-button.is-active {
-		    border-color: var(--df-review-accent);
-		    background: var(--df-review-accent-soft);
-		    color: var(--df-review-accent);
-		  }
-
-		  .df-review-settings-help-button svg {
-		    width: 13px;
-		    height: 13px;
-		    fill: none;
-		    stroke: currentColor;
-		    stroke-linecap: round;
-		    stroke-linejoin: round;
-		    stroke-width: 2.1;
-		  }
-
-			  .df-review-settings-token-input,
-			  .df-review-settings-text-input,
-			  .df-review-settings-select-input {
-			    display: grid;
-			    align-items: stretch;
-			    overflow: hidden;
-			    border: 1px solid var(--df-review-line);
-		    border-radius: var(--df-review-radius-sm);
-			    background: var(--df-review-bg);
-			  }
-
-			  .df-review-settings-token-input {
-			    grid-template-columns: minmax(0, 1fr) 38px;
-			  }
-
-			  .df-review-settings-text-input,
-			  .df-review-settings-select-input {
-			    grid-template-columns: minmax(0, 1fr);
-			  }
-
-			  .df-review-settings-token-input:focus-within,
-			  .df-review-settings-text-input:focus-within,
-			  .df-review-settings-select-input:focus-within {
-			    outline: 2px solid var(--df-review-focus-ring);
-			    outline-offset: 1px;
-			  }
-
-			  .df-review-settings-token-input input,
-			  .df-review-settings-text-input input,
-			  .df-review-settings-select-input select {
-			    min-width: 0;
-			    min-height: var(--df-review-control-height-lg);
-			    border: 0;
-		    padding: 0 10px;
-		    background: transparent;
-		    color: var(--df-review-text);
-			    font-size: var(--df-review-font-size-md);
-			  }
-
-			  .df-review-settings-token-input input:focus,
-			  .df-review-settings-text-input input:focus,
-			  .df-review-settings-select-input select:focus {
-			    outline: 0;
-			  }
-
-			  .df-review-settings-token-input input.is-token-masked {
-			    -webkit-text-security: disc;
-			  }
-
-			  .df-review-settings-select-input select {
-			    appearance: none;
-			    cursor: pointer;
-			  }
-
-		  .df-review-settings-token-toggle {
-		    display: grid;
-		    place-items: center;
-		    width: 38px;
-		    min-width: 38px;
-		    min-height: var(--df-review-control-height-lg);
-		    border: 0;
-		    border-left: 1px solid var(--df-review-line-soft);
-		    border-radius: 0;
-		    padding: 0;
-		    background: transparent;
-		    color: var(--df-review-muted);
-		  }
-
-		  .df-review-settings-token-toggle:hover {
-		    background: var(--df-review-chip-bg);
-		    color: var(--df-review-text);
-		  }
-
-		  .df-review-settings-token-toggle svg {
-		    width: 16px;
-		    height: 16px;
-		    fill: none;
-		    stroke: currentColor;
-		    stroke-linecap: round;
-		    stroke-linejoin: round;
-		    stroke-width: 2;
-		  }
-
-		  .df-review-settings-guide {
-		    margin-top: -2px;
-		    border: 1px solid var(--df-review-line-soft);
-		    border-radius: var(--df-review-radius-sm);
-		    padding: 9px 11px;
-		    background: var(--df-review-chip-bg);
-		    color: var(--df-review-muted);
-		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 700;
-		    line-height: 1.55;
-		  }
-
-		  .df-review-settings-guide ol {
-		    display: grid;
-		    gap: 3px;
-		    margin: 0;
-		    padding-left: 17px;
-		  }
-
-		  .df-review-settings-status {
-		    min-height: 20px;
-		    margin: 0;
-		    color: var(--df-review-accent);
-		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 800;
-		  }
-
-		  .df-review-settings-actions {
-		    display: grid;
-		    grid-template-columns: auto minmax(0, 1fr) auto auto;
-		    gap: 8px;
-		    align-items: center;
-		  }
-
-		  .df-review-settings-actions button {
-		    padding: 0 12px;
-		  }
-
-			  .df-review-settings-actions button[type='submit'] {
-			    border-color: var(--df-review-accent);
-			    background: var(--df-review-accent-soft);
-			    color: var(--df-review-accent);
-			  }
-
-			  .df-review-prompt-modal {
-			    position: fixed;
-			    inset: 0;
-			    z-index: 1002;
-			    display: grid;
-			    place-items: center;
-			    padding: 24px;
-			  }
-
-			  .df-review-prompt-backdrop {
-			    position: absolute;
-			    inset: 0;
-			    min-height: 0;
-			    border: 0;
-			    border-radius: 0;
-			    padding: 0;
-			    background: var(--df-review-color-backdrop);
-			  }
-
-			  .df-review-prompt-dialog {
-			    position: relative;
-			    z-index: 1;
-			    display: grid;
-			    grid-template-rows: auto minmax(0, 1fr);
-				    width: min(1040px, calc(100vw - 36px));
-				    max-height: min(900px, calc(100vh - 36px));
-			    overflow: hidden;
-			    border: 1px solid var(--df-review-line);
-			    border-radius: var(--df-review-radius-lg);
-			    background: var(--df-review-panel);
-			    box-shadow: var(--df-review-shadow-modal);
-			  }
-
-			  .df-review-prompt-header {
-			    display: flex;
-			    align-items: center;
-			    justify-content: space-between;
-			    gap: 12px;
-			    min-height: 54px;
-			    padding: 0 14px 0 16px;
-			    border-bottom: 1px solid var(--df-review-line);
-			  }
-
-			  .df-review-prompt-header div {
-			    display: grid;
-			    gap: 2px;
-			    min-width: 0;
-			  }
-
-			  .df-review-prompt-header strong {
-			    color: var(--df-review-text);
-			    font-size: var(--df-review-font-size-lg);
-			  }
-
-			  .df-review-prompt-header span {
-			    overflow: hidden;
-			    color: var(--df-review-muted);
-			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 800;
-			    text-overflow: ellipsis;
-			    white-space: nowrap;
-			  }
-
-			  .df-review-prompt-header button {
-			    display: grid;
-			    place-items: center;
-			    width: 34px;
-			    min-width: 34px;
-			    padding: 0;
-			    font-size: var(--df-review-font-size-md);
-			    font-weight: 800;
-			  }
-
-			  .df-review-prompt-body {
-			    display: grid;
-			    gap: 12px;
-			    min-height: 0;
-			    overflow: auto;
-			    padding: 16px;
-			  }
-
-			  .df-review-prompt-tabs {
-			    display: grid;
-			    grid-template-columns: repeat(2, minmax(0, 1fr));
-			    gap: 4px;
-			    padding: 3px;
-			    border: 1px solid var(--df-review-line-soft);
-			    border-radius: 7px;
-			    background: var(--df-review-line-soft);
-			  }
-
-			  .df-review-prompt-tabs button {
-			    min-width: 0;
-			    min-height: 32px;
-			    padding: 0 10px;
-			    border-color: transparent;
-			    background: transparent;
-			    color: var(--df-review-muted);
-			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 900;
-			  }
-
-			  .df-review-prompt-tabs button:hover,
-			  .df-review-prompt-tabs button.is-active {
-			    border-color: var(--df-review-line);
-			    background: var(--df-review-panel);
-			    color: var(--df-review-text);
-			  }
-
-			  .df-review-prompt-block {
-			    display: grid;
-			    gap: 8px;
-			    min-width: 0;
-			  }
-
-			  .df-review-prompt-block-header {
-			    display: flex;
-			    align-items: center;
-			    justify-content: space-between;
-			    gap: 12px;
-			    min-width: 0;
-			  }
-
-			  .df-review-prompt-block-header div {
-			    display: grid;
-			    gap: 2px;
-			    min-width: 0;
-			  }
-
-			  .df-review-prompt-block-header strong {
-			    color: var(--df-review-text);
-			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 900;
-			  }
-
-			  .df-review-prompt-block-header span {
-			    color: var(--df-review-muted);
-			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 800;
-			  }
-
-			  .df-review-prompt-block-header button {
-			    display: inline-flex;
-			    align-items: center;
-			    gap: 6px;
-			    min-height: 30px;
-			    padding: 0 10px;
-			  }
-
-			  .df-review-prompt-block-header button:disabled {
-			    cursor: not-allowed;
-			    opacity: 0.5;
-			  }
-
-			  .df-review-prompt-block-header svg {
-			    width: 13px;
-			    height: 13px;
-			    fill: none;
-			    stroke: currentColor;
-			    stroke-linecap: round;
-			    stroke-linejoin: round;
-			    stroke-width: 2;
-			  }
-
-				  .df-review-prompt-block textarea {
-				    width: 100%;
-				    height: min(520px, calc(100vh - 290px));
-				    min-height: 360px;
-				    max-height: calc(100vh - 290px);
-			    resize: vertical;
-			    border: 1px solid var(--df-review-line);
-			    border-radius: var(--df-review-radius-sm);
-			    padding: 10px;
-			    background: var(--df-review-bg);
-			    color: var(--df-review-text);
-			    font-family: var(--df-review-font-mono);
-			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 600;
-			    line-height: 1.5;
-			    white-space: pre;
-			  }
-
-			  .df-review-prompt-block textarea:focus {
-			    outline: 2px solid var(--df-review-focus-ring);
-			    outline-offset: 1px;
-			  }
-
-				  .df-review-tools {
-			    display: flex;
-			    align-items: center;
-		    justify-content: space-between;
-		    gap: 12px;
-		    width: 100%;
-		    max-width: 1440px;
-		    min-width: 0;
-		    margin: 0 auto;
-		  }
-
-		  .df-review-tool-controls {
-		    display: flex;
-		    align-items: center;
-		    justify-content: flex-start;
-		    gap: 12px;
-		    min-width: 0;
-		    flex-wrap: wrap;
-	  }
-
-		  .df-review-presets,
-		  .df-review-mode,
-	  .df-review-overlays {
-	    display: flex;
-	    align-items: center;
-	    gap: var(--df-review-space-1-5);
-	    min-height: calc(var(--df-review-control-height-lg) + 6px);
-	    padding: 3px;
-	    border: 1px solid var(--df-review-line-soft);
-	    border-radius: var(--df-review-radius-md);
-	    background: var(--df-review-card);
-	  }
-
-		  .df-review-tool-divider,
-		  .df-review-mode-divider {
-		    display: inline-flex;
-		    align-items: center;
-		    color: var(--df-review-line);
-		    font-size: var(--df-review-font-size-2xl);
-		    font-weight: 700;
-	    line-height: 1;
-		    user-select: none;
-	  }
-
-		  .df-review-active-size {
-		    flex: 0 0 auto;
-		    display: inline-flex;
-		    align-items: center;
-		    min-height: var(--df-review-control-height-lg);
-		    color: var(--df-review-muted);
-		    font-size: var(--df-review-font-size-sm);
-		    font-variant-numeric: tabular-nums;
-	    font-weight: 800;
-	    line-height: 1;
-	  }
-
-	  .df-review-presets button {
-	    display: inline-flex;
-	    align-items: center;
-    gap: 7px;
-    min-height: var(--df-review-control-height-lg);
-    padding: 0 11px 0 9px;
-    border-color: transparent;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .df-review-presets button svg {
-    width: 16px;
-    height: 16px;
-    flex: 0 0 auto;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.9;
-  }
-
-  .df-review-preset-count {
-    min-width: 16px;
-    padding: 0 5px;
-    border-radius: var(--df-review-radius-pill);
-    background: var(--df-review-line-soft);
-    color: var(--df-review-muted);
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 800;
-    line-height: 16px;
-    text-align: center;
-  }
-
-  .df-review-presets button.is-active .df-review-preset-count {
-    background: var(--df-review-accent-hover);
-    color: var(--df-review-accent);
-  }
-
-  .df-review-presets button.is-active {
-    color: var(--df-review-accent);
-    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
-  }
-
-  .df-review-preset-copy {
-    display: grid;
-    gap: 1px;
-    min-width: 0;
-    text-align: left;
-    line-height: 1.05;
-  }
-
-  .df-review-preset-copy strong {
-    color: var(--df-review-text);
-    font-size: var(--df-review-font-size-sm);
-  }
-
-	  .df-review-overlay-button,
-	  .df-review-mode-button {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-	    width: 38px;
-	    min-width: 38px;
-	    padding: 0;
-	    border-color: transparent;
-	    background: transparent;
-	    box-shadow: none;
-	    color: var(--df-review-muted);
-	  }
-
-  .df-review-overlay-button svg,
-  .df-review-mode-button svg {
-    width: 18px;
-    height: 18px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.9;
-	  }
-
-
-
-
-
-
-
-		  .df-review-overlay-button.is-settings {
-		    color: var(--df-review-muted);
-		  }
-
-		  .df-review-overlay-button.is-settings:hover {
-		    color: var(--df-review-text);
-		  }
-
-	  .df-review-overlay-button.is-disabled,
-	  .df-review-overlay-button.is-disabled:hover {
-	    cursor: not-allowed;
-	    border-color: var(--df-review-line);
-	    background: var(--df-review-line-soft);
-	    color: var(--df-review-subtle);
-	  }
-
-	  @container (max-width: 1040px) {
-	    .df-review-tools {
-	      flex-direction: column;
-	      align-items: stretch;
-	      justify-content: flex-start;
-	    }
-
-	    .df-review-tool-controls {
-	      width: 100%;
-	    }
-
-	    .df-review-presets {
-	      flex-wrap: wrap;
-	    }
-
-	    .df-review-overlays {
-	      width: 100%;
-	      justify-content: flex-start;
-	    }
-	  }
-
-	  .df-review-side-rail {
-	    grid-column: 3;
-	    grid-row: 1 / span 2;
-	    display: flex;
-	    align-items: stretch;
-	    justify-content: center;
-	    min-width: 0;
-	    min-height: 0;
-	    border-left: 1px solid var(--df-review-line);
-	    background: var(--df-review-side-rail);
-	  }
-
-  .df-review-side-toggle {
-    display: grid;
-    grid-template-rows: 28px auto;
-    align-items: start;
-    justify-items: center;
-    gap: 8px;
-    width: 100%;
-    min-height: 100%;
-    border: 0;
-	    border-radius: 0;
-	    padding: 10px 0;
-	    background: transparent;
-	    color: var(--df-review-muted);
-	  }
-
-	  .df-review-side-toggle:hover {
-	    background: var(--df-review-accent-soft);
-	    color: var(--df-review-text);
-	  }
-
-  .df-review-side-toggle span {
-    display: grid;
-    place-items: center;
-	    width: 20px;
-	    height: 24px;
-	    line-height: 1;
-	  }
-
-	  .df-review-side-toggle svg {
-	    width: 18px;
-	    height: 18px;
-	    fill: none;
-	    stroke: currentColor;
-	    stroke-linecap: round;
-	    stroke-width: 2;
-	  }
-
-  .df-review-side-toggle strong {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    color: inherit;
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
-    letter-spacing: 0.08em;
-  }
-
-	  .df-review-qa-panel {
-	    grid-column: 2;
-	    grid-row: 1 / span 2;
-	    display: grid;
-	    grid-template-rows: minmax(0, 1fr);
-	    min-width: 0;
-	    min-height: 0;
-	    overflow: hidden;
-	    border-left: 1px solid var(--df-review-line-soft);
-	    background:
-	      linear-gradient(180deg, var(--df-review-panel), var(--df-review-bg));
-	  }
-
-	  .df-review-shell:not(.is-list-visible) .df-review-qa-panel {
-	    visibility: hidden;
-	    border-left: 0;
-	  }
-
-	  .df-review-panel-body {
-	    display: grid;
-	    min-width: 0;
-	    min-height: 0;
-	    overflow: hidden;
-	  }
-
-  .df-review-item-list {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    min-width: 0;
-    min-height: 0;
-  }
-
-			  .df-review-list-header {
-			    display: grid;
-			    grid-template-rows: auto auto;
-			    gap: var(--df-review-space-2);
-			    padding: var(--df-review-space-3) var(--df-review-frame-gutter-x);
-			    border-bottom: 1px solid var(--df-review-line-soft);
-			    background: var(--df-review-card);
-			    color: var(--df-review-muted);
-			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 800;
-			  }
-
-			  .df-review-list-toolbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-  }
-
-			  .df-review-list-title {
-			    display: flex;
-			    align-items: center;
-			    gap: 8px;
-		    min-width: 0;
-		  }
-
-		  .df-review-list-title span {
-		    min-width: 0;
-		    overflow: hidden;
-		    text-overflow: ellipsis;
-		    white-space: nowrap;
-		  }
-
-		  .df-review-list-title strong {
-		    flex: 0 0 auto;
-		    color: var(--df-review-muted);
-		    font-size: var(--df-review-font-size-xs);
-		    font-variant-numeric: tabular-nums;
-		  }
-
-  .df-review-presence-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-    gap: 5px;
-    min-width: 0;
-  }
-
-  .df-review-presence-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    min-width: 0;
-    color: var(--df-review-muted);
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  .df-review-presence-label svg {
-    width: 12px;
-    height: 12px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2;
-  }
-
-  .df-review-presence-list {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    min-width: 0;
-    flex-wrap: wrap;
-  }
-
-  .df-review-presence-chip {
-    --df-review-presence-color: var(--df-review-accent);
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-width: 0;
-    flex: 0 1 auto;
-    min-height: 22px;
-    border: 1px solid var(--df-review-line-soft);
-    border-radius: var(--df-review-radius-pill);
-    padding: 0 7px;
-    color: var(--df-review-text);
-    background: var(--df-review-chip-bg);
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
-    line-height: 1.1;
-    white-space: nowrap;
-  }
-
-  .df-review-presence-chip.is-self {
-    border-color: var(--df-review-presence-color);
-    background: var(--df-review-accent-soft);
-  }
-
-  .df-review-presence-dot {
-    width: 7px;
-    min-width: 7px;
-    height: 7px;
-    border-radius: var(--df-review-radius-pill);
-    background: var(--df-review-presence-color);
-  }
-
-  .df-review-presence-name {
-    min-width: 0;
-  }
-
-		  .df-review-list-controls {
-		    display: flex;
-		    align-items: center;
-		    gap: 4px;
-		  }
-
-		  .df-review-source-select {
-		    width: 104px;
-		    min-height: 30px;
-		    border: 1px solid var(--df-review-line-soft);
-		    border-radius: var(--df-review-radius-sm);
-		    padding: 0 24px 0 8px;
-		    color: var(--df-review-text);
-		    background: var(--df-review-control);
-		    box-shadow: var(--df-review-shadow-control);
-		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 800;
-		  }
-
-		  .df-review-source-refresh {
-		    position: relative;
-		    display: inline-grid;
-		    place-items: center;
-		    width: 30px;
-		    min-width: 30px;
-		    height: 30px;
-		    border: 1px solid var(--df-review-line-soft);
-		    border-radius: var(--df-review-radius-sm);
-		    padding: 0;
-		    color: var(--df-review-muted);
-		    background: var(--df-review-control);
-		    box-shadow: var(--df-review-shadow-control);
-		  }
-
-		  .df-review-source-refresh svg {
-		    width: 14px;
-		    height: 14px;
-		  }
-
-			  .df-review-filter-tabs {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    height: 30px;
-    padding: 2px;
-    border: 1px solid var(--df-review-line-soft);
-    border-radius: var(--df-review-radius-md);
-    background: var(--df-review-card);
-    box-shadow: var(--df-review-shadow-control);
-  }
-
-				  .df-review-filter-tab {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 26px;
-    min-width: 26px;
-    height: 26px;
-    border: 0;
-    border-radius: 5px;
-    background: transparent;
-    color: var(--df-review-subtle);
-  }
-
-				  .df-review-filter-icon {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 100%;
-  }
-
-				  .df-review-filter-separator {
-				    display: block;
-				    width: 18px;
-				    height: 1px;
-				    border-radius: var(--df-review-radius-pill);
-				    background: currentColor;
-				    opacity: 0.42;
-				  }
-
-		  .df-review-filter-tab:hover,
-		  .df-review-filter-tab.is-active {
-		    background: var(--df-review-accent-soft);
-		    color: var(--df-review-text);
-		  }
-
-		  .df-review-filter-tab.is-active {
-		    box-shadow: inset 0 0 0 1px rgba(124, 199, 255, 0.42);
-		    color: var(--df-review-accent);
-		  }
-
-				  .df-review-filter-icon svg {
-				    width: 15px;
-				    height: 15px;
-		    fill: none;
-		    stroke: currentColor;
-		    stroke-linecap: round;
-		    stroke-linejoin: round;
-			    stroke-width: 2;
-			  }
-
-			  .df-review-filter-count {
-			    color: currentColor;
-			    font-size: var(--df-review-font-size-3xs);
-			    font-weight: 900;
-			    font-variant-numeric: tabular-nums;
-			    line-height: 1;
-			  }
-
-  .df-review-list-scroll {
-    display: grid;
-    align-content: start;
-    gap: var(--df-review-space-2);
-    min-height: 0;
-    overflow: auto;
-    padding: var(--df-review-space-2);
-  }
-
-	  .df-review-empty {
-	    margin: 0;
-	    padding: var(--df-review-space-5) var(--df-review-space-4);
-	    border: 1px dashed var(--df-review-line);
-	    border-radius: var(--df-review-radius-lg);
-	    background: var(--df-review-card);
-	    color: var(--df-review-subtle);
-	    font-size: var(--df-review-font-size-sm);
-	    line-height: 1.45;
-	  }
-
-  .df-review-item-card.is-dim {
-    opacity: 0.4;
-  }
-
-  .df-review-item-card.is-dim:hover {
-    opacity: 0.72;
-  }
-
-	  .df-review-item-card {
-		    position: relative;
-		    display: grid;
-		    gap: var(--df-review-space-2);
-		    padding: var(--df-review-space-3);
-		    border: 1px solid var(--df-review-line-soft);
-		    border-radius: var(--df-review-radius-lg);
-		    background: var(--df-review-card);
-		    cursor: pointer;
-		    transition: border-color 140ms ease, background 140ms ease, opacity 140ms ease, transform 140ms ease;
-		  }
-
-	  .df-review-item-card:not(.is-dim) {
-    border-left: 3px solid var(--df-review-accent);
-    padding-left: calc(var(--df-review-space-3) - 2px);
-  }
-
-  .df-review-item-card:not(.is-dim):hover {
-    border-color: var(--df-review-line);
-    background: var(--df-review-card-hover);
-    transform: translateY(-1px);
-  }
-
-  .df-review-item-card.is-active {
-	    border-color: var(--df-review-accent);
-	    background: var(--df-review-accent-soft);
-	    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
-	  }
-
-  .df-review-item-card.is-overlay-hidden .df-review-item-main {
-    opacity: 0.68;
-  }
-
-  .df-review-item-header {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 8px;
-    min-width: 0;
-  }
-
-  .df-review-item-main {
-    display: grid;
-    gap: 4px;
-    min-width: 0;
-	    border: 0;
-	    padding: 0;
-	    text-align: left;
-	    background: transparent;
-	    color: var(--df-review-text);
-	  }
-
-  .df-review-item-main strong {
-    overflow-wrap: anywhere;
-    font-size: var(--df-review-font-size-md);
-    line-height: 1.35;
-  }
-
-  .df-review-item-comment {
-    padding: 5px 0;
-    white-space: pre-wrap;
-  }
-
-	  .df-review-item-main small {
-	    color: var(--df-review-subtle);
-	    font-size: var(--df-review-font-size-xs);
-	  }
-
-  .df-review-item-error {
-    color: var(--df-review-danger) !important;
-    overflow-wrap: anywhere;
-  }
-
-  .df-review-item-badges {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-    flex-wrap: wrap;
-  }
-
-  .df-review-item-id,
-  .df-review-item-scope,
-  .df-review-item-mode,
-  .df-review-item-status-badge,
-  .df-review-item-status-select {
-    --df-review-scope: var(--df-review-accent);
-    --df-review-scope-rgb: 124, 199, 255;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    min-height: 20px;
-    border: 1px solid var(--df-review-line);
-    border-radius: var(--df-review-radius-pill);
-    padding: 0 7px;
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .df-review-item-id {
-    border-color: var(--df-review-line);
-    background: rgba(255, 255, 255, 0.03);
-    color: var(--df-review-text);
-  }
-
-  .df-review-item-scope {
-    border-color: rgba(var(--df-review-scope-rgb), 0.36);
-    background: rgba(var(--df-review-scope-rgb), 0.12);
-    color: var(--df-review-scope);
-  }
-
-  .df-review-item-scope.is-scope-tablet {
-    --df-review-scope: var(--df-review-area);
-    --df-review-scope-rgb: 99, 215, 199;
-  }
-
-  .df-review-item-scope.is-scope-desktop {
-    --df-review-scope: var(--df-review-note);
-    --df-review-scope-rgb: 243, 183, 95;
-  }
-
-  .df-review-item-scope.is-scope-wide {
-    --df-review-scope: var(--df-review-purple);
-    --df-review-scope-rgb: 201, 156, 255;
-  }
-
-  .df-review-item-scope.is-scope-dom {
-    --df-review-scope: var(--df-review-danger);
-    --df-review-scope-rgb: 255, 143, 97;
-  }
-
-  .df-review-item-scope svg,
-  .df-review-item-mode svg {
-    width: 12px;
-    height: 12px;
-    flex: 0 0 auto;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2;
-  }
-
-	  .df-review-item-mode {
-	    color: var(--df-review-muted);
-    background: var(--df-review-line-soft);
-  }
-
-  .df-review-item-mode.is-mode-area {
-    color: var(--df-review-area);
-  }
-
-  .df-review-item-mode.is-mode-dom {
-    color: var(--df-review-danger);
-  }
-
-  .df-review-item-status-badge {
-    border-color: var(--df-review-line);
-    color: var(--df-review-muted);
-    background: var(--df-review-line-soft);
-  }
-
-  .df-review-item-status-select {
-    max-width: 86px;
-    cursor: pointer;
-    border-color: var(--df-review-line);
-    color: var(--df-review-text);
-    background: var(--df-review-control);
-    outline: 0;
-  }
-
-  .df-review-item-status-select:focus-visible {
-    border-color: var(--df-review-accent);
-    box-shadow: 0 0 0 2px var(--df-review-accent-soft);
-  }
-
-  .df-review-item-status-badge.is-error {
-    border-color: rgba(255, 143, 97, 0.36);
-    color: var(--df-review-danger);
-    background: var(--df-review-danger-soft);
-  }
-
-	  .df-review-item-main img {
-	    width: 100%;
-	    max-height: 110px;
-	    border: 1px solid var(--df-review-line);
-	    border-radius: var(--df-review-radius-sm);
-	    object-fit: cover;
-	    background: var(--df-review-control);
-  }
-
-	  .df-review-item-header-actions {
-	    display: inline-flex;
-	    align-items: center;
-	    justify-content: flex-end;
-	    gap: 4px;
-	    cursor: auto;
-	  }
-
-  .df-review-item-delete,
-  .df-review-item-visibility {
-    display: inline-grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
-    border: 1px solid transparent;
-    border-radius: var(--df-review-radius-sm);
-    padding: 0;
-    color: var(--df-review-muted);
-    background: transparent;
-  }
-
-  .df-review-item-visibility.is-visible {
-    color: var(--df-review-accent);
-  }
-
-  .df-review-item-visibility.is-hidden {
-    opacity: 0.7;
-    color: var(--df-review-subtle);
-  }
-
-  .df-review-item-delete svg,
-  .df-review-item-visibility svg {
-    width: 14px;
-    height: 14px;
-  }
-
-				  .df-review-item-actions {
-				    display: grid;
-				    grid-template-columns: auto minmax(0, 1fr) auto;
-			    align-items: center;
-			    gap: 6px;
-			    min-width: 0;
-			  }
-
-			  .df-review-item-prompt-actions {
-			    display: inline-grid;
-			    grid-template-columns: auto 28px;
-		    align-items: stretch;
-			    min-width: 0;
-		    cursor: auto;
-			  }
-
-			  .df-review-item-remote-actions {
-			    display: inline-flex;
-			    grid-column: 3;
-			    align-items: center;
-			    justify-content: flex-end;
-			    gap: 6px;
-			    min-width: 0;
-		    cursor: auto;
-			  }
-
-	  .df-review-item-prompt {
-	    display: inline-flex;
-	    align-items: center;
-	    min-height: 28px;
-	    padding: 0 8px;
-	    border-top-right-radius: 0;
-	    border-bottom-right-radius: 0;
-	    font-size: var(--df-review-font-size-2xs);
-	    text-transform: uppercase;
-	  }
-
-	  .df-review-item-prompt-copy {
-	    position: relative;
-	    display: inline-grid;
-	    place-items: center;
-	    width: 28px;
-	    min-width: 28px;
-	    min-height: 28px;
-	    border-left: 0;
-	    border-top-left-radius: 0;
-	    border-bottom-left-radius: 0;
-	    padding: 0;
-	  }
-
-	  .df-review-item-prompt-copy.is-copied {
-	    border-color: var(--df-review-accent);
-	    color: var(--df-review-accent);
-	  }
-
-	  .df-review-item-prompt-copy svg {
-	    width: 12px;
-	    height: 12px;
-	    fill: none;
-	    stroke: currentColor;
-	    stroke-linecap: round;
-	    stroke-linejoin: round;
-	    stroke-width: 2;
-	  }
-
-  .df-review-item-action-button {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-    width: 30px;
-    min-width: 30px;
-    height: 28px;
-    border: 1px solid var(--df-review-line);
-    border-radius: var(--df-review-radius-sm);
-    padding: 0;
-    color: var(--df-review-muted);
-    background: var(--df-review-control);
-  }
-
-	  .df-review-item-action-button:hover:not(:disabled) {
-	    border-color: rgba(124, 199, 255, 0.42);
-	    color: var(--df-review-text);
-	    background: var(--df-review-control-hover);
-	  }
-
-		  .df-review-item-submit-button {
-		    display: inline-flex;
-		    align-items: center;
-		    gap: 6px;
-		    width: auto;
-		    min-width: 0;
-		    padding: 0 9px;
-		    border-color: rgba(124, 199, 255, 0.46);
-		    background: var(--df-review-accent-soft);
-		    color: var(--df-review-accent);
-		  }
-
-		  .df-review-item-submit-button span {
-		    font-size: var(--df-review-font-size-2xs);
-		    font-weight: 900;
-		    line-height: 1;
-		    white-space: nowrap;
-		  }
-
-	  .df-review-item-submit-button:hover:not(:disabled) {
-	    border-color: var(--df-review-accent);
-	    background: var(--df-review-accent-hover);
-	    color: var(--df-review-text);
-	  }
-
-  .df-review-item-action-button:disabled {
-    cursor: default;
-    opacity: 0.45;
-  }
-
-  .df-review-item-action-button svg {
-    width: 14px;
-    height: 14px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2;
-  }
-
-	  .df-review-stage {
-	    grid-column: 1;
-	    grid-row: 2;
-	    display: grid;
-	    min-width: 0;
-	    min-height: 0;
-	    overflow: hidden;
-	  }
-
-  .df-review-frame {
-    display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
-    min-width: 0;
-    min-height: 0;
-  }
-
-  .df-review-frame-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 56px;
-    padding: 8px 40px 10px;
-    border-top: 1px solid var(--df-review-line-soft);
-    background: var(--df-review-mode-bar);
-  }
-
-	  .df-review-frame-scroll {
-	    min-width: 0;
-	    min-height: 0;
-	    overflow: auto;
-	  }
-
-	  .df-review-frame-canvas {
-	    display: grid;
-	    place-items: center;
-	    width: max-content;
-	    height: max-content;
-	    min-width: 100%;
-	    min-height: 100%;
-	    padding: 34px 40px 12px;
-	  }
-
-  .df-review-device {
-	    box-sizing: border-box;
-	    flex: 0 0 auto;
-	    position: relative;
-	    margin: 0;
-	    overflow: hidden;
-	    border: 1px solid var(--df-review-line);
-	    border-radius: var(--df-review-radius-lg);
-	    background: #fff;
-	    box-shadow: var(--df-review-shadow-device);
-  }
-
-  .df-review-device iframe {
-    display: block;
-    width: inherit;
-    height: inherit;
-    min-width: inherit;
-    min-height: inherit;
-    border: 0;
-    background: #fff;
-  }
-
-  .df-review-device-frame {
-    position: relative;
-    box-sizing: border-box;
-    flex: 0 0 auto;
-  }
-
-  .df-review-ruler-corner {
-    position: absolute;
-    left: -26px;
-    top: -26px;
-    width: 26px;
-    height: 26px;
-    z-index: 6;
-    border-right: 1px solid var(--df-review-line-soft);
-    border-bottom: 1px solid var(--df-review-line-soft);
-    background: rgba(10, 13, 18, 0.92);
-  }
-
-  .df-review-ruler-gutter {
-    position: absolute;
-    z-index: 6;
-    background: rgba(10, 13, 18, 0.92);
-    color: var(--df-review-muted);
-    user-select: none;
-  }
-
-  .df-review-ruler-gutter.is-x {
-    left: 0;
-    right: 0;
-    top: -26px;
-    height: 26px;
-    border-bottom: 1px solid var(--df-review-line-soft);
-    background-image:
-      linear-gradient(to right, rgba(179, 149, 255, 0.75) 1px, transparent 1px),
-      linear-gradient(to right, rgba(237, 243, 251, 0.2) 1px, transparent 1px);
-    background-size:
-      calc(var(--df-review-ruler-step-x) * 5) 11px,
-      var(--df-review-ruler-step-x) 6px;
-    background-position: left bottom;
-    background-repeat: repeat-x;
-  }
-
-  .df-review-ruler-gutter.is-y {
-    left: -26px;
-    top: 0;
-    bottom: 0;
-    width: 26px;
-    border-right: 1px solid var(--df-review-line-soft);
-    background-image:
-      linear-gradient(to bottom, rgba(179, 149, 255, 0.75) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(237, 243, 251, 0.2) 1px, transparent 1px);
-    background-size:
-      11px calc(var(--df-review-ruler-step-y) * 5),
-      6px var(--df-review-ruler-step-y);
-    background-position: right top;
-    background-repeat: repeat-y;
-  }
-
-  .df-review-ruler-frame-label {
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 7px;
-    border-radius: 5px;
-    background: rgba(20, 24, 32, 0.92);
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  .df-review-ruler-frame-label strong {
-    color: #e1d8ff;
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
-  }
-
-  .df-review-ruler-frame-label span {
-    color: var(--df-review-muted);
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
-  }
-
-  .df-review-ruler-coord {
-    position: absolute;
-    z-index: 7;
-    padding: 2px 4px;
-    border-radius: 4px;
-    background: #b395ff;
-    color: #14111f;
-    font-size: var(--df-review-font-size-3xs);
-    font-weight: 900;
-    line-height: 1;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
-  .df-review-ruler-coord.is-x {
-    top: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .df-review-ruler-coord.is-y {
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .df-review-ruler-overlay {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: inherit;
-    height: inherit;
-    z-index: 5;
-    cursor: crosshair;
-    overflow: hidden;
-    touch-action: none;
-    user-select: none;
-  }
-
-  .df-review-ruler-overlay.is-dragging {
-    cursor: crosshair;
-  }
-
-  .df-review-ruler-guide {
-    position: absolute;
-    z-index: 2;
-    pointer-events: none;
-    background: rgba(255, 255, 255, 0.74);
-    box-shadow: 0 0 0 1px rgba(87, 55, 166, 0.45);
-  }
-
-  .df-review-ruler-guide.is-x {
-    left: 0;
-    right: 0;
-    height: 1px;
-  }
-
-  .df-review-ruler-guide.is-y {
-    top: 0;
-    bottom: 0;
-    width: 1px;
-  }
-
-  .df-review-ruler-selection {
-    position: absolute;
-    z-index: 3;
-    pointer-events: none;
-    border: 1px solid #c9b8ff;
-    background: rgba(179, 149, 255, 0.16);
-    box-shadow:
-      inset 0 0 0 1px rgba(20, 12, 40, 0.38),
-      0 0 0 1px rgba(20, 12, 40, 0.38);
-  }
-
-  .df-review-ruler-label {
-    position: absolute;
-    z-index: 4;
-    pointer-events: none;
-    min-width: 156px;
-    padding: 7px 8px;
-    border: 1px solid rgba(237, 243, 251, 0.22);
-    border-radius: var(--df-review-radius-sm);
-    background: rgba(10, 13, 18, 0.9);
-    color: var(--df-review-text);
-    font-size: var(--df-review-font-size-xs);
-    font-weight: 900;
-    line-height: 1;
-    white-space: nowrap;
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
-  }
-
-	  @media (max-width: 860px) {
-	    .df-review-shell,
-	    .df-review-shell.is-list-visible {
-	      grid-template-columns: minmax(0, 1fr) 0 32px;
-	      grid-template-rows: auto minmax(0, 1fr);
-	    }
-
-	    .df-review-shell.is-list-visible {
-	      grid-template-columns: minmax(0, 1fr) minmax(260px, 70vw) 32px;
-	    }
-
-	    .df-review-qa-panel {
-	      border-left: 1px solid var(--df-review-line);
-	      border-bottom: 0;
-	    }
-
-	    .df-review-tools {
-	      flex-wrap: wrap;
-	    }
-
-	    .df-review-tool-controls {
-	      justify-content: flex-start;
-	    }
-
-    .df-review-frame-actions {
-      padding: 8px 20px 10px;
+};
+
+// src/react-shell/hooks/use.review.kit.lifecycle.ts
+var useReviewKitLifecycle = ({
+  adapter,
+  cleanupTargetRef,
+  controllerRef,
+  frameScrollRef,
+  hiddenOverlayItemIdList,
+  hiddenOverlayItemIdListRef,
+  iframeRef,
+  pageTargets,
+  projectId,
+  reviewPathPrefix,
+  reviewUserId,
+  reviewViewportPresets,
+  ruler,
+  sizeRef,
+  targetRef,
+  onApplyPendingRestore,
+  onCancelReviewMode,
+  onCloseRuler,
+  onItemsRefresh,
+  onModeChange,
+  onCreateItem,
+  onRefreshTargetOverlayState,
+  onRestoreInitialItem,
+  onRestoreReviewItem,
+  onSyncShellTarget,
+  onSyncTargetViewport
+}) => {
+  const destroyReviewKit = useCallback2(() => {
+    cleanupTargetRef.current?.();
+    cleanupTargetRef.current = null;
+    controllerRef.current?.destroy();
+    controllerRef.current = null;
+  }, [cleanupTargetRef, controllerRef]);
+  const initReviewKit = useCallback2(() => {
+    destroyReviewKit();
+    const iframe = iframeRef.current;
+    const targetWindow = iframe?.contentWindow;
+    const targetDocument = iframe?.contentDocument;
+    if (!iframe || !targetWindow || !targetDocument) return;
+    cleanupTargetRef.current = bindReviewFrameNavigation({
+      pageTargets,
+      reviewPathPrefix,
+      targetDocument,
+      targetRef,
+      targetWindow,
+      onCancelReviewMode,
+      onCloseRuler,
+      onSyncShellTarget,
+      onSyncTargetViewport
+    });
+    controllerRef.current = createWebReviewKit({
+      projectId,
+      userId: reviewUserId.trim() || void 0,
+      adapter,
+      target: () => getReviewKitTarget({ frameScrollRef, iframeRef }),
+      hotkeys: {
+        qa: "Shift+Q"
+      },
+      anchors: {
+        attribute: "data-qa-id"
+      },
+      viewports: {
+        presets: reviewViewportPresets
+      },
+      ruler,
+      onCreateItem,
+      onRestoreItem: onRestoreReviewItem,
+      onItemsChange: () => {
+        void onItemsRefresh();
+      },
+      onModeChange,
+      ui: {
+        panel: false
+      },
+      modules: {
+        qa: true,
+        grid: false,
+        figma: false
+      }
+    });
+    controllerRef.current.open();
+    controllerRef.current.setHiddenItemIds(hiddenOverlayItemIdListRef.current);
+    onModeChange(controllerRef.current.getMode());
+    void onItemsRefresh();
+    void onRestoreInitialItem();
+    onApplyPendingRestore();
+    onRefreshTargetOverlayState();
+    setTargetScrollbarHidden(
+      targetDocument,
+      getViewportPresetKind(sizeRef.current) === "mobile"
+    );
+  }, [
+    adapter,
+    cleanupTargetRef,
+    controllerRef,
+    destroyReviewKit,
+    frameScrollRef,
+    hiddenOverlayItemIdListRef,
+    iframeRef,
+    onApplyPendingRestore,
+    onCancelReviewMode,
+    onCloseRuler,
+    onCreateItem,
+    onItemsRefresh,
+    onModeChange,
+    onRefreshTargetOverlayState,
+    onRestoreInitialItem,
+    onRestoreReviewItem,
+    onSyncShellTarget,
+    onSyncTargetViewport,
+    pageTargets,
+    projectId,
+    reviewPathPrefix,
+    reviewUserId,
+    reviewViewportPresets,
+    ruler,
+    sizeRef,
+    targetRef
+  ]);
+  const reloadReviewKit = useCallback2(async () => {
+    await controllerRef.current?.reload();
+  }, [controllerRef]);
+  const setControllerReviewMode = useCallback2(
+    (nextMode) => {
+      controllerRef.current?.setMode(nextMode);
+      onModeChange(controllerRef.current?.getMode() ?? "idle");
+    },
+    [controllerRef, onModeChange]
+  );
+  useEffect(() => destroyReviewKit, [destroyReviewKit]);
+  useEffect(() => {
+    const frameDocument = iframeRef.current?.contentDocument;
+    if (!frameDocument || frameDocument.readyState !== "complete") return;
+    initReviewKit();
+  }, [iframeRef, initReviewKit]);
+  useEffect(() => {
+    hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
+    controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
+  }, [controllerRef, hiddenOverlayItemIdList, hiddenOverlayItemIdListRef]);
+  return {
+    destroyReviewKit,
+    initReviewKit,
+    reloadReviewKit,
+    setControllerReviewMode
+  };
+};
+
+// src/react-shell/hooks/use.review.target.overlay.ts
+import { useCallback as useCallback3, useEffect as useEffect2 } from "react";
+var useReviewTargetOverlay = ({
+  iframeRef,
+  isFigmaOverlayAvailable,
+  targetOverlayState,
+  onTargetOverlayStateChange
+}) => {
+  const refreshTargetOverlayState = useCallback3(() => {
+    onTargetOverlayStateChange(
+      getTargetOverlayState(iframeRef.current?.contentDocument ?? void 0)
+    );
+  }, [iframeRef, onTargetOverlayStateChange]);
+  const dispatchTargetOverlayHotkey = useCallback3(
+    (overlay) => {
+      const targetWindow = iframeRef.current?.contentWindow;
+      if (!targetWindow) return false;
+      const code = overlay === "grid" ? "KeyG" : "KeyF";
+      targetWindow.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          code,
+          key: code.replace("Key", "").toLowerCase(),
+          shiftKey: true
+        })
+      );
+      window.setTimeout(refreshTargetOverlayState, 80);
+      return true;
+    },
+    [iframeRef, refreshTargetOverlayState]
+  );
+  const toggleTargetOverlay = useCallback3(
+    (overlay) => {
+      if (overlay === "figma" && !isFigmaOverlayAvailable) {
+        refreshTargetOverlayState();
+        return;
+      }
+      dispatchTargetOverlayHotkey(overlay);
+    },
+    [
+      dispatchTargetOverlayHotkey,
+      isFigmaOverlayAvailable,
+      refreshTargetOverlayState
+    ]
+  );
+  const closeTargetOverlay = useCallback3(
+    (overlay) => {
+      const currentState = getTargetOverlayState(
+        iframeRef.current?.contentDocument ?? void 0
+      );
+      onTargetOverlayStateChange(currentState);
+      if (!currentState[overlay]) return false;
+      return dispatchTargetOverlayHotkey(overlay);
+    },
+    [dispatchTargetOverlayHotkey, iframeRef, onTargetOverlayStateChange]
+  );
+  useEffect2(() => {
+    if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
+    closeTargetOverlay("figma");
+  }, [closeTargetOverlay, isFigmaOverlayAvailable, targetOverlayState.figma]);
+  return {
+    closeTargetOverlay,
+    refreshTargetOverlayState,
+    toggleTargetOverlay
+  };
+};
+
+// src/react-shell/hooks/use.review.target.sync.ts
+import {
+  useCallback as useCallback4,
+  useEffect as useEffect3
+} from "react";
+var useReviewTargetSync = ({
+  iframeRef,
+  reviewPathPrefix,
+  selectedItemIdRef,
+  size,
+  sizeRef,
+  source,
+  target,
+  targetRef,
+  onActiveRouteChange,
+  onClearSelectedItem,
+  onDraftTargetChange,
+  onSyncTargetViewport,
+  onTargetChange
+}) => {
+  const syncShellTarget = useCallback4(
+    (nextTarget) => {
+      const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
+      if (normalizedTarget !== targetRef.current) {
+        onClearSelectedItem();
+        targetRef.current = normalizedTarget;
+        onTargetChange(normalizedTarget);
+        onDraftTargetChange(normalizedTarget);
+        onActiveRouteChange(normalizedTarget);
+      }
+      if (selectedItemIdRef.current) {
+        updateShellUrlForItem(
+          normalizedTarget,
+          sizeRef.current,
+          selectedItemIdRef.current,
+          source
+        );
+      } else {
+        updateShellUrl(normalizedTarget, sizeRef.current, source);
+      }
+    },
+    [
+      onActiveRouteChange,
+      onClearSelectedItem,
+      onDraftTargetChange,
+      onTargetChange,
+      reviewPathPrefix,
+      selectedItemIdRef,
+      sizeRef,
+      source,
+      targetRef
+    ]
+  );
+  useEffect3(() => {
+    targetRef.current = target;
+    onActiveRouteChange(target);
+  }, [onActiveRouteChange, target, targetRef]);
+  useEffect3(() => {
+    sizeRef.current = size;
+    if (selectedItemIdRef.current) {
+      updateShellUrlForItem(
+        targetRef.current,
+        size,
+        selectedItemIdRef.current,
+        source
+      );
+    } else {
+      updateShellUrl(targetRef.current, size, source);
     }
+    onSyncTargetViewport();
+    setTargetScrollbarHidden(
+      iframeRef.current?.contentDocument,
+      getViewportPresetKind(size) === "mobile"
+    );
+  }, [
+    iframeRef,
+    onSyncTargetViewport,
+    selectedItemIdRef,
+    size,
+    sizeRef,
+    source,
+    targetRef
+  ]);
+  return {
+    syncShellTarget
+  };
+};
 
-	    .df-review-frame-canvas {
-	      padding: 34px 28px 12px;
-	    }
+// src/react-shell/hooks/use.review.controller.ts
+var useReviewController = ({
+  adapter,
+  cleanupTargetRef,
+  controllerRef,
+  frameScrollRef,
+  hiddenOverlayItemIdList,
+  hiddenOverlayItemIdListRef,
+  iframeRef,
+  isFigmaOverlayAvailable,
+  pageTargets,
+  pendingInitialItemIdRef,
+  pendingRestoreRef,
+  projectId,
+  reviewPathPrefix,
+  reviewUserId,
+  reviewViewportPresets,
+  ruler,
+  selectedItemIdRef,
+  size,
+  sizeRef,
+  source,
+  target,
+  targetOverlayState,
+  targetRef,
+  viewportPresets,
+  onActiveRouteChange,
+  onCancelReviewMode,
+  onDraftTargetChange,
+  onItemsRefresh,
+  onModeChange,
+  onSelectedItemIdChange,
+  onSizeChange,
+  onTargetChange,
+  onTargetOverlayStateChange,
+  onCloseRuler
+}) => {
+  const syncTargetViewport = useCallback5(() => {
+    window.dispatchEvent(new Event("resize"));
+  }, []);
+  const {
+    closeTargetOverlay,
+    refreshTargetOverlayState,
+    toggleTargetOverlay
+  } = useReviewTargetOverlay({
+    iframeRef,
+    isFigmaOverlayAvailable,
+    targetOverlayState,
+    onTargetOverlayStateChange
+  });
+  const {
+    applyPendingRestore,
+    clearSelectedItem,
+    restoreInitialItem,
+    restoreReviewItem
+  } = useReviewItemRestore({
+    adapter,
+    controllerRef,
+    iframeRef,
+    pendingInitialItemIdRef,
+    pendingRestoreRef,
+    reviewPathPrefix,
+    selectedItemIdRef,
+    source,
+    targetRef,
+    viewportPresets,
+    onActiveRouteChange,
+    onDraftTargetChange,
+    onSelectedItemIdChange,
+    onSizeChange,
+    onSyncTargetViewport: syncTargetViewport,
+    onTargetChange
+  });
+  const { syncShellTarget } = useReviewTargetSync({
+    iframeRef,
+    reviewPathPrefix,
+    selectedItemIdRef,
+    size,
+    sizeRef,
+    source,
+    target,
+    targetRef,
+    onActiveRouteChange,
+    onClearSelectedItem: clearSelectedItem,
+    onDraftTargetChange,
+    onSyncTargetViewport: syncTargetViewport,
+    onTargetChange
+  });
+  const {
+    initReviewKit,
+    reloadReviewKit,
+    setControllerReviewMode
+  } = useReviewKitLifecycle({
+    adapter,
+    cleanupTargetRef,
+    controllerRef,
+    frameScrollRef,
+    hiddenOverlayItemIdList,
+    hiddenOverlayItemIdListRef,
+    iframeRef,
+    pageTargets,
+    projectId,
+    reviewPathPrefix,
+    reviewUserId,
+    reviewViewportPresets,
+    ruler,
+    sizeRef,
+    targetRef,
+    onApplyPendingRestore: applyPendingRestore,
+    onCancelReviewMode,
+    onCloseRuler,
+    onCreateItem: restoreReviewItem,
+    onItemsRefresh,
+    onModeChange,
+    onRefreshTargetOverlayState: refreshTargetOverlayState,
+    onRestoreInitialItem: restoreInitialItem,
+    onRestoreReviewItem: restoreReviewItem,
+    onSyncShellTarget: syncShellTarget,
+    onSyncTargetViewport: syncTargetViewport
+  });
+  return {
+    clearSelectedItem,
+    closeTargetOverlay,
+    initReviewKit,
+    reloadReviewKit,
+    restoreReviewItem,
+    setControllerReviewMode,
+    syncTargetViewport,
+    toggleTargetOverlay
+  };
+};
 
-		    .df-review-prompt-modal {
-		      padding: 12px;
-		    }
+// src/react-shell/hooks/use.review.presence.ts
+import {
+  useCallback as useCallback6,
+  useEffect as useEffect4,
+  useMemo as useMemo2,
+  useRef,
+  useState
+} from "react";
 
-		    .df-review-prompt-dialog {
-		      width: calc(100vw - 24px);
-		      max-height: calc(100vh - 24px);
-		    }
-
-		    .df-review-prompt-block textarea {
-		      height: min(360px, calc(100vh - 270px));
-		      min-height: 240px;
-		      max-height: calc(100vh - 270px);
-		    }
-
-	    .df-review-panel-body {
-	      min-height: 0;
-	    }
-  }
-    `;
-    document.head.append(style);
-  }
-}
-
-// src/react-shell/presence.ts
+// src/react-shell/presence/presence.ts
 var REVIEW_PRESENCE_SESSION_KEY = "df-review-presence-session-id";
 var DEFAULT_LOCAL_PRESENCE_CHANNEL = "df-review-kit:presence";
 var DEFAULT_LOCAL_PRESENCE_HEARTBEAT_MS = 5e3;
@@ -2774,352 +5523,199 @@ var createFallbackPresenceAdapter = (primaryAdapter, fallbackAdapter) => ({
   }
 });
 
-// src/react-shell/constants.ts
-var REVIEW_QA_FILTERS = [
-  { key: "all", label: "All" },
-  { key: "mobile", label: "Mobile", scope: "mobile" },
-  { key: "tablet", label: "Tablet", scope: "tablet" },
-  { key: "desktop", label: "Desktop", scope: "desktop" },
-  { key: "wide", label: "Wide", scope: "wide" }
-];
-var FIGMA_OVERLAY_UNAVAILABLE_MESSAGE = "\uD53C\uADF8\uB9C8 \uC624\uBC84\uB808\uC774 \uB514\uBC84\uAE45\uC774 \uC548\uB418\uB294 \uD574\uC0C1\uB3C4";
-var FIGMA_TOKEN_STORAGE_KEY = "figma-token";
-var REVIEW_USER_ID_STORAGE_KEY = "user-id";
-var REVIEW_THEME_STORAGE_KEY = "df-review-theme";
-var DEFAULT_REVIEW_THEME = "dark";
-var FIGMA_TOKEN_GUIDE_ID = "df-review-figma-token-guide";
-var DEFAULT_INITIAL_REVIEW_PROMPT = "You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, DOM metadata, coordinates, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.";
-var REVIEW_THEME_OPTIONS = [
-  { value: "dark", label: "Dark" },
-  { value: "light", label: "Light" },
-  { value: "system", label: "System" }
-];
-
-// src/react-shell/route.ts
-var DEFAULT_REVIEW_PATH_PREFIX = "/review";
-var normalizeReviewPathPrefix = (value) => {
-  const raw = value.trim() || DEFAULT_REVIEW_PATH_PREFIX;
-  const prefix = raw.startsWith("/") ? raw : `/${raw}`;
-  return prefix.length > 1 && prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
-};
-var normalizeTarget = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
-  const raw = value.trim() || "/";
-  const [path] = raw.split(/[?#]/);
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  const reviewPrefix = normalizeReviewPathPrefix(reviewPathPrefix);
-  return normalized === reviewPrefix || normalized.startsWith(`${reviewPrefix}/`) ? "/" : normalized;
-};
-var getInitialTarget = (reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
-  if (typeof window === "undefined") return "/";
-  const target = new URLSearchParams(window.location.search).get("target");
-  return target ? normalizeTarget(target, reviewPathPrefix) : "/";
-};
-var buildTargetSrc = (target) => {
-  const url = new URL(target || "/", window.location.origin);
-  url.searchParams.set("__dfwr_target", "1");
-  return `${url.pathname}${url.search}${url.hash}`;
-};
-var getHashRoutePath = (hash) => {
-  if (!hash.startsWith("#/")) return null;
-  const [path] = hash.slice(1).split(/[?#]/);
-  try {
-    return decodeURI(path || "/");
-  } catch {
-    return path || "/";
-  }
-};
-var getFrameRouteTarget = (targetWindow, reviewPathPrefix) => {
-  const hashPath = getHashRoutePath(targetWindow.location.hash);
-  return normalizeTarget(
-    hashPath ?? targetWindow.location.pathname,
-    reviewPathPrefix
-  );
-};
-var updateShellUrl = (target, size, source) => {
-  const url = new URL(window.location.href);
-  url.searchParams.set("target", target);
-  url.searchParams.set("w", String(size.width));
-  url.searchParams.set("h", String(size.height));
-  if (source !== "local") {
-    url.searchParams.set("source", source);
-  } else {
-    url.searchParams.delete("source");
-  }
-  url.searchParams.delete("item");
-  window.history.replaceState(null, "", `${url.pathname}${url.search}`);
-};
-var updateShellUrlForItem = (target, size, itemId, source) => {
-  const url = new URL(window.location.href);
-  url.searchParams.set("target", target);
-  url.searchParams.set("w", String(size.width));
-  url.searchParams.set("h", String(size.height));
-  url.searchParams.set("item", itemId);
-  if (source !== "local") {
-    url.searchParams.set("source", source);
-  } else {
-    url.searchParams.delete("source");
-  }
-  window.history.replaceState(null, "", `${url.pathname}${url.search}`);
-};
-var getInitialItemId = () => {
-  if (typeof window === "undefined") return null;
-  return new URLSearchParams(window.location.search).get("item");
-};
-var getInitialSource = (remoteSource) => {
-  if (typeof window === "undefined" || !remoteSource) return "local";
-  return new URLSearchParams(window.location.search).get("source") === remoteSource ? remoteSource : "local";
-};
-var getItemTarget = (item, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
-  if (item.routeKey) return normalizeTarget(item.routeKey, reviewPathPrefix);
-  if (item.normalizedPath) {
-    return normalizeTarget(item.normalizedPath, reviewPathPrefix);
-  }
-  try {
-    return normalizeTarget(new URL(item.pageUrl).pathname, reviewPathPrefix);
-  } catch {
-    return "/";
-  }
-};
-
-// src/react-shell/viewport.ts
-var DEFAULT_REVIEW_VIEWPORT_PRESETS = [
-  { label: "Mobile", width: 390, height: 720, kind: "mobile" },
-  { label: "Tablet", width: 768, height: 1024, kind: "tablet" },
-  { label: "Desktop", width: 1440, height: 900, kind: "desktop" },
-  { label: "Wide", width: 1980, height: 1080, kind: "wide" }
-];
-var getFallbackPreset = (presets) => presets[0] ?? DEFAULT_REVIEW_VIEWPORT_PRESETS[0];
-var getViewportPresetDistance = (preset, width, height) => Math.abs(preset.width - width) + Math.abs(preset.height - height);
-var findViewportPreset = (presets, width, height) => {
-  const fallback = getFallbackPreset(presets);
-  const exact = presets.find(
-    (preset) => preset.width === width && preset.height === height
-  );
-  if (exact) return exact;
-  return presets.reduce((closest, preset) => {
-    const closestDistance = getViewportPresetDistance(closest, width, height);
-    const presetDistance = getViewportPresetDistance(preset, width, height);
-    return presetDistance < closestDistance ? preset : closest;
-  }, fallback);
-};
-var getInitialSize = (presets) => {
-  if (typeof window === "undefined") return getFallbackPreset(presets);
-  const params = new URLSearchParams(window.location.search);
-  const width = Number(params.get("w"));
-  const height = Number(params.get("h"));
-  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
-    return findViewportPreset(presets, width, height);
-  }
-  return getFallbackPreset(presets);
-};
-var getRestoredSize = (item, presets) => findViewportPreset(
-  presets,
-  Math.max(
-    240,
-    Math.round(item.viewport?.width ?? getFallbackPreset(presets).width)
-  ),
-  Math.max(
-    320,
-    Math.round(item.viewport?.height ?? getFallbackPreset(presets).height)
-  )
-);
-var getViewportPresetKind = (preset) => {
-  if (preset.kind) return preset.kind;
-  const label = preset.label.toLowerCase();
-  if (label.includes("mobile") || label.includes("phone")) return "mobile";
-  if (label.includes("tablet") || label.includes("pad")) return "tablet";
-  if (label.includes("wide") || label.includes("1980") || label.includes("1940") || label.includes("1920")) {
-    return "wide";
-  }
-  if (label.includes("desktop")) return "desktop";
-  if (preset.width >= 1800) return "wide";
-  if (preset.width >= 1e3) return "desktop";
-  if (preset.width >= 700) return "tablet";
-  return "mobile";
-};
-var toReviewViewportPresets = (presets) => presets.map((preset) => ({
-  label: preset.label,
-  width: preset.width,
-  height: preset.height,
-  scope: getViewportPresetKind(preset)
-}));
-var getIsFigmaOverlayAvailable = (preset) => {
-  const kind = getViewportPresetKind(preset);
-  return kind === "mobile" || kind === "wide";
-};
-
-// src/react-shell/anchor-restore.ts
-var isAnchorRestorableReviewItem = (item) => item.scope === "dom" || item.kind === "note" && Boolean(item.anchor && item.selection);
-var queryReviewItemAnchorElement = (targetDocument, item) => {
-  const anchor = item.anchor;
-  if (!anchor || !isAnchorRestorableReviewItem(item)) return void 0;
-  const expectedRect = getReviewItemExpectedDocumentRect(item);
-  const candidates = [anchor, ...anchor.candidates ?? []].filter(
-    (candidate) => Boolean(candidate.selector)
-  );
-  const matches = [];
-  candidates.forEach((candidate, index) => {
-    try {
-      targetDocument.querySelectorAll(candidate.selector).forEach((element) => {
-        if (!isScrollableReviewAnchorElement(element)) return;
-        matches.push({
-          element,
-          score: getReviewAnchorMatchScore(
-            element,
-            expectedRect,
-            candidate.textFingerprint ?? anchor.textFingerprint,
-            index
-          )
-        });
-      });
-    } catch {
-      return;
+// src/react-shell/hooks/use.review.presence.ts
+var getPresenceUserTarget = (user, reviewPathPrefix) => normalizeTarget(user.target || user.routeKey, reviewPathPrefix);
+var dedupePresenceUsersByPageAndId = (users, reviewPathPrefix) => {
+  const userByPageAndId = /* @__PURE__ */ new Map();
+  users.forEach((user) => {
+    const userId = user.userId.trim();
+    if (!userId) return;
+    const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
+    const key = `${userTarget}::${userId}`;
+    const currentUser = userByPageAndId.get(key);
+    if (!currentUser || Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)) {
+      userByPageAndId.set(key, user);
     }
   });
-  return matches.sort((a, b) => a.score - b.score)[0]?.element;
+  return Array.from(userByPageAndId.values());
 };
-var getReviewItemRestoreScrollPosition = (targetWindow, targetDocument, item, anchorElement) => {
-  if (anchorElement) {
-    const rect = anchorElement.getBoundingClientRect();
-    return clampDocumentScrollPosition(targetDocument, {
-      left: targetWindow.scrollX + rect.left - Math.max(0, (targetWindow.innerWidth - rect.width) / 2),
-      top: targetWindow.scrollY + rect.top - Math.max(0, (targetWindow.innerHeight - rect.height) / 2)
+var useReviewPresence = ({
+  activeRoute,
+  mode,
+  presence,
+  projectId,
+  reviewPathPrefix,
+  reviewUserId,
+  selectedNumberedItem,
+  size,
+  source
+}) => {
+  const presenceSessionRef = useRef(null);
+  const [presenceUsers, setPresenceUsers] = useState([]);
+  const [presenceSessionVersion, setPresenceSessionVersion] = useState(0);
+  const presenceSessionId = useMemo2(getReviewPresenceSessionId, []);
+  const normalizedReviewUserId = reviewUserId.trim();
+  const presenceDisplayName = getReviewPresenceDisplayName(
+    normalizedReviewUserId
+  );
+  const presenceColor = getReviewPresenceColor(
+    normalizedReviewUserId || presenceSessionId
+  );
+  const presenceViewport = useMemo2(
+    () => ({
+      label: size.label,
+      width: size.width,
+      height: size.height,
+      kind: getViewportPresetKind(size)
+    }),
+    [size]
+  );
+  const presenceStatus = mode === "idle" ? "reviewing" : "editing";
+  const visiblePresenceUsers = useMemo2(
+    () => {
+      const projectPresenceUsers = presenceUsers.filter(
+        (user) => user.projectId === projectId && user.userId.trim()
+      );
+      return dedupePresenceUsersByPageAndId(
+        projectPresenceUsers,
+        reviewPathPrefix
+      );
+    },
+    [presenceUsers, projectId, reviewPathPrefix]
+  );
+  const currentPagePresenceUsers = useMemo2(
+    () => visiblePresenceUsers.filter((user) => {
+      const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
+      return userTarget === activeRoute;
+    }),
+    [activeRoute, reviewPathPrefix, visiblePresenceUsers]
+  );
+  const pagePresenceUsers = useMemo2(() => {
+    const usersByTarget = /* @__PURE__ */ new Map();
+    visiblePresenceUsers.forEach((user) => {
+      const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
+      const pageUsers = usersByTarget.get(userTarget) ?? [];
+      pageUsers.push(user);
+      usersByTarget.set(userTarget, pageUsers);
     });
-  }
-  return clampDocumentScrollPosition(targetDocument, {
-    left: item.scroll?.x ?? 0,
-    top: item.scroll?.y ?? 0
-  });
-};
-var setDocumentScrollInstantly = (targetWindow, targetDocument, position) => {
-  const scrollElement = targetDocument.scrollingElement;
-  if (scrollElement) {
-    scrollElement.scrollLeft = position.left;
-    scrollElement.scrollTop = position.top;
-    return;
-  }
-  targetWindow.scrollTo(position.left, position.top);
-};
-var getReviewItemExpectedDocumentRect = (item) => {
-  const scroll = item.scroll ?? { x: 0, y: 0 };
-  const selection = item.selection?.viewport;
-  if (selection && typeof selection.x === "number" && typeof selection.y === "number" && typeof selection.width === "number" && typeof selection.height === "number") {
-    return {
-      left: scroll.x + selection.x,
-      top: scroll.y + selection.y,
-      width: selection.width,
-      height: selection.height
+    return usersByTarget;
+  }, [reviewPathPrefix, visiblePresenceUsers]);
+  const getCurrentPresenceState = useCallback6(
+    () => ({
+      projectId,
+      sessionId: presenceSessionId,
+      userId: normalizedReviewUserId,
+      displayName: presenceDisplayName,
+      color: presenceColor,
+      routeKey: activeRoute,
+      target: activeRoute,
+      source,
+      viewport: presenceViewport,
+      mode,
+      selectedItemId: selectedNumberedItem?.item.id ?? null,
+      selectedReviewNumber: selectedNumberedItem?.number ?? null,
+      status: presenceStatus,
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    }),
+    [
+      activeRoute,
+      mode,
+      normalizedReviewUserId,
+      presenceColor,
+      presenceDisplayName,
+      presenceSessionId,
+      presenceStatus,
+      presenceViewport,
+      projectId,
+      selectedNumberedItem,
+      source
+    ]
+  );
+  const getCurrentPresenceStateRef = useRef(getCurrentPresenceState);
+  getCurrentPresenceStateRef.current = getCurrentPresenceState;
+  useEffect4(() => {
+    if (!presence || !normalizedReviewUserId) {
+      const session = presenceSessionRef.current;
+      presenceSessionRef.current = null;
+      setPresenceUsers([]);
+      void session?.disconnect();
+      return void 0;
+    }
+    let isActive = true;
+    let unsubscribe;
+    const initialState = getCurrentPresenceStateRef.current();
+    void Promise.resolve(
+      presence.connect({
+        projectId,
+        sessionId: presenceSessionId,
+        userId: normalizedReviewUserId,
+        displayName: presenceDisplayName,
+        color: presenceColor,
+        initialState
+      })
+    ).then((session) => {
+      if (!isActive) {
+        void session.disconnect();
+        return;
+      }
+      presenceSessionRef.current = session;
+      unsubscribe = session.subscribe(setPresenceUsers);
+      setPresenceSessionVersion((current) => current + 1);
+      void session.update(initialState);
+    }).catch(() => {
+      if (!isActive) return;
+      presenceSessionRef.current = null;
+      setPresenceUsers([]);
+    });
+    return () => {
+      isActive = false;
+      unsubscribe?.();
+      const session = presenceSessionRef.current;
+      presenceSessionRef.current = null;
+      setPresenceUsers([]);
+      void session?.disconnect();
     };
-  }
-  const marker = item.marker?.viewport;
-  if (marker && typeof marker.x === "number" && typeof marker.y === "number") {
-    return {
-      left: scroll.x + marker.x,
-      top: scroll.y + marker.y,
-      width: 1,
-      height: 1
-    };
-  }
-  return void 0;
-};
-var getReviewAnchorMatchScore = (element, expectedRect, textFingerprint, candidateIndex) => {
-  const rect = getElementDocumentRect(element);
-  let score = candidateIndex * 25;
-  if (expectedRect) {
-    score += Math.abs(rect.top - expectedRect.top);
-    score += Math.abs(rect.left - expectedRect.left) * 0.25;
-    score += Math.abs(rect.width - expectedRect.width) * 0.1;
-    score += Math.abs(rect.height - expectedRect.height) * 0.1;
-  }
-  if (textFingerprint) {
-    score += (1 - getReviewTextFingerprintScore(textFingerprint, element)) * 100;
-  }
-  return score;
-};
-var getElementDocumentRect = (element) => {
-  const rect = element.getBoundingClientRect();
-  const view = element.ownerDocument.defaultView;
+  }, [
+    normalizedReviewUserId,
+    presence,
+    presenceColor,
+    presenceDisplayName,
+    presenceSessionId,
+    projectId
+  ]);
+  useEffect4(() => {
+    const session = presenceSessionRef.current;
+    if (!session || !normalizedReviewUserId) return;
+    void session.update(getCurrentPresenceState());
+  }, [
+    getCurrentPresenceState,
+    normalizedReviewUserId,
+    presenceSessionVersion
+  ]);
   return {
-    left: rect.left + (view?.scrollX ?? 0),
-    top: rect.top + (view?.scrollY ?? 0),
-    width: rect.width,
-    height: rect.height
+    currentPagePresenceUsers,
+    pagePresenceUsers,
+    presenceSessionId
   };
 };
-var clampDocumentScrollPosition = (targetDocument, position) => {
-  const scrollElement = targetDocument.scrollingElement;
-  const view = targetDocument.defaultView;
-  const maxLeft = Math.max(
-    0,
-    (scrollElement?.scrollWidth ?? 0) - (view?.innerWidth ?? 0)
-  );
-  const maxTop = Math.max(
-    0,
-    (scrollElement?.scrollHeight ?? 0) - (view?.innerHeight ?? 0)
-  );
-  return {
-    left: Math.min(Math.max(0, Math.round(position.left)), maxLeft),
-    top: Math.min(Math.max(0, Math.round(position.top)), maxTop)
-  };
-};
-var getReviewTextFingerprintScore = (expected, element) => {
-  const actual = element.textContent?.replace(/\s+/g, " ").trim();
-  if (!actual) return 0.5;
-  if (expected === actual) return 1;
-  if (actual.includes(expected) || expected.includes(actual)) return 0.82;
-  const expectedTokens = getReviewFingerprintTokens(expected);
-  const actualTokens = new Set(getReviewFingerprintTokens(actual));
-  if (expectedTokens.length === 0 || actualTokens.size === 0) return 0.5;
-  const matches = expectedTokens.filter((token) => actualTokens.has(token));
-  return Math.min(Math.max(matches.length / expectedTokens.length, 0.25), 0.76);
-};
-var getReviewFingerprintTokens = (value) => value.toLowerCase().split(/[\s/|,.:;()[\]{}"'`~!?<>]+/).map((token) => token.trim()).filter((token) => token.length > 1);
-var isScrollableReviewAnchorElement = (element) => {
-  const id = element.id.trim().toLowerCase();
-  if (element === element.ownerDocument.body || element === element.ownerDocument.documentElement || ["app", "main", "page", "root", "__next", "__nuxt"].includes(id)) {
-    return false;
-  }
-  const rect = element.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return false;
-  const viewportHeight = element.ownerDocument.documentElement.clientHeight;
-  const scrollHeight = element.ownerDocument.documentElement.scrollHeight;
-  return !(scrollHeight > viewportHeight * 1.5 && rect.height > viewportHeight * 3);
-};
 
-// src/react-shell/target.ts
-var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
-var setTargetScrollbarHidden = (targetDocument, hidden) => {
-  if (!targetDocument) return;
-  const existing = targetDocument.getElementById(HIDE_SCROLLBAR_STYLE_ID);
-  if (hidden) {
-    if (existing) return;
-    const style = targetDocument.createElement("style");
-    style.id = HIDE_SCROLLBAR_STYLE_ID;
-    style.textContent = "html{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}";
-    targetDocument.head?.appendChild(style);
-  } else {
-    existing?.remove();
-  }
-};
-var isEditableEventTarget = (event) => {
-  const path = event.composedPath?.() ?? [];
-  const element = path[0] ?? event.target;
-  if (!element || typeof element.tagName !== "string") return false;
-  const tag = element.tagName;
-  return tag === "INPUT" || tag === "TEXTAREA" || element.isContentEditable === true;
-};
-var getTargetOverlayState = (targetDocument) => ({
-  grid: Boolean(
-    targetDocument?.body.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow")
-  ),
-  figma: Boolean(
-    targetDocument?.querySelector(
-      ".helper-figma-root, .helper-figma-loading-backdrop"
-    )
-  )
-});
+// src/react-shell/hooks/use.review.ruler.ts
+import {
+  useCallback as useCallback8,
+  useEffect as useEffect6,
+  useState as useState3
+} from "react";
 
-// src/react-shell/ruler.ts
+// src/react-shell/hooks/use.review.ruler.drag.ts
+import {
+  useCallback as useCallback7,
+  useEffect as useEffect5,
+  useMemo as useMemo3,
+  useRef as useRef2,
+  useState as useState2
+} from "react";
+
+// src/react-shell/ruler/ruler.ts
 var getRulerPointFromRect = (clientX, clientY, rect) => {
   const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
   const y = Math.min(Math.max(clientY - rect.top, 0), rect.height);
@@ -3138,687 +5734,1610 @@ var getRulerMeasure = (start, end) => {
   };
 };
 
-// src/react-shell/settings.ts
-var normalizeReviewTheme = (value) => value === "light" || value === "system" || value === "dark" ? value : DEFAULT_REVIEW_THEME;
-var getStoredFigmaToken = () => {
-  if (typeof window === "undefined") return "";
-  try {
-    return window.localStorage.getItem(FIGMA_TOKEN_STORAGE_KEY) ?? "";
-  } catch {
-    return "";
-  }
-};
-var writeStoredFigmaToken = (token) => {
-  if (typeof window === "undefined") return;
-  try {
-    if (token) {
-      window.localStorage.setItem(FIGMA_TOKEN_STORAGE_KEY, token);
-    } else {
-      window.localStorage.removeItem(FIGMA_TOKEN_STORAGE_KEY);
-    }
-  } catch {
-    return;
-  }
-};
-var getStoredReviewUserId = () => {
-  if (typeof window === "undefined") return "";
-  try {
-    return window.localStorage.getItem(REVIEW_USER_ID_STORAGE_KEY) ?? "";
-  } catch {
-    return "";
-  }
-};
-var writeStoredReviewUserId = (userId) => {
-  if (typeof window === "undefined") return;
-  try {
-    if (userId) {
-      window.localStorage.setItem(REVIEW_USER_ID_STORAGE_KEY, userId);
-    } else {
-      window.localStorage.removeItem(REVIEW_USER_ID_STORAGE_KEY);
-    }
-  } catch {
-    return;
-  }
-};
-var getStoredReviewTheme = () => {
-  if (typeof window === "undefined") return DEFAULT_REVIEW_THEME;
-  try {
-    return normalizeReviewTheme(
-      window.localStorage.getItem(REVIEW_THEME_STORAGE_KEY)
-    );
-  } catch {
-    return DEFAULT_REVIEW_THEME;
-  }
-};
-var writeStoredReviewTheme = (theme) => {
-  if (typeof window === "undefined") return;
-  try {
-    if (theme === DEFAULT_REVIEW_THEME) {
-      window.localStorage.removeItem(REVIEW_THEME_STORAGE_KEY);
-    } else {
-      window.localStorage.setItem(REVIEW_THEME_STORAGE_KEY, theme);
-    }
-  } catch {
-    return;
-  }
-};
-var getSystemReviewTheme = () => {
-  if (typeof window === "undefined" || !window.matchMedia) return "dark";
-  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-};
-
-// src/react-shell/prompt.ts
-var getItemTitle = (item) => item.title || item.comment.split("\n")[0] || item.kind;
-var formatPromptViewport = (item) => `${Math.round(item.viewport?.width ?? 0)}x${Math.round(
-  item.viewport?.height ?? 0
-)}`;
-var formatPromptPoint = (point) => point ? `x=${Math.round(point.x)}, y=${Math.round(point.y)}` : "(none)";
-var formatPromptSelection = (selection) => {
-  if (!selection) return "(none)";
-  const x = "x" in selection ? selection.x : selection.left;
-  const y = "y" in selection ? selection.y : selection.top;
-  return `x=${Math.round(x ?? 0)}, y=${Math.round(y ?? 0)}, width=${Math.round(
-    selection.width
-  )}, height=${Math.round(selection.height)}`;
-};
-var decodePromptHtmlEntities = (value) => value.replace(
-  /&(#\d+|#x[\da-f]+|lt|gt|quot|apos|amp);/gi,
-  (match, entity) => {
-    const normalized = entity.toLowerCase();
-    if (normalized === "lt") return "<";
-    if (normalized === "gt") return ">";
-    if (normalized === "quot") return '"';
-    if (normalized === "apos") return "'";
-    if (normalized === "amp") return "&";
-    const codePoint = normalized.startsWith("#x") ? Number.parseInt(normalized.slice(2), 16) : Number.parseInt(normalized.slice(1), 10);
-    return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
-  }
-);
-var getPromptAnchorCandidates = (item) => {
-  const anchor = item.anchor;
-  if (!anchor) return [];
-  const seen = /* @__PURE__ */ new Set();
-  return [anchor, ...anchor.candidates ?? []].filter((candidate) => {
-    const key = `${candidate.strategy}:${candidate.selector}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-};
-var formatPromptSourceHint = (item) => {
-  const source = item.anchor?.source;
-  if (!source) return "(none)";
-  return [
-    `Component: ${source.component ?? "(unknown)"}`,
-    `File: ${source.file ?? "(unknown)"}`,
-    `Section index: ${source.sectionIndex ?? "(unknown)"}`,
-    `Section id: ${source.sectionId ?? "(none)"}`
-  ].join("\n");
-};
-var buildReviewItemPrompt = (numberedItem, reviewPathPrefix) => {
-  const { item } = numberedItem;
-  const anchor = item.anchor;
-  const candidates = getPromptAnchorCandidates(item);
-  const candidateLines = candidates.length > 0 ? candidates.map((candidate, index) => {
-    const confidence = typeof candidate.confidence === "number" ? `, confidence=${Math.round(candidate.confidence * 100)}%` : "";
-    const fingerprint = candidate.textFingerprint ? `, text="${candidate.textFingerprint}"` : "";
-    return `${index + 1}. ${candidate.selector} (${candidate.strategy}${confidence}${fingerprint})`;
-  }).join("\n") : "(none)";
-  return [
-    "Fix this df-web-review-kit QA issue.",
-    "",
-    `Page: ${getItemTarget(item, reviewPathPrefix)}`,
-    `URL: ${item.originalUrl ?? item.pageUrl}`,
-    `QA item: ${numberedItem.displayLabel}`,
-    `Viewport: ${numberedItem.label} ${formatPromptViewport(item)}`,
-    `Scroll: ${formatPromptPoint(item.scroll)}`,
-    "",
-    "Target:",
-    `Primary selector: ${anchor?.selector ?? "(missing)"}`,
-    `Primary strategy: ${anchor?.strategy ?? "(missing)"}`,
-    `Text fingerprint: ${anchor?.textFingerprint ?? "(none)"}`,
-    "Selector candidates:",
-    candidateLines,
-    "",
-    "Source hint:",
-    formatPromptSourceHint(item),
-    "",
-    `Marker: ${formatPromptPoint(item.marker?.viewport)}`,
-    `Marker relative: ${formatPromptPoint(item.marker?.relative)}`,
-    `Selection: ${formatPromptSelection(item.selection?.viewport)}`,
-    `Selection relative: ${formatPromptSelection(item.selection?.relative)}`,
-    "",
-    "Element HTML snippet:",
-    "```html",
-    anchor?.htmlSnippet ? decodePromptHtmlEntities(anchor.htmlSnippet) : "(not available)",
-    "```",
-    "",
-    "Issue:",
-    item.comment,
-    "",
-    "Request:",
-    "Find the target element with the selector candidates above and apply the smallest UI/CSS/code change that fixes this QA issue. If the selector is missing because CSR or hydration has not finished, wait for the page to load and use the Source hint first. Preserve unrelated layout and behavior."
-  ].join("\n");
-};
-var getPromptLengthLabel = (value) => {
-  const length = value.length;
-  if (length <= 2e3) return `${length} chars / Discord 2,000 OK`;
-  if (length <= 4e3) return `${length} chars / Nitro 4,000 OK`;
-  return `${length} chars / attach as file`;
-};
-var formatDate = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString(void 0, {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-};
-
-// src/react-shell/shell-modals.tsx
-import { jsx, jsxs } from "react/jsx-runtime";
-var EMPTY_SITEMAP_QA_COUNT = {
-  local: 0,
-  remote: 0
-};
-var SitemapModal = ({
-  pages,
-  activeRoute,
-  pageQaCounts,
-  pagePresenceUsers,
-  getPageTarget,
-  onClose,
-  onSelectPage
-}) => {
-  return /* @__PURE__ */ jsxs(
-    "div",
-    {
-      "aria-label": "Sitemap",
-      "aria-modal": "true",
-      className: "df-review-sitemap-modal",
-      role: "dialog",
-      children: [
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            "aria-label": "Close sitemap",
-            className: "df-review-sitemap-backdrop",
-            type: "button",
-            onClick: onClose
-          }
-        ),
-        /* @__PURE__ */ jsxs("div", { className: "df-review-sitemap-dialog", children: [
-          /* @__PURE__ */ jsxs("div", { className: "df-review-sitemap-header", children: [
-            /* @__PURE__ */ jsxs("div", { children: [
-              /* @__PURE__ */ jsx("strong", { children: "Sitemap" }),
-              /* @__PURE__ */ jsxs("span", { children: [
-                pages.length,
-                " pages"
-              ] })
-            ] }),
-            /* @__PURE__ */ jsx("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
-          ] }),
-          /* @__PURE__ */ jsx("div", { className: "df-review-sitemap-list", children: pages.map((page) => {
-            const pageTarget = getPageTarget(page.href);
-            const qaCount = pageQaCounts.get(pageTarget) ?? EMPTY_SITEMAP_QA_COUNT;
-            const pageUsers = pagePresenceUsers.get(pageTarget) ?? [];
-            return /* @__PURE__ */ jsxs(
-              "button",
-              {
-                "aria-label": `${page.href} / local ${qaCount.local} QA / remote ${qaCount.remote} QA / ${pageUsers.length} online`,
-                className: pageTarget === activeRoute ? "is-active" : "",
-                type: "button",
-                onClick: () => onSelectPage(page.href),
-                children: [
-                  /* @__PURE__ */ jsx("span", { className: "df-review-sitemap-path", children: page.href }),
-                  /* @__PURE__ */ jsxs("span", { className: "df-review-sitemap-meta", children: [
-                    pageUsers.length > 0 && /* @__PURE__ */ jsx("span", { className: "df-review-sitemap-users", children: pageUsers.map((user) => /* @__PURE__ */ jsx(
-                      "span",
-                      {
-                        className: "df-review-sitemap-user",
-                        style: {
-                          "--df-review-presence-color": user.color
-                        },
-                        children: user.userId
-                      },
-                      user.sessionId
-                    )) }),
-                    /* @__PURE__ */ jsxs("span", { className: "df-review-sitemap-counts", children: [
-                      /* @__PURE__ */ jsxs("span", { className: "df-review-sitemap-count is-local", children: [
-                        "L ",
-                        qaCount.local
-                      ] }),
-                      /* @__PURE__ */ jsxs("span", { className: "df-review-sitemap-count is-remote", children: [
-                        "R ",
-                        qaCount.remote
-                      ] })
-                    ] })
-                  ] })
-                ]
-              },
-              page.href
-            );
-          }) })
-        ] })
-      ]
-    }
-  );
-};
-var ReviewSettingsModal = ({
-  figmaTokenDraft,
-  reviewUserIdDraft,
-  reviewThemeDraft,
-  figmaSettingsStatus,
-  isFigmaTokenVisible,
-  isFigmaTokenGuideOpen,
-  onClose,
-  onFigmaTokenDraftChange,
-  onReviewUserIdDraftChange,
-  onReviewThemeDraftChange,
-  onClearStatus,
-  onToggleFigmaTokenVisible,
-  onToggleFigmaTokenGuide,
-  onSave
-}) => {
-  return /* @__PURE__ */ jsxs(
-    "div",
-    {
-      "aria-label": "Review settings",
-      "aria-modal": "true",
-      className: "df-review-settings-modal",
-      role: "dialog",
-      children: [
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            "aria-label": "Close settings",
-            className: "df-review-settings-backdrop",
-            type: "button",
-            onClick: onClose
-          }
-        ),
-        /* @__PURE__ */ jsxs(
-          "form",
-          {
-            className: "df-review-settings-dialog",
-            onSubmit: (event) => {
-              event.preventDefault();
-              onSave(figmaTokenDraft, reviewUserIdDraft, reviewThemeDraft);
-            },
-            children: [
-              /* @__PURE__ */ jsxs("div", { className: "df-review-settings-header", children: [
-                /* @__PURE__ */ jsxs("div", { children: [
-                  /* @__PURE__ */ jsx("strong", { children: "Settings" }),
-                  /* @__PURE__ */ jsxs("span", { children: [
-                    FIGMA_TOKEN_STORAGE_KEY,
-                    " / ",
-                    REVIEW_USER_ID_STORAGE_KEY,
-                    " /",
-                    " ",
-                    REVIEW_THEME_STORAGE_KEY
-                  ] })
-                ] }),
-                /* @__PURE__ */ jsx("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" })
-              ] }),
-              /* @__PURE__ */ jsxs("div", { className: "df-review-settings-body", children: [
-                /* @__PURE__ */ jsxs("div", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ jsxs("div", { className: "df-review-settings-label-row", children: [
-                    /* @__PURE__ */ jsx("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
-                    /* @__PURE__ */ jsx(
-                      "button",
-                      {
-                        "aria-controls": FIGMA_TOKEN_GUIDE_ID,
-                        "aria-expanded": isFigmaTokenGuideOpen,
-                        "aria-label": "Show Figma token guide",
-                        className: `df-review-settings-help-button${isFigmaTokenGuideOpen ? " is-active" : ""}`,
-                        type: "button",
-                        onClick: onToggleFigmaTokenGuide,
-                        children: /* @__PURE__ */ jsx(CircleQuestionMark, { "aria-hidden": "true" })
-                      }
-                    )
-                  ] }),
-                  /* @__PURE__ */ jsxs("div", { className: "df-review-settings-token-input", children: [
-                    /* @__PURE__ */ jsx(
-                      "input",
-                      {
-                        id: "df-review-figma-token",
-                        "aria-label": "Figma token",
-                        "aria-describedby": isFigmaTokenGuideOpen ? FIGMA_TOKEN_GUIDE_ID : void 0,
-                        autoCapitalize: "off",
-                        autoComplete: "off",
-                        autoCorrect: "off",
-                        className: isFigmaTokenVisible ? void 0 : "is-token-masked",
-                        "data-1p-ignore": "true",
-                        "data-lpignore": "true",
-                        inputMode: "text",
-                        name: "df-review-figma-access-key",
-                        spellCheck: false,
-                        type: "text",
-                        value: figmaTokenDraft,
-                        onChange: (event) => {
-                          onFigmaTokenDraftChange(event.target.value);
-                          onClearStatus();
-                        }
-                      }
-                    ),
-                    /* @__PURE__ */ jsx(
-                      "button",
-                      {
-                        "aria-label": isFigmaTokenVisible ? "Hide Figma token" : "Show Figma token",
-                        className: "df-review-settings-token-toggle",
-                        type: "button",
-                        onClick: onToggleFigmaTokenVisible,
-                        children: isFigmaTokenVisible ? /* @__PURE__ */ jsx(EyeOff, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx(Eye, { "aria-hidden": "true" })
-                      }
-                    )
-                  ] }),
-                  isFigmaTokenGuideOpen && /* @__PURE__ */ jsx(
-                    "div",
-                    {
-                      className: "df-review-settings-guide",
-                      id: FIGMA_TOKEN_GUIDE_ID,
-                      children: /* @__PURE__ */ jsxs("ol", { children: [
-                        /* @__PURE__ */ jsx("li", { children: "Figma file browser\uC5D0\uC11C account menu\uB97C \uC5F4\uACE0 Settings\uB85C \uC774\uB3D9" }),
-                        /* @__PURE__ */ jsx("li", { children: "Security \uD0ED\uC758 Personal access tokens\uB85C \uC774\uB3D9" }),
-                        /* @__PURE__ */ jsx("li", { children: "Generate new token\uC5D0\uC11C \uC774\uB984\uACFC scope\uB97C \uC815\uD55C \uB4A4 \uC0DD\uC131" }),
-                        /* @__PURE__ */ jsx("li", { children: "\uC0DD\uC131\uB41C token\uC744 \uBCF5\uC0AC\uD574\uC11C \uC5EC\uAE30\uC5D0 \uBD99\uC5EC\uB123\uAE30" })
-                      ] })
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxs("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ jsx("span", { children: "User ID" }),
-                  /* @__PURE__ */ jsx("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ jsx(
-                    "input",
-                    {
-                      "aria-label": "Review user ID",
-                      autoComplete: "off",
-                      spellCheck: false,
-                      type: "text",
-                      value: reviewUserIdDraft,
-                      onChange: (event) => {
-                        onReviewUserIdDraftChange(event.target.value);
-                        onClearStatus();
-                      }
-                    }
-                  ) })
-                ] }),
-                /* @__PURE__ */ jsxs("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ jsx("span", { children: "Theme" }),
-                  /* @__PURE__ */ jsx("div", { className: "df-review-settings-select-input", children: /* @__PURE__ */ jsx(
-                    "select",
-                    {
-                      "aria-label": "Review theme",
-                      value: reviewThemeDraft,
-                      onChange: (event) => {
-                        onReviewThemeDraftChange(
-                          normalizeReviewTheme(event.target.value)
-                        );
-                        onClearStatus();
-                      },
-                      children: REVIEW_THEME_OPTIONS.map((option) => /* @__PURE__ */ jsx("option", { value: option.value, children: option.label }, option.value))
-                    }
-                  ) })
-                ] }),
-                figmaSettingsStatus && /* @__PURE__ */ jsx("p", { className: "df-review-settings-status", children: figmaSettingsStatus }),
-                /* @__PURE__ */ jsxs("div", { className: "df-review-settings-actions", children: [
-                  /* @__PURE__ */ jsx(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => onSave("", "", DEFAULT_REVIEW_THEME),
-                      children: "Clear"
-                    }
-                  ),
-                  /* @__PURE__ */ jsx("span", {}),
-                  /* @__PURE__ */ jsx("button", { type: "button", onClick: onClose, children: "Cancel" }),
-                  /* @__PURE__ */ jsx("button", { type: "submit", children: "Save" })
-                ] })
-              ] })
-            ]
-          }
-        )
-      ]
-    }
-  );
-};
-var PromptModal = ({
-  numberedItem,
-  promptTab,
-  activeLabel,
-  activeText,
-  activeCopyKey,
-  copiedPromptKey,
-  onClose,
-  onPromptTabChange,
-  onCopyPrompt
-}) => {
-  return /* @__PURE__ */ jsxs(
-    "div",
-    {
-      "aria-label": "Prompt",
-      "aria-modal": "true",
-      className: "df-review-prompt-modal",
-      role: "dialog",
-      children: [
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            "aria-label": "Close prompt",
-            className: "df-review-prompt-backdrop",
-            type: "button",
-            onClick: onClose
-          }
-        ),
-        /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-dialog", children: [
-          /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-header", children: [
-            /* @__PURE__ */ jsxs("div", { children: [
-              /* @__PURE__ */ jsx("strong", { children: "Prompt" }),
-              /* @__PURE__ */ jsxs("span", { children: [
-                numberedItem.displayLabel,
-                " / ",
-                getItemTitle(numberedItem.item)
-              ] })
-            ] }),
-            /* @__PURE__ */ jsx("button", { "aria-label": "Close prompt", type: "button", onClick: onClose, children: "x" })
-          ] }),
-          /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-body", children: [
-            /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-tabs", role: "tablist", children: [
-              /* @__PURE__ */ jsx(
-                "button",
-                {
-                  "aria-selected": promptTab === "initial",
-                  className: promptTab === "initial" ? "is-active" : "",
-                  role: "tab",
-                  type: "button",
-                  onClick: () => onPromptTabChange("initial"),
-                  children: "Initial prompt"
-                }
-              ),
-              /* @__PURE__ */ jsx(
-                "button",
-                {
-                  "aria-selected": promptTab === "item",
-                  className: promptTab === "item" ? "is-active" : "",
-                  role: "tab",
-                  type: "button",
-                  onClick: () => onPromptTabChange("item"),
-                  children: "This QA prompt"
-                }
-              )
-            ] }),
-            /* @__PURE__ */ jsxs("section", { className: "df-review-prompt-block", role: "tabpanel", children: [
-              /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-block-header", children: [
-                /* @__PURE__ */ jsxs("div", { children: [
-                  /* @__PURE__ */ jsx("strong", { children: activeLabel }),
-                  /* @__PURE__ */ jsx("span", { children: getPromptLengthLabel(activeText) })
-                ] }),
-                /* @__PURE__ */ jsxs(
-                  "button",
-                  {
-                    disabled: !activeText,
-                    type: "button",
-                    onClick: () => onCopyPrompt(activeText, activeCopyKey),
-                    children: [
-                      /* @__PURE__ */ jsx(Copy, { "aria-hidden": "true" }),
-                      copiedPromptKey === activeCopyKey ? "Copied" : "Copy"
-                    ]
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ jsx(
-                "textarea",
-                {
-                  readOnly: true,
-                  "aria-label": activeLabel,
-                  value: activeText || `${activeLabel} is not configured.`
-                }
-              )
-            ] })
-          ] })
-        ] })
-      ]
-    }
-  );
-};
-
-// src/react-shell/topbar.tsx
-import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
-var ReviewScopeIcon = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ jsx2(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ jsx2(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ jsx2(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ jsx2(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx2(Monitor, { "aria-hidden": "true" });
-};
-var ViewportPresetIcon = ({
-  preset
-}) => {
-  return /* @__PURE__ */ jsx2(ReviewScopeIcon, { scope: getViewportPresetKind(preset) });
-};
-var ReviewTopbar = ({
-  draftTarget,
-  copyLabel,
-  viewportPresets,
-  size,
-  presetScopeCounts,
+// src/react-shell/hooks/use.review.ruler.drag.ts
+var useReviewRulerDrag = ({
+  iframeRef,
   isRulerAvailable,
   isRulerVisible,
-  targetOverlayState,
-  isFigmaOverlayAvailable,
-  onDraftTargetChange,
-  onApplyTarget,
-  onOpenSitemap,
-  onCopyCurrentUrl,
-  onSizeChange,
-  onToggleRuler,
-  onToggleTargetOverlay,
-  onOpenSettings
+  size,
+  targetSrc
 }) => {
-  return /* @__PURE__ */ jsxs2("header", { className: "df-review-topbar", children: [
-    /* @__PURE__ */ jsxs2(
-      "form",
-      {
-        className: "df-review-address",
-        onSubmit: (event) => {
-          event.preventDefault();
-          onApplyTarget();
-        },
-        children: [
-          /* @__PURE__ */ jsx2(
-            "button",
-            {
-              "aria-label": "Open sitemap",
-              className: "df-review-sitemap-button",
-              type: "button",
-              onClick: onOpenSitemap,
-              children: /* @__PURE__ */ jsx2(Map2, { "aria-hidden": "true" })
-            }
-          ),
-          /* @__PURE__ */ jsx2(
-            "input",
-            {
-              "aria-label": "Path",
-              value: draftTarget,
-              onChange: (event) => onDraftTargetChange(event.target.value)
-            }
-          ),
-          /* @__PURE__ */ jsx2("button", { type: "submit", children: "Load" }),
-          /* @__PURE__ */ jsx2("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
-        ]
+  const rulerOverlayRef = useRef2(null);
+  const rulerDragRectRef = useRef2(null);
+  const isRulerDraggingRef = useRef2(false);
+  const sizeRef = useRef2(size);
+  const [rulerStart, setRulerStart] = useState2(null);
+  const [rulerPoint, setRulerPoint] = useState2(null);
+  const [rulerHover, setRulerHover] = useState2(null);
+  const [isRulerDragging, setIsRulerDragging] = useState2(false);
+  const rulerMeasure = useMemo3(
+    () => getRulerMeasure(rulerStart, rulerPoint),
+    [rulerPoint, rulerStart]
+  );
+  const clearRulerMeasure = useCallback7(() => {
+    rulerDragRectRef.current = null;
+    isRulerDraggingRef.current = false;
+    setRulerStart(null);
+    setRulerPoint(null);
+    setRulerHover(null);
+    setIsRulerDragging(false);
+  }, []);
+  const finishRulerDrag = useCallback7((point) => {
+    if (point) {
+      setRulerPoint(point);
+    }
+    rulerDragRectRef.current = null;
+    isRulerDraggingRef.current = false;
+    setIsRulerDragging(false);
+  }, []);
+  const startRulerDrag = useCallback7(
+    (clientX, clientY, rect) => {
+      const point = getRulerPointFromRect(clientX, clientY, rect);
+      rulerDragRectRef.current = rect;
+      isRulerDraggingRef.current = true;
+      setRulerStart(point);
+      setRulerPoint(point);
+      setIsRulerDragging(true);
+    },
+    []
+  );
+  useEffect5(() => {
+    sizeRef.current = size;
+  }, [size]);
+  useEffect5(() => {
+    if (!isRulerVisible || !isRulerAvailable) return void 0;
+    const getRulerEventClientPoint = (event) => {
+      const frame2 = iframeRef.current;
+      let isFrameEvent = false;
+      try {
+        isFrameEvent = Boolean(frame2?.contentWindow) && event.view === frame2?.contentWindow;
+        if (!isFrameEvent && frame2?.contentDocument) {
+          const targetDocument = event.target?.ownerDocument;
+          isFrameEvent = targetDocument === frame2.contentDocument;
+        }
+      } catch {
+        isFrameEvent = false;
       }
+      if (isFrameEvent && frame2) {
+        const frameRect = frame2.getBoundingClientRect();
+        return {
+          clientX: event.clientX + frameRect.left,
+          clientY: event.clientY + frameRect.top
+        };
+      }
+      return {
+        clientX: event.clientX,
+        clientY: event.clientY
+      };
+    };
+    const snapDesign = (screen, axis) => {
+      const current = sizeRef.current;
+      const scaleX = current.designWidth ? current.width / current.designWidth : 1;
+      const scale = axis === "y" ? current.designHeight ? current.height / current.designHeight : scaleX : scaleX;
+      return Math.round(Math.round(screen / scale) * scale);
+    };
+    const getActiveRulerPoint = (event) => {
+      const rect = rulerDragRectRef.current ?? rulerOverlayRef.current?.getBoundingClientRect();
+      if (!rect) return void 0;
+      const point = getRulerEventClientPoint(event);
+      const snapped = getRulerPointFromRect(point.clientX, point.clientY, rect);
+      return { x: snapDesign(snapped.x, "x"), y: snapDesign(snapped.y, "y") };
+    };
+    const getHoverRulerPoint = (event) => {
+      const rect = rulerOverlayRef.current?.getBoundingClientRect();
+      if (!rect) return null;
+      const { clientX, clientY } = getRulerEventClientPoint(event);
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
+      return { x: snapDesign(x, "x"), y: snapDesign(y, "y") };
+    };
+    const handleDragStart = (event) => {
+      if (isRulerDraggingRef.current) return;
+      const mouseEvent = event;
+      if (mouseEvent.button !== 0) return;
+      const overlay = rulerOverlayRef.current;
+      const target = mouseEvent.target;
+      if (!overlay || !(target instanceof Node) || !overlay.contains(target)) {
+        return;
+      }
+      event.preventDefault();
+      startRulerDrag(
+        mouseEvent.clientX,
+        mouseEvent.clientY,
+        overlay.getBoundingClientRect()
+      );
+    };
+    const handlePointerMove = (event) => {
+      const mouseEvent = event;
+      if (isRulerDraggingRef.current) {
+        const point = getActiveRulerPoint(mouseEvent);
+        if (!point) return;
+        mouseEvent.preventDefault();
+        setRulerPoint(point);
+        setRulerHover(point);
+        return;
+      }
+      setRulerHover(getHoverRulerPoint(mouseEvent));
+    };
+    const handleDragEnd = (event) => {
+      if (!isRulerDraggingRef.current) return;
+      const point = getActiveRulerPoint(event);
+      event.preventDefault();
+      finishRulerDrag(point);
+    };
+    const handleWindowBlur = () => {
+      if (!isRulerDraggingRef.current) return;
+      finishRulerDrag();
+    };
+    const dragTargets = /* @__PURE__ */ new Set([window]);
+    const frame = iframeRef.current;
+    try {
+      if (frame?.contentWindow) dragTargets.add(frame.contentWindow);
+      if (frame?.contentDocument) dragTargets.add(frame.contentDocument);
+    } catch {
+    }
+    dragTargets.forEach((target) => {
+      target.addEventListener("mousedown", handleDragStart, true);
+      target.addEventListener("mousemove", handlePointerMove, true);
+      target.addEventListener("mouseup", handleDragEnd, true);
+    });
+    window.addEventListener("blur", handleWindowBlur);
+    return () => {
+      dragTargets.forEach((target) => {
+        target.removeEventListener("mousedown", handleDragStart, true);
+        target.removeEventListener("mousemove", handlePointerMove, true);
+        target.removeEventListener("mouseup", handleDragEnd, true);
+      });
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [
+    finishRulerDrag,
+    iframeRef,
+    isRulerAvailable,
+    isRulerVisible,
+    startRulerDrag
+  ]);
+  useEffect5(() => {
+    clearRulerMeasure();
+  }, [clearRulerMeasure, size.height, size.width, targetSrc]);
+  return {
+    clearRulerMeasure,
+    isRulerDragging,
+    rulerHover,
+    rulerMeasure,
+    rulerOverlayRef
+  };
+};
+
+// src/react-shell/hooks/use.review.ruler.ts
+var useReviewRuler = ({
+  iframeRef,
+  ruler,
+  size,
+  targetSrc,
+  onCancelReviewMode,
+  onCloseTransientPanels
+}) => {
+  const [isRulerVisible, setIsRulerVisible] = useState3(false);
+  const isRulerAvailable = ruler?.enabled !== false && typeof size.designWidth === "number" && size.designWidth > 0;
+  const rulerUnit = ruler?.unit ?? "px";
+  const rulerScaleX = isRulerAvailable && size.designWidth ? size.width / size.designWidth : 1;
+  const rulerScaleY = size.designHeight && size.designHeight > 0 ? size.height / size.designHeight : rulerScaleX;
+  const {
+    clearRulerMeasure,
+    isRulerDragging,
+    rulerHover,
+    rulerMeasure,
+    rulerOverlayRef
+  } = useReviewRulerDrag({
+    iframeRef,
+    isRulerAvailable,
+    isRulerVisible,
+    size,
+    targetSrc
+  });
+  const rulerMeasureLabel = rulerMeasure ? `Figma ${Math.round(rulerMeasure.width / rulerScaleX)}x${Math.round(
+    rulerMeasure.height / rulerScaleY
+  )}${rulerUnit}` : "";
+  const closeRuler = useCallback8(() => {
+    if (!isRulerVisible) return false;
+    setIsRulerVisible(false);
+    clearRulerMeasure();
+    return true;
+  }, [clearRulerMeasure, isRulerVisible]);
+  const toggleRuler = useCallback8(() => {
+    if (!isRulerAvailable) return;
+    onCancelReviewMode();
+    onCloseTransientPanels();
+    clearRulerMeasure();
+    setIsRulerVisible((current) => !current);
+  }, [
+    clearRulerMeasure,
+    isRulerAvailable,
+    onCancelReviewMode,
+    onCloseTransientPanels
+  ]);
+  useEffect6(() => {
+    if (!isRulerVisible || isRulerAvailable) return;
+    closeRuler();
+  }, [closeRuler, isRulerAvailable, isRulerVisible]);
+  return {
+    closeRuler,
+    isRulerAvailable,
+    isRulerDragging,
+    isRulerVisible,
+    rulerHover,
+    rulerMeasure,
+    rulerMeasureLabel,
+    rulerOverlayRef,
+    rulerScaleX,
+    rulerScaleY,
+    rulerUnit,
+    toggleRuler
+  };
+};
+
+// src/react-shell/hooks/use.review.settings.ts
+import { useCallback as useCallback9, useEffect as useEffect7, useState as useState4 } from "react";
+var useReviewSettings = ({
+  onCancelReviewMode,
+  onCloseInitialPrompt,
+  onCloseSitemap,
+  onReloadTargetFrame
+}) => {
+  const [figmaTokenDraft, setFigmaTokenDraft] = useState4(getStoredFigmaToken);
+  const [reviewUserId, setReviewUserId] = useState4(getStoredReviewUserId);
+  const [reviewUserIdDraft, setReviewUserIdDraft] = useState4(
+    getStoredReviewUserId
+  );
+  const [reviewTheme, setReviewTheme] = useState4(getStoredReviewTheme);
+  const [reviewThemeDraft, setReviewThemeDraft] = useState4(getStoredReviewTheme);
+  const [systemReviewTheme, setSystemReviewTheme] = useState4(getSystemReviewTheme);
+  const [figmaSettingsStatus, setFigmaSettingsStatus] = useState4("");
+  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState4(false);
+  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState4(false);
+  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState4(false);
+  const effectiveReviewTheme = reviewTheme === "system" ? systemReviewTheme : reviewTheme;
+  const closeFigmaSettings = useCallback9(() => {
+    setIsFigmaSettingsOpen(false);
+    setFigmaSettingsStatus("");
+    setIsFigmaTokenVisible(false);
+    setIsFigmaTokenGuideOpen(false);
+  }, []);
+  const openFigmaSettings = useCallback9(() => {
+    onCancelReviewMode();
+    onCloseSitemap();
+    onCloseInitialPrompt();
+    setFigmaTokenDraft(getStoredFigmaToken());
+    setReviewUserIdDraft(getStoredReviewUserId());
+    setReviewThemeDraft(reviewTheme);
+    setFigmaSettingsStatus("");
+    setIsFigmaTokenVisible(false);
+    setIsFigmaTokenGuideOpen(false);
+    setIsFigmaSettingsOpen(true);
+  }, [
+    onCancelReviewMode,
+    onCloseInitialPrompt,
+    onCloseSitemap,
+    reviewTheme
+  ]);
+  const saveReviewSettings = useCallback9(
+    (token, userId, theme) => {
+      const nextToken = token.trim();
+      const nextUserId = userId.trim();
+      const nextTheme = normalizeReviewTheme(theme);
+      const shouldReload = nextToken !== getStoredFigmaToken() || nextUserId !== getStoredReviewUserId();
+      writeStoredFigmaToken(nextToken);
+      writeStoredReviewUserId(nextUserId);
+      writeStoredReviewTheme(nextTheme);
+      setFigmaTokenDraft(nextToken);
+      setReviewUserId(nextUserId);
+      setReviewUserIdDraft(nextUserId);
+      setReviewTheme(nextTheme);
+      setReviewThemeDraft(nextTheme);
+      setFigmaSettingsStatus(
+        nextToken || nextUserId || nextTheme !== DEFAULT_REVIEW_THEME ? "Saved" : "Cleared"
+      );
+      if (shouldReload) {
+        onReloadTargetFrame();
+      }
+      closeFigmaSettings();
+    },
+    [closeFigmaSettings, onReloadTargetFrame]
+  );
+  useEffect7(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return void 0;
+    const query = window.matchMedia("(prefers-color-scheme: light)");
+    const syncSystemTheme = () => {
+      setSystemReviewTheme(query.matches ? "light" : "dark");
+    };
+    syncSystemTheme();
+    if (query.addEventListener) {
+      query.addEventListener("change", syncSystemTheme);
+      return () => query.removeEventListener("change", syncSystemTheme);
+    }
+    query.addListener(syncSystemTheme);
+    return () => query.removeListener(syncSystemTheme);
+  }, []);
+  useEffect7(() => {
+    document.body.classList.toggle(
+      "df-review-theme-light",
+      effectiveReviewTheme === "light"
+    );
+    document.body.classList.toggle(
+      "df-review-theme-dark",
+      effectiveReviewTheme === "dark"
+    );
+    return () => {
+      document.body.classList.remove(
+        "df-review-theme-light",
+        "df-review-theme-dark"
+      );
+    };
+  }, [effectiveReviewTheme]);
+  return {
+    closeFigmaSettings,
+    effectiveReviewTheme,
+    figmaSettingsStatus,
+    figmaTokenDraft,
+    isFigmaSettingsOpen,
+    isFigmaTokenGuideOpen,
+    isFigmaTokenVisible,
+    openFigmaSettings,
+    reviewThemeDraft,
+    reviewUserId,
+    reviewUserIdDraft,
+    saveReviewSettings,
+    setFigmaSettingsStatus,
+    setFigmaTokenDraft,
+    setIsFigmaTokenGuideOpen,
+    setIsFigmaTokenVisible,
+    setReviewThemeDraft,
+    setReviewUserIdDraft
+  };
+};
+
+// src/react-shell/hooks/use.review.shell.data.ts
+import { useCallback as useCallback10, useMemo as useMemo4, useState as useState5 } from "react";
+var createEmptySitemapQaCount = () => ({
+  local: 0,
+  remote: 0
+});
+var useReviewShellData = ({
+  activeRoute,
+  pages,
+  reviewPathPrefix,
+  reviewViewportPresets,
+  selectedItemId,
+  size,
+  target,
+  viewportPresets
+}) => {
+  const [items, setItems] = useState5([]);
+  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = useState5(
+    () => /* @__PURE__ */ new Set()
+  );
+  const [qaFilter, setQaFilter] = useState5("all");
+  const [sitemapItems, setSitemapItems] = useState5(() => ({
+    local: [],
+    remote: []
+  }));
+  const targetSrc = useMemo4(() => buildTargetSrc(target), [target]);
+  const pageTargets = useMemo4(
+    () => new Set(
+      pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
     ),
-    /* @__PURE__ */ jsxs2("div", { className: "df-review-tools", children: [
-      /* @__PURE__ */ jsxs2("div", { className: "df-review-tool-controls", children: [
-        /* @__PURE__ */ jsx2("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ jsxs2(
+    [pages, reviewPathPrefix]
+  );
+  const activeItems = useMemo4(
+    () => items.filter((item) => getItemTarget(item, reviewPathPrefix) === activeRoute).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+    [activeRoute, items, reviewPathPrefix]
+  );
+  const numberedActiveItems = useMemo4(
+    () => getNumberedReviewItems(activeItems, reviewViewportPresets),
+    [activeItems, reviewViewportPresets]
+  );
+  const filteredNumberedActiveItems = useMemo4(
+    () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
+      (numberedItem) => numberedItem.scope === qaFilter
+    ),
+    [numberedActiveItems, qaFilter]
+  );
+  const hiddenOverlayItemIdList = useMemo4(
+    () => Array.from(hiddenOverlayItemIds),
+    [hiddenOverlayItemIds]
+  );
+  const qaFilterCounts = useMemo4(() => {
+    const counts = /* @__PURE__ */ new Map();
+    counts.set("all", numberedActiveItems.length);
+    numberedActiveItems.forEach((numberedItem) => {
+      counts.set(numberedItem.scope, (counts.get(numberedItem.scope) ?? 0) + 1);
+    });
+    return counts;
+  }, [numberedActiveItems]);
+  const getItemPresetScope = useCallback10(
+    (item) => getViewportPresetKind(
+      findViewportPreset(
+        viewportPresets,
+        item.viewport?.width ?? 0,
+        item.viewport?.height ?? 0
+      )
+    ),
+    [viewportPresets]
+  );
+  const presetScopeCounts = useMemo4(() => {
+    const counts = /* @__PURE__ */ new Map();
+    activeItems.forEach((item) => {
+      const scope = getItemPresetScope(item);
+      counts.set(scope, (counts.get(scope) ?? 0) + 1);
+    });
+    return counts;
+  }, [activeItems, getItemPresetScope]);
+  const currentPresetScope = getViewportPresetKind(size);
+  const pageQaCounts = useMemo4(() => {
+    const counts = /* @__PURE__ */ new Map();
+    const addItems = (sourceKey, sourceItems) => {
+      sourceItems.forEach((item) => {
+        const pageTarget = normalizeTarget(
+          getItemTarget(item, reviewPathPrefix),
+          reviewPathPrefix
+        );
+        const count = counts.get(pageTarget) ?? createEmptySitemapQaCount();
+        count[sourceKey] += 1;
+        counts.set(pageTarget, count);
+      });
+    };
+    addItems("local", sitemapItems.local);
+    addItems("remote", sitemapItems.remote);
+    return counts;
+  }, [reviewPathPrefix, sitemapItems]);
+  const selectedNumberedItem = useMemo4(
+    () => selectedItemId ? numberedActiveItems.find(
+      (numberedItem) => numberedItem.item.id === selectedItemId
+    ) : void 0,
+    [numberedActiveItems, selectedItemId]
+  );
+  return {
+    activeItems,
+    currentPresetScope,
+    filteredNumberedActiveItems,
+    getItemPresetScope,
+    hiddenOverlayItemIdList,
+    hiddenOverlayItemIds,
+    pageQaCounts,
+    pageTargets,
+    presetScopeCounts,
+    qaFilter,
+    qaFilterCounts,
+    selectedNumberedItem,
+    setHiddenOverlayItemIds,
+    setItems,
+    setQaFilter,
+    setSitemapItems,
+    targetSrc
+  };
+};
+
+// src/react-shell/hooks/use.review.shell.hotkeys.ts
+import { useEffect as useEffect8 } from "react";
+var useReviewShellHotkeys = ({
+  isFigmaSettingsOpen,
+  isInitialPromptOpen,
+  isRulerAvailable,
+  isRulerVisible,
+  isSitemapOpen,
+  mode,
+  onCancelReviewMode,
+  onCloseFigmaSettings,
+  onCloseInitialPrompt,
+  onCloseRuler,
+  onCloseSitemap,
+  onSetReviewMode,
+  onToggleRuler,
+  onToggleTargetOverlay
+}) => {
+  useEffect8(() => {
+    if (mode === "idle" && !isRulerVisible && !isInitialPromptOpen && !isSitemapOpen && !isFigmaSettingsOpen) {
+      return;
+    }
+    const handleKeyDown = (event) => {
+      if (event.key !== "Escape") return;
+      if (mode !== "idle" && onCancelReviewMode()) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (onCloseRuler()) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (isInitialPromptOpen) {
+        onCloseInitialPrompt();
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (isSitemapOpen) {
+        onCloseSitemap();
+        return;
+      }
+      if (isFigmaSettingsOpen) {
+        onCloseFigmaSettings();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    isFigmaSettingsOpen,
+    isInitialPromptOpen,
+    isRulerVisible,
+    isSitemapOpen,
+    mode,
+    onCancelReviewMode,
+    onCloseFigmaSettings,
+    onCloseInitialPrompt,
+    onCloseRuler,
+    onCloseSitemap
+  ]);
+  useEffect8(() => {
+    const handleHotkey = (event) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return;
+      }
+      if (isEditableEventTarget(event)) return;
+      const actions = {
+        r: () => {
+          if (isRulerAvailable) onToggleRuler();
+        },
+        g: () => onToggleTargetOverlay("grid"),
+        f: () => onToggleTargetOverlay("figma"),
+        n: () => onSetReviewMode("note"),
+        e: () => onSetReviewMode("element"),
+        a: () => onSetReviewMode("area")
+      };
+      const action = actions[event.key.toLowerCase()];
+      if (!action) return;
+      event.preventDefault();
+      action();
+    };
+    window.addEventListener("keydown", handleHotkey);
+    return () => window.removeEventListener("keydown", handleHotkey);
+  }, [
+    isRulerAvailable,
+    onSetReviewMode,
+    onToggleRuler,
+    onToggleTargetOverlay
+  ]);
+};
+
+// src/react-shell/hooks/use.review.shell.state.ts
+import {
+  useMemo as useMemo5,
+  useRef as useRef3,
+  useState as useState6
+} from "react";
+
+// src/react-shell/adapters.ts
+var ALL_REVIEW_WRITE_MODES = ["dom", "note", "area"];
+function normalizeReviewShellAdapters(adapters) {
+  if (Array.isArray(adapters)) {
+    const normalized = adapters.map((adapter) => normalizeShellAdapter(adapter));
+    const local = normalized.find((adapter) => adapter.label === "local") ?? null;
+    const remote = normalized.find((adapter) => adapter.label !== "local") ?? null;
+    if (normalized.length === 0 || !local && !remote) {
+      throw new Error("ReviewShell requires at least one adapter.");
+    }
+    return {
+      local,
+      remote,
+      sources: normalized
+    };
+  }
+  return normalizeLegacyAdapterMap(adapters);
+}
+function normalizeLegacyAdapterMap(adapters) {
+  const local = {
+    label: "local",
+    adapter: adapters.local,
+    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+    updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
+    syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
+    writeModes: [...ALL_REVIEW_WRITE_MODES],
+    canRemove: true
+  };
+  const remote = adapters.remote ? {
+    label: "remote",
+    adapter: adapters.remote,
+    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+    updateStatus: ({ id, status }) => adapters.remote?.update(id, { status }) ?? Promise.reject(new Error("Remote adapter is not available.")),
+    writeModes: [],
+    canRemove: false,
+    pageId: adapters.remotePageId
+  } : null;
+  return {
+    local,
+    remote,
+    sources: remote ? [local, remote] : [local]
+  };
+}
+function normalizeShellAdapter(adapterConfig) {
+  const statusOptions = [
+    ...adapterConfig.statusOptions ?? REVIEW_WORKFLOW_STATUS_OPTIONS
+  ];
+  const updateAdapter = adapterConfig.update;
+  const updateStatus = adapterConfig.updateStatus ? adapterConfig.updateStatus : updateAdapter ? ({ id, status }) => updateAdapter(id, { status }) : void 0;
+  const writeModes = normalizeWriteModes(
+    adapterConfig.create ? adapterConfig.canWrite ?? adapterConfig.label === "local" : false
+  );
+  return {
+    label: adapterConfig.label,
+    pageId: adapterConfig.pageId,
+    statusOptions,
+    updateStatus,
+    syncSubmission: adapterConfig.syncSubmission,
+    writeModes,
+    canRemove: Boolean(adapterConfig.remove),
+    adapter: {
+      get: adapterConfig.get,
+      list: adapterConfig.list,
+      create: async (item) => {
+        if (!adapterConfig.create) {
+          throw new Error(
+            `Review adapter "${adapterConfig.label}" does not support create.`
+          );
+        }
+        return adapterConfig.create(item);
+      },
+      update: async (id, patch) => {
+        const nextStatus = patch.status;
+        if (nextStatus && updateStatus) {
+          const statusIndex = statusOptions.findIndex(
+            (statusOption2) => statusOption2.value === nextStatus
+          );
+          const statusOption = statusOptions[statusIndex];
+          if (statusOption) {
+            const item2 = await adapterConfig.get(id);
+            if (!item2) throw new Error(`Review item not found: ${id}`);
+            const updated2 = await updateStatus({
+              id,
+              item: item2,
+              status: nextStatus,
+              statusOption,
+              statusIndex
+            });
+            return updated2;
+          }
+        }
+        if (updateAdapter) {
+          return updateAdapter(id, patch);
+        }
+        if (!adapterConfig.syncSubmission) {
+          throw new Error(
+            `Review adapter "${adapterConfig.label}" does not support update.`
+          );
+        }
+        const item = await adapterConfig.get(id);
+        if (!item) throw new Error(`Review item not found: ${id}`);
+        await adapterConfig.syncSubmission({
+          id,
+          item,
+          patch
+        });
+        const updated = await adapterConfig.get(id);
+        if (!updated) throw new Error(`Review item not found after update: ${id}`);
+        return updated;
+      },
+      remove: async (id) => {
+        if (!adapterConfig.remove) {
+          throw new Error(
+            `Review adapter "${adapterConfig.label}" does not support remove.`
+          );
+        }
+        return adapterConfig.remove(id);
+      }
+    }
+  };
+}
+function normalizeWriteModes(value) {
+  if (value === true) return [...ALL_REVIEW_WRITE_MODES];
+  if (Array.isArray(value)) {
+    const modes = value.filter(
+      (mode) => ALL_REVIEW_WRITE_MODES.includes(mode)
+    );
+    return Array.from(new Set(modes));
+  }
+  return [];
+}
+
+// src/react-shell/hooks/use.review.shell.state.ts
+var useReviewShellState = ({
+  adapters,
+  presets,
+  reviewPathPrefix
+}) => {
+  const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
+  const reviewViewportPresets = useMemo5(
+    () => toReviewViewportPresets(viewportPresets),
+    [viewportPresets]
+  );
+  const normalizedAdapters = useMemo5(
+    () => normalizeReviewShellAdapters(adapters),
+    [adapters]
+  );
+  const localAdapterEntry = normalizedAdapters.local;
+  const remoteAdapterEntry = normalizedAdapters.remote;
+  const sourceEntries = normalizedAdapters.sources;
+  const defaultSource = sourceEntries[0]?.label ?? "local";
+  const [source, setSource] = useState6(() => {
+    const initialSource = getInitialSource(remoteAdapterEntry?.label);
+    return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
+  });
+  const remoteSource = remoteAdapterEntry?.label ?? null;
+  const activeAdapterEntry = sourceEntries.find((entry) => entry.label === source) ?? sourceEntries[0];
+  const isRemoteSource = Boolean(
+    remoteSource && activeAdapterEntry.label === remoteSource
+  );
+  const showSourceSelect = sourceEntries.length > 1;
+  const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
+  const canWriteNote = activeAdapterEntry.writeModes.includes("note");
+  const canWriteArea = activeAdapterEntry.writeModes.includes("area");
+  const canWriteAny = canWriteDom || canWriteNote || canWriteArea;
+  const adapter = activeAdapterEntry.adapter;
+  const iframeRef = useRef3(null);
+  const frameScrollRef = useRef3(null);
+  const controllerRef = useRef3(null);
+  const cleanupTargetRef = useRef3(null);
+  const pendingRestoreRef = useRef3(null);
+  const pendingInitialItemIdRef = useRef3(getInitialItemId());
+  const selectedItemIdRef = useRef3(getInitialItemId());
+  const hiddenOverlayItemIdListRef = useRef3([]);
+  const [target, setTarget] = useState6(
+    () => getInitialTarget(reviewPathPrefix)
+  );
+  const [draftTarget, setDraftTarget] = useState6(
+    () => getInitialTarget(reviewPathPrefix)
+  );
+  const [activeRoute, setActiveRoute] = useState6(
+    () => getInitialTarget(reviewPathPrefix)
+  );
+  const [size, setSize] = useState6(
+    () => getInitialSize(viewportPresets)
+  );
+  const [mode, setMode] = useState6("idle");
+  const [targetOverlayState, setTargetOverlayState] = useState6({
+    grid: false,
+    figma: false
+  });
+  const [selectedItemId, setSelectedItemId] = useState6(getInitialItemId());
+  const [isListVisible, setIsListVisible] = useState6(true);
+  const [isSitemapOpen, setIsSitemapOpen] = useState6(false);
+  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState6(false);
+  const [copyLabel, setCopyLabel] = useState6("Copy URL");
+  const [toastMessage, setToastMessage] = useState6("");
+  const [copiedPromptKey, setCopiedPromptKey] = useState6(null);
+  const targetRef = useRef3(target);
+  const sizeRef = useRef3(size);
+  const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
+  return {
+    activeAdapterEntry,
+    activeRoute,
+    adapter,
+    canWriteAny,
+    canWriteArea,
+    canWriteDom,
+    canWriteNote,
+    cleanupTargetRef,
+    controllerRef,
+    copiedPromptKey,
+    copyLabel,
+    draftTarget,
+    frameScrollRef,
+    hiddenOverlayItemIdListRef,
+    iframeRef,
+    isFigmaOverlayAvailable,
+    isInitialPromptOpen,
+    isListVisible,
+    isRemoteSource,
+    isSitemapOpen,
+    localAdapterEntry,
+    mode,
+    pendingInitialItemIdRef,
+    pendingRestoreRef,
+    remoteAdapterEntry,
+    reviewViewportPresets,
+    selectedItemId,
+    selectedItemIdRef,
+    setActiveRoute,
+    setCopiedPromptKey,
+    setCopyLabel,
+    setDraftTarget,
+    setIsInitialPromptOpen,
+    setIsListVisible,
+    setIsSitemapOpen,
+    setMode,
+    setSelectedItemId,
+    setSize,
+    setSource,
+    setTarget,
+    setTargetOverlayState,
+    showSourceSelect,
+    size,
+    sizeRef,
+    source,
+    sourceEntries,
+    target,
+    targetOverlayState,
+    targetRef,
+    toastMessage,
+    viewportPresets,
+    setToastMessage
+  };
+};
+
+// src/react-shell/review/shell.actions.ts
+var writeClipboardText = async (value) => {
+  try {
+    await navigator.clipboard.writeText(value);
+    return;
+  } catch {
+    const selection = document.getSelection();
+    const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const ranges = selection ? Array.from(
+      { length: selection.rangeCount },
+      (_, index) => selection.getRangeAt(index)
+    ) : [];
+    const textarea = document.createElement("textarea");
+    textarea.value = value;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const isCopied = document.execCommand("copy");
+    textarea.remove();
+    selection?.removeAllRanges();
+    ranges.forEach((range) => selection?.addRange(range));
+    activeElement?.focus();
+    if (!isCopied) {
+      throw new Error("Failed to copy to clipboard");
+    }
+  }
+};
+var listReviewItems = async ({
+  activeRoute,
+  adapter,
+  isRemoteSource,
+  pageId,
+  projectId
+}) => adapter.list({
+  projectId,
+  pageId,
+  routeKey: isRemoteSource ? activeRoute : void 0
+});
+var listSitemapReviewItems = async ({
+  localAdapterEntry,
+  projectId,
+  remoteAdapterEntry
+}) => {
+  const [localResult, remoteResult] = await Promise.allSettled([
+    localAdapterEntry ? localAdapterEntry.adapter.list({
+      projectId,
+      pageId: localAdapterEntry.pageId
+    }) : Promise.resolve([]),
+    remoteAdapterEntry ? remoteAdapterEntry.adapter.list({
+      projectId,
+      pageId: remoteAdapterEntry.pageId,
+      source: remoteAdapterEntry.label
+    }) : Promise.resolve([])
+  ]);
+  return {
+    local: localResult.status === "fulfilled" ? localResult.value : [],
+    remote: remoteResult.status === "fulfilled" ? remoteResult.value : []
+  };
+};
+var refreshReviewItems = async ({
+  onItemsChange,
+  ...listOptions
+}) => {
+  const nextItems = await listReviewItems(listOptions);
+  onItemsChange(nextItems);
+  return nextItems;
+};
+var refreshSitemapReviewItems = async ({
+  onSitemapItemsChange,
+  ...listOptions
+}) => {
+  const sitemapItems = await listSitemapReviewItems(listOptions);
+  onSitemapItemsChange(sitemapItems);
+};
+var copyCurrentReviewUrl = async ({
+  onCopyLabelChange
+}) => {
+  await writeClipboardText(window.location.href);
+  onCopyLabelChange("Copied");
+  window.setTimeout(() => onCopyLabelChange("Copy URL"), 1200);
+};
+var refreshReviewData = async ({
+  onRefreshItems,
+  onRefreshSitemapItems,
+  onReloadReviewKit
+}) => {
+  await onReloadReviewKit();
+  await Promise.all([onRefreshItems(), onRefreshSitemapItems()]);
+};
+var updateReviewItemStatus = async ({
+  activeAdapterEntry,
+  item,
+  nextStatus,
+  onRefreshReviewData,
+  onToast
+}) => {
+  if (!activeAdapterEntry.updateStatus) return;
+  const statusIndex = activeAdapterEntry.statusOptions.findIndex(
+    (statusOption2) => statusOption2.value === nextStatus
+  );
+  const statusOption = activeAdapterEntry.statusOptions[statusIndex];
+  if (!statusOption) return;
+  await activeAdapterEntry.updateStatus({
+    id: item.id,
+    item,
+    status: statusOption.value,
+    statusOption,
+    statusIndex
+  });
+  await onRefreshReviewData();
+  onToast?.("QA status updated");
+};
+var submitReviewItem = async ({
+  localAdapterEntry,
+  numberedItem,
+  remoteAdapterEntry,
+  selectedItemIdRef,
+  onClearSelectedItem,
+  onRefreshReviewData,
+  onToast
+}) => {
+  const { item } = numberedItem;
+  const syncLocalSubmission = localAdapterEntry?.syncSubmission;
+  if (!remoteAdapterEntry || !localAdapterEntry || !syncLocalSubmission || item.submitStatus === "submitted") {
+    return;
+  }
+  await syncLocalSubmission({
+    id: item.id,
+    item,
+    patch: {
+      submitStatus: "submitting",
+      submitError: void 0
+    }
+  });
+  await onRefreshReviewData();
+  let toastMessage;
+  try {
+    await remoteAdapterEntry.adapter.create({
+      ...item,
+      reviewNumber: void 0,
+      externalIssueId: void 0,
+      externalIssueUrl: void 0,
+      submittedAt: void 0,
+      submitStatus: "submitted",
+      submitError: void 0
+    });
+    await localAdapterEntry.adapter.remove(item.id);
+    if (selectedItemIdRef.current === item.id) {
+      onClearSelectedItem();
+    }
+    toastMessage = "Remote submitted";
+  } catch (error) {
+    await syncLocalSubmission({
+      id: item.id,
+      item,
+      patch: {
+        submitStatus: "failed",
+        submitError: error instanceof Error ? error.message : "Failed to submit remote"
+      }
+    });
+    toastMessage = "Remote submit failed";
+  }
+  await onRefreshReviewData();
+  onToast?.(toastMessage);
+};
+var copyReviewPrompt = async ({
+  key,
+  toastMessage = "Copied",
+  value,
+  onCopiedPromptKeyChange,
+  onToast
+}) => {
+  if (!value) return;
+  await writeClipboardText(value);
+  onCopiedPromptKeyChange(key);
+  onToast?.(toastMessage);
+  window.setTimeout(() => {
+    onCopiedPromptKeyChange((current) => current === key ? null : current);
+  }, 1200);
+};
+var removeReviewItem = async ({
+  activeAdapterEntry,
+  isRemoteSource,
+  item,
+  selectedItemIdRef,
+  sizeRef,
+  source,
+  targetRef,
+  onClearSelectedItem,
+  onRefreshReviewData,
+  onToast
+}) => {
+  if (!activeAdapterEntry.canRemove || item.submitStatus === "submitting" || !isRemoteSource && item.submitStatus === "submitted") {
+    return;
+  }
+  await activeAdapterEntry.adapter.remove(item.id);
+  if (selectedItemIdRef.current === item.id) {
+    onClearSelectedItem();
+    updateShellUrl(targetRef.current, sizeRef.current, source);
+  }
+  await onRefreshReviewData();
+  onToast?.("QA deleted");
+};
+
+// src/react-shell/review/shell.tsx
+import { jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
+var getReviewModeWriteMode = (mode) => {
+  if (mode === "element") return "dom";
+  if (mode === "note" || mode === "area") return mode;
+  return null;
+};
+var ReviewShell = ({
+  projectId,
+  pages,
+  adapters,
+  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
+  ruler,
+  initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
+  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
+  presence
+}) => {
+  const {
+    activeAdapterEntry,
+    activeRoute,
+    adapter,
+    canWriteAny,
+    canWriteArea,
+    canWriteDom,
+    canWriteNote,
+    cleanupTargetRef,
+    controllerRef,
+    copiedPromptKey,
+    copyLabel,
+    draftTarget,
+    frameScrollRef,
+    hiddenOverlayItemIdListRef,
+    iframeRef,
+    isFigmaOverlayAvailable,
+    isInitialPromptOpen,
+    isListVisible,
+    isRemoteSource,
+    isSitemapOpen,
+    localAdapterEntry,
+    mode,
+    pendingInitialItemIdRef,
+    pendingRestoreRef,
+    remoteAdapterEntry,
+    reviewViewportPresets,
+    selectedItemId,
+    selectedItemIdRef,
+    setActiveRoute,
+    setCopiedPromptKey,
+    setCopyLabel,
+    setDraftTarget,
+    setIsInitialPromptOpen,
+    setIsListVisible,
+    setIsSitemapOpen,
+    setMode,
+    setSelectedItemId,
+    setSize,
+    setSource,
+    setTarget,
+    setTargetOverlayState,
+    showSourceSelect,
+    size,
+    sizeRef,
+    source,
+    sourceEntries,
+    target,
+    targetOverlayState,
+    targetRef,
+    toastMessage,
+    viewportPresets,
+    setToastMessage
+  } = useReviewShellState({
+    adapters,
+    presets,
+    reviewPathPrefix
+  });
+  const {
+    activeItems,
+    currentPresetScope,
+    filteredNumberedActiveItems,
+    getItemPresetScope,
+    hiddenOverlayItemIdList,
+    hiddenOverlayItemIds,
+    pageQaCounts,
+    pageTargets,
+    presetScopeCounts,
+    qaFilter,
+    qaFilterCounts,
+    selectedNumberedItem,
+    setHiddenOverlayItemIds,
+    setItems,
+    setQaFilter,
+    setSitemapItems,
+    targetSrc
+  } = useReviewShellData({
+    activeRoute,
+    pages,
+    reviewPathPrefix,
+    reviewViewportPresets,
+    selectedItemId,
+    size,
+    target,
+    viewportPresets
+  });
+  const initialPromptText = initialPrompt.trim();
+  const refreshItems = useCallback11(
+    () => refreshReviewItems({
+      activeRoute,
+      adapter,
+      isRemoteSource,
+      pageId: activeAdapterEntry.pageId,
+      projectId,
+      onItemsChange: setItems
+    }),
+    [activeAdapterEntry.pageId, activeRoute, adapter, isRemoteSource, projectId]
+  );
+  const refreshSitemapItems = useCallback11(
+    () => refreshSitemapReviewItems({
+      localAdapterEntry,
+      projectId,
+      remoteAdapterEntry,
+      onSitemapItemsChange: setSitemapItems
+    }),
+    [localAdapterEntry, projectId, remoteAdapterEntry]
+  );
+  const cancelReviewMode = useCallback11(() => {
+    const controller = controllerRef.current;
+    if (!controller || controller.getMode() === "idle") return false;
+    controller.setMode("idle");
+    setMode(controller.getMode());
+    return true;
+  }, []);
+  const closePromptModal = useCallback11(() => {
+    setIsInitialPromptOpen(false);
+  }, []);
+  const closeSitemap = useCallback11(() => {
+    setIsSitemapOpen(false);
+  }, []);
+  const reloadTargetFrame = useCallback11(() => {
+    try {
+      iframeRef.current?.contentWindow?.location.reload();
+    } catch {
+      return;
+    }
+  }, []);
+  const {
+    closeFigmaSettings,
+    effectiveReviewTheme,
+    figmaSettingsStatus,
+    figmaTokenDraft,
+    isFigmaSettingsOpen,
+    isFigmaTokenGuideOpen,
+    isFigmaTokenVisible,
+    openFigmaSettings,
+    reviewThemeDraft,
+    reviewUserId,
+    reviewUserIdDraft,
+    saveReviewSettings,
+    setFigmaSettingsStatus,
+    setFigmaTokenDraft,
+    setIsFigmaTokenGuideOpen,
+    setIsFigmaTokenVisible,
+    setReviewThemeDraft,
+    setReviewUserIdDraft
+  } = useReviewSettings({
+    onCancelReviewMode: cancelReviewMode,
+    onCloseInitialPrompt: closePromptModal,
+    onCloseSitemap: closeSitemap,
+    onReloadTargetFrame: reloadTargetFrame
+  });
+  const {
+    currentPagePresenceUsers,
+    pagePresenceUsers,
+    presenceSessionId
+  } = useReviewPresence({
+    activeRoute,
+    mode,
+    presence,
+    projectId,
+    reviewPathPrefix,
+    reviewUserId,
+    selectedNumberedItem,
+    size,
+    source
+  });
+  const closeRulerPanels = useCallback11(() => {
+    closeSitemap();
+    closeFigmaSettings();
+  }, [closeFigmaSettings, closeSitemap]);
+  const {
+    closeRuler,
+    isRulerAvailable,
+    isRulerDragging,
+    isRulerVisible,
+    rulerHover,
+    rulerMeasure,
+    rulerMeasureLabel,
+    rulerOverlayRef,
+    rulerScaleX,
+    rulerScaleY,
+    rulerUnit,
+    toggleRuler
+  } = useReviewRuler({
+    iframeRef,
+    ruler,
+    size,
+    targetSrc,
+    onCancelReviewMode: cancelReviewMode,
+    onCloseTransientPanels: closeRulerPanels
+  });
+  const {
+    clearSelectedItem,
+    closeTargetOverlay,
+    initReviewKit,
+    reloadReviewKit,
+    restoreReviewItem,
+    setControllerReviewMode,
+    syncTargetViewport,
+    toggleTargetOverlay
+  } = useReviewController({
+    adapter,
+    cleanupTargetRef,
+    controllerRef,
+    frameScrollRef,
+    hiddenOverlayItemIdList,
+    hiddenOverlayItemIdListRef,
+    iframeRef,
+    isFigmaOverlayAvailable,
+    pageTargets,
+    pendingInitialItemIdRef,
+    pendingRestoreRef,
+    projectId,
+    reviewPathPrefix,
+    reviewUserId,
+    reviewViewportPresets,
+    ruler,
+    selectedItemIdRef,
+    size,
+    sizeRef,
+    source,
+    target,
+    targetOverlayState,
+    targetRef,
+    viewportPresets,
+    onActiveRouteChange: setActiveRoute,
+    onCancelReviewMode: cancelReviewMode,
+    onCloseRuler: closeRuler,
+    onDraftTargetChange: setDraftTarget,
+    onItemsRefresh: refreshItems,
+    onModeChange: setMode,
+    onSelectedItemIdChange: setSelectedItemId,
+    onSizeChange: setSize,
+    onTargetChange: setTarget,
+    onTargetOverlayStateChange: setTargetOverlayState
+  });
+  const refreshReviewData2 = useCallback11(() => {
+    return refreshReviewData({
+      onRefreshItems: refreshItems,
+      onRefreshSitemapItems: refreshSitemapItems,
+      onReloadReviewKit: reloadReviewKit
+    });
+  }, [refreshItems, refreshSitemapItems, reloadReviewKit]);
+  const toggleItemOverlayVisibility = useCallback11((itemId) => {
+    setHiddenOverlayItemIds((currentHiddenOverlayItemIds) => {
+      const nextHiddenItemIds = new Set(currentHiddenOverlayItemIds);
+      if (nextHiddenItemIds.has(itemId)) {
+        nextHiddenItemIds.delete(itemId);
+      } else {
+        nextHiddenItemIds.add(itemId);
+      }
+      return nextHiddenItemIds;
+    });
+  }, []);
+  useEffect9(() => {
+    void refreshItems();
+  }, [refreshItems]);
+  useEffect9(() => {
+    void refreshSitemapItems();
+  }, [refreshSitemapItems]);
+  useEffect9(() => {
+    if (!isSitemapOpen) return;
+    void refreshSitemapItems();
+  }, [isSitemapOpen, refreshSitemapItems]);
+  useEffect9(() => {
+    const frameScroll = frameScrollRef.current;
+    if (!frameScroll) return void 0;
+    const centerFrameScroll = () => {
+      frameScroll.scrollLeft = Math.max(
+        0,
+        (frameScroll.scrollWidth - frameScroll.clientWidth) / 2
+      );
+      frameScroll.scrollTop = 0;
+      syncTargetViewport();
+    };
+    const animationFrame = window.requestAnimationFrame(centerFrameScroll);
+    const transitionTimeout = window.setTimeout(centerFrameScroll, 180);
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(transitionTimeout);
+    };
+  }, [isListVisible, size.height, size.width, syncTargetViewport, targetSrc]);
+  const applyTarget = () => {
+    const normalizedTarget = normalizeTarget(draftTarget, reviewPathPrefix);
+    clearSelectedItem();
+    targetRef.current = normalizedTarget;
+    setActiveRoute(normalizedTarget);
+    setDraftTarget(normalizedTarget);
+    setTarget(normalizedTarget);
+    updateShellUrl(normalizedTarget, sizeRef.current, source);
+  };
+  const selectPage = (href) => {
+    const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
+    clearSelectedItem();
+    targetRef.current = normalizedTarget;
+    setActiveRoute(normalizedTarget);
+    setDraftTarget(normalizedTarget);
+    setTarget(normalizedTarget);
+    updateShellUrl(normalizedTarget, sizeRef.current, source);
+    setIsSitemapOpen(false);
+  };
+  const setReviewMode = (nextMode) => {
+    const writeMode = getReviewModeWriteMode(nextMode);
+    if (writeMode && !activeAdapterEntry.writeModes.includes(writeMode)) return;
+    closeRuler();
+    if (nextMode === "element") {
+      closeTargetOverlay("figma");
+    }
+    setControllerReviewMode(nextMode);
+  };
+  useReviewShellHotkeys({
+    isFigmaSettingsOpen,
+    isInitialPromptOpen,
+    isRulerAvailable,
+    isRulerVisible,
+    isSitemapOpen,
+    mode,
+    onCancelReviewMode: cancelReviewMode,
+    onCloseFigmaSettings: closeFigmaSettings,
+    onCloseInitialPrompt: closePromptModal,
+    onCloseRuler: closeRuler,
+    onCloseSitemap: closeSitemap,
+    onSetReviewMode: setReviewMode,
+    onToggleRuler: toggleRuler,
+    onToggleTargetOverlay: toggleTargetOverlay
+  });
+  const copyCurrentUrl = () => copyCurrentReviewUrl({
+    onCopyLabelChange: setCopyLabel
+  });
+  const showToast = useCallback11(
+    (message) => {
+      setToastMessage(message);
+      window.setTimeout(() => {
+        setToastMessage((current) => current === message ? "" : current);
+      }, 1600);
+    },
+    [setToastMessage]
+  );
+  const clearSelectedReviewItem = useCallback11(() => {
+    clearSelectedItem();
+    updateShellUrl(targetRef.current, sizeRef.current, source);
+  }, [clearSelectedItem, sizeRef, source, targetRef]);
+  const changeReviewSource = (nextSource) => {
+    if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
+    cancelReviewMode();
+    clearSelectedItem();
+    setItems([]);
+    setSource(nextSource);
+    updateShellUrl(targetRef.current, sizeRef.current, nextSource);
+  };
+  const changeItemStatus = (item, nextStatus) => updateReviewItemStatus({
+    activeAdapterEntry,
+    item,
+    nextStatus,
+    onRefreshReviewData: refreshReviewData2,
+    onToast: showToast
+  });
+  const submitItem = (numberedItem) => submitReviewItem({
+    localAdapterEntry,
+    numberedItem,
+    remoteAdapterEntry,
+    selectedItemIdRef,
+    onClearSelectedItem: clearSelectedItem,
+    onRefreshReviewData: refreshReviewData2,
+    onToast: showToast
+  });
+  const copyPrompt = (value, key, toastMessage2 = "Prompt copied") => copyReviewPrompt({
+    key,
+    toastMessage: toastMessage2,
+    value,
+    onCopiedPromptKeyChange: setCopiedPromptKey,
+    onToast: showToast
+  });
+  const copyItemPrompt = (numberedItem) => copyPrompt(
+    buildReviewItemPrompt(numberedItem, reviewPathPrefix),
+    `qa:${numberedItem.item.id}`,
+    "QA prompt copied"
+  );
+  const removeItem = (item) => removeReviewItem({
+    activeAdapterEntry,
+    isRemoteSource,
+    item,
+    selectedItemIdRef,
+    sizeRef,
+    source,
+    targetRef,
+    onClearSelectedItem: clearSelectedItem,
+    onRefreshReviewData: refreshReviewData2,
+    onToast: showToast
+  });
+  return /* @__PURE__ */ jsxs14(
+    "div",
+    {
+      className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
+      children: [
+        /* @__PURE__ */ jsx16(
+          ReviewTopbar,
+          {
+            draftTarget,
+            copyLabel,
+            viewportPresets,
+            size,
+            presetScopeCounts,
+            isRulerAvailable,
+            isRulerVisible,
+            targetOverlayState,
+            isFigmaOverlayAvailable,
+            onDraftTargetChange: setDraftTarget,
+            onApplyTarget: applyTarget,
+            onOpenSitemap: () => setIsSitemapOpen(true),
+            onCopyCurrentUrl: () => void copyCurrentUrl(),
+            onSizeChange: setSize,
+            onToggleRuler: toggleRuler,
+            onToggleTargetOverlay: toggleTargetOverlay,
+            onOpenInitialPrompt: () => {
+              setIsInitialPromptOpen(true);
+            },
+            onOpenSettings: openFigmaSettings
+          }
+        ),
+        isSitemapOpen && /* @__PURE__ */ jsx16(
+          SitemapModal,
+          {
+            pages,
+            activeRoute,
+            pageQaCounts,
+            pagePresenceUsers,
+            getPageTarget: (href) => normalizeTarget(href, reviewPathPrefix),
+            onClose: () => setIsSitemapOpen(false),
+            onSelectPage: selectPage
+          }
+        ),
+        isFigmaSettingsOpen && /* @__PURE__ */ jsx16(
+          ReviewSettingsModal,
+          {
+            figmaTokenDraft,
+            reviewUserIdDraft,
+            reviewThemeDraft,
+            figmaSettingsStatus,
+            isFigmaTokenVisible,
+            isFigmaTokenGuideOpen,
+            onClose: closeFigmaSettings,
+            onFigmaTokenDraftChange: setFigmaTokenDraft,
+            onReviewUserIdDraftChange: setReviewUserIdDraft,
+            onReviewThemeDraftChange: setReviewThemeDraft,
+            onClearStatus: () => setFigmaSettingsStatus(""),
+            onToggleFigmaTokenVisible: () => setIsFigmaTokenVisible((current) => !current),
+            onToggleFigmaTokenGuide: () => setIsFigmaTokenGuideOpen((current) => !current),
+            onSave: saveReviewSettings
+          }
+        ),
+        isInitialPromptOpen && /* @__PURE__ */ jsx16(
+          PromptModal,
+          {
+            initialPromptText,
+            copiedPromptKey,
+            onClose: closePromptModal,
+            onCopyPrompt: (text, key) => void copyPrompt(text, key)
+          }
+        ),
+        toastMessage && /* @__PURE__ */ jsx16("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
+        /* @__PURE__ */ jsx16("div", { className: "df-review-side-rail", children: /* @__PURE__ */ jsxs14(
           "button",
           {
-            className: preset.label === size.label ? "is-active" : "",
+            "aria-label": isListVisible ? "Hide QA list" : "Show QA list",
+            className: "df-review-side-toggle",
             type: "button",
-            onClick: () => onSizeChange(preset),
+            onClick: () => setIsListVisible((current) => !current),
             children: [
-              /* @__PURE__ */ jsx2(ViewportPresetIcon, { preset }),
-              /* @__PURE__ */ jsx2("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ jsx2("strong", { children: preset.label }) }),
-              /* @__PURE__ */ jsx2("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
+              /* @__PURE__ */ jsx16("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx16(GripVertical, {}) }),
+              /* @__PURE__ */ jsx16("strong", { children: "QA" })
             ]
-          },
-          preset.label
-        )) }),
-        /* @__PURE__ */ jsx2("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ jsxs2("span", { className: "df-review-active-size", children: [
-          size.width,
-          "x",
-          size.height
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxs2("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
-        isRulerAvailable && /* @__PURE__ */ jsx2(
-          "button",
+          }
+        ) }),
+        /* @__PURE__ */ jsx16(
+          ReviewQaPanel,
           {
-            "aria-label": "Toggle ruler",
-            className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
-            type: "button",
-            onClick: onToggleRuler,
-            children: /* @__PURE__ */ jsx2(Ruler, { "aria-hidden": "true" })
+            activeAdapterEntry,
+            activeItems,
+            currentPagePresenceUsers,
+            currentPresetScope,
+            filteredNumberedActiveItems,
+            getItemPresetScope,
+            hiddenOverlayItemIds,
+            isListVisible,
+            isRemoteSource,
+            presenceSessionId,
+            copiedPromptKey,
+            qaFilter,
+            qaFilterCounts,
+            remoteAdapterEntry,
+            selectedItemId,
+            showSourceSelect,
+            source,
+            sourceEntries,
+            onChangeItemStatus: changeItemStatus,
+            onClearSelectedItem: clearSelectedReviewItem,
+            onChangeReviewSource: changeReviewSource,
+            onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
+            onQaFilterChange: setQaFilter,
+            onRefreshReviewData: refreshReviewData2,
+            onRemoveItem: removeItem,
+            onRestoreReviewItem: restoreReviewItem,
+            onSubmitItem: submitItem,
+            onToggleItemOverlayVisibility: toggleItemOverlayVisibility
           }
         ),
-        /* @__PURE__ */ jsx2(
-          "button",
+        /* @__PURE__ */ jsx16(
+          ReviewTargetFrame,
           {
-            "aria-label": "Toggle grid overlay",
-            className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
-            type: "button",
-            onClick: () => onToggleTargetOverlay("grid"),
-            children: /* @__PURE__ */ jsx2(LayoutGrid, { "aria-hidden": "true" })
-          }
-        ),
-        /* @__PURE__ */ jsx2(
-          "button",
-          {
-            "aria-disabled": !isFigmaOverlayAvailable,
-            "aria-label": isFigmaOverlayAvailable ? "Toggle Figma overlay" : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
-            className: `df-review-overlay-button is-figma${targetOverlayState.figma ? " is-active" : ""}${isFigmaOverlayAvailable ? "" : " is-disabled"}`,
-            type: "button",
-            onClick: () => onToggleTargetOverlay("figma"),
-            children: /* @__PURE__ */ jsx2(Image, { "aria-hidden": "true" })
-          }
-        ),
-        /* @__PURE__ */ jsx2("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ jsx2(
-          "button",
-          {
-            "aria-label": "Open settings",
-            className: "df-review-overlay-button is-settings",
-            type: "button",
-            onClick: onOpenSettings,
-            children: /* @__PURE__ */ jsx2(Settings, { "aria-hidden": "true" })
+            canWriteAny,
+            canWriteArea,
+            canWriteDom,
+            canWriteNote,
+            frameScrollRef,
+            iframeRef,
+            isRulerAvailable,
+            isRulerDragging,
+            isRulerVisible,
+            mode,
+            rulerHover,
+            rulerMeasure,
+            rulerMeasureLabel,
+            rulerOverlayRef,
+            rulerScaleX,
+            rulerScaleY,
+            rulerUnit,
+            size,
+            targetSrc,
+            onLoadTarget: initReviewKit,
+            onSetReviewMode: setReviewMode
           }
         )
-      ] })
-    ] })
-  ] });
+      ]
+    }
+  );
 };
 
 // src/react-shell/pages.ts
@@ -3842,7 +7361,7 @@ var createReviewPagesFromGlob = (entries, options = {}) => {
   }).filter((href) => !options.exclude?.(href)).sort((a, b) => sortReviewPages({ href: a }, { href: b })).map((href) => ({ href }));
 };
 
-// src/react-shell/supabase-presence.ts
+// src/react-shell/presence/supabase.ts
 var normalizeTopicPart = (value) => value.trim().replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "default";
 var getPresenceTopic = (channelPrefix, projectId) => `${normalizeTopicPart(channelPrefix)}-${normalizeTopicPart(projectId)}`;
 var PRESENCE_BRIDGE_KEY = "__dfReviewPresenceBridge";
@@ -3995,1788 +7514,7 @@ var createSupabasePresenceAdapter = ({
 });
 
 // src/react-shell.tsx
-import { Fragment, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
-var ReviewScopeIcon2 = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ jsx3(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ jsx3(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ jsx3(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ jsx3(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx3(Monitor, { "aria-hidden": "true" });
-};
-var isDomReviewItem = (item) => isAnchorRestorableReviewItem(item);
-var getReviewItemMode = (item) => isDomReviewItem(item) ? "dom" : item.kind;
-var createEmptySitemapQaCount = () => ({
-  local: 0,
-  remote: 0
-});
-var getStatusOption = (status, statusOptions) => {
-  const normalizedStatus = normalizeReviewItemStatus(status);
-  return statusOptions.find((statusOption) => statusOption.value === status) ?? statusOptions.find(
-    (statusOption) => statusOption.value === normalizedStatus
-  ) ?? statusOptions[0];
-};
-var ReviewItemModeIcon = ({
-  mode
-}) => {
-  if (mode === "area") return /* @__PURE__ */ jsx3(Scan, { "aria-hidden": "true" });
-  if (mode === "dom") return /* @__PURE__ */ jsx3(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx3(StickyNote, { "aria-hidden": "true" });
-};
-var getPresenceUserTarget = (user, reviewPathPrefix) => normalizeTarget(user.target || user.routeKey, reviewPathPrefix);
-var dedupePresenceUsersByPageAndId = (users, reviewPathPrefix) => {
-  const userByPageAndId = /* @__PURE__ */ new Map();
-  users.forEach((user) => {
-    const userId = user.userId.trim();
-    if (!userId) return;
-    const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
-    const key = `${userTarget}::${userId}`;
-    const currentUser = userByPageAndId.get(key);
-    if (!currentUser || Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)) {
-      userByPageAndId.set(key, user);
-    }
-  });
-  return Array.from(userByPageAndId.values());
-};
-function runWithAutoScrollBehavior(targetDocument, callback) {
-  const elements = [
-    targetDocument?.documentElement,
-    targetDocument?.body
-  ].filter((element) => Boolean(element));
-  const previousValues = elements.map((element) => element.style.scrollBehavior);
-  elements.forEach((element) => {
-    element.style.scrollBehavior = "auto";
-  });
-  try {
-    callback();
-  } finally {
-    elements.forEach((element, index) => {
-      element.style.scrollBehavior = previousValues[index] ?? "";
-    });
-  }
-}
-var ReviewShell = ({
-  projectId,
-  pages,
-  adapters,
-  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
-  ruler,
-  initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
-  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
-  presence
-}) => {
-  const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const reviewViewportPresets = useMemo2(
-    () => toReviewViewportPresets(viewportPresets),
-    [viewportPresets]
-  );
-  const normalizedAdapters = useMemo2(
-    () => normalizeReviewShellAdapters(adapters),
-    [adapters]
-  );
-  const localAdapterEntry = normalizedAdapters.local;
-  const remoteAdapterEntry = normalizedAdapters.remote;
-  const [source, setSource] = useState(
-    () => getInitialSource(remoteAdapterEntry?.label)
-  );
-  const remoteSource = remoteAdapterEntry?.label ?? null;
-  const isRemoteSource = Boolean(remoteSource && source === remoteSource);
-  const activeAdapterEntry = isRemoteSource && remoteAdapterEntry ? remoteAdapterEntry : localAdapterEntry;
-  const adapter = activeAdapterEntry.adapter;
-  const iframeRef = useRef(null);
-  const frameScrollRef = useRef(null);
-  const rulerOverlayRef = useRef(null);
-  const rulerDragRectRef = useRef(null);
-  const isRulerDraggingRef = useRef(false);
-  const controllerRef = useRef(null);
-  const cleanupTargetRef = useRef(null);
-  const presenceSessionRef = useRef(null);
-  const pendingRestoreRef = useRef(null);
-  const pendingInitialItemIdRef = useRef(getInitialItemId());
-  const selectedItemIdRef = useRef(getInitialItemId());
-  const hiddenOverlayItemIdListRef = useRef([]);
-  const [target, setTarget] = useState(
-    () => getInitialTarget(reviewPathPrefix)
-  );
-  const [draftTarget, setDraftTarget] = useState(
-    () => getInitialTarget(reviewPathPrefix)
-  );
-  const [activeRoute, setActiveRoute] = useState(
-    () => getInitialTarget(reviewPathPrefix)
-  );
-  const [size, setSize] = useState(
-    () => getInitialSize(viewportPresets)
-  );
-  const [items, setItems] = useState([]);
-  const [mode, setMode] = useState("idle");
-  const [targetOverlayState, setTargetOverlayState] = useState({
-    grid: false,
-    figma: false
-  });
-  const [selectedItemId, setSelectedItemId] = useState(getInitialItemId());
-  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = useState(() => /* @__PURE__ */ new Set());
-  const [isListVisible, setIsListVisible] = useState(true);
-  const [isSitemapOpen, setIsSitemapOpen] = useState(false);
-  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState(false);
-  const [figmaTokenDraft, setFigmaTokenDraft] = useState(getStoredFigmaToken);
-  const [reviewUserId, setReviewUserId] = useState(getStoredReviewUserId);
-  const [reviewUserIdDraft, setReviewUserIdDraft] = useState(
-    getStoredReviewUserId
-  );
-  const [reviewTheme, setReviewTheme] = useState(getStoredReviewTheme);
-  const [reviewThemeDraft, setReviewThemeDraft] = useState(getStoredReviewTheme);
-  const [systemReviewTheme, setSystemReviewTheme] = useState(getSystemReviewTheme);
-  const [figmaSettingsStatus, setFigmaSettingsStatus] = useState("");
-  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState(false);
-  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState(false);
-  const [qaFilter, setQaFilter] = useState("all");
-  const [copyLabel, setCopyLabel] = useState("Copy URL");
-  const [sitemapItems, setSitemapItems] = useState(() => ({
-    local: [],
-    remote: []
-  }));
-  const [isRulerVisible, setIsRulerVisible] = useState(false);
-  const [rulerStart, setRulerStart] = useState(null);
-  const [rulerPoint, setRulerPoint] = useState(null);
-  const [rulerHover, setRulerHover] = useState(null);
-  const [isRulerDragging, setIsRulerDragging] = useState(false);
-  const [promptItemId, setPromptItemId] = useState(null);
-  const [promptTab, setPromptTab] = useState("item");
-  const [copiedPromptKey, setCopiedPromptKey] = useState(null);
-  const [presenceUsers, setPresenceUsers] = useState([]);
-  const [presenceSessionVersion, setPresenceSessionVersion] = useState(0);
-  const presenceSessionId = useMemo2(getReviewPresenceSessionId, []);
-  const targetRef = useRef(target);
-  const sizeRef = useRef(size);
-  const effectiveReviewTheme = reviewTheme === "system" ? systemReviewTheme : reviewTheme;
-  const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
-  const isRulerAvailable = ruler?.enabled !== false && typeof size.designWidth === "number" && size.designWidth > 0;
-  const rulerUnit = ruler?.unit ?? "px";
-  const rulerScaleX = isRulerAvailable && size.designWidth ? size.width / size.designWidth : 1;
-  const rulerScaleY = size.designHeight && size.designHeight > 0 ? size.height / size.designHeight : rulerScaleX;
-  const rulerMeasure = useMemo2(
-    () => getRulerMeasure(rulerStart, rulerPoint),
-    [rulerPoint, rulerStart]
-  );
-  const rulerMeasureLabel = useMemo2(() => {
-    if (!rulerMeasure) return "";
-    const designWidth = Math.round(rulerMeasure.width / rulerScaleX);
-    const designHeight = Math.round(rulerMeasure.height / rulerScaleY);
-    return `Figma ${designWidth}x${designHeight}${rulerUnit}`;
-  }, [rulerMeasure, rulerScaleX, rulerScaleY, rulerUnit]);
-  const targetSrc = useMemo2(() => buildTargetSrc(target), [target]);
-  const pageTargets = useMemo2(
-    () => new Set(
-      pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
-    ),
-    [pages, reviewPathPrefix]
-  );
-  const activeItems = useMemo2(
-    () => items.filter((item) => getItemTarget(item, reviewPathPrefix) === activeRoute).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
-    [activeRoute, items, reviewPathPrefix]
-  );
-  const numberedActiveItems = useMemo2(
-    () => getNumberedReviewItems(activeItems, reviewViewportPresets),
-    [activeItems, reviewViewportPresets]
-  );
-  const filteredNumberedActiveItems = useMemo2(
-    () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
-      (numberedItem) => numberedItem.scope === qaFilter
-    ),
-    [numberedActiveItems, qaFilter]
-  );
-  const hiddenOverlayItemIdList = useMemo2(
-    () => Array.from(hiddenOverlayItemIds),
-    [hiddenOverlayItemIds]
-  );
-  const qaFilterCounts = useMemo2(() => {
-    const counts = /* @__PURE__ */ new Map();
-    counts.set("all", numberedActiveItems.length);
-    numberedActiveItems.forEach((numberedItem) => {
-      counts.set(numberedItem.scope, (counts.get(numberedItem.scope) ?? 0) + 1);
-    });
-    return counts;
-  }, [numberedActiveItems]);
-  const getItemPresetScope = useCallback(
-    (item) => getViewportPresetKind(
-      findViewportPreset(
-        viewportPresets,
-        item.viewport?.width ?? 0,
-        item.viewport?.height ?? 0
-      )
-    ),
-    [viewportPresets]
-  );
-  const presetScopeCounts = useMemo2(() => {
-    const counts = /* @__PURE__ */ new Map();
-    activeItems.forEach((item) => {
-      const scope = getItemPresetScope(item);
-      counts.set(scope, (counts.get(scope) ?? 0) + 1);
-    });
-    return counts;
-  }, [activeItems, getItemPresetScope]);
-  const currentPresetScope = getViewportPresetKind(size);
-  const pageQaCounts = useMemo2(() => {
-    const counts = /* @__PURE__ */ new Map();
-    const addItems = (sourceKey, sourceItems) => {
-      sourceItems.forEach((item) => {
-        const pageTarget = normalizeTarget(
-          getItemTarget(item, reviewPathPrefix),
-          reviewPathPrefix
-        );
-        const count = counts.get(pageTarget) ?? createEmptySitemapQaCount();
-        count[sourceKey] += 1;
-        counts.set(pageTarget, count);
-      });
-    };
-    addItems("local", sitemapItems.local);
-    addItems("remote", sitemapItems.remote);
-    return counts;
-  }, [reviewPathPrefix, sitemapItems]);
-  const promptDialogNumberedItem = useMemo2(
-    () => promptItemId ? numberedActiveItems.find(
-      (numberedItem) => numberedItem.item.id === promptItemId
-    ) : void 0,
-    [numberedActiveItems, promptItemId]
-  );
-  const selectedNumberedItem = useMemo2(
-    () => selectedItemId ? numberedActiveItems.find(
-      (numberedItem) => numberedItem.item.id === selectedItemId
-    ) : void 0,
-    [numberedActiveItems, selectedItemId]
-  );
-  const initialPromptText = initialPrompt.trim();
-  const promptDialogItemPrompt = promptDialogNumberedItem ? buildReviewItemPrompt(promptDialogNumberedItem, reviewPathPrefix) : "";
-  const promptDialogItemCopyKey = promptDialogNumberedItem ? `dialog:${promptDialogNumberedItem.item.id}` : "dialog:item";
-  const promptDialogActiveText = promptTab === "initial" ? initialPromptText : promptDialogItemPrompt;
-  const promptDialogActiveLabel = promptTab === "initial" ? "Initial prompt" : "This QA prompt";
-  const promptDialogActiveCopyKey = promptTab === "initial" ? "initial" : promptDialogItemCopyKey;
-  const normalizedReviewUserId = reviewUserId.trim();
-  const presenceDisplayName = getReviewPresenceDisplayName(
-    normalizedReviewUserId
-  );
-  const presenceColor = getReviewPresenceColor(
-    normalizedReviewUserId || presenceSessionId
-  );
-  const presenceViewport = useMemo2(
-    () => ({
-      label: size.label,
-      width: size.width,
-      height: size.height,
-      kind: getViewportPresetKind(size)
-    }),
-    [size]
-  );
-  const presenceStatus = mode === "idle" ? "reviewing" : "editing";
-  const visiblePresenceUsers = useMemo2(
-    () => {
-      const projectPresenceUsers = presenceUsers.filter(
-        (user) => user.projectId === projectId && user.userId.trim()
-      );
-      return dedupePresenceUsersByPageAndId(
-        projectPresenceUsers,
-        reviewPathPrefix
-      );
-    },
-    [presenceUsers, projectId, reviewPathPrefix]
-  );
-  const currentPagePresenceUsers = useMemo2(
-    () => visiblePresenceUsers.filter((user) => {
-      const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
-      return userTarget === activeRoute;
-    }),
-    [activeRoute, reviewPathPrefix, visiblePresenceUsers]
-  );
-  const pagePresenceUsers = useMemo2(() => {
-    const usersByTarget = /* @__PURE__ */ new Map();
-    visiblePresenceUsers.forEach((user) => {
-      const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
-      const pageUsers = usersByTarget.get(userTarget) ?? [];
-      pageUsers.push(user);
-      usersByTarget.set(userTarget, pageUsers);
-    });
-    return usersByTarget;
-  }, [reviewPathPrefix, visiblePresenceUsers]);
-  const getCurrentPresenceState = useCallback(
-    () => ({
-      projectId,
-      sessionId: presenceSessionId,
-      userId: normalizedReviewUserId,
-      displayName: presenceDisplayName,
-      color: presenceColor,
-      routeKey: activeRoute,
-      target: activeRoute,
-      source,
-      viewport: presenceViewport,
-      mode,
-      selectedItemId: selectedNumberedItem?.item.id ?? null,
-      selectedReviewNumber: selectedNumberedItem?.number ?? null,
-      status: presenceStatus,
-      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-    }),
-    [
-      activeRoute,
-      mode,
-      normalizedReviewUserId,
-      presenceColor,
-      presenceDisplayName,
-      presenceSessionId,
-      presenceStatus,
-      presenceViewport,
-      projectId,
-      selectedNumberedItem,
-      source
-    ]
-  );
-  const refreshItems = useCallback(async () => {
-    const nextItems = await adapter.list({
-      projectId,
-      pageId: activeAdapterEntry.pageId,
-      routeKey: isRemoteSource ? activeRoute : void 0
-    });
-    setItems(nextItems);
-    return nextItems;
-  }, [activeAdapterEntry.pageId, activeRoute, adapter, isRemoteSource, projectId]);
-  const refreshSitemapItems = useCallback(async () => {
-    const [localResult, remoteResult] = await Promise.allSettled([
-      localAdapterEntry.adapter.list({
-        projectId,
-        pageId: localAdapterEntry.pageId
-      }),
-      remoteAdapterEntry ? remoteAdapterEntry.adapter.list({
-        projectId,
-        pageId: remoteAdapterEntry.pageId,
-        source: remoteAdapterEntry.label
-      }) : Promise.resolve([])
-    ]);
-    setSitemapItems({
-      local: localResult.status === "fulfilled" ? localResult.value : [],
-      remote: remoteResult.status === "fulfilled" ? remoteResult.value : []
-    });
-  }, [localAdapterEntry, projectId, remoteAdapterEntry]);
-  const refreshReviewData = useCallback(async () => {
-    await controllerRef.current?.reload();
-    await Promise.all([refreshItems(), refreshSitemapItems()]);
-  }, [refreshItems, refreshSitemapItems]);
-  const clearSelectedItem = useCallback(() => {
-    pendingRestoreRef.current = null;
-    selectedItemIdRef.current = null;
-    setSelectedItemId(null);
-    controllerRef.current?.highlightItem(void 0);
-  }, []);
-  const toggleItemOverlayVisibility = useCallback(
-    (itemId) => {
-      const nextHiddenItemIds = new Set(hiddenOverlayItemIds);
-      if (nextHiddenItemIds.has(itemId)) {
-        nextHiddenItemIds.delete(itemId);
-      } else {
-        nextHiddenItemIds.add(itemId);
-      }
-      const nextHiddenItemIdList = Array.from(nextHiddenItemIds);
-      setHiddenOverlayItemIds(nextHiddenItemIds);
-      const controller = controllerRef.current;
-      controller?.setHiddenItemIds(nextHiddenItemIdList);
-      hiddenOverlayItemIdListRef.current = nextHiddenItemIdList;
-    },
-    [hiddenOverlayItemIds]
-  );
-  const destroyReviewKit = useCallback(() => {
-    cleanupTargetRef.current?.();
-    cleanupTargetRef.current = null;
-    controllerRef.current?.destroy();
-    controllerRef.current = null;
-  }, []);
-  const syncTargetViewport = useCallback(() => {
-    window.dispatchEvent(new Event("resize"));
-  }, []);
-  const refreshTargetOverlayState = useCallback(() => {
-    setTargetOverlayState(
-      getTargetOverlayState(iframeRef.current?.contentDocument ?? void 0)
-    );
-  }, []);
-  const dispatchTargetOverlayHotkey = useCallback(
-    (overlay) => {
-      const targetWindow = iframeRef.current?.contentWindow;
-      if (!targetWindow) return false;
-      const code = overlay === "grid" ? "KeyG" : "KeyF";
-      targetWindow.dispatchEvent(
-        new KeyboardEvent("keydown", {
-          bubbles: true,
-          cancelable: true,
-          code,
-          key: code.replace("Key", "").toLowerCase(),
-          shiftKey: true
-        })
-      );
-      window.setTimeout(refreshTargetOverlayState, 80);
-      return true;
-    },
-    [refreshTargetOverlayState]
-  );
-  const toggleTargetOverlay = useCallback(
-    (overlay) => {
-      if (overlay === "figma" && !isFigmaOverlayAvailable) {
-        refreshTargetOverlayState();
-        return;
-      }
-      dispatchTargetOverlayHotkey(overlay);
-    },
-    [
-      dispatchTargetOverlayHotkey,
-      isFigmaOverlayAvailable,
-      refreshTargetOverlayState
-    ]
-  );
-  const closeTargetOverlay = useCallback(
-    (overlay) => {
-      const currentState = getTargetOverlayState(
-        iframeRef.current?.contentDocument ?? void 0
-      );
-      setTargetOverlayState(currentState);
-      if (!currentState[overlay]) return false;
-      return dispatchTargetOverlayHotkey(overlay);
-    },
-    [dispatchTargetOverlayHotkey]
-  );
-  const syncShellTarget = useCallback(
-    (nextTarget) => {
-      const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
-      if (normalizedTarget !== targetRef.current) {
-        clearSelectedItem();
-        targetRef.current = normalizedTarget;
-        setTarget(normalizedTarget);
-        setDraftTarget(normalizedTarget);
-        setActiveRoute(normalizedTarget);
-      }
-      if (selectedItemIdRef.current) {
-        updateShellUrlForItem(
-          normalizedTarget,
-          sizeRef.current,
-          selectedItemIdRef.current,
-          source
-        );
-      } else {
-        updateShellUrl(normalizedTarget, sizeRef.current, source);
-      }
-    },
-    [clearSelectedItem, reviewPathPrefix, source]
-  );
-  const applyItemScroll = useCallback(
-    (item) => {
-      if (selectedItemIdRef.current !== item.id) return;
-      const targetWindow = iframeRef.current?.contentWindow;
-      const targetDocument = iframeRef.current?.contentDocument;
-      if (!targetWindow) return;
-      const anchorElement = targetDocument ? queryReviewItemAnchorElement(targetDocument, item) : void 0;
-      runWithAutoScrollBehavior(targetDocument ?? void 0, () => {
-        if (!targetDocument) return;
-        setDocumentScrollInstantly(
-          targetWindow,
-          targetDocument,
-          getReviewItemRestoreScrollPosition(
-            targetWindow,
-            targetDocument,
-            item,
-            anchorElement
-          )
-        );
-      });
-      syncTargetViewport();
-      controllerRef.current?.highlightItem(item.id);
-    },
-    [syncTargetViewport]
-  );
-  const applyPendingRestore = useCallback(() => {
-    const item = pendingRestoreRef.current;
-    if (!item) return;
-    applyItemScroll(item);
-    pendingRestoreRef.current = null;
-  }, [applyItemScroll]);
-  const cancelReviewMode = useCallback(() => {
-    const controller = controllerRef.current;
-    if (!controller || controller.getMode() === "idle") return false;
-    controller.setMode("idle");
-    setMode(controller.getMode());
-    return true;
-  }, []);
-  const clearRulerMeasure = useCallback(() => {
-    rulerDragRectRef.current = null;
-    isRulerDraggingRef.current = false;
-    setRulerStart(null);
-    setRulerPoint(null);
-    setRulerHover(null);
-    setIsRulerDragging(false);
-  }, []);
-  const closeRuler = useCallback(() => {
-    if (!isRulerVisible) return false;
-    setIsRulerVisible(false);
-    clearRulerMeasure();
-    return true;
-  }, [clearRulerMeasure, isRulerVisible]);
-  const toggleRuler = useCallback(() => {
-    if (!isRulerAvailable) return;
-    cancelReviewMode();
-    setIsSitemapOpen(false);
-    setIsFigmaSettingsOpen(false);
-    setPromptItemId(null);
-    clearRulerMeasure();
-    setIsRulerVisible((current) => !current);
-  }, [cancelReviewMode, clearRulerMeasure, isRulerAvailable]);
-  const finishRulerDrag = useCallback((point) => {
-    if (point) {
-      setRulerPoint(point);
-    }
-    rulerDragRectRef.current = null;
-    isRulerDraggingRef.current = false;
-    setIsRulerDragging(false);
-  }, []);
-  const startRulerDrag = useCallback(
-    (clientX, clientY, rect) => {
-      const point = getRulerPointFromRect(clientX, clientY, rect);
-      rulerDragRectRef.current = rect;
-      isRulerDraggingRef.current = true;
-      setRulerStart(point);
-      setRulerPoint(point);
-      setIsRulerDragging(true);
-    },
-    []
-  );
-  const reloadTargetFrame = useCallback(() => {
-    try {
-      iframeRef.current?.contentWindow?.location.reload();
-    } catch {
-      return;
-    }
-  }, []);
-  const openFigmaSettings = useCallback(() => {
-    cancelReviewMode();
-    setIsSitemapOpen(false);
-    setPromptItemId(null);
-    setFigmaTokenDraft(getStoredFigmaToken());
-    setReviewUserIdDraft(getStoredReviewUserId());
-    setReviewThemeDraft(reviewTheme);
-    setFigmaSettingsStatus("");
-    setIsFigmaTokenVisible(false);
-    setIsFigmaTokenGuideOpen(false);
-    setIsFigmaSettingsOpen(true);
-  }, [cancelReviewMode, reviewTheme]);
-  const closeFigmaSettings = useCallback(() => {
-    setIsFigmaSettingsOpen(false);
-    setFigmaSettingsStatus("");
-    setIsFigmaTokenVisible(false);
-    setIsFigmaTokenGuideOpen(false);
-  }, []);
-  const saveReviewSettings = useCallback(
-    (token, userId, theme) => {
-      const nextToken = token.trim();
-      const nextUserId = userId.trim();
-      const nextTheme = normalizeReviewTheme(theme);
-      const shouldReload = nextToken !== getStoredFigmaToken() || nextUserId !== getStoredReviewUserId();
-      writeStoredFigmaToken(nextToken);
-      writeStoredReviewUserId(nextUserId);
-      writeStoredReviewTheme(nextTheme);
-      setFigmaTokenDraft(nextToken);
-      setReviewUserId(nextUserId);
-      setReviewUserIdDraft(nextUserId);
-      setReviewTheme(nextTheme);
-      setReviewThemeDraft(nextTheme);
-      setFigmaSettingsStatus(
-        nextToken || nextUserId || nextTheme !== DEFAULT_REVIEW_THEME ? "Saved" : "Cleared"
-      );
-      if (shouldReload) {
-        reloadTargetFrame();
-      }
-    },
-    [reloadTargetFrame]
-  );
-  const restoreReviewItem = useCallback(
-    (item) => {
-      const nextTarget = getItemTarget(item, reviewPathPrefix);
-      const nextSize = getRestoredSize(item, viewportPresets);
-      pendingRestoreRef.current = item;
-      selectedItemIdRef.current = item.id;
-      setSelectedItemId(item.id);
-      setActiveRoute(nextTarget);
-      setDraftTarget(nextTarget);
-      setSize(nextSize);
-      updateShellUrlForItem(nextTarget, nextSize, item.id, source);
-      if (targetRef.current !== nextTarget) {
-        setTarget(nextTarget);
-        return;
-      }
-      applyPendingRestore();
-    },
-    [applyPendingRestore, viewportPresets, reviewPathPrefix, source]
-  );
-  const restoreInitialItem = useCallback(async () => {
-    const itemId = pendingInitialItemIdRef.current;
-    if (!itemId) return;
-    pendingInitialItemIdRef.current = null;
-    const item = await adapter.get(itemId);
-    if (item) {
-      restoreReviewItem(item);
-    }
-  }, [adapter, restoreReviewItem]);
-  const initReviewKit = useCallback(() => {
-    destroyReviewKit();
-    const iframe = iframeRef.current;
-    const targetWindow = iframe?.contentWindow;
-    const targetDocument = iframe?.contentDocument;
-    if (!iframe || !targetWindow || !targetDocument) return;
-    const syncRouteFromFrame = () => {
-      const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
-      if (nextTarget !== targetRef.current && !pageTargets.has(nextTarget)) {
-        return;
-      }
-      syncShellTarget(nextTarget);
-    };
-    const handleClick = (event) => {
-      if (event.defaultPrevented || event.button !== 0) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-        return;
-      }
-      const targetElement = event.target;
-      if (!targetElement || !("closest" in targetElement)) return;
-      const link = targetElement.closest("a[href]");
-      const href = link?.getAttribute("href");
-      const linkTarget = link?.getAttribute("target");
-      if (!href || linkTarget && linkTarget !== "_self") return;
-      const url = new URL(href, targetWindow.location.href);
-      if (url.origin !== targetWindow.location.origin) return;
-      const nextTarget = normalizeTarget(url.pathname, reviewPathPrefix);
-      if (nextTarget === targetRef.current) return;
-      event.preventDefault();
-      syncShellTarget(nextTarget);
-    };
-    const handleFrameKeyDown = (event) => {
-      if (event.key !== "Escape") return;
-      if (!cancelReviewMode() && !closeRuler()) return;
-      event.preventDefault();
-      event.stopPropagation();
-    };
-    const history = targetWindow.history;
-    const originalPushState = history.pushState.bind(history);
-    const originalReplaceState = history.replaceState.bind(history);
-    history.pushState = (...args) => {
-      originalPushState(...args);
-      syncRouteFromFrame();
-    };
-    history.replaceState = (...args) => {
-      originalReplaceState(...args);
-      syncRouteFromFrame();
-    };
-    syncRouteFromFrame();
-    targetWindow.addEventListener("popstate", syncRouteFromFrame);
-    targetWindow.addEventListener("hashchange", syncRouteFromFrame);
-    targetWindow.addEventListener("keydown", handleFrameKeyDown, true);
-    targetDocument.addEventListener("click", handleClick, true);
-    targetWindow.addEventListener("scroll", syncTargetViewport, true);
-    targetWindow.addEventListener("resize", syncTargetViewport);
-    cleanupTargetRef.current = () => {
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
-      targetWindow.removeEventListener("popstate", syncRouteFromFrame);
-      targetWindow.removeEventListener("hashchange", syncRouteFromFrame);
-      targetWindow.removeEventListener("keydown", handleFrameKeyDown, true);
-      targetDocument.removeEventListener("click", handleClick, true);
-      targetWindow.removeEventListener("scroll", syncTargetViewport, true);
-      targetWindow.removeEventListener("resize", syncTargetViewport);
-    };
-    controllerRef.current = createWebReviewKit({
-      projectId,
-      adapter,
-      target: () => {
-        const frame = iframeRef.current;
-        const frameWindow = frame?.contentWindow;
-        const frameDocument = frame?.contentDocument;
-        if (!frame || !frameWindow || !frameDocument) return void 0;
-        return {
-          window: frameWindow,
-          document: frameDocument,
-          getViewportRect: () => frame.getBoundingClientRect(),
-          getOverlayRect: () => {
-            const frameRect = frame.getBoundingClientRect();
-            const scrollRect = frameScrollRef.current?.getBoundingClientRect();
-            if (!scrollRect) return frameRect;
-            const left = Math.max(frameRect.left, scrollRect.left);
-            const top = Math.max(frameRect.top, scrollRect.top);
-            const right = Math.min(
-              frameRect.left + frameRect.width,
-              scrollRect.left + scrollRect.width
-            );
-            const bottom = Math.min(
-              frameRect.top + frameRect.height,
-              scrollRect.top + scrollRect.height
-            );
-            return {
-              left,
-              top,
-              width: Math.max(0, right - left),
-              height: Math.max(0, bottom - top)
-            };
-          }
-        };
-      },
-      hotkeys: {
-        qa: "Shift+Q"
-      },
-      anchors: {
-        attribute: "data-qa-id"
-      },
-      viewports: {
-        presets: reviewViewportPresets
-      },
-      ruler,
-      onRestoreItem: restoreReviewItem,
-      onItemsChange: () => {
-        void refreshItems();
-      },
-      onModeChange: setMode,
-      ui: {
-        panel: false
-      },
-      modules: {
-        qa: true,
-        grid: false,
-        figma: false
-      }
-    });
-    controllerRef.current.open();
-    controllerRef.current.setHiddenItemIds(hiddenOverlayItemIdListRef.current);
-    setMode(controllerRef.current.getMode());
-    void refreshItems();
-    void restoreInitialItem();
-    applyPendingRestore();
-    refreshTargetOverlayState();
-    setTargetScrollbarHidden(
-      targetDocument,
-      getViewportPresetKind(sizeRef.current) === "mobile"
-    );
-  }, [
-    adapter,
-    applyPendingRestore,
-    cancelReviewMode,
-    closeRuler,
-    destroyReviewKit,
-    projectId,
-    pageTargets,
-    refreshItems,
-    refreshTargetOverlayState,
-    reviewViewportPresets,
-    restoreInitialItem,
-    restoreReviewItem,
-    ruler,
-    reviewPathPrefix,
-    syncShellTarget,
-    syncTargetViewport
-  ]);
-  useEffect(() => destroyReviewKit, [destroyReviewKit]);
-  useEffect(() => {
-    if (!presence || !normalizedReviewUserId) {
-      const session = presenceSessionRef.current;
-      presenceSessionRef.current = null;
-      setPresenceUsers([]);
-      void session?.disconnect();
-      return void 0;
-    }
-    let isActive = true;
-    let unsubscribe;
-    const initialState = getCurrentPresenceState();
-    void Promise.resolve(
-      presence.connect({
-        projectId,
-        sessionId: presenceSessionId,
-        userId: normalizedReviewUserId,
-        displayName: presenceDisplayName,
-        color: presenceColor,
-        initialState
-      })
-    ).then((session) => {
-      if (!isActive) {
-        void session.disconnect();
-        return;
-      }
-      presenceSessionRef.current = session;
-      unsubscribe = session.subscribe(setPresenceUsers);
-      setPresenceSessionVersion((current) => current + 1);
-      void session.update(initialState);
-    }).catch(() => {
-      if (!isActive) return;
-      presenceSessionRef.current = null;
-      setPresenceUsers([]);
-    });
-    return () => {
-      isActive = false;
-      unsubscribe?.();
-      const session = presenceSessionRef.current;
-      presenceSessionRef.current = null;
-      setPresenceUsers([]);
-      void session?.disconnect();
-    };
-  }, [
-    normalizedReviewUserId,
-    presence,
-    presenceColor,
-    presenceDisplayName,
-    presenceSessionId,
-    projectId
-  ]);
-  useEffect(() => {
-    const session = presenceSessionRef.current;
-    if (!session || !normalizedReviewUserId) return;
-    void session.update(getCurrentPresenceState());
-  }, [
-    getCurrentPresenceState,
-    normalizedReviewUserId,
-    presenceSessionVersion
-  ]);
-  useEffect(() => {
-    const frameDocument = iframeRef.current?.contentDocument;
-    if (!frameDocument || frameDocument.readyState !== "complete") return;
-    initReviewKit();
-  }, [initReviewKit]);
-  useEffect(() => {
-    void refreshItems();
-  }, [refreshItems]);
-  useEffect(() => {
-    void refreshSitemapItems();
-  }, [refreshSitemapItems]);
-  useEffect(() => {
-    if (!isSitemapOpen) return;
-    void refreshSitemapItems();
-  }, [isSitemapOpen, refreshSitemapItems]);
-  useEffect(() => {
-    hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
-    controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
-  }, [hiddenOverlayItemIdList]);
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return void 0;
-    const query = window.matchMedia("(prefers-color-scheme: light)");
-    const syncSystemTheme = () => {
-      setSystemReviewTheme(query.matches ? "light" : "dark");
-    };
-    syncSystemTheme();
-    if (query.addEventListener) {
-      query.addEventListener("change", syncSystemTheme);
-      return () => query.removeEventListener("change", syncSystemTheme);
-    }
-    query.addListener(syncSystemTheme);
-    return () => query.removeListener(syncSystemTheme);
-  }, []);
-  useEffect(() => {
-    document.body.classList.toggle(
-      "df-review-theme-light",
-      effectiveReviewTheme === "light"
-    );
-    document.body.classList.toggle(
-      "df-review-theme-dark",
-      effectiveReviewTheme === "dark"
-    );
-    return () => {
-      document.body.classList.remove(
-        "df-review-theme-light",
-        "df-review-theme-dark"
-      );
-    };
-  }, [effectiveReviewTheme]);
-  useEffect(() => {
-    if (mode === "idle" && !isRulerVisible && !promptItemId && !isSitemapOpen && !isFigmaSettingsOpen) {
-      return;
-    }
-    const handleKeyDown = (event) => {
-      if (event.key !== "Escape") return;
-      if (mode !== "idle" && cancelReviewMode()) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      if (closeRuler()) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      if (promptItemId) {
-        setPromptItemId(null);
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      if (isSitemapOpen) {
-        setIsSitemapOpen(false);
-        return;
-      }
-      if (isFigmaSettingsOpen) {
-        closeFigmaSettings();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    cancelReviewMode,
-    closeRuler,
-    closeFigmaSettings,
-    isFigmaSettingsOpen,
-    isRulerVisible,
-    isSitemapOpen,
-    promptItemId,
-    mode
-  ]);
-  useEffect(() => {
-    targetRef.current = target;
-    setActiveRoute(target);
-  }, [target]);
-  useEffect(() => {
-    sizeRef.current = size;
-    if (selectedItemIdRef.current) {
-      updateShellUrlForItem(
-        targetRef.current,
-        size,
-        selectedItemIdRef.current,
-        source
-      );
-    } else {
-      updateShellUrl(targetRef.current, size, source);
-    }
-    syncTargetViewport();
-    setTargetScrollbarHidden(
-      iframeRef.current?.contentDocument,
-      getViewportPresetKind(size) === "mobile"
-    );
-  }, [size, source, syncTargetViewport]);
-  useEffect(() => {
-    const frameScroll = frameScrollRef.current;
-    if (!frameScroll) return void 0;
-    const centerFrameScroll = () => {
-      frameScroll.scrollLeft = Math.max(
-        0,
-        (frameScroll.scrollWidth - frameScroll.clientWidth) / 2
-      );
-      frameScroll.scrollTop = 0;
-    };
-    const animationFrame = window.requestAnimationFrame(centerFrameScroll);
-    const transitionTimeout = window.setTimeout(centerFrameScroll, 180);
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.clearTimeout(transitionTimeout);
-    };
-  }, [isListVisible, size.height, size.width, targetSrc]);
-  useEffect(() => {
-    if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
-    dispatchTargetOverlayHotkey("figma");
-  }, [
-    dispatchTargetOverlayHotkey,
-    isFigmaOverlayAvailable,
-    targetOverlayState.figma
-  ]);
-  useEffect(() => {
-    if (!isRulerVisible || !isRulerAvailable) return void 0;
-    const getRulerEventClientPoint = (event) => {
-      const frame2 = iframeRef.current;
-      let isFrameEvent = false;
-      try {
-        isFrameEvent = Boolean(frame2?.contentWindow) && event.view === frame2?.contentWindow;
-        if (!isFrameEvent && frame2?.contentDocument) {
-          const targetDocument = event.target?.ownerDocument;
-          isFrameEvent = targetDocument === frame2.contentDocument;
-        }
-      } catch {
-        isFrameEvent = false;
-      }
-      if (isFrameEvent && frame2) {
-        const frameRect = frame2.getBoundingClientRect();
-        return {
-          clientX: event.clientX + frameRect.left,
-          clientY: event.clientY + frameRect.top
-        };
-      }
-      return {
-        clientX: event.clientX,
-        clientY: event.clientY
-      };
-    };
-    const snapDesign = (screen, axis) => {
-      const current = sizeRef.current;
-      const scaleX = current.designWidth ? current.width / current.designWidth : 1;
-      const scale = axis === "y" ? current.designHeight ? current.height / current.designHeight : scaleX : scaleX;
-      return Math.round(Math.round(screen / scale) * scale);
-    };
-    const getActiveRulerPoint = (event) => {
-      const rect = rulerDragRectRef.current ?? rulerOverlayRef.current?.getBoundingClientRect();
-      if (!rect) return void 0;
-      const point = getRulerEventClientPoint(event);
-      const snapped = getRulerPointFromRect(point.clientX, point.clientY, rect);
-      return { x: snapDesign(snapped.x, "x"), y: snapDesign(snapped.y, "y") };
-    };
-    const getHoverRulerPoint = (event) => {
-      const rect = rulerOverlayRef.current?.getBoundingClientRect();
-      if (!rect) return null;
-      const { clientX, clientY } = getRulerEventClientPoint(event);
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
-      return { x: snapDesign(x, "x"), y: snapDesign(y, "y") };
-    };
-    const handleDragStart = (event) => {
-      if (isRulerDraggingRef.current) return;
-      const mouseEvent = event;
-      if (mouseEvent.button !== 0) return;
-      const overlay = rulerOverlayRef.current;
-      const target2 = mouseEvent.target;
-      if (!overlay || !(target2 instanceof Node) || !overlay.contains(target2)) {
-        return;
-      }
-      event.preventDefault();
-      startRulerDrag(
-        mouseEvent.clientX,
-        mouseEvent.clientY,
-        overlay.getBoundingClientRect()
-      );
-    };
-    const handlePointerMove = (event) => {
-      const mouseEvent = event;
-      if (isRulerDraggingRef.current) {
-        const point = getActiveRulerPoint(mouseEvent);
-        if (!point) return;
-        mouseEvent.preventDefault();
-        setRulerPoint(point);
-        setRulerHover(point);
-        return;
-      }
-      setRulerHover(getHoverRulerPoint(mouseEvent));
-    };
-    const handleDragEnd = (event) => {
-      if (!isRulerDraggingRef.current) return;
-      const point = getActiveRulerPoint(event);
-      event.preventDefault();
-      finishRulerDrag(point);
-    };
-    const handleWindowBlur = () => {
-      if (!isRulerDraggingRef.current) return;
-      finishRulerDrag();
-    };
-    const dragTargets = /* @__PURE__ */ new Set([window]);
-    const frame = iframeRef.current;
-    try {
-      if (frame?.contentWindow) dragTargets.add(frame.contentWindow);
-      if (frame?.contentDocument) dragTargets.add(frame.contentDocument);
-    } catch {
-    }
-    dragTargets.forEach((target2) => {
-      target2.addEventListener("mousedown", handleDragStart, true);
-      target2.addEventListener("mousemove", handlePointerMove, true);
-      target2.addEventListener("mouseup", handleDragEnd, true);
-    });
-    window.addEventListener("blur", handleWindowBlur);
-    return () => {
-      dragTargets.forEach((target2) => {
-        target2.removeEventListener("mousedown", handleDragStart, true);
-        target2.removeEventListener("mousemove", handlePointerMove, true);
-        target2.removeEventListener("mouseup", handleDragEnd, true);
-      });
-      window.removeEventListener("blur", handleWindowBlur);
-    };
-  }, [finishRulerDrag, isRulerAvailable, isRulerVisible, startRulerDrag]);
-  useEffect(() => {
-    clearRulerMeasure();
-  }, [clearRulerMeasure, size.height, size.width, targetSrc]);
-  useEffect(() => {
-    if (!isRulerVisible || isRulerAvailable) return;
-    closeRuler();
-  }, [closeRuler, isRulerAvailable, isRulerVisible]);
-  const applyTarget = () => {
-    const normalizedTarget = normalizeTarget(draftTarget, reviewPathPrefix);
-    clearSelectedItem();
-    targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
-    setDraftTarget(normalizedTarget);
-    setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, sizeRef.current, source);
-  };
-  const selectPage = (href) => {
-    const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
-    clearSelectedItem();
-    targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
-    setDraftTarget(normalizedTarget);
-    setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, sizeRef.current, source);
-    setIsSitemapOpen(false);
-  };
-  const setReviewMode = (nextMode) => {
-    if (isRemoteSource) return;
-    closeRuler();
-    if (nextMode === "element") {
-      closeTargetOverlay("figma");
-    }
-    controllerRef.current?.setMode(nextMode);
-    setMode(controllerRef.current?.getMode() ?? "idle");
-  };
-  const copyCurrentUrl = async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopyLabel("Copied");
-    window.setTimeout(() => setCopyLabel("Copy URL"), 1200);
-  };
-  const changeReviewSource = (nextSource) => {
-    if (nextSource !== "local" && nextSource !== remoteSource) return;
-    cancelReviewMode();
-    clearSelectedItem();
-    setItems([]);
-    setSource(nextSource);
-    updateShellUrl(targetRef.current, sizeRef.current, nextSource);
-  };
-  const changeItemStatus = async (item, nextStatus) => {
-    if (!activeAdapterEntry.updateStatus) return;
-    const statusIndex = activeAdapterEntry.statusOptions.findIndex(
-      (statusOption2) => statusOption2.value === nextStatus
-    );
-    const statusOption = activeAdapterEntry.statusOptions[statusIndex];
-    if (!statusOption) return;
-    await activeAdapterEntry.updateStatus({
-      id: item.id,
-      item,
-      status: statusOption.value,
-      statusOption,
-      statusIndex
-    });
-    await refreshReviewData();
-  };
-  const submitItem = async (numberedItem) => {
-    const { item } = numberedItem;
-    if (!remoteAdapterEntry || !localAdapterEntry.syncSubmission || item.submitStatus === "submitted") {
-      return;
-    }
-    await localAdapterEntry.syncSubmission({
-      id: item.id,
-      item,
-      patch: {
-        submitStatus: "submitting",
-        submitError: void 0
-      }
-    });
-    await refreshReviewData();
-    try {
-      await remoteAdapterEntry.adapter.create({
-        ...item,
-        reviewNumber: void 0,
-        externalIssueId: void 0,
-        externalIssueUrl: void 0,
-        submittedAt: void 0,
-        submitStatus: "submitted",
-        submitError: void 0
-      });
-      await localAdapterEntry.adapter.remove(item.id);
-      if (selectedItemIdRef.current === item.id) {
-        clearSelectedItem();
-      }
-    } catch (error) {
-      await localAdapterEntry.syncSubmission({
-        id: item.id,
-        item,
-        patch: {
-          submitStatus: "failed",
-          submitError: error instanceof Error ? error.message : "Failed to submit remote"
-        }
-      });
-    }
-    await refreshReviewData();
-  };
-  const copyPrompt = async (value, key) => {
-    if (!value) return;
-    await navigator.clipboard.writeText(value);
-    setCopiedPromptKey(key);
-    window.setTimeout(() => {
-      setCopiedPromptKey((current) => current === key ? null : current);
-    }, 1200);
-  };
-  const copyItemPrompt = async (numberedItem) => {
-    await copyPrompt(
-      buildReviewItemPrompt(numberedItem, reviewPathPrefix),
-      `item:${numberedItem.item.id}`
-    );
-  };
-  const removeItem = async (item) => {
-    if (!activeAdapterEntry.canRemove || item.submitStatus === "submitting" || !isRemoteSource && item.submitStatus === "submitted") {
-      return;
-    }
-    await activeAdapterEntry.adapter.remove(item.id);
-    if (selectedItemIdRef.current === item.id) {
-      clearSelectedItem();
-      updateShellUrl(targetRef.current, sizeRef.current, source);
-    }
-    await refreshReviewData();
-  };
-  useEffect(() => {
-    const handleHotkey = (event) => {
-      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
-        return;
-      }
-      if (isEditableEventTarget(event)) return;
-      const actions = {
-        r: () => {
-          if (isRulerAvailable) toggleRuler();
-        },
-        g: () => toggleTargetOverlay("grid"),
-        f: () => toggleTargetOverlay("figma"),
-        n: () => setReviewMode("note"),
-        e: () => setReviewMode("element"),
-        a: () => setReviewMode("area")
-      };
-      const action = actions[event.key.toLowerCase()];
-      if (!action) return;
-      event.preventDefault();
-      action();
-    };
-    window.addEventListener("keydown", handleHotkey);
-    return () => window.removeEventListener("keydown", handleHotkey);
-  }, [isRulerAvailable, toggleRuler, toggleTargetOverlay, setReviewMode]);
-  return /* @__PURE__ */ jsxs3(
-    "div",
-    {
-      className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
-      children: [
-        /* @__PURE__ */ jsx3(
-          ReviewTopbar,
-          {
-            draftTarget,
-            copyLabel,
-            viewportPresets,
-            size,
-            presetScopeCounts,
-            isRulerAvailable,
-            isRulerVisible,
-            targetOverlayState,
-            isFigmaOverlayAvailable,
-            onDraftTargetChange: setDraftTarget,
-            onApplyTarget: applyTarget,
-            onOpenSitemap: () => setIsSitemapOpen(true),
-            onCopyCurrentUrl: () => void copyCurrentUrl(),
-            onSizeChange: setSize,
-            onToggleRuler: toggleRuler,
-            onToggleTargetOverlay: toggleTargetOverlay,
-            onOpenSettings: openFigmaSettings
-          }
-        ),
-        isSitemapOpen && /* @__PURE__ */ jsx3(
-          SitemapModal,
-          {
-            pages,
-            activeRoute,
-            pageQaCounts,
-            pagePresenceUsers,
-            getPageTarget: (href) => normalizeTarget(href, reviewPathPrefix),
-            onClose: () => setIsSitemapOpen(false),
-            onSelectPage: selectPage
-          }
-        ),
-        isFigmaSettingsOpen && /* @__PURE__ */ jsx3(
-          ReviewSettingsModal,
-          {
-            figmaTokenDraft,
-            reviewUserIdDraft,
-            reviewThemeDraft,
-            figmaSettingsStatus,
-            isFigmaTokenVisible,
-            isFigmaTokenGuideOpen,
-            onClose: closeFigmaSettings,
-            onFigmaTokenDraftChange: setFigmaTokenDraft,
-            onReviewUserIdDraftChange: setReviewUserIdDraft,
-            onReviewThemeDraftChange: setReviewThemeDraft,
-            onClearStatus: () => setFigmaSettingsStatus(""),
-            onToggleFigmaTokenVisible: () => setIsFigmaTokenVisible((current) => !current),
-            onToggleFigmaTokenGuide: () => setIsFigmaTokenGuideOpen((current) => !current),
-            onSave: saveReviewSettings
-          }
-        ),
-        promptDialogNumberedItem && /* @__PURE__ */ jsx3(
-          PromptModal,
-          {
-            numberedItem: promptDialogNumberedItem,
-            promptTab,
-            activeLabel: promptDialogActiveLabel,
-            activeText: promptDialogActiveText,
-            activeCopyKey: promptDialogActiveCopyKey,
-            copiedPromptKey,
-            onClose: () => setPromptItemId(null),
-            onPromptTabChange: setPromptTab,
-            onCopyPrompt: (text, key) => void copyPrompt(text, key)
-          }
-        ),
-        /* @__PURE__ */ jsx3("div", { className: "df-review-side-rail", children: /* @__PURE__ */ jsxs3(
-          "button",
-          {
-            "aria-label": isListVisible ? "Hide QA list" : "Show QA list",
-            className: "df-review-side-toggle",
-            type: "button",
-            onClick: () => setIsListVisible((current) => !current),
-            children: [
-              /* @__PURE__ */ jsx3("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx3(GripVertical, {}) }),
-              /* @__PURE__ */ jsx3("strong", { children: "QA" })
-            ]
-          }
-        ) }),
-        /* @__PURE__ */ jsx3("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: /* @__PURE__ */ jsx3("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs3("section", { className: "df-review-item-list", children: [
-          /* @__PURE__ */ jsxs3("div", { className: "df-review-list-header", children: [
-            /* @__PURE__ */ jsxs3("div", { className: "df-review-list-toolbar", children: [
-              /* @__PURE__ */ jsxs3("div", { className: "df-review-list-controls", children: [
-                /* @__PURE__ */ jsxs3(
-                  "select",
-                  {
-                    "aria-label": "QA source",
-                    className: "df-review-source-select",
-                    value: source,
-                    onChange: (event) => changeReviewSource(event.currentTarget.value),
-                    children: [
-                      /* @__PURE__ */ jsx3("option", { value: "local", children: "local" }),
-                      remoteAdapterEntry && /* @__PURE__ */ jsx3("option", { value: remoteAdapterEntry.label, children: remoteAdapterEntry.label })
-                    ]
-                  }
-                ),
-                /* @__PURE__ */ jsx3(
-                  "button",
-                  {
-                    "aria-label": "Refresh QA",
-                    className: "df-review-source-refresh",
-                    type: "button",
-                    onClick: () => void refreshReviewData(),
-                    children: /* @__PURE__ */ jsx3(RefreshCw, { "aria-hidden": "true" })
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ jsx3("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
-                const count = qaFilterCounts.get(filter.key) ?? 0;
-                const isActive = qaFilter === filter.key;
-                return /* @__PURE__ */ jsx3(
-                  "button",
-                  {
-                    "aria-label": `${filter.label} QA (${count})`,
-                    "aria-pressed": isActive,
-                    className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
-                    type: "button",
-                    onClick: () => setQaFilter(filter.key),
-                    children: /* @__PURE__ */ jsx3("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ jsx3(ReviewScopeIcon2, { scope: filter.scope }) : /* @__PURE__ */ jsx3(ListFilter, { "aria-hidden": "true" }) })
-                  },
-                  filter.key
-                );
-              }) })
-            ] }),
-            /* @__PURE__ */ jsxs3("div", { className: "df-review-list-title", children: [
-              /* @__PURE__ */ jsxs3("span", { children: [
-                activeAdapterEntry.label,
-                " QA"
-              ] }),
-              /* @__PURE__ */ jsxs3("strong", { children: [
-                filteredNumberedActiveItems.length,
-                qaFilter === "all" ? "" : `/${activeItems.length}`
-              ] })
-            ] }),
-            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsxs3(
-              "div",
-              {
-                "aria-label": "Review presence",
-                className: "df-review-presence-row",
-                children: [
-                  /* @__PURE__ */ jsxs3("span", { className: "df-review-presence-label", children: [
-                    /* @__PURE__ */ jsx3(Users, { "aria-hidden": "true" }),
-                    "online ",
-                    currentPagePresenceUsers.length
-                  ] }),
-                  /* @__PURE__ */ jsx3("div", { className: "df-review-presence-list", children: currentPagePresenceUsers.map((user) => /* @__PURE__ */ jsxs3(
-                    "span",
-                    {
-                      className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
-                      style: {
-                        "--df-review-presence-color": user.color
-                      },
-                      children: [
-                        /* @__PURE__ */ jsx3(
-                          "span",
-                          {
-                            className: "df-review-presence-dot",
-                            "aria-hidden": "true"
-                          }
-                        ),
-                        /* @__PURE__ */ jsx3("span", { className: "df-review-presence-name", children: user.userId })
-                      ]
-                    },
-                    user.sessionId
-                  )) })
-                ]
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxs3("div", { className: "df-review-list-scroll", children: [
-            activeItems.length === 0 && /* @__PURE__ */ jsx3("p", { className: "df-review-empty", children: isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page." }),
-            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx3("p", { className: "df-review-empty", children: "No QA in this filter." }),
-            filteredNumberedActiveItems.map((numberedItem) => {
-              const { item } = numberedItem;
-              const itemMode = getReviewItemMode(item);
-              const isSubmitted = item.submitStatus === "submitted";
-              const isSubmitting = item.submitStatus === "submitting";
-              const canRemoveItem = activeAdapterEntry.canRemove && !isSubmitting && (isRemoteSource || !isSubmitted);
-              const hasRemoteActions = !isRemoteSource && Boolean(remoteAdapterEntry) || Boolean(item.externalIssueUrl);
-              const isItemOverlayVisible = !hiddenOverlayItemIds.has(item.id);
-              const itemComment = item.comment.trim() || getItemTitle(item);
-              const statusOptions = activeAdapterEntry.statusOptions;
-              const currentStatusOption = getStatusOption(
-                item.status,
-                statusOptions
-              );
-              const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
-              return /* @__PURE__ */ jsxs3(
-                "article",
-                {
-                  className: `df-review-item-card${item.id === selectedItemId ? " is-active" : ""}${getItemPresetScope(item) !== currentPresetScope ? " is-dim" : ""}${isItemOverlayVisible ? "" : " is-overlay-hidden"}`,
-                  onClick: () => restoreReviewItem(item),
-                  children: [
-                    /* @__PURE__ */ jsxs3("div", { className: "df-review-item-header", children: [
-                      /* @__PURE__ */ jsxs3("div", { className: "df-review-item-main", children: [
-                        /* @__PURE__ */ jsxs3("span", { className: "df-review-item-badges", children: [
-                          /* @__PURE__ */ jsxs3("span", { className: "df-review-item-id", children: [
-                            "#",
-                            numberedItem.number
-                          ] }),
-                          /* @__PURE__ */ jsxs3(
-                            "span",
-                            {
-                              className: `df-review-item-scope is-scope-${numberedItem.scope}`,
-                              children: [
-                                /* @__PURE__ */ jsx3(ReviewScopeIcon2, { scope: numberedItem.scope }),
-                                numberedItem.label
-                              ]
-                            }
-                          ),
-                          /* @__PURE__ */ jsxs3(
-                            "span",
-                            {
-                              className: `df-review-item-mode is-mode-${itemMode}`,
-                              children: [
-                                /* @__PURE__ */ jsx3(ReviewItemModeIcon, { mode: itemMode }),
-                                itemMode
-                              ]
-                            }
-                          ),
-                          currentStatusOption && (canUpdateStatus ? /* @__PURE__ */ jsx3(
-                            "select",
-                            {
-                              "aria-label": "QA status",
-                              className: "df-review-item-status-select",
-                              value: currentStatusOption.value,
-                              onClick: (event) => event.stopPropagation(),
-                              onChange: (event) => void changeItemStatus(
-                                item,
-                                event.currentTarget.value
-                              ),
-                              children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx3(
-                                "option",
-                                {
-                                  value: statusOption.value,
-                                  children: statusOption.label
-                                },
-                                statusOption.value
-                              ))
-                            }
-                          ) : /* @__PURE__ */ jsx3("span", { className: "df-review-item-status-badge", children: currentStatusOption.label }))
-                        ] }),
-                        /* @__PURE__ */ jsx3("strong", { className: "df-review-item-comment", children: itemComment }),
-                        /* @__PURE__ */ jsx3("small", { children: formatDate(item.createdAt) }),
-                        item.submitError && /* @__PURE__ */ jsx3("small", { className: "df-review-item-error", children: item.submitError })
-                      ] }),
-                      /* @__PURE__ */ jsxs3(
-                        "div",
-                        {
-                          className: "df-review-item-header-actions",
-                          onClick: (event) => event.stopPropagation(),
-                          children: [
-                            /* @__PURE__ */ jsx3(
-                              "button",
-                              {
-                                "aria-label": isItemOverlayVisible ? "Hide QA overlay" : "Show QA overlay",
-                                className: `df-review-item-visibility${isItemOverlayVisible ? " is-visible" : " is-hidden"}`,
-                                type: "button",
-                                onClick: () => toggleItemOverlayVisibility(item.id),
-                                children: isItemOverlayVisible ? /* @__PURE__ */ jsx3(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx3(EyeOff, { "aria-hidden": "true" })
-                              }
-                            ),
-                            canRemoveItem && /* @__PURE__ */ jsx3(
-                              "button",
-                              {
-                                "aria-label": "Delete QA",
-                                className: "df-review-item-delete",
-                                type: "button",
-                                onClick: () => void removeItem(item),
-                                children: /* @__PURE__ */ jsx3(X, { "aria-hidden": "true" })
-                              }
-                            )
-                          ]
-                        }
-                      )
-                    ] }),
-                    /* @__PURE__ */ jsxs3("div", { className: "df-review-item-actions", children: [
-                      /* @__PURE__ */ jsxs3(
-                        "div",
-                        {
-                          className: "df-review-item-prompt-actions",
-                          onClick: (event) => event.stopPropagation(),
-                          children: [
-                            /* @__PURE__ */ jsx3(
-                              "button",
-                              {
-                                className: "df-review-item-prompt",
-                                type: "button",
-                                onClick: () => {
-                                  setPromptTab("item");
-                                  setPromptItemId(item.id);
-                                },
-                                children: "Prompt"
-                              }
-                            ),
-                            /* @__PURE__ */ jsx3(
-                              "button",
-                              {
-                                "aria-label": "Copy QA prompt",
-                                className: `df-review-item-prompt-copy${copiedPromptKey === `item:${item.id}` ? " is-copied" : ""}`,
-                                type: "button",
-                                onClick: () => void copyItemPrompt(numberedItem),
-                                children: /* @__PURE__ */ jsx3(Copy, { "aria-hidden": "true" })
-                              }
-                            )
-                          ]
-                        }
-                      ),
-                      hasRemoteActions && /* @__PURE__ */ jsxs3(
-                        "div",
-                        {
-                          className: "df-review-item-remote-actions",
-                          onClick: (event) => event.stopPropagation(),
-                          children: [
-                            !isRemoteSource && remoteAdapterEntry && /* @__PURE__ */ jsxs3(
-                              "button",
-                              {
-                                "aria-label": "Submit to remote",
-                                className: "df-review-item-action-button df-review-item-submit-button",
-                                disabled: isSubmitted || isSubmitting,
-                                type: "button",
-                                onClick: () => void submitItem(numberedItem),
-                                children: [
-                                  /* @__PURE__ */ jsx3(Upload, { "aria-hidden": "true" }),
-                                  /* @__PURE__ */ jsx3("span", { children: isSubmitted ? "\uB4F1\uB85D\uB428" : isSubmitting ? "\uB4F1\uB85D \uC911" : "remote \uB4F1\uB85D" })
-                                ]
-                              }
-                            ),
-                            item.externalIssueUrl && /* @__PURE__ */ jsx3(
-                              "a",
-                              {
-                                "aria-label": "Open remote issue",
-                                className: "df-review-item-action-button",
-                                href: item.externalIssueUrl,
-                                rel: "noreferrer",
-                                target: "_blank",
-                                children: /* @__PURE__ */ jsx3(ExternalLink, { "aria-hidden": "true" })
-                              }
-                            )
-                          ]
-                        }
-                      )
-                    ] })
-                  ]
-                },
-                item.id
-              );
-            })
-          ] })
-        ] }) }) }),
-        /* @__PURE__ */ jsx3("main", { className: "df-review-stage", children: /* @__PURE__ */ jsxs3("div", { className: "df-review-frame", children: [
-          /* @__PURE__ */ jsx3("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ jsx3("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ jsxs3(
-            "div",
-            {
-              className: `df-review-device-frame${isRulerVisible && isRulerAvailable ? " is-ruler" : ""}`,
-              children: [
-                isRulerVisible && isRulerAvailable && /* @__PURE__ */ jsxs3(Fragment, { children: [
-                  /* @__PURE__ */ jsx3("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
-                  /* @__PURE__ */ jsxs3(
-                    "div",
-                    {
-                      className: "df-review-ruler-gutter is-x",
-                      style: {
-                        "--df-review-ruler-step-x": `${rulerScaleX * 20}px`
-                      },
-                      children: [
-                        /* @__PURE__ */ jsxs3("div", { className: "df-review-ruler-frame-label", children: [
-                          /* @__PURE__ */ jsx3("strong", { children: size.label }),
-                          /* @__PURE__ */ jsxs3("span", { children: [
-                            size.designWidth,
-                            size.designHeight ? `x${size.designHeight}` : "",
-                            rulerUnit
-                          ] })
-                        ] }),
-                        rulerHover && /* @__PURE__ */ jsx3(
-                          "div",
-                          {
-                            className: "df-review-ruler-coord is-x",
-                            style: { left: `${rulerHover.x}px` },
-                            children: Math.round(rulerHover.x / rulerScaleX)
-                          }
-                        )
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsx3(
-                    "div",
-                    {
-                      className: "df-review-ruler-gutter is-y",
-                      style: {
-                        "--df-review-ruler-step-y": `${rulerScaleY * 20}px`
-                      },
-                      children: rulerHover && /* @__PURE__ */ jsx3(
-                        "div",
-                        {
-                          className: "df-review-ruler-coord is-y",
-                          style: { top: `${rulerHover.y}px` },
-                          children: Math.round(rulerHover.y / rulerScaleY)
-                        }
-                      )
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxs3(
-                  "div",
-                  {
-                    className: "df-review-device",
-                    style: {
-                      width: `${size.width}px`,
-                      height: `${size.height}px`,
-                      minWidth: `${size.width}px`,
-                      minHeight: `${size.height}px`
-                    },
-                    children: [
-                      /* @__PURE__ */ jsx3(
-                        "iframe",
-                        {
-                          ref: iframeRef,
-                          width: size.width,
-                          height: size.height,
-                          src: targetSrc,
-                          title: "Review target",
-                          onLoad: initReviewKit
-                        },
-                        targetSrc
-                      ),
-                      isRulerVisible && isRulerAvailable && /* @__PURE__ */ jsxs3(
-                        "div",
-                        {
-                          ref: rulerOverlayRef,
-                          "aria-label": "Ruler",
-                          className: `df-review-ruler-overlay${isRulerDragging ? " is-dragging" : ""}`,
-                          role: "application",
-                          onWheel: (event) => {
-                            iframeRef.current?.contentWindow?.scrollBy(
-                              event.deltaX,
-                              event.deltaY
-                            );
-                          },
-                          children: [
-                            rulerHover && /* @__PURE__ */ jsxs3(Fragment, { children: [
-                              /* @__PURE__ */ jsx3(
-                                "div",
-                                {
-                                  className: "df-review-ruler-guide is-x",
-                                  "aria-hidden": "true",
-                                  style: { top: `${rulerHover.y}px` }
-                                }
-                              ),
-                              /* @__PURE__ */ jsx3(
-                                "div",
-                                {
-                                  className: "df-review-ruler-guide is-y",
-                                  "aria-hidden": "true",
-                                  style: { left: `${rulerHover.x}px` }
-                                }
-                              )
-                            ] }),
-                            rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs3(Fragment, { children: [
-                              /* @__PURE__ */ jsx3(
-                                "div",
-                                {
-                                  className: "df-review-ruler-selection",
-                                  "aria-hidden": "true",
-                                  style: {
-                                    left: `${rulerMeasure.left}px`,
-                                    top: `${rulerMeasure.top}px`,
-                                    width: `${rulerMeasure.width}px`,
-                                    height: `${rulerMeasure.height}px`
-                                  }
-                                }
-                              ),
-                              /* @__PURE__ */ jsx3(
-                                "div",
-                                {
-                                  className: "df-review-ruler-label",
-                                  style: {
-                                    left: `${Math.min(
-                                      Math.max(
-                                        rulerMeasure.left + rulerMeasure.width + 8,
-                                        8
-                                      ),
-                                      Math.max(8, size.width - 164)
-                                    )}px`,
-                                    top: `${Math.min(
-                                      Math.max(
-                                        rulerMeasure.top + rulerMeasure.height + 8,
-                                        8
-                                      ),
-                                      Math.max(8, size.height - 34)
-                                    )}px`
-                                  },
-                                  children: rulerMeasureLabel
-                                }
-                              )
-                            ] })
-                          ]
-                        }
-                      )
-                    ]
-                  }
-                )
-              ]
-            }
-          ) }) }),
-          /* @__PURE__ */ jsx3("div", { className: "df-review-frame-actions", children: !isRemoteSource && /* @__PURE__ */ jsxs3("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
-            /* @__PURE__ */ jsx3(
-              "button",
-              {
-                "aria-label": "Element",
-                className: `df-review-mode-button is-element${mode === "element" ? " is-active" : ""}`,
-                type: "button",
-                onClick: () => setReviewMode("element"),
-                children: /* @__PURE__ */ jsx3(SquareMousePointer, { "aria-hidden": "true" })
-              }
-            ),
-            /* @__PURE__ */ jsx3("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
-            /* @__PURE__ */ jsx3(
-              "button",
-              {
-                "aria-label": "Note",
-                className: `df-review-mode-button is-note${mode === "note" ? " is-active" : ""}`,
-                type: "button",
-                onClick: () => setReviewMode("note"),
-                children: /* @__PURE__ */ jsx3(StickyNote, { "aria-hidden": "true" })
-              }
-            ),
-            /* @__PURE__ */ jsx3(
-              "button",
-              {
-                "aria-label": "Area",
-                className: `df-review-mode-button is-area${mode === "area" ? " is-active" : ""}`,
-                type: "button",
-                onClick: () => setReviewMode("area"),
-                children: /* @__PURE__ */ jsx3(Scan, { "aria-hidden": "true" })
-              }
-            )
-          ] }) })
-        ] }) })
-      ]
-    }
-  );
-};
+import { jsx as jsx17 } from "react/jsx-runtime";
 var mountReviewShell = (options) => {
   if (typeof document === "undefined" || !document.head) return;
   const { rootId = "root", ...shellProps } = options;
@@ -5787,7 +7525,7 @@ var mountReviewShell = (options) => {
   root.style.height = "100%";
   root.style.margin = "0";
   createRoot(root).render(
-    /* @__PURE__ */ jsx3(React.StrictMode, { children: /* @__PURE__ */ jsx3(ReviewShell, { ...shellProps }) })
+    /* @__PURE__ */ jsx17(React2.StrictMode, { children: /* @__PURE__ */ jsx17(ReviewShell, { ...shellProps }) })
   );
 };
 export {

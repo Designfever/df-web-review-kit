@@ -172,6 +172,12 @@ h2 {
   font-weight: 750;
 }
 
+.dev-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .dev-actions a + a,
 .dev-component-row button + button {
   color: #fff;

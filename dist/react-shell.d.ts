@@ -1,5 +1,5 @@
+import { f as ReviewItemScope, r as ReviewSource, n as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, p as ReviewRulerConfig } from './types-NiCp9JJQ.js';
 import React from 'react';
-import { f as ReviewItemScope, s as ReviewSource, o as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, q as ReviewRulerConfig } from './types-D_mNjOHx.js';
 
 type ReviewShellViewportKind = Exclude<ReviewItemScope, 'dom'>;
 type ReviewShellViewportPreset = {
@@ -18,6 +18,7 @@ type ReviewShellStatusOption = {
     value: ReviewItemStatus;
     label: string;
 };
+type ReviewShellWriteMode = 'dom' | 'note' | 'area';
 type ReviewShellUpdateStatusInput = {
     id: string;
     item: ReviewItem;
@@ -36,8 +37,10 @@ type ReviewShellAdapter = {
     pageId?: string;
     get: WebReviewKitAdapter['get'];
     list: WebReviewKitAdapter['list'];
-    create: WebReviewKitAdapter['create'];
+    create?: WebReviewKitAdapter['create'];
+    update?: WebReviewKitAdapter['update'];
     statusOptions?: readonly ReviewShellStatusOption[];
+    canWrite?: boolean | readonly ReviewShellWriteMode[];
     updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<ReviewItem>;
     syncSubmission?: (input: ReviewShellSyncSubmissionInput) => Promise<ReviewItem>;
     remove?: WebReviewKitAdapter['remove'];
@@ -107,6 +110,8 @@ interface ReviewShellMountOptions extends ReviewShellProps {
     rootId?: string;
 }
 
+declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, reviewPathPrefix, presence }: ReviewShellProps) => React.JSX.Element;
+
 declare const createReviewPagesFromGlob: (entries: ReviewShellGlobEntries, options?: CreateReviewPagesOptions) => ReviewShellPage[];
 
 declare const DEFAULT_REVIEW_VIEWPORT_PRESETS: ReviewShellViewportPreset[];
@@ -150,7 +155,6 @@ type SupabasePresenceAdapterOptions = {
 };
 declare const createSupabasePresenceAdapter: ({ client, channelPrefix, private: isPrivate, }: SupabasePresenceAdapterOptions) => ReviewPresenceAdapter;
 
-declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, reviewPathPrefix, presence }: ReviewShellProps) => React.JSX.Element;
 declare const mountReviewShell: (options: ReviewShellMountOptions) => void;
 
 export { type CreateReviewPagesOptions, DEFAULT_REVIEW_VIEWPORT_PRESETS, type LocalPresenceAdapterOptions, type ReviewPresenceAdapter, type ReviewPresenceContext, type ReviewPresenceSession, type ReviewPresenceState, type ReviewPresenceStatus, type ReviewPresenceUser, ReviewShell, type ReviewShellAdapter, type ReviewShellAdapters, type ReviewShellGlobEntries, type ReviewShellMountOptions, type ReviewShellPage, type ReviewShellProps, type ReviewShellStatusOption, type ReviewShellViewportKind, type ReviewShellViewportPreset, type SupabasePresenceAdapterOptions, type SupabasePresenceClient, createFallbackPresenceAdapter, createLocalPresenceAdapter, createReviewPagesFromGlob, createSupabasePresenceAdapter, mountReviewShell };

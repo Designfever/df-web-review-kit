@@ -30,6 +30,8 @@ export type ReviewShellStatusOption = {
   label: string;
 };
 
+export type ReviewShellWriteMode = 'dom' | 'note' | 'area';
+
 export type ReviewShellUpdateStatusInput = {
   id: string;
   item: ReviewItem;
@@ -60,8 +62,10 @@ export type ReviewShellAdapter = {
   pageId?: string;
   get: WebReviewKitAdapter['get'];
   list: WebReviewKitAdapter['list'];
-  create: WebReviewKitAdapter['create'];
+  create?: WebReviewKitAdapter['create'];
+  update?: WebReviewKitAdapter['update'];
   statusOptions?: readonly ReviewShellStatusOption[];
+  canWrite?: boolean | readonly ReviewShellWriteMode[];
   updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<ReviewItem>;
   syncSubmission?: (
     input: ReviewShellSyncSubmissionInput
@@ -156,8 +160,6 @@ export type TargetOverlayState = Record<TargetOverlayKey, boolean>;
 export type ReviewQaFilter = 'all' | ReviewItemScope;
 
 export type ReviewShellTheme = 'dark' | 'light' | 'system';
-
-export type ReviewPromptTab = 'initial' | 'item';
 
 export type ReviewRulerPoint = {
   x: number;

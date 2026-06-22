@@ -79,11 +79,8 @@ export function supabaseAdapter(
       const nextItem = normalizeItemForSupabaseCreate(item, source, options);
 
       if (options.unsafeClientReviewNumberFallback) {
-        return createItemWithClientReviewNumber(
-          nextItem,
-          source,
-          options,
-          fromTable
+        throw new Error(
+          'supabase create review item: unsafeClientReviewNumberFallback is no longer supported. Use create_review_item RPC with database-backed review_number sequence.'
         );
       }
 
@@ -190,58 +187,6 @@ async function createItemWithRpc(
   );
 
   return rowToReviewItem(row, options) ?? item;
-}
-
-async function createItemWithClientReviewNumber(
-  item: ReviewItem,
-  source: ReviewSource,
-  options: SupabaseReviewAdapterOptions,
-  fromTable: () => any
-) {
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const reviewNumber = await getNextReviewNumber(
-      options.projectId,
-      source,
-      fromTable
-    );
-    const nextItem: ReviewItem = { ...item, reviewNumber };
-    const row = itemToRow(nextItem, source, options);
-    const created = await fromTable().insert(row).select('*').single();
-
-    if (!created.error) {
-      return rowToReviewItem(created.data, options) ?? nextItem;
-    }
-
-    if (created.error.code === '23505' && attempt < 4) {
-      continue;
-    }
-
-    throw new Error(
-      `supabase create review item: ${
-        created.error.message ?? created.error.code ?? 'failed'
-      }`
-    );
-  }
-
-  throw new Error('supabase create review item: failed');
-}
-
-async function getNextReviewNumber(
-  projectId: string,
-  source: ReviewSource,
-  fromTable: () => any
-) {
-  const rows = await unwrapResponse<Array<{ review_number: number | null }>>(
-    fromTable()
-      .select('review_number')
-      .eq('project_id', projectId)
-      .eq('source', source)
-      .order('review_number', { ascending: false })
-      .limit(1),
-    'supabase get next review number'
-  );
-  const maxNumber = normalizeReviewNumber(rows?.[0]?.review_number) ?? 0;
-  return maxNumber + 1;
 }
 
 function itemToRow(

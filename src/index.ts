@@ -1,14 +1,10 @@
 export { localAdapter } from './adapters/local';
-export {
-  DF_SHEET_REVIEW_SOURCE,
-  dfSheetAdapter,
-} from './adapters/df-sheet';
 export { supabaseAdapter } from './adapters/supabase';
 export {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   normalizeReviewItemStatus,
 } from './status';
-export { createWebReviewKit } from './core/web-review-kit-app';
+export { createWebReviewKit } from './core/web.review.kit.app';
 export {
   DEFAULT_REVIEW_VIEWPORTS,
   findReviewViewportPreset,
@@ -16,12 +12,11 @@ export {
   getReviewItemScope,
   getReviewItemScopeLabel,
   getReviewViewportScope,
-} from './core/review-scope';
+} from './core/review/scope';
 export type {
   DomAnchor,
   DomAnchorCandidate,
   DomAnchorStrategy,
-  DfSheetAdapterOptions,
   DomSourceHint,
   LocalAdapterOptions,
   NumberedReviewItem,

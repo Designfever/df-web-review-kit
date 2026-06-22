@@ -1,0 +1,97 @@
+name: Bug report
+description: Report a bug in df-web-review-kit.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please include enough context for someone else to reproduce it.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the kit is affected?
+      options:
+        - Review shell
+        - Core overlay runtime
+        - Marker / anchor restore
+        - Local adapter
+        - Supabase adapter
+        - df-sheet adapter
+        - Figma / grid overlay
+        - Documentation
+        - Dev harness
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the bug in a few sentences.
+      placeholder: The review marker disappears after resizing the iframe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: List the shortest steps that reproduce the issue.
+      placeholder: |
+        1. Open /review/
+        2. Select mobile viewport
+        3. Add an area item
+        4. Reload the page
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
+    validations:
+      required: true
+
+  - type: input
+    id: route
+    attributes:
+      label: Target route or URL
+      description: Where did you see the issue?
+      placeholder: /review/?target=/components/&w=390&h=844
+
+  - type: input
+    id: version
+    attributes:
+      label: Package version or commit
+      description: Use the npm version, git commit, or branch name if available.
+      placeholder: 0.0.0 / e1dae31 / uforgot/feat/local-dev-review-harness
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Safari
+        - Firefox
+        - Edge
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshot or recording
+      description: Drag images, videos, or logs here if they help explain the issue.
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context
+      description: Add anything else that might help.

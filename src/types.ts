@@ -3,7 +3,7 @@ export type ReviewItemScope = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'dom';
 export type ReviewWorkflowStatus = 'todo' | 'doing' | 'review' | 'hold' | 'done';
 export type ReviewItemStatus = 'open' | 'resolved' | ReviewWorkflowStatus;
 export type ReviewMode = 'idle' | 'note' | 'element' | 'area';
-export type ReviewSource = 'local' | 'df-sheet' | 'supabase' | (string & {});
+export type ReviewSource = 'local' | 'supabase' | (string & {});
 export type ReviewSubmitStatus =
   | 'idle'
   | 'submitting'
@@ -124,18 +124,6 @@ export interface LocalAdapterOptions {
   storageKey?: string;
 }
 
-export interface DfSheetAdapterOptions {
-  baseUrl?: string;
-  projectId: string;
-  pageId: string;
-  reviewProjectId?: string;
-  reviewPathPrefix?: string;
-  source?: string;
-  issueType?: string;
-  priority?: string;
-  token?: string;
-}
-
 export interface SupabaseReviewClient {
   from(table: string): any;
   rpc?: (fn: string, args?: Record<string, unknown>) => any;
@@ -182,6 +170,7 @@ export interface WebReviewKitOptions {
     attribute?: string;
   };
   onRestoreItem?: (item: ReviewItem) => void | Promise<void>;
+  onCreateItem?: (item: ReviewItem) => void | Promise<void>;
   onItemsChange?: (items: ReviewItem[]) => void;
   onModeChange?: (mode: ReviewMode) => void;
   ui?: {

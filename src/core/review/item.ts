@@ -39,7 +39,7 @@ export function getBoundMarkerPoint(
   if (!marker) return undefined;
 
   // Prefer anchor-relative positions because absolute viewport points drift after layout changes.
-  if (item.anchor && marker.relative) {
+  if (item.kind !== 'area' && item.anchor && marker.relative) {
     const resolved = resolveAnchorElement(item.anchor, environment);
     const element = resolved?.element;
 
@@ -81,7 +81,6 @@ export function getItemHighlightSelection(
     return getVisibleHighlightSelection(
       [
         getBoundSelection(item, environment),
-        getAnchorHighlightSelection(item, environment),
         getPointHighlightSelection(item, environment),
       ],
       environment
@@ -178,7 +177,7 @@ function getBoundSelection(item: ReviewItem, environment: ReviewEnvironment) {
   if (!selection?.viewport) return undefined;
 
   // Rebuild the rectangle from the anchor when possible, then fall back to scroll offset.
-  if (item.anchor && selection.relative) {
+  if (item.kind !== 'area' && item.anchor && selection.relative) {
     const resolved = resolveAnchorElement(item.anchor, environment);
     const element = resolved?.element;
 
@@ -211,7 +210,7 @@ function getBoundSelection(item: ReviewItem, environment: ReviewEnvironment) {
       width: viewportSelection.width,
       height: viewportSelection.height,
     },
-    isBound: false,
+    isBound: item.kind === 'area',
     confidence: 0,
   };
 }

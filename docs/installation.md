@@ -170,6 +170,19 @@ mountReviewShell({
 
 See [DB setup](db-setup.md) before enabling Supabase in a shared environment.
 
+## Custom Adapter
+
+If a team or host project owns its own QA backend, keep that adapter in the host project or in a separate package. Start from [adaptor.sample.ts](adaptor.sample.ts) and map its `WebReviewKitAdapter` methods to your backend API.
+
+The sample explains the main interfaces:
+
+- `ReviewItem`: the full QA payload to persist as structured JSON.
+- `ReviewItemQuery`: filters used by page lists and sitemap counts.
+- `WebReviewKitAdapter`: core CRUD contract.
+- `ReviewShellAdapter`: React shell wiring for source labels, write modes, status updates, and delete actions.
+
+Private keys, admin credentials, canonical numbering, and permission checks should stay in your backend, not in browser code.
+
 ## Environment
 
 ```env

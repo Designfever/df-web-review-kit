@@ -160,6 +160,18 @@ function ensureReviewShellStyle() {
 	    --df-review-color-scrollbar-thumb-hover: rgba(237, 243, 251, 0.28);
 	    --df-review-color-scrollbar-border: rgba(15, 18, 24, 0.92);
 	    --df-review-color-backdrop: rgba(2, 6, 12, 0.62);
+	    --df-review-color-ruler-surface: transparent;
+	    --df-review-color-ruler-label: transparent;
+	    --df-review-color-ruler-label-text: #e1d8ff;
+	    --df-review-color-ruler-tick-major: rgba(179, 149, 255, 0.75);
+	    --df-review-color-ruler-tick-minor: rgba(237, 243, 251, 0.2);
+	    --df-review-color-ruler-guide: rgba(255, 255, 255, 0.74);
+	    --df-review-color-ruler-measure-border: #c9b8ff;
+	    --df-review-color-ruler-measure-bg: rgba(179, 149, 255, 0.16);
+	    --df-review-color-ruler-measure-shadow: rgba(20, 12, 40, 0.38);
+	    --df-review-color-ruler-popover-border: rgba(237, 243, 251, 0.22);
+	    --df-review-color-ruler-popover-bg: transparent;
+	    --df-review-color-ruler-popover-shadow: transparent;
 	    --df-review-focus-ring: rgba(124, 199, 255, 0.58);
 	    --df-review-shadow-card: 0 14px 36px rgba(0, 0, 0, 0.34);
 	    --df-review-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -240,6 +252,18 @@ function ensureReviewShellStyle() {
 	    --df-review-color-scrollbar-thumb-hover: rgba(23, 32, 44, 0.34);
 	    --df-review-color-scrollbar-border: rgba(244, 246, 249, 0.92);
 	    --df-review-color-backdrop: rgba(15, 23, 42, 0.32);
+	    --df-review-color-ruler-surface: transparent;
+	    --df-review-color-ruler-label: transparent;
+	    --df-review-color-ruler-label-text: #6543b8;
+	    --df-review-color-ruler-tick-major: rgba(101, 67, 184, 0.58);
+	    --df-review-color-ruler-tick-minor: rgba(23, 32, 44, 0.24);
+	    --df-review-color-ruler-guide: rgba(101, 67, 184, 0.58);
+	    --df-review-color-ruler-measure-border: #6543b8;
+	    --df-review-color-ruler-measure-bg: rgba(101, 67, 184, 0.1);
+	    --df-review-color-ruler-measure-shadow: rgba(101, 67, 184, 0.22);
+	    --df-review-color-ruler-popover-border: rgba(23, 32, 44, 0.16);
+	    --df-review-color-ruler-popover-bg: transparent;
+	    --df-review-color-ruler-popover-shadow: transparent;
 	    --df-review-focus-ring: rgba(23, 105, 170, 0.42);
 	    --df-review-shadow-card: 0 14px 36px rgba(15, 23, 42, 0.14);
 	    --df-review-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.72);
@@ -2135,13 +2159,13 @@ function ensureReviewShellStyle() {
     z-index: 6;
     border-right: 1px solid var(--df-review-line-soft);
     border-bottom: 1px solid var(--df-review-line-soft);
-    background: rgba(10, 13, 18, 0.92);
+    background: var(--df-review-color-ruler-surface);
   }
 
   .df-review-ruler-gutter {
     position: absolute;
     z-index: 6;
-    background: rgba(10, 13, 18, 0.92);
+    background: var(--df-review-color-ruler-surface);
     color: var(--df-review-muted);
     user-select: none;
   }
@@ -2153,8 +2177,16 @@ function ensureReviewShellStyle() {
     height: 26px;
     border-bottom: 1px solid var(--df-review-line-soft);
     background-image:
-      linear-gradient(to right, rgba(179, 149, 255, 0.75) 1px, transparent 1px),
-      linear-gradient(to right, rgba(237, 243, 251, 0.2) 1px, transparent 1px);
+      linear-gradient(
+        to right,
+        var(--df-review-color-ruler-tick-major) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to right,
+        var(--df-review-color-ruler-tick-minor) 1px,
+        transparent 1px
+      );
     background-size:
       calc(var(--df-review-ruler-step-x) * 5) 11px,
       var(--df-review-ruler-step-x) 6px;
@@ -2169,8 +2201,16 @@ function ensureReviewShellStyle() {
     width: 26px;
     border-right: 1px solid var(--df-review-line-soft);
     background-image:
-      linear-gradient(to bottom, rgba(179, 149, 255, 0.75) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(237, 243, 251, 0.2) 1px, transparent 1px);
+      linear-gradient(
+        to bottom,
+        var(--df-review-color-ruler-tick-major) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        var(--df-review-color-ruler-tick-minor) 1px,
+        transparent 1px
+      );
     background-size:
       11px calc(var(--df-review-ruler-step-y) * 5),
       6px var(--df-review-ruler-step-y);
@@ -2188,13 +2228,13 @@ function ensureReviewShellStyle() {
     gap: 6px;
     padding: 3px 7px;
     border-radius: 5px;
-    background: rgba(20, 24, 32, 0.92);
+    background: var(--df-review-color-ruler-label);
     line-height: 1;
     white-space: nowrap;
   }
 
   .df-review-ruler-frame-label strong {
-    color: #e1d8ff;
+    color: var(--df-review-color-ruler-label-text);
     font-size: var(--df-review-font-size-2xs);
     font-weight: 900;
   }
@@ -2250,7 +2290,7 @@ function ensureReviewShellStyle() {
     position: absolute;
     z-index: 2;
     pointer-events: none;
-    background: rgba(255, 255, 255, 0.74);
+    background: var(--df-review-color-ruler-guide);
     box-shadow: 0 0 0 1px rgba(87, 55, 166, 0.45);
   }
 
@@ -2270,11 +2310,11 @@ function ensureReviewShellStyle() {
     position: absolute;
     z-index: 3;
     pointer-events: none;
-    border: 1px solid #c9b8ff;
-    background: rgba(179, 149, 255, 0.16);
+    border: 1px solid var(--df-review-color-ruler-measure-border);
+    background: var(--df-review-color-ruler-measure-bg);
     box-shadow:
-      inset 0 0 0 1px rgba(20, 12, 40, 0.38),
-      0 0 0 1px rgba(20, 12, 40, 0.38);
+      inset 0 0 0 1px var(--df-review-color-ruler-measure-shadow),
+      0 0 0 1px var(--df-review-color-ruler-measure-shadow);
   }
 
   .df-review-ruler-label {
@@ -2283,15 +2323,15 @@ function ensureReviewShellStyle() {
     pointer-events: none;
     min-width: 156px;
     padding: 7px 8px;
-    border: 1px solid rgba(237, 243, 251, 0.22);
+    border: 1px solid var(--df-review-color-ruler-popover-border);
     border-radius: var(--df-review-radius-sm);
-    background: rgba(10, 13, 18, 0.9);
+    background: var(--df-review-color-ruler-popover-bg);
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-xs);
     font-weight: 900;
     line-height: 1;
     white-space: nowrap;
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
+    box-shadow: 0 8px 22px var(--df-review-color-ruler-popover-shadow);
   }
 
 	  @media (max-width: 860px) {
@@ -3859,6 +3899,7 @@ var QaItemCard = ({
   copiedPromptKey,
   selectedItemId,
   onChangeItemStatus,
+  onClearSelectedItem,
   onRemoveItem,
   onCopyItemPrompt,
   onRestoreReviewItem,
@@ -3875,13 +3916,20 @@ var QaItemCard = ({
   const promptCopyKey = `qa:${item.id}`;
   const isPromptCopied = copiedPromptKey === promptCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
+  const isActive = item.id === selectedItemId;
   const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor].filter(Boolean).join(" | ");
   return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
     "article",
     {
-      className: `df-review-item-card${item.id === selectedItemId ? " is-active" : ""}${getItemPresetScope(item) !== currentPresetScope ? " is-dim" : ""}${isOverlayVisible ? "" : " is-overlay-hidden"}`,
-      onClick: () => onRestoreReviewItem(item),
+      className: `df-review-item-card${isActive ? " is-active" : ""}${getItemPresetScope(item) !== currentPresetScope ? " is-dim" : ""}${isOverlayVisible ? "" : " is-overlay-hidden"}`,
+      onClick: () => {
+        if (isActive) {
+          onClearSelectedItem();
+          return;
+        }
+        onRestoreReviewItem(item);
+      },
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "df-review-item-header", children: [
           /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "df-review-item-main", children: [
@@ -4105,6 +4153,7 @@ var ReviewQaPanel = ({
   source,
   sourceEntries,
   onChangeItemStatus,
+  onClearSelectedItem,
   onChangeReviewSource,
   onCopyItemPrompt,
   onQaFilterChange,
@@ -4133,34 +4182,46 @@ var ReviewQaPanel = ({
         onRefreshReviewData
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-list-scroll", children: [
-      activeItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "df-review-empty", children: isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page." }),
-      activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "df-review-empty", children: "No QA in this filter." }),
-      filteredNumberedActiveItems.map((numberedItem) => {
-        const { item } = numberedItem;
-        return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
-          QaItemCard,
-          {
-            activeAdapterEntry,
-            currentPresetScope,
-            getItemPresetScope,
-            isOverlayVisible: !hiddenOverlayItemIds.has(item.id),
-            isRemoteSource,
-            numberedItem,
-            remoteAdapterEntry,
-            copiedPromptKey,
-            selectedItemId,
-            onChangeItemStatus,
-            onCopyItemPrompt,
-            onRemoveItem,
-            onRestoreReviewItem,
-            onSubmitItem,
-            onToggleItemOverlayVisibility
-          },
-          item.id
-        );
-      })
-    ] })
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+      "div",
+      {
+        className: "df-review-list-scroll",
+        onClick: (event) => {
+          if (event.target === event.currentTarget) {
+            onClearSelectedItem();
+          }
+        },
+        children: [
+          activeItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "df-review-empty", children: isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page." }),
+          activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "df-review-empty", children: "No QA in this filter." }),
+          filteredNumberedActiveItems.map((numberedItem) => {
+            const { item } = numberedItem;
+            return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+              QaItemCard,
+              {
+                activeAdapterEntry,
+                currentPresetScope,
+                getItemPresetScope,
+                isOverlayVisible: !hiddenOverlayItemIds.has(item.id),
+                isRemoteSource,
+                numberedItem,
+                remoteAdapterEntry,
+                copiedPromptKey,
+                selectedItemId,
+                onChangeItemStatus,
+                onClearSelectedItem,
+                onCopyItemPrompt,
+                onRemoveItem,
+                onRestoreReviewItem,
+                onSubmitItem,
+                onToggleItemOverlayVisibility
+              },
+              item.id
+            );
+          })
+        ]
+      }
+    )
   ] }) }) });
 };
 
@@ -5468,7 +5529,7 @@ function normalizeReviewNumber(value) {
 function getBoundMarkerPoint(item, environment) {
   const marker = getItemMarker(item);
   if (!marker) return void 0;
-  if (item.anchor && marker.relative) {
+  if (item.kind !== "area" && item.anchor && marker.relative) {
     const resolved = resolveAnchorElement(item.anchor, environment);
     const element = resolved?.element;
     if (element) {
@@ -5501,7 +5562,6 @@ function getItemHighlightSelection(item, environment) {
     return getVisibleHighlightSelection(
       [
         getBoundSelection(item, environment),
-        getAnchorHighlightSelection(item, environment),
         getPointHighlightSelection(item, environment)
       ],
       environment
@@ -5566,7 +5626,7 @@ function createSelectionCenterMarker(selection, anchor, environment) {
 function getBoundSelection(item, environment) {
   const selection = getItemSelection(item);
   if (!selection?.viewport) return void 0;
-  if (item.anchor && selection.relative) {
+  if (item.kind !== "area" && item.anchor && selection.relative) {
     const resolved = resolveAnchorElement(item.anchor, environment);
     const element = resolved?.element;
     if (element) {
@@ -5595,7 +5655,7 @@ function getBoundSelection(item, environment) {
       width: viewportSelection.width,
       height: viewportSelection.height
     },
-    isBound: false,
+    isBound: item.kind === "area",
     confidence: 0
   };
 }
@@ -6954,7 +7014,7 @@ var WebReviewKitView = class {
       }
       const isHighlighted = item.id === this.state.highlightedItemId;
       const highlightMode = getReviewItemHighlightMode(item);
-      if (highlightMode !== "note") {
+      if (highlightMode !== "note" && (!this.state.highlightedItemId || isHighlighted)) {
         const selection = getItemHighlightSelection(item, environment);
         if (selection) {
           layer.append(
@@ -7565,24 +7625,16 @@ var WebReviewKitApp = class {
     if (!environment) return;
     const viewport = getViewportSize(environment);
     this.areaDraft = await this.withOverlayHidden(() => {
-      const anchor = getDomAnchor(
-        selection,
-        this.options.anchors?.attribute,
-        environment
-      );
-      const relativeSelection = anchor ? getRelativeSelection(selection, anchor, environment) : void 0;
       const marker = createSelectionCenterMarker(
         selection,
-        anchor,
+        void 0,
         environment
       );
       const reviewSelection = {
-        viewport: toPublicSelection(selection),
-        relative: relativeSelection
+        viewport: toPublicSelection(selection)
       };
       return {
         viewport,
-        anchor,
         marker,
         selection: reviewSelection
       };
@@ -7633,12 +7685,13 @@ var WebReviewKitApp = class {
       createdAt: now,
       updatedAt: now
     };
-    await this.adapter.create(item);
+    const createdItem = await this.adapter.create(item);
     this.setModeState("idle");
     this.noteDraft = void 0;
     this.areaDraft = void 0;
-    this.highlightItem(item.id);
+    this.highlightItem(createdItem.id);
     await this.reload();
+    await this.options.onCreateItem?.(createdItem);
   }
   async restoreItem(item) {
     this.setModeState("idle");
@@ -7854,6 +7907,7 @@ var useReviewKitLifecycle = ({
   onCloseRuler,
   onItemsRefresh,
   onModeChange,
+  onCreateItem,
   onRefreshTargetOverlayState,
   onRestoreInitialItem,
   onRestoreReviewItem,
@@ -7898,6 +7952,7 @@ var useReviewKitLifecycle = ({
         presets: reviewViewportPresets
       },
       ruler,
+      onCreateItem,
       onRestoreItem: onRestoreReviewItem,
       onItemsChange: () => {
         void onItemsRefresh();
@@ -7934,6 +7989,7 @@ var useReviewKitLifecycle = ({
     onApplyPendingRestore,
     onCancelReviewMode,
     onCloseRuler,
+    onCreateItem,
     onItemsRefresh,
     onModeChange,
     onRefreshTargetOverlayState,
@@ -8242,6 +8298,7 @@ var useReviewController = ({
     onApplyPendingRestore: applyPendingRestore,
     onCancelReviewMode,
     onCloseRuler,
+    onCreateItem: restoreReviewItem,
     onItemsRefresh,
     onModeChange,
     onRefreshTargetOverlayState: refreshTargetOverlayState,
@@ -9262,7 +9319,7 @@ function normalizeLegacyAdapterMap(adapters) {
     canRemove: true
   };
   const remote = adapters.remote ? {
-    label: "df-sheet",
+    label: "remote",
     adapter: adapters.remote,
     statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
     updateStatus: ({ id, status }) => adapters.remote?.update(id, { status }) ?? Promise.reject(new Error("Remote adapter is not available.")),
@@ -10054,6 +10111,10 @@ var ReviewShell = ({
     },
     [setToastMessage]
   );
+  const clearSelectedReviewItem = (0, import_react16.useCallback)(() => {
+    clearSelectedItem();
+    updateShellUrl(targetRef.current, sizeRef.current, source);
+  }, [clearSelectedItem, sizeRef, source, targetRef]);
   const changeReviewSource = (nextSource) => {
     if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
     cancelReviewMode();
@@ -10208,6 +10269,7 @@ var ReviewShell = ({
             source,
             sourceEntries,
             onChangeItemStatus: changeItemStatus,
+            onClearSelectedItem: clearSelectedReviewItem,
             onChangeReviewSource: changeReviewSource,
             onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
             onQaFilterChange: setQaFilter,

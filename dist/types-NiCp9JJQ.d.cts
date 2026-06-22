@@ -3,7 +3,7 @@ type ReviewItemScope = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'dom';
 type ReviewWorkflowStatus = 'todo' | 'doing' | 'review' | 'hold' | 'done';
 type ReviewItemStatus = 'open' | 'resolved' | ReviewWorkflowStatus;
 type ReviewMode = 'idle' | 'note' | 'element' | 'area';
-type ReviewSource = 'local' | 'df-sheet' | 'supabase' | (string & {});
+type ReviewSource = 'local' | 'supabase' | (string & {});
 type ReviewSubmitStatus = 'idle' | 'submitting' | 'submitted' | 'failed';
 type ReviewViewportScope = Exclude<ReviewItemScope, 'dom'>;
 type DomAnchorStrategy = 'configured-attribute' | 'id' | 'class' | 'dom-path';
@@ -141,6 +141,7 @@ interface WebReviewKitOptions {
         attribute?: string;
     };
     onRestoreItem?: (item: ReviewItem) => void | Promise<void>;
+    onCreateItem?: (item: ReviewItem) => void | Promise<void>;
     onItemsChange?: (items: ReviewItem[]) => void;
     onModeChange?: (mode: ReviewMode) => void;
     ui?: {

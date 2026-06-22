@@ -482,27 +482,17 @@ class WebReviewKitApp {
     const viewport = getViewportSize(environment);
 
     this.areaDraft = await this.withOverlayHidden(() => {
-      const anchor = getDomAnchor(
-        selection,
-        this.options.anchors?.attribute,
-        environment
-      );
-      const relativeSelection = anchor
-        ? getRelativeSelection(selection, anchor, environment)
-        : undefined;
       const marker = createSelectionCenterMarker(
         selection,
-        anchor,
+        undefined,
         environment
       );
       const reviewSelection: ReviewSelection = {
         viewport: toPublicSelection(selection),
-        relative: relativeSelection,
       };
 
       return {
         viewport,
-        anchor,
         marker,
         selection: reviewSelection,
       };
@@ -562,12 +552,13 @@ class WebReviewKitApp {
       updatedAt: now,
     };
 
-    await this.adapter.create(item);
+    const createdItem = await this.adapter.create(item);
     this.setModeState('idle');
     this.noteDraft = undefined;
     this.areaDraft = undefined;
-    this.highlightItem(item.id);
+    this.highlightItem(createdItem.id);
     await this.reload();
+    await this.options.onCreateItem?.(createdItem);
   }
 
   private async restoreItem(item: ReviewItem) {

@@ -36,6 +36,7 @@ interface ReviewQaPanelProps {
     item: ReviewItem,
     nextStatus: ReviewItemStatus
   ) => Promise<void>;
+  onClearSelectedItem: () => void;
   onChangeReviewSource: (nextSource: ReviewSource) => void;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onQaFilterChange: (filter: ReviewQaFilter) => void;
@@ -66,6 +67,7 @@ export const ReviewQaPanel = ({
   source,
   sourceEntries,
   onChangeItemStatus,
+  onClearSelectedItem,
   onChangeReviewSource,
   onCopyItemPrompt,
   onQaFilterChange,
@@ -94,7 +96,14 @@ export const ReviewQaPanel = ({
             onQaFilterChange={onQaFilterChange}
             onRefreshReviewData={onRefreshReviewData}
           />
-          <div className="df-review-list-scroll">
+          <div
+            className="df-review-list-scroll"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
+                onClearSelectedItem();
+              }
+            }}
+          >
             {activeItems.length === 0 && (
               <p className="df-review-empty">
                 {isRemoteSource
@@ -122,6 +131,7 @@ export const ReviewQaPanel = ({
                   copiedPromptKey={copiedPromptKey}
                   selectedItemId={selectedItemId}
                   onChangeItemStatus={onChangeItemStatus}
+                  onClearSelectedItem={onClearSelectedItem}
                   onCopyItemPrompt={onCopyItemPrompt}
                   onRemoveItem={onRemoveItem}
                   onRestoreReviewItem={onRestoreReviewItem}

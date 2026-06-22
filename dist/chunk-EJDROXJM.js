@@ -756,7 +756,7 @@ function getPublicSearch(location) {
 function getBoundMarkerPoint(item, environment) {
   const marker = getItemMarker(item);
   if (!marker) return void 0;
-  if (item.anchor && marker.relative) {
+  if (item.kind !== "area" && item.anchor && marker.relative) {
     const resolved = resolveAnchorElement(item.anchor, environment);
     const element = resolved?.element;
     if (element) {
@@ -789,7 +789,6 @@ function getItemHighlightSelection(item, environment) {
     return getVisibleHighlightSelection(
       [
         getBoundSelection(item, environment),
-        getAnchorHighlightSelection(item, environment),
         getPointHighlightSelection(item, environment)
       ],
       environment
@@ -854,7 +853,7 @@ function createSelectionCenterMarker(selection, anchor, environment) {
 function getBoundSelection(item, environment) {
   const selection = getItemSelection(item);
   if (!selection?.viewport) return void 0;
-  if (item.anchor && selection.relative) {
+  if (item.kind !== "area" && item.anchor && selection.relative) {
     const resolved = resolveAnchorElement(item.anchor, environment);
     const element = resolved?.element;
     if (element) {
@@ -883,7 +882,7 @@ function getBoundSelection(item, environment) {
       width: viewportSelection.width,
       height: viewportSelection.height
     },
-    isBound: false,
+    isBound: item.kind === "area",
     confidence: 0
   };
 }
@@ -2242,7 +2241,7 @@ var WebReviewKitView = class {
       }
       const isHighlighted = item.id === this.state.highlightedItemId;
       const highlightMode = getReviewItemHighlightMode(item);
-      if (highlightMode !== "note") {
+      if (highlightMode !== "note" && (!this.state.highlightedItemId || isHighlighted)) {
         const selection = getItemHighlightSelection(item, environment);
         if (selection) {
           layer.append(
@@ -2853,24 +2852,16 @@ var WebReviewKitApp = class {
     if (!environment) return;
     const viewport = getViewportSize(environment);
     this.areaDraft = await this.withOverlayHidden(() => {
-      const anchor = getDomAnchor(
-        selection,
-        this.options.anchors?.attribute,
-        environment
-      );
-      const relativeSelection = anchor ? getRelativeSelection(selection, anchor, environment) : void 0;
       const marker = createSelectionCenterMarker(
         selection,
-        anchor,
+        void 0,
         environment
       );
       const reviewSelection = {
-        viewport: toPublicSelection(selection),
-        relative: relativeSelection
+        viewport: toPublicSelection(selection)
       };
       return {
         viewport,
-        anchor,
         marker,
         selection: reviewSelection
       };
@@ -2921,12 +2912,13 @@ var WebReviewKitApp = class {
       createdAt: now,
       updatedAt: now
     };
-    await this.adapter.create(item);
+    const createdItem = await this.adapter.create(item);
     this.setModeState("idle");
     this.noteDraft = void 0;
     this.areaDraft = void 0;
-    this.highlightItem(item.id);
+    this.highlightItem(createdItem.id);
     await this.reload();
+    await this.options.onCreateItem?.(createdItem);
   }
   async restoreItem(item) {
     this.setModeState("idle");
@@ -2989,4 +2981,4 @@ export {
   getNumberedReviewItems,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-ZPV3V3HW.js.map
+//# sourceMappingURL=chunk-EJDROXJM.js.map

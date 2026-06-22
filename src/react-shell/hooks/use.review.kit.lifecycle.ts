@@ -40,6 +40,7 @@ interface UseReviewKitLifecycleOptions {
   onCloseRuler: () => boolean;
   onItemsRefresh: () => Promise<ReviewItem[]>;
   onModeChange: (mode: ReviewMode) => void;
+  onCreateItem: (item: ReviewItem) => void;
   onRefreshTargetOverlayState: () => void;
   onRestoreInitialItem: () => Promise<void>;
   onRestoreReviewItem: (item: ReviewItem) => void;
@@ -68,6 +69,7 @@ export const useReviewKitLifecycle = ({
   onCloseRuler,
   onItemsRefresh,
   onModeChange,
+  onCreateItem,
   onRefreshTargetOverlayState,
   onRestoreInitialItem,
   onRestoreReviewItem,
@@ -116,6 +118,7 @@ export const useReviewKitLifecycle = ({
         presets: reviewViewportPresets,
       },
       ruler,
+      onCreateItem,
       onRestoreItem: onRestoreReviewItem,
       onItemsChange: () => {
         void onItemsRefresh();
@@ -152,6 +155,7 @@ export const useReviewKitLifecycle = ({
     onApplyPendingRestore,
     onCancelReviewMode,
     onCloseRuler,
+    onCreateItem,
     onItemsRefresh,
     onModeChange,
     onRefreshTargetOverlayState,

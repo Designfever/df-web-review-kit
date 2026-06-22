@@ -168,6 +168,7 @@ export const useReviewController = ({
     onApplyPendingRestore: applyPendingRestore,
     onCancelReviewMode,
     onCloseRuler,
+    onCreateItem: restoreReviewItem,
     onItemsRefresh,
     onModeChange,
     onRefreshTargetOverlayState: refreshTargetOverlayState,

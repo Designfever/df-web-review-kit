@@ -572,7 +572,10 @@ export class WebReviewKitView {
 
       const isHighlighted = item.id === this.state.highlightedItemId;
       const highlightMode = getReviewItemHighlightMode(item);
-      if (highlightMode !== 'note') {
+      if (
+        highlightMode !== 'note' &&
+        (!this.state.highlightedItemId || isHighlighted)
+      ) {
         const selection = getItemHighlightSelection(item, environment);
         if (selection) {
           layer.append(

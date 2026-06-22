@@ -12,6 +12,7 @@ This package owns:
 - local draft storage
 - marker creation and restore logic
 - adapter contracts
+- custom adapter sample
 - optional Supabase adapter samples
 - grid/Figma overlay controls for host pages that already support them
 
@@ -20,6 +21,7 @@ This package does not own internal operator tools, private admin keys, or produc
 ## Docs
 
 - [Installation](docs/installation.md): install the package and mount `/review`.
+- [Custom adapter sample](docs/adaptor.sample.ts): starting point for host-owned remote adapters.
 - [DB setup](docs/db-setup.md): optional Supabase `review_items` setup, RLS, presence notes, and validation.
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, and extension boundaries.
 - [Figma overlay](docs/figma-overlay.md): how the shell toggles a host Figma overlay.

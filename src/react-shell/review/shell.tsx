@@ -443,6 +443,11 @@ export const ReviewShell = ({
     [setToastMessage]
   );
 
+  const clearSelectedReviewItem = useCallback(() => {
+    clearSelectedItem();
+    updateShellUrl(targetRef.current, sizeRef.current, source);
+  }, [clearSelectedItem, sizeRef, source, targetRef]);
+
   const changeReviewSource = (nextSource: ReviewSource) => {
     if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
 
@@ -623,6 +628,7 @@ export const ReviewShell = ({
         source={source}
         sourceEntries={sourceEntries}
         onChangeItemStatus={changeItemStatus}
+        onClearSelectedItem={clearSelectedReviewItem}
         onChangeReviewSource={changeReviewSource}
         onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
         onQaFilterChange={setQaFilter}

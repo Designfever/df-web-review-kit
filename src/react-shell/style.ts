@@ -116,6 +116,18 @@ export function ensureReviewShellStyle() {
 	    --df-review-color-scrollbar-thumb-hover: rgba(237, 243, 251, 0.28);
 	    --df-review-color-scrollbar-border: rgba(15, 18, 24, 0.92);
 	    --df-review-color-backdrop: rgba(2, 6, 12, 0.62);
+	    --df-review-color-ruler-surface: transparent;
+	    --df-review-color-ruler-label: transparent;
+	    --df-review-color-ruler-label-text: #e1d8ff;
+	    --df-review-color-ruler-tick-major: rgba(179, 149, 255, 0.75);
+	    --df-review-color-ruler-tick-minor: rgba(237, 243, 251, 0.2);
+	    --df-review-color-ruler-guide: rgba(255, 255, 255, 0.74);
+	    --df-review-color-ruler-measure-border: #c9b8ff;
+	    --df-review-color-ruler-measure-bg: rgba(179, 149, 255, 0.16);
+	    --df-review-color-ruler-measure-shadow: rgba(20, 12, 40, 0.38);
+	    --df-review-color-ruler-popover-border: rgba(237, 243, 251, 0.22);
+	    --df-review-color-ruler-popover-bg: transparent;
+	    --df-review-color-ruler-popover-shadow: transparent;
 	    --df-review-focus-ring: rgba(124, 199, 255, 0.58);
 	    --df-review-shadow-card: 0 14px 36px rgba(0, 0, 0, 0.34);
 	    --df-review-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -196,6 +208,18 @@ export function ensureReviewShellStyle() {
 	    --df-review-color-scrollbar-thumb-hover: rgba(23, 32, 44, 0.34);
 	    --df-review-color-scrollbar-border: rgba(244, 246, 249, 0.92);
 	    --df-review-color-backdrop: rgba(15, 23, 42, 0.32);
+	    --df-review-color-ruler-surface: transparent;
+	    --df-review-color-ruler-label: transparent;
+	    --df-review-color-ruler-label-text: #6543b8;
+	    --df-review-color-ruler-tick-major: rgba(101, 67, 184, 0.58);
+	    --df-review-color-ruler-tick-minor: rgba(23, 32, 44, 0.24);
+	    --df-review-color-ruler-guide: rgba(101, 67, 184, 0.58);
+	    --df-review-color-ruler-measure-border: #6543b8;
+	    --df-review-color-ruler-measure-bg: rgba(101, 67, 184, 0.1);
+	    --df-review-color-ruler-measure-shadow: rgba(101, 67, 184, 0.22);
+	    --df-review-color-ruler-popover-border: rgba(23, 32, 44, 0.16);
+	    --df-review-color-ruler-popover-bg: transparent;
+	    --df-review-color-ruler-popover-shadow: transparent;
 	    --df-review-focus-ring: rgba(23, 105, 170, 0.42);
 	    --df-review-shadow-card: 0 14px 36px rgba(15, 23, 42, 0.14);
 	    --df-review-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.72);
@@ -2091,13 +2115,13 @@ export function ensureReviewShellStyle() {
     z-index: 6;
     border-right: 1px solid var(--df-review-line-soft);
     border-bottom: 1px solid var(--df-review-line-soft);
-    background: rgba(10, 13, 18, 0.92);
+    background: var(--df-review-color-ruler-surface);
   }
 
   .df-review-ruler-gutter {
     position: absolute;
     z-index: 6;
-    background: rgba(10, 13, 18, 0.92);
+    background: var(--df-review-color-ruler-surface);
     color: var(--df-review-muted);
     user-select: none;
   }
@@ -2109,8 +2133,16 @@ export function ensureReviewShellStyle() {
     height: 26px;
     border-bottom: 1px solid var(--df-review-line-soft);
     background-image:
-      linear-gradient(to right, rgba(179, 149, 255, 0.75) 1px, transparent 1px),
-      linear-gradient(to right, rgba(237, 243, 251, 0.2) 1px, transparent 1px);
+      linear-gradient(
+        to right,
+        var(--df-review-color-ruler-tick-major) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to right,
+        var(--df-review-color-ruler-tick-minor) 1px,
+        transparent 1px
+      );
     background-size:
       calc(var(--df-review-ruler-step-x) * 5) 11px,
       var(--df-review-ruler-step-x) 6px;
@@ -2125,8 +2157,16 @@ export function ensureReviewShellStyle() {
     width: 26px;
     border-right: 1px solid var(--df-review-line-soft);
     background-image:
-      linear-gradient(to bottom, rgba(179, 149, 255, 0.75) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(237, 243, 251, 0.2) 1px, transparent 1px);
+      linear-gradient(
+        to bottom,
+        var(--df-review-color-ruler-tick-major) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        var(--df-review-color-ruler-tick-minor) 1px,
+        transparent 1px
+      );
     background-size:
       11px calc(var(--df-review-ruler-step-y) * 5),
       6px var(--df-review-ruler-step-y);
@@ -2144,13 +2184,13 @@ export function ensureReviewShellStyle() {
     gap: 6px;
     padding: 3px 7px;
     border-radius: 5px;
-    background: rgba(20, 24, 32, 0.92);
+    background: var(--df-review-color-ruler-label);
     line-height: 1;
     white-space: nowrap;
   }
 
   .df-review-ruler-frame-label strong {
-    color: #e1d8ff;
+    color: var(--df-review-color-ruler-label-text);
     font-size: var(--df-review-font-size-2xs);
     font-weight: 900;
   }
@@ -2206,7 +2246,7 @@ export function ensureReviewShellStyle() {
     position: absolute;
     z-index: 2;
     pointer-events: none;
-    background: rgba(255, 255, 255, 0.74);
+    background: var(--df-review-color-ruler-guide);
     box-shadow: 0 0 0 1px rgba(87, 55, 166, 0.45);
   }
 
@@ -2226,11 +2266,11 @@ export function ensureReviewShellStyle() {
     position: absolute;
     z-index: 3;
     pointer-events: none;
-    border: 1px solid #c9b8ff;
-    background: rgba(179, 149, 255, 0.16);
+    border: 1px solid var(--df-review-color-ruler-measure-border);
+    background: var(--df-review-color-ruler-measure-bg);
     box-shadow:
-      inset 0 0 0 1px rgba(20, 12, 40, 0.38),
-      0 0 0 1px rgba(20, 12, 40, 0.38);
+      inset 0 0 0 1px var(--df-review-color-ruler-measure-shadow),
+      0 0 0 1px var(--df-review-color-ruler-measure-shadow);
   }
 
   .df-review-ruler-label {
@@ -2239,15 +2279,15 @@ export function ensureReviewShellStyle() {
     pointer-events: none;
     min-width: 156px;
     padding: 7px 8px;
-    border: 1px solid rgba(237, 243, 251, 0.22);
+    border: 1px solid var(--df-review-color-ruler-popover-border);
     border-radius: var(--df-review-radius-sm);
-    background: rgba(10, 13, 18, 0.9);
+    background: var(--df-review-color-ruler-popover-bg);
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-xs);
     font-weight: 900;
     line-height: 1;
     white-space: nowrap;
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
+    box-shadow: 0 8px 22px var(--df-review-color-ruler-popover-shadow);
   }
 
 	  @media (max-width: 860px) {

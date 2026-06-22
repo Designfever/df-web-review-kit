@@ -34,6 +34,7 @@ interface QaItemCardProps {
     item: ReviewItem,
     nextStatus: ReviewItemStatus
   ) => Promise<void>;
+  onClearSelectedItem: () => void;
   onRemoveItem: (item: ReviewItem) => Promise<void>;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onRestoreReviewItem: (item: ReviewItem) => void;
@@ -64,6 +65,7 @@ export const QaItemCard = ({
   copiedPromptKey,
   selectedItemId,
   onChangeItemStatus,
+  onClearSelectedItem,
   onRemoveItem,
   onCopyItemPrompt,
   onRestoreReviewItem,
@@ -83,6 +85,7 @@ export const QaItemCard = ({
   const promptCopyKey = `qa:${item.id}`;
   const isPromptCopied = copiedPromptKey === promptCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
+  const isActive = item.id === selectedItemId;
   const canUpdateStatus =
     Boolean(activeAdapterEntry.updateStatus) &&
     statusOptions.length > 0 &&
@@ -93,12 +96,17 @@ export const QaItemCard = ({
 
   return (
     <article
-      className={`df-review-item-card${
-        item.id === selectedItemId ? ' is-active' : ''
-      }${
+      className={`df-review-item-card${isActive ? ' is-active' : ''}${
         getItemPresetScope(item) !== currentPresetScope ? ' is-dim' : ''
       }${isOverlayVisible ? '' : ' is-overlay-hidden'}`}
-      onClick={() => onRestoreReviewItem(item)}
+      onClick={() => {
+        if (isActive) {
+          onClearSelectedItem();
+          return;
+        }
+
+        onRestoreReviewItem(item);
+      }}
     >
       <div className="df-review-item-header">
         <div className="df-review-item-main">

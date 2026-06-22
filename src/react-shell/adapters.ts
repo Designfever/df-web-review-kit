@@ -70,7 +70,7 @@ function normalizeLegacyAdapterMap(
   } satisfies NormalizedReviewShellAdapter;
   const remote = adapters.remote
     ? ({
-        label: 'df-sheet',
+        label: 'remote',
         adapter: adapters.remote,
         statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
         updateStatus: ({ id, status }) =>

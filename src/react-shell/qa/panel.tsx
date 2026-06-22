@@ -30,6 +30,7 @@ interface ReviewQaPanelProps {
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
   selectedItemId: string | null;
   showSourceSelect: boolean;
+  sourceRoot?: string;
   source: ReviewSource;
   sourceEntries: NormalizedReviewShellAdapter[];
   onChangeItemStatus: (
@@ -64,6 +65,7 @@ export const ReviewQaPanel = ({
   remoteAdapterEntry,
   selectedItemId,
   showSourceSelect,
+  sourceRoot,
   source,
   sourceEntries,
   onChangeItemStatus,
@@ -130,6 +132,7 @@ export const ReviewQaPanel = ({
                   remoteAdapterEntry={remoteAdapterEntry}
                   copiedPromptKey={copiedPromptKey}
                   selectedItemId={selectedItemId}
+                  sourceRoot={sourceRoot}
                   onChangeItemStatus={onChangeItemStatus}
                   onClearSelectedItem={onClearSelectedItem}
                   onCopyItemPrompt={onCopyItemPrompt}

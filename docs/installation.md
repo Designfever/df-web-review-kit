@@ -170,6 +170,39 @@ mountReviewShell({
 
 See [DB setup](db-setup.md) before enabling Supabase in a shared environment.
 
+## Source Locator
+
+Host projects can opt into source file hints for local QA. The Vite plugin wraps React's dev JSX runtime and writes source attributes to rendered DOM nodes.
+
+```ts
+import { defineConfig } from 'vite';
+import { reviewSourceLocator } from '@designfever/web-review-kit/vite';
+
+export default defineConfig({
+  plugins: [
+    reviewSourceLocator({
+      enabled: true,
+      include: ['src'],
+      filePath: 'absolute',
+    }),
+  ],
+});
+```
+
+Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, and `data-wrk-source-column`. In the review shell, `Option` + click inside the target iframe opens that source in VS Code. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
+
+```tsx
+mountReviewShell({
+  projectId: REVIEW_PROJECT_ID,
+  pages,
+  adapters,
+  reviewPathPrefix: REVIEW_PATH_PREFIX,
+  sourceRoot: import.meta.env.VITE_REVIEW_SOURCE_ROOT,
+});
+```
+
+Use this only in dev/review builds. Source paths are written into the browser DOM and can be persisted with QA items.
+
 ## Custom Adapter
 
 If a team or host project owns its own QA backend, keep that adapter in the host project or in a separate package. Start from [adaptor.sample.ts](adaptor.sample.ts) and map its `WebReviewKitAdapter` methods to your backend API.

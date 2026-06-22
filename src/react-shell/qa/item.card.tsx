@@ -2,6 +2,7 @@ import {
   Copy as CopyIcon,
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
+  FileCode2 as FileCode2Icon,
   X as XIcon,
 } from 'lucide-react';
 import type {
@@ -18,6 +19,7 @@ import {
   ReviewItemModeIcon,
   ReviewScopeIcon,
 } from '../review/item.icons';
+import { getSourceOpenUrl } from '../source.open';
 import type { ReviewShellViewportKind } from '../types';
 
 interface QaItemCardProps {
@@ -30,6 +32,7 @@ interface QaItemCardProps {
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
   copiedPromptKey: string | null;
   selectedItemId: string | null;
+  sourceRoot?: string;
   onChangeItemStatus: (
     item: ReviewItem,
     nextStatus: ReviewItemStatus
@@ -64,6 +67,7 @@ export const QaItemCard = ({
   remoteAdapterEntry,
   copiedPromptKey,
   selectedItemId,
+  sourceRoot,
   onChangeItemStatus,
   onClearSelectedItem,
   onRemoveItem,
@@ -93,6 +97,7 @@ export const QaItemCard = ({
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor]
     .filter(Boolean)
     .join(' | ');
+  const sourceOpenUrl = getSourceOpenUrl(item.anchor?.source, sourceRoot);
 
   return (
     <article
@@ -149,6 +154,18 @@ export const QaItemCard = ({
               <EyeOffIcon aria-hidden="true" />
             )}
           </button>
+          {sourceOpenUrl && (
+            <a
+              aria-label="Open source in VS Code"
+              className="df-review-item-source-open"
+              href={sourceOpenUrl}
+              rel="noreferrer"
+              target="_blank"
+              title="Open source in VS Code"
+            >
+              <FileCode2Icon aria-hidden="true" />
+            </a>
+          )}
           <button
             aria-label={isPromptCopied ? 'Copied QA prompt' : 'Copy QA prompt'}
             className={`df-review-item-prompt-copy${

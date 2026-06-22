@@ -3,7 +3,7 @@ import {
   createWebReviewKit,
   getNumberedReviewItems,
   normalizeReviewItemStatus
-} from "./chunk-64JMY6IQ.js";
+} from "./chunk-I76WEDLA.js";
 
 // src/react-shell.tsx
 import React2 from "react";
@@ -341,6 +341,7 @@ function ensureReviewShellStyle() {
 		  .df-review-prompt-block-header button:hover,
 			  .df-review-item-actions button:hover,
 		  .df-review-item-visibility:hover,
+		  .df-review-item-source-open:hover,
 		  .df-review-item-prompt-copy:hover,
 		  .df-review-item-delete:hover,
 		  .df-review-presets button.is-active,
@@ -1907,6 +1908,7 @@ function ensureReviewShellStyle() {
 
   .df-review-item-delete,
   .df-review-item-prompt-copy,
+  .df-review-item-source-open,
   .df-review-item-visibility {
     display: inline-grid;
     place-items: center;
@@ -1917,10 +1919,12 @@ function ensureReviewShellStyle() {
     padding: 0;
     color: var(--df-review-muted);
     background: transparent;
+    text-decoration: none;
     transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
   }
 
   .df-review-item-visibility:hover,
+  .df-review-item-source-open:hover,
   .df-review-item-prompt-copy:hover {
     border-color: rgba(124, 199, 255, 0.34);
     color: var(--df-review-accent);
@@ -1948,6 +1952,7 @@ function ensureReviewShellStyle() {
 
   .df-review-item-delete svg,
   .df-review-item-prompt-copy svg,
+  .df-review-item-source-open svg,
   .df-review-item-visibility svg {
     width: 14px;
     height: 14px;
@@ -2360,7 +2365,8 @@ function ensureReviewShellStyle() {
 // src/react-shell/review/shell.tsx
 import {
   useCallback as useCallback11,
-  useEffect as useEffect9
+  useEffect as useEffect9,
+  useRef as useRef4
 } from "react";
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
@@ -2524,8 +2530,23 @@ var __iconNode5 = [
 ];
 var Eye = createLucideIcon("eye", __iconNode5);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/grip-vertical.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/file-code-corner.mjs
 var __iconNode6 = [
+  [
+    "path",
+    {
+      d: "M4 12.15V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2h-3.35",
+      key: "1wthlu"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "m5 16-3 3 3 3", key: "331omg" }],
+  ["path", { d: "m9 22 3-3-3-3", key: "lsp7cz" }]
+];
+var FileCodeCorner = createLucideIcon("file-code-corner", __iconNode6);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/grip-vertical.mjs
+var __iconNode7 = [
   ["circle", { cx: "9", cy: "12", r: "1", key: "1vctgf" }],
   ["circle", { cx: "9", cy: "5", r: "1", key: "hp0tcf" }],
   ["circle", { cx: "9", cy: "19", r: "1", key: "fkjjf6" }],
@@ -2533,35 +2554,35 @@ var __iconNode6 = [
   ["circle", { cx: "15", cy: "5", r: "1", key: "19l28e" }],
   ["circle", { cx: "15", cy: "19", r: "1", key: "f4zoj3" }]
 ];
-var GripVertical = createLucideIcon("grip-vertical", __iconNode6);
+var GripVertical = createLucideIcon("grip-vertical", __iconNode7);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
-var __iconNode7 = [
+var __iconNode8 = [
   ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
   ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
   ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
 ];
-var Image = createLucideIcon("image", __iconNode7);
+var Image = createLucideIcon("image", __iconNode8);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
-var __iconNode8 = [
+var __iconNode9 = [
   ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
   ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
   ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
   ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
 ];
-var LayoutGrid = createLucideIcon("layout-grid", __iconNode8);
+var LayoutGrid = createLucideIcon("layout-grid", __iconNode9);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
-var __iconNode9 = [
+var __iconNode10 = [
   ["path", { d: "M2 5h20", key: "1fs1ex" }],
   ["path", { d: "M6 12h12", key: "8npq4p" }],
   ["path", { d: "M9 19h6", key: "456am0" }]
 ];
-var ListFilter = createLucideIcon("list-filter", __iconNode9);
+var ListFilter = createLucideIcon("list-filter", __iconNode10);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
-var __iconNode10 = [
+var __iconNode11 = [
   [
     "path",
     {
@@ -2572,42 +2593,42 @@ var __iconNode10 = [
   ["path", { d: "M15 5.764v15", key: "1pn4in" }],
   ["path", { d: "M9 3.236v15", key: "1uimfh" }]
 ];
-var Map2 = createLucideIcon("map", __iconNode10);
+var Map2 = createLucideIcon("map", __iconNode11);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
-var __iconNode11 = [
+var __iconNode12 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "m21 3-7 7", key: "1l2asr" }],
   ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
   ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
 ];
-var Maximize2 = createLucideIcon("maximize-2", __iconNode11);
+var Maximize2 = createLucideIcon("maximize-2", __iconNode12);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
-var __iconNode12 = [
+var __iconNode13 = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
   ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
 ];
-var Monitor = createLucideIcon("monitor", __iconNode12);
+var Monitor = createLucideIcon("monitor", __iconNode13);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
-var __iconNode13 = [
+var __iconNode14 = [
   ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
 ];
-var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode13);
+var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode14);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
-var __iconNode14 = [
+var __iconNode15 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode14);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode15);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
-var __iconNode15 = [
+var __iconNode16 = [
   [
     "path",
     {
@@ -2620,19 +2641,19 @@ var __iconNode15 = [
   ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
   ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
 ];
-var Ruler = createLucideIcon("ruler", __iconNode15);
+var Ruler = createLucideIcon("ruler", __iconNode16);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
-var __iconNode16 = [
+var __iconNode17 = [
   ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
   ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
   ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
   ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
 ];
-var Scan = createLucideIcon("scan", __iconNode16);
+var Scan = createLucideIcon("scan", __iconNode17);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
-var __iconNode17 = [
+var __iconNode18 = [
   [
     "path",
     {
@@ -2642,17 +2663,17 @@ var __iconNode17 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Settings = createLucideIcon("settings", __iconNode17);
+var Settings = createLucideIcon("settings", __iconNode18);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
-var __iconNode18 = [
+var __iconNode19 = [
   ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
   ["path", { d: "M12 18h.01", key: "mhygvu" }]
 ];
-var Smartphone = createLucideIcon("smartphone", __iconNode18);
+var Smartphone = createLucideIcon("smartphone", __iconNode19);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode19 = [
+var __iconNode20 = [
   [
     "path",
     {
@@ -2662,10 +2683,10 @@ var __iconNode19 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode19);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode20);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode20 = [
+var __iconNode21 = [
   [
     "path",
     {
@@ -2675,31 +2696,31 @@ var __iconNode20 = [
   ],
   ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
 ];
-var StickyNote = createLucideIcon("sticky-note", __iconNode20);
+var StickyNote = createLucideIcon("sticky-note", __iconNode21);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode21 = [
+var __iconNode22 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode21);
+var Upload = createLucideIcon("upload", __iconNode22);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/users.mjs
-var __iconNode22 = [
+var __iconNode23 = [
   ["path", { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", key: "1yyitq" }],
   ["path", { d: "M16 3.128a4 4 0 0 1 0 7.744", key: "16gr8j" }],
   ["path", { d: "M22 21v-2a4 4 0 0 0-3-3.87", key: "kshegd" }],
   ["circle", { cx: "9", cy: "7", r: "4", key: "nufk8" }]
 ];
-var Users = createLucideIcon("users", __iconNode22);
+var Users = createLucideIcon("users", __iconNode23);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode23 = [
+var __iconNode24 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode23);
+var X = createLucideIcon("x", __iconNode24);
 
 // src/react-shell/constants.ts
 var REVIEW_QA_FILTERS = [
@@ -2919,6 +2940,8 @@ var formatPromptSourceHint = (item) => {
   return [
     `Component: ${source.component ?? "(unknown)"}`,
     `File: ${source.file ?? "(unknown)"}`,
+    `Line: ${source.line ?? "(unknown)"}`,
+    `Column: ${source.column ?? "(unknown)"}`,
     `Section index: ${source.sectionIndex ?? "(unknown)"}`,
     `Section id: ${source.sectionId ?? "(none)"}`
   ].join("\n");
@@ -3829,6 +3852,88 @@ var ReviewItemModeIcon = ({
   return /* @__PURE__ */ jsx6(StickyNote, { "aria-hidden": "true" });
 };
 
+// src/react-shell/source.open.ts
+var SOURCE_SELECTOR = [
+  "[data-wrk-source-file]",
+  "[data-wrk-source-component]",
+  "[data-wrk-source-line]",
+  "[data-wrk-source-column]",
+  "[data-file]",
+  "[data-component]",
+  "[data-section-index]",
+  "[data-section-id]"
+].join(", ");
+var getSourceHintElement = (target) => {
+  return getEventElement(target)?.closest(SOURCE_SELECTOR) ?? null;
+};
+var getElementSourceHint = (target) => {
+  const sourceElement = getSourceHintElement(target);
+  if (!sourceElement) return void 0;
+  const source = {
+    component: getSourceAttribute(
+      sourceElement,
+      "data-wrk-source-component",
+      "data-component"
+    ),
+    file: getSourceAttribute(sourceElement, "data-wrk-source-file", "data-file"),
+    line: getSourceAttribute(sourceElement, "data-wrk-source-line"),
+    column: getSourceAttribute(sourceElement, "data-wrk-source-column"),
+    sectionId: getSourceAttribute(sourceElement, "data-section-id"),
+    sectionIndex: getSourceAttribute(sourceElement, "data-section-index")
+  };
+  return Object.values(source).some(Boolean) ? source : void 0;
+};
+var getSourceOpenUrl = (source, sourceRoot) => {
+  const file = source?.file?.trim();
+  if (!file) return null;
+  const sourcePath = getSourcePath(file, sourceRoot);
+  if (!sourcePath) return null;
+  const line = getSourcePosition(source?.line);
+  const column = getSourcePosition(source?.column);
+  const encodedPath = encodeURI(sourcePath).replace(
+    /[#?]/g,
+    (match) => match === "#" ? "%23" : "%3F"
+  );
+  return `vscode://file/${encodedPath}:${line}:${column}`;
+};
+var openSourceInEditor = (source, sourceRoot) => {
+  const url = getSourceOpenUrl(source, sourceRoot);
+  if (!url) return false;
+  window.open(url, "_blank", "noreferrer");
+  return true;
+};
+function getSourceAttribute(element, ...names) {
+  for (const name of names) {
+    const value = element.getAttribute(name)?.trim();
+    if (value) return value;
+  }
+  return void 0;
+}
+function getEventElement(target) {
+  if (!target || typeof target !== "object") return null;
+  const node = target;
+  if (node.nodeType === 1 && typeof node.closest === "function") {
+    return node;
+  }
+  if (node.parentElement && typeof node.parentElement.closest === "function") {
+    return node.parentElement;
+  }
+  return null;
+}
+function getSourcePath(file, sourceRoot) {
+  const normalizedFile = file.replace(/\\/g, "/");
+  if (normalizedFile.startsWith("/") || /^[a-zA-Z]:\//.test(normalizedFile)) {
+    return normalizedFile;
+  }
+  const normalizedRoot = sourceRoot?.trim().replace(/\\/g, "/").replace(/\/+$/, "");
+  if (!normalizedRoot) return null;
+  return `${normalizedRoot}/${normalizedFile.replace(/^\/+/, "")}`;
+}
+function getSourcePosition(value) {
+  const position = Number(value);
+  return Number.isInteger(position) && position > 0 ? position : 1;
+}
+
 // src/react-shell/qa/item.card.tsx
 import { jsx as jsx7, jsxs as jsxs5 } from "react/jsx-runtime";
 var formatItemCardDate = (value) => {
@@ -3851,6 +3956,7 @@ var QaItemCard = ({
   remoteAdapterEntry,
   copiedPromptKey,
   selectedItemId,
+  sourceRoot,
   onChangeItemStatus,
   onClearSelectedItem,
   onRemoveItem,
@@ -3872,6 +3978,7 @@ var QaItemCard = ({
   const isActive = item.id === selectedItemId;
   const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor].filter(Boolean).join(" | ");
+  const sourceOpenUrl = getSourceOpenUrl(item.anchor?.source, sourceRoot);
   return /* @__PURE__ */ jsxs5(
     "article",
     {
@@ -3921,6 +4028,18 @@ var QaItemCard = ({
                     type: "button",
                     onClick: () => onToggleItemOverlayVisibility(item.id),
                     children: isOverlayVisible ? /* @__PURE__ */ jsx7(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx7(EyeOff, { "aria-hidden": "true" })
+                  }
+                ),
+                sourceOpenUrl && /* @__PURE__ */ jsx7(
+                  "a",
+                  {
+                    "aria-label": "Open source in VS Code",
+                    className: "df-review-item-source-open",
+                    href: sourceOpenUrl,
+                    rel: "noreferrer",
+                    target: "_blank",
+                    title: "Open source in VS Code",
+                    children: /* @__PURE__ */ jsx7(FileCodeCorner, { "aria-hidden": "true" })
                   }
                 ),
                 /* @__PURE__ */ jsx7(
@@ -4103,6 +4222,7 @@ var ReviewQaPanel = ({
   remoteAdapterEntry,
   selectedItemId,
   showSourceSelect,
+  sourceRoot,
   source,
   sourceEntries,
   onChangeItemStatus,
@@ -4161,6 +4281,7 @@ var ReviewQaPanel = ({
                 remoteAdapterEntry,
                 copiedPromptKey,
                 selectedItemId,
+                sourceRoot,
                 onChangeItemStatus,
                 onClearSelectedItem,
                 onCopyItemPrompt,
@@ -6799,6 +6920,7 @@ var ReviewShell = ({
   ruler,
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
+  sourceRoot,
   presence
 }) => {
   const {
@@ -6859,6 +6981,7 @@ var ReviewShell = ({
     presets,
     reviewPathPrefix
   });
+  const sourceShortcutCleanupRef = useRef4(null);
   const {
     activeItems,
     currentPresetScope,
@@ -7140,6 +7263,144 @@ var ReviewShell = ({
     },
     [setToastMessage]
   );
+  const cleanupSourceOpenShortcut = useCallback11(() => {
+    sourceShortcutCleanupRef.current?.();
+    sourceShortcutCleanupRef.current = null;
+  }, []);
+  const bindSourceOpenShortcut = useCallback11(() => {
+    cleanupSourceOpenShortcut();
+    let frameDocument = null;
+    try {
+      frameDocument = iframeRef.current?.contentDocument ?? null;
+    } catch {
+      return;
+    }
+    if (!frameDocument) return;
+    const hoverAttribute = "data-dfwr-source-hover";
+    const optionAttribute = "data-dfwr-source-option";
+    const style = frameDocument.createElement("style");
+    style.dataset.dfwrSourceOpenShortcut = "true";
+    style.textContent = `
+      html[${optionAttribute}="true"],
+      html[${optionAttribute}="true"] * {
+        cursor: crosshair !important;
+      }
+
+      html[${optionAttribute}="true"] body::before {
+        position: fixed !important;
+        z-index: 2147483647 !important;
+        top: 10px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        display: block !important;
+        border: 1px solid rgba(124, 199, 255, 0.72) !important;
+        border-radius: 999px !important;
+        padding: 6px 10px !important;
+        color: #ffffff !important;
+        background: rgba(15, 23, 42, 0.86) !important;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24) !important;
+        content: "Source select" !important;
+        font: 700 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+        pointer-events: none !important;
+      }
+
+      [${hoverAttribute}="true"] {
+        outline: 2px solid rgba(124, 199, 255, 0.96) !important;
+        outline-offset: 2px !important;
+      }
+    `;
+    (frameDocument.head ?? frameDocument.documentElement).append(style);
+    let hoveredElement = null;
+    let lastSourceElement = null;
+    let isSourceSelecting = false;
+    const setHoveredElement = (element) => {
+      if (hoveredElement === element) return;
+      hoveredElement?.removeAttribute(hoverAttribute);
+      hoveredElement = element;
+      hoveredElement?.setAttribute(hoverAttribute, "true");
+    };
+    const setSourceSelecting = (isSelecting) => {
+      isSourceSelecting = isSelecting;
+      if (isSelecting) {
+        frameDocument.documentElement.setAttribute(optionAttribute, "true");
+        setHoveredElement(lastSourceElement);
+        return;
+      }
+      setHoveredElement(null);
+      frameDocument.documentElement.removeAttribute(optionAttribute);
+    };
+    const handleMouseMove = (event) => {
+      lastSourceElement = getSourceHintElement(event.target);
+      if (event.altKey && !isSourceSelecting) {
+        setSourceSelecting(true);
+      }
+      setHoveredElement(isSourceSelecting ? lastSourceElement : null);
+    };
+    const handleClick = (event) => {
+      if (!isSourceSelecting && !event.altKey) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      const source2 = getElementSourceHint(event.target);
+      if (!source2?.file) {
+        showToast("Source hint not found");
+        setSourceSelecting(false);
+        return;
+      }
+      const didOpen = openSourceInEditor(source2, sourceRoot);
+      showToast(didOpen ? "Source opened" : "Source root required");
+      setSourceSelecting(false);
+    };
+    const isOptionKeyEvent = (event) => event.key === "Alt" || event.code === "AltLeft" || event.code === "AltRight" || event.altKey;
+    const handleKeyDown = (event) => {
+      if (!isOptionKeyEvent(event)) return;
+      cancelReviewMode();
+      setSourceSelecting(true);
+    };
+    const handleKeyUp = (event) => {
+      if (isOptionKeyEvent(event) || !event.altKey) setSourceSelecting(false);
+    };
+    const handleBlur = () => {
+      setSourceSelecting(false);
+    };
+    frameDocument.addEventListener("mousemove", handleMouseMove, true);
+    frameDocument.addEventListener("click", handleClick, true);
+    frameDocument.addEventListener("keydown", handleKeyDown, true);
+    frameDocument.addEventListener("keyup", handleKeyUp, true);
+    frameDocument.defaultView?.addEventListener("blur", handleBlur);
+    window.addEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("keyup", handleKeyUp, true);
+    window.addEventListener("blur", handleBlur);
+    sourceShortcutCleanupRef.current = () => {
+      frameDocument.removeEventListener("mousemove", handleMouseMove, true);
+      frameDocument.removeEventListener("click", handleClick, true);
+      frameDocument.removeEventListener("keydown", handleKeyDown, true);
+      frameDocument.removeEventListener("keyup", handleKeyUp, true);
+      frameDocument.defaultView?.removeEventListener("blur", handleBlur);
+      window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("keyup", handleKeyUp, true);
+      window.removeEventListener("blur", handleBlur);
+      setSourceSelecting(false);
+      style.remove();
+    };
+  }, [
+    cancelReviewMode,
+    cleanupSourceOpenShortcut,
+    iframeRef,
+    showToast,
+    sourceRoot
+  ]);
+  useEffect9(() => {
+    return cleanupSourceOpenShortcut;
+  }, [cleanupSourceOpenShortcut]);
+  const loadTargetFrame = useCallback11(() => {
+    initReviewKit();
+    bindSourceOpenShortcut();
+  }, [bindSourceOpenShortcut, initReviewKit]);
+  useEffect9(() => {
+    const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
+    return () => window.cancelAnimationFrame(frame);
+  }, [bindSourceOpenShortcut, targetSrc]);
   const clearSelectedReviewItem = useCallback11(() => {
     clearSelectedItem();
     updateShellUrl(targetRef.current, sizeRef.current, source);
@@ -7295,6 +7556,7 @@ var ReviewShell = ({
             remoteAdapterEntry,
             selectedItemId,
             showSourceSelect,
+            sourceRoot,
             source,
             sourceEntries,
             onChangeItemStatus: changeItemStatus,
@@ -7331,7 +7593,7 @@ var ReviewShell = ({
             rulerUnit,
             size,
             targetSrc,
-            onLoadTarget: initReviewKit,
+            onLoadTarget: loadTargetFrame,
             onSetReviewMode: setReviewMode
           }
         )
@@ -7553,6 +7815,7 @@ lucide-react/dist/esm/icons/copy.mjs:
 lucide-react/dist/esm/icons/external-link.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
 lucide-react/dist/esm/icons/eye.mjs:
+lucide-react/dist/esm/icons/file-code-corner.mjs:
 lucide-react/dist/esm/icons/grip-vertical.mjs:
 lucide-react/dist/esm/icons/image.mjs:
 lucide-react/dist/esm/icons/layout-grid.mjs:

@@ -146,6 +146,7 @@ export interface ReviewShellProps {
   ruler?: ReviewRulerConfig;
   initialPrompt?: string;
   reviewPathPrefix?: string;
+  sourceRoot?: string;
   presence?: ReviewPresenceAdapter;
 }
 

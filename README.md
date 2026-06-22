@@ -92,11 +92,34 @@ Browser env must use a Supabase `anon` key only. Do not put `service_role` or Op
 ```ts
 import { createWebReviewKit, localAdapter } from '@designfever/web-review-kit';
 import { mountReviewShell } from '@designfever/web-review-kit/react-shell';
+import { reviewSourceLocator } from '@designfever/web-review-kit/vite';
 ```
 
 - `@designfever/web-review-kit`: core API, adapters, shared types.
 - `@designfever/web-review-kit/react-shell`: review shell UI, presence adapters, page glob helper.
+- `@designfever/web-review-kit/vite`: dev-only JSX source locator for source file hints.
 - `src/*` is not a public import path.
+
+## Optional Source Locator
+
+For local QA, add the Vite plugin to inject source hints into rendered DOM nodes.
+
+```ts
+import { defineConfig } from 'vite';
+import { reviewSourceLocator } from '@designfever/web-review-kit/vite';
+
+export default defineConfig({
+  plugins: [
+    reviewSourceLocator({
+      enabled: true,
+      include: ['src'],
+      filePath: 'absolute',
+    }),
+  ],
+});
+```
+
+When source hints are available, `Option` + click inside the review target opens the source file in VS Code. DOM QA cards also show a source action when the saved item has source hints. Keep this plugin disabled for production builds because it writes source paths into the DOM.
 
 ## Local Dev Harness
 

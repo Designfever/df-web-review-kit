@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useRef,
 } from 'react';
 import {
   GripVertical as GripVerticalIcon,
@@ -35,6 +36,11 @@ import {
 } from '../shell.modals';
 import { buildReviewItemPrompt } from '../prompt/prompt';
 import { ReviewQaPanel } from '../qa/panel';
+import {
+  getElementSourceHint,
+  getSourceHintElement,
+  openSourceInEditor,
+} from '../source.open';
 import { ReviewTargetFrame } from '../target/frame';
 import { ReviewTopbar } from '../topbar';
 import { useReviewController } from '../hooks/use.review.controller';
@@ -71,6 +77,7 @@ export const ReviewShell = ({
   ruler,
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
+  sourceRoot,
   presence
 }: ReviewShellProps) => {
   const {
@@ -131,6 +138,7 @@ export const ReviewShell = ({
     presets,
     reviewPathPrefix,
   });
+  const sourceShortcutCleanupRef = useRef<(() => void) | null>(null);
   const {
     activeItems,
     currentPresetScope,
@@ -443,6 +451,175 @@ export const ReviewShell = ({
     [setToastMessage]
   );
 
+  const cleanupSourceOpenShortcut = useCallback(() => {
+    sourceShortcutCleanupRef.current?.();
+    sourceShortcutCleanupRef.current = null;
+  }, []);
+
+  const bindSourceOpenShortcut = useCallback(() => {
+    cleanupSourceOpenShortcut();
+
+    let frameDocument: Document | null = null;
+    try {
+      frameDocument = iframeRef.current?.contentDocument ?? null;
+    } catch {
+      return;
+    }
+
+    if (!frameDocument) return;
+
+    const hoverAttribute = 'data-dfwr-source-hover';
+    const optionAttribute = 'data-dfwr-source-option';
+    const style = frameDocument.createElement('style');
+    style.dataset.dfwrSourceOpenShortcut = 'true';
+    style.textContent = `
+      html[${optionAttribute}="true"],
+      html[${optionAttribute}="true"] * {
+        cursor: crosshair !important;
+      }
+
+      html[${optionAttribute}="true"] body::before {
+        position: fixed !important;
+        z-index: 2147483647 !important;
+        top: 10px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        display: block !important;
+        border: 1px solid rgba(124, 199, 255, 0.72) !important;
+        border-radius: 999px !important;
+        padding: 6px 10px !important;
+        color: #ffffff !important;
+        background: rgba(15, 23, 42, 0.86) !important;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24) !important;
+        content: "Source select" !important;
+        font: 700 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+        pointer-events: none !important;
+      }
+
+      [${hoverAttribute}="true"] {
+        outline: 2px solid rgba(124, 199, 255, 0.96) !important;
+        outline-offset: 2px !important;
+      }
+    `;
+
+    (frameDocument.head ?? frameDocument.documentElement).append(style);
+
+    let hoveredElement: Element | null = null;
+    let lastSourceElement: Element | null = null;
+    let isSourceSelecting = false;
+
+    const setHoveredElement = (element: Element | null) => {
+      if (hoveredElement === element) return;
+      hoveredElement?.removeAttribute(hoverAttribute);
+      hoveredElement = element;
+      hoveredElement?.setAttribute(hoverAttribute, 'true');
+    };
+
+    const setSourceSelecting = (isSelecting: boolean) => {
+      isSourceSelecting = isSelecting;
+      if (isSelecting) {
+        frameDocument.documentElement.setAttribute(optionAttribute, 'true');
+        setHoveredElement(lastSourceElement);
+        return;
+      }
+
+      setHoveredElement(null);
+      frameDocument.documentElement.removeAttribute(optionAttribute);
+    };
+
+    const handleMouseMove = (event: MouseEvent) => {
+      lastSourceElement = getSourceHintElement(event.target);
+
+      if (event.altKey && !isSourceSelecting) {
+        setSourceSelecting(true);
+      }
+
+      setHoveredElement(isSourceSelecting ? lastSourceElement : null);
+    };
+
+    const handleClick = (event: MouseEvent) => {
+      if (!isSourceSelecting && !event.altKey) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      const source = getElementSourceHint(event.target);
+      if (!source?.file) {
+        showToast('Source hint not found');
+        setSourceSelecting(false);
+        return;
+      }
+
+      const didOpen = openSourceInEditor(source, sourceRoot);
+      showToast(didOpen ? 'Source opened' : 'Source root required');
+      setSourceSelecting(false);
+    };
+
+    const isOptionKeyEvent = (event: KeyboardEvent) =>
+      event.key === 'Alt' ||
+      event.code === 'AltLeft' ||
+      event.code === 'AltRight' ||
+      event.altKey;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isOptionKeyEvent(event)) return;
+
+      cancelReviewMode();
+      setSourceSelecting(true);
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (isOptionKeyEvent(event) || !event.altKey) setSourceSelecting(false);
+    };
+
+    const handleBlur = () => {
+      setSourceSelecting(false);
+    };
+
+    frameDocument.addEventListener('mousemove', handleMouseMove, true);
+    frameDocument.addEventListener('click', handleClick, true);
+    frameDocument.addEventListener('keydown', handleKeyDown, true);
+    frameDocument.addEventListener('keyup', handleKeyUp, true);
+    frameDocument.defaultView?.addEventListener('blur', handleBlur);
+    window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keyup', handleKeyUp, true);
+    window.addEventListener('blur', handleBlur);
+
+    sourceShortcutCleanupRef.current = () => {
+      frameDocument.removeEventListener('mousemove', handleMouseMove, true);
+      frameDocument.removeEventListener('click', handleClick, true);
+      frameDocument.removeEventListener('keydown', handleKeyDown, true);
+      frameDocument.removeEventListener('keyup', handleKeyUp, true);
+      frameDocument.defaultView?.removeEventListener('blur', handleBlur);
+      window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('keyup', handleKeyUp, true);
+      window.removeEventListener('blur', handleBlur);
+      setSourceSelecting(false);
+      style.remove();
+    };
+  }, [
+    cancelReviewMode,
+    cleanupSourceOpenShortcut,
+    iframeRef,
+    showToast,
+    sourceRoot,
+  ]);
+
+  useEffect(() => {
+    return cleanupSourceOpenShortcut;
+  }, [cleanupSourceOpenShortcut]);
+
+  const loadTargetFrame = useCallback(() => {
+    initReviewKit();
+    bindSourceOpenShortcut();
+  }, [bindSourceOpenShortcut, initReviewKit]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
+    return () => window.cancelAnimationFrame(frame);
+  }, [bindSourceOpenShortcut, targetSrc]);
+
   const clearSelectedReviewItem = useCallback(() => {
     clearSelectedItem();
     updateShellUrl(targetRef.current, sizeRef.current, source);
@@ -625,6 +802,7 @@ export const ReviewShell = ({
         remoteAdapterEntry={remoteAdapterEntry}
         selectedItemId={selectedItemId}
         showSourceSelect={showSourceSelect}
+        sourceRoot={sourceRoot}
         source={source}
         sourceEntries={sourceEntries}
         onChangeItemStatus={changeItemStatus}
@@ -659,7 +837,7 @@ export const ReviewShell = ({
         rulerUnit={rulerUnit}
         size={size}
         targetSrc={targetSrc}
-        onLoadTarget={initReviewKit}
+        onLoadTarget={loadTargetFrame}
         onSetReviewMode={setReviewMode}
       />
     </div>

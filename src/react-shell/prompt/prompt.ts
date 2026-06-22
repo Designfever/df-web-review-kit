@@ -89,6 +89,8 @@ export const formatPromptSourceHint = (item: ReviewItem) => {
   return [
     `Component: ${source.component ?? '(unknown)'}`,
     `File: ${source.file ?? '(unknown)'}`,
+    `Line: ${source.line ?? '(unknown)'}`,
+    `Column: ${source.column ?? '(unknown)'}`,
     `Section index: ${source.sectionIndex ?? '(unknown)'}`,
     `Section id: ${source.sectionId ?? '(none)'}`,
   ].join('\n');

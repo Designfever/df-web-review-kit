@@ -287,19 +287,42 @@ function decodeHtmlEntities(value: string) {
 
 function getDomSourceHint(target: Element): DomSourceHint | undefined {
   const sourceElement = target.closest(
-    '[data-file], [data-component], [data-section-index], [data-section-id]'
+    [
+      '[data-wrk-source-file]',
+      '[data-wrk-source-component]',
+      '[data-wrk-source-line]',
+      '[data-wrk-source-column]',
+      '[data-file]',
+      '[data-component]',
+      '[data-section-index]',
+      '[data-section-id]',
+    ].join(', ')
   );
   if (!sourceElement) return undefined;
 
-  const dataset = (sourceElement as HTMLElement).dataset;
   const source: DomSourceHint = {
-    component: dataset.component,
-    file: dataset.file,
-    sectionId: dataset.sectionId,
-    sectionIndex: dataset.sectionIndex,
+    component: getSourceAttribute(
+      sourceElement,
+      'data-wrk-source-component',
+      'data-component'
+    ),
+    file: getSourceAttribute(sourceElement, 'data-wrk-source-file', 'data-file'),
+    line: getSourceAttribute(sourceElement, 'data-wrk-source-line'),
+    column: getSourceAttribute(sourceElement, 'data-wrk-source-column'),
+    sectionId: getSourceAttribute(sourceElement, 'data-section-id'),
+    sectionIndex: getSourceAttribute(sourceElement, 'data-section-index'),
   };
 
   return Object.values(source).some(Boolean) ? source : undefined;
+}
+
+function getSourceAttribute(element: Element, ...names: string[]) {
+  for (const name of names) {
+    const value = element.getAttribute(name)?.trim();
+    if (value) return value;
+  }
+
+  return undefined;
 }
 
 function dedupeAnchorCandidates(candidates: DomAnchorCandidate[]) {

@@ -718,17 +718,38 @@ function decodeHtmlEntities(value) {
 }
 function getDomSourceHint(target) {
   const sourceElement = target.closest(
-    "[data-file], [data-component], [data-section-index], [data-section-id]"
+    [
+      "[data-wrk-source-file]",
+      "[data-wrk-source-component]",
+      "[data-wrk-source-line]",
+      "[data-wrk-source-column]",
+      "[data-file]",
+      "[data-component]",
+      "[data-section-index]",
+      "[data-section-id]"
+    ].join(", ")
   );
   if (!sourceElement) return void 0;
-  const dataset = sourceElement.dataset;
   const source = {
-    component: dataset.component,
-    file: dataset.file,
-    sectionId: dataset.sectionId,
-    sectionIndex: dataset.sectionIndex
+    component: getSourceAttribute(
+      sourceElement,
+      "data-wrk-source-component",
+      "data-component"
+    ),
+    file: getSourceAttribute(sourceElement, "data-wrk-source-file", "data-file"),
+    line: getSourceAttribute(sourceElement, "data-wrk-source-line"),
+    column: getSourceAttribute(sourceElement, "data-wrk-source-column"),
+    sectionId: getSourceAttribute(sourceElement, "data-section-id"),
+    sectionIndex: getSourceAttribute(sourceElement, "data-section-index")
   };
   return Object.values(source).some(Boolean) ? source : void 0;
+}
+function getSourceAttribute(element, ...names) {
+  for (const name of names) {
+    const value = element.getAttribute(name)?.trim();
+    if (value) return value;
+  }
+  return void 0;
 }
 function dedupeAnchorCandidates(candidates) {
   const seen = /* @__PURE__ */ new Set();

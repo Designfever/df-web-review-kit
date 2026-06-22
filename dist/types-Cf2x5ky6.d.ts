@@ -20,6 +20,8 @@ interface DomAnchorCandidate {
 interface DomSourceHint {
     component?: string;
     file?: string;
+    line?: string;
+    column?: string;
     sectionId?: string;
     sectionIndex?: string;
 }

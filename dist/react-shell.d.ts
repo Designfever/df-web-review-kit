@@ -1,4 +1,4 @@
-import { f as ReviewItemScope, r as ReviewSource, n as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, p as ReviewRulerConfig } from './types-NiCp9JJQ.js';
+import { f as ReviewItemScope, r as ReviewSource, n as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, p as ReviewRulerConfig } from './types-Cf2x5ky6.js';
 import React from 'react';
 
 type ReviewShellViewportKind = Exclude<ReviewItemScope, 'dom'>;
@@ -104,13 +104,14 @@ interface ReviewShellProps {
     ruler?: ReviewRulerConfig;
     initialPrompt?: string;
     reviewPathPrefix?: string;
+    sourceRoot?: string;
     presence?: ReviewPresenceAdapter;
 }
 interface ReviewShellMountOptions extends ReviewShellProps {
     rootId?: string;
 }
 
-declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, reviewPathPrefix, presence }: ReviewShellProps) => React.JSX.Element;
+declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, reviewPathPrefix, sourceRoot, presence }: ReviewShellProps) => React.JSX.Element;
 
 declare const createReviewPagesFromGlob: (entries: ReviewShellGlobEntries, options?: CreateReviewPagesOptions) => ReviewShellPage[];
 

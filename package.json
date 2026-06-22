@@ -31,6 +31,11 @@
       "import": "./dist/react-shell.js",
       "require": "./dist/react-shell.cjs"
     },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js",
+      "require": "./dist/vite.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -39,8 +44,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/react-shell.tsx --format esm,cjs --dts --sourcemap --clean --external react --external react-dom --external react/jsx-runtime",
-    "dev": "tsup src/index.ts src/react-shell.tsx --format esm,cjs --dts --sourcemap --watch --external react --external react-dom --external react/jsx-runtime",
+    "build": "tsup src/index.ts src/react-shell.tsx src/vite.ts --format esm,cjs --dts --sourcemap --clean --external react --external react-dom --external react/jsx-runtime",
+    "dev": "tsup src/index.ts src/react-shell.tsx src/vite.ts --format esm,cjs --dts --sourcemap --watch --external react --external react-dom --external react/jsx-runtime",
     "dev:review": "vite --config dev/vite.config.ts",
     "build:dev": "vite build --config dev/vite.config.ts",
     "prepare": "pnpm build",
@@ -49,7 +54,13 @@
   },
   "peerDependencies": {
     "react": ">=18",
-    "react-dom": ">=18"
+    "react-dom": ">=18",
+    "vite": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.108.2",

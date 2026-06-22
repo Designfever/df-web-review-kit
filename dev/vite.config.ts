@@ -1,8 +1,16 @@
 import { defineConfig } from 'vite';
+import { reviewSourceLocator } from '../src/vite';
 
 export default defineConfig({
   root: 'dev',
   envDir: '..',
+  plugins: [
+    reviewSourceLocator({
+      enabled: true,
+      filePath: 'absolute',
+      include: ['src'],
+    }),
+  ],
   server: {
     host: '127.0.0.1',
     port: 5177,

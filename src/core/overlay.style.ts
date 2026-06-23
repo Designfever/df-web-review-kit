@@ -725,6 +725,12 @@ export function createStyleElement() {
       outline: none;
     }
 
+    .dfwr-adjust-toggle svg {
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
+    }
+
     .dfwr-adjust-hud {
       position: fixed;
       z-index: 5;

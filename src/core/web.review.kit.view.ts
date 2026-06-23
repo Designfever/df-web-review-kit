@@ -853,6 +853,39 @@ export class WebReviewKitView {
     return handle;
   }
 
+  private createIcon(paths: string[]) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2.4');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+
+    paths.forEach((d) => {
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      svg.append(path);
+    });
+
+    return svg;
+  }
+
+  private setAdjustmentToggleIcon(button: HTMLButtonElement, isActive: boolean) {
+    const paths = isActive
+      ? ['M20 6 9 17l-5-5']
+      : [
+          'M12 2v20',
+          'M2 12h20',
+          'm9 5 3-3 3 3',
+          'm9 19 3 3 3-3',
+          'm5 9-3 3 3 3',
+          'm19 9 3 3-3 3',
+        ];
+    button.replaceChildren(this.createIcon(paths));
+  }
+
   private attachDraftComposerDrag(
     popover: HTMLDivElement,
     handle: HTMLButtonElement,
@@ -961,7 +994,7 @@ export class WebReviewKitView {
       panel.classList.toggle('is-active', isActive);
       adjust.classList.toggle('is-active', isActive);
       adjust.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      adjust.textContent = isActive ? '✓' : '↔↕';
+      this.setAdjustmentToggleIcon(adjust, isActive);
       adjust.title = isActive
         ? 'Finish DOM adjustment'
         : 'Adjust DOM element with keyboard arrows';

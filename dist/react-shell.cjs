@@ -1728,6 +1728,10 @@ function ensureReviewShellStyle() {
     width: 124px;
   }
 
+  .df-review-list-title .df-review-status-filter-select {
+    margin-left: auto;
+  }
+
   .df-review-source-refresh {
     position: relative;
 		    display: inline-grid;
@@ -4897,21 +4901,6 @@ var QaPanelHeader = ({
   return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-list-header", children: [
     /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-list-toolbar", children: [
       /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-list-controls", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
-          "select",
-          {
-            "aria-label": "QA status filter",
-            className: "df-review-status-filter-select",
-            value: qaStatusFilter,
-            onChange: (event) => onQaStatusFilterChange(
-              event.currentTarget.value
-            ),
-            children: [
-              /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
-              statusFilterOptions.map((statusOption) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
-            ]
-          }
-        ),
         showSourceSelect && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
           "select",
           {
@@ -4952,7 +4941,22 @@ var QaPanelHeader = ({
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-list-title", children: [
       /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: isAllQaVisible ? `${label} QA \xB7 All pages` : `${label} QA` }),
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { title: `${activeRemainingItemCount} remaining of ${activeItemCount}`, children: !hasActiveFilter ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}` })
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { title: `${activeRemainingItemCount} remaining of ${activeItemCount}`, children: !hasActiveFilter ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}` }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+        "select",
+        {
+          "aria-label": "QA status filter",
+          className: "df-review-status-filter-select",
+          value: qaStatusFilter,
+          onChange: (event) => onQaStatusFilterChange(
+            event.currentTarget.value
+          ),
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
+            statusFilterOptions.map((statusOption) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
+          ]
+        }
+      )
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
       PresenceRow,

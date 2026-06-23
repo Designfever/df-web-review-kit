@@ -1684,6 +1684,10 @@ export function ensureReviewShellStyle() {
     width: 124px;
   }
 
+  .df-review-list-title .df-review-status-filter-select {
+    margin-left: auto;
+  }
+
   .df-review-source-refresh {
     position: relative;
 		    display: inline-grid;

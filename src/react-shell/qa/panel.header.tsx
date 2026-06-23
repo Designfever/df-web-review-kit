@@ -65,27 +65,6 @@ export const QaPanelHeader = ({
     <div className="df-review-list-header">
       <div className="df-review-list-toolbar">
         <div className="df-review-list-controls">
-          <select
-            aria-label="QA status filter"
-            className="df-review-status-filter-select"
-            value={qaStatusFilter}
-            onChange={(event) =>
-              onQaStatusFilterChange(
-                event.currentTarget.value as ReviewQaStatusFilter
-              )
-            }
-          >
-            <option value="all">
-              {`All status (${qaStatusFilterCounts.get('all') ?? 0})`}
-            </option>
-            {statusFilterOptions.map((statusOption) => (
-              <option key={statusOption.value} value={statusOption.value}>
-                {`${statusOption.label} (${
-                  qaStatusFilterCounts.get(statusOption.value) ?? 0
-                })`}
-              </option>
-            ))}
-          </select>
           {showSourceSelect && (
             <select
               aria-label="QA source"
@@ -146,6 +125,27 @@ export const QaPanelHeader = ({
             ? `${activeRemainingItemCount}/${activeItemCount}`
             : `${filteredItemCount}/${activeItemCount}`}
         </strong>
+        <select
+          aria-label="QA status filter"
+          className="df-review-status-filter-select"
+          value={qaStatusFilter}
+          onChange={(event) =>
+            onQaStatusFilterChange(
+              event.currentTarget.value as ReviewQaStatusFilter
+            )
+          }
+        >
+          <option value="all">
+            {`All status (${qaStatusFilterCounts.get('all') ?? 0})`}
+          </option>
+          {statusFilterOptions.map((statusOption) => (
+            <option key={statusOption.value} value={statusOption.value}>
+              {`${statusOption.label} (${
+                qaStatusFilterCounts.get(statusOption.value) ?? 0
+              })`}
+            </option>
+          ))}
+        </select>
       </div>
       <PresenceRow
         presenceSessionId={presenceSessionId}

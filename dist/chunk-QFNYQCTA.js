@@ -469,20 +469,22 @@ function getAnchorElement(anchor, environment) {
   return typeof anchor === "string" ? queryAnchorElement(anchor, environment) : resolveAnchorElement(anchor, environment)?.element;
 }
 function createAnchorCandidates(target, configuredAttribute) {
-  const candidates = [];
-  const configuredAnchor = getClosestAttributeAnchor(
+  const targetCandidates = [];
+  const configuredAnchor = getExactAttributeAnchorCandidate(
     target,
-    configuredAttribute
+    configuredAttribute,
+    0.98,
+    "configured-attribute"
   );
-  if (configuredAnchor) candidates.push(configuredAnchor);
+  if (configuredAnchor) targetCandidates.push(configuredAnchor);
   const targetAttributeAnchor = getAttributeAnchorCandidate(
     target,
-    COMMON_ANCHOR_ATTRIBUTES,
+    COMMON_ANCHOR_ATTRIBUTES.filter((name) => name !== configuredAttribute),
     0.9
   );
-  if (targetAttributeAnchor) candidates.push(targetAttributeAnchor);
+  if (targetAttributeAnchor) targetCandidates.push(targetAttributeAnchor);
   if (isMeaningfulId(target.id)) {
-    candidates.push({
+    targetCandidates.push({
       selector: `#${cssEscape(target.id)}`,
       strategy: "id",
       confidence: 0.94,
@@ -494,10 +496,10 @@ function createAnchorCandidates(target, configuredAttribute) {
     SEMANTIC_ANCHOR_ATTRIBUTES,
     0.84
   );
-  if (semanticAnchor) candidates.push(semanticAnchor);
+  if (semanticAnchor) targetCandidates.push(semanticAnchor);
   const targetClassName = getMeaningfulClassName(target);
   if (targetClassName) {
-    candidates.push({
+    targetCandidates.push({
       selector: `${target.tagName.toLowerCase()}.${cssEscape(targetClassName)}`,
       strategy: "class",
       confidence: 0.82,
@@ -505,23 +507,28 @@ function createAnchorCandidates(target, configuredAttribute) {
     });
   }
   const scopedPath = getScopedDomPathCandidate(target, configuredAttribute);
-  if (scopedPath) candidates.push(scopedPath);
-  candidates.push({
+  if (scopedPath) targetCandidates.push(scopedPath);
+  const targetDomPath = {
     selector: getDomPath(target),
     strategy: "dom-path",
-    confidence: 0.9,
+    confidence: targetCandidates.length > 0 ? 0.8 : 0.5,
     textFingerprint: getTextFingerprint(target)
-  });
+  };
+  const parentCandidates = [];
   const parent = target.parentElement;
+  const parentConfiguredAnchor = parent ? findClosestAttributeAnchor(parent, [configuredAttribute], 0.72, {
+    strategy: "configured-attribute"
+  }) : void 0;
+  if (parentConfiguredAnchor) parentCandidates.push(parentConfiguredAnchor);
   const anchoredByAttribute = parent ? findClosestAttributeAnchor(
     parent,
     COMMON_ANCHOR_ATTRIBUTES.filter((name) => name !== configuredAttribute),
     0.7
   ) : void 0;
-  if (anchoredByAttribute) candidates.push(anchoredByAttribute);
+  if (anchoredByAttribute) parentCandidates.push(anchoredByAttribute);
   const anchoredById = parent ? findClosest(parent, (element) => isMeaningfulId(element.id)) : void 0;
   if (anchoredById?.id) {
-    candidates.push({
+    parentCandidates.push({
       selector: `#${cssEscape(anchoredById.id)}`,
       strategy: "id",
       confidence: 0.72,
@@ -531,7 +538,7 @@ function createAnchorCandidates(target, configuredAttribute) {
   const anchoredByClass = parent ? findClosest(parent, (element) => Boolean(getMeaningfulClassName(element))) : void 0;
   const className = anchoredByClass ? getMeaningfulClassName(anchoredByClass) : void 0;
   if (anchoredByClass && className) {
-    candidates.push({
+    parentCandidates.push({
       selector: `${anchoredByClass.tagName.toLowerCase()}.${cssEscape(
         className
       )}`,
@@ -540,12 +547,8 @@ function createAnchorCandidates(target, configuredAttribute) {
       textFingerprint: getTextFingerprint(anchoredByClass)
     });
   }
+  const candidates = targetCandidates.length > 0 ? [...targetCandidates, targetDomPath, ...parentCandidates] : [...parentCandidates, targetDomPath];
   return dedupeAnchorCandidates(candidates);
-}
-function getClosestAttributeAnchor(target, attributeName) {
-  return findClosestAttributeAnchor(target, [attributeName], 0.98, {
-    strategy: "configured-attribute"
-  });
 }
 function findClosestAttributeAnchor(target, attributeNames, confidence, options) {
   for (const attributeName of attributeNames) {
@@ -562,6 +565,16 @@ function findClosestAttributeAnchor(target, attributeNames, confidence, options)
     };
   }
   return void 0;
+}
+function getExactAttributeAnchorCandidate(element, attributeName, confidence, strategy) {
+  const value = getStableAttributeValue(element, attributeName);
+  if (!value) return void 0;
+  return {
+    selector: `[${attributeName}="${cssEscape(value)}"]`,
+    strategy,
+    confidence,
+    textFingerprint: getTextFingerprint(element)
+  };
 }
 function getAttributeAnchorCandidate(element, attributeNames, confidence) {
   for (const attributeName of attributeNames) {
@@ -3957,4 +3970,4 @@ export {
   getNumberedReviewItems,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-PVG63JVK.js.map
+//# sourceMappingURL=chunk-QFNYQCTA.js.map

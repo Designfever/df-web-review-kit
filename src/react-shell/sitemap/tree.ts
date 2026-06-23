@@ -5,7 +5,19 @@ import type {
 import type {
   ReviewPresenceUser,
   ReviewShellPage,
+  ReviewShellViewportPreset,
 } from '../types';
+
+export type SitemapViewportCount = {
+  total: number;
+  remaining: number;
+};
+
+export type SitemapViewportColumn = {
+  key: string;
+  label: string;
+  title: string;
+};
 
 export type SitemapQaCount = {
   total: number;
@@ -14,6 +26,7 @@ export type SitemapQaCount = {
   remote: number;
   status: Record<ReviewWorkflowStatus, number>;
   scope: Partial<Record<ReviewItemScope, number>>;
+  viewport: Record<string, SitemapViewportCount>;
 };
 
 type SitemapTreeNode = {
@@ -33,31 +46,15 @@ export type SitemapTreeRow = {
   users: ReviewPresenceUser[];
 };
 
-export type SitemapStatusFilter = 'all' | ReviewWorkflowStatus;
+export type SitemapSortDirection = 'asc' | 'desc';
 
-export type SitemapSortKey = 'tree' | 'remaining' | 'total' | 'online';
-
-export const SITEMAP_STATUS_FILTERS: Array<{
-  key: SitemapStatusFilter;
-  label: string;
-}> = [
-  { key: 'all', label: 'All status' },
-  { key: 'todo', label: 'Todo' },
-  { key: 'doing', label: 'Doing' },
-  { key: 'review', label: 'Review' },
-  { key: 'hold', label: 'Hold' },
-  { key: 'done', label: 'Done' },
-];
-
-export const SITEMAP_SORT_OPTIONS: Array<{
-  key: SitemapSortKey;
-  label: string;
-}> = [
-  { key: 'tree', label: 'Tree order' },
-  { key: 'remaining', label: 'Most remaining' },
-  { key: 'total', label: 'Most total' },
-  { key: 'online', label: 'Most online' },
-];
+export type SitemapSortKey =
+  | 'page'
+  | 'total'
+  | 'review'
+  | 'hold'
+  | 'online'
+  | `viewport:${string}`;
 
 const WORKFLOW_STATUSES: ReviewWorkflowStatus[] = [
   'todo',
@@ -80,12 +77,17 @@ export const createEmptySitemapQaCount = (): SitemapQaCount => ({
     done: 0,
   },
   scope: {},
+  viewport: {},
 });
 
-export const getSitemapStatusCount = (
-  count: SitemapQaCount,
-  statusFilter: SitemapStatusFilter
-) => (statusFilter === 'all' ? count.total : count.status[statusFilter]);
+export const createSitemapViewportColumn = (
+  preset: ReviewShellViewportPreset,
+  index: number
+): SitemapViewportColumn => ({
+  key: `${index}:${preset.width}x${preset.height}`,
+  label: preset.label,
+  title: `${preset.label} ${preset.width}x${preset.height}`,
+});
 
 const normalizeSitemapHref = (href: string) => {
   const [path = '/'] = href.split(/[?#]/);
@@ -156,6 +158,22 @@ export const addSitemapQaCounts = (
     }),
     {} as Partial<Record<ReviewItemScope, number>>
   ),
+  viewport: Array.from(
+    new Set([...Object.keys(first.viewport), ...Object.keys(second.viewport)])
+  ).reduce(
+    (viewportCounts, viewportKey) => ({
+      ...viewportCounts,
+      [viewportKey]: {
+        total:
+          (first.viewport[viewportKey]?.total ?? 0) +
+          (second.viewport[viewportKey]?.total ?? 0),
+        remaining:
+          (first.viewport[viewportKey]?.remaining ?? 0) +
+          (second.viewport[viewportKey]?.remaining ?? 0),
+      },
+    }),
+    {} as Record<string, SitemapViewportCount>
+  ),
 });
 
 type SitemapTreeSummary = {
@@ -175,11 +193,11 @@ export const createSitemapRows = (
   getPageTarget: (href: string) => string,
   options: {
     sortKey?: SitemapSortKey;
-    statusFilter?: SitemapStatusFilter;
+    sortDirection?: SitemapSortDirection;
   } = {}
 ) => {
-  const sortKey = options.sortKey ?? 'tree';
-  const statusFilter = options.statusFilter ?? 'all';
+  const sortKey = options.sortKey ?? 'page';
+  const sortDirection = options.sortDirection ?? 'asc';
   const root = createSitemapNode('/', '/', false);
 
   pages.forEach((page) => {
@@ -257,29 +275,37 @@ export const createSitemapRows = (
   };
 
   const getSortValue = (summary: SitemapTreeSummary) => {
-    if (sortKey === 'remaining') return summary.count.remaining;
-    if (sortKey === 'total') return summary.count.total;
+    if (sortKey === 'page') return summary.node.label;
+    if (sortKey === 'total') return summary.count.remaining;
+    if (sortKey === 'review') return summary.count.status.review;
+    if (sortKey === 'hold') return summary.count.status.hold;
     if (sortKey === 'online') return summary.users.length;
+    if (sortKey.startsWith('viewport:')) {
+      const viewportKey = sortKey.slice('viewport:'.length);
+      return summary.count.viewport[viewportKey]?.remaining ?? 0;
+    }
+
     return 0;
   };
 
   const sortSummaries = (summaries: SitemapTreeSummary[]) => {
-    if (sortKey === 'tree') return summaries;
-
     return [...summaries].sort((a, b) => {
-      const valueDiff = getSortValue(b) - getSortValue(a);
-      if (valueDiff !== 0) return valueDiff;
-      const totalDiff = b.count.total - a.count.total;
+      const firstValue = getSortValue(a);
+      const secondValue = getSortValue(b);
+      const valueDiff =
+        typeof firstValue === 'string' && typeof secondValue === 'string'
+          ? firstValue.localeCompare(secondValue)
+          : Number(firstValue) - Number(secondValue);
+
+      if (valueDiff !== 0) {
+        return sortDirection === 'asc' ? valueDiff : -valueDiff;
+      }
+
+      const totalDiff = b.count.remaining - a.count.remaining;
       if (totalDiff !== 0) return totalDiff;
       return a.node.label.localeCompare(b.node.label);
     });
   };
-
-  const hasStatusMatch = (count: SitemapQaCount) =>
-    getSitemapStatusCount(count, statusFilter) > 0;
-
-  const shouldShowSummary = (summary: SitemapTreeSummary) =>
-    statusFilter === 'all' || hasStatusMatch(summary.count);
 
   const rows: SitemapTreeRow[] = [];
 
@@ -289,8 +315,6 @@ export const createSitemapRows = (
     ancestorLastList: boolean[],
     isLastNode: boolean
   ) => {
-    if (!shouldShowSummary(summary)) return;
-
     const { node } = summary;
     const rowCount = node.isPage ? summary.directCount : summary.count;
     const rowUsers = node.isPage ? summary.directUsers : summary.users;
@@ -303,25 +327,19 @@ export const createSitemapRows = (
               isLastNode ? '└─ ' : '├─ '
             }`;
       const pageTarget = node.isPage ? getPageTarget(node.href) : null;
-      const hasRowStatusMatch =
-        statusFilter === 'all' || hasStatusMatch(rowCount);
 
-      if (hasRowStatusMatch || !node.isPage) {
-        rows.push({
-          href: node.href,
-          label: node.label,
-          prefix,
-          isPage: node.isPage,
-          isActive: pageTarget === activeRoute,
-          qaCount: rowCount,
-          users: rowUsers,
-        });
-      }
+      rows.push({
+        href: node.href,
+        label: node.label,
+        prefix,
+        isPage: node.isPage,
+        isActive: pageTarget === activeRoute,
+        qaCount: rowCount,
+        users: rowUsers,
+      });
     }
 
-    const visibleChildren = sortSummaries(
-      summary.children.filter(shouldShowSummary)
-    );
+    const visibleChildren = sortSummaries(summary.children);
     visibleChildren.forEach((child, childIndex) => {
       appendSummaryRows(
         child,
@@ -336,22 +354,20 @@ export const createSitemapRows = (
     const directCount = getDirectCount(root);
     const directUsers = getDirectUsers(root);
 
-    if (statusFilter === 'all' || hasStatusMatch(directCount)) {
-      rows.push({
-        href: root.href,
-        label: root.label,
-        prefix: '',
-        isPage: true,
-        isActive: getPageTarget(root.href) === activeRoute,
-        qaCount: directCount,
-        users: directUsers,
-      });
-    }
+    rows.push({
+      href: root.href,
+      label: root.label,
+      prefix: '',
+      isPage: true,
+      isActive: getPageTarget(root.href) === activeRoute,
+      qaCount: directCount,
+      users: directUsers,
+    });
   }
 
   const rootSummaries = sortSummaries(
     Array.from(root.children.values()).map(createNodeSummary)
-  ).filter(shouldShowSummary);
+  );
 
   rootSummaries.forEach((summary, index, siblings) => {
     appendSummaryRows(summary, 1, [], index === siblings.length - 1);

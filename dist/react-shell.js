@@ -409,8 +409,8 @@ function ensureReviewShellStyle() {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
-	    width: min(760px, calc(100vw - 48px));
+    grid-template-rows: auto minmax(0, 1fr);
+	    width: min(940px, calc(100vw - 48px));
 	    max-height: min(720px, calc(100vh - 48px));
 	    overflow: hidden;
 	    border: 1px solid var(--df-review-line);
@@ -489,6 +489,7 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-sitemap-list {
+    --df-review-sitemap-grid-template: minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px);
     display: grid;
     align-content: start;
     min-height: 0;
@@ -499,7 +500,7 @@ function ensureReviewShellStyle() {
   .df-review-sitemap-table-head,
   .df-review-sitemap-row {
     display: grid;
-    grid-template-columns: minmax(190px, 1fr) 76px 86px minmax(96px, 140px);
+    grid-template-columns: var(--df-review-sitemap-grid-template);
     align-items: center;
     column-gap: 0;
   }
@@ -519,8 +520,48 @@ function ensureReviewShellStyle() {
     text-transform: uppercase;
   }
 
-  .df-review-sitemap-table-head span:not(:first-child) {
+  .df-review-sitemap-sort {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    min-width: 0;
+    min-height: 28px;
+    border: 0;
+    border-radius: 0;
+    padding: 0 0 0 8px;
+    color: inherit;
+    background: transparent;
+    box-shadow: none;
+    font: inherit;
+    letter-spacing: inherit;
     text-align: right;
+    text-transform: inherit;
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-sort.is-page {
+    justify-content: flex-start;
+    padding-left: 0;
+    text-align: left;
+  }
+
+  .df-review-sitemap-sort span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .df-review-sitemap-sort span:last-child {
+    width: 8px;
+    min-width: 8px;
+    color: var(--df-review-accent);
+  }
+
+  .df-review-sitemap-sort:hover,
+  .df-review-sitemap-sort.is-active {
+    color: var(--df-review-text);
   }
 
   .df-review-sitemap-row {
@@ -538,9 +579,13 @@ function ensureReviewShellStyle() {
     cursor: pointer;
   }
 
-  .df-review-sitemap-row.is-all {
-    border-bottom-color: var(--df-review-line);
-    background: var(--df-review-card);
+  .df-review-sitemap-row.is-summary {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    border-top: 1px solid var(--df-review-line);
+    border-bottom: 0;
+    background: var(--df-review-surface);
   }
 
   .df-review-sitemap-row.is-folder {
@@ -586,29 +631,6 @@ function ensureReviewShellStyle() {
     text-overflow: ellipsis;
   }
 
-  .df-review-sitemap-scope-badges {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    min-width: 0;
-    flex-wrap: wrap;
-  }
-
-  .df-review-sitemap-scope-badges span {
-    display: inline-flex;
-    align-items: center;
-    min-height: 18px;
-    border: 1px solid var(--df-review-line-soft);
-    border-radius: var(--df-review-radius-pill);
-    padding: 0 5px;
-    color: var(--df-review-muted);
-    background: var(--df-review-chip-bg);
-    font-size: var(--df-review-font-size-3xs);
-    font-weight: 900;
-    line-height: 1;
-    white-space: nowrap;
-  }
-
   .df-review-sitemap-cell {
     min-width: 0;
     color: var(--df-review-muted);
@@ -619,19 +641,12 @@ function ensureReviewShellStyle() {
     text-align: right;
   }
 
-  .df-review-sitemap-cell.is-work {
+  .df-review-sitemap-cell.is-total {
     color: var(--df-review-accent);
   }
 
-  .df-review-sitemap-cell.is-work strong {
+  .df-review-sitemap-cell.is-total strong {
     font: inherit;
-  }
-
-  .df-review-sitemap-cell.is-source {
-    display: inline-flex;
-    justify-content: flex-end;
-    gap: 6px;
-    color: var(--df-review-muted);
   }
 
   .df-review-sitemap-cell.is-online {
@@ -3754,20 +3769,6 @@ import {
 } from "react";
 
 // src/react-shell/sitemap/tree.ts
-var SITEMAP_STATUS_FILTERS = [
-  { key: "all", label: "All status" },
-  { key: "todo", label: "Todo" },
-  { key: "doing", label: "Doing" },
-  { key: "review", label: "Review" },
-  { key: "hold", label: "Hold" },
-  { key: "done", label: "Done" }
-];
-var SITEMAP_SORT_OPTIONS = [
-  { key: "tree", label: "Tree order" },
-  { key: "remaining", label: "Most remaining" },
-  { key: "total", label: "Most total" },
-  { key: "online", label: "Most online" }
-];
 var WORKFLOW_STATUSES = [
   "todo",
   "doing",
@@ -3787,9 +3788,14 @@ var createEmptySitemapQaCount = () => ({
     hold: 0,
     done: 0
   },
-  scope: {}
+  scope: {},
+  viewport: {}
 });
-var getSitemapStatusCount = (count, statusFilter) => statusFilter === "all" ? count.total : count.status[statusFilter];
+var createSitemapViewportColumn = (preset, index) => ({
+  key: `${index}:${preset.width}x${preset.height}`,
+  label: preset.label,
+  title: `${preset.label} ${preset.width}x${preset.height}`
+});
 var normalizeSitemapHref = (href) => {
   const [path = "/"] = href.split(/[?#]/);
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -3836,11 +3842,23 @@ var addSitemapQaCounts = (first, second) => ({
       [scope]: (first.scope[scope] ?? 0) + (second.scope[scope] ?? 0)
     }),
     {}
+  ),
+  viewport: Array.from(
+    /* @__PURE__ */ new Set([...Object.keys(first.viewport), ...Object.keys(second.viewport)])
+  ).reduce(
+    (viewportCounts, viewportKey) => ({
+      ...viewportCounts,
+      [viewportKey]: {
+        total: (first.viewport[viewportKey]?.total ?? 0) + (second.viewport[viewportKey]?.total ?? 0),
+        remaining: (first.viewport[viewportKey]?.remaining ?? 0) + (second.viewport[viewportKey]?.remaining ?? 0)
+      }
+    }),
+    {}
   )
 });
 var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget, options = {}) => {
-  const sortKey = options.sortKey ?? "tree";
-  const statusFilter = options.statusFilter ?? "all";
+  const sortKey = options.sortKey ?? "page";
+  const sortDirection = options.sortDirection ?? "asc";
   const root = createSitemapNode("/", "/", false);
   pages.forEach((page) => {
     const pageHref = page.href.startsWith("/") ? page.href : `/${page.href}`;
@@ -3898,48 +3916,49 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
     };
   };
   const getSortValue = (summary) => {
-    if (sortKey === "remaining") return summary.count.remaining;
-    if (sortKey === "total") return summary.count.total;
+    if (sortKey === "page") return summary.node.label;
+    if (sortKey === "total") return summary.count.remaining;
+    if (sortKey === "review") return summary.count.status.review;
+    if (sortKey === "hold") return summary.count.status.hold;
     if (sortKey === "online") return summary.users.length;
+    if (sortKey.startsWith("viewport:")) {
+      const viewportKey = sortKey.slice("viewport:".length);
+      return summary.count.viewport[viewportKey]?.remaining ?? 0;
+    }
     return 0;
   };
   const sortSummaries = (summaries) => {
-    if (sortKey === "tree") return summaries;
     return [...summaries].sort((a, b) => {
-      const valueDiff = getSortValue(b) - getSortValue(a);
-      if (valueDiff !== 0) return valueDiff;
-      const totalDiff = b.count.total - a.count.total;
+      const firstValue = getSortValue(a);
+      const secondValue = getSortValue(b);
+      const valueDiff = typeof firstValue === "string" && typeof secondValue === "string" ? firstValue.localeCompare(secondValue) : Number(firstValue) - Number(secondValue);
+      if (valueDiff !== 0) {
+        return sortDirection === "asc" ? valueDiff : -valueDiff;
+      }
+      const totalDiff = b.count.remaining - a.count.remaining;
       if (totalDiff !== 0) return totalDiff;
       return a.node.label.localeCompare(b.node.label);
     });
   };
-  const hasStatusMatch = (count) => getSitemapStatusCount(count, statusFilter) > 0;
-  const shouldShowSummary = (summary) => statusFilter === "all" || hasStatusMatch(summary.count);
   const rows = [];
   const appendSummaryRows = (summary, depth, ancestorLastList, isLastNode) => {
-    if (!shouldShowSummary(summary)) return;
     const { node } = summary;
     const rowCount = node.isPage ? summary.directCount : summary.count;
     const rowUsers = node.isPage ? summary.directUsers : summary.users;
     if (node.isPage || depth > 0) {
       const prefix = depth === 0 ? "" : `${ancestorLastList.map((isLast) => isLast ? "   " : "\u2502  ").join("")}${isLastNode ? "\u2514\u2500 " : "\u251C\u2500 "}`;
       const pageTarget = node.isPage ? getPageTarget(node.href) : null;
-      const hasRowStatusMatch = statusFilter === "all" || hasStatusMatch(rowCount);
-      if (hasRowStatusMatch || !node.isPage) {
-        rows.push({
-          href: node.href,
-          label: node.label,
-          prefix,
-          isPage: node.isPage,
-          isActive: pageTarget === activeRoute,
-          qaCount: rowCount,
-          users: rowUsers
-        });
-      }
+      rows.push({
+        href: node.href,
+        label: node.label,
+        prefix,
+        isPage: node.isPage,
+        isActive: pageTarget === activeRoute,
+        qaCount: rowCount,
+        users: rowUsers
+      });
     }
-    const visibleChildren = sortSummaries(
-      summary.children.filter(shouldShowSummary)
-    );
+    const visibleChildren = sortSummaries(summary.children);
     visibleChildren.forEach((child, childIndex) => {
       appendSummaryRows(
         child,
@@ -3952,21 +3971,19 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
   if (root.isPage) {
     const directCount = getDirectCount(root);
     const directUsers = getDirectUsers(root);
-    if (statusFilter === "all" || hasStatusMatch(directCount)) {
-      rows.push({
-        href: root.href,
-        label: root.label,
-        prefix: "",
-        isPage: true,
-        isActive: getPageTarget(root.href) === activeRoute,
-        qaCount: directCount,
-        users: directUsers
-      });
-    }
+    rows.push({
+      href: root.href,
+      label: root.label,
+      prefix: "",
+      isPage: true,
+      isActive: getPageTarget(root.href) === activeRoute,
+      qaCount: directCount,
+      users: directUsers
+    });
   }
   const rootSummaries = sortSummaries(
     Array.from(root.children.values()).map(createNodeSummary)
-  ).filter(shouldShowSummary);
+  );
   rootSummaries.forEach((summary, index, siblings) => {
     appendSummaryRows(summary, 1, [], index === siblings.length - 1);
   });
@@ -3975,6 +3992,15 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
 
 // src/react-shell/sitemap/modal.tsx
 import { Fragment, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
+var getNextSortDirection = (current, key) => {
+  if (current.key !== key) return key === "page" ? "asc" : "desc";
+  return current.direction === "desc" ? "asc" : "desc";
+};
+var getSortIndicator = (sort, key) => {
+  if (sort.key !== key) return "";
+  return sort.direction === "desc" ? "\u2193" : "\u2191";
+};
+var getViewportCount = (qaCount, column) => qaCount.viewport[column.key]?.remaining ?? 0;
 var SitemapModal = ({
   pages,
   activeRoute,
@@ -3982,24 +4008,52 @@ var SitemapModal = ({
   isAllQaVisible,
   pageQaCounts,
   pagePresenceUsers,
+  viewportPresets,
   getPageTarget,
   onClose,
   onSelectAllQa,
   onSelectPage
 }) => {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortKey, setSortKey] = useState("tree");
+  const [sort, setSort] = useState({
+    key: "total",
+    direction: "desc"
+  });
+  const viewportColumns = useMemo2(
+    () => viewportPresets.map(createSitemapViewportColumn),
+    [viewportPresets]
+  );
   const sitemapRows = createSitemapRows(
     pages,
     activeRoute,
     pageQaCounts,
     pagePresenceUsers,
     getPageTarget,
-    { sortKey, statusFilter }
+    {
+      sortKey: sort.key,
+      sortDirection: sort.direction
+    }
   );
-  const filteredAllCount = getSitemapStatusCount(allQaCount, statusFilter);
-  const allQaLabel = statusFilter === "all" ? `${allQaCount.remaining}/${allQaCount.total}` : String(filteredAllCount);
-  const allQaStatusLabel = SITEMAP_STATUS_FILTERS.find((filter) => filter.key === statusFilter)?.label ?? "All status";
+  const gridStyle = {
+    "--df-review-sitemap-grid-template": `minmax(190px, 1fr) repeat(${viewportColumns.length}, minmax(66px, 76px)) 74px 78px 64px minmax(108px, 160px)`
+  };
+  const sortHeaders = [
+    { key: "page", label: "Page", className: "is-page" },
+    ...viewportColumns.map((column) => ({
+      key: `viewport:${column.key}`,
+      label: column.label,
+      title: column.title
+    })),
+    { key: "total", label: "Total", title: "Remaining total" },
+    { key: "review", label: "Review" },
+    { key: "hold", label: "Hold" },
+    { key: "online", label: "Online", className: "is-online" }
+  ];
+  const setSortKey = (key) => {
+    setSort((current) => ({
+      key,
+      direction: getNextSortDirection(current, key)
+    }));
+  };
   return /* @__PURE__ */ jsxs3(
     "div",
     {
@@ -4025,58 +4079,36 @@ var SitemapModal = ({
                 pages.length,
                 " pages \xB7 ",
                 allQaCount.remaining,
-                "/",
-                allQaCount.total
+                " remaining \xB7",
+                " ",
+                allQaCount.status.review,
+                " review \xB7 ",
+                allQaCount.status.hold,
+                " hold"
               ] })
             ] }),
             /* @__PURE__ */ jsx3("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
           ] }),
-          /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-controls", children: [
-            /* @__PURE__ */ jsx3(
-              "select",
-              {
-                "aria-label": "Sitemap status filter",
-                value: statusFilter,
-                onChange: (event) => setStatusFilter(event.currentTarget.value),
-                children: SITEMAP_STATUS_FILTERS.map((filter) => /* @__PURE__ */ jsx3("option", { value: filter.key, children: filter.label }, filter.key))
-              }
-            ),
-            /* @__PURE__ */ jsx3(
-              "select",
-              {
-                "aria-label": "Sitemap sort",
-                value: sortKey,
-                onChange: (event) => setSortKey(event.currentTarget.value),
-                children: SITEMAP_SORT_OPTIONS.map((option) => /* @__PURE__ */ jsx3("option", { value: option.key, children: option.label }, option.key))
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-list", children: [
-            /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-table-head", "aria-hidden": "true", children: [
-              /* @__PURE__ */ jsx3("span", { children: "Page" }),
-              /* @__PURE__ */ jsx3("span", { children: "Work" }),
-              /* @__PURE__ */ jsx3("span", { children: "Source" }),
-              /* @__PURE__ */ jsx3("span", { children: "Online" })
-            ] }),
-            /* @__PURE__ */ jsx3(
+          /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-list", style: gridStyle, children: [
+            /* @__PURE__ */ jsx3("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ jsxs3(
               "button",
               {
-                "aria-label": `All QA / ${allQaStatusLabel} ${allQaLabel} / local ${allQaCount.local} QA / remote ${allQaCount.remote} QA`,
-                className: `df-review-sitemap-row is-page is-all${isAllQaVisible ? " is-active" : ""}`,
+                "aria-label": `Sort sitemap by ${header.label}`,
+                className: [
+                  "df-review-sitemap-sort",
+                  header.className ?? "",
+                  sort.key === header.key ? "is-active" : ""
+                ].filter(Boolean).join(" "),
+                title: header.title ?? header.label,
                 type: "button",
-                onClick: onSelectAllQa,
-                children: /* @__PURE__ */ jsx3(
-                  SitemapRowContent,
-                  {
-                    label: "All QA",
-                    prefix: "",
-                    qaCount: allQaCount,
-                    statusFilter,
-                    users: []
-                  }
-                )
-              }
-            ),
+                onClick: () => setSortKey(header.key),
+                children: [
+                  /* @__PURE__ */ jsx3("span", { children: header.label }),
+                  /* @__PURE__ */ jsx3("span", { "aria-hidden": "true", children: getSortIndicator(sort, header.key) })
+                ]
+              },
+              header.key
+            )) }),
             sitemapRows.map((row) => {
               const rowClassName = [
                 "df-review-sitemap-row",
@@ -4089,15 +4121,15 @@ var SitemapModal = ({
                   label: row.label,
                   prefix: row.prefix,
                   qaCount: row.qaCount,
-                  statusFilter,
-                  users: row.users
+                  users: row.users,
+                  viewportColumns
                 }
               );
               if (!row.isPage) {
                 return /* @__PURE__ */ jsx3(
                   "div",
                   {
-                    "aria-label": `${row.href} group / remaining ${row.qaCount.remaining} of ${row.qaCount.total} QA / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                    "aria-label": `${row.href} group / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
                     className: rowClassName,
                     role: "row",
                     children: rowContent
@@ -4108,7 +4140,7 @@ var SitemapModal = ({
               return /* @__PURE__ */ jsx3(
                 "button",
                 {
-                  "aria-label": `${row.href} / remaining ${row.qaCount.remaining} of ${row.qaCount.total} QA / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                  "aria-label": `${row.href} / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
                   className: rowClassName,
                   type: "button",
                   onClick: () => onSelectPage(row.href),
@@ -4116,68 +4148,59 @@ var SitemapModal = ({
                 },
                 row.href
               );
-            })
+            }),
+            /* @__PURE__ */ jsx3(
+              "button",
+              {
+                "aria-label": `All QA / ${allQaCount.remaining} remaining / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`,
+                className: `df-review-sitemap-row is-summary${isAllQaVisible ? " is-active" : ""}`,
+                type: "button",
+                onClick: onSelectAllQa,
+                children: /* @__PURE__ */ jsx3(
+                  SitemapRowContent,
+                  {
+                    label: "All QA",
+                    prefix: "",
+                    qaCount: allQaCount,
+                    users: [],
+                    viewportColumns
+                  }
+                )
+              }
+            )
           ] })
         ] })
       ]
     }
   );
 };
-var SITEMAP_SCOPE_LABELS = [
-  { key: "mobile", label: "MO" },
-  { key: "tablet", label: "TA" },
-  { key: "desktop", label: "PC" },
-  { key: "wide", label: "WD" },
-  { key: "dom", label: "DOM" }
-];
 var SitemapRowContent = ({
   label,
   prefix,
   qaCount,
-  statusFilter,
-  users
-}) => {
-  const visibleScopeCounts = useMemo2(
-    () => SITEMAP_SCOPE_LABELS.map((scope) => ({
-      ...scope,
-      count: qaCount.scope[scope.key] ?? 0
-    })).filter((scope) => scope.count > 0),
-    [qaCount.scope]
-  );
-  const statusCount = getSitemapStatusCount(qaCount, statusFilter);
-  return /* @__PURE__ */ jsxs3(Fragment, { children: [
-    /* @__PURE__ */ jsxs3("span", { className: "df-review-sitemap-path", children: [
-      /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-tree-prefix", children: prefix }),
-      /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-label", children: label }),
-      visibleScopeCounts.length > 0 && /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-scope-badges", children: visibleScopeCounts.map((scope) => /* @__PURE__ */ jsxs3("span", { children: [
-        scope.label,
-        " ",
-        scope.count
-      ] }, scope.key)) })
-    ] }),
-    /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-work", children: statusFilter === "all" ? /* @__PURE__ */ jsxs3("strong", { children: [
-      qaCount.remaining,
-      "/",
-      qaCount.total
-    ] }) : /* @__PURE__ */ jsx3("strong", { children: statusCount }) }),
-    /* @__PURE__ */ jsxs3("span", { className: "df-review-sitemap-cell is-source", children: [
-      /* @__PURE__ */ jsx3("span", { children: qaCount.local }),
-      /* @__PURE__ */ jsx3("span", { "aria-hidden": "true", children: "|" }),
-      /* @__PURE__ */ jsx3("span", { children: qaCount.remote })
-    ] }),
-    /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ jsx3(
-      "span",
-      {
-        className: "df-review-sitemap-user",
-        style: {
-          "--df-review-presence-color": user.color
-        },
-        children: user.userId
+  users,
+  viewportColumns
+}) => /* @__PURE__ */ jsxs3(Fragment, { children: [
+  /* @__PURE__ */ jsxs3("span", { className: "df-review-sitemap-path", children: [
+    /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-tree-prefix", children: prefix }),
+    /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-label", children: label })
+  ] }),
+  viewportColumns.map((column) => /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-viewport", children: getViewportCount(qaCount, column) }, column.key)),
+  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-total", children: /* @__PURE__ */ jsx3("strong", { children: qaCount.remaining }) }),
+  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-review", children: qaCount.status.review }),
+  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-hold", children: qaCount.status.hold }),
+  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ jsx3(
+    "span",
+    {
+      className: "df-review-sitemap-user",
+      style: {
+        "--df-review-presence-color": user.color
       },
-      user.sessionId
-    )) }) : /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
-  ] });
-};
+      children: user.userId
+    },
+    user.sessionId
+  )) }) : /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
+] });
 
 // src/react-shell/figma.ts
 function getTargetFigmaFrameConfig(targetWindow) {
@@ -7224,15 +7247,25 @@ var useReviewShellData = ({
     });
     return counts;
   }, [numberedActiveItems]);
-  const getItemPresetScope = useCallback10(
-    (item) => getViewportPresetKind(
-      findViewportPreset(
-        viewportPresets,
-        item.viewport?.width ?? 0,
-        item.viewport?.height ?? 0
-      )
+  const getItemPreset = useCallback10(
+    (item) => findViewportPreset(
+      viewportPresets,
+      item.viewport?.width ?? 0,
+      item.viewport?.height ?? 0
     ),
     [viewportPresets]
+  );
+  const getItemPresetScope = useCallback10(
+    (item) => getViewportPresetKind(getItemPreset(item)),
+    [getItemPreset]
+  );
+  const getItemPresetColumn = useCallback10(
+    (item) => {
+      const preset = getItemPreset(item);
+      const presetIndex = Math.max(0, viewportPresets.indexOf(preset));
+      return createSitemapViewportColumn(preset, presetIndex);
+    },
+    [getItemPreset, viewportPresets]
   );
   const getItemCountScope = useCallback10(
     (item) => item.scope === "dom" ? "dom" : getItemPresetScope(item),
@@ -7264,10 +7297,13 @@ var useReviewShellData = ({
         const currentCount = counts.get(pageTarget) ?? createEmptySitemapQaCount();
         const status = normalizeReviewItemStatus(item.status);
         const scope = getItemCountScope(item);
+        const viewportColumn = getItemPresetColumn(item);
+        const currentViewportCount = currentCount.viewport[viewportColumn.key] ?? { total: 0, remaining: 0 };
+        const isRemaining = status !== SITEMAP_STATUS_DONE;
         counts.set(pageTarget, {
           ...currentCount,
           total: currentCount.total + 1,
-          remaining: status === SITEMAP_STATUS_DONE ? currentCount.remaining : currentCount.remaining + 1,
+          remaining: isRemaining ? currentCount.remaining + 1 : currentCount.remaining,
           local: currentCount.local + (sourceKey === "local" ? 1 : 0),
           remote: currentCount.remote + (sourceKey === "remote" ? 1 : 0),
           status: {
@@ -7277,6 +7313,13 @@ var useReviewShellData = ({
           scope: {
             ...currentCount.scope,
             [scope]: (currentCount.scope[scope] ?? 0) + 1
+          },
+          viewport: {
+            ...currentCount.viewport,
+            [viewportColumn.key]: {
+              total: currentViewportCount.total + 1,
+              remaining: isRemaining ? currentViewportCount.remaining + 1 : currentViewportCount.remaining
+            }
           }
         });
       });
@@ -7284,7 +7327,7 @@ var useReviewShellData = ({
     addItems("local", sitemapItems.local);
     addItems("remote", sitemapItems.remote);
     return counts;
-  }, [getItemCountScope, reviewPathPrefix, sitemapItems]);
+  }, [getItemCountScope, getItemPresetColumn, reviewPathPrefix, sitemapItems]);
   const allQaCount = useMemo5(
     () => Array.from(pageQaCounts.values()).reduce(
       addSitemapQaCounts,
@@ -8798,6 +8841,7 @@ var ReviewShell = ({
             isAllQaVisible,
             pageQaCounts,
             pagePresenceUsers,
+            viewportPresets,
             getPageTarget: (href) => normalizeTarget(href, reviewPathPrefix),
             onClose: () => setIsSitemapOpen(false),
             onSelectAllQa: selectAllQa,

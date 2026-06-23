@@ -28,6 +28,7 @@ import type { SitemapQaCount } from '../sitemap/tree';
 import {
   addSitemapQaCounts,
   createEmptySitemapQaCount,
+  createSitemapViewportColumn,
 } from '../sitemap/tree';
 
 export type SitemapItemsBySource = {
@@ -119,16 +120,27 @@ export const useReviewShellData = ({
     });
     return counts;
   }, [numberedActiveItems]);
-  const getItemPresetScope = useCallback(
+  const getItemPreset = useCallback(
     (item: ReviewItem) =>
-      getViewportPresetKind(
-        findViewportPreset(
-          viewportPresets,
-          item.viewport?.width ?? 0,
-          item.viewport?.height ?? 0
-        )
+      findViewportPreset(
+        viewportPresets,
+        item.viewport?.width ?? 0,
+        item.viewport?.height ?? 0
       ),
     [viewportPresets]
+  );
+  const getItemPresetScope = useCallback(
+    (item: ReviewItem) => getViewportPresetKind(getItemPreset(item)),
+    [getItemPreset]
+  );
+  const getItemPresetColumn = useCallback(
+    (item: ReviewItem) => {
+      const preset = getItemPreset(item);
+      const presetIndex = Math.max(0, viewportPresets.indexOf(preset));
+
+      return createSitemapViewportColumn(preset, presetIndex);
+    },
+    [getItemPreset, viewportPresets]
   );
   const getItemCountScope = useCallback(
     (item: ReviewItem): ReviewItemScope =>
@@ -166,14 +178,17 @@ export const useReviewShellData = ({
           counts.get(pageTarget) ?? createEmptySitemapQaCount();
         const status = normalizeReviewItemStatus(item.status);
         const scope = getItemCountScope(item);
+        const viewportColumn = getItemPresetColumn(item);
+        const currentViewportCount = currentCount.viewport[
+          viewportColumn.key
+        ] ?? { total: 0, remaining: 0 };
+        const isRemaining = status !== SITEMAP_STATUS_DONE;
 
         counts.set(pageTarget, {
           ...currentCount,
           total: currentCount.total + 1,
           remaining:
-            status === SITEMAP_STATUS_DONE
-              ? currentCount.remaining
-              : currentCount.remaining + 1,
+            isRemaining ? currentCount.remaining + 1 : currentCount.remaining,
           local: currentCount.local + (sourceKey === 'local' ? 1 : 0),
           remote: currentCount.remote + (sourceKey === 'remote' ? 1 : 0),
           status: {
@@ -184,6 +199,15 @@ export const useReviewShellData = ({
             ...currentCount.scope,
             [scope]: (currentCount.scope[scope] ?? 0) + 1,
           },
+          viewport: {
+            ...currentCount.viewport,
+            [viewportColumn.key]: {
+              total: currentViewportCount.total + 1,
+              remaining: isRemaining
+                ? currentViewportCount.remaining + 1
+                : currentViewportCount.remaining,
+            },
+          },
         });
       });
     };
@@ -192,7 +216,7 @@ export const useReviewShellData = ({
     addItems('remote', sitemapItems.remote);
 
     return counts;
-  }, [getItemCountScope, reviewPathPrefix, sitemapItems]);
+  }, [getItemCountScope, getItemPresetColumn, reviewPathPrefix, sitemapItems]);
   const allQaCount = useMemo(
     () =>
       Array.from(pageQaCounts.values()).reduce(

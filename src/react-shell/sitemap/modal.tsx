@@ -3,19 +3,18 @@ import {
   useState,
   type CSSProperties,
 } from 'react';
-import type { ReviewItemScope } from '../../types';
 import type {
   ReviewPresenceUser,
   ReviewShellPage,
+  ReviewShellViewportPreset,
 } from '../types';
 import {
   createSitemapRows,
-  getSitemapStatusCount,
-  SITEMAP_SORT_OPTIONS,
-  SITEMAP_STATUS_FILTERS,
+  createSitemapViewportColumn,
   type SitemapQaCount,
+  type SitemapSortDirection,
   type SitemapSortKey,
-  type SitemapStatusFilter,
+  type SitemapViewportColumn,
 } from './tree';
 
 interface SitemapModalProps {
@@ -25,11 +24,44 @@ interface SitemapModalProps {
   isAllQaVisible: boolean;
   pageQaCounts: ReadonlyMap<string, SitemapQaCount>;
   pagePresenceUsers: ReadonlyMap<string, ReviewPresenceUser[]>;
+  viewportPresets: ReviewShellViewportPreset[];
   getPageTarget: (href: string) => string;
   onClose: () => void;
   onSelectAllQa: () => void;
   onSelectPage: (href: string) => void;
 }
+
+type SortState = {
+  key: SitemapSortKey;
+  direction: SitemapSortDirection;
+};
+
+type SortHeader = {
+  key: SitemapSortKey;
+  label: string;
+  title?: string;
+  className?: string;
+};
+
+const getNextSortDirection = (
+  current: SortState,
+  key: SitemapSortKey
+): SitemapSortDirection => {
+  if (current.key !== key) return key === 'page' ? 'asc' : 'desc';
+
+  return current.direction === 'desc' ? 'asc' : 'desc';
+};
+
+const getSortIndicator = (sort: SortState, key: SitemapSortKey) => {
+  if (sort.key !== key) return '';
+
+  return sort.direction === 'desc' ? '↓' : '↑';
+};
+
+const getViewportCount = (
+  qaCount: SitemapQaCount,
+  column: SitemapViewportColumn
+) => qaCount.viewport[column.key]?.remaining ?? 0;
 
 export const SitemapModal = ({
   pages,
@@ -38,29 +70,52 @@ export const SitemapModal = ({
   isAllQaVisible,
   pageQaCounts,
   pagePresenceUsers,
+  viewportPresets,
   getPageTarget,
   onClose,
   onSelectAllQa,
   onSelectPage,
 }: SitemapModalProps) => {
-  const [statusFilter, setStatusFilter] =
-    useState<SitemapStatusFilter>('all');
-  const [sortKey, setSortKey] = useState<SitemapSortKey>('tree');
+  const [sort, setSort] = useState<SortState>({
+    key: 'total',
+    direction: 'desc',
+  });
+  const viewportColumns = useMemo(
+    () => viewportPresets.map(createSitemapViewportColumn),
+    [viewportPresets]
+  );
   const sitemapRows = createSitemapRows(
     pages,
     activeRoute,
     pageQaCounts,
     pagePresenceUsers,
     getPageTarget,
-    { sortKey, statusFilter }
+    {
+      sortKey: sort.key,
+      sortDirection: sort.direction,
+    }
   );
-  const filteredAllCount = getSitemapStatusCount(allQaCount, statusFilter);
-  const allQaLabel = statusFilter === 'all'
-    ? `${allQaCount.remaining}/${allQaCount.total}`
-    : String(filteredAllCount);
-  const allQaStatusLabel =
-    SITEMAP_STATUS_FILTERS.find((filter) => filter.key === statusFilter)
-      ?.label ?? 'All status';
+  const gridStyle = {
+    '--df-review-sitemap-grid-template': `minmax(190px, 1fr) repeat(${viewportColumns.length}, minmax(66px, 76px)) 74px 78px 64px minmax(108px, 160px)`,
+  } as CSSProperties;
+  const sortHeaders: SortHeader[] = [
+    { key: 'page', label: 'Page', className: 'is-page' },
+    ...viewportColumns.map((column) => ({
+      key: `viewport:${column.key}` as SitemapSortKey,
+      label: column.label,
+      title: column.title,
+    })),
+    { key: 'total', label: 'Total', title: 'Remaining total' },
+    { key: 'review', label: 'Review' },
+    { key: 'hold', label: 'Hold' },
+    { key: 'online', label: 'Online', className: 'is-online' },
+  ];
+  const setSortKey = (key: SitemapSortKey) => {
+    setSort((current) => ({
+      key,
+      direction: getNextSortDirection(current, key),
+    }));
+  };
 
   return (
     <div
@@ -80,64 +135,38 @@ export const SitemapModal = ({
           <div>
             <strong>Sitemap</strong>
             <span>
-              {pages.length} pages · {allQaCount.remaining}/{allQaCount.total}
+              {pages.length} pages · {allQaCount.remaining} remaining ·{' '}
+              {allQaCount.status.review} review · {allQaCount.status.hold} hold
             </span>
           </div>
           <button aria-label="Close sitemap" type="button" onClick={onClose}>
             x
           </button>
         </div>
-        <div className="df-review-sitemap-controls">
-          <select
-            aria-label="Sitemap status filter"
-            value={statusFilter}
-            onChange={(event) =>
-              setStatusFilter(event.currentTarget.value as SitemapStatusFilter)
-            }
-          >
-            {SITEMAP_STATUS_FILTERS.map((filter) => (
-              <option key={filter.key} value={filter.key}>
-                {filter.label}
-              </option>
+        <div className="df-review-sitemap-list" style={gridStyle}>
+          <div className="df-review-sitemap-table-head" role="row">
+            {sortHeaders.map((header) => (
+              <button
+                key={header.key}
+                aria-label={`Sort sitemap by ${header.label}`}
+                className={[
+                  'df-review-sitemap-sort',
+                  header.className ?? '',
+                  sort.key === header.key ? 'is-active' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                title={header.title ?? header.label}
+                type="button"
+                onClick={() => setSortKey(header.key)}
+              >
+                <span>{header.label}</span>
+                <span aria-hidden="true">
+                  {getSortIndicator(sort, header.key)}
+                </span>
+              </button>
             ))}
-          </select>
-          <select
-            aria-label="Sitemap sort"
-            value={sortKey}
-            onChange={(event) =>
-              setSortKey(event.currentTarget.value as SitemapSortKey)
-            }
-          >
-            {SITEMAP_SORT_OPTIONS.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="df-review-sitemap-list">
-          <div className="df-review-sitemap-table-head" aria-hidden="true">
-            <span>Page</span>
-            <span>Work</span>
-            <span>Source</span>
-            <span>Online</span>
           </div>
-          <button
-            aria-label={`All QA / ${allQaStatusLabel} ${allQaLabel} / local ${allQaCount.local} QA / remote ${allQaCount.remote} QA`}
-            className={`df-review-sitemap-row is-page is-all${
-              isAllQaVisible ? ' is-active' : ''
-            }`}
-            type="button"
-            onClick={onSelectAllQa}
-          >
-            <SitemapRowContent
-              label="All QA"
-              prefix=""
-              qaCount={allQaCount}
-              statusFilter={statusFilter}
-              users={[]}
-            />
-          </button>
           {sitemapRows.map((row) => {
             const rowClassName = [
               'df-review-sitemap-row',
@@ -151,8 +180,8 @@ export const SitemapModal = ({
                 label={row.label}
                 prefix={row.prefix}
                 qaCount={row.qaCount}
-                statusFilter={statusFilter}
                 users={row.users}
+                viewportColumns={viewportColumns}
               />
             );
 
@@ -160,7 +189,7 @@ export const SitemapModal = ({
               return (
                 <div
                   key={row.href}
-                  aria-label={`${row.href} group / remaining ${row.qaCount.remaining} of ${row.qaCount.total} QA / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`}
+                  aria-label={`${row.href} group / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`}
                   className={rowClassName}
                   role="row"
                 >
@@ -172,7 +201,7 @@ export const SitemapModal = ({
             return (
               <button
                 key={row.href}
-                aria-label={`${row.href} / remaining ${row.qaCount.remaining} of ${row.qaCount.total} QA / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`}
+                aria-label={`${row.href} / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`}
                 className={rowClassName}
                 type="button"
                 onClick={() => onSelectPage(row.href)}
@@ -181,94 +210,78 @@ export const SitemapModal = ({
               </button>
             );
           })}
+          <button
+            aria-label={`All QA / ${allQaCount.remaining} remaining / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`}
+            className={`df-review-sitemap-row is-summary${
+              isAllQaVisible ? ' is-active' : ''
+            }`}
+            type="button"
+            onClick={onSelectAllQa}
+          >
+            <SitemapRowContent
+              label="All QA"
+              prefix=""
+              qaCount={allQaCount}
+              users={[]}
+              viewportColumns={viewportColumns}
+            />
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-const SITEMAP_SCOPE_LABELS: Array<{
-  key: ReviewItemScope;
-  label: string;
-}> = [
-  { key: 'mobile', label: 'MO' },
-  { key: 'tablet', label: 'TA' },
-  { key: 'desktop', label: 'PC' },
-  { key: 'wide', label: 'WD' },
-  { key: 'dom', label: 'DOM' },
-];
-
 const SitemapRowContent = ({
   label,
   prefix,
   qaCount,
-  statusFilter,
   users,
+  viewportColumns,
 }: {
   label: string;
   prefix: string;
   qaCount: SitemapQaCount;
-  statusFilter: SitemapStatusFilter;
   users: ReviewPresenceUser[];
-}) => {
-  const visibleScopeCounts = useMemo(
-    () =>
-      SITEMAP_SCOPE_LABELS.map((scope) => ({
-        ...scope,
-        count: qaCount.scope[scope.key] ?? 0,
-      })).filter((scope) => scope.count > 0),
-    [qaCount.scope]
-  );
-  const statusCount = getSitemapStatusCount(qaCount, statusFilter);
-
-  return (
-    <>
-      <span className="df-review-sitemap-path">
-        <span className="df-review-sitemap-tree-prefix">{prefix}</span>
-        <span className="df-review-sitemap-label">{label}</span>
-        {visibleScopeCounts.length > 0 && (
-          <span className="df-review-sitemap-scope-badges">
-            {visibleScopeCounts.map((scope) => (
-              <span key={scope.key}>
-                {scope.label} {scope.count}
-              </span>
-            ))}
-          </span>
-        )}
+  viewportColumns: SitemapViewportColumn[];
+}) => (
+  <>
+    <span className="df-review-sitemap-path">
+      <span className="df-review-sitemap-tree-prefix">{prefix}</span>
+      <span className="df-review-sitemap-label">{label}</span>
+    </span>
+    {viewportColumns.map((column) => (
+      <span key={column.key} className="df-review-sitemap-cell is-viewport">
+        {getViewportCount(qaCount, column)}
       </span>
-      <span className="df-review-sitemap-cell is-work">
-        {statusFilter === 'all' ? (
-          <strong>
-            {qaCount.remaining}/{qaCount.total}
-          </strong>
-        ) : (
-          <strong>{statusCount}</strong>
-        )}
-      </span>
-      <span className="df-review-sitemap-cell is-source">
-        <span>{qaCount.local}</span>
-        <span aria-hidden="true">|</span>
-        <span>{qaCount.remote}</span>
-      </span>
-      <span className="df-review-sitemap-cell is-online">
-        {users.length > 0 ? (
-          <span className="df-review-sitemap-users">
-            {users.map((user) => (
-              <span
-                key={user.sessionId}
-                className="df-review-sitemap-user"
-                style={{
-                  '--df-review-presence-color': user.color,
-                } as CSSProperties}
-              >
-                {user.userId}
-              </span>
-            ))}
-          </span>
-        ) : (
-          <span className="df-review-sitemap-online-empty">0</span>
-        )}
-      </span>
-    </>
-  );
-};
+    ))}
+    <span className="df-review-sitemap-cell is-total">
+      <strong>{qaCount.remaining}</strong>
+    </span>
+    <span className="df-review-sitemap-cell is-review">
+      {qaCount.status.review}
+    </span>
+    <span className="df-review-sitemap-cell is-hold">
+      {qaCount.status.hold}
+    </span>
+    <span className="df-review-sitemap-cell is-online">
+      {users.length > 0 ? (
+        <span className="df-review-sitemap-users">
+          {users.map((user) => (
+            <span
+              key={user.sessionId}
+              className="df-review-sitemap-user"
+              style={{
+                '--df-review-presence-color': user.color,
+              } as CSSProperties}
+            >
+              {user.userId}
+            </span>
+          ))}
+        </span>
+      ) : (
+        <span className="df-review-sitemap-online-empty">0</span>
+      )}
+    </span>
+  </>
+);

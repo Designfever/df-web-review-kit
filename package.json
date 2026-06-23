@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "type": "module",
   "description": "Designfever web page review overlay toolkit.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Designfever/df-web-review-kit.git"

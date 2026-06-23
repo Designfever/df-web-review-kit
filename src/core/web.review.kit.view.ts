@@ -92,6 +92,7 @@ type DraftPreviewElement = HTMLElement | SVGElement;
 interface DraftPreviewSnapshot {
   element: DraftPreviewElement;
   transform: string;
+  transformOrigin: string;
   transition: string;
   willChange: string;
   baseTransform: string;
@@ -212,16 +213,32 @@ export class WebReviewKitView {
     const adjustment = draft.adjustment;
     const x = adjustment?.x ?? 0;
     const y = adjustment?.y ?? 0;
-    const { scale, designWidth, presetLabel } = this.getDraftViewportScale(
-      draft.viewport
-    );
+    const scale = adjustment?.scale ?? 0;
+    const {
+      scale: viewportScale,
+      designWidth,
+      presetLabel,
+    } = this.getDraftViewportScale(draft.viewport);
+    const selection = draft.selection
+      ? toViewportSelection(draft.selection.viewport)
+      : undefined;
+    const scaleCssDelta = scale * viewportScale;
+    const scaleFactor =
+      selection && selection.width > 0
+        ? Math.max(
+            1 / selection.width,
+            (selection.width + scaleCssDelta) / selection.width
+          )
+        : 1;
 
     return {
       x,
       y,
-      cssX: x * scale,
-      cssY: y * scale,
       scale,
+      cssX: x * viewportScale,
+      cssY: y * viewportScale,
+      scaleFactor,
+      viewportScale,
       designWidth,
       presetLabel,
       viewportWidth: draft.viewport.width,
@@ -230,7 +247,7 @@ export class WebReviewKitView {
 
   private hasDraftAdjustment(draft: NoteDraft) {
     const metrics = this.getDraftAdjustmentMetrics(draft);
-    return metrics.x !== 0 || metrics.y !== 0;
+    return metrics.x !== 0 || metrics.y !== 0 || metrics.scale !== 0;
   }
 
   private getAdjustedDraftPoint(point: ReviewPoint, draft: NoteDraft) {
@@ -250,6 +267,8 @@ export class WebReviewKitView {
       ...selection,
       left: selection.left + metrics.cssX,
       top: selection.top + metrics.cssY,
+      width: selection.width * metrics.scaleFactor,
+      height: selection.height * metrics.scaleFactor,
     };
   }
 
@@ -389,9 +408,11 @@ export class WebReviewKitView {
 
   private formatDraftAdjustmentStatus(draft: NoteDraft) {
     const metrics = this.getDraftAdjustmentMetrics(draft);
-    return `move x ${this.formatSignedPx(metrics.x)} / y ${this.formatSignedPx(
-      metrics.y
-    )}`;
+    return [
+      `move x ${this.formatSignedPx(metrics.x)}`,
+      `y ${this.formatSignedPx(metrics.y)}`,
+      `scale ${this.formatSignedPx(metrics.scale)}`,
+    ].join(' / ');
   }
 
   private withDraftAdjustmentComment(comment: string, draft: NoteDraft) {
@@ -401,7 +422,7 @@ export class WebReviewKitView {
     const adjustment = [
       `Adjust: x ${this.formatSignedPx(metrics.x)}, y ${this.formatSignedPx(
         metrics.y
-      )}`,
+      )}, scale ${this.formatSignedPx(metrics.scale)}`,
       `(MQ 기준 px, ${metrics.presetLabel} ${Math.round(
         metrics.viewportWidth
       )}/design ${Math.round(metrics.designWidth)})`,
@@ -447,6 +468,7 @@ export class WebReviewKitView {
       this.draftPreview = {
         element,
         transform: element.style.transform,
+        transformOrigin: element.style.transformOrigin,
         transition: element.style.transition,
         willChange: element.style.willChange,
         baseTransform:
@@ -461,9 +483,18 @@ export class WebReviewKitView {
     const translate = `translate(${this.toCssNumber(metrics.cssX)}px, ${this.toCssNumber(
       metrics.cssY
     )}px)`;
+    const scale =
+      metrics.scaleFactor === 1
+        ? ''
+        : `scale(${this.toCssNumber(metrics.scaleFactor)})`;
     element.style.transition = 'none';
     element.style.willChange = 'transform';
-    element.style.transform = [this.draftPreview.baseTransform, translate]
+    element.style.transformOrigin = 'top left';
+    element.style.transform = [
+      this.draftPreview.baseTransform,
+      translate,
+      scale,
+    ]
       .filter(Boolean)
       .join(' ');
   }
@@ -471,8 +502,10 @@ export class WebReviewKitView {
   private restoreDraftPreview() {
     if (!this.draftPreview) return;
 
-    const { element, transform, transition, willChange } = this.draftPreview;
+    const { element, transform, transformOrigin, transition, willChange } =
+      this.draftPreview;
     element.style.transform = transform;
+    element.style.transformOrigin = transformOrigin;
     element.style.transition = transition;
     element.style.willChange = willChange;
     this.draftPreview = undefined;
@@ -901,6 +934,7 @@ export class WebReviewKitView {
         adjustment: {
           x: currentDraft.adjustment?.x ?? 0,
           y: currentDraft.adjustment?.y ?? 0,
+          scale: currentDraft.adjustment?.scale ?? 0,
           isActive: currentDraft.adjustment?.isActive !== true,
         },
       }));
@@ -913,6 +947,7 @@ export class WebReviewKitView {
         adjustment: {
           x: 0,
           y: 0,
+          scale: 0,
           isActive: currentDraft.adjustment?.isActive,
         },
       }));
@@ -934,6 +969,7 @@ export class WebReviewKitView {
         adjustment: {
           x: (activeDraft.adjustment?.x ?? 0) + keyDelta.x,
           y: (activeDraft.adjustment?.y ?? 0) + keyDelta.y,
+          scale: (activeDraft.adjustment?.scale ?? 0) + keyDelta.scale,
           isActive: true,
         },
       }));
@@ -952,10 +988,12 @@ export class WebReviewKitView {
   private getAdjustmentKeyDelta(event: KeyboardEvent) {
     const step = event.shiftKey ? 10 : 1;
 
-    if (event.key === 'ArrowLeft') return { x: -step, y: 0 };
-    if (event.key === 'ArrowRight') return { x: step, y: 0 };
-    if (event.key === 'ArrowUp') return { x: 0, y: -step };
-    if (event.key === 'ArrowDown') return { x: 0, y: step };
+    if (event.key === 'ArrowLeft') return { x: -step, y: 0, scale: 0 };
+    if (event.key === 'ArrowRight') return { x: step, y: 0, scale: 0 };
+    if (event.key === 'ArrowUp') return { x: 0, y: -step, scale: 0 };
+    if (event.key === 'ArrowDown') return { x: 0, y: step, scale: 0 };
+    if (event.key.toLowerCase() === 'w') return { x: 0, y: 0, scale: step };
+    if (event.key.toLowerCase() === 's') return { x: 0, y: 0, scale: -step };
 
     return undefined;
   }

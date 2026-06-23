@@ -3,7 +3,7 @@ import {
   createWebReviewKit,
   getNumberedReviewItems,
   normalizeReviewItemStatus
-} from "./chunk-FTGWEG6E.js";
+} from "./chunk-4RXJ2DTN.js";
 
 // src/react-shell.tsx
 import React2 from "react";

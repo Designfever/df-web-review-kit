@@ -8,6 +8,7 @@ import type {
 
 export interface ReviewAdjustmentDraft extends ReviewPoint {
   isActive?: boolean;
+  scale?: number;
 }
 
 export interface ReviewDraftComposer {

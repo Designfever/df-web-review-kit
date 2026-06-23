@@ -1,8 +1,9 @@
 import {
+  Bot as BotIcon,
   Copy as CopyIcon,
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
-  FileCode2 as FileCode2Icon,
+  Link2 as Link2Icon,
   Pencil as PencilIcon,
   X as XIcon,
 } from 'lucide-react';
@@ -20,9 +21,7 @@ import {
   ReviewItemModeIcon,
   ReviewScopeIcon,
 } from '../review/item.icons';
-import { getSourceOpenUrl } from '../source.open';
 import type {
-  ReviewSourceInspectorOptions,
   ReviewShellViewportKind,
 } from '../types';
 
@@ -36,14 +35,13 @@ interface QaItemCardProps {
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
   copiedPromptKey: string | null;
   selectedItemId: string | null;
-  sourceRoot?: string;
-  sourceInspectorOptions?: ReviewSourceInspectorOptions;
   onChangeItemStatus: (
     item: ReviewItem,
     nextStatus: ReviewItemStatus
   ) => Promise<void>;
   onClearSelectedItem: () => void;
   onRemoveItem: (item: ReviewItem) => Promise<void>;
+  onCopyItemLink: (numberedItem: NumberedReviewItem) => void;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onEditItem: (item: ReviewItem) => void;
   onRestoreReviewItem: (item: ReviewItem) => void;
@@ -73,11 +71,10 @@ export const QaItemCard = ({
   remoteAdapterEntry,
   copiedPromptKey,
   selectedItemId,
-  sourceRoot,
-  sourceInspectorOptions,
   onChangeItemStatus,
   onClearSelectedItem,
   onRemoveItem,
+  onCopyItemLink,
   onCopyItemPrompt,
   onEditItem,
   onRestoreReviewItem,
@@ -95,7 +92,9 @@ export const QaItemCard = ({
   const itemComment = item.comment.trim() || getItemTitle(item);
   const itemAuthor = item.createdBy?.trim();
   const promptCopyKey = `qa:${item.id}`;
+  const linkCopyKey = `link:${item.id}`;
   const isPromptCopied = copiedPromptKey === promptCopyKey;
+  const isLinkCopied = copiedPromptKey === linkCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
   const isActive = item.id === selectedItemId;
   const canUpdateStatus =
@@ -106,13 +105,6 @@ export const QaItemCard = ({
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor]
     .filter(Boolean)
     .join(' | ');
-  const sourceOpenUrl =
-    sourceInspectorOptions?.enabled === false
-      ? null
-      : getSourceOpenUrl(item.anchor?.source, {
-          ...sourceInspectorOptions,
-          sourceRoot,
-        });
 
   return (
     <article
@@ -169,28 +161,16 @@ export const QaItemCard = ({
               <EyeOffIcon aria-hidden="true" />
             )}
           </button>
-          {sourceOpenUrl && (
-            <a
-              aria-label="Open source"
-              className="df-review-item-source-open"
-              href={sourceOpenUrl}
-              rel="noreferrer"
-              target="_blank"
-              title="Open source"
-            >
-              <FileCode2Icon aria-hidden="true" />
-            </a>
-          )}
           <button
-            aria-label={isPromptCopied ? 'Copied QA prompt' : 'Copy QA prompt'}
-            className={`df-review-item-prompt-copy${
-              isPromptCopied ? ' is-copied' : ''
+            aria-label={isLinkCopied ? 'Copied QA link' : 'Copy QA link'}
+            className={`df-review-item-link-copy${
+              isLinkCopied ? ' is-copied' : ''
             }`}
-            title={isPromptCopied ? 'Copied QA prompt' : 'Copy QA prompt'}
+            title={isLinkCopied ? 'Copied QA link' : 'Copy QA link'}
             type="button"
-            onClick={() => onCopyItemPrompt(numberedItem)}
+            onClick={() => onCopyItemLink(numberedItem)}
           >
-            <CopyIcon aria-hidden="true" />
+            <Link2Icon aria-hidden="true" />
           </button>
           {canEditItem && (
             <button
@@ -222,6 +202,26 @@ export const QaItemCard = ({
           statusOptions={statusOptions}
           onChangeItemStatus={onChangeItemStatus}
         />
+        <div
+          className="df-review-item-prompt-actions"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            aria-label={isPromptCopied ? 'Copied QA prompt' : 'Copy QA prompt'}
+            className={`df-review-item-action-button df-review-item-prompt-copy${
+              isPromptCopied ? ' is-copied' : ''
+            }`}
+            title={isPromptCopied ? 'Copied QA prompt' : 'Copy QA prompt'}
+            type="button"
+            onClick={() => onCopyItemPrompt(numberedItem)}
+          >
+            {isPromptCopied ? (
+              <CopyIcon aria-hidden="true" />
+            ) : (
+              <BotIcon aria-hidden="true" />
+            )}
+          </button>
+        </div>
         <QaItemRemoteActions
           isRemoteSource={isRemoteSource}
           isSubmitted={isSubmitted}

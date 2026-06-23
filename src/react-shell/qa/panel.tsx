@@ -9,7 +9,6 @@ import { QaItemCard } from './item.card';
 import { QaPanelHeader } from './panel.header';
 import type {
   ReviewPresenceUser,
-  ReviewSourceInspectorOptions,
   ReviewQaFilter,
   ReviewShellViewportKind,
 } from '../types';
@@ -31,8 +30,6 @@ interface ReviewQaPanelProps {
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
   selectedItemId: string | null;
   showSourceSelect: boolean;
-  sourceRoot?: string;
-  sourceInspectorOptions?: ReviewSourceInspectorOptions;
   source: ReviewSource;
   sourceEntries: NormalizedReviewShellAdapter[];
   onChangeItemStatus: (
@@ -41,6 +38,7 @@ interface ReviewQaPanelProps {
   ) => Promise<void>;
   onClearSelectedItem: () => void;
   onChangeReviewSource: (nextSource: ReviewSource) => void;
+  onCopyItemLink: (numberedItem: NumberedReviewItem) => void;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onEditItem: (item: ReviewItem) => void;
   onQaFilterChange: (filter: ReviewQaFilter) => void;
@@ -68,13 +66,12 @@ export const ReviewQaPanel = ({
   remoteAdapterEntry,
   selectedItemId,
   showSourceSelect,
-  sourceRoot,
-  sourceInspectorOptions,
   source,
   sourceEntries,
   onChangeItemStatus,
   onClearSelectedItem,
   onChangeReviewSource,
+  onCopyItemLink,
   onCopyItemPrompt,
   onEditItem,
   onQaFilterChange,
@@ -137,10 +134,9 @@ export const ReviewQaPanel = ({
                   remoteAdapterEntry={remoteAdapterEntry}
                   copiedPromptKey={copiedPromptKey}
                   selectedItemId={selectedItemId}
-                  sourceRoot={sourceRoot}
-                  sourceInspectorOptions={sourceInspectorOptions}
                   onChangeItemStatus={onChangeItemStatus}
                   onClearSelectedItem={onClearSelectedItem}
+                  onCopyItemLink={onCopyItemLink}
                   onCopyItemPrompt={onCopyItemPrompt}
                   onEditItem={onEditItem}
                   onRemoveItem={onRemoveItem}

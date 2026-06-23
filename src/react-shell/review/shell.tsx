@@ -25,11 +25,14 @@ import {
 } from '../constants';
 import {
   DEFAULT_REVIEW_PATH_PREFIX,
+  getItemTarget,
+  getShellUrlForItem,
   normalizeTarget,
   updateShellUrl,
 } from '../route';
 import {
   DEFAULT_REVIEW_VIEWPORT_PRESETS,
+  getRestoredSize,
 } from '../viewport';
 import {
   PromptModal,
@@ -1017,6 +1020,20 @@ export const ReviewShell = ({
       'QA prompt copied'
     );
 
+  const copyItemLink = (numberedItem: NumberedReviewItem) => {
+    const { item } = numberedItem;
+    return copyPrompt(
+      getShellUrlForItem(
+        getItemTarget(item, reviewPathPrefix),
+        getRestoredSize(item, viewportPresets),
+        item.id,
+        source
+      ).href,
+      `link:${item.id}`,
+      'QA link copied'
+    );
+  };
+
   const removeItem = (item: ReviewItem) =>
     removeReviewItem({
       activeAdapterEntry,
@@ -1149,13 +1166,12 @@ export const ReviewShell = ({
         remoteAdapterEntry={remoteAdapterEntry}
         selectedItemId={selectedItemId}
         showSourceSelect={showSourceSelect}
-        sourceRoot={sourceRoot}
-        sourceInspectorOptions={sourceInspector}
         source={source}
         sourceEntries={sourceEntries}
         onChangeItemStatus={changeItemStatus}
         onClearSelectedItem={clearSelectedReviewItem}
         onChangeReviewSource={changeReviewSource}
+        onCopyItemLink={(numberedItem) => void copyItemLink(numberedItem)}
         onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
         onEditItem={setEditingItem}
         onQaFilterChange={setQaFilter}

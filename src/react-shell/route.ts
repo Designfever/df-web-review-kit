@@ -85,6 +85,16 @@ export const updateShellUrlForItem = (
   itemId: string,
   source: ReviewSource
 ) => {
+  const url = getShellUrlForItem(target, size, itemId, source);
+  window.history.replaceState(null, '', `${url.pathname}${url.search}`);
+};
+
+export const getShellUrlForItem = (
+  target: string,
+  size: ReviewShellViewportPreset,
+  itemId: string,
+  source: ReviewSource
+) => {
   const url = new URL(window.location.href);
   url.searchParams.set('target', target);
   url.searchParams.set('w', String(size.width));
@@ -95,7 +105,7 @@ export const updateShellUrlForItem = (
   } else {
     url.searchParams.delete('source');
   }
-  window.history.replaceState(null, '', `${url.pathname}${url.search}`);
+  return url;
 };
 
 export const getInitialItemId = () => {

@@ -63,6 +63,69 @@ function runWithAutoScrollBehavior(
   }
 }
 
+const RESTORE_WAIT_MAX_MS = 2600;
+const RESTORE_STABLE_FRAME_COUNT = 2;
+
+const waitForNextAnimationFrame = (targetWindow: Window) =>
+  new Promise<void>((resolve) => {
+    targetWindow.requestAnimationFrame(() => resolve());
+  });
+
+const getRestoreLayoutSnapshot = (
+  targetDocument: Document,
+  anchorElement?: Element
+) => {
+  const root = targetDocument.documentElement;
+  const body = targetDocument.body;
+  const anchorRect = anchorElement?.getBoundingClientRect();
+
+  return [
+    root.scrollWidth,
+    root.scrollHeight,
+    body?.scrollWidth ?? 0,
+    body?.scrollHeight ?? 0,
+    anchorRect ? Math.round(anchorRect.left) : -1,
+    anchorRect ? Math.round(anchorRect.top) : -1,
+    anchorRect ? Math.round(anchorRect.width) : -1,
+    anchorRect ? Math.round(anchorRect.height) : -1,
+  ].join(':');
+};
+
+const waitForRestoreAnchor = async (
+  targetWindow: Window,
+  targetDocument: Document,
+  item: ReviewItem,
+  isCurrent: () => boolean
+) => {
+  const startedAt = targetWindow.performance.now();
+  let previousSnapshot = '';
+  let stableFrameCount = 0;
+
+  while (
+    isCurrent() &&
+    targetWindow.performance.now() - startedAt < RESTORE_WAIT_MAX_MS
+  ) {
+    const anchorElement = queryReviewItemAnchorElement(targetDocument, item);
+    const snapshot = getRestoreLayoutSnapshot(targetDocument, anchorElement);
+    const canRestore = item.anchor ? Boolean(anchorElement) : true;
+
+    if (snapshot === previousSnapshot) {
+      stableFrameCount += 1;
+    } else {
+      stableFrameCount = 0;
+    }
+
+    if (canRestore && stableFrameCount >= RESTORE_STABLE_FRAME_COUNT) {
+      return anchorElement;
+    }
+
+    previousSnapshot = snapshot;
+    await waitForNextAnimationFrame(targetWindow);
+  }
+
+  return queryReviewItemAnchorElement(targetDocument, item);
+};
+
 export const useReviewItemRestore = ({
   adapter,
   controllerRef,
@@ -94,20 +157,25 @@ export const useReviewItemRestore = ({
   ]);
 
   const applyItemScroll = useCallback(
-    (item: ReviewItem) => {
+    async (item: ReviewItem) => {
       if (selectedItemIdRef.current !== item.id) return;
 
       const targetWindow = iframeRef.current?.contentWindow;
       const targetDocument = iframeRef.current?.contentDocument;
-      if (!targetWindow) return;
+      if (!targetWindow || !targetDocument) return;
 
-      const anchorElement = targetDocument
-        ? queryReviewItemAnchorElement(targetDocument, item)
-        : undefined;
+      const isCurrentRestore = () =>
+        selectedItemIdRef.current === item.id &&
+        iframeRef.current?.contentDocument === targetDocument;
+      const anchorElement = await waitForRestoreAnchor(
+        targetWindow,
+        targetDocument,
+        item,
+        isCurrentRestore
+      );
+      if (!isCurrentRestore()) return;
 
-      runWithAutoScrollBehavior(targetDocument ?? undefined, () => {
-        if (!targetDocument) return;
-
+      runWithAutoScrollBehavior(targetDocument, () => {
         setDocumentScrollInstantly(
           targetWindow,
           targetDocument,
@@ -129,7 +197,7 @@ export const useReviewItemRestore = ({
     const item = pendingRestoreRef.current;
     if (!item) return;
 
-    applyItemScroll(item);
+    void applyItemScroll(item);
     pendingRestoreRef.current = null;
   }, [applyItemScroll, pendingRestoreRef]);
 

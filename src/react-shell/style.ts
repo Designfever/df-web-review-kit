@@ -336,7 +336,7 @@ export function ensureReviewShellStyle() {
 		  .df-review-prompt-block-header button:hover,
 			  .df-review-item-actions button:hover,
 		  .df-review-item-visibility:hover,
-		  .df-review-item-source-open:hover,
+		  .df-review-item-link-copy:hover,
 		  .df-review-item-prompt-copy:hover,
 		  .df-review-item-delete:hover,
 		  .df-review-presets button.is-active,
@@ -1956,8 +1956,8 @@ export function ensureReviewShellStyle() {
 
   .df-review-item-delete,
   .df-review-item-edit,
+  .df-review-item-link-copy,
   .df-review-item-prompt-copy,
-  .df-review-item-source-open,
   .df-review-item-visibility {
     display: inline-grid;
     place-items: center;
@@ -1974,7 +1974,7 @@ export function ensureReviewShellStyle() {
 
   .df-review-item-visibility:hover,
   .df-review-item-edit:hover,
-  .df-review-item-source-open:hover,
+  .df-review-item-link-copy:hover,
   .df-review-item-prompt-copy:hover {
     border-color: rgba(124, 199, 255, 0.34);
     color: var(--df-review-accent);
@@ -1996,14 +1996,15 @@ export function ensureReviewShellStyle() {
     color: var(--df-review-subtle);
   }
 
+  .df-review-item-link-copy.is-copied,
   .df-review-item-prompt-copy.is-copied {
     color: var(--df-review-accent);
   }
 
   .df-review-item-delete svg,
   .df-review-item-edit svg,
+  .df-review-item-link-copy svg,
   .df-review-item-prompt-copy svg,
-  .df-review-item-source-open svg,
   .df-review-item-visibility svg {
     width: 14px;
     height: 14px;
@@ -2022,6 +2023,15 @@ export function ensureReviewShellStyle() {
 			    display: inline-flex;
 			    grid-column: 1;
 			    align-items: center;
+			    min-width: 0;
+		    cursor: auto;
+			  }
+
+			  .df-review-item-prompt-actions {
+			    display: inline-flex;
+			    grid-column: 2;
+			    align-items: center;
+			    justify-self: end;
 			    min-width: 0;
 		    cursor: auto;
 			  }

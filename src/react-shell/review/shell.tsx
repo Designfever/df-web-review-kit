@@ -9,6 +9,9 @@ import {
   GripVertical as GripVerticalIcon,
 } from 'lucide-react';
 import type {
+  DomAnchor,
+  ReviewMarker,
+  ReviewSelection,
   NumberedReviewItem,
   ReviewItem,
   ReviewItemStatus,
@@ -17,9 +20,27 @@ import type {
 } from '../../types';
 
 import type {
+  ReviewAnchorBindingStatus,
   ReviewShellProps,
   ReviewShellWriteMode,
 } from '../types';
+import {
+  getAnchorCandidates,
+  getDomAnchorFromPoint,
+  getElementViewportSelection,
+  getRelativePoint,
+  getRelativeSelection,
+} from '../../core/dom.anchor';
+import {
+  getSelectionCenter,
+  getViewportSize,
+  roundPoint,
+  toPublicSelection,
+  type ReviewEnvironment,
+} from '../../core/geometry';
+import {
+  getReviewItemAnchorResolution,
+} from '../anchor.restore';
 import {
   DEFAULT_INITIAL_REVIEW_PROMPT,
 } from '../constants';
@@ -177,6 +198,9 @@ export const ReviewShell = ({
   const sourceInspectorInteractionRef = useRef(false);
   const [sourceInspectorState, setSourceInspectorState] =
     useState<SourceInspectorState | null>(null);
+  const [rebindAnchorItem, setRebindAnchorItem] = useState<ReviewItem | null>(
+    null
+  );
   const sourceOpenOptions = useMemo<SourceOpenOptions>(
     () => ({
       ...sourceInspector,
@@ -224,6 +248,54 @@ export const ReviewShell = ({
   const isFigmaOverlayAvailable =
     isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
   const [editingItem, setEditingItem] = useState<ReviewItem | null>(null);
+  const getTargetReviewEnvironment =
+    useCallback((): ReviewEnvironment | null => {
+      const frame = iframeRef.current;
+      const targetWindow = frame?.contentWindow;
+      const targetDocument = frame?.contentDocument;
+      if (!frame || !targetWindow || !targetDocument) return null;
+
+      const frameRect = frame.getBoundingClientRect();
+      return {
+        window: targetWindow,
+        document: targetDocument,
+        viewportRect: {
+          left: 0,
+          top: 0,
+          width: targetWindow.innerWidth,
+          height: targetWindow.innerHeight,
+        },
+        overlayRect: {
+          left: frameRect.left,
+          top: frameRect.top,
+          width: frameRect.width,
+          height: frameRect.height,
+        },
+      };
+    }, [iframeRef]);
+  const anchorStatusByItemId = useMemo(() => {
+    const targetDocument = iframeRef.current?.contentDocument;
+    const statuses = new Map<string, ReviewAnchorBindingStatus>();
+
+    activeItems.forEach((item) => {
+      if (!item.anchor) return;
+
+      const resolution = targetDocument
+        ? getReviewItemAnchorResolution(targetDocument, item)
+        : undefined;
+      const candidates = getAnchorCandidates(item.anchor);
+
+      statuses.set(item.id, {
+        candidates,
+        confidence:
+          resolution?.candidate.confidence ?? item.anchor.confidence,
+        selector: resolution?.candidate.selector ?? item.anchor.selector,
+        state: resolution ? 'bound' : 'fallback',
+      });
+    });
+
+    return statuses;
+  }, [activeItems, iframeRef, size.height, size.width, targetSrc]);
   const initialPromptText = initialPrompt.trim();
   const refreshItems = useCallback(
     () =>
@@ -519,6 +591,89 @@ export const ReviewShell = ({
     sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
+
+  const rebindReviewItemAnchor = useCallback(
+    async (item: ReviewItem, point: { x: number; y: number }) => {
+      if (!activeAdapterEntry.canUpdate) {
+        showToast('Current review source does not support rebind');
+        return;
+      }
+
+      const environment = getTargetReviewEnvironment();
+      if (!environment) {
+        showToast('Review target is not ready');
+        return;
+      }
+
+      const anchor = getDomAnchorFromPoint(
+        point,
+        undefined,
+        environment
+      ) as DomAnchor | undefined;
+      const elementSelection = anchor
+        ? getElementViewportSelection(anchor, environment)
+        : undefined;
+
+      if (!anchor || !elementSelection) {
+        showToast('Anchor target not found');
+        return;
+      }
+
+      const markerPoint = getSelectionCenter(elementSelection);
+      const selection: ReviewSelection = {
+        viewport: toPublicSelection(elementSelection),
+        relative: getRelativeSelection(elementSelection, anchor, environment),
+      };
+      const marker: ReviewMarker = {
+        viewport: roundPoint(markerPoint),
+        relative: getRelativePoint(markerPoint, anchor, environment),
+      };
+      const updated = await activeAdapterEntry.adapter.update(item.id, {
+        anchor,
+        marker,
+        scroll: {
+          x: environment.window.scrollX,
+          y: environment.window.scrollY,
+        },
+        selection,
+        viewport: getViewportSize(environment),
+      });
+
+      setRebindAnchorItem(null);
+      await refreshReviewData();
+      restoreReviewItem(updated);
+      showToast('QA anchor rebound');
+    },
+    [
+      activeAdapterEntry,
+      getTargetReviewEnvironment,
+      refreshReviewData,
+      restoreReviewItem,
+      showToast,
+    ]
+  );
+
+  const startRebindAnchor = useCallback(
+    (item: ReviewItem) => {
+      if (!activeAdapterEntry.canUpdate) {
+        showToast('Current review source does not support rebind');
+        return;
+      }
+
+      cancelReviewMode();
+      clearSourceInspector();
+      setRebindAnchorItem(item);
+      restoreReviewItem(item);
+      showToast('Click a target element to rebind anchor');
+    },
+    [
+      activeAdapterEntry.canUpdate,
+      cancelReviewMode,
+      clearSourceInspector,
+      restoreReviewItem,
+      showToast,
+    ]
+  );
 
   const getSourceInspectorRect = useCallback(
     (element: Element): SourceInspectorRect | null => {
@@ -937,6 +1092,48 @@ export const ReviewShell = ({
     return cleanupSourceOpenShortcut;
   }, [cleanupSourceOpenShortcut]);
 
+  useEffect(() => {
+    if (!rebindAnchorItem) return undefined;
+
+    const frameDocument = iframeRef.current?.contentDocument;
+    if (!frameDocument) return undefined;
+
+    const previousCursor = frameDocument.documentElement.style.cursor;
+    frameDocument.documentElement.style.cursor = 'crosshair';
+
+    const handleClick = (event: MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      void rebindReviewItemAnchor(rebindAnchorItem, {
+        x: event.clientX,
+        y: event.clientY,
+      });
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+
+      setRebindAnchorItem(null);
+      showToast('Anchor rebind canceled');
+    };
+
+    frameDocument.addEventListener('click', handleClick, true);
+    frameDocument.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keydown', handleKeyDown, true);
+
+    return () => {
+      frameDocument.documentElement.style.cursor = previousCursor;
+      frameDocument.removeEventListener('click', handleClick, true);
+      frameDocument.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [
+    iframeRef,
+    rebindAnchorItem,
+    rebindReviewItemAnchor,
+    showToast,
+  ]);
+
   const loadTargetFrame = useCallback(() => {
     initReviewKit();
     refreshTargetFigmaConfig();
@@ -1135,6 +1332,7 @@ export const ReviewShell = ({
       <ReviewQaPanel
         activeAdapterEntry={activeAdapterEntry}
         activeItems={activeItems}
+        anchorStatusByItemId={anchorStatusByItemId}
         currentPagePresenceUsers={currentPagePresenceUsers}
         currentPresetScope={currentPresetScope}
         filteredNumberedActiveItems={filteredNumberedActiveItems}
@@ -1158,6 +1356,7 @@ export const ReviewShell = ({
         onChangeReviewSource={changeReviewSource}
         onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
         onEditItem={setEditingItem}
+        onRebindAnchor={startRebindAnchor}
         onQaFilterChange={setQaFilter}
         onRefreshReviewData={refreshReviewData}
         onRemoveItem={removeItem}

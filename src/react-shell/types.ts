@@ -1,4 +1,5 @@
 import type {
+  DomAnchorCandidate,
   ReviewItem,
   ReviewItemScope,
   ReviewItemStatus,
@@ -39,6 +40,13 @@ export type ReviewShellStatusOption = {
 };
 
 export type ReviewShellWriteMode = 'dom' | 'note' | 'area';
+
+export type ReviewAnchorBindingStatus = {
+  candidates: DomAnchorCandidate[];
+  confidence?: number;
+  selector?: string;
+  state: 'bound' | 'fallback' | 'missing';
+};
 
 export type ReviewShellUpdateStatusInput = {
   id: string;

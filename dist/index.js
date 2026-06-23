@@ -9,7 +9,7 @@ import {
   getReviewViewportScope,
   localAdapter,
   normalizeReviewItemStatus
-} from "./chunk-H6CWA36F.js";
+} from "./chunk-FYWANZXL.js";
 
 // src/adapters/supabase.ts
 var DEFAULT_SUPABASE_REVIEW_TABLE = "review_items";

@@ -8,6 +8,7 @@ import type { NormalizedReviewShellAdapter } from '../adapters';
 import { QaItemCard } from './item.card';
 import { QaPanelHeader } from './panel.header';
 import type {
+  ReviewAnchorBindingStatus,
   ReviewPresenceUser,
   ReviewSourceInspectorOptions,
   ReviewQaFilter,
@@ -21,6 +22,7 @@ interface ReviewQaPanelProps {
   currentPresetScope: ReviewShellViewportKind;
   filteredNumberedActiveItems: NumberedReviewItem[];
   getItemPresetScope: (item: ReviewItem) => ReviewShellViewportKind;
+  anchorStatusByItemId: ReadonlyMap<string, ReviewAnchorBindingStatus>;
   hiddenOverlayItemIds: ReadonlySet<string>;
   isListVisible: boolean;
   isRemoteSource: boolean;
@@ -43,6 +45,7 @@ interface ReviewQaPanelProps {
   onChangeReviewSource: (nextSource: ReviewSource) => void;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onEditItem: (item: ReviewItem) => void;
+  onRebindAnchor: (item: ReviewItem) => void;
   onQaFilterChange: (filter: ReviewQaFilter) => void;
   onRefreshReviewData: () => Promise<void>;
   onRemoveItem: (item: ReviewItem) => Promise<void>;
@@ -58,6 +61,7 @@ export const ReviewQaPanel = ({
   currentPresetScope,
   filteredNumberedActiveItems,
   getItemPresetScope,
+  anchorStatusByItemId,
   hiddenOverlayItemIds,
   isListVisible,
   isRemoteSource,
@@ -77,6 +81,7 @@ export const ReviewQaPanel = ({
   onChangeReviewSource,
   onCopyItemPrompt,
   onEditItem,
+  onRebindAnchor,
   onQaFilterChange,
   onRefreshReviewData,
   onRemoveItem,
@@ -134,6 +139,7 @@ export const ReviewQaPanel = ({
                   isOverlayVisible={!hiddenOverlayItemIds.has(item.id)}
                   isRemoteSource={isRemoteSource}
                   numberedItem={numberedItem}
+                  anchorStatus={anchorStatusByItemId.get(item.id)}
                   remoteAdapterEntry={remoteAdapterEntry}
                   copiedPromptKey={copiedPromptKey}
                   selectedItemId={selectedItemId}
@@ -143,6 +149,7 @@ export const ReviewQaPanel = ({
                   onClearSelectedItem={onClearSelectedItem}
                   onCopyItemPrompt={onCopyItemPrompt}
                   onEditItem={onEditItem}
+                  onRebindAnchor={onRebindAnchor}
                   onRemoveItem={onRemoveItem}
                   onRestoreReviewItem={onRestoreReviewItem}
                   onSubmitItem={onSubmitItem}

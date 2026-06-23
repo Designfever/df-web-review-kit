@@ -1,20 +1,16 @@
 import {
-  useMemo,
   useState,
   type CSSProperties,
 } from 'react';
 import type {
   ReviewPresenceUser,
   ReviewShellPage,
-  ReviewShellViewportPreset,
 } from '../types';
 import {
   createSitemapRows,
-  createSitemapViewportColumn,
   type SitemapQaCount,
   type SitemapSortDirection,
   type SitemapSortKey,
-  type SitemapViewportColumn,
 } from './tree';
 
 interface SitemapModalProps {
@@ -24,7 +20,6 @@ interface SitemapModalProps {
   isAllQaVisible: boolean;
   pageQaCounts: ReadonlyMap<string, SitemapQaCount>;
   pagePresenceUsers: ReadonlyMap<string, ReviewPresenceUser[]>;
-  viewportPresets: ReviewShellViewportPreset[];
   getPageTarget: (href: string) => string;
   onClose: () => void;
   onSelectAllQa: () => void;
@@ -58,11 +53,6 @@ const getSortIndicator = (sort: SortState, key: SitemapSortKey) => {
   return sort.direction === 'desc' ? '↓' : '↑';
 };
 
-const getViewportCount = (
-  qaCount: SitemapQaCount,
-  column: SitemapViewportColumn
-) => qaCount.viewport[column.key]?.remaining ?? 0;
-
 export const SitemapModal = ({
   pages,
   activeRoute,
@@ -70,7 +60,6 @@ export const SitemapModal = ({
   isAllQaVisible,
   pageQaCounts,
   pagePresenceUsers,
-  viewportPresets,
   getPageTarget,
   onClose,
   onSelectAllQa,
@@ -80,10 +69,6 @@ export const SitemapModal = ({
     key: 'total',
     direction: 'desc',
   });
-  const viewportColumns = useMemo(
-    () => viewportPresets.map(createSitemapViewportColumn),
-    [viewportPresets]
-  );
   const sitemapRows = createSitemapRows(
     pages,
     activeRoute,
@@ -96,15 +81,10 @@ export const SitemapModal = ({
     }
   );
   const gridStyle = {
-    '--df-review-sitemap-grid-template': `minmax(190px, 1fr) repeat(${viewportColumns.length}, minmax(66px, 76px)) 74px 78px 64px minmax(108px, 160px)`,
+    '--df-review-sitemap-grid-template': 'minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px)',
   } as CSSProperties;
   const sortHeaders: SortHeader[] = [
     { key: 'page', label: 'Page', className: 'is-page' },
-    ...viewportColumns.map((column) => ({
-      key: `viewport:${column.key}` as SitemapSortKey,
-      label: column.label,
-      title: column.title,
-    })),
     { key: 'total', label: 'Total', title: 'Remaining total' },
     { key: 'review', label: 'Review' },
     { key: 'hold', label: 'Hold' },
@@ -186,7 +166,6 @@ export const SitemapModal = ({
                 prefix={row.prefix}
                 qaCount={row.qaCount}
                 users={row.users}
-                viewportColumns={viewportColumns}
               />
             );
 
@@ -228,7 +207,6 @@ export const SitemapModal = ({
               prefix=""
               qaCount={allQaCount}
               users={[]}
-              viewportColumns={viewportColumns}
             />
           </button>
         </div>
@@ -242,24 +220,17 @@ const SitemapRowContent = ({
   prefix,
   qaCount,
   users,
-  viewportColumns,
 }: {
   label: string;
   prefix: string;
   qaCount: SitemapQaCount;
   users: ReviewPresenceUser[];
-  viewportColumns: SitemapViewportColumn[];
 }) => (
   <>
     <span className="df-review-sitemap-path">
       <span className="df-review-sitemap-tree-prefix">{prefix}</span>
       <span className="df-review-sitemap-label">{label}</span>
     </span>
-    {viewportColumns.map((column) => (
-      <span key={column.key} className="df-review-sitemap-cell is-viewport">
-        {getViewportCount(qaCount, column)}
-      </span>
-    ))}
     <span className="df-review-sitemap-cell is-total">
       <strong>{qaCount.remaining}</strong>
     </span>

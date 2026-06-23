@@ -4026,7 +4026,6 @@ var getSortIndicator = (sort, key) => {
   if (sort.key !== key) return "";
   return sort.direction === "desc" ? "\u2193" : "\u2191";
 };
-var getViewportCount = (qaCount, column) => qaCount.viewport[column.key]?.remaining ?? 0;
 var SitemapModal = ({
   pages,
   activeRoute,
@@ -4034,7 +4033,6 @@ var SitemapModal = ({
   isAllQaVisible,
   pageQaCounts,
   pagePresenceUsers,
-  viewportPresets,
   getPageTarget,
   onClose,
   onSelectAllQa,
@@ -4044,10 +4042,6 @@ var SitemapModal = ({
     key: "total",
     direction: "desc"
   });
-  const viewportColumns = (0, import_react4.useMemo)(
-    () => viewportPresets.map(createSitemapViewportColumn),
-    [viewportPresets]
-  );
   const sitemapRows = createSitemapRows(
     pages,
     activeRoute,
@@ -4060,15 +4054,10 @@ var SitemapModal = ({
     }
   );
   const gridStyle = {
-    "--df-review-sitemap-grid-template": `minmax(190px, 1fr) repeat(${viewportColumns.length}, minmax(66px, 76px)) 74px 78px 64px minmax(108px, 160px)`
+    "--df-review-sitemap-grid-template": "minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px)"
   };
   const sortHeaders = [
     { key: "page", label: "Page", className: "is-page" },
-    ...viewportColumns.map((column) => ({
-      key: `viewport:${column.key}`,
-      label: column.label,
-      title: column.title
-    })),
     { key: "total", label: "Total", title: "Remaining total" },
     { key: "review", label: "Review" },
     { key: "hold", label: "Hold" },
@@ -4154,8 +4143,7 @@ var SitemapModal = ({
                   label: row.label,
                   prefix: row.prefix,
                   qaCount: row.qaCount,
-                  users: row.users,
-                  viewportColumns
+                  users: row.users
                 }
               );
               if (!row.isPage) {
@@ -4195,8 +4183,7 @@ var SitemapModal = ({
                     label: "All QA",
                     prefix: "",
                     qaCount: allQaCount,
-                    users: [],
-                    viewportColumns
+                    users: []
                   }
                 )
               }
@@ -4211,14 +4198,12 @@ var SitemapRowContent = ({
   label,
   prefix,
   qaCount,
-  users,
-  viewportColumns
+  users
 }) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(import_jsx_runtime3.Fragment, { children: [
   /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { className: "df-review-sitemap-path", children: [
     /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-tree-prefix", children: prefix }),
     /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-label", children: label })
   ] }),
-  viewportColumns.map((column) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-viewport", children: getViewportCount(qaCount, column) }, column.key)),
   /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-total", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { children: qaCount.remaining }) }),
   /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-review", children: qaCount.status.review }),
   /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-hold", children: qaCount.status.hold }),
@@ -11999,7 +11984,6 @@ var ReviewShell = ({
             isAllQaVisible,
             pageQaCounts,
             pagePresenceUsers,
-            viewportPresets,
             getPageTarget: (href) => normalizeTarget(href, reviewPathPrefix),
             onClose: () => setIsSitemapOpen(false),
             onSelectAllQa: selectAllQa,

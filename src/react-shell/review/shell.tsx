@@ -1129,7 +1129,6 @@ export const ReviewShell = ({
           isAllQaVisible={isAllQaVisible}
           pageQaCounts={pageQaCounts}
           pagePresenceUsers={pagePresenceUsers}
-          viewportPresets={viewportPresets}
           getPageTarget={(href) => normalizeTarget(href, reviewPathPrefix)}
           onClose={() => setIsSitemapOpen(false)}
           onSelectAllQa={selectAllQa}

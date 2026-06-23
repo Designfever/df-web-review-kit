@@ -2030,6 +2030,11 @@ export function ensureReviewShellStyle() {
   .df-review-source-select,
   .df-review-status-filter-select,
   .df-review-item-status-select,
+  .df-review-item-status-select.is-status-todo,
+  .df-review-item-status-select.is-status-doing,
+  .df-review-item-status-select.is-status-review,
+  .df-review-item-status-select.is-status-hold,
+  .df-review-item-status-select.is-status-done,
   .df-review-sitemap-controls select {
     --df-review-select-padding-x: 12px;
     --df-review-select-chevron-size: 14px;

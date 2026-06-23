@@ -4183,14 +4183,9 @@ var SitemapRowContent = ({
       qaCount.total
     ] }) : /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { children: statusCount }) }),
     /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { className: "df-review-sitemap-cell is-source", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { children: [
-        "L ",
-        qaCount.local
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { children: [
-        "R ",
-        qaCount.remote
-      ] })
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: qaCount.local }),
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { "aria-hidden": "true", children: "|" }),
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: qaCount.remote })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
       "span",

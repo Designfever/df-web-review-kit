@@ -246,8 +246,9 @@ const SitemapRowContent = ({
         )}
       </span>
       <span className="df-review-sitemap-cell is-source">
-        <span>L {qaCount.local}</span>
-        <span>R {qaCount.remote}</span>
+        <span>{qaCount.local}</span>
+        <span aria-hidden="true">|</span>
+        <span>{qaCount.remote}</span>
       </span>
       <span className="df-review-sitemap-cell is-online">
         {users.length > 0 ? (

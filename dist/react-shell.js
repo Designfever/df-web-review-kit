@@ -4159,14 +4159,9 @@ var SitemapRowContent = ({
       qaCount.total
     ] }) : /* @__PURE__ */ jsx3("strong", { children: statusCount }) }),
     /* @__PURE__ */ jsxs3("span", { className: "df-review-sitemap-cell is-source", children: [
-      /* @__PURE__ */ jsxs3("span", { children: [
-        "L ",
-        qaCount.local
-      ] }),
-      /* @__PURE__ */ jsxs3("span", { children: [
-        "R ",
-        qaCount.remote
-      ] })
+      /* @__PURE__ */ jsx3("span", { children: qaCount.local }),
+      /* @__PURE__ */ jsx3("span", { "aria-hidden": "true", children: "|" }),
+      /* @__PURE__ */ jsx3("span", { children: qaCount.remote })
     ] }),
     /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ jsx3(
       "span",

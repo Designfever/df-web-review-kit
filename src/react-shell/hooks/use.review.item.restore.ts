@@ -158,11 +158,11 @@ export const useReviewItemRestore = ({
 
   const applyItemScroll = useCallback(
     async (item: ReviewItem) => {
-      if (selectedItemIdRef.current !== item.id) return;
+      if (selectedItemIdRef.current !== item.id) return false;
 
       const targetWindow = iframeRef.current?.contentWindow;
       const targetDocument = iframeRef.current?.contentDocument;
-      if (!targetWindow || !targetDocument) return;
+      if (!targetWindow || !targetDocument) return false;
 
       const isCurrentRestore = () =>
         selectedItemIdRef.current === item.id &&
@@ -173,7 +173,7 @@ export const useReviewItemRestore = ({
         item,
         isCurrentRestore
       );
-      if (!isCurrentRestore()) return;
+      if (!isCurrentRestore()) return false;
 
       runWithAutoScrollBehavior(targetDocument, () => {
         setDocumentScrollInstantly(
@@ -189,6 +189,7 @@ export const useReviewItemRestore = ({
       });
       onSyncTargetViewport();
       controllerRef.current?.highlightItem(item.id);
+      return true;
     },
     [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
   );
@@ -197,8 +198,11 @@ export const useReviewItemRestore = ({
     const item = pendingRestoreRef.current;
     if (!item) return;
 
-    void applyItemScroll(item);
-    pendingRestoreRef.current = null;
+    void applyItemScroll(item).then((didApply) => {
+      if (didApply && pendingRestoreRef.current?.id === item.id) {
+        pendingRestoreRef.current = null;
+      }
+    });
   }, [applyItemScroll, pendingRestoreRef]);
 
   const restoreReviewItem = useCallback(

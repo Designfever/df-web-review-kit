@@ -137,8 +137,7 @@ export const useReviewKitLifecycle = ({
     controllerRef.current.setHiddenItemIds(hiddenOverlayItemIdListRef.current);
     onModeChange(controllerRef.current.getMode());
     void onItemsRefresh();
-    void onRestoreInitialItem();
-    onApplyPendingRestore();
+    void onRestoreInitialItem().then(onApplyPendingRestore);
     onRefreshTargetOverlayState();
     setTargetScrollbarHidden(
       targetDocument,

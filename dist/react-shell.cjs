@@ -5499,10 +5499,10 @@ var useReviewItemRestore = ({
   ]);
   const applyItemScroll = (0, import_react5.useCallback)(
     async (item) => {
-      if (selectedItemIdRef.current !== item.id) return;
+      if (selectedItemIdRef.current !== item.id) return false;
       const targetWindow = iframeRef.current?.contentWindow;
       const targetDocument = iframeRef.current?.contentDocument;
-      if (!targetWindow || !targetDocument) return;
+      if (!targetWindow || !targetDocument) return false;
       const isCurrentRestore = () => selectedItemIdRef.current === item.id && iframeRef.current?.contentDocument === targetDocument;
       const anchorElement = await waitForRestoreAnchor(
         targetWindow,
@@ -5510,7 +5510,7 @@ var useReviewItemRestore = ({
         item,
         isCurrentRestore
       );
-      if (!isCurrentRestore()) return;
+      if (!isCurrentRestore()) return false;
       runWithAutoScrollBehavior(targetDocument, () => {
         setDocumentScrollInstantly(
           targetWindow,
@@ -5525,14 +5525,18 @@ var useReviewItemRestore = ({
       });
       onSyncTargetViewport();
       controllerRef.current?.highlightItem(item.id);
+      return true;
     },
     [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
   );
   const applyPendingRestore = (0, import_react5.useCallback)(() => {
     const item = pendingRestoreRef.current;
     if (!item) return;
-    void applyItemScroll(item);
-    pendingRestoreRef.current = null;
+    void applyItemScroll(item).then((didApply) => {
+      if (didApply && pendingRestoreRef.current?.id === item.id) {
+        pendingRestoreRef.current = null;
+      }
+    });
   }, [applyItemScroll, pendingRestoreRef]);
   const restoreReviewItem = (0, import_react5.useCallback)(
     (item) => {
@@ -8953,8 +8957,7 @@ var useReviewKitLifecycle = ({
     controllerRef.current.setHiddenItemIds(hiddenOverlayItemIdListRef.current);
     onModeChange(controllerRef.current.getMode());
     void onItemsRefresh();
-    void onRestoreInitialItem();
-    onApplyPendingRestore();
+    void onRestoreInitialItem().then(onApplyPendingRestore);
     onRefreshTargetOverlayState();
     setTargetScrollbarHidden(
       targetDocument,

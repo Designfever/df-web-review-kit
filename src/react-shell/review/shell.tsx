@@ -95,11 +95,14 @@ type SourceInspectorState = {
   candidates: SourceInspectorCandidate[];
   isPinned: boolean;
   panelLeft: number;
+  panelMaxWidth: number;
+  panelRight: number | null;
   panelTop: number;
   rect: SourceInspectorRect;
 };
 
-const SOURCE_PANEL_WIDTH = 360;
+const SOURCE_PANEL_MAX_WIDTH = 680;
+const SOURCE_PANEL_MIN_WIDTH = 300;
 const SOURCE_PANEL_MAX_HEIGHT = 260;
 
 export const ReviewShell = ({
@@ -550,17 +553,31 @@ export const ReviewShell = ({
       const margin = 12;
       const gap = 10;
       const preferredLeft = rect.left + rect.width + gap;
-      const fallbackLeft = rect.left - SOURCE_PANEL_WIDTH - gap;
-      const left =
-        preferredLeft + SOURCE_PANEL_WIDTH + margin <= window.innerWidth
-          ? preferredLeft
-          : Math.max(margin, fallbackLeft);
+      const rightSpace = window.innerWidth - preferredLeft - margin;
+      const leftSpace = rect.left - gap - margin;
+      const canOpenRight = rightSpace >= SOURCE_PANEL_MIN_WIDTH;
+      const canOpenLeft = leftSpace >= SOURCE_PANEL_MIN_WIDTH;
+      const left = canOpenRight || !canOpenLeft ? preferredLeft : margin;
+      const right = canOpenRight || !canOpenLeft
+        ? null
+        : Math.max(margin, window.innerWidth - (rect.left - gap));
+      const maxWidth = Math.min(
+        SOURCE_PANEL_MAX_WIDTH,
+        Math.max(
+          SOURCE_PANEL_MIN_WIDTH,
+          canOpenRight
+            ? rightSpace
+            : canOpenLeft
+              ? leftSpace
+              : window.innerWidth - margin * 2
+        )
+      );
       const top = Math.min(
         Math.max(margin, rect.top),
         Math.max(margin, window.innerHeight - SOURCE_PANEL_MAX_HEIGHT - margin)
       );
 
-      return { left, top };
+      return { left, maxWidth, right, top };
     },
     []
   );
@@ -584,11 +601,14 @@ export const ReviewShell = ({
         return [];
       }
 
-      const { left, top } = getSourceInspectorPanelPosition(rect);
+      const { left, maxWidth, right, top } =
+        getSourceInspectorPanelPosition(rect);
       setSourceInspectorState({
         candidates,
         isPinned,
         panelLeft: left,
+        panelMaxWidth: maxWidth,
+        panelRight: right,
         panelTop: top,
         rect,
       });
@@ -617,6 +637,8 @@ export const ReviewShell = ({
         candidates: [],
         isPinned: false,
         panelLeft: 0,
+        panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
+        panelRight: null,
         panelTop: 0,
         rect,
       });
@@ -1186,7 +1208,15 @@ export const ReviewShell = ({
                 sourceInspectorState.isPinned ? ' is-pinned' : ''
               }`}
               style={{
-                left: `${sourceInspectorState.panelLeft}px`,
+                left:
+                  sourceInspectorState.panelRight === null
+                    ? `${sourceInspectorState.panelLeft}px`
+                    : undefined,
+                maxWidth: `${sourceInspectorState.panelMaxWidth}px`,
+                right:
+                  sourceInspectorState.panelRight === null
+                    ? undefined
+                    : `${sourceInspectorState.panelRight}px`,
                 top: `${sourceInspectorState.panelTop}px`,
               }}
               onPointerDown={() => {

@@ -2234,16 +2234,24 @@ export function ensureReviewShellStyle() {
   }
 
   .df-review-source-popover {
+    --df-review-source-popover-line: rgba(226, 233, 245, 0.16);
+    --df-review-source-popover-text: #edf3fb;
+    --df-review-source-popover-muted: rgba(237, 243, 251, 0.68);
+    --df-review-source-popover-subtle: rgba(237, 243, 251, 0.5);
+    --df-review-source-popover-hover: rgba(124, 199, 255, 0.14);
     position: fixed;
     z-index: 890;
     display: grid;
-    width: 360px;
+    width: max-content;
+    min-width: min(300px, calc(100vw - 24px));
+    max-width: min(680px, calc(100vw - 24px));
     max-height: 260px;
     overflow: hidden;
-    border: 1px solid var(--df-review-line);
+    border: 1px solid var(--df-review-source-popover-line);
     border-radius: var(--df-review-radius-md);
     padding: 8px 6px 6px;
-    color: var(--df-review-text);
+    color: var(--df-review-source-popover-text);
+    color-scheme: dark;
     background: rgba(19, 24, 33, 0.96);
     box-shadow: var(--df-review-shadow-panel);
     backdrop-filter: blur(10px);
@@ -2264,7 +2272,7 @@ export function ensureReviewShellStyle() {
     border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
     padding: 0;
-    color: var(--df-review-subtle);
+    color: var(--df-review-source-popover-subtle);
     background: transparent;
     font-size: 16px;
     font-weight: 800;
@@ -2272,9 +2280,9 @@ export function ensureReviewShellStyle() {
   }
 
   .df-review-source-popover-close button:hover {
-    border-color: var(--df-review-line);
-    color: var(--df-review-text);
-    background: var(--df-review-control);
+    border-color: var(--df-review-source-popover-line);
+    color: var(--df-review-source-popover-text);
+    background: var(--df-review-source-popover-hover);
   }
 
   .df-review-source-candidate-list {
@@ -2291,13 +2299,13 @@ export function ensureReviewShellStyle() {
     border: 0;
     border-radius: var(--df-review-radius-sm);
     padding: 6px 30px 6px 8px;
-    color: var(--df-review-text);
+    color: var(--df-review-source-popover-text);
     background: transparent;
     text-align: left;
   }
 
   .df-review-source-candidate:hover {
-    background: var(--df-review-accent-soft);
+    background: var(--df-review-source-popover-hover);
   }
 
   .df-review-source-candidate-main {
@@ -2320,13 +2328,13 @@ export function ensureReviewShellStyle() {
   }
 
   .df-review-source-candidate-main span {
-    color: var(--df-review-muted);
+    color: var(--df-review-source-popover-muted);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
   }
 
   .df-review-source-candidate-main small {
-    color: var(--df-review-subtle);
+    color: var(--df-review-source-popover-subtle);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
   }

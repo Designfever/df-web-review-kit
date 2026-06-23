@@ -2245,16 +2245,24 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-source-popover {
+    --df-review-source-popover-line: rgba(226, 233, 245, 0.16);
+    --df-review-source-popover-text: #edf3fb;
+    --df-review-source-popover-muted: rgba(237, 243, 251, 0.68);
+    --df-review-source-popover-subtle: rgba(237, 243, 251, 0.5);
+    --df-review-source-popover-hover: rgba(124, 199, 255, 0.14);
     position: fixed;
     z-index: 890;
     display: grid;
-    width: 360px;
+    width: max-content;
+    min-width: min(300px, calc(100vw - 24px));
+    max-width: min(680px, calc(100vw - 24px));
     max-height: 260px;
     overflow: hidden;
-    border: 1px solid var(--df-review-line);
+    border: 1px solid var(--df-review-source-popover-line);
     border-radius: var(--df-review-radius-md);
     padding: 8px 6px 6px;
-    color: var(--df-review-text);
+    color: var(--df-review-source-popover-text);
+    color-scheme: dark;
     background: rgba(19, 24, 33, 0.96);
     box-shadow: var(--df-review-shadow-panel);
     backdrop-filter: blur(10px);
@@ -2275,7 +2283,7 @@ function ensureReviewShellStyle() {
     border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
     padding: 0;
-    color: var(--df-review-subtle);
+    color: var(--df-review-source-popover-subtle);
     background: transparent;
     font-size: 16px;
     font-weight: 800;
@@ -2283,9 +2291,9 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-source-popover-close button:hover {
-    border-color: var(--df-review-line);
-    color: var(--df-review-text);
-    background: var(--df-review-control);
+    border-color: var(--df-review-source-popover-line);
+    color: var(--df-review-source-popover-text);
+    background: var(--df-review-source-popover-hover);
   }
 
   .df-review-source-candidate-list {
@@ -2302,13 +2310,13 @@ function ensureReviewShellStyle() {
     border: 0;
     border-radius: var(--df-review-radius-sm);
     padding: 6px 30px 6px 8px;
-    color: var(--df-review-text);
+    color: var(--df-review-source-popover-text);
     background: transparent;
     text-align: left;
   }
 
   .df-review-source-candidate:hover {
-    background: var(--df-review-accent-soft);
+    background: var(--df-review-source-popover-hover);
   }
 
   .df-review-source-candidate-main {
@@ -2331,13 +2339,13 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-source-candidate-main span {
-    color: var(--df-review-muted);
+    color: var(--df-review-source-popover-muted);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
   }
 
   .df-review-source-candidate-main small {
-    color: var(--df-review-subtle);
+    color: var(--df-review-source-popover-subtle);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
   }
@@ -7503,7 +7511,8 @@ var getReviewModeWriteMode = (mode) => {
   if (mode === "note" || mode === "area") return mode;
   return null;
 };
-var SOURCE_PANEL_WIDTH = 360;
+var SOURCE_PANEL_MAX_WIDTH = 680;
+var SOURCE_PANEL_MIN_WIDTH = 300;
 var SOURCE_PANEL_MAX_HEIGHT = 260;
 var ReviewShell = ({
   projectId,
@@ -7913,13 +7922,24 @@ var ReviewShell = ({
       const margin = 12;
       const gap = 10;
       const preferredLeft = rect.left + rect.width + gap;
-      const fallbackLeft = rect.left - SOURCE_PANEL_WIDTH - gap;
-      const left = preferredLeft + SOURCE_PANEL_WIDTH + margin <= window.innerWidth ? preferredLeft : Math.max(margin, fallbackLeft);
+      const rightSpace = window.innerWidth - preferredLeft - margin;
+      const leftSpace = rect.left - gap - margin;
+      const canOpenRight = rightSpace >= SOURCE_PANEL_MIN_WIDTH;
+      const canOpenLeft = leftSpace >= SOURCE_PANEL_MIN_WIDTH;
+      const left = canOpenRight || !canOpenLeft ? preferredLeft : margin;
+      const right = canOpenRight || !canOpenLeft ? null : Math.max(margin, window.innerWidth - (rect.left - gap));
+      const maxWidth = Math.min(
+        SOURCE_PANEL_MAX_WIDTH,
+        Math.max(
+          SOURCE_PANEL_MIN_WIDTH,
+          canOpenRight ? rightSpace : canOpenLeft ? leftSpace : window.innerWidth - margin * 2
+        )
+      );
       const top = Math.min(
         Math.max(margin, rect.top),
         Math.max(margin, window.innerHeight - SOURCE_PANEL_MAX_HEIGHT - margin)
       );
-      return { left, top };
+      return { left, maxWidth, right, top };
     },
     []
   );
@@ -7938,11 +7958,13 @@ var ReviewShell = ({
         setSourceInspectorState(null);
         return [];
       }
-      const { left, top } = getSourceInspectorPanelPosition(rect);
+      const { left, maxWidth, right, top } = getSourceInspectorPanelPosition(rect);
       setSourceInspectorState({
         candidates,
         isPinned,
         panelLeft: left,
+        panelMaxWidth: maxWidth,
+        panelRight: right,
         panelTop: top,
         rect
       });
@@ -7966,6 +7988,8 @@ var ReviewShell = ({
         candidates: [],
         isPinned: false,
         panelLeft: 0,
+        panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
+        panelRight: null,
         panelTop: 0,
         rect
       });
@@ -8457,7 +8481,9 @@ var ReviewShell = ({
             {
               className: `df-review-source-popover${sourceInspectorState.isPinned ? " is-pinned" : ""}`,
               style: {
-                left: `${sourceInspectorState.panelLeft}px`,
+                left: sourceInspectorState.panelRight === null ? `${sourceInspectorState.panelLeft}px` : void 0,
+                maxWidth: `${sourceInspectorState.panelMaxWidth}px`,
+                right: sourceInspectorState.panelRight === null ? void 0 : `${sourceInspectorState.panelRight}px`,
                 top: `${sourceInspectorState.panelTop}px`
               },
               onPointerDown: () => {

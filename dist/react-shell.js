@@ -1,18 +1,9 @@
 import {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   createWebReviewKit,
-  getAnchorCandidates,
-  getDomAnchorFromPoint,
-  getElementViewportSelection,
   getNumberedReviewItems,
-  getRelativePoint,
-  getRelativeSelection,
-  getSelectionCenter,
-  getViewportSize,
-  normalizeReviewItemStatus,
-  roundPoint,
-  toPublicSelection
-} from "./chunk-FYWANZXL.js";
+  normalizeReviewItemStatus
+} from "./chunk-H6CWA36F.js";
 
 // src/react-shell.tsx
 import React2 from "react";
@@ -1804,106 +1795,6 @@ function ensureReviewShellStyle() {
     overflow-wrap: anywhere;
   }
 
-  .df-review-item-anchor {
-    display: grid;
-    gap: 5px;
-    min-width: 0;
-    border-top: 1px solid var(--df-review-line-soft);
-    padding-top: 7px;
-    color: var(--df-review-muted);
-    cursor: auto;
-  }
-
-  .df-review-item-anchor.is-bound {
-    color: var(--df-review-text);
-  }
-
-  .df-review-item-anchor.is-fallback {
-    color: var(--df-review-note);
-  }
-
-  .df-review-item-anchor-head {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-  }
-
-  .df-review-item-anchor-head strong,
-  .df-review-item-anchor-head span {
-    font-size: var(--df-review-font-size-2xs);
-    line-height: 1.2;
-  }
-
-  .df-review-item-anchor-head strong {
-    font-weight: 900;
-  }
-
-  .df-review-item-anchor-head span {
-    color: var(--df-review-subtle);
-    font-family: var(--df-review-font-mono);
-  }
-
-  .df-review-item-anchor-head button {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    min-height: 22px;
-    margin-left: auto;
-    border: 1px solid var(--df-review-line);
-    border-radius: var(--df-review-radius-sm);
-    padding: 0 7px;
-    color: var(--df-review-muted);
-    background: var(--df-review-control);
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 850;
-  }
-
-  .df-review-item-anchor-head button:hover {
-    border-color: var(--df-review-accent);
-    color: var(--df-review-text);
-    background: var(--df-review-control-hover);
-  }
-
-  .df-review-item-anchor-head svg {
-    width: 12px;
-    height: 12px;
-  }
-
-  .df-review-item-anchor > code,
-  .df-review-item-anchor-candidates code {
-    min-width: 0;
-    overflow: hidden;
-    color: var(--df-review-subtle);
-    font-family: var(--df-review-font-mono);
-    font-size: var(--df-review-font-size-2xs);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .df-review-item-anchor-candidates {
-    display: grid;
-    gap: 3px;
-    min-width: 0;
-  }
-
-  .df-review-item-anchor-candidates span {
-    display: grid;
-    grid-template-columns: 74px minmax(0, 1fr);
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-  }
-
-  .df-review-item-anchor-candidates b {
-    overflow: hidden;
-    color: var(--df-review-subtle);
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 800;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .df-review-item-badges {
     display: flex;
     align-items: center;
@@ -3091,148 +2982,6 @@ var __iconNode25 = [
 ];
 var X = createLucideIcon("x", __iconNode25);
 
-// src/react-shell/anchor.restore.ts
-var isAnchorRestorableReviewItem = (item) => item.scope === "dom" || item.kind === "note" && Boolean(item.anchor && item.selection);
-var queryReviewItemAnchorElement = (targetDocument, item) => {
-  return getReviewItemAnchorResolution(targetDocument, item)?.element;
-};
-var getReviewItemAnchorResolution = (targetDocument, item) => {
-  const anchor = item.anchor;
-  if (!anchor || !isAnchorRestorableReviewItem(item)) return void 0;
-  const expectedRect = getReviewItemExpectedDocumentRect(item);
-  const candidates = [anchor, ...anchor.candidates ?? []].filter(
-    (candidate) => Boolean(candidate.selector)
-  );
-  const matches = [];
-  candidates.forEach((candidate, index) => {
-    try {
-      targetDocument.querySelectorAll(candidate.selector).forEach((element) => {
-        if (!isScrollableReviewAnchorElement(element)) return;
-        matches.push({
-          candidate,
-          element,
-          score: getReviewAnchorMatchScore(
-            element,
-            expectedRect,
-            candidate.textFingerprint ?? anchor.textFingerprint,
-            index
-          )
-        });
-      });
-    } catch {
-      return;
-    }
-  });
-  return matches.sort((a, b) => a.score - b.score)[0];
-};
-var getReviewItemRestoreScrollPosition = (targetWindow, targetDocument, item, anchorElement) => {
-  if (anchorElement) {
-    const rect = anchorElement.getBoundingClientRect();
-    return clampDocumentScrollPosition(targetDocument, {
-      left: targetWindow.scrollX + rect.left - Math.max(0, (targetWindow.innerWidth - rect.width) / 2),
-      top: targetWindow.scrollY + rect.top - Math.max(0, (targetWindow.innerHeight - rect.height) / 2)
-    });
-  }
-  return clampDocumentScrollPosition(targetDocument, {
-    left: item.scroll?.x ?? 0,
-    top: item.scroll?.y ?? 0
-  });
-};
-var setDocumentScrollInstantly = (targetWindow, targetDocument, position) => {
-  const scrollElement = targetDocument.scrollingElement;
-  if (scrollElement) {
-    scrollElement.scrollLeft = position.left;
-    scrollElement.scrollTop = position.top;
-    return;
-  }
-  targetWindow.scrollTo(position.left, position.top);
-};
-var getReviewItemExpectedDocumentRect = (item) => {
-  const scroll = item.scroll ?? { x: 0, y: 0 };
-  const selection = item.selection?.viewport;
-  if (selection && typeof selection.x === "number" && typeof selection.y === "number" && typeof selection.width === "number" && typeof selection.height === "number") {
-    return {
-      left: scroll.x + selection.x,
-      top: scroll.y + selection.y,
-      width: selection.width,
-      height: selection.height
-    };
-  }
-  const marker = item.marker?.viewport;
-  if (marker && typeof marker.x === "number" && typeof marker.y === "number") {
-    return {
-      left: scroll.x + marker.x,
-      top: scroll.y + marker.y,
-      width: 1,
-      height: 1
-    };
-  }
-  return void 0;
-};
-var getReviewAnchorMatchScore = (element, expectedRect, textFingerprint, candidateIndex) => {
-  const rect = getElementDocumentRect(element);
-  let score = candidateIndex * 25;
-  if (expectedRect) {
-    score += Math.abs(rect.top - expectedRect.top);
-    score += Math.abs(rect.left - expectedRect.left) * 0.25;
-    score += Math.abs(rect.width - expectedRect.width) * 0.1;
-    score += Math.abs(rect.height - expectedRect.height) * 0.1;
-  }
-  if (textFingerprint) {
-    score += (1 - getReviewTextFingerprintScore(textFingerprint, element)) * 100;
-  }
-  return score;
-};
-var getElementDocumentRect = (element) => {
-  const rect = element.getBoundingClientRect();
-  const view = element.ownerDocument.defaultView;
-  return {
-    left: rect.left + (view?.scrollX ?? 0),
-    top: rect.top + (view?.scrollY ?? 0),
-    width: rect.width,
-    height: rect.height
-  };
-};
-var clampDocumentScrollPosition = (targetDocument, position) => {
-  const scrollElement = targetDocument.scrollingElement;
-  const view = targetDocument.defaultView;
-  const maxLeft = Math.max(
-    0,
-    (scrollElement?.scrollWidth ?? 0) - (view?.innerWidth ?? 0)
-  );
-  const maxTop = Math.max(
-    0,
-    (scrollElement?.scrollHeight ?? 0) - (view?.innerHeight ?? 0)
-  );
-  return {
-    left: Math.min(Math.max(0, Math.round(position.left)), maxLeft),
-    top: Math.min(Math.max(0, Math.round(position.top)), maxTop)
-  };
-};
-var getReviewTextFingerprintScore = (expected, element) => {
-  const actual = element.textContent?.replace(/\s+/g, " ").trim();
-  if (!actual) return 0.5;
-  if (expected === actual) return 1;
-  if (actual.includes(expected) || expected.includes(actual)) return 0.82;
-  const expectedTokens = getReviewFingerprintTokens(expected);
-  const actualTokens = new Set(getReviewFingerprintTokens(actual));
-  if (expectedTokens.length === 0 || actualTokens.size === 0) return 0.5;
-  const matches = expectedTokens.filter((token) => actualTokens.has(token));
-  return Math.min(Math.max(matches.length / expectedTokens.length, 0.25), 0.76);
-};
-var getReviewFingerprintTokens = (value) => value.toLowerCase().split(/[\s/|,.:;()[\]{}"'`~!?<>]+/).map((token) => token.trim()).filter((token) => token.length > 1);
-var isScrollableReviewAnchorElement = (element) => {
-  const id = element.id.trim().toLowerCase();
-  if (element === element.ownerDocument.body || element === element.ownerDocument.documentElement || ["app", "main", "page", "root", "__next", "__nuxt"].includes(id)) {
-    return false;
-  }
-  const rect = element.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return false;
-  const viewportHeight = element.ownerDocument.documentElement.clientHeight;
-  const scrollHeight = element.ownerDocument.documentElement.scrollHeight;
-  return !(scrollHeight > viewportHeight * 1.5 && rect.height > viewportHeight * 3);
-};
-
 // src/react-shell/constants.ts
 var REVIEW_QA_FILTERS = [
   { key: "all", label: "All" },
@@ -4355,6 +4104,144 @@ var QaItemStatusActions = ({
   );
 };
 
+// src/react-shell/anchor.restore.ts
+var isAnchorRestorableReviewItem = (item) => item.scope === "dom" || item.kind === "note" && Boolean(item.anchor && item.selection);
+var queryReviewItemAnchorElement = (targetDocument, item) => {
+  const anchor = item.anchor;
+  if (!anchor || !isAnchorRestorableReviewItem(item)) return void 0;
+  const expectedRect = getReviewItemExpectedDocumentRect(item);
+  const candidates = [anchor, ...anchor.candidates ?? []].filter(
+    (candidate) => Boolean(candidate.selector)
+  );
+  const matches = [];
+  candidates.forEach((candidate, index) => {
+    try {
+      targetDocument.querySelectorAll(candidate.selector).forEach((element) => {
+        if (!isScrollableReviewAnchorElement(element)) return;
+        matches.push({
+          element,
+          score: getReviewAnchorMatchScore(
+            element,
+            expectedRect,
+            candidate.textFingerprint ?? anchor.textFingerprint,
+            index
+          )
+        });
+      });
+    } catch {
+      return;
+    }
+  });
+  return matches.sort((a, b) => a.score - b.score)[0]?.element;
+};
+var getReviewItemRestoreScrollPosition = (targetWindow, targetDocument, item, anchorElement) => {
+  if (anchorElement) {
+    const rect = anchorElement.getBoundingClientRect();
+    return clampDocumentScrollPosition(targetDocument, {
+      left: targetWindow.scrollX + rect.left - Math.max(0, (targetWindow.innerWidth - rect.width) / 2),
+      top: targetWindow.scrollY + rect.top - Math.max(0, (targetWindow.innerHeight - rect.height) / 2)
+    });
+  }
+  return clampDocumentScrollPosition(targetDocument, {
+    left: item.scroll?.x ?? 0,
+    top: item.scroll?.y ?? 0
+  });
+};
+var setDocumentScrollInstantly = (targetWindow, targetDocument, position) => {
+  const scrollElement = targetDocument.scrollingElement;
+  if (scrollElement) {
+    scrollElement.scrollLeft = position.left;
+    scrollElement.scrollTop = position.top;
+    return;
+  }
+  targetWindow.scrollTo(position.left, position.top);
+};
+var getReviewItemExpectedDocumentRect = (item) => {
+  const scroll = item.scroll ?? { x: 0, y: 0 };
+  const selection = item.selection?.viewport;
+  if (selection && typeof selection.x === "number" && typeof selection.y === "number" && typeof selection.width === "number" && typeof selection.height === "number") {
+    return {
+      left: scroll.x + selection.x,
+      top: scroll.y + selection.y,
+      width: selection.width,
+      height: selection.height
+    };
+  }
+  const marker = item.marker?.viewport;
+  if (marker && typeof marker.x === "number" && typeof marker.y === "number") {
+    return {
+      left: scroll.x + marker.x,
+      top: scroll.y + marker.y,
+      width: 1,
+      height: 1
+    };
+  }
+  return void 0;
+};
+var getReviewAnchorMatchScore = (element, expectedRect, textFingerprint, candidateIndex) => {
+  const rect = getElementDocumentRect(element);
+  let score = candidateIndex * 25;
+  if (expectedRect) {
+    score += Math.abs(rect.top - expectedRect.top);
+    score += Math.abs(rect.left - expectedRect.left) * 0.25;
+    score += Math.abs(rect.width - expectedRect.width) * 0.1;
+    score += Math.abs(rect.height - expectedRect.height) * 0.1;
+  }
+  if (textFingerprint) {
+    score += (1 - getReviewTextFingerprintScore(textFingerprint, element)) * 100;
+  }
+  return score;
+};
+var getElementDocumentRect = (element) => {
+  const rect = element.getBoundingClientRect();
+  const view = element.ownerDocument.defaultView;
+  return {
+    left: rect.left + (view?.scrollX ?? 0),
+    top: rect.top + (view?.scrollY ?? 0),
+    width: rect.width,
+    height: rect.height
+  };
+};
+var clampDocumentScrollPosition = (targetDocument, position) => {
+  const scrollElement = targetDocument.scrollingElement;
+  const view = targetDocument.defaultView;
+  const maxLeft = Math.max(
+    0,
+    (scrollElement?.scrollWidth ?? 0) - (view?.innerWidth ?? 0)
+  );
+  const maxTop = Math.max(
+    0,
+    (scrollElement?.scrollHeight ?? 0) - (view?.innerHeight ?? 0)
+  );
+  return {
+    left: Math.min(Math.max(0, Math.round(position.left)), maxLeft),
+    top: Math.min(Math.max(0, Math.round(position.top)), maxTop)
+  };
+};
+var getReviewTextFingerprintScore = (expected, element) => {
+  const actual = element.textContent?.replace(/\s+/g, " ").trim();
+  if (!actual) return 0.5;
+  if (expected === actual) return 1;
+  if (actual.includes(expected) || expected.includes(actual)) return 0.82;
+  const expectedTokens = getReviewFingerprintTokens(expected);
+  const actualTokens = new Set(getReviewFingerprintTokens(actual));
+  if (expectedTokens.length === 0 || actualTokens.size === 0) return 0.5;
+  const matches = expectedTokens.filter((token) => actualTokens.has(token));
+  return Math.min(Math.max(matches.length / expectedTokens.length, 0.25), 0.76);
+};
+var getReviewFingerprintTokens = (value) => value.toLowerCase().split(/[\s/|,.:;()[\]{}"'`~!?<>]+/).map((token) => token.trim()).filter((token) => token.length > 1);
+var isScrollableReviewAnchorElement = (element) => {
+  const id = element.id.trim().toLowerCase();
+  if (element === element.ownerDocument.body || element === element.ownerDocument.documentElement || ["app", "main", "page", "root", "__next", "__nuxt"].includes(id)) {
+    return false;
+  }
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  const viewportHeight = element.ownerDocument.documentElement.clientHeight;
+  const scrollHeight = element.ownerDocument.documentElement.scrollHeight;
+  return !(scrollHeight > viewportHeight * 1.5 && rect.height > viewportHeight * 3);
+};
+
 // src/react-shell/review/item.icons.tsx
 import { jsx as jsx7 } from "react/jsx-runtime";
 var ReviewScopeIcon = ({ scope }) => {
@@ -4592,23 +4479,6 @@ var formatItemCardDate = (value) => {
     month: "short"
   }).format(date);
 };
-var getCardAnchorCandidates = (item) => {
-  const anchor = item.anchor;
-  if (!anchor) return [];
-  const seen = /* @__PURE__ */ new Set();
-  return [anchor, ...anchor.candidates ?? []].filter((candidate) => {
-    const key = `${candidate.strategy}:${candidate.selector}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-};
-var getAnchorStateLabel = (state) => {
-  if (state === "bound") return "Anchor bound";
-  if (state === "fallback") return "Using fallback";
-  return "No anchor";
-};
-var formatAnchorConfidence = (value) => typeof value === "number" ? `${Math.round(value * 100)}%` : void 0;
 var QaItemCard = ({
   activeAdapterEntry,
   currentPresetScope,
@@ -4616,7 +4486,6 @@ var QaItemCard = ({
   isOverlayVisible,
   isRemoteSource,
   numberedItem,
-  anchorStatus,
   remoteAdapterEntry,
   copiedPromptKey,
   selectedItemId,
@@ -4627,7 +4496,6 @@ var QaItemCard = ({
   onRemoveItem,
   onCopyItemPrompt,
   onEditItem,
-  onRebindAnchor,
   onRestoreReviewItem,
   onSubmitItem,
   onToggleItemOverlayVisibility
@@ -4650,18 +4518,6 @@ var QaItemCard = ({
     ...sourceInspectorOptions,
     sourceRoot
   });
-  const anchorCandidates = getCardAnchorCandidates(item);
-  const hasAnchorMeta = Boolean(item.anchor);
-  const normalizedAnchorStatus = anchorStatus ?? {
-    candidates: anchorCandidates,
-    confidence: item.anchor?.confidence,
-    selector: item.anchor?.selector,
-    state: hasAnchorMeta ? "missing" : "missing"
-  };
-  const anchorConfidenceLabel = formatAnchorConfidence(
-    normalizedAnchorStatus.confidence
-  );
-  const canRebindAnchor = activeAdapterEntry.canUpdate && hasAnchorMeta && !isSubmitting;
   return /* @__PURE__ */ jsxs6(
     "article",
     {
@@ -4695,36 +4551,7 @@ var QaItemCard = ({
             ] }),
             /* @__PURE__ */ jsx8("strong", { className: "df-review-item-comment", children: itemComment }),
             /* @__PURE__ */ jsx8("small", { className: "df-review-item-meta", children: itemMeta }),
-            item.submitError && /* @__PURE__ */ jsx8("small", { className: "df-review-item-error", children: item.submitError }),
-            hasAnchorMeta && /* @__PURE__ */ jsxs6(
-              "div",
-              {
-                className: `df-review-item-anchor is-${normalizedAnchorStatus.state}`,
-                onClick: (event) => event.stopPropagation(),
-                children: [
-                  /* @__PURE__ */ jsxs6("div", { className: "df-review-item-anchor-head", children: [
-                    /* @__PURE__ */ jsx8("strong", { children: getAnchorStateLabel(normalizedAnchorStatus.state) }),
-                    anchorConfidenceLabel && /* @__PURE__ */ jsx8("span", { children: anchorConfidenceLabel }),
-                    canRebindAnchor && /* @__PURE__ */ jsxs6(
-                      "button",
-                      {
-                        type: "button",
-                        onClick: () => onRebindAnchor(item),
-                        children: [
-                          /* @__PURE__ */ jsx8(RefreshCw, { "aria-hidden": "true" }),
-                          "Rebind"
-                        ]
-                      }
-                    )
-                  ] }),
-                  /* @__PURE__ */ jsx8("code", { children: normalizedAnchorStatus.selector ?? item.anchor?.selector }),
-                  anchorCandidates.length > 0 && /* @__PURE__ */ jsx8("div", { className: "df-review-item-anchor-candidates", children: anchorCandidates.slice(0, 5).map((candidate) => /* @__PURE__ */ jsxs6("span", { children: [
-                    /* @__PURE__ */ jsx8("b", { children: candidate.strategy }),
-                    /* @__PURE__ */ jsx8("code", { children: candidate.selector })
-                  ] }, `${candidate.strategy}:${candidate.selector}`)) })
-                ]
-              }
-            )
+            item.submitError && /* @__PURE__ */ jsx8("small", { className: "df-review-item-error", children: item.submitError })
           ] }),
           /* @__PURE__ */ jsxs6(
             "div",
@@ -4935,7 +4762,6 @@ var ReviewQaPanel = ({
   currentPresetScope,
   filteredNumberedActiveItems,
   getItemPresetScope,
-  anchorStatusByItemId,
   hiddenOverlayItemIds,
   isListVisible,
   isRemoteSource,
@@ -4955,7 +4781,6 @@ var ReviewQaPanel = ({
   onChangeReviewSource,
   onCopyItemPrompt,
   onEditItem,
-  onRebindAnchor,
   onQaFilterChange,
   onRefreshReviewData,
   onRemoveItem,
@@ -5005,7 +4830,6 @@ var ReviewQaPanel = ({
                 isOverlayVisible: !hiddenOverlayItemIds.has(item.id),
                 isRemoteSource,
                 numberedItem,
-                anchorStatus: anchorStatusByItemId.get(item.id),
                 remoteAdapterEntry,
                 copiedPromptKey,
                 selectedItemId,
@@ -5015,7 +4839,6 @@ var ReviewQaPanel = ({
                 onClearSelectedItem,
                 onCopyItemPrompt,
                 onEditItem,
-                onRebindAnchor,
                 onRemoveItem,
                 onRestoreReviewItem,
                 onSubmitItem,
@@ -7762,9 +7585,6 @@ var ReviewShell = ({
   const sourceShortcutCleanupRef = useRef4(null);
   const sourceInspectorInteractionRef = useRef4(false);
   const [sourceInspectorState, setSourceInspectorState] = useState8(null);
-  const [rebindAnchorItem, setRebindAnchorItem] = useState8(
-    null
-  );
   const sourceOpenOptions = useMemo6(
     () => ({
       ...sourceInspector,
@@ -7809,45 +7629,6 @@ var ReviewShell = ({
   );
   const isFigmaOverlayAvailable = isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
   const [editingItem, setEditingItem] = useState8(null);
-  const getTargetReviewEnvironment = useCallback11(() => {
-    const frame = iframeRef.current;
-    const targetWindow = frame?.contentWindow;
-    const targetDocument = frame?.contentDocument;
-    if (!frame || !targetWindow || !targetDocument) return null;
-    const frameRect = frame.getBoundingClientRect();
-    return {
-      window: targetWindow,
-      document: targetDocument,
-      viewportRect: {
-        left: 0,
-        top: 0,
-        width: targetWindow.innerWidth,
-        height: targetWindow.innerHeight
-      },
-      overlayRect: {
-        left: frameRect.left,
-        top: frameRect.top,
-        width: frameRect.width,
-        height: frameRect.height
-      }
-    };
-  }, [iframeRef]);
-  const anchorStatusByItemId = useMemo6(() => {
-    const targetDocument = iframeRef.current?.contentDocument;
-    const statuses = /* @__PURE__ */ new Map();
-    activeItems.forEach((item) => {
-      if (!item.anchor) return;
-      const resolution = targetDocument ? getReviewItemAnchorResolution(targetDocument, item) : void 0;
-      const candidates = getAnchorCandidates(item.anchor);
-      statuses.set(item.id, {
-        candidates,
-        confidence: resolution?.candidate.confidence ?? item.anchor.confidence,
-        selector: resolution?.candidate.selector ?? item.anchor.selector,
-        state: resolution ? "bound" : "fallback"
-      });
-    });
-    return statuses;
-  }, [activeItems, iframeRef, size.height, size.width, targetSrc]);
   const initialPromptText = initialPrompt.trim();
   const refreshItems = useCallback11(
     () => refreshReviewItems({
@@ -8111,79 +7892,6 @@ var ReviewShell = ({
     sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
-  const rebindReviewItemAnchor = useCallback11(
-    async (item, point) => {
-      if (!activeAdapterEntry.canUpdate) {
-        showToast("Current review source does not support rebind");
-        return;
-      }
-      const environment = getTargetReviewEnvironment();
-      if (!environment) {
-        showToast("Review target is not ready");
-        return;
-      }
-      const anchor = getDomAnchorFromPoint(
-        point,
-        void 0,
-        environment
-      );
-      const elementSelection = anchor ? getElementViewportSelection(anchor, environment) : void 0;
-      if (!anchor || !elementSelection) {
-        showToast("Anchor target not found");
-        return;
-      }
-      const markerPoint = getSelectionCenter(elementSelection);
-      const selection = {
-        viewport: toPublicSelection(elementSelection),
-        relative: getRelativeSelection(elementSelection, anchor, environment)
-      };
-      const marker = {
-        viewport: roundPoint(markerPoint),
-        relative: getRelativePoint(markerPoint, anchor, environment)
-      };
-      const updated = await activeAdapterEntry.adapter.update(item.id, {
-        anchor,
-        marker,
-        scroll: {
-          x: environment.window.scrollX,
-          y: environment.window.scrollY
-        },
-        selection,
-        viewport: getViewportSize(environment)
-      });
-      setRebindAnchorItem(null);
-      await refreshReviewData2();
-      restoreReviewItem(updated);
-      showToast("QA anchor rebound");
-    },
-    [
-      activeAdapterEntry,
-      getTargetReviewEnvironment,
-      refreshReviewData2,
-      restoreReviewItem,
-      showToast
-    ]
-  );
-  const startRebindAnchor = useCallback11(
-    (item) => {
-      if (!activeAdapterEntry.canUpdate) {
-        showToast("Current review source does not support rebind");
-        return;
-      }
-      cancelReviewMode();
-      clearSourceInspector();
-      setRebindAnchorItem(item);
-      restoreReviewItem(item);
-      showToast("Click a target element to rebind anchor");
-    },
-    [
-      activeAdapterEntry.canUpdate,
-      cancelReviewMode,
-      clearSourceInspector,
-      restoreReviewItem,
-      showToast
-    ]
-  );
   const getSourceInspectorRect = useCallback11(
     (element) => {
       const frame = iframeRef.current;
@@ -8531,41 +8239,6 @@ var ReviewShell = ({
   useEffect10(() => {
     return cleanupSourceOpenShortcut;
   }, [cleanupSourceOpenShortcut]);
-  useEffect10(() => {
-    if (!rebindAnchorItem) return void 0;
-    const frameDocument = iframeRef.current?.contentDocument;
-    if (!frameDocument) return void 0;
-    const previousCursor = frameDocument.documentElement.style.cursor;
-    frameDocument.documentElement.style.cursor = "crosshair";
-    const handleClick = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      void rebindReviewItemAnchor(rebindAnchorItem, {
-        x: event.clientX,
-        y: event.clientY
-      });
-    };
-    const handleKeyDown = (event) => {
-      if (event.key !== "Escape") return;
-      setRebindAnchorItem(null);
-      showToast("Anchor rebind canceled");
-    };
-    frameDocument.addEventListener("click", handleClick, true);
-    frameDocument.addEventListener("keydown", handleKeyDown, true);
-    window.addEventListener("keydown", handleKeyDown, true);
-    return () => {
-      frameDocument.documentElement.style.cursor = previousCursor;
-      frameDocument.removeEventListener("click", handleClick, true);
-      frameDocument.removeEventListener("keydown", handleKeyDown, true);
-      window.removeEventListener("keydown", handleKeyDown, true);
-    };
-  }, [
-    iframeRef,
-    rebindAnchorItem,
-    rebindReviewItemAnchor,
-    showToast
-  ]);
   const loadTargetFrame = useCallback11(() => {
     initReviewKit();
     refreshTargetFigmaConfig();
@@ -8734,7 +8407,6 @@ var ReviewShell = ({
           {
             activeAdapterEntry,
             activeItems,
-            anchorStatusByItemId,
             currentPagePresenceUsers,
             currentPresetScope,
             filteredNumberedActiveItems,
@@ -8758,7 +8430,6 @@ var ReviewShell = ({
             onChangeReviewSource: changeReviewSource,
             onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
             onEditItem: setEditingItem,
-            onRebindAnchor: startRebindAnchor,
             onQaFilterChange: setQaFilter,
             onRefreshReviewData: refreshReviewData2,
             onRemoveItem: removeItem,

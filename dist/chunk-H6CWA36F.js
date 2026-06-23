@@ -3157,15 +3157,6 @@ export {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   normalizeReviewItemStatus,
   localAdapter,
-  toPublicSelection,
-  getSelectionCenter,
-  getViewportSize,
-  roundPoint,
-  getDomAnchorFromPoint,
-  getElementViewportSelection,
-  getRelativeSelection,
-  getRelativePoint,
-  getAnchorCandidates,
   DEFAULT_REVIEW_VIEWPORTS,
   findReviewViewportPreset,
   getReviewViewportScope,
@@ -3174,4 +3165,4 @@ export {
   getNumberedReviewItems,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-FYWANZXL.js.map
+//# sourceMappingURL=chunk-H6CWA36F.js.map

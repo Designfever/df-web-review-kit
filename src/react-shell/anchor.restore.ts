@@ -1,17 +1,10 @@
-import type { DomAnchorCandidate, ReviewItem } from '../types';
+import type { ReviewItem } from '../types';
 
 export const isAnchorRestorableReviewItem = (item: ReviewItem) =>
   item.scope === 'dom' ||
   (item.kind === 'note' && Boolean(item.anchor && item.selection));
 
 export const queryReviewItemAnchorElement = (
-  targetDocument: Document,
-  item: ReviewItem
-) => {
-  return getReviewItemAnchorResolution(targetDocument, item)?.element;
-};
-
-export const getReviewItemAnchorResolution = (
   targetDocument: Document,
   item: ReviewItem
 ) => {
@@ -23,7 +16,6 @@ export const getReviewItemAnchorResolution = (
     (candidate) => Boolean(candidate.selector)
   );
   const matches: Array<{
-    candidate: DomAnchorCandidate;
     element: Element;
     score: number;
   }> = [];
@@ -34,7 +26,6 @@ export const getReviewItemAnchorResolution = (
         if (!isScrollableReviewAnchorElement(element)) return;
 
         matches.push({
-          candidate,
           element,
           score: getReviewAnchorMatchScore(
             element,
@@ -49,7 +40,7 @@ export const getReviewItemAnchorResolution = (
     }
   });
 
-  return matches.sort((a, b) => a.score - b.score)[0];
+  return matches.sort((a, b) => a.score - b.score)[0]?.element;
 };
 
 export const getReviewItemRestoreScrollPosition = (

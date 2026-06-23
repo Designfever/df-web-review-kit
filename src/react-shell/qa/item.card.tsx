@@ -4,7 +4,6 @@ import {
   EyeOff as EyeOffIcon,
   FileCode2 as FileCode2Icon,
   Pencil as PencilIcon,
-  RefreshCw as RefreshCwIcon,
   X as XIcon,
 } from 'lucide-react';
 import type {
@@ -23,7 +22,6 @@ import {
 } from '../review/item.icons';
 import { getSourceOpenUrl } from '../source.open';
 import type {
-  ReviewAnchorBindingStatus,
   ReviewSourceInspectorOptions,
   ReviewShellViewportKind,
 } from '../types';
@@ -35,7 +33,6 @@ interface QaItemCardProps {
   isOverlayVisible: boolean;
   isRemoteSource: boolean;
   numberedItem: NumberedReviewItem;
-  anchorStatus?: ReviewAnchorBindingStatus;
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
   copiedPromptKey: string | null;
   selectedItemId: string | null;
@@ -49,7 +46,6 @@ interface QaItemCardProps {
   onRemoveItem: (item: ReviewItem) => Promise<void>;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onEditItem: (item: ReviewItem) => void;
-  onRebindAnchor: (item: ReviewItem) => void;
   onRestoreReviewItem: (item: ReviewItem) => void;
   onSubmitItem: (numberedItem: NumberedReviewItem) => Promise<void>;
   onToggleItemOverlayVisibility: (itemId: string) => void;
@@ -67,31 +63,6 @@ const formatItemCardDate = (value: string) => {
   }).format(date);
 };
 
-const getCardAnchorCandidates = (item: ReviewItem) => {
-  const anchor = item.anchor;
-  if (!anchor) return [];
-
-  const seen = new Set<string>();
-  return [anchor, ...(anchor.candidates ?? [])].filter((candidate) => {
-    const key = `${candidate.strategy}:${candidate.selector}`;
-    if (seen.has(key)) return false;
-
-    seen.add(key);
-    return true;
-  });
-};
-
-const getAnchorStateLabel = (
-  state: ReviewAnchorBindingStatus['state']
-) => {
-  if (state === 'bound') return 'Anchor bound';
-  if (state === 'fallback') return 'Using fallback';
-  return 'No anchor';
-};
-
-const formatAnchorConfidence = (value?: number) =>
-  typeof value === 'number' ? `${Math.round(value * 100)}%` : undefined;
-
 export const QaItemCard = ({
   activeAdapterEntry,
   currentPresetScope,
@@ -99,7 +70,6 @@ export const QaItemCard = ({
   isOverlayVisible,
   isRemoteSource,
   numberedItem,
-  anchorStatus,
   remoteAdapterEntry,
   copiedPromptKey,
   selectedItemId,
@@ -110,7 +80,6 @@ export const QaItemCard = ({
   onRemoveItem,
   onCopyItemPrompt,
   onEditItem,
-  onRebindAnchor,
   onRestoreReviewItem,
   onSubmitItem,
   onToggleItemOverlayVisibility,
@@ -144,19 +113,6 @@ export const QaItemCard = ({
           ...sourceInspectorOptions,
           sourceRoot,
         });
-  const anchorCandidates = getCardAnchorCandidates(item);
-  const hasAnchorMeta = Boolean(item.anchor);
-  const normalizedAnchorStatus: ReviewAnchorBindingStatus = anchorStatus ?? {
-    candidates: anchorCandidates,
-    confidence: item.anchor?.confidence,
-    selector: item.anchor?.selector,
-    state: hasAnchorMeta ? 'missing' : 'missing',
-  };
-  const anchorConfidenceLabel = formatAnchorConfidence(
-    normalizedAnchorStatus.confidence
-  );
-  const canRebindAnchor =
-    activeAdapterEntry.canUpdate && hasAnchorMeta && !isSubmitting;
 
   return (
     <article
@@ -193,41 +149,6 @@ export const QaItemCard = ({
           <small className="df-review-item-meta">{itemMeta}</small>
           {item.submitError && (
             <small className="df-review-item-error">{item.submitError}</small>
-          )}
-          {hasAnchorMeta && (
-            <div
-              className={`df-review-item-anchor is-${normalizedAnchorStatus.state}`}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="df-review-item-anchor-head">
-                <strong>
-                  {getAnchorStateLabel(normalizedAnchorStatus.state)}
-                </strong>
-                {anchorConfidenceLabel && <span>{anchorConfidenceLabel}</span>}
-                {canRebindAnchor && (
-                  <button
-                    type="button"
-                    onClick={() => onRebindAnchor(item)}
-                  >
-                    <RefreshCwIcon aria-hidden="true" />
-                    Rebind
-                  </button>
-                )}
-              </div>
-              <code>
-                {normalizedAnchorStatus.selector ?? item.anchor?.selector}
-              </code>
-              {anchorCandidates.length > 0 && (
-                <div className="df-review-item-anchor-candidates">
-                  {anchorCandidates.slice(0, 5).map((candidate) => (
-                    <span key={`${candidate.strategy}:${candidate.selector}`}>
-                      <b>{candidate.strategy}</b>
-                      <code>{candidate.selector}</code>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
           )}
         </div>
         <div

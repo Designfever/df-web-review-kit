@@ -6,7 +6,7 @@ type ReviewMode = 'idle' | 'note' | 'element' | 'area';
 type ReviewSource = 'local' | 'supabase' | (string & {});
 type ReviewSubmitStatus = 'idle' | 'submitting' | 'submitted' | 'failed';
 type ReviewViewportScope = Exclude<ReviewItemScope, 'dom'>;
-type DomAnchorStrategy = 'configured-attribute' | 'id' | 'class' | 'dom-path';
+type DomAnchorStrategy = 'configured-attribute' | 'attribute' | 'id' | 'class' | 'dom-path';
 interface ReviewRulerConfig {
     enabled?: boolean;
     unit?: string;

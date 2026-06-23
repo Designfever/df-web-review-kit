@@ -61,8 +61,11 @@ Persisted review data uses target-space viewport values plus optional anchor-rel
 When a user creates a DOM or area item, core tries to capture:
 
 - an explicit configured anchor such as `data-qa-id`
+- common test/section attributes such as `data-testid`, `data-cy`, or `data-section-id`
 - a meaningful `id`
+- semantic attributes such as `aria-label`, `title`, `name`, or `href`
 - a meaningful class
+- a scoped DOM path from the nearest stable ancestor
 - a DOM path fallback
 - a short text fingerprint
 

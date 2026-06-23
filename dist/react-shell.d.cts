@@ -1,4 +1,4 @@
-import { f as ReviewItemScope, r as ReviewSource, n as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, p as ReviewRulerConfig } from './types-Cf2x5ky6.cjs';
+import { f as ReviewItemScope, r as ReviewSource, n as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, p as ReviewRulerConfig } from './types-7IhUVTjO.cjs';
 import React from 'react';
 
 type ReviewShellViewportKind = Exclude<ReviewItemScope, 'dom'>;

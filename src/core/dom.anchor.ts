@@ -12,6 +12,23 @@ import {
   type ViewportSelection,
 } from './geometry';
 
+const COMMON_ANCHOR_ATTRIBUTES = [
+  'data-testid',
+  'data-test-id',
+  'data-cy',
+  'data-test',
+  'data-qa',
+  'data-section-id',
+  'data-component',
+];
+
+const SEMANTIC_ANCHOR_ATTRIBUTES = [
+  'aria-label',
+  'title',
+  'name',
+  'href',
+];
+
 /** Resolves a DOM anchor from the center of a target-space selection. */
 export function getDomAnchor(
   selection: ViewportSelection,
@@ -165,18 +182,18 @@ function createAnchorCandidates(
   const candidates: DomAnchorCandidate[] = [];
 
   // Prefer explicit project-authored anchors, then fall back to stable-enough DOM hints.
-  const anchoredByAttribute = target.closest(`[${configuredAttribute}]`);
-  if (anchoredByAttribute) {
-    const value = anchoredByAttribute.getAttribute(configuredAttribute);
-    if (value) {
-      candidates.push({
-        selector: `[${configuredAttribute}="${cssEscape(value)}"]`,
-        strategy: 'configured-attribute',
-        confidence: 0.98,
-        textFingerprint: getTextFingerprint(anchoredByAttribute),
-      });
-    }
-  }
+  const configuredAnchor = getClosestAttributeAnchor(
+    target,
+    configuredAttribute
+  );
+  if (configuredAnchor) candidates.push(configuredAnchor);
+
+  const targetAttributeAnchor = getAttributeAnchorCandidate(
+    target,
+    COMMON_ANCHOR_ATTRIBUTES,
+    0.9
+  );
+  if (targetAttributeAnchor) candidates.push(targetAttributeAnchor);
 
   if (isMeaningfulId(target.id)) {
     candidates.push({
@@ -186,6 +203,13 @@ function createAnchorCandidates(
       textFingerprint: getTextFingerprint(target),
     });
   }
+
+  const semanticAnchor = getAttributeAnchorCandidate(
+    target,
+    SEMANTIC_ANCHOR_ATTRIBUTES,
+    0.84
+  );
+  if (semanticAnchor) candidates.push(semanticAnchor);
 
   const targetClassName = getMeaningfulClassName(target);
   if (targetClassName) {
@@ -197,6 +221,9 @@ function createAnchorCandidates(
     });
   }
 
+  const scopedPath = getScopedDomPathCandidate(target, configuredAttribute);
+  if (scopedPath) candidates.push(scopedPath);
+
   candidates.push({
     selector: getDomPath(target),
     strategy: 'dom-path',
@@ -205,6 +232,15 @@ function createAnchorCandidates(
   });
 
   const parent = target.parentElement;
+  const anchoredByAttribute = parent
+    ? findClosestAttributeAnchor(
+        parent,
+        COMMON_ANCHOR_ATTRIBUTES.filter((name) => name !== configuredAttribute),
+        0.7
+      )
+    : undefined;
+  if (anchoredByAttribute) candidates.push(anchoredByAttribute);
+
   const anchoredById = parent
     ? findClosest(parent, (element) => isMeaningfulId(element.id))
     : undefined;
@@ -238,6 +274,138 @@ function createAnchorCandidates(
   return dedupeAnchorCandidates(candidates);
 }
 
+function getClosestAttributeAnchor(
+  target: Element,
+  attributeName: string
+): DomAnchorCandidate | undefined {
+  return findClosestAttributeAnchor(target, [attributeName], 0.98, {
+    strategy: 'configured-attribute',
+  });
+}
+
+function findClosestAttributeAnchor(
+  target: Element,
+  attributeNames: string[],
+  confidence: number,
+  options?: {
+    strategy?: DomAnchorCandidate['strategy'];
+  }
+): DomAnchorCandidate | undefined {
+  for (const attributeName of attributeNames) {
+    const selector = `[${attributeName}]`;
+    const element = safeClosest(target, selector);
+    if (!element) continue;
+
+    const value = getStableAttributeValue(element, attributeName);
+    if (!value) continue;
+
+    return {
+      selector: `[${attributeName}="${cssEscape(value)}"]`,
+      strategy: options?.strategy ?? 'attribute',
+      confidence,
+      textFingerprint: getTextFingerprint(element),
+    };
+  }
+
+  return undefined;
+}
+
+function getAttributeAnchorCandidate(
+  element: Element,
+  attributeNames: string[],
+  confidence: number
+): DomAnchorCandidate | undefined {
+  for (const attributeName of attributeNames) {
+    const value = getStableAttributeValue(element, attributeName);
+    if (!value) continue;
+
+    return {
+      selector: `${element.tagName.toLowerCase()}[${attributeName}="${cssEscape(
+        value
+      )}"]`,
+      strategy: 'attribute',
+      confidence,
+      textFingerprint: getTextFingerprint(element),
+    };
+  }
+
+  return undefined;
+}
+
+function getScopedDomPathCandidate(
+  target: Element,
+  configuredAttribute: string
+): DomAnchorCandidate | undefined {
+  const parent = target.parentElement;
+  if (!parent) return undefined;
+
+  const anchor = findStableAncestorSelector(parent, configuredAttribute);
+  if (!anchor) return undefined;
+
+  const selector = getDomPathBetween(anchor.element, target, anchor.selector);
+  if (!selector) return undefined;
+
+  return {
+    selector,
+    strategy: 'dom-path',
+    confidence: anchor.confidence,
+    textFingerprint: getTextFingerprint(target),
+  };
+}
+
+function findStableAncestorSelector(
+  start: Element,
+  configuredAttribute: string
+) {
+  let element: Element | null = start;
+  const root = start.ownerDocument.documentElement;
+
+  while (element && element !== root) {
+    const configuredValue = getStableAttributeValue(element, configuredAttribute);
+    if (configuredValue) {
+      return {
+        element,
+        selector: `[${configuredAttribute}="${cssEscape(configuredValue)}"]`,
+        confidence: 0.88,
+      };
+    }
+
+    const attributeAnchor = getAttributeAnchorCandidate(
+      element,
+      COMMON_ANCHOR_ATTRIBUTES.filter((name) => name !== configuredAttribute),
+      0.84
+    );
+    if (attributeAnchor) {
+      return {
+        element,
+        selector: attributeAnchor.selector,
+        confidence: 0.84,
+      };
+    }
+
+    if (isMeaningfulId(element.id)) {
+      return {
+        element,
+        selector: `#${cssEscape(element.id)}`,
+        confidence: 0.82,
+      };
+    }
+
+    const className = getMeaningfulClassName(element);
+    if (className) {
+      return {
+        element,
+        selector: `${element.tagName.toLowerCase()}.${cssEscape(className)}`,
+        confidence: 0.76,
+      };
+    }
+
+    element = element.parentElement;
+  }
+
+  return undefined;
+}
+
 function getAnchorSourceElement(
   target: Element,
   candidate: DomAnchorCandidate,
@@ -253,6 +421,14 @@ function getAnchorSourceElement(
     return target.closest(candidate.selector);
   } catch {
     return target;
+  }
+}
+
+function safeClosest(element: Element, selector: string) {
+  try {
+    return element.closest(selector);
+  } catch {
+    return null;
   }
 }
 
@@ -420,9 +596,50 @@ function getDomPath(element: Element) {
   return `body > ${parts.join(' > ')}`;
 }
 
+function getDomPathBetween(
+  ancestor: Element,
+  target: Element,
+  ancestorSelector: string
+) {
+  const parts: string[] = [];
+  let current: Element | null = target;
+
+  while (current && current !== ancestor) {
+    parts.unshift(getDomPathPart(current));
+    current = current.parentElement;
+  }
+
+  if (current !== ancestor || parts.length === 0) return undefined;
+
+  return `${ancestorSelector} > ${parts.join(' > ')}`;
+}
+
+function getDomPathPart(element: Element) {
+  const parent: Element | null = element.parentElement;
+  const tag = element.tagName.toLowerCase();
+
+  if (!parent) return tag;
+
+  const currentTagName = element.tagName;
+  const siblings: Element[] = Array.from(parent.children).filter(
+    (child) => child.tagName === currentTagName
+  );
+  const index = siblings.indexOf(element) + 1;
+  return `${tag}:nth-of-type(${index})`;
+}
+
 function getTextFingerprint(element: Element) {
   const text = element.textContent?.replace(/\s+/g, ' ').trim();
   return text ? text.slice(0, 120) : undefined;
+}
+
+function getStableAttributeValue(element: Element, attributeName: string) {
+  const value = element.getAttribute(attributeName)?.trim();
+  if (!value || value.length > 160) return undefined;
+  if (/^(true|false)$/i.test(value)) return undefined;
+  if (/^\d+$/.test(value) && value.length < 3) return undefined;
+
+  return value;
 }
 
 function getTextFingerprintScore(expected?: string, actual?: string) {

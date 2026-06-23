@@ -12,6 +12,7 @@ export type ReviewSubmitStatus =
 export type ReviewViewportScope = Exclude<ReviewItemScope, 'dom'>;
 export type DomAnchorStrategy =
   | 'configured-attribute'
+  | 'attribute'
   | 'id'
   | 'class'
   | 'dom-path';

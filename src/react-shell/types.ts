@@ -2,6 +2,7 @@ import type {
   ReviewItem,
   ReviewItemScope,
   ReviewItemStatus,
+  ReviewWorkflowStatus,
   ReviewMode,
   ReviewRulerConfig,
   ReviewSource,
@@ -169,6 +170,7 @@ export type TargetOverlayKey = 'grid' | 'figma';
 export type TargetOverlayState = Record<TargetOverlayKey, boolean>;
 
 export type ReviewQaFilter = 'all' | ReviewItemScope;
+export type ReviewQaStatusFilter = 'all' | ReviewWorkflowStatus;
 
 export type ReviewShellTheme = 'dark' | 'light' | 'system';
 

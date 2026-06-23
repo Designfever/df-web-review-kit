@@ -3,11 +3,17 @@ import {
   RefreshCw as RefreshCwIcon,
 } from 'lucide-react';
 import type { ReviewSource } from '../../types';
+import { normalizeReviewItemStatus } from '../../status';
 import type { NormalizedReviewShellAdapter } from '../adapters';
 import { REVIEW_QA_FILTERS } from '../constants';
 import { PresenceRow } from '../presence/row';
 import { ReviewScopeIcon } from '../review/item.icons';
-import type { ReviewPresenceUser, ReviewQaFilter } from '../types';
+import type {
+  ReviewPresenceUser,
+  ReviewQaFilter,
+  ReviewQaStatusFilter,
+  ReviewShellStatusOption,
+} from '../types';
 
 interface QaPanelHeaderProps {
   activeItemCount: number;
@@ -19,11 +25,15 @@ interface QaPanelHeaderProps {
   presenceSessionId: string;
   qaFilter: ReviewQaFilter;
   qaFilterCounts: ReadonlyMap<ReviewQaFilter, number>;
+  qaStatusFilter: ReviewQaStatusFilter;
+  qaStatusFilterCounts: ReadonlyMap<ReviewQaStatusFilter, number>;
   showSourceSelect: boolean;
   source: ReviewSource;
   sourceEntries: NormalizedReviewShellAdapter[];
+  statusOptions: readonly ReviewShellStatusOption[];
   onChangeReviewSource: (nextSource: ReviewSource) => void;
   onQaFilterChange: (filter: ReviewQaFilter) => void;
+  onQaStatusFilterChange: (filter: ReviewQaStatusFilter) => void;
   onRefreshReviewData: () => Promise<void>;
 }
 
@@ -37,17 +47,45 @@ export const QaPanelHeader = ({
   presenceSessionId,
   qaFilter,
   qaFilterCounts,
+  qaStatusFilter,
+  qaStatusFilterCounts,
   showSourceSelect,
   source,
   sourceEntries,
+  statusOptions,
   onChangeReviewSource,
   onQaFilterChange,
+  onQaStatusFilterChange,
   onRefreshReviewData,
 }: QaPanelHeaderProps) => {
+  const statusFilterOptions = getStatusFilterOptions(statusOptions);
+  const hasActiveFilter = qaFilter !== 'all' || qaStatusFilter !== 'all';
+
   return (
     <div className="df-review-list-header">
       <div className="df-review-list-toolbar">
         <div className="df-review-list-controls">
+          <select
+            aria-label="QA status filter"
+            className="df-review-status-filter-select"
+            value={qaStatusFilter}
+            onChange={(event) =>
+              onQaStatusFilterChange(
+                event.currentTarget.value as ReviewQaStatusFilter
+              )
+            }
+          >
+            <option value="all">
+              {`All status (${qaStatusFilterCounts.get('all') ?? 0})`}
+            </option>
+            {statusFilterOptions.map((statusOption) => (
+              <option key={statusOption.value} value={statusOption.value}>
+                {`${statusOption.label} (${
+                  qaStatusFilterCounts.get(statusOption.value) ?? 0
+                })`}
+              </option>
+            ))}
+          </select>
           {showSourceSelect && (
             <select
               aria-label="QA source"
@@ -104,7 +142,7 @@ export const QaPanelHeader = ({
       <div className="df-review-list-title">
         <span>{isAllQaVisible ? `${label} QA · All pages` : `${label} QA`}</span>
         <strong title={`${activeRemainingItemCount} remaining of ${activeItemCount}`}>
-          {qaFilter === 'all'
+          {!hasActiveFilter
             ? `${activeRemainingItemCount}/${activeItemCount}`
             : `${filteredItemCount}/${activeItemCount}`}
         </strong>
@@ -116,3 +154,20 @@ export const QaPanelHeader = ({
     </div>
   );
 };
+
+function getStatusFilterOptions(
+  statusOptions: readonly ReviewShellStatusOption[]
+) {
+  const seen = new Set<ReviewQaStatusFilter>();
+
+  return statusOptions.flatMap((statusOption) => {
+    const value = normalizeReviewItemStatus(statusOption.value);
+    if (seen.has(value)) return [];
+
+    seen.add(value);
+    return [{
+      value,
+      label: statusOption.label,
+    }];
+  });
+}

@@ -16,6 +16,7 @@ import {
 } from '../route';
 import type {
   ReviewQaFilter,
+  ReviewQaStatusFilter,
   ReviewShellPage,
   ReviewShellViewportKind,
   ReviewShellViewportPreset,
@@ -68,6 +69,8 @@ export const useReviewShellData = ({
     () => new Set()
   );
   const [qaFilter, setQaFilter] = useState<ReviewQaFilter>('all');
+  const [qaStatusFilter, setQaStatusFilter] =
+    useState<ReviewQaStatusFilter>('all');
   const [sitemapItems, setSitemapItems] = useState<SitemapItemsBySource>(() => ({
     local: [],
     remote: [],
@@ -99,7 +102,7 @@ export const useReviewShellData = ({
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
     [activeItems, reviewViewportPresets]
   );
-  const filteredNumberedActiveItems = useMemo(
+  const scopeFilteredNumberedActiveItems = useMemo(
     () =>
       qaFilter === 'all'
         ? numberedActiveItems
@@ -108,18 +111,49 @@ export const useReviewShellData = ({
           ),
     [numberedActiveItems, qaFilter]
   );
+  const statusFilteredNumberedActiveItems = useMemo(
+    () =>
+      qaStatusFilter === 'all'
+        ? numberedActiveItems
+        : numberedActiveItems.filter(
+            (numberedItem) =>
+              normalizeReviewItemStatus(numberedItem.item.status) ===
+              qaStatusFilter
+          ),
+    [numberedActiveItems, qaStatusFilter]
+  );
+  const filteredNumberedActiveItems = useMemo(
+    () =>
+      qaStatusFilter === 'all'
+        ? scopeFilteredNumberedActiveItems
+        : scopeFilteredNumberedActiveItems.filter(
+            (numberedItem) =>
+              normalizeReviewItemStatus(numberedItem.item.status) ===
+              qaStatusFilter
+          ),
+    [qaStatusFilter, scopeFilteredNumberedActiveItems]
+  );
   const hiddenOverlayItemIdList = useMemo(
     () => Array.from(hiddenOverlayItemIds),
     [hiddenOverlayItemIds]
   );
   const qaFilterCounts = useMemo(() => {
     const counts = new Map<ReviewQaFilter, number>();
-    counts.set('all', numberedActiveItems.length);
-    numberedActiveItems.forEach((numberedItem) => {
+    counts.set('all', statusFilteredNumberedActiveItems.length);
+    statusFilteredNumberedActiveItems.forEach((numberedItem) => {
       counts.set(numberedItem.scope, (counts.get(numberedItem.scope) ?? 0) + 1);
     });
     return counts;
-  }, [numberedActiveItems]);
+  }, [statusFilteredNumberedActiveItems]);
+  const qaStatusFilterCounts = useMemo(() => {
+    const counts = new Map<ReviewQaStatusFilter, number>();
+    counts.set('all', scopeFilteredNumberedActiveItems.length);
+    scopeFilteredNumberedActiveItems.forEach((numberedItem) => {
+      const status = normalizeReviewItemStatus(numberedItem.item.status);
+      counts.set(status, (counts.get(status) ?? 0) + 1);
+    });
+    return counts;
+  }, [scopeFilteredNumberedActiveItems]);
   const getItemPreset = useCallback(
     (item: ReviewItem) =>
       findViewportPreset(
@@ -249,10 +283,13 @@ export const useReviewShellData = ({
     presetScopeCounts,
     qaFilter,
     qaFilterCounts,
+    qaStatusFilter,
+    qaStatusFilterCounts,
     selectedNumberedItem,
     setHiddenOverlayItemIds,
     setItems,
     setQaFilter,
+    setQaStatusFilter,
     setSitemapItems,
     targetSrc,
   };

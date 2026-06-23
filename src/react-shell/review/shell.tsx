@@ -206,10 +206,13 @@ export const ReviewShell = ({
     presetScopeCounts,
     qaFilter,
     qaFilterCounts,
+    qaStatusFilter,
+    qaStatusFilterCounts,
     selectedNumberedItem,
     setHiddenOverlayItemIds,
     setItems,
     setQaFilter,
+    setQaStatusFilter,
     setSitemapItems,
     targetSrc,
   } = useReviewShellData({
@@ -1214,6 +1217,8 @@ export const ReviewShell = ({
         copiedPromptKey={copiedPromptKey}
         qaFilter={qaFilter}
         qaFilterCounts={qaFilterCounts}
+        qaStatusFilter={qaStatusFilter}
+        qaStatusFilterCounts={qaStatusFilterCounts}
         remoteAdapterEntry={remoteAdapterEntry}
         selectedItemId={selectedItemId}
         showSourceSelect={showSourceSelect}
@@ -1226,6 +1231,7 @@ export const ReviewShell = ({
         onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
         onEditItem={setEditingItem}
         onQaFilterChange={setQaFilter}
+        onQaStatusFilterChange={setQaStatusFilter}
         onRefreshReviewData={refreshReviewData}
         onRemoveItem={removeItem}
         onRestoreReviewItem={restoreReviewItem}

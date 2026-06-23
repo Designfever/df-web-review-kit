@@ -10,6 +10,7 @@ import { QaPanelHeader } from './panel.header';
 import type {
   ReviewPresenceUser,
   ReviewQaFilter,
+  ReviewQaStatusFilter,
   ReviewShellViewportKind,
 } from '../types';
 
@@ -29,6 +30,8 @@ interface ReviewQaPanelProps {
   copiedPromptKey: string | null;
   qaFilter: ReviewQaFilter;
   qaFilterCounts: ReadonlyMap<ReviewQaFilter, number>;
+  qaStatusFilter: ReviewQaStatusFilter;
+  qaStatusFilterCounts: ReadonlyMap<ReviewQaStatusFilter, number>;
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
   selectedItemId: string | null;
   showSourceSelect: boolean;
@@ -44,6 +47,7 @@ interface ReviewQaPanelProps {
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onEditItem: (item: ReviewItem) => void;
   onQaFilterChange: (filter: ReviewQaFilter) => void;
+  onQaStatusFilterChange: (filter: ReviewQaStatusFilter) => void;
   onRefreshReviewData: () => Promise<void>;
   onRemoveItem: (item: ReviewItem) => Promise<void>;
   onRestoreReviewItem: (item: ReviewItem) => void;
@@ -67,6 +71,8 @@ export const ReviewQaPanel = ({
   copiedPromptKey,
   qaFilter,
   qaFilterCounts,
+  qaStatusFilter,
+  qaStatusFilterCounts,
   remoteAdapterEntry,
   selectedItemId,
   showSourceSelect,
@@ -79,6 +85,7 @@ export const ReviewQaPanel = ({
   onCopyItemPrompt,
   onEditItem,
   onQaFilterChange,
+  onQaStatusFilterChange,
   onRefreshReviewData,
   onRemoveItem,
   onRestoreReviewItem,
@@ -105,11 +112,15 @@ export const ReviewQaPanel = ({
             presenceSessionId={presenceSessionId}
             qaFilter={qaFilter}
             qaFilterCounts={qaFilterCounts}
+            qaStatusFilter={qaStatusFilter}
+            qaStatusFilterCounts={qaStatusFilterCounts}
             showSourceSelect={showSourceSelect}
             source={source}
             sourceEntries={sourceEntries}
+            statusOptions={activeAdapterEntry.statusOptions}
             onChangeReviewSource={onChangeReviewSource}
             onQaFilterChange={onQaFilterChange}
+            onQaStatusFilterChange={onQaStatusFilterChange}
             onRefreshReviewData={onRefreshReviewData}
           />
           <div

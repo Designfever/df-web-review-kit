@@ -1668,27 +1668,35 @@ function ensureReviewShellStyle() {
     min-width: 0;
   }
 
-		  .df-review-list-controls {
-		    display: flex;
-		    align-items: center;
-		    gap: 4px;
-		  }
+  .df-review-list-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
 
-		  .df-review-source-select {
-		    width: 104px;
-		    min-height: 30px;
-		    border: 1px solid var(--df-review-line-soft);
-		    border-radius: var(--df-review-radius-sm);
-		    padding: 0 24px 0 8px;
-		    color: var(--df-review-text);
-		    background: var(--df-review-control);
-		    box-shadow: var(--df-review-shadow-control);
-		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 800;
-		  }
+  .df-review-source-select,
+  .df-review-status-filter-select {
+    min-height: 30px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 24px 0 8px;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 800;
+  }
 
-		  .df-review-source-refresh {
-		    position: relative;
+  .df-review-source-select {
+    width: 104px;
+  }
+
+  .df-review-status-filter-select {
+    width: 124px;
+  }
+
+  .df-review-source-refresh {
+    position: relative;
 		    display: inline-grid;
 		    place-items: center;
 		    width: 30px;
@@ -4832,16 +4840,37 @@ var QaPanelHeader = ({
   presenceSessionId,
   qaFilter,
   qaFilterCounts,
+  qaStatusFilter,
+  qaStatusFilterCounts,
   showSourceSelect,
   source,
   sourceEntries,
+  statusOptions,
   onChangeReviewSource,
   onQaFilterChange,
+  onQaStatusFilterChange,
   onRefreshReviewData
 }) => {
+  const statusFilterOptions = getStatusFilterOptions(statusOptions);
+  const hasActiveFilter = qaFilter !== "all" || qaStatusFilter !== "all";
   return /* @__PURE__ */ jsxs8("div", { className: "df-review-list-header", children: [
     /* @__PURE__ */ jsxs8("div", { className: "df-review-list-toolbar", children: [
       /* @__PURE__ */ jsxs8("div", { className: "df-review-list-controls", children: [
+        /* @__PURE__ */ jsxs8(
+          "select",
+          {
+            "aria-label": "QA status filter",
+            className: "df-review-status-filter-select",
+            value: qaStatusFilter,
+            onChange: (event) => onQaStatusFilterChange(
+              event.currentTarget.value
+            ),
+            children: [
+              /* @__PURE__ */ jsx10("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
+              statusFilterOptions.map((statusOption) => /* @__PURE__ */ jsx10("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
+            ]
+          }
+        ),
         showSourceSelect && /* @__PURE__ */ jsx10(
           "select",
           {
@@ -4882,7 +4911,7 @@ var QaPanelHeader = ({
     ] }),
     /* @__PURE__ */ jsxs8("div", { className: "df-review-list-title", children: [
       /* @__PURE__ */ jsx10("span", { children: isAllQaVisible ? `${label} QA \xB7 All pages` : `${label} QA` }),
-      /* @__PURE__ */ jsx10("strong", { title: `${activeRemainingItemCount} remaining of ${activeItemCount}`, children: qaFilter === "all" ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}` })
+      /* @__PURE__ */ jsx10("strong", { title: `${activeRemainingItemCount} remaining of ${activeItemCount}`, children: !hasActiveFilter ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}` })
     ] }),
     /* @__PURE__ */ jsx10(
       PresenceRow,
@@ -4893,6 +4922,18 @@ var QaPanelHeader = ({
     )
   ] });
 };
+function getStatusFilterOptions(statusOptions) {
+  const seen = /* @__PURE__ */ new Set();
+  return statusOptions.flatMap((statusOption) => {
+    const value = normalizeReviewItemStatus(statusOption.value);
+    if (seen.has(value)) return [];
+    seen.add(value);
+    return [{
+      value,
+      label: statusOption.label
+    }];
+  });
+}
 
 // src/react-shell/qa/panel.tsx
 import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
@@ -4912,6 +4953,8 @@ var ReviewQaPanel = ({
   copiedPromptKey,
   qaFilter,
   qaFilterCounts,
+  qaStatusFilter,
+  qaStatusFilterCounts,
   remoteAdapterEntry,
   selectedItemId,
   showSourceSelect,
@@ -4924,6 +4967,7 @@ var ReviewQaPanel = ({
   onCopyItemPrompt,
   onEditItem,
   onQaFilterChange,
+  onQaStatusFilterChange,
   onRefreshReviewData,
   onRemoveItem,
   onRestoreReviewItem,
@@ -4944,11 +4988,15 @@ var ReviewQaPanel = ({
         presenceSessionId,
         qaFilter,
         qaFilterCounts,
+        qaStatusFilter,
+        qaStatusFilterCounts,
         showSourceSelect,
         source,
         sourceEntries,
+        statusOptions: activeAdapterEntry.statusOptions,
         onChangeReviewSource,
         onQaFilterChange,
+        onQaStatusFilterChange,
         onRefreshReviewData
       }
     ),
@@ -7220,6 +7268,7 @@ var useReviewShellData = ({
     () => /* @__PURE__ */ new Set()
   );
   const [qaFilter, setQaFilter] = useState7("all");
+  const [qaStatusFilter, setQaStatusFilter] = useState7("all");
   const [sitemapItems, setSitemapItems] = useState7(() => ({
     local: [],
     remote: []
@@ -7245,11 +7294,23 @@ var useReviewShellData = ({
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
     [activeItems, reviewViewportPresets]
   );
-  const filteredNumberedActiveItems = useMemo5(
+  const scopeFilteredNumberedActiveItems = useMemo5(
     () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
       (numberedItem) => numberedItem.scope === qaFilter
     ),
     [numberedActiveItems, qaFilter]
+  );
+  const statusFilteredNumberedActiveItems = useMemo5(
+    () => qaStatusFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
+      (numberedItem) => normalizeReviewItemStatus(numberedItem.item.status) === qaStatusFilter
+    ),
+    [numberedActiveItems, qaStatusFilter]
+  );
+  const filteredNumberedActiveItems = useMemo5(
+    () => qaStatusFilter === "all" ? scopeFilteredNumberedActiveItems : scopeFilteredNumberedActiveItems.filter(
+      (numberedItem) => normalizeReviewItemStatus(numberedItem.item.status) === qaStatusFilter
+    ),
+    [qaStatusFilter, scopeFilteredNumberedActiveItems]
   );
   const hiddenOverlayItemIdList = useMemo5(
     () => Array.from(hiddenOverlayItemIds),
@@ -7257,12 +7318,21 @@ var useReviewShellData = ({
   );
   const qaFilterCounts = useMemo5(() => {
     const counts = /* @__PURE__ */ new Map();
-    counts.set("all", numberedActiveItems.length);
-    numberedActiveItems.forEach((numberedItem) => {
+    counts.set("all", statusFilteredNumberedActiveItems.length);
+    statusFilteredNumberedActiveItems.forEach((numberedItem) => {
       counts.set(numberedItem.scope, (counts.get(numberedItem.scope) ?? 0) + 1);
     });
     return counts;
-  }, [numberedActiveItems]);
+  }, [statusFilteredNumberedActiveItems]);
+  const qaStatusFilterCounts = useMemo5(() => {
+    const counts = /* @__PURE__ */ new Map();
+    counts.set("all", scopeFilteredNumberedActiveItems.length);
+    scopeFilteredNumberedActiveItems.forEach((numberedItem) => {
+      const status = normalizeReviewItemStatus(numberedItem.item.status);
+      counts.set(status, (counts.get(status) ?? 0) + 1);
+    });
+    return counts;
+  }, [scopeFilteredNumberedActiveItems]);
   const getItemPreset = useCallback10(
     (item) => findViewportPreset(
       viewportPresets,
@@ -7371,10 +7441,13 @@ var useReviewShellData = ({
     presetScopeCounts,
     qaFilter,
     qaFilterCounts,
+    qaStatusFilter,
+    qaStatusFilterCounts,
     selectedNumberedItem,
     setHiddenOverlayItemIds,
     setItems,
     setQaFilter,
+    setQaStatusFilter,
     setSitemapItems,
     targetSrc
   };
@@ -8074,10 +8147,13 @@ var ReviewShell = ({
     presetScopeCounts,
     qaFilter,
     qaFilterCounts,
+    qaStatusFilter,
+    qaStatusFilterCounts,
     selectedNumberedItem,
     setHiddenOverlayItemIds,
     setItems,
     setQaFilter,
+    setQaStatusFilter,
     setSitemapItems,
     targetSrc
   } = useReviewShellData({
@@ -8933,6 +9009,8 @@ var ReviewShell = ({
             copiedPromptKey,
             qaFilter,
             qaFilterCounts,
+            qaStatusFilter,
+            qaStatusFilterCounts,
             remoteAdapterEntry,
             selectedItemId,
             showSourceSelect,
@@ -8945,6 +9023,7 @@ var ReviewShell = ({
             onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
             onEditItem: setEditingItem,
             onQaFilterChange: setQaFilter,
+            onQaStatusFilterChange: setQaStatusFilter,
             onRefreshReviewData: refreshReviewData2,
             onRemoveItem: removeItem,
             onRestoreReviewItem: restoreReviewItem,

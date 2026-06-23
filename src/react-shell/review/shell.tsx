@@ -106,8 +106,8 @@ type SourceInspectorState = {
   rect: SourceInspectorRect;
 };
 
-const SOURCE_PANEL_MAX_WIDTH = 680;
-const SOURCE_PANEL_MIN_WIDTH = 300;
+const SOURCE_PANEL_MAX_WIDTH = 440;
+const SOURCE_PANEL_MIN_WIDTH = 240;
 const SOURCE_PANEL_MAX_HEIGHT = 260;
 
 export const ReviewShell = ({

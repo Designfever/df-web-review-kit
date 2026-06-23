@@ -2328,9 +2328,9 @@ function ensureReviewShellStyle() {
     position: fixed;
     z-index: 890;
     display: grid;
-    width: max-content;
-    min-width: min(300px, calc(100vw - 24px));
-    max-width: min(680px, calc(100vw - 24px));
+    width: fit-content;
+    min-width: min(240px, calc(100vw - 24px));
+    max-width: min(440px, calc(100vw - 24px));
     max-height: 260px;
     overflow: hidden;
     border: 1px solid var(--df-review-source-popover-line);
@@ -2401,7 +2401,6 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-source-candidate-main strong,
-  .df-review-source-candidate-main span,
   .df-review-source-candidate-main small {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2414,9 +2413,12 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-source-candidate-main span {
+    overflow-wrap: anywhere;
     color: var(--df-review-source-popover-muted);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
+    line-height: 1.25;
+    white-space: normal;
   }
 
   .df-review-source-candidate-main small {
@@ -7915,8 +7917,8 @@ var getReviewModeWriteMode = (mode) => {
   if (mode === "note" || mode === "area") return mode;
   return null;
 };
-var SOURCE_PANEL_MAX_WIDTH = 680;
-var SOURCE_PANEL_MIN_WIDTH = 300;
+var SOURCE_PANEL_MAX_WIDTH = 440;
+var SOURCE_PANEL_MIN_WIDTH = 240;
 var SOURCE_PANEL_MAX_HEIGHT = 260;
 var ReviewShell = ({
   projectId,

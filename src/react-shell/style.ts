@@ -2317,9 +2317,9 @@ export function ensureReviewShellStyle() {
     position: fixed;
     z-index: 890;
     display: grid;
-    width: max-content;
-    min-width: min(300px, calc(100vw - 24px));
-    max-width: min(680px, calc(100vw - 24px));
+    width: fit-content;
+    min-width: min(240px, calc(100vw - 24px));
+    max-width: min(440px, calc(100vw - 24px));
     max-height: 260px;
     overflow: hidden;
     border: 1px solid var(--df-review-source-popover-line);
@@ -2390,7 +2390,6 @@ export function ensureReviewShellStyle() {
   }
 
   .df-review-source-candidate-main strong,
-  .df-review-source-candidate-main span,
   .df-review-source-candidate-main small {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2403,9 +2402,12 @@ export function ensureReviewShellStyle() {
   }
 
   .df-review-source-candidate-main span {
+    overflow-wrap: anywhere;
     color: var(--df-review-source-popover-muted);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
+    line-height: 1.25;
+    white-space: normal;
   }
 
   .df-review-source-candidate-main small {

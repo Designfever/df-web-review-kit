@@ -7046,6 +7046,19 @@ function createStyleElement() {
       display: block;
     }
 
+    .dfwr-shell.has-dismissible-draft {
+      z-index: 900;
+    }
+
+    .dfwr-draft-cancel-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: auto;
+      background: transparent;
+      cursor: default;
+    }
+
     .dfwr-panel {
       position: fixed;
       right: 16px;
@@ -7983,8 +7996,13 @@ var WebReviewKitView = class {
     shadow.replaceChildren();
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
+    const hasDismissableDraft = Boolean(state.noteDraft || state.areaDraft);
     const shell = document.createElement("div");
-    shell.className = `dfwr-shell${state.isOpen ? " is-open" : ""}`;
+    shell.className = [
+      "dfwr-shell",
+      state.isOpen ? "is-open" : "",
+      hasDismissableDraft ? "has-dismissible-draft" : ""
+    ].filter(Boolean).join(" ");
     shell.setAttribute("aria-hidden", state.isOpen ? "false" : "true");
     if (this.config.options.ui?.panel !== false) {
       const panel = document.createElement("div");
@@ -8000,6 +8018,9 @@ var WebReviewKitView = class {
       shell.append(panel);
     }
     shell.append(this.createMarkerLayer());
+    if (state.isOpen && hasDismissableDraft) {
+      shell.append(this.createDraftCancelLayer());
+    }
     if (state.isOpen && (state.mode === "note" || state.mode === "element")) {
       shell.append(
         state.noteDraft ? this.createNotePopover(state.noteDraft) : state.mode === "element" ? this.createElementLayer() : this.createNoteLayer()
@@ -8018,6 +8039,26 @@ var WebReviewKitView = class {
   }
   get state() {
     return this.config.getState();
+  }
+  createDraftCancelLayer() {
+    const layer = document.createElement("div");
+    layer.className = "dfwr-draft-cancel-layer";
+    layer.setAttribute("aria-hidden", "true");
+    const cancel = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      this.config.actions.setModeState("idle");
+      this.config.actions.clearDrafts();
+      this.config.actions.setSelectingArea(false);
+      this.config.actions.render();
+    };
+    layer.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      cancel(event);
+    });
+    layer.addEventListener("click", cancel);
+    return layer;
   }
   getDraftAdjustmentMetrics(draft) {
     const adjustment = draft.adjustment;

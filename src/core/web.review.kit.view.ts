@@ -117,8 +117,15 @@ export class WebReviewKitView {
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
 
+    const hasDismissableDraft = Boolean(state.noteDraft || state.areaDraft);
     const shell = document.createElement('div');
-    shell.className = `dfwr-shell${state.isOpen ? ' is-open' : ''}`;
+    shell.className = [
+      'dfwr-shell',
+      state.isOpen ? 'is-open' : '',
+      hasDismissableDraft ? 'has-dismissible-draft' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
     shell.setAttribute('aria-hidden', state.isOpen ? 'false' : 'true');
 
     if (this.config.options.ui?.panel !== false) {
@@ -139,6 +146,9 @@ export class WebReviewKitView {
     }
 
     shell.append(this.createMarkerLayer());
+    if (state.isOpen && hasDismissableDraft) {
+      shell.append(this.createDraftCancelLayer());
+    }
 
     if (state.isOpen && (state.mode === 'note' || state.mode === 'element')) {
       shell.append(
@@ -172,6 +182,30 @@ export class WebReviewKitView {
 
   private get state() {
     return this.config.getState();
+  }
+
+  private createDraftCancelLayer() {
+    const layer = document.createElement('div');
+    layer.className = 'dfwr-draft-cancel-layer';
+    layer.setAttribute('aria-hidden', 'true');
+
+    const cancel = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      this.config.actions.setModeState('idle');
+      this.config.actions.clearDrafts();
+      this.config.actions.setSelectingArea(false);
+      this.config.actions.render();
+    };
+
+    layer.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+      cancel(event);
+    });
+    layer.addEventListener('click', cancel);
+
+    return layer;
   }
 
   private getDraftAdjustmentMetrics(draft: NoteDraft) {

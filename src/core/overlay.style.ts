@@ -61,6 +61,19 @@ export function createStyleElement() {
       display: block;
     }
 
+    .dfwr-shell.has-dismissible-draft {
+      z-index: 900;
+    }
+
+    .dfwr-draft-cancel-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: auto;
+      background: transparent;
+      cursor: default;
+    }
+
     .dfwr-panel {
       position: fixed;
       right: 16px;

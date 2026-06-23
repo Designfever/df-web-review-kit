@@ -40,7 +40,7 @@ function supabaseAdapter(options) {
         );
       }
       const rows = await unwrapResponse(
-        request.order("updated_at", { ascending: false }),
+        request.order("created_at", { ascending: false }),
         "supabase list review items"
       );
       return (rows ?? []).flatMap((row) => {

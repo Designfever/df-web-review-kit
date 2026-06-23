@@ -65,10 +65,8 @@ export const useReviewShellState = ({
     remoteSource && activeAdapterEntry.label === remoteSource
   );
   const showSourceSelect = sourceEntries.length > 1;
-  const canWriteDom = activeAdapterEntry.writeModes.includes('dom');
-  const canWriteNote = activeAdapterEntry.writeModes.includes('note');
   const canWriteArea = activeAdapterEntry.writeModes.includes('area');
-  const canWriteAny = canWriteDom || canWriteNote || canWriteArea;
+  const canWriteDom = activeAdapterEntry.writeModes.includes('dom');
   const adapter = activeAdapterEntry.adapter;
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -112,10 +110,8 @@ export const useReviewShellState = ({
     activeAdapterEntry,
     activeRoute,
     adapter,
-    canWriteAny,
     canWriteArea,
     canWriteDom,
-    canWriteNote,
     cleanupTargetRef,
     controllerRef,
     copiedPromptKey,

@@ -913,7 +913,7 @@ export function ensureReviewShellStyle() {
     position: relative;
     z-index: 1;
     display: grid;
-    width: min(520px, calc(100vw - 48px));
+    width: min(460px, calc(100vw - 48px));
     overflow: hidden;
     border: 1px solid var(--df-review-line);
     border-radius: var(--df-review-radius-lg);
@@ -921,60 +921,25 @@ export function ensureReviewShellStyle() {
     box-shadow: var(--df-review-shadow-modal);
   }
 
-  .df-review-edit-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-height: 54px;
-    padding: 0 14px 0 16px;
-    border-bottom: 1px solid var(--df-review-line);
+  .df-review-edit-textarea {
+    min-height: 160px;
   }
 
-  .df-review-edit-close {
-    display: grid;
-    place-items: center;
-    width: 34px;
-    min-width: 34px;
-    padding: 0;
-    font-size: var(--df-review-font-size-md);
-    font-weight: 800;
-  }
-
-  .df-review-edit-body {
-    display: grid;
-    gap: 8px;
-    padding: 16px;
-  }
-
-  .df-review-edit-field {
-    display: grid;
-    gap: 7px;
-  }
-
-  .df-review-edit-field span {
-    color: var(--df-review-muted);
-    font-size: var(--df-review-font-size-sm);
-    font-weight: 800;
-  }
-
-  .df-review-edit-field textarea {
+  .df-review-edit-textarea textarea {
     width: 100%;
     min-height: 160px;
-    resize: vertical;
-    border: 1px solid var(--df-review-line);
-    border-radius: var(--df-review-radius-sm);
-    padding: 10px 11px;
+    border: 0;
+    padding: 10px;
+    outline: 0;
+    background: transparent;
     color: var(--df-review-text);
-    background: var(--df-review-bg);
-    font: inherit;
+    resize: vertical;
     font-size: var(--df-review-font-size-md);
     line-height: 1.5;
   }
 
-  .df-review-edit-field textarea:focus {
-    outline: 2px solid var(--df-review-focus-ring);
-    outline-offset: 1px;
+  .df-review-edit-textarea textarea:focus {
+    outline: 0;
   }
 
   .df-review-edit-error {
@@ -985,23 +950,7 @@ export function ensureReviewShellStyle() {
   }
 
   .df-review-edit-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    padding: 0 16px 16px;
-  }
-
-  .df-review-edit-cancel,
-  .df-review-edit-save {
-    min-height: var(--df-review-control-height-md);
-    padding: 0 13px;
-  }
-
-  .df-review-edit-save {
-    border-color: var(--df-review-accent);
-    background: var(--df-review-accent-soft);
-    color: var(--df-review-accent);
+    grid-template-columns: minmax(0, 1fr) auto auto;
   }
 
 			  .df-review-prompt-modal {

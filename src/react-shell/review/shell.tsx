@@ -87,10 +87,8 @@ export const ReviewShell = ({
     activeAdapterEntry,
     activeRoute,
     adapter,
-    canWriteAny,
     canWriteArea,
     canWriteDom,
-    canWriteNote,
     cleanupTargetRef,
     controllerRef,
     copiedPromptKey,
@@ -474,6 +472,7 @@ export const ReviewShell = ({
 
     const hoverAttribute = 'data-dfwr-source-hover';
     const optionAttribute = 'data-dfwr-source-option';
+    const fontOverlayAttribute = 'data-dfwr-source-fonts';
     const style = frameDocument.createElement('style');
     style.dataset.dfwrSourceOpenShortcut = 'true';
     style.textContent = `
@@ -504,19 +503,106 @@ export const ReviewShell = ({
         outline: 2px solid rgba(124, 199, 255, 0.96) !important;
         outline-offset: 2px !important;
       }
+
+      [${fontOverlayAttribute}] {
+        position: fixed !important;
+        z-index: 2147483647 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        max-width: 180px !important;
+        border: 1px solid rgba(124, 199, 255, 0.72) !important;
+        border-radius: 6px !important;
+        padding: 4px 6px !important;
+        color: #ffffff !important;
+        background: rgba(15, 23, 42, 0.9) !important;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28) !important;
+        font: 800 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+        pointer-events: none !important;
+        white-space: nowrap !important;
+      }
+
+      [${fontOverlayAttribute}] > span {
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+      }
+
+      [${fontOverlayAttribute}][hidden] {
+        display: none !important;
+      }
     `;
 
     (frameDocument.head ?? frameDocument.documentElement).append(style);
+
+    const fontOverlay = frameDocument.createElement('div');
+    fontOverlay.setAttribute(fontOverlayAttribute, 'true');
+    fontOverlay.hidden = true;
+    (frameDocument.body ?? frameDocument.documentElement).append(fontOverlay);
 
     let hoveredElement: Element | null = null;
     let lastSourceElement: Element | null = null;
     let isSourceSelecting = false;
 
+    const getFontHints = (element: Element | null) => {
+      if (!element) return [];
+
+      const values: Array<{ tag: string; value: string }> = [];
+      const addValue = (target: Element) => {
+        const value = target.getAttribute('data-font')?.trim();
+        const tag = target.tagName.toLowerCase();
+        if (
+          value &&
+          !values.some((item) => item.tag === tag && item.value === value)
+        ) {
+          values.push({ tag, value });
+        }
+      };
+
+      addValue(element);
+      element.querySelectorAll('[data-font]').forEach(addValue);
+      return values;
+    };
+
+    const updateFontOverlay = (element: Element | null) => {
+      const values = isSourceSelecting ? getFontHints(element) : [];
+      if (!values.length || !element) {
+        fontOverlay.hidden = true;
+        return;
+      }
+
+      const rect = element.getBoundingClientRect();
+      const frameWidth = frameDocument.documentElement.clientWidth;
+      const showAbove = rect.top > 48;
+      const left = Math.max(4, Math.min(rect.left, frameWidth - 96));
+      const top = Math.max(4, showAbove ? rect.top : rect.bottom);
+
+      fontOverlay.replaceChildren();
+      fontOverlay.style.minWidth = '72px';
+      const rows = values.map(({ tag, value }) => {
+        const row = frameDocument.createElement('span');
+        const tagText = frameDocument.createElement('span');
+        const valueText = frameDocument.createElement('span');
+        tagText.textContent = tag;
+        valueText.textContent = value;
+        row.append(tagText, valueText);
+        return row;
+      });
+      fontOverlay.append(...rows);
+      fontOverlay.style.left = `${left}px`;
+      fontOverlay.style.top = `${top}px`;
+      fontOverlay.style.transform = showAbove
+        ? 'translateY(calc(-100% - 6px))'
+        : 'translateY(6px)';
+      fontOverlay.hidden = false;
+    };
+
     const setHoveredElement = (element: Element | null) => {
-      if (hoveredElement === element) return;
-      hoveredElement?.removeAttribute(hoverAttribute);
-      hoveredElement = element;
-      hoveredElement?.setAttribute(hoverAttribute, 'true');
+      if (hoveredElement !== element) {
+        hoveredElement?.removeAttribute(hoverAttribute);
+        hoveredElement = element;
+        hoveredElement?.setAttribute(hoverAttribute, 'true');
+      }
+      updateFontOverlay(element);
     };
 
     const setSourceSelecting = (isSelecting: boolean) => {
@@ -528,6 +614,7 @@ export const ReviewShell = ({
       }
 
       setHoveredElement(null);
+      fontOverlay.hidden = true;
       frameDocument.documentElement.removeAttribute(optionAttribute);
     };
 
@@ -601,6 +688,7 @@ export const ReviewShell = ({
       window.removeEventListener('blur', handleBlur);
       setSourceSelecting(false);
       style.remove();
+      fontOverlay.remove();
     };
   }, [
     cancelReviewMode,
@@ -842,10 +930,8 @@ export const ReviewShell = ({
       />
 
       <ReviewTargetFrame
-        canWriteAny={canWriteAny}
         canWriteArea={canWriteArea}
         canWriteDom={canWriteDom}
-        canWriteNote={canWriteNote}
         frameScrollRef={frameScrollRef}
         iframeRef={iframeRef}
         isRulerAvailable={isRulerAvailable}

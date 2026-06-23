@@ -76,7 +76,7 @@ export const useReviewShellData = ({
     () =>
       items
         .filter((item) => getItemTarget(item, reviewPathPrefix) === activeRoute)
-        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [activeRoute, items, reviewPathPrefix]
   );
   const numberedActiveItems = useMemo(

@@ -10,10 +10,8 @@ import { RulerGutters } from '../ruler/gutters';
 import { RulerOverlay } from '../ruler/overlay';
 
 interface ReviewTargetFrameProps {
-  canWriteAny: boolean;
   canWriteArea: boolean;
   canWriteDom: boolean;
-  canWriteNote: boolean;
   frameScrollRef: RefObject<HTMLDivElement | null>;
   iframeRef: RefObject<HTMLIFrameElement | null>;
   isRulerAvailable: boolean;
@@ -34,10 +32,8 @@ interface ReviewTargetFrameProps {
 }
 
 export const ReviewTargetFrame = ({
-  canWriteAny,
   canWriteArea,
   canWriteDom,
-  canWriteNote,
   frameScrollRef,
   iframeRef,
   isRulerAvailable,
@@ -112,10 +108,8 @@ export const ReviewTargetFrame = ({
         </div>
         <div className="df-review-frame-actions">
           <ReviewModeToolbar
-            canWriteAny={canWriteAny}
             canWriteArea={canWriteArea}
             canWriteDom={canWriteDom}
-            canWriteNote={canWriteNote}
             mode={mode}
             onSetReviewMode={onSetReviewMode}
           />

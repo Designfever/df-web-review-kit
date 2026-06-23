@@ -65,7 +65,7 @@ export function supabaseAdapter(
       }
 
       const rows = await unwrapResponse<SupabaseReviewRow[]>(
-        request.order('updated_at', { ascending: false }),
+        request.order('created_at', { ascending: false }),
         'supabase list review items'
       );
 

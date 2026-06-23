@@ -924,7 +924,7 @@ function ensureReviewShellStyle() {
     position: relative;
     z-index: 1;
     display: grid;
-    width: min(520px, calc(100vw - 48px));
+    width: min(460px, calc(100vw - 48px));
     overflow: hidden;
     border: 1px solid var(--df-review-line);
     border-radius: var(--df-review-radius-lg);
@@ -932,60 +932,25 @@ function ensureReviewShellStyle() {
     box-shadow: var(--df-review-shadow-modal);
   }
 
-  .df-review-edit-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-height: 54px;
-    padding: 0 14px 0 16px;
-    border-bottom: 1px solid var(--df-review-line);
+  .df-review-edit-textarea {
+    min-height: 160px;
   }
 
-  .df-review-edit-close {
-    display: grid;
-    place-items: center;
-    width: 34px;
-    min-width: 34px;
-    padding: 0;
-    font-size: var(--df-review-font-size-md);
-    font-weight: 800;
-  }
-
-  .df-review-edit-body {
-    display: grid;
-    gap: 8px;
-    padding: 16px;
-  }
-
-  .df-review-edit-field {
-    display: grid;
-    gap: 7px;
-  }
-
-  .df-review-edit-field span {
-    color: var(--df-review-muted);
-    font-size: var(--df-review-font-size-sm);
-    font-weight: 800;
-  }
-
-  .df-review-edit-field textarea {
+  .df-review-edit-textarea textarea {
     width: 100%;
     min-height: 160px;
-    resize: vertical;
-    border: 1px solid var(--df-review-line);
-    border-radius: var(--df-review-radius-sm);
-    padding: 10px 11px;
+    border: 0;
+    padding: 10px;
+    outline: 0;
+    background: transparent;
     color: var(--df-review-text);
-    background: var(--df-review-bg);
-    font: inherit;
+    resize: vertical;
     font-size: var(--df-review-font-size-md);
     line-height: 1.5;
   }
 
-  .df-review-edit-field textarea:focus {
-    outline: 2px solid var(--df-review-focus-ring);
-    outline-offset: 1px;
+  .df-review-edit-textarea textarea:focus {
+    outline: 0;
   }
 
   .df-review-edit-error {
@@ -996,23 +961,7 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-edit-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    padding: 0 16px 16px;
-  }
-
-  .df-review-edit-cancel,
-  .df-review-edit-save {
-    min-height: var(--df-review-control-height-md);
-    padding: 0 13px;
-  }
-
-  .df-review-edit-save {
-    border-color: var(--df-review-accent);
-    background: var(--df-review-accent-soft);
-    color: var(--df-review-accent);
+    grid-template-columns: minmax(0, 1fr) auto auto;
   }
 
 			  .df-review-prompt-modal {
@@ -3801,26 +3750,25 @@ var QaItemEditModal = ({
               void saveComment();
             },
             children: [
-              /* @__PURE__ */ jsxs4("header", { className: "df-review-edit-header", children: [
+              /* @__PURE__ */ jsxs4("header", { className: "df-review-settings-header", children: [
                 /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-title", children: [
                   /* @__PURE__ */ jsx4("strong", { id: "df-review-edit-title", children: "Edit QA comment" }),
                   /* @__PURE__ */ jsx4("span", { children: "Update the text shown on this QA item." })
                 ] }),
-                /* @__PURE__ */ jsx4(
+                /* @__PURE__ */ jsx4("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ jsx4(
                   "button",
                   {
                     "aria-label": "Close edit dialog",
-                    className: "df-review-edit-close",
                     type: "button",
                     onClick: onClose,
-                    children: "\xD7"
+                    children: "x"
                   }
-                )
+                ) })
               ] }),
-              /* @__PURE__ */ jsxs4("div", { className: "df-review-edit-body", children: [
-                /* @__PURE__ */ jsxs4("label", { className: "df-review-edit-field", children: [
+              /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-body df-review-edit-body", children: [
+                /* @__PURE__ */ jsxs4("label", { className: "df-review-settings-field", children: [
                   /* @__PURE__ */ jsx4("span", { children: "Comment" }),
-                  /* @__PURE__ */ jsx4(
+                  /* @__PURE__ */ jsx4("div", { className: "df-review-settings-text-input df-review-edit-textarea", children: /* @__PURE__ */ jsx4(
                     "textarea",
                     {
                       autoFocus: true,
@@ -3840,30 +3788,14 @@ var QaItemEditModal = ({
                         }
                       }
                     }
-                  )
+                  ) })
                 ] }),
-                error && /* @__PURE__ */ jsx4("p", { className: "df-review-edit-error", children: error })
-              ] }),
-              /* @__PURE__ */ jsxs4("footer", { className: "df-review-edit-actions", children: [
-                /* @__PURE__ */ jsx4(
-                  "button",
-                  {
-                    className: "df-review-edit-cancel",
-                    disabled: isSaving,
-                    type: "button",
-                    onClick: onClose,
-                    children: "Cancel"
-                  }
-                ),
-                /* @__PURE__ */ jsx4(
-                  "button",
-                  {
-                    className: "df-review-edit-save",
-                    disabled: isSaving,
-                    type: "submit",
-                    children: isSaving ? "Saving\u2026" : "Save"
-                  }
-                )
+                error && /* @__PURE__ */ jsx4("p", { className: "df-review-edit-error", children: error }),
+                /* @__PURE__ */ jsxs4("footer", { className: "df-review-settings-actions df-review-edit-actions", children: [
+                  /* @__PURE__ */ jsx4("span", {}),
+                  /* @__PURE__ */ jsx4("button", { disabled: isSaving, type: "button", onClick: onClose, children: "Cancel" }),
+                  /* @__PURE__ */ jsx4("button", { disabled: isSaving, type: "submit", children: isSaving ? "Saving\u2026" : "Save" })
+                ] })
               ] })
             ]
           }
@@ -4586,14 +4518,12 @@ var ReviewQaPanel = ({
 // src/react-shell/review/mode.toolbar.tsx
 import { jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
 var ReviewModeToolbar = ({
-  canWriteAny,
   canWriteArea,
   canWriteDom,
-  canWriteNote,
   mode,
   onSetReviewMode
 }) => {
-  if (!canWriteAny) return null;
+  if (!canWriteDom && !canWriteArea) return null;
   return /* @__PURE__ */ jsxs10("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
     canWriteDom && /* @__PURE__ */ jsx12(
       "button",
@@ -4605,17 +4535,7 @@ var ReviewModeToolbar = ({
         children: /* @__PURE__ */ jsx12(SquareMousePointer, { "aria-hidden": "true" })
       }
     ),
-    canWriteDom && (canWriteNote || canWriteArea) && /* @__PURE__ */ jsx12("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
-    canWriteNote && /* @__PURE__ */ jsx12(
-      "button",
-      {
-        "aria-label": "Note",
-        className: `df-review-mode-button is-note${mode === "note" ? " is-active" : ""}`,
-        type: "button",
-        onClick: () => onSetReviewMode("note"),
-        children: /* @__PURE__ */ jsx12(StickyNote, { "aria-hidden": "true" })
-      }
-    ),
+    canWriteDom && canWriteArea && /* @__PURE__ */ jsx12("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
     canWriteArea && /* @__PURE__ */ jsx12(
       "button",
       {
@@ -4770,10 +4690,8 @@ var RulerOverlay = ({
 // src/react-shell/target/frame.tsx
 import { jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
 var ReviewTargetFrame = ({
-  canWriteAny,
   canWriteArea,
   canWriteDom,
-  canWriteNote,
   frameScrollRef,
   iframeRef,
   isRulerAvailable,
@@ -4853,10 +4771,8 @@ var ReviewTargetFrame = ({
     /* @__PURE__ */ jsx15("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ jsx15(
       ReviewModeToolbar,
       {
-        canWriteAny,
         canWriteArea,
         canWriteDom,
-        canWriteNote,
         mode,
         onSetReviewMode
       }
@@ -6536,7 +6452,7 @@ var useReviewShellData = ({
     [pages, reviewPathPrefix]
   );
   const activeItems = useMemo4(
-    () => items.filter((item) => getItemTarget(item, reviewPathPrefix) === activeRoute).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+    () => items.filter((item) => getItemTarget(item, reviewPathPrefix) === activeRoute).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [activeRoute, items, reviewPathPrefix]
   );
   const numberedActiveItems = useMemo4(
@@ -6888,10 +6804,8 @@ var useReviewShellState = ({
     remoteSource && activeAdapterEntry.label === remoteSource
   );
   const showSourceSelect = sourceEntries.length > 1;
-  const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
-  const canWriteNote = activeAdapterEntry.writeModes.includes("note");
   const canWriteArea = activeAdapterEntry.writeModes.includes("area");
-  const canWriteAny = canWriteDom || canWriteNote || canWriteArea;
+  const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
   const adapter = activeAdapterEntry.adapter;
   const iframeRef = useRef3(null);
   const frameScrollRef = useRef3(null);
@@ -6932,10 +6846,8 @@ var useReviewShellState = ({
     activeAdapterEntry,
     activeRoute,
     adapter,
-    canWriteAny,
     canWriteArea,
     canWriteDom,
-    canWriteNote,
     cleanupTargetRef,
     controllerRef,
     copiedPromptKey,
@@ -7239,10 +7151,8 @@ var ReviewShell = ({
     activeAdapterEntry,
     activeRoute,
     adapter,
-    canWriteAny,
     canWriteArea,
     canWriteDom,
-    canWriteNote,
     cleanupTargetRef,
     controllerRef,
     copiedPromptKey,
@@ -7591,6 +7501,7 @@ var ReviewShell = ({
     if (!frameDocument) return;
     const hoverAttribute = "data-dfwr-source-hover";
     const optionAttribute = "data-dfwr-source-option";
+    const fontOverlayAttribute = "data-dfwr-source-fonts";
     const style = frameDocument.createElement("style");
     style.dataset.dfwrSourceOpenShortcut = "true";
     style.textContent = `
@@ -7621,16 +7532,91 @@ var ReviewShell = ({
         outline: 2px solid rgba(124, 199, 255, 0.96) !important;
         outline-offset: 2px !important;
       }
+
+      [${fontOverlayAttribute}] {
+        position: fixed !important;
+        z-index: 2147483647 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        max-width: 180px !important;
+        border: 1px solid rgba(124, 199, 255, 0.72) !important;
+        border-radius: 6px !important;
+        padding: 4px 6px !important;
+        color: #ffffff !important;
+        background: rgba(15, 23, 42, 0.9) !important;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28) !important;
+        font: 800 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+        pointer-events: none !important;
+        white-space: nowrap !important;
+      }
+
+      [${fontOverlayAttribute}] > span {
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+      }
+
+      [${fontOverlayAttribute}][hidden] {
+        display: none !important;
+      }
     `;
     (frameDocument.head ?? frameDocument.documentElement).append(style);
+    const fontOverlay = frameDocument.createElement("div");
+    fontOverlay.setAttribute(fontOverlayAttribute, "true");
+    fontOverlay.hidden = true;
+    (frameDocument.body ?? frameDocument.documentElement).append(fontOverlay);
     let hoveredElement = null;
     let lastSourceElement = null;
     let isSourceSelecting = false;
+    const getFontHints = (element) => {
+      if (!element) return [];
+      const values = [];
+      const addValue = (target2) => {
+        const value = target2.getAttribute("data-font")?.trim();
+        const tag = target2.tagName.toLowerCase();
+        if (value && !values.some((item) => item.tag === tag && item.value === value)) {
+          values.push({ tag, value });
+        }
+      };
+      addValue(element);
+      element.querySelectorAll("[data-font]").forEach(addValue);
+      return values;
+    };
+    const updateFontOverlay = (element) => {
+      const values = isSourceSelecting ? getFontHints(element) : [];
+      if (!values.length || !element) {
+        fontOverlay.hidden = true;
+        return;
+      }
+      const rect = element.getBoundingClientRect();
+      const frameWidth = frameDocument.documentElement.clientWidth;
+      const showAbove = rect.top > 48;
+      const left = Math.max(4, Math.min(rect.left, frameWidth - 96));
+      const top = Math.max(4, showAbove ? rect.top : rect.bottom);
+      fontOverlay.replaceChildren();
+      fontOverlay.style.minWidth = "72px";
+      const rows = values.map(({ tag, value }) => {
+        const row = frameDocument.createElement("span");
+        const tagText = frameDocument.createElement("span");
+        const valueText = frameDocument.createElement("span");
+        tagText.textContent = tag;
+        valueText.textContent = value;
+        row.append(tagText, valueText);
+        return row;
+      });
+      fontOverlay.append(...rows);
+      fontOverlay.style.left = `${left}px`;
+      fontOverlay.style.top = `${top}px`;
+      fontOverlay.style.transform = showAbove ? "translateY(calc(-100% - 6px))" : "translateY(6px)";
+      fontOverlay.hidden = false;
+    };
     const setHoveredElement = (element) => {
-      if (hoveredElement === element) return;
-      hoveredElement?.removeAttribute(hoverAttribute);
-      hoveredElement = element;
-      hoveredElement?.setAttribute(hoverAttribute, "true");
+      if (hoveredElement !== element) {
+        hoveredElement?.removeAttribute(hoverAttribute);
+        hoveredElement = element;
+        hoveredElement?.setAttribute(hoverAttribute, "true");
+      }
+      updateFontOverlay(element);
     };
     const setSourceSelecting = (isSelecting) => {
       isSourceSelecting = isSelecting;
@@ -7640,6 +7626,7 @@ var ReviewShell = ({
         return;
       }
       setHoveredElement(null);
+      fontOverlay.hidden = true;
       frameDocument.documentElement.removeAttribute(optionAttribute);
     };
     const handleMouseMove = (event) => {
@@ -7695,6 +7682,7 @@ var ReviewShell = ({
       window.removeEventListener("blur", handleBlur);
       setSourceSelecting(false);
       style.remove();
+      fontOverlay.remove();
     };
   }, [
     cancelReviewMode,
@@ -7906,10 +7894,8 @@ var ReviewShell = ({
         /* @__PURE__ */ jsx17(
           ReviewTargetFrame,
           {
-            canWriteAny,
             canWriteArea,
             canWriteDom,
-            canWriteNote,
             frameScrollRef,
             iframeRef,
             isRulerAvailable,

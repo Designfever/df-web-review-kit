@@ -148,6 +148,7 @@ function ensureReviewShellStyle() {
 	    --df-review-shadow-device: 0 24px 60px rgba(0, 0, 0, 0.38);
 	    --df-review-shadow-panel: 0 18px 48px rgba(0, 0, 0, 0.38);
 	    --df-review-shadow-modal: 0 24px 70px rgba(0, 0, 0, 0.48);
+	    --df-review-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d7e0ec' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 
 	    /* Semantic aliases consumed by the existing shell chrome. */
 	    --df-review-bg: var(--df-review-color-canvas);
@@ -243,6 +244,7 @@ function ensureReviewShellStyle() {
 	    --df-review-shadow-device: 0 24px 60px rgba(15, 23, 42, 0.18);
 	    --df-review-shadow-panel: 0 18px 48px rgba(15, 23, 42, 0.18);
 	    --df-review-shadow-modal: 0 24px 70px rgba(15, 23, 42, 0.2);
+	    --df-review-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317202c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 	  }
 
 	  button,
@@ -2034,6 +2036,29 @@ function ensureReviewShellStyle() {
     border-color: rgba(99, 215, 199, 0.34);
     color: var(--df-review-area);
     background: var(--df-review-area-soft);
+  }
+
+  .df-review-source-select,
+  .df-review-status-filter-select,
+  .df-review-item-status-select,
+  .df-review-sitemap-controls select {
+    --df-review-select-padding-x: 12px;
+    --df-review-select-chevron-size: 14px;
+    --df-review-select-chevron-gap: 8px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: var(--df-review-select-chevron);
+    background-repeat: no-repeat;
+    background-position: right var(--df-review-select-padding-x) center;
+    background-size:
+      var(--df-review-select-chevron-size)
+      var(--df-review-select-chevron-size);
+    padding-right: calc(
+      var(--df-review-select-padding-x) +
+      var(--df-review-select-chevron-size) +
+      var(--df-review-select-chevron-gap)
+    );
+    padding-left: var(--df-review-select-padding-x);
   }
 
   .df-review-item-status-badge.is-error {

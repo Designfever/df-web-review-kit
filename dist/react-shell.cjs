@@ -295,7 +295,7 @@ function ensureReviewShellStyle() {
     --df-review-frame-gutter-x: var(--df-review-space-4);
     display: grid;
     grid-template-columns: minmax(0, 1fr) 0 32px;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -321,6 +321,20 @@ function ensureReviewShellStyle() {
 	      linear-gradient(180deg, var(--df-review-topbar), var(--df-review-panel));
 	    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.025);
 	  }
+
+  .df-review-presence-row {
+    grid-column: 1;
+    grid-row: 2;
+    position: relative;
+    z-index: 590;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+    padding: var(--df-review-space-2) var(--df-review-frame-gutter-x);
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background: var(--df-review-panel);
+  }
 
 		  .df-review-address {
 		    display: grid;
@@ -1496,7 +1510,7 @@ function ensureReviewShellStyle() {
 
 	  .df-review-side-rail {
 	    grid-column: 3;
-	    grid-row: 1 / span 2;
+	    grid-row: 1 / span 3;
 	    position: relative;
 	    z-index: 600;
 	    display: flex;
@@ -1556,7 +1570,7 @@ function ensureReviewShellStyle() {
 
 	  .df-review-qa-panel {
 	    grid-column: 2;
-	    grid-row: 1 / span 2;
+	    grid-row: 1 / span 3;
 	    position: relative;
 	    z-index: 600;
 	    display: grid;
@@ -1638,6 +1652,12 @@ function ensureReviewShellStyle() {
     pointer-events: none;
   }
 
+  .df-review-presence-row .df-review-presence-overlay {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
   .df-review-presence-chip {
     --df-review-presence-color: var(--df-review-accent);
     display: inline-flex;
@@ -1658,6 +1678,10 @@ function ensureReviewShellStyle() {
     text-overflow: ellipsis;
     white-space: nowrap;
     backdrop-filter: blur(8px);
+  }
+
+  .df-review-presence-row .df-review-presence-chip {
+    max-width: none;
   }
 
   .df-review-presence-chip.is-self {
@@ -2272,7 +2296,7 @@ function ensureReviewShellStyle() {
 
 	  .df-review-stage {
 	    grid-column: 1;
-	    grid-row: 2;
+	    grid-row: 3;
 	    display: grid;
 	    min-width: 0;
 	    min-height: 0;
@@ -2524,10 +2548,6 @@ function ensureReviewShellStyle() {
     flex: 0 0 auto;
   }
 
-  .df-review-presence-overlay + .df-review-device-frame.is-ruler {
-    margin-top: 26px;
-  }
-
   .df-review-ruler-corner {
     position: absolute;
     left: -26px;
@@ -2727,7 +2747,7 @@ function ensureReviewShellStyle() {
 	    .df-review-shell,
 	    .df-review-shell.is-list-visible {
 	      grid-template-columns: minmax(0, 1fr) 0 32px;
-	      grid-template-rows: auto minmax(0, 1fr);
+	      grid-template-rows: auto auto minmax(0, 1fr);
 	    }
 
 	    .df-review-shell.is-list-visible {
@@ -5071,6 +5091,56 @@ var ReviewQaPanel = ({
   ] }) }) });
 };
 
+// src/react-shell/presence/overlay.tsx
+var import_react6 = require("react");
+var import_jsx_runtime11 = require("react/jsx-runtime");
+var COLLAPSED_USER_COUNT = 1;
+var getPresenceName = (user) => user.displayName || user.userId;
+var PresenceOverlay = ({
+  presenceSessionId,
+  users
+}) => {
+  const [isExpanded, setIsExpanded] = (0, import_react6.useState)(false);
+  if (users.length === 0) return null;
+  const visibleUsers = isExpanded ? users : users.slice(0, COLLAPSED_USER_COUNT);
+  const hiddenUserCount = users.length - visibleUsers.length;
+  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+    "div",
+    {
+      "aria-label": `Review presence, ${users.length} online`,
+      className: `df-review-presence-overlay${isExpanded ? " is-expanded" : ""}`,
+      children: [
+        visibleUsers.map((user) => /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+          "span",
+          {
+            className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
+            style: {
+              "--df-review-presence-color": user.color
+            },
+            title: getPresenceName(user),
+            children: getPresenceName(user)
+          },
+          user.sessionId
+        )),
+        hiddenUserCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+          "button",
+          {
+            "aria-label": `Show ${hiddenUserCount} more online reviewers`,
+            "aria-expanded": isExpanded,
+            className: "df-review-presence-more",
+            type: "button",
+            onClick: () => setIsExpanded(true),
+            children: [
+              "+",
+              hiddenUserCount
+            ]
+          }
+        )
+      ]
+    }
+  );
+};
+
 // src/react-shell/source.open.ts
 var SOURCE_SELECTOR = [
   "[data-wrk-source-file]",
@@ -5278,56 +5348,6 @@ function encodePathForFileScheme(path) {
   );
 }
 
-// src/react-shell/presence/overlay.tsx
-var import_react6 = require("react");
-var import_jsx_runtime11 = require("react/jsx-runtime");
-var COLLAPSED_USER_COUNT = 1;
-var getPresenceName = (user) => user.displayName || user.userId;
-var PresenceOverlay = ({
-  presenceSessionId,
-  users
-}) => {
-  const [isExpanded, setIsExpanded] = (0, import_react6.useState)(false);
-  if (users.length === 0) return null;
-  const visibleUsers = isExpanded ? users : users.slice(0, COLLAPSED_USER_COUNT);
-  const hiddenUserCount = users.length - visibleUsers.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
-    "div",
-    {
-      "aria-label": `Review presence, ${users.length} online`,
-      className: `df-review-presence-overlay${isExpanded ? " is-expanded" : ""}`,
-      children: [
-        visibleUsers.map((user) => /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
-          "span",
-          {
-            className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
-            style: {
-              "--df-review-presence-color": user.color
-            },
-            title: getPresenceName(user),
-            children: getPresenceName(user)
-          },
-          user.sessionId
-        )),
-        hiddenUserCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
-          "button",
-          {
-            "aria-label": `Show ${hiddenUserCount} more online reviewers`,
-            "aria-expanded": isExpanded,
-            className: "df-review-presence-more",
-            type: "button",
-            onClick: () => setIsExpanded(true),
-            children: [
-              "+",
-              hiddenUserCount
-            ]
-          }
-        )
-      ]
-    }
-  );
-};
-
 // src/react-shell/review/mode.toolbar.tsx
 var import_jsx_runtime12 = require("react/jsx-runtime");
 var ReviewModeToolbar = ({
@@ -5512,7 +5532,6 @@ var ReviewTargetFrame = ({
   isRulerDragging,
   isRulerVisible,
   mode,
-  presenceSessionId,
   rulerHover,
   rulerMeasure,
   rulerMeasureLabel,
@@ -5522,103 +5541,93 @@ var ReviewTargetFrame = ({
   rulerUnit,
   size,
   targetSrc,
-  users,
   onLoadTarget,
   onSetReviewMode
 }) => {
   const showRuler = isRulerVisible && isRulerAvailable;
   return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("main", { className: "df-review-stage", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-frame", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-target-stack", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-        PresenceOverlay,
-        {
-          presenceSessionId,
-          users
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
-        "div",
-        {
-          className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
-          children: [
-            showRuler && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-              RulerGutters,
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-target-stack", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+      "div",
+      {
+        className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
+        children: [
+          showRuler && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+            RulerGutters,
+            {
+              rulerHover,
+              rulerScaleX,
+              rulerScaleY,
+              rulerUnit,
+              size
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+            "div",
+            {
+              className: "df-review-device",
+              style: {
+                width: `${size.width}px`,
+                height: `${size.height}px`,
+                minWidth: `${size.width}px`,
+                minHeight: `${size.height}px`
+              },
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+                  "iframe",
+                  {
+                    ref: iframeRef,
+                    width: size.width,
+                    height: size.height,
+                    src: targetSrc,
+                    title: "Review target",
+                    onLoad: onLoadTarget
+                  },
+                  targetSrc
+                ),
+                showRuler && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+                  RulerOverlay,
+                  {
+                    iframeRef,
+                    isRulerDragging,
+                    rulerHover,
+                    rulerMeasure,
+                    rulerMeasureLabel,
+                    rulerOverlayRef,
+                    size
+                  }
+                )
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-frame-link-stack", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+              "a",
               {
-                rulerHover,
-                rulerScaleX,
-                rulerScaleY,
-                rulerUnit,
-                size
+                "aria-label": "Open target page",
+                className: "df-review-frame-link is-target",
+                href: targetSrc,
+                rel: "noreferrer",
+                target: "_blank",
+                title: "Open target page",
+                children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(ExternalLink, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
-              "div",
+            figmaFrameUrl && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+              "a",
               {
-                className: "df-review-device",
-                style: {
-                  width: `${size.width}px`,
-                  height: `${size.height}px`,
-                  minWidth: `${size.width}px`,
-                  minHeight: `${size.height}px`
-                },
-                children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-                    "iframe",
-                    {
-                      ref: iframeRef,
-                      width: size.width,
-                      height: size.height,
-                      src: targetSrc,
-                      title: "Review target",
-                      onLoad: onLoadTarget
-                    },
-                    targetSrc
-                  ),
-                  showRuler && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-                    RulerOverlay,
-                    {
-                      iframeRef,
-                      isRulerDragging,
-                      rulerHover,
-                      rulerMeasure,
-                      rulerMeasureLabel,
-                      rulerOverlayRef,
-                      size
-                    }
-                  )
-                ]
+                "aria-label": "Open Figma frame",
+                className: "df-review-frame-link is-figma",
+                href: figmaFrameUrl,
+                rel: "noreferrer",
+                target: "_blank",
+                title: "Open Figma frame",
+                children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(FigmaIcon, {})
               }
-            ),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-frame-link-stack", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-                "a",
-                {
-                  "aria-label": "Open target page",
-                  className: "df-review-frame-link is-target",
-                  href: targetSrc,
-                  rel: "noreferrer",
-                  target: "_blank",
-                  title: "Open target page",
-                  children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(ExternalLink, { "aria-hidden": "true" })
-                }
-              ),
-              figmaFrameUrl && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-                "a",
-                {
-                  "aria-label": "Open Figma frame",
-                  className: "df-review-frame-link is-figma",
-                  href: figmaFrameUrl,
-                  rel: "noreferrer",
-                  target: "_blank",
-                  title: "Open Figma frame",
-                  children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(FigmaIcon, {})
-                }
-              )
-            ] })
-          ]
-        }
-      )
-    ] }) }) }),
+            )
+          ] })
+        ]
+      }
+    ) }) }) }),
     /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
       ReviewModeToolbar,
       {
@@ -12926,6 +12935,13 @@ var ReviewShell = ({
             onOpenSettings: openFigmaSettings
           }
         ),
+        currentPagePresenceUsers.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-presence-row", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+          PresenceOverlay,
+          {
+            presenceSessionId,
+            users: currentPagePresenceUsers
+          }
+        ) }),
         isSitemapOpen && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
           SitemapModal,
           {
@@ -13041,7 +13057,6 @@ var ReviewShell = ({
             isRulerDragging,
             isRulerVisible,
             mode,
-            presenceSessionId,
             rulerHover,
             rulerMeasure,
             rulerMeasureLabel,
@@ -13051,7 +13066,6 @@ var ReviewShell = ({
             rulerUnit,
             size,
             targetSrc,
-            users: currentPagePresenceUsers,
             onLoadTarget: loadTargetFrame,
             onSetReviewMode: setReviewMode
           }

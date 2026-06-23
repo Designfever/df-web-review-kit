@@ -49,6 +49,7 @@ import {
 } from '../figma';
 import { QaItemEditModal } from '../qa/item.edit.modal';
 import { ReviewQaPanel } from '../qa/panel';
+import { PresenceOverlay } from '../presence/overlay';
 import {
   getSourceCandidates,
   getSourceOpenUrl,
@@ -1126,6 +1127,15 @@ export const ReviewShell = ({
         onOpenSettings={openFigmaSettings}
       />
 
+      {currentPagePresenceUsers.length > 0 && (
+        <div className="df-review-presence-row">
+          <PresenceOverlay
+            presenceSessionId={presenceSessionId}
+            users={currentPagePresenceUsers}
+          />
+        </div>
+      )}
+
       {isSitemapOpen && (
         <SitemapModal
           pages={pages}
@@ -1247,7 +1257,6 @@ export const ReviewShell = ({
         isRulerDragging={isRulerDragging}
         isRulerVisible={isRulerVisible}
         mode={mode}
-        presenceSessionId={presenceSessionId}
         rulerHover={rulerHover}
         rulerMeasure={rulerMeasure}
         rulerMeasureLabel={rulerMeasureLabel}
@@ -1257,7 +1266,6 @@ export const ReviewShell = ({
         rulerUnit={rulerUnit}
         size={size}
         targetSrc={targetSrc}
-        users={currentPagePresenceUsers}
         onLoadTarget={loadTargetFrame}
         onSetReviewMode={setReviewMode}
       />

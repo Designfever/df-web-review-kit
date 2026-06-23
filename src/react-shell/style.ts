@@ -251,7 +251,7 @@ export function ensureReviewShellStyle() {
     --df-review-frame-gutter-x: var(--df-review-space-4);
     display: grid;
     grid-template-columns: minmax(0, 1fr) 0 32px;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -277,6 +277,20 @@ export function ensureReviewShellStyle() {
 	      linear-gradient(180deg, var(--df-review-topbar), var(--df-review-panel));
 	    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.025);
 	  }
+
+  .df-review-presence-row {
+    grid-column: 1;
+    grid-row: 2;
+    position: relative;
+    z-index: 590;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+    padding: var(--df-review-space-2) var(--df-review-frame-gutter-x);
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background: var(--df-review-panel);
+  }
 
 		  .df-review-address {
 		    display: grid;
@@ -1452,7 +1466,7 @@ export function ensureReviewShellStyle() {
 
 	  .df-review-side-rail {
 	    grid-column: 3;
-	    grid-row: 1 / span 2;
+	    grid-row: 1 / span 3;
 	    position: relative;
 	    z-index: 600;
 	    display: flex;
@@ -1512,7 +1526,7 @@ export function ensureReviewShellStyle() {
 
 	  .df-review-qa-panel {
 	    grid-column: 2;
-	    grid-row: 1 / span 2;
+	    grid-row: 1 / span 3;
 	    position: relative;
 	    z-index: 600;
 	    display: grid;
@@ -1594,6 +1608,12 @@ export function ensureReviewShellStyle() {
     pointer-events: none;
   }
 
+  .df-review-presence-row .df-review-presence-overlay {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
   .df-review-presence-chip {
     --df-review-presence-color: var(--df-review-accent);
     display: inline-flex;
@@ -1614,6 +1634,10 @@ export function ensureReviewShellStyle() {
     text-overflow: ellipsis;
     white-space: nowrap;
     backdrop-filter: blur(8px);
+  }
+
+  .df-review-presence-row .df-review-presence-chip {
+    max-width: none;
   }
 
   .df-review-presence-chip.is-self {
@@ -2228,7 +2252,7 @@ export function ensureReviewShellStyle() {
 
 	  .df-review-stage {
 	    grid-column: 1;
-	    grid-row: 2;
+	    grid-row: 3;
 	    display: grid;
 	    min-width: 0;
 	    min-height: 0;
@@ -2480,10 +2504,6 @@ export function ensureReviewShellStyle() {
     flex: 0 0 auto;
   }
 
-  .df-review-presence-overlay + .df-review-device-frame.is-ruler {
-    margin-top: 26px;
-  }
-
   .df-review-ruler-corner {
     position: absolute;
     left: -26px;
@@ -2683,7 +2703,7 @@ export function ensureReviewShellStyle() {
 	    .df-review-shell,
 	    .df-review-shell.is-list-visible {
 	      grid-template-columns: minmax(0, 1fr) 0 32px;
-	      grid-template-rows: auto minmax(0, 1fr);
+	      grid-template-rows: auto auto minmax(0, 1fr);
 	    }
 
 	    .df-review-shell.is-list-visible {

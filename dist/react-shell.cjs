@@ -4026,6 +4026,17 @@ var getSortIndicator = (sort, key) => {
   if (sort.key !== key) return "";
   return sort.direction === "desc" ? "\u2193" : "\u2191";
 };
+var mergePresenceUsers = (users) => {
+  const userByKey = /* @__PURE__ */ new Map();
+  users.forEach((user) => {
+    const key = user.sessionId || user.userId;
+    const currentUser = userByKey.get(key);
+    if (!currentUser || Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)) {
+      userByKey.set(key, user);
+    }
+  });
+  return Array.from(userByKey.values());
+};
 var SitemapModal = ({
   pages,
   activeRoute,
@@ -4042,6 +4053,10 @@ var SitemapModal = ({
     key: "total",
     direction: "desc"
   });
+  const allQaUsers = (0, import_react4.useMemo)(
+    () => mergePresenceUsers(Array.from(pagePresenceUsers.values()).flat()),
+    [pagePresenceUsers]
+  );
   const sitemapRows = createSitemapRows(
     pages,
     activeRoute,
@@ -4057,7 +4072,7 @@ var SitemapModal = ({
     "--df-review-sitemap-grid-template": "minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px)"
   };
   const sortHeaders = [
-    { key: "page", label: "Page", className: "is-page" },
+    { key: "page", label: "", title: "Page", className: "is-page" },
     { key: "total", label: "Total", title: "Remaining total" },
     { key: "review", label: "Review" },
     { key: "hold", label: "Hold" },
@@ -4108,7 +4123,7 @@ var SitemapModal = ({
             /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
               "button",
               {
-                "aria-label": `Sort sitemap by ${header.label}`,
+                "aria-label": `Sort sitemap by ${header.title ?? header.label}`,
                 className: [
                   "df-review-sitemap-sort",
                   header.className ?? "",
@@ -4180,10 +4195,10 @@ var SitemapModal = ({
                 children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
                   SitemapRowContent,
                   {
-                    label: "All QA",
+                    label: "",
                     prefix: "",
                     qaCount: allQaCount,
-                    users: []
+                    users: allQaUsers
                   }
                 )
               }
@@ -4217,7 +4232,7 @@ var SitemapRowContent = ({
       children: user.userId
     },
     user.sessionId
-  )) }) : /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
+  )) }) : null })
 ] });
 
 // src/react-shell/figma.ts

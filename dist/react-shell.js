@@ -2705,7 +2705,7 @@ function ensureReviewShellStyle() {
 import {
   useCallback as useCallback11,
   useEffect as useEffect10,
-  useMemo as useMemo6,
+  useMemo as useMemo7,
   useRef as useRef4,
   useState as useState9
 } from "react";
@@ -3766,6 +3766,7 @@ var ReviewSettingsModal = ({
 
 // src/react-shell/sitemap/modal.tsx
 import {
+  useMemo as useMemo2,
   useState
 } from "react";
 
@@ -4001,6 +4002,17 @@ var getSortIndicator = (sort, key) => {
   if (sort.key !== key) return "";
   return sort.direction === "desc" ? "\u2193" : "\u2191";
 };
+var mergePresenceUsers = (users) => {
+  const userByKey = /* @__PURE__ */ new Map();
+  users.forEach((user) => {
+    const key = user.sessionId || user.userId;
+    const currentUser = userByKey.get(key);
+    if (!currentUser || Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)) {
+      userByKey.set(key, user);
+    }
+  });
+  return Array.from(userByKey.values());
+};
 var SitemapModal = ({
   pages,
   activeRoute,
@@ -4017,6 +4029,10 @@ var SitemapModal = ({
     key: "total",
     direction: "desc"
   });
+  const allQaUsers = useMemo2(
+    () => mergePresenceUsers(Array.from(pagePresenceUsers.values()).flat()),
+    [pagePresenceUsers]
+  );
   const sitemapRows = createSitemapRows(
     pages,
     activeRoute,
@@ -4032,7 +4048,7 @@ var SitemapModal = ({
     "--df-review-sitemap-grid-template": "minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px)"
   };
   const sortHeaders = [
-    { key: "page", label: "Page", className: "is-page" },
+    { key: "page", label: "", title: "Page", className: "is-page" },
     { key: "total", label: "Total", title: "Remaining total" },
     { key: "review", label: "Review" },
     { key: "hold", label: "Hold" },
@@ -4083,7 +4099,7 @@ var SitemapModal = ({
             /* @__PURE__ */ jsx3("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ jsxs3(
               "button",
               {
-                "aria-label": `Sort sitemap by ${header.label}`,
+                "aria-label": `Sort sitemap by ${header.title ?? header.label}`,
                 className: [
                   "df-review-sitemap-sort",
                   header.className ?? "",
@@ -4155,10 +4171,10 @@ var SitemapModal = ({
                 children: /* @__PURE__ */ jsx3(
                   SitemapRowContent,
                   {
-                    label: "All QA",
+                    label: "",
                     prefix: "",
                     qaCount: allQaCount,
-                    users: []
+                    users: allQaUsers
                   }
                 )
               }
@@ -4192,7 +4208,7 @@ var SitemapRowContent = ({
       children: user.userId
     },
     user.sessionId
-  )) }) : /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
+  )) }) : null })
 ] });
 
 // src/react-shell/figma.ts
@@ -6411,7 +6427,7 @@ var useReviewController = ({
 import {
   useCallback as useCallback6,
   useEffect as useEffect5,
-  useMemo as useMemo2,
+  useMemo as useMemo3,
   useRef,
   useState as useState3
 } from "react";
@@ -6632,7 +6648,7 @@ var useReviewPresence = ({
   const presenceSessionRef = useRef(null);
   const [presenceUsers, setPresenceUsers] = useState3([]);
   const [presenceSessionVersion, setPresenceSessionVersion] = useState3(0);
-  const presenceSessionId = useMemo2(getReviewPresenceSessionId, []);
+  const presenceSessionId = useMemo3(getReviewPresenceSessionId, []);
   const normalizedReviewUserId = reviewUserId.trim();
   const presenceDisplayName = getReviewPresenceDisplayName(
     normalizedReviewUserId
@@ -6640,7 +6656,7 @@ var useReviewPresence = ({
   const presenceColor = getReviewPresenceColor(
     normalizedReviewUserId || presenceSessionId
   );
-  const presenceViewport = useMemo2(
+  const presenceViewport = useMemo3(
     () => ({
       label: size.label,
       width: size.width,
@@ -6650,7 +6666,7 @@ var useReviewPresence = ({
     [size]
   );
   const presenceStatus = mode === "idle" ? "reviewing" : "editing";
-  const visiblePresenceUsers = useMemo2(
+  const visiblePresenceUsers = useMemo3(
     () => {
       const projectPresenceUsers = presenceUsers.filter(
         (user) => user.projectId === projectId && user.userId.trim()
@@ -6662,14 +6678,14 @@ var useReviewPresence = ({
     },
     [presenceUsers, projectId, reviewPathPrefix]
   );
-  const currentPagePresenceUsers = useMemo2(
+  const currentPagePresenceUsers = useMemo3(
     () => visiblePresenceUsers.filter((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
       return userTarget === activeRoute;
     }),
     [activeRoute, reviewPathPrefix, visiblePresenceUsers]
   );
-  const pagePresenceUsers = useMemo2(() => {
+  const pagePresenceUsers = useMemo3(() => {
     const usersByTarget = /* @__PURE__ */ new Map();
     visiblePresenceUsers.forEach((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
@@ -6789,7 +6805,7 @@ import {
 import {
   useCallback as useCallback7,
   useEffect as useEffect6,
-  useMemo as useMemo3,
+  useMemo as useMemo4,
   useRef as useRef2,
   useState as useState4
 } from "react";
@@ -6829,7 +6845,7 @@ var useReviewRulerDrag = ({
   const [rulerPoint, setRulerPoint] = useState4(null);
   const [rulerHover, setRulerHover] = useState4(null);
   const [isRulerDragging, setIsRulerDragging] = useState4(false);
-  const rulerMeasure = useMemo3(
+  const rulerMeasure = useMemo4(
     () => getRulerMeasure(rulerStart, rulerPoint),
     [rulerPoint, rulerStart]
   );
@@ -7178,7 +7194,7 @@ var useReviewSettings = ({
 };
 
 // src/react-shell/hooks/use.review.shell.data.ts
-import { useCallback as useCallback10, useMemo as useMemo4, useState as useState7 } from "react";
+import { useCallback as useCallback10, useMemo as useMemo5, useState as useState7 } from "react";
 var SITEMAP_STATUS_DONE = "done";
 var useReviewShellData = ({
   activeRoute,
@@ -7201,38 +7217,38 @@ var useReviewShellData = ({
     local: [],
     remote: []
   }));
-  const targetSrc = useMemo4(() => buildTargetSrc(target), [target]);
-  const pageTargets = useMemo4(
+  const targetSrc = useMemo5(() => buildTargetSrc(target), [target]);
+  const pageTargets = useMemo5(
     () => new Set(
       pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
     ),
     [pages, reviewPathPrefix]
   );
-  const sitemapSourceItems = useMemo4(
+  const sitemapSourceItems = useMemo5(
     () => isRemoteSource ? sitemapItems.remote : sitemapItems.local,
     [isRemoteSource, sitemapItems]
   );
-  const activeItems = useMemo4(
+  const activeItems = useMemo5(
     () => (isAllQaVisible ? sitemapSourceItems : items.filter(
       (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
     )).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
   );
-  const numberedActiveItems = useMemo4(
+  const numberedActiveItems = useMemo5(
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
     [activeItems, reviewViewportPresets]
   );
-  const filteredNumberedActiveItems = useMemo4(
+  const filteredNumberedActiveItems = useMemo5(
     () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
       (numberedItem) => numberedItem.scope === qaFilter
     ),
     [numberedActiveItems, qaFilter]
   );
-  const hiddenOverlayItemIdList = useMemo4(
+  const hiddenOverlayItemIdList = useMemo5(
     () => Array.from(hiddenOverlayItemIds),
     [hiddenOverlayItemIds]
   );
-  const qaFilterCounts = useMemo4(() => {
+  const qaFilterCounts = useMemo5(() => {
     const counts = /* @__PURE__ */ new Map();
     counts.set("all", numberedActiveItems.length);
     numberedActiveItems.forEach((numberedItem) => {
@@ -7264,13 +7280,13 @@ var useReviewShellData = ({
     (item) => item.scope === "dom" ? "dom" : getItemPresetScope(item),
     [getItemPresetScope]
   );
-  const activeRemainingItemCount = useMemo4(
+  const activeRemainingItemCount = useMemo5(
     () => activeItems.filter(
       (item) => normalizeReviewItemStatus(item.status) !== SITEMAP_STATUS_DONE
     ).length,
     [activeItems]
   );
-  const presetScopeCounts = useMemo4(() => {
+  const presetScopeCounts = useMemo5(() => {
     const counts = /* @__PURE__ */ new Map();
     activeItems.forEach((item) => {
       const scope = getItemPresetScope(item);
@@ -7279,7 +7295,7 @@ var useReviewShellData = ({
     return counts;
   }, [activeItems, getItemPresetScope]);
   const currentPresetScope = getViewportPresetKind(size);
-  const pageQaCounts = useMemo4(() => {
+  const pageQaCounts = useMemo5(() => {
     const counts = /* @__PURE__ */ new Map();
     const addItems = (sourceKey, sourceItems) => {
       sourceItems.forEach((item) => {
@@ -7321,14 +7337,14 @@ var useReviewShellData = ({
     addItems("remote", sitemapItems.remote);
     return counts;
   }, [getItemCountScope, getItemPresetColumn, reviewPathPrefix, sitemapItems]);
-  const allQaCount = useMemo4(
+  const allQaCount = useMemo5(
     () => Array.from(pageQaCounts.values()).reduce(
       addSitemapQaCounts,
       createEmptySitemapQaCount()
     ),
     [pageQaCounts]
   );
-  const selectedNumberedItem = useMemo4(
+  const selectedNumberedItem = useMemo5(
     () => selectedItemId ? numberedActiveItems.find(
       (numberedItem) => numberedItem.item.id === selectedItemId
     ) : void 0,
@@ -7452,7 +7468,7 @@ var useReviewShellHotkeys = ({
 
 // src/react-shell/hooks/use.review.shell.state.ts
 import {
-  useMemo as useMemo5,
+  useMemo as useMemo6,
   useRef as useRef3,
   useState as useState8
 } from "react";
@@ -7599,11 +7615,11 @@ var useReviewShellState = ({
   reviewPathPrefix
 }) => {
   const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const reviewViewportPresets = useMemo5(
+  const reviewViewportPresets = useMemo6(
     () => toReviewViewportPresets(viewportPresets),
     [viewportPresets]
   );
-  const normalizedAdapters = useMemo5(
+  const normalizedAdapters = useMemo6(
     () => normalizeReviewShellAdapters(adapters),
     [adapters]
   );
@@ -8028,7 +8044,7 @@ var ReviewShell = ({
   const sourceInspectorInteractionRef = useRef4(false);
   const [sourceInspectorState, setSourceInspectorState] = useState9(null);
   const [isAllQaVisible, setIsAllQaVisible] = useState9(false);
-  const sourceOpenOptions = useMemo6(
+  const sourceOpenOptions = useMemo7(
     () => ({
       ...sourceInspector,
       sourceRoot
@@ -8070,7 +8086,7 @@ var ReviewShell = ({
   });
   const [targetFigmaState, setTargetFigmaState] = useState9(null);
   const targetFigmaConfig = targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
-  const figmaFrameUrl = useMemo6(
+  const figmaFrameUrl = useMemo7(
     () => getFigmaFrameUrl(targetFigmaConfig, size),
     [targetFigmaConfig, size]
   );

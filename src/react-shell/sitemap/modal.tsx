@@ -1,4 +1,5 @@
 import {
+  useMemo,
   useState,
   type CSSProperties,
 } from 'react';
@@ -53,6 +54,24 @@ const getSortIndicator = (sort: SortState, key: SitemapSortKey) => {
   return sort.direction === 'desc' ? '↓' : '↑';
 };
 
+const mergePresenceUsers = (users: ReviewPresenceUser[]) => {
+  const userByKey = new Map<string, ReviewPresenceUser>();
+
+  users.forEach((user) => {
+    const key = user.sessionId || user.userId;
+    const currentUser = userByKey.get(key);
+
+    if (
+      !currentUser ||
+      Date.parse(user.updatedAt) >= Date.parse(currentUser.updatedAt)
+    ) {
+      userByKey.set(key, user);
+    }
+  });
+
+  return Array.from(userByKey.values());
+};
+
 export const SitemapModal = ({
   pages,
   activeRoute,
@@ -69,6 +88,10 @@ export const SitemapModal = ({
     key: 'total',
     direction: 'desc',
   });
+  const allQaUsers = useMemo(
+    () => mergePresenceUsers(Array.from(pagePresenceUsers.values()).flat()),
+    [pagePresenceUsers]
+  );
   const sitemapRows = createSitemapRows(
     pages,
     activeRoute,
@@ -84,7 +107,7 @@ export const SitemapModal = ({
     '--df-review-sitemap-grid-template': 'minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px)',
   } as CSSProperties;
   const sortHeaders: SortHeader[] = [
-    { key: 'page', label: 'Page', className: 'is-page' },
+    { key: 'page', label: '', title: 'Page', className: 'is-page' },
     { key: 'total', label: 'Total', title: 'Remaining total' },
     { key: 'review', label: 'Review' },
     { key: 'hold', label: 'Hold' },
@@ -128,7 +151,7 @@ export const SitemapModal = ({
             {sortHeaders.map((header) => (
               <button
                 key={header.key}
-                aria-label={`Sort sitemap by ${header.label}`}
+                aria-label={`Sort sitemap by ${header.title ?? header.label}`}
                 className={[
                   'df-review-sitemap-sort',
                   header.className ?? '',
@@ -203,10 +226,10 @@ export const SitemapModal = ({
             onClick={onSelectAllQa}
           >
             <SitemapRowContent
-              label="All QA"
+              label=""
               prefix=""
               qaCount={allQaCount}
-              users={[]}
+              users={allQaUsers}
             />
           </button>
         </div>
@@ -255,9 +278,7 @@ const SitemapRowContent = ({
             </span>
           ))}
         </span>
-      ) : (
-        <span className="df-review-sitemap-online-empty">0</span>
-      )}
+      ) : null}
     </span>
   </>
 );

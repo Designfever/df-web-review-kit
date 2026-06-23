@@ -3,7 +3,7 @@ import {
   createWebReviewKit,
   getNumberedReviewItems,
   normalizeReviewItemStatus
-} from "./chunk-H6CWA36F.js";
+} from "./chunk-PW6UN6X7.js";
 
 // src/react-shell.tsx
 import React2 from "react";
@@ -3290,7 +3290,9 @@ var toReviewViewportPresets = (presets) => presets.map((preset) => ({
   label: preset.label,
   width: preset.width,
   height: preset.height,
-  scope: getViewportPresetKind(preset)
+  scope: getViewportPresetKind(preset),
+  designWidth: preset.designWidth,
+  designHeight: preset.designHeight
 }));
 var getIsFigmaOverlayAvailable = (preset) => {
   const kind = getViewportPresetKind(preset);

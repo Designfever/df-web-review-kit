@@ -169,6 +169,7 @@ class WebReviewKitApp {
   }
 
   destroy() {
+    this.view.clearDraftPreview();
     document.removeEventListener('keydown', this.handleKeyDown, true);
     window.removeEventListener('scroll', this.handleViewportChange, true);
     window.removeEventListener('resize', this.handleViewportChange);
@@ -458,7 +459,9 @@ class WebReviewKitApp {
         ? getElementViewportSelection(anchor, environment)
         : undefined;
       const selection = elementSelection ?? getPointSelection(nextPoint);
-      const markerPoint = getSelectionCenter(selection);
+      const markerPoint = elementSelection
+        ? { x: selection.left, y: selection.top }
+        : getSelectionCenter(selection);
       const reviewSelection = elementSelection
         ? {
             viewport: toPublicSelection(elementSelection),

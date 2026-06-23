@@ -104,7 +104,9 @@ export const toReviewViewportPresets = (
     label: preset.label,
     width: preset.width,
     height: preset.height,
-    scope: getViewportPresetKind(preset)
+    scope: getViewportPresetKind(preset),
+    designWidth: preset.designWidth,
+    designHeight: preset.designHeight
   }));
 
 export const getIsFigmaOverlayAvailable = (preset: ReviewShellViewportPreset) => {

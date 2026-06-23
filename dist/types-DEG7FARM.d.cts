@@ -119,6 +119,8 @@ interface ReviewViewportPreset {
     width: number;
     height: number;
     scope?: Exclude<ReviewItemScope, 'dom'>;
+    designWidth?: number;
+    designHeight?: number;
 }
 interface NumberedReviewItem {
     item: ReviewItem;

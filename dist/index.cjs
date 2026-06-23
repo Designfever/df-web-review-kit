@@ -1962,6 +1962,14 @@ function createStyleElement() {
       padding: 0;
     }
 
+    .dfwr-note-actions {
+      justify-content: flex-end;
+    }
+
+    .dfwr-note-actions .dfwr-button:first-child {
+      margin-right: auto;
+    }
+
     .dfwr-area-draft .dfwr-actions {
       padding: 0;
     }
@@ -1988,6 +1996,33 @@ function createStyleElement() {
     .dfwr-textarea:focus {
       outline: 2px solid var(--df-review-color-accent-ring);
       outline-offset: 1px;
+    }
+
+    .dfwr-adjust-panel {
+      display: grid;
+      gap: 4px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--df-review-radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .dfwr-adjust-panel.is-active {
+      border-color: rgba(215, 255, 95, 0.5);
+      background: var(--df-review-color-accent-soft);
+    }
+
+    .dfwr-adjust-help,
+    .dfwr-adjust-status {
+      margin: 0;
+      color: var(--df-review-color-text-muted);
+      font-size: var(--df-review-font-size-xs);
+      line-height: 1.35;
+    }
+
+    .dfwr-adjust-status {
+      color: var(--df-review-color-text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
 
     .dfwr-empty,
@@ -2289,8 +2324,14 @@ var WebReviewKitView = class {
   constructor(config) {
     this.config = config;
   }
+  clearDraftPreview() {
+    this.restoreDraftPreview();
+  }
   render(shadow, hiddenItemsStyle) {
     const state = this.state;
+    this.syncDraftPreview(
+      state.isOpen && state.mode === "element" ? state.noteDraft : void 0
+    );
     shadow.replaceChildren();
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
@@ -2329,6 +2370,126 @@ var WebReviewKitView = class {
   }
   get state() {
     return this.config.getState();
+  }
+  getDraftAdjustmentMetrics(draft) {
+    const adjustment = draft.adjustment;
+    const x = adjustment?.x ?? 0;
+    const y = adjustment?.y ?? 0;
+    const preset = findReviewViewportPreset(
+      draft.viewport,
+      this.config.options.viewports?.presets
+    );
+    const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : draft.viewport.width;
+    const scale = designWidth > 0 ? draft.viewport.width / designWidth : 1;
+    return {
+      x,
+      y,
+      cssX: x * scale,
+      cssY: y * scale,
+      scale,
+      designWidth,
+      presetLabel: preset.label,
+      viewportWidth: draft.viewport.width
+    };
+  }
+  hasDraftAdjustment(draft) {
+    const metrics = this.getDraftAdjustmentMetrics(draft);
+    return metrics.x !== 0 || metrics.y !== 0;
+  }
+  getAdjustedDraftPoint(point, draft) {
+    const metrics = this.getDraftAdjustmentMetrics(draft);
+    return {
+      x: point.x + metrics.cssX,
+      y: point.y + metrics.cssY
+    };
+  }
+  getAdjustedDraftSelection(selection, draft) {
+    const metrics = this.getDraftAdjustmentMetrics(draft);
+    return {
+      ...selection,
+      left: selection.left + metrics.cssX,
+      top: selection.top + metrics.cssY
+    };
+  }
+  formatSignedPx(value) {
+    if (value === 0) return "+0px";
+    return `${value > 0 ? "+" : ""}${value}px`;
+  }
+  formatDraftAdjustmentStatus(draft) {
+    const metrics = this.getDraftAdjustmentMetrics(draft);
+    return [
+      `x ${this.formatSignedPx(metrics.x)}`,
+      `y ${this.formatSignedPx(metrics.y)}`,
+      `MQ px`,
+      `${metrics.presetLabel} ${Math.round(metrics.viewportWidth)}/design ${Math.round(
+        metrics.designWidth
+      )}`,
+      `preview x${Math.round(metrics.scale * 1e3) / 1e3}`
+    ].join(" / ");
+  }
+  withDraftAdjustmentComment(comment, draft) {
+    if (!this.hasDraftAdjustment(draft)) return comment;
+    const metrics = this.getDraftAdjustmentMetrics(draft);
+    const adjustment = [
+      `Adjust: x ${this.formatSignedPx(metrics.x)}, y ${this.formatSignedPx(
+        metrics.y
+      )}`,
+      `(MQ \uAE30\uC900 px, ${metrics.presetLabel} ${Math.round(
+        metrics.viewportWidth
+      )}/design ${Math.round(metrics.designWidth)})`
+    ].join(" ");
+    return `${comment.trim()}
+${adjustment}`;
+  }
+  getStyleableDraftElement(draft, environment) {
+    if (!draft.anchor) return void 0;
+    const element = resolveAnchorElement(draft.anchor, environment)?.element;
+    if (!element) return void 0;
+    if ("style" in element) return element;
+    return void 0;
+  }
+  syncDraftPreview(draft) {
+    const environment = this.config.getEnvironment();
+    if (!draft || !environment || !this.hasDraftAdjustment(draft)) {
+      this.restoreDraftPreview();
+      return;
+    }
+    const element = this.getStyleableDraftElement(draft, environment);
+    if (!element) {
+      this.restoreDraftPreview();
+      return;
+    }
+    if (this.draftPreview?.element !== element) {
+      this.restoreDraftPreview();
+    }
+    if (!this.draftPreview) {
+      const computedTransform = environment.window.getComputedStyle(element).transform;
+      this.draftPreview = {
+        element,
+        transform: element.style.transform,
+        transition: element.style.transition,
+        willChange: element.style.willChange,
+        baseTransform: element.style.transform || (computedTransform && computedTransform !== "none" ? computedTransform : "")
+      };
+    }
+    const metrics = this.getDraftAdjustmentMetrics(draft);
+    const translate = `translate(${this.toCssNumber(metrics.cssX)}px, ${this.toCssNumber(
+      metrics.cssY
+    )}px)`;
+    element.style.transition = "none";
+    element.style.willChange = "transform";
+    element.style.transform = [this.draftPreview.baseTransform, translate].filter(Boolean).join(" ");
+  }
+  restoreDraftPreview() {
+    if (!this.draftPreview) return;
+    const { element, transform, transition, willChange } = this.draftPreview;
+    element.style.transform = transform;
+    element.style.transition = transition;
+    element.style.willChange = willChange;
+    this.draftPreview = void 0;
+  }
+  toCssNumber(value) {
+    return Math.round(value * 1e3) / 1e3;
   }
   createHeader() {
     const header = document.createElement("div");
@@ -2421,15 +2582,20 @@ var WebReviewKitView = class {
     const group = document.createElement("div");
     group.className = "dfwr-note-draft";
     if (!environment) return group;
-    const hostPoint = toHostPoint(draft.marker.viewport, environment);
+    const isElementDraft = this.state.mode === "element" && Boolean(draft.selection);
+    const hostPoint = toHostPoint(
+      isElementDraft ? this.getAdjustedDraftPoint(draft.marker.viewport, draft) : draft.marker.viewport,
+      environment
+    );
+    let selectionHighlight;
     if (draft.selection) {
-      group.append(
-        this.createSelectionHighlight(
-          toViewportSelection(draft.selection.viewport),
-          environment,
-          true
-        )
+      const selection = toViewportSelection(draft.selection.viewport);
+      selectionHighlight = this.createSelectionHighlight(
+        isElementDraft ? this.getAdjustedDraftSelection(selection, draft) : selection,
+        environment,
+        true
       );
+      group.append(selectionHighlight);
     }
     const pin = document.createElement("button");
     pin.className = "dfwr-note-pin";
@@ -2460,24 +2626,177 @@ var WebReviewKitView = class {
         comment: textarea.value
       });
     });
-    const actions = this.createFormActions("Save note", () => {
+    const saveDraft = () => {
       const comment = textarea.value.trim();
       if (!comment) return;
+      const currentDraft = this.state.noteDraft ?? draft;
       void this.config.actions.createItem({
         kind: "note",
-        comment,
-        viewport: draft.viewport,
-        anchor: draft.anchor,
-        marker: draft.marker,
-        selection: draft.selection
+        comment: this.withDraftAdjustmentComment(comment, currentDraft),
+        viewport: currentDraft.viewport,
+        anchor: currentDraft.anchor,
+        marker: currentDraft.marker,
+        selection: currentDraft.selection
       });
+    };
+    const adjustmentControls = isElementDraft ? this.createAdjustmentControls({
+      draft,
+      pin,
+      popover,
+      selectionHighlight,
+      textarea
+    }) : void 0;
+    const actions = this.createFormActions("Save note", saveDraft, {
+      className: isElementDraft ? "dfwr-note-actions" : void 0,
+      beforeSave: adjustmentControls?.buttons
     });
-    form.append(meta, textarea, actions);
+    form.append(
+      meta,
+      textarea,
+      ...adjustmentControls ? [adjustmentControls.panel] : [],
+      actions
+    );
     popover.append(form);
     group.append(pin, popover);
     this.attachDraftPinDrag(pin, popover, meta, textarea);
-    window.setTimeout(() => textarea.focus(), 0);
+    window.setTimeout(() => {
+      if (draft.adjustment?.isActive) {
+        adjustmentControls?.focusTarget.focus();
+        return;
+      }
+      textarea.focus();
+    }, 0);
     return group;
+  }
+  createAdjustmentControls({
+    draft,
+    pin,
+    popover,
+    selectionHighlight,
+    textarea
+  }) {
+    const panel = document.createElement("div");
+    panel.className = "dfwr-adjust-panel";
+    const help = document.createElement("div");
+    help.className = "dfwr-adjust-help";
+    help.textContent = "MQ \uAE30\uC900 CSS px\uB85C \uC774\uB3D9\uAC12\uC744 \uAE30\uB85D\uD569\uB2C8\uB2E4.";
+    const status = document.createElement("div");
+    status.className = "dfwr-adjust-status";
+    const reset = document.createElement("button");
+    reset.className = "dfwr-button";
+    reset.type = "button";
+    reset.textContent = "Reset";
+    const adjust = document.createElement("button");
+    adjust.className = "dfwr-button";
+    adjust.type = "button";
+    const syncControls = (nextDraft) => {
+      const isActive = nextDraft.adjustment?.isActive === true;
+      const hasAdjustment = this.hasDraftAdjustment(nextDraft);
+      panel.classList.toggle("is-active", isActive);
+      reset.hidden = !hasAdjustment;
+      adjust.textContent = isActive ? "Done" : "Adjust";
+      status.textContent = this.formatDraftAdjustmentStatus(nextDraft);
+      this.syncDraftAdjustmentUi({
+        draft: nextDraft,
+        pin,
+        selectionHighlight,
+        status
+      });
+    };
+    const updateDraft = (updater) => {
+      const currentDraft = this.state.noteDraft ?? draft;
+      const nextDraft = updater(currentDraft);
+      this.config.actions.setNoteDraft({
+        ...nextDraft,
+        comment: textarea.value
+      });
+      syncControls(nextDraft);
+    };
+    adjust.addEventListener("click", () => {
+      updateDraft((currentDraft) => ({
+        ...currentDraft,
+        adjustment: {
+          x: currentDraft.adjustment?.x ?? 0,
+          y: currentDraft.adjustment?.y ?? 0,
+          isActive: currentDraft.adjustment?.isActive !== true
+        }
+      }));
+      adjust.focus();
+    });
+    reset.addEventListener("click", () => {
+      updateDraft((currentDraft) => ({
+        ...currentDraft,
+        adjustment: {
+          x: 0,
+          y: 0,
+          isActive: currentDraft.adjustment?.isActive
+        }
+      }));
+      adjust.focus();
+    });
+    popover.addEventListener("keydown", (event) => {
+      const currentDraft = this.state.noteDraft ?? draft;
+      if (currentDraft.adjustment?.isActive !== true) return;
+      const keyDelta = this.getAdjustmentKeyDelta(event);
+      if (!keyDelta) return;
+      event.preventDefault();
+      event.stopPropagation();
+      updateDraft((activeDraft) => ({
+        ...activeDraft,
+        adjustment: {
+          x: (activeDraft.adjustment?.x ?? 0) + keyDelta.x,
+          y: (activeDraft.adjustment?.y ?? 0) + keyDelta.y,
+          isActive: true
+        }
+      }));
+    });
+    panel.append(help, status);
+    syncControls(draft);
+    return {
+      panel,
+      buttons: [reset, adjust],
+      focusTarget: adjust
+    };
+  }
+  getAdjustmentKeyDelta(event) {
+    const step = event.shiftKey ? 10 : 1;
+    if (event.key === "ArrowLeft") return { x: -step, y: 0 };
+    if (event.key === "ArrowRight") return { x: step, y: 0 };
+    if (event.key === "ArrowUp") return { x: 0, y: -step };
+    if (event.key === "ArrowDown") return { x: 0, y: step };
+    return void 0;
+  }
+  syncDraftAdjustmentUi({
+    draft,
+    pin,
+    selectionHighlight,
+    status
+  }) {
+    const environment = this.config.getEnvironment();
+    if (!environment) return;
+    const hostPoint = toHostPoint(
+      this.getAdjustedDraftPoint(draft.marker.viewport, draft),
+      environment
+    );
+    pin.style.left = `${hostPoint.x}px`;
+    pin.style.top = `${hostPoint.y}px`;
+    if (draft.selection && selectionHighlight) {
+      const rect = toHostSelection(
+        this.getAdjustedDraftSelection(
+          toViewportSelection(draft.selection.viewport),
+          draft
+        ),
+        environment
+      );
+      selectionHighlight.style.left = `${rect.left}px`;
+      selectionHighlight.style.top = `${rect.top}px`;
+      selectionHighlight.style.width = `${rect.width}px`;
+      selectionHighlight.style.height = `${rect.height}px`;
+    }
+    if (status) {
+      status.textContent = this.formatDraftAdjustmentStatus(draft);
+    }
+    this.syncDraftPreview(draft);
   }
   createAreaForm() {
     const form = document.createElement("form");
@@ -2556,9 +2875,9 @@ var WebReviewKitView = class {
     popover.append(this.createAreaForm());
     return popover;
   }
-  createFormActions(saveLabel, onSave) {
+  createFormActions(saveLabel, onSave, options) {
     const actions = document.createElement("div");
-    actions.className = "dfwr-actions";
+    actions.className = ["dfwr-actions", options?.className].filter(Boolean).join(" ");
     const save = document.createElement("button");
     save.className = "dfwr-button is-primary";
     save.type = "button";
@@ -2573,6 +2892,10 @@ var WebReviewKitView = class {
       this.config.actions.clearDrafts();
       this.config.actions.render();
     });
+    if (options?.beforeSave?.length || options?.className) {
+      actions.append(cancel, ...options.beforeSave ?? [], save);
+      return actions;
+    }
     actions.append(save, cancel);
     return actions;
   }
@@ -3051,6 +3374,7 @@ var WebReviewKitApp = class {
     this.render();
   }
   destroy() {
+    this.view.clearDraftPreview();
     document.removeEventListener("keydown", this.handleKeyDown, true);
     window.removeEventListener("scroll", this.handleViewportChange, true);
     window.removeEventListener("resize", this.handleViewportChange);
@@ -3261,7 +3585,7 @@ var WebReviewKitApp = class {
       );
       const elementSelection = anchor ? getElementViewportSelection(anchor, environment) : void 0;
       const selection = elementSelection ?? getPointSelection(nextPoint);
-      const markerPoint = getSelectionCenter(selection);
+      const markerPoint = elementSelection ? { x: selection.left, y: selection.top } : getSelectionCenter(selection);
       const reviewSelection = elementSelection ? {
         viewport: toPublicSelection(elementSelection),
         relative: getRelativeSelection(

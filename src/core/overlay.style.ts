@@ -575,6 +575,14 @@ export function createStyleElement() {
       padding: 0;
     }
 
+    .dfwr-note-actions {
+      justify-content: flex-end;
+    }
+
+    .dfwr-note-actions .dfwr-button:first-child {
+      margin-right: auto;
+    }
+
     .dfwr-area-draft .dfwr-actions {
       padding: 0;
     }
@@ -601,6 +609,33 @@ export function createStyleElement() {
     .dfwr-textarea:focus {
       outline: 2px solid var(--df-review-color-accent-ring);
       outline-offset: 1px;
+    }
+
+    .dfwr-adjust-panel {
+      display: grid;
+      gap: 4px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--df-review-radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .dfwr-adjust-panel.is-active {
+      border-color: rgba(215, 255, 95, 0.5);
+      background: var(--df-review-color-accent-soft);
+    }
+
+    .dfwr-adjust-help,
+    .dfwr-adjust-status {
+      margin: 0;
+      color: var(--df-review-color-text-muted);
+      font-size: var(--df-review-font-size-xs);
+      line-height: 1.35;
+    }
+
+    .dfwr-adjust-status {
+      color: var(--df-review-color-text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
 
     .dfwr-empty,

@@ -33,6 +33,7 @@ interface UseReviewKitLifecycleOptions {
   reviewUserId: string;
   reviewViewportPresets: ReviewViewportPreset[];
   ruler?: ReviewRulerConfig;
+  adjustmentLabel?: string;
   sizeRef: MutableRefObject<ReviewShellViewportPreset>;
   targetRef: MutableRefObject<string>;
   onApplyPendingRestore: () => void;
@@ -62,6 +63,7 @@ export const useReviewKitLifecycle = ({
   reviewUserId,
   reviewViewportPresets,
   ruler,
+  adjustmentLabel,
   sizeRef,
   targetRef,
   onApplyPendingRestore,
@@ -118,6 +120,7 @@ export const useReviewKitLifecycle = ({
         presets: reviewViewportPresets,
       },
       ruler,
+      adjustmentLabel,
       onCreateItem,
       onRestoreItem: onRestoreReviewItem,
       onItemsChange: () => {
@@ -168,6 +171,7 @@ export const useReviewKitLifecycle = ({
     reviewUserId,
     reviewViewportPresets,
     ruler,
+    adjustmentLabel,
     sizeRef,
     targetRef,
   ]);

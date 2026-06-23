@@ -134,6 +134,7 @@ interface WebReviewKitOptions {
     userId?: string;
     adapter?: WebReviewKitAdapter;
     target?: WebReviewKitTarget | (() => WebReviewKitTarget | undefined);
+    adjustmentLabel?: string;
     viewports?: {
         presets?: ReviewViewportPreset[];
     };

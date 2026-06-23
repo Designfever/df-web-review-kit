@@ -3,7 +3,7 @@ import {
   createWebReviewKit,
   getNumberedReviewItems,
   normalizeReviewItemStatus
-} from "./chunk-M4MQLGC4.js";
+} from "./chunk-VDHDUYVD.js";
 
 // src/react-shell.tsx
 import React2 from "react";
@@ -6004,6 +6004,7 @@ var useReviewKitLifecycle = ({
   reviewUserId,
   reviewViewportPresets,
   ruler,
+  adjustmentLabel,
   sizeRef,
   targetRef,
   onApplyPendingRestore,
@@ -6056,6 +6057,7 @@ var useReviewKitLifecycle = ({
         presets: reviewViewportPresets
       },
       ruler,
+      adjustmentLabel,
       onCreateItem,
       onRestoreItem: onRestoreReviewItem,
       onItemsChange: () => {
@@ -6106,6 +6108,7 @@ var useReviewKitLifecycle = ({
     reviewUserId,
     reviewViewportPresets,
     ruler,
+    adjustmentLabel,
     sizeRef,
     targetRef
   ]);
@@ -6311,6 +6314,7 @@ var useReviewController = ({
   reviewUserId,
   reviewViewportPresets,
   ruler,
+  adjustmentLabel,
   selectedItemIdRef,
   size,
   sizeRef,
@@ -6399,6 +6403,7 @@ var useReviewController = ({
     reviewUserId,
     reviewViewportPresets,
     ruler,
+    adjustmentLabel,
     sizeRef,
     targetRef,
     onApplyPendingRestore: applyPendingRestore,
@@ -7981,6 +7986,7 @@ var ReviewShell = ({
   presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
   ruler,
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
+  adjustmentLabel,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
   sourceRoot,
   sourceInspector,
@@ -8226,6 +8232,7 @@ var ReviewShell = ({
     reviewUserId,
     reviewViewportPresets,
     ruler,
+    adjustmentLabel,
     selectedItemIdRef,
     size,
     sizeRef,

@@ -38,6 +38,7 @@ interface UseReviewControllerOptions {
   reviewUserId: string;
   reviewViewportPresets: ReviewViewportPreset[];
   ruler?: ReviewRulerConfig;
+  adjustmentLabel?: string;
   selectedItemIdRef: MutableRefObject<string | null>;
   size: ReviewShellViewportPreset;
   sizeRef: MutableRefObject<ReviewShellViewportPreset>;
@@ -75,6 +76,7 @@ export const useReviewController = ({
   reviewUserId,
   reviewViewportPresets,
   ruler,
+  adjustmentLabel,
   selectedItemIdRef,
   size,
   sizeRef,
@@ -163,6 +165,7 @@ export const useReviewController = ({
     reviewUserId,
     reviewViewportPresets,
     ruler,
+    adjustmentLabel,
     sizeRef,
     targetRef,
     onApplyPendingRestore: applyPendingRestore,

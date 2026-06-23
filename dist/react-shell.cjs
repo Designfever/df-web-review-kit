@@ -7652,6 +7652,19 @@ function createStyleElement() {
       background: rgba(255, 255, 255, 0.04);
     }
 
+    .dfwr-adjust-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .dfwr-adjust-panel-header .dfwr-adjust-help {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
     .dfwr-adjust-panel.is-active {
       border-color: rgba(215, 255, 95, 0.5);
       background: var(--df-review-color-accent-soft);
@@ -7668,6 +7681,33 @@ function createStyleElement() {
     .dfwr-adjust-status {
       color: var(--df-review-color-text);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .dfwr-adjust-toggle {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--df-review-radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--df-review-color-text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .dfwr-adjust-toggle:hover,
+    .dfwr-adjust-toggle:focus-visible,
+    .dfwr-adjust-toggle.is-active {
+      border-color: rgba(215, 255, 95, 0.68);
+      background: var(--df-review-color-accent-soft);
+      outline: none;
     }
 
     .dfwr-adjust-hud {
@@ -7981,6 +8021,7 @@ function formatAnchorMeta(anchor) {
 }
 
 // src/core/web.review.kit.view.ts
+var DEFAULT_ADJUSTMENT_LABEL = "Responsive CSS px adjustments";
 var WebReviewKitView = class {
   constructor(config) {
     this.config = config;
@@ -8217,22 +8258,21 @@ var WebReviewKitView = class {
   formatRoundedPx(value) {
     return `${Math.round(value)}px`;
   }
-  formatDraftSelectionStatus(selection, viewport) {
-    if (!selection) return "area none";
+  getAdjustmentLabel() {
+    return this.config.options.adjustmentLabel?.trim() || DEFAULT_ADJUSTMENT_LABEL;
+  }
+  getSelectionMetricLines(selection, viewport) {
+    if (!selection) return ["area", "x none / y none", "w none / h none"];
     const metrics = this.getSelectionMqMetrics(selection, viewport);
     return [
-      `area x ${this.formatRoundedPx(metrics.x)}`,
-      `y ${this.formatRoundedPx(metrics.y)}`,
-      `w ${this.formatRoundedPx(metrics.width)}`,
-      `h ${this.formatRoundedPx(metrics.height)}`
-    ].join(" / ");
-  }
-  getNoteDraftMetricSelection(draft) {
-    if (!draft.selection) return void 0;
-    return this.getAdjustedDraftSelection(
-      toViewportSelection(draft.selection.viewport),
-      draft
-    );
+      "area",
+      `x ${this.formatRoundedPx(metrics.x)} / y ${this.formatRoundedPx(
+        metrics.y
+      )}`,
+      `w ${this.formatRoundedPx(metrics.width)} / h ${this.formatRoundedPx(
+        metrics.height
+      )}`
+    ];
   }
   getAreaDraftMetricSelection(draft) {
     if (!draft.selection) return void 0;
@@ -8241,19 +8281,30 @@ var WebReviewKitView = class {
   formatDraftAdjustmentStatus(draft) {
     const metrics = this.getDraftAdjustmentMetrics(draft);
     return [
-      `move x ${this.formatSignedPx(metrics.x)}`,
+      `x ${this.formatSignedPx(metrics.x)}`,
       `y ${this.formatSignedPx(metrics.y)}`,
       `scale ${this.formatSignedPx(metrics.scale)}`
     ].join(" / ");
+  }
+  getDraftAdjustmentMetricLines(draft) {
+    const metrics = this.getDraftAdjustmentMetrics(draft);
+    return [
+      `x ${this.formatSignedPx(metrics.x)} / y ${this.formatSignedPx(
+        metrics.y
+      )}`,
+      `scale ${this.formatSignedPx(metrics.scale)}`
+    ];
   }
   withDraftAdjustmentComment(comment, draft) {
     if (!this.hasDraftAdjustment(draft)) return comment;
     const metrics = this.getDraftAdjustmentMetrics(draft);
     const adjustment = [
-      `Adjust: x ${this.formatSignedPx(metrics.x)}, y ${this.formatSignedPx(
-        metrics.y
-      )}, scale ${this.formatSignedPx(metrics.scale)}`,
-      `(MQ \uAE30\uC900 px, ${metrics.presetLabel} ${Math.round(
+      `${this.getAdjustmentLabel()}: x ${this.formatSignedPx(
+        metrics.x
+      )}, y ${this.formatSignedPx(metrics.y)}, scale ${this.formatSignedPx(
+        metrics.scale
+      )}`,
+      `(${metrics.presetLabel} viewport, ${Math.round(
         metrics.viewportWidth
       )}/design ${Math.round(metrics.designWidth)})`
     ].join(" ");
@@ -8499,14 +8550,11 @@ ${adjustment}`;
       selectionHighlight,
       textarea
     }) : void 0;
-    const actions = this.createFormActions("Save note", saveDraft, {
-      className: isElementDraft ? "dfwr-note-actions" : void 0,
-      beforeSave: adjustmentControls?.buttons
-    });
+    const actions = this.createFormActions("Save note", saveDraft);
     form.append(
       ...meta ? [meta] : [],
-      textarea,
       ...adjustmentControls ? [adjustmentControls.panel] : [],
+      textarea,
       actions
     );
     const dragHandle = isElementDraft ? this.createDraftDragHandle("Move DOM composer") : void 0;
@@ -8604,35 +8652,40 @@ ${adjustment}`;
     textarea
   }) {
     const panel = document.createElement("div");
-    panel.className = "dfwr-adjust-panel";
+    panel.className = "dfwr-adjust-panel is-dom-adjust-panel";
+    const header = document.createElement("div");
+    header.className = "dfwr-adjust-panel-header";
     const help = document.createElement("div");
     help.className = "dfwr-adjust-help";
-    help.textContent = "MQ \uAE30\uC900 CSS px";
-    const selectionStatus = document.createElement("div");
-    selectionStatus.className = "dfwr-adjust-status";
-    const status = document.createElement("div");
-    status.className = "dfwr-adjust-status";
-    const reset = document.createElement("button");
-    reset.className = "dfwr-button";
-    reset.type = "button";
-    reset.textContent = "Reset";
+    help.textContent = this.getAdjustmentLabel();
     const adjust = document.createElement("button");
-    adjust.className = "dfwr-button";
+    adjust.className = "dfwr-adjust-toggle";
     adjust.type = "button";
+    adjust.title = "Adjust DOM element with keyboard arrows";
+    adjust.setAttribute("aria-label", "Adjust DOM element with keyboard arrows");
+    const xyStatus = document.createElement("div");
+    xyStatus.className = "dfwr-adjust-status";
+    const scaleStatus = document.createElement("div");
+    scaleStatus.className = "dfwr-adjust-status";
     const syncControls = (nextDraft) => {
       const isActive = nextDraft.adjustment?.isActive === true;
-      const hasAdjustment = this.hasDraftAdjustment(nextDraft);
       panel.classList.toggle("is-active", isActive);
-      reset.hidden = !hasAdjustment;
-      adjust.textContent = isActive ? "Done" : "Adjust";
-      status.textContent = this.formatDraftAdjustmentStatus(nextDraft);
+      adjust.classList.toggle("is-active", isActive);
+      adjust.setAttribute("aria-pressed", isActive ? "true" : "false");
+      adjust.textContent = isActive ? "\u2713" : "\u2194\u2195";
+      adjust.title = isActive ? "Finish DOM adjustment" : "Adjust DOM element with keyboard arrows";
+      adjust.setAttribute(
+        "aria-label",
+        isActive ? "Finish DOM adjustment" : "Adjust DOM element with keyboard arrows"
+      );
+      const [xyLine, scaleLine] = this.getDraftAdjustmentMetricLines(nextDraft);
+      xyStatus.textContent = xyLine;
+      scaleStatus.textContent = scaleLine;
       this.syncDraftAdjustmentUi({
         draft: nextDraft,
         hud,
         pin,
-        selectionHighlight,
-        selectionStatus,
-        status
+        selectionHighlight
       });
     };
     const updateDraft = (updater) => {
@@ -8656,18 +8709,6 @@ ${adjustment}`;
       }));
       adjust.focus();
     });
-    reset.addEventListener("click", () => {
-      updateDraft((currentDraft) => ({
-        ...currentDraft,
-        adjustment: {
-          x: 0,
-          y: 0,
-          scale: 0,
-          isActive: currentDraft.adjustment?.isActive
-        }
-      }));
-      adjust.focus();
-    });
     popover.addEventListener("keydown", (event) => {
       const currentDraft = this.state.noteDraft ?? draft;
       if (currentDraft.adjustment?.isActive !== true) return;
@@ -8685,11 +8726,11 @@ ${adjustment}`;
         }
       }));
     });
-    panel.append(help, selectionStatus, status);
+    header.append(help, adjust);
+    panel.append(header, xyStatus, scaleStatus);
     syncControls(draft);
     return {
       panel,
-      buttons: [reset, adjust],
       focusTarget: adjust
     };
   }
@@ -8714,9 +8755,7 @@ ${adjustment}`;
     draft,
     hud,
     pin,
-    selectionHighlight,
-    selectionStatus,
-    status
+    selectionHighlight
   }) {
     const environment = this.config.getEnvironment();
     if (!environment) return;
@@ -8738,15 +8777,6 @@ ${adjustment}`;
       selectionHighlight.style.top = `${rect.top}px`;
       selectionHighlight.style.width = `${rect.width}px`;
       selectionHighlight.style.height = `${rect.height}px`;
-    }
-    if (status) {
-      status.textContent = this.formatDraftAdjustmentStatus(draft);
-    }
-    if (selectionStatus) {
-      selectionStatus.textContent = this.formatDraftSelectionStatus(
-        this.getNoteDraftMetricSelection(draft),
-        draft.viewport
-      );
     }
     if (hud) {
       this.syncAdjustmentHud(hud, draft, environment);
@@ -8811,17 +8841,21 @@ ${adjustment}`;
   }
   createAreaMetricsPanel(draft) {
     const panel = document.createElement("div");
-    panel.className = "dfwr-adjust-panel";
+    panel.className = "dfwr-adjust-panel is-area-metrics-panel";
     const help = document.createElement("div");
     help.className = "dfwr-adjust-help";
-    help.textContent = "MQ \uAE30\uC900 CSS px";
-    const status = document.createElement("div");
-    status.className = "dfwr-adjust-status";
-    status.textContent = this.formatDraftSelectionStatus(
+    const [labelLine, xyLine, sizeLine] = this.getSelectionMetricLines(
       this.getAreaDraftMetricSelection(draft),
       draft.viewport
     );
-    panel.append(help, status);
+    help.textContent = labelLine;
+    const xyStatus = document.createElement("div");
+    xyStatus.className = "dfwr-adjust-status";
+    xyStatus.textContent = xyLine;
+    const sizeStatus = document.createElement("div");
+    sizeStatus.className = "dfwr-adjust-status";
+    sizeStatus.textContent = sizeLine;
+    panel.append(help, xyStatus, sizeStatus);
     return panel;
   }
   createAreaDraftOverlay(draft) {
@@ -9901,6 +9935,7 @@ var useReviewKitLifecycle = ({
   reviewUserId,
   reviewViewportPresets,
   ruler,
+  adjustmentLabel,
   sizeRef,
   targetRef,
   onApplyPendingRestore,
@@ -9953,6 +9988,7 @@ var useReviewKitLifecycle = ({
         presets: reviewViewportPresets
       },
       ruler,
+      adjustmentLabel,
       onCreateItem,
       onRestoreItem: onRestoreReviewItem,
       onItemsChange: () => {
@@ -10003,6 +10039,7 @@ var useReviewKitLifecycle = ({
     reviewUserId,
     reviewViewportPresets,
     ruler,
+    adjustmentLabel,
     sizeRef,
     targetRef
   ]);
@@ -10205,6 +10242,7 @@ var useReviewController = ({
   reviewUserId,
   reviewViewportPresets,
   ruler,
+  adjustmentLabel,
   selectedItemIdRef,
   size,
   sizeRef,
@@ -10293,6 +10331,7 @@ var useReviewController = ({
     reviewUserId,
     reviewViewportPresets,
     ruler,
+    adjustmentLabel,
     sizeRef,
     targetRef,
     onApplyPendingRestore: applyPendingRestore,
@@ -11855,6 +11894,7 @@ var ReviewShell = ({
   presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
   ruler,
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
+  adjustmentLabel,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
   sourceRoot,
   sourceInspector,
@@ -12100,6 +12140,7 @@ var ReviewShell = ({
     reviewUserId,
     reviewViewportPresets,
     ruler,
+    adjustmentLabel,
     selectedItemIdRef,
     size,
     sizeRef,

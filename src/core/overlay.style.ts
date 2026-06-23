@@ -667,6 +667,19 @@ export function createStyleElement() {
       background: rgba(255, 255, 255, 0.04);
     }
 
+    .dfwr-adjust-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .dfwr-adjust-panel-header .dfwr-adjust-help {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
     .dfwr-adjust-panel.is-active {
       border-color: rgba(215, 255, 95, 0.5);
       background: var(--df-review-color-accent-soft);
@@ -683,6 +696,33 @@ export function createStyleElement() {
     .dfwr-adjust-status {
       color: var(--df-review-color-text);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .dfwr-adjust-toggle {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--df-review-radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--df-review-color-text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .dfwr-adjust-toggle:hover,
+    .dfwr-adjust-toggle:focus-visible,
+    .dfwr-adjust-toggle.is-active {
+      border-color: rgba(215, 255, 95, 0.68);
+      background: var(--df-review-color-accent-soft);
+      outline: none;
     }
 
     .dfwr-adjust-hud {

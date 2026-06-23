@@ -3031,6 +3031,45 @@ var normalizeTarget = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => 
   const reviewPrefix = normalizeReviewPathPrefix(reviewPathPrefix);
   return normalized === reviewPrefix || normalized.startsWith(`${reviewPrefix}/`) ? "/" : normalized;
 };
+var parseReviewAddressInput = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  const raw = value.trim();
+  if (!raw) return { target: "/" };
+  const parsedUrl = parseSameOriginUrl(raw);
+  if (!parsedUrl) {
+    return { target: normalizeTarget(raw, reviewPathPrefix) };
+  }
+  const reviewPrefix = normalizeReviewPathPrefix(reviewPathPrefix);
+  const isReviewUrl = parsedUrl.pathname === reviewPrefix || parsedUrl.pathname.startsWith(`${reviewPrefix}/`);
+  if (!isReviewUrl) {
+    return {
+      target: normalizeTarget(parsedUrl.pathname, reviewPathPrefix)
+    };
+  }
+  const source = parsedUrl.searchParams.get("source")?.trim();
+  return {
+    height: getPositiveParamNumber(parsedUrl.searchParams, "h"),
+    itemId: parsedUrl.searchParams.get("item"),
+    source: source ? source : void 0,
+    target: normalizeTarget(
+      parsedUrl.searchParams.get("target") ?? "/",
+      reviewPathPrefix
+    ),
+    width: getPositiveParamNumber(parsedUrl.searchParams, "w")
+  };
+};
+function parseSameOriginUrl(value) {
+  if (typeof window === "undefined") return null;
+  try {
+    const url = new URL(value, window.location.origin);
+    return url.origin === window.location.origin ? url : null;
+  } catch {
+    return null;
+  }
+}
+function getPositiveParamNumber(params, name) {
+  const value = Number(params.get(name));
+  return Number.isFinite(value) && value > 0 ? value : void 0;
+}
 var getInitialTarget = (reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
   if (typeof window === "undefined") return "/";
   const target = new URLSearchParams(window.location.search).get("target");
@@ -7892,14 +7931,32 @@ var ReviewShell = ({
       window.clearTimeout(transitionTimeout);
     };
   }, [isListVisible, size.height, size.width, syncTargetViewport, targetSrc]);
-  const applyTarget = () => {
-    const normalizedTarget = normalizeTarget(draftTarget, reviewPathPrefix);
+  const applyTarget = async () => {
+    const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
+    const normalizedTarget = parsedInput.target;
+    const nextSource = parsedInput.source && sourceEntries.some((entry) => entry.label === parsedInput.source) ? parsedInput.source : source;
+    const nextSize = parsedInput.width && parsedInput.height ? findViewportPreset(
+      viewportPresets,
+      parsedInput.width,
+      parsedInput.height
+    ) : sizeRef.current;
+    const nextAdapter = sourceEntries.find((entry) => entry.label === nextSource) ?? activeAdapterEntry;
+    if (parsedInput.itemId) {
+      const item = await nextAdapter.adapter.get(parsedInput.itemId);
+      if (item) {
+        setSource(nextSource);
+        restoreReviewItem(item);
+        return;
+      }
+    }
     clearSelectedItem();
+    setSource(nextSource);
     targetRef.current = normalizedTarget;
     setActiveRoute(normalizedTarget);
     setDraftTarget(normalizedTarget);
+    setSize(nextSize);
     setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, sizeRef.current, source);
+    updateShellUrl(normalizedTarget, nextSize, nextSource);
   };
   const selectPage = (href) => {
     const normalizedTarget = normalizeTarget(href, reviewPathPrefix);

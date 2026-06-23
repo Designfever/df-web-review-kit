@@ -28,10 +28,12 @@ import {
   getItemTarget,
   getShellUrlForItem,
   normalizeTarget,
+  parseReviewAddressInput,
   updateShellUrl,
 } from '../route';
 import {
   DEFAULT_REVIEW_VIEWPORT_PRESETS,
+  findViewportPreset,
   getRestoredSize,
 } from '../viewport';
 import {
@@ -448,14 +450,43 @@ export const ReviewShell = ({
     };
   }, [isListVisible, size.height, size.width, syncTargetViewport, targetSrc]);
 
-  const applyTarget = () => {
-    const normalizedTarget = normalizeTarget(draftTarget, reviewPathPrefix);
+  const applyTarget = async () => {
+    const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
+    const normalizedTarget = parsedInput.target;
+    const nextSource =
+      parsedInput.source &&
+      sourceEntries.some((entry) => entry.label === parsedInput.source)
+        ? parsedInput.source
+        : source;
+    const nextSize =
+      parsedInput.width && parsedInput.height
+        ? findViewportPreset(
+            viewportPresets,
+            parsedInput.width,
+            parsedInput.height
+          )
+        : sizeRef.current;
+    const nextAdapter =
+      sourceEntries.find((entry) => entry.label === nextSource) ??
+      activeAdapterEntry;
+
+    if (parsedInput.itemId) {
+      const item = await nextAdapter.adapter.get(parsedInput.itemId);
+      if (item) {
+        setSource(nextSource);
+        restoreReviewItem(item);
+        return;
+      }
+    }
+
     clearSelectedItem();
+    setSource(nextSource);
     targetRef.current = normalizedTarget;
     setActiveRoute(normalizedTarget);
     setDraftTarget(normalizedTarget);
+    setSize(nextSize);
     setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, sizeRef.current, source);
+    updateShellUrl(normalizedTarget, nextSize, nextSource);
   };
 
   const selectPage = (href: string) => {

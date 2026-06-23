@@ -3,6 +3,14 @@ import type { ReviewShellViewportPreset } from './types';
 
 export const DEFAULT_REVIEW_PATH_PREFIX = '/review';
 
+export type ReviewAddressInput = {
+  height?: number;
+  itemId?: string | null;
+  source?: ReviewSource;
+  target: string;
+  width?: number;
+};
+
 export const normalizeReviewPathPrefix = (value: string) => {
   const raw = value.trim() || DEFAULT_REVIEW_PATH_PREFIX;
   const prefix = raw.startsWith('/') ? raw : `/${raw}`;
@@ -25,6 +33,59 @@ export const normalizeTarget = (
     ? '/'
     : normalized;
 };
+
+export const parseReviewAddressInput = (
+  value: string,
+  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
+): ReviewAddressInput => {
+  const raw = value.trim();
+  if (!raw) return { target: '/' };
+
+  const parsedUrl = parseSameOriginUrl(raw);
+  if (!parsedUrl) {
+    return { target: normalizeTarget(raw, reviewPathPrefix) };
+  }
+
+  const reviewPrefix = normalizeReviewPathPrefix(reviewPathPrefix);
+  const isReviewUrl =
+    parsedUrl.pathname === reviewPrefix ||
+    parsedUrl.pathname.startsWith(`${reviewPrefix}/`);
+
+  if (!isReviewUrl) {
+    return {
+      target: normalizeTarget(parsedUrl.pathname, reviewPathPrefix),
+    };
+  }
+
+  const source = parsedUrl.searchParams.get('source')?.trim();
+
+  return {
+    height: getPositiveParamNumber(parsedUrl.searchParams, 'h'),
+    itemId: parsedUrl.searchParams.get('item'),
+    source: source ? source as ReviewSource : undefined,
+    target: normalizeTarget(
+      parsedUrl.searchParams.get('target') ?? '/',
+      reviewPathPrefix
+    ),
+    width: getPositiveParamNumber(parsedUrl.searchParams, 'w'),
+  };
+};
+
+function parseSameOriginUrl(value: string) {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const url = new URL(value, window.location.origin);
+    return url.origin === window.location.origin ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+function getPositiveParamNumber(params: URLSearchParams, name: string) {
+  const value = Number(params.get(name));
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
 
 export const getInitialTarget = (reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
   if (typeof window === 'undefined') return '/';

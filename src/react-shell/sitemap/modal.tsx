@@ -160,9 +160,14 @@ export const SitemapModal = ({
                 type="button"
                 onClick={() => setSortKey(header.key)}
               >
-                <span>{header.label}</span>
-                <span aria-hidden="true">
+                <span
+                  aria-hidden="true"
+                  className="df-review-sitemap-sort-indicator"
+                >
                   {getSortIndicator(sort, header.key)}
+                </span>
+                <span className="df-review-sitemap-sort-label">
+                  {header.label}
                 </span>
               </button>
             ))}

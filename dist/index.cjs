@@ -1941,6 +1941,12 @@ function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
+    .dfwr-note-popover.is-docked {
+      max-height: min(360px, calc(100vh - 32px));
+      overflow: auto;
+      border-color: rgba(99, 215, 199, 0.56);
+    }
+
     .dfwr-area-draft {
       position: fixed;
       right: 16px;
@@ -2023,6 +2029,32 @@ function createStyleElement() {
     .dfwr-adjust-status {
       color: var(--df-review-color-text);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .dfwr-adjust-hud {
+      position: fixed;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 8px;
+      border: 1px solid rgba(99, 215, 199, 0.72);
+      border-radius: var(--df-review-radius-sm);
+      background: rgba(21, 25, 29, 0.92);
+      box-shadow:
+        0 0 0 3px rgba(99, 215, 199, 0.14),
+        0 8px 18px rgba(0, 0, 0, 0.26);
+      color: #63d7c7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: var(--df-review-font-size-2xs);
+      font-weight: 800;
+      line-height: 1;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .dfwr-adjust-hud[hidden] {
+      display: none;
     }
 
     .dfwr-empty,
@@ -2411,21 +2443,54 @@ var WebReviewKitView = class {
       top: selection.top + metrics.cssY
     };
   }
+  getDockPopoverPosition(draft, environment) {
+    const bounds = environment.overlayRect;
+    const margin = 12;
+    const width = Math.min(360, Math.max(240, bounds.width - margin * 2));
+    const height = 240;
+    const selection = draft.selection ? toHostSelection(
+      this.getAdjustedDraftSelection(
+        toViewportSelection(draft.selection.viewport),
+        draft
+      ),
+      environment
+    ) : void 0;
+    const positions = [
+      {
+        left: bounds.left + bounds.width - width - margin,
+        top: bounds.top + bounds.height - height - margin
+      },
+      {
+        left: bounds.left + bounds.width - width - margin,
+        top: bounds.top + margin
+      },
+      {
+        left: bounds.left + margin,
+        top: bounds.top + bounds.height - height - margin
+      }
+    ];
+    const position = positions.find((candidate) => {
+      if (!selection) return true;
+      return !rectanglesIntersect(
+        { ...candidate, width, height },
+        selection
+      );
+    }) ?? positions[0];
+    return {
+      width,
+      left: Math.max(bounds.left + margin, position.left),
+      top: Math.max(bounds.top + margin, position.top)
+    };
+  }
   formatSignedPx(value) {
     if (value === 0) return "+0px";
     return `${value > 0 ? "+" : ""}${value}px`;
   }
   formatDraftAdjustmentStatus(draft) {
     const metrics = this.getDraftAdjustmentMetrics(draft);
-    return [
-      `x ${this.formatSignedPx(metrics.x)}`,
-      `y ${this.formatSignedPx(metrics.y)}`,
-      `MQ px`,
-      `${metrics.presetLabel} ${Math.round(metrics.viewportWidth)}/design ${Math.round(
-        metrics.designWidth
-      )}`,
-      `preview x${Math.round(metrics.scale * 1e3) / 1e3}`
-    ].join(" / ");
+    return `x ${this.formatSignedPx(metrics.x)} / y ${this.formatSignedPx(
+      metrics.y
+    )}`;
   }
   withDraftAdjustmentComment(comment, draft) {
     if (!this.hasDraftAdjustment(draft)) return comment;
@@ -2605,14 +2670,23 @@ ${adjustment}`;
     pin.style.top = `${hostPoint.y}px`;
     const popover = document.createElement("div");
     const position = getPopoverPosition(hostPoint, environment);
-    popover.className = "dfwr-note-popover";
-    popover.style.left = `${position.left}px`;
-    popover.style.top = `${position.top}px`;
+    popover.className = `dfwr-note-popover${isElementDraft ? " is-docked" : ""}`;
+    if (isElementDraft) {
+      const dock = this.getDockPopoverPosition(draft, environment);
+      popover.style.left = `${dock.left}px`;
+      popover.style.top = `${dock.top}px`;
+      popover.style.width = `${dock.width}px`;
+    } else {
+      popover.style.left = `${position.left}px`;
+      popover.style.top = `${position.top}px`;
+    }
     const form = document.createElement("form");
     form.className = "dfwr-form";
-    const meta = document.createElement("div");
-    meta.className = "dfwr-item-date";
-    meta.textContent = formatNoteDraftMeta(draft);
+    const meta = isElementDraft ? void 0 : document.createElement("div");
+    if (meta) {
+      meta.className = "dfwr-item-date";
+      meta.textContent = formatNoteDraftMeta(draft);
+    }
     const textarea = document.createElement("textarea");
     textarea.className = "dfwr-textarea";
     textarea.placeholder = "Review comment";
@@ -2639,8 +2713,13 @@ ${adjustment}`;
         selection: currentDraft.selection
       });
     };
+    const adjustmentHud = isElementDraft ? this.createAdjustmentHud(draft, environment) : void 0;
+    if (adjustmentHud) {
+      group.append(adjustmentHud);
+    }
     const adjustmentControls = isElementDraft ? this.createAdjustmentControls({
       draft,
+      hud: adjustmentHud,
       pin,
       popover,
       selectionHighlight,
@@ -2651,14 +2730,19 @@ ${adjustment}`;
       beforeSave: adjustmentControls?.buttons
     });
     form.append(
-      meta,
+      ...meta ? [meta] : [],
       textarea,
       ...adjustmentControls ? [adjustmentControls.panel] : [],
       actions
     );
     popover.append(form);
     group.append(pin, popover);
-    this.attachDraftPinDrag(pin, popover, meta, textarea);
+    this.attachDraftPinDrag(
+      pin,
+      isElementDraft ? void 0 : popover,
+      meta,
+      textarea
+    );
     window.setTimeout(() => {
       if (draft.adjustment?.isActive) {
         adjustmentControls?.focusTarget.focus();
@@ -2670,6 +2754,7 @@ ${adjustment}`;
   }
   createAdjustmentControls({
     draft,
+    hud,
     pin,
     popover,
     selectionHighlight,
@@ -2698,6 +2783,7 @@ ${adjustment}`;
       status.textContent = this.formatDraftAdjustmentStatus(nextDraft);
       this.syncDraftAdjustmentUi({
         draft: nextDraft,
+        hud,
         pin,
         selectionHighlight,
         status
@@ -2766,8 +2852,16 @@ ${adjustment}`;
     if (event.key === "ArrowDown") return { x: 0, y: step };
     return void 0;
   }
+  createAdjustmentHud(draft, environment) {
+    const hud = document.createElement("div");
+    hud.className = "dfwr-adjust-hud";
+    hud.setAttribute("aria-hidden", "true");
+    this.syncAdjustmentHud(hud, draft, environment);
+    return hud;
+  }
   syncDraftAdjustmentUi({
     draft,
+    hud,
     pin,
     selectionHighlight,
     status
@@ -2796,7 +2890,25 @@ ${adjustment}`;
     if (status) {
       status.textContent = this.formatDraftAdjustmentStatus(draft);
     }
+    if (hud) {
+      this.syncAdjustmentHud(hud, draft, environment);
+    }
     this.syncDraftPreview(draft);
+  }
+  syncAdjustmentHud(hud, draft, environment) {
+    if (!draft.selection) return;
+    const rect = toHostSelection(
+      this.getAdjustedDraftSelection(
+        toViewportSelection(draft.selection.viewport),
+        draft
+      ),
+      environment
+    );
+    const isVisible = draft.adjustment?.isActive === true || this.hasDraftAdjustment(draft);
+    hud.hidden = !isVisible;
+    hud.textContent = this.formatDraftAdjustmentStatus(draft);
+    hud.style.left = `${Math.max(4, rect.left)}px`;
+    hud.style.top = `${Math.max(4, rect.top - 28)}px`;
   }
   createAreaForm() {
     const form = document.createElement("form");
@@ -3100,11 +3212,13 @@ ${formatItemMeta(item)}`;
       if (!environment) return;
       const nextPoint = clampPoint(toTargetPoint(hostPoint, environment), environment);
       const nextHostPoint = toHostPoint(nextPoint, environment);
-      const position = getPopoverPosition(nextHostPoint, environment);
       pin.style.left = `${nextHostPoint.x}px`;
       pin.style.top = `${nextHostPoint.y}px`;
-      popover.style.left = `${position.left}px`;
-      popover.style.top = `${position.top}px`;
+      if (popover) {
+        const position = getPopoverPosition(nextHostPoint, environment);
+        popover.style.left = `${position.left}px`;
+        popover.style.top = `${position.top}px`;
+      }
       const noteDraft = this.state.noteDraft;
       if (!noteDraft) return;
       const nextDraft = {
@@ -3116,7 +3230,9 @@ ${formatItemMeta(item)}`;
         comment: textarea.value
       };
       this.config.actions.setNoteDraft(nextDraft);
-      meta.textContent = formatNoteDraftMeta(nextDraft);
+      if (meta) {
+        meta.textContent = formatNoteDraftMeta(nextDraft);
+      }
     };
     pin.addEventListener("pointerdown", (event) => {
       if (event.button !== 0) return;

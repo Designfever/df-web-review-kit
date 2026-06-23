@@ -18,6 +18,7 @@ import {
   getViewportSize,
   isPointInViewport,
   placeLayerOverTarget,
+  rectanglesIntersect,
   roundPoint,
   toHostPoint,
   toHostSelection,
@@ -227,6 +228,54 @@ export class WebReviewKitView {
     };
   }
 
+  private getDockPopoverPosition(
+    draft: NoteDraft,
+    environment: ReviewEnvironment
+  ) {
+    const bounds = environment.overlayRect;
+    const margin = 12;
+    const width = Math.min(360, Math.max(240, bounds.width - margin * 2));
+    const height = 240;
+    const selection = draft.selection
+      ? toHostSelection(
+          this.getAdjustedDraftSelection(
+            toViewportSelection(draft.selection.viewport),
+            draft
+          ),
+          environment
+        )
+      : undefined;
+
+    const positions = [
+      {
+        left: bounds.left + bounds.width - width - margin,
+        top: bounds.top + bounds.height - height - margin,
+      },
+      {
+        left: bounds.left + bounds.width - width - margin,
+        top: bounds.top + margin,
+      },
+      {
+        left: bounds.left + margin,
+        top: bounds.top + bounds.height - height - margin,
+      },
+    ];
+    const position =
+      positions.find((candidate) => {
+        if (!selection) return true;
+        return !rectanglesIntersect(
+          { ...candidate, width, height },
+          selection
+        );
+      }) ?? positions[0];
+
+    return {
+      width,
+      left: Math.max(bounds.left + margin, position.left),
+      top: Math.max(bounds.top + margin, position.top),
+    };
+  }
+
   private formatSignedPx(value: number) {
     if (value === 0) return '+0px';
     return `${value > 0 ? '+' : ''}${value}px`;
@@ -234,15 +283,9 @@ export class WebReviewKitView {
 
   private formatDraftAdjustmentStatus(draft: NoteDraft) {
     const metrics = this.getDraftAdjustmentMetrics(draft);
-    return [
-      `x ${this.formatSignedPx(metrics.x)}`,
-      `y ${this.formatSignedPx(metrics.y)}`,
-      `MQ px`,
-      `${metrics.presetLabel} ${Math.round(metrics.viewportWidth)}/design ${Math.round(
-        metrics.designWidth
-      )}`,
-      `preview x${Math.round(metrics.scale * 1000) / 1000}`,
-    ].join(' / ');
+    return `x ${this.formatSignedPx(metrics.x)} / y ${this.formatSignedPx(
+      metrics.y
+    )}`;
   }
 
   private withDraftAdjustmentComment(comment: string, draft: NoteDraft) {
@@ -479,16 +522,27 @@ export class WebReviewKitView {
     const popover = document.createElement('div');
     const position = getPopoverPosition(hostPoint, environment);
 
-    popover.className = 'dfwr-note-popover';
-    popover.style.left = `${position.left}px`;
-    popover.style.top = `${position.top}px`;
+    popover.className = `dfwr-note-popover${
+      isElementDraft ? ' is-docked' : ''
+    }`;
+    if (isElementDraft) {
+      const dock = this.getDockPopoverPosition(draft, environment);
+      popover.style.left = `${dock.left}px`;
+      popover.style.top = `${dock.top}px`;
+      popover.style.width = `${dock.width}px`;
+    } else {
+      popover.style.left = `${position.left}px`;
+      popover.style.top = `${position.top}px`;
+    }
 
     const form = document.createElement('form');
     form.className = 'dfwr-form';
 
-    const meta = document.createElement('div');
-    meta.className = 'dfwr-item-date';
-    meta.textContent = formatNoteDraftMeta(draft);
+    const meta = isElementDraft ? undefined : document.createElement('div');
+    if (meta) {
+      meta.className = 'dfwr-item-date';
+      meta.textContent = formatNoteDraftMeta(draft);
+    }
 
     const textarea = document.createElement('textarea');
     textarea.className = 'dfwr-textarea';
@@ -518,9 +572,17 @@ export class WebReviewKitView {
       });
     };
 
+    const adjustmentHud = isElementDraft
+      ? this.createAdjustmentHud(draft, environment)
+      : undefined;
+    if (adjustmentHud) {
+      group.append(adjustmentHud);
+    }
+
     const adjustmentControls = isElementDraft
       ? this.createAdjustmentControls({
           draft,
+          hud: adjustmentHud,
           pin,
           popover,
           selectionHighlight,
@@ -534,7 +596,7 @@ export class WebReviewKitView {
     });
 
     form.append(
-      meta,
+      ...(meta ? [meta] : []),
       textarea,
       ...(adjustmentControls ? [adjustmentControls.panel] : []),
       actions
@@ -542,7 +604,12 @@ export class WebReviewKitView {
     popover.append(form);
     group.append(pin, popover);
 
-    this.attachDraftPinDrag(pin, popover, meta, textarea);
+    this.attachDraftPinDrag(
+      pin,
+      isElementDraft ? undefined : popover,
+      meta,
+      textarea
+    );
 
     window.setTimeout(() => {
       if (draft.adjustment?.isActive) {
@@ -558,12 +625,14 @@ export class WebReviewKitView {
 
   private createAdjustmentControls({
     draft,
+    hud,
     pin,
     popover,
     selectionHighlight,
     textarea,
   }: {
     draft: NoteDraft;
+    hud?: HTMLDivElement;
     pin: HTMLButtonElement;
     popover: HTMLDivElement;
     selectionHighlight?: HTMLDivElement;
@@ -597,6 +666,7 @@ export class WebReviewKitView {
       status.textContent = this.formatDraftAdjustmentStatus(nextDraft);
       this.syncDraftAdjustmentUi({
         draft: nextDraft,
+        hud,
         pin,
         selectionHighlight,
         status,
@@ -678,13 +748,26 @@ export class WebReviewKitView {
     return undefined;
   }
 
+  private createAdjustmentHud(
+    draft: NoteDraft,
+    environment: ReviewEnvironment
+  ) {
+    const hud = document.createElement('div');
+    hud.className = 'dfwr-adjust-hud';
+    hud.setAttribute('aria-hidden', 'true');
+    this.syncAdjustmentHud(hud, draft, environment);
+    return hud;
+  }
+
   private syncDraftAdjustmentUi({
     draft,
+    hud,
     pin,
     selectionHighlight,
     status,
   }: {
     draft: NoteDraft;
+    hud?: HTMLDivElement;
     pin: HTMLButtonElement;
     selectionHighlight?: HTMLDivElement;
     status?: HTMLDivElement;
@@ -717,7 +800,34 @@ export class WebReviewKitView {
       status.textContent = this.formatDraftAdjustmentStatus(draft);
     }
 
+    if (hud) {
+      this.syncAdjustmentHud(hud, draft, environment);
+    }
+
     this.syncDraftPreview(draft);
+  }
+
+  private syncAdjustmentHud(
+    hud: HTMLDivElement,
+    draft: NoteDraft,
+    environment: ReviewEnvironment
+  ) {
+    if (!draft.selection) return;
+
+    const rect = toHostSelection(
+      this.getAdjustedDraftSelection(
+        toViewportSelection(draft.selection.viewport),
+        draft
+      ),
+      environment
+    );
+    const isVisible =
+      draft.adjustment?.isActive === true || this.hasDraftAdjustment(draft);
+
+    hud.hidden = !isVisible;
+    hud.textContent = this.formatDraftAdjustmentStatus(draft);
+    hud.style.left = `${Math.max(4, rect.left)}px`;
+    hud.style.top = `${Math.max(4, rect.top - 28)}px`;
   }
 
   private createAreaForm() {
@@ -1105,8 +1215,8 @@ export class WebReviewKitView {
 
   private attachDraftPinDrag(
     pin: HTMLButtonElement,
-    popover: HTMLDivElement,
-    meta: HTMLDivElement,
+    popover: HTMLDivElement | undefined,
+    meta: HTMLDivElement | undefined,
     textarea: HTMLTextAreaElement
   ) {
     let isDragging = false;
@@ -1117,12 +1227,14 @@ export class WebReviewKitView {
 
       const nextPoint = clampPoint(toTargetPoint(hostPoint, environment), environment);
       const nextHostPoint = toHostPoint(nextPoint, environment);
-      const position = getPopoverPosition(nextHostPoint, environment);
 
       pin.style.left = `${nextHostPoint.x}px`;
       pin.style.top = `${nextHostPoint.y}px`;
-      popover.style.left = `${position.left}px`;
-      popover.style.top = `${position.top}px`;
+      if (popover) {
+        const position = getPopoverPosition(nextHostPoint, environment);
+        popover.style.left = `${position.left}px`;
+        popover.style.top = `${position.top}px`;
+      }
 
       const noteDraft = this.state.noteDraft;
       if (!noteDraft) return;
@@ -1136,7 +1248,9 @@ export class WebReviewKitView {
         comment: textarea.value,
       };
       this.config.actions.setNoteDraft(nextDraft);
-      meta.textContent = formatNoteDraftMeta(nextDraft);
+      if (meta) {
+        meta.textContent = formatNoteDraftMeta(nextDraft);
+      }
     };
 
     pin.addEventListener('pointerdown', (event) => {

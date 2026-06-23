@@ -9,6 +9,7 @@ import { QaItemCard } from './item.card';
 import { QaPanelHeader } from './panel.header';
 import type {
   ReviewPresenceUser,
+  ReviewSourceInspectorOptions,
   ReviewQaFilter,
   ReviewShellViewportKind,
 } from '../types';
@@ -31,6 +32,7 @@ interface ReviewQaPanelProps {
   selectedItemId: string | null;
   showSourceSelect: boolean;
   sourceRoot?: string;
+  sourceInspectorOptions?: ReviewSourceInspectorOptions;
   source: ReviewSource;
   sourceEntries: NormalizedReviewShellAdapter[];
   onChangeItemStatus: (
@@ -67,6 +69,7 @@ export const ReviewQaPanel = ({
   selectedItemId,
   showSourceSelect,
   sourceRoot,
+  sourceInspectorOptions,
   source,
   sourceEntries,
   onChangeItemStatus,
@@ -135,6 +138,7 @@ export const ReviewQaPanel = ({
                   copiedPromptKey={copiedPromptKey}
                   selectedItemId={selectedItemId}
                   sourceRoot={sourceRoot}
+                  sourceInspectorOptions={sourceInspectorOptions}
                   onChangeItemStatus={onChangeItemStatus}
                   onClearSelectedItem={onClearSelectedItem}
                   onCopyItemPrompt={onCopyItemPrompt}

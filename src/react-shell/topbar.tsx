@@ -168,6 +168,7 @@ export const ReviewTopbar = ({
             className={`df-review-overlay-button is-figma${
               targetOverlayState.figma ? ' is-active' : ''
             }${isFigmaOverlayAvailable ? '' : ' is-disabled'}`}
+            disabled={!isFigmaOverlayAvailable}
             type="button"
             onClick={() => onToggleTargetOverlay('figma')}
           >

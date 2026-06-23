@@ -21,7 +21,10 @@ import {
   ReviewScopeIcon,
 } from '../review/item.icons';
 import { getSourceOpenUrl } from '../source.open';
-import type { ReviewShellViewportKind } from '../types';
+import type {
+  ReviewSourceInspectorOptions,
+  ReviewShellViewportKind,
+} from '../types';
 
 interface QaItemCardProps {
   activeAdapterEntry: NormalizedReviewShellAdapter;
@@ -34,6 +37,7 @@ interface QaItemCardProps {
   copiedPromptKey: string | null;
   selectedItemId: string | null;
   sourceRoot?: string;
+  sourceInspectorOptions?: ReviewSourceInspectorOptions;
   onChangeItemStatus: (
     item: ReviewItem,
     nextStatus: ReviewItemStatus
@@ -70,6 +74,7 @@ export const QaItemCard = ({
   copiedPromptKey,
   selectedItemId,
   sourceRoot,
+  sourceInspectorOptions,
   onChangeItemStatus,
   onClearSelectedItem,
   onRemoveItem,
@@ -101,7 +106,13 @@ export const QaItemCard = ({
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor]
     .filter(Boolean)
     .join(' | ');
-  const sourceOpenUrl = getSourceOpenUrl(item.anchor?.source, sourceRoot);
+  const sourceOpenUrl =
+    sourceInspectorOptions?.enabled === false
+      ? null
+      : getSourceOpenUrl(item.anchor?.source, {
+          ...sourceInspectorOptions,
+          sourceRoot,
+        });
 
   return (
     <article
@@ -160,12 +171,12 @@ export const QaItemCard = ({
           </button>
           {sourceOpenUrl && (
             <a
-              aria-label="Open source in VS Code"
+              aria-label="Open source"
               className="df-review-item-source-open"
               href={sourceOpenUrl}
               rel="noreferrer"
               target="_blank"
-              title="Open source in VS Code"
+              title="Open source"
             >
               <FileCode2Icon aria-hidden="true" />
             </a>

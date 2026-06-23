@@ -25,6 +25,14 @@ export type ReviewShellPage = {
 
 export type ReviewShellGlobEntries = Record<string, unknown>;
 
+export type ReviewSourceEditor = 'vscode' | 'cursor' | 'webstorm' | 'custom';
+
+export type ReviewSourceInspectorOptions = {
+  enabled?: boolean;
+  editor?: ReviewSourceEditor;
+  urlTemplate?: string;
+};
+
 export type ReviewShellStatusOption = {
   value: ReviewItemStatus;
   label: string;
@@ -147,6 +155,7 @@ export interface ReviewShellProps {
   initialPrompt?: string;
   reviewPathPrefix?: string;
   sourceRoot?: string;
+  sourceInspector?: ReviewSourceInspectorOptions;
   presence?: ReviewPresenceAdapter;
 }
 

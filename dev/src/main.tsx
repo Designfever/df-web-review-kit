@@ -19,12 +19,26 @@ import {
 } from '../../src/react-shell';
 import './style.css';
 
+declare global {
+  interface Window {
+    __figma?: {
+      desktopNodeId: string;
+      mobileNodeId: string;
+    };
+  }
+}
+
 const REVIEW_PROJECT_ID =
   import.meta.env.VITE_REVIEW_PROJECT_ID || 'df-web-review-kit';
 const REVIEW_PATH_PREFIX = '/review';
 const REVIEW_STORAGE_KEY = `${REVIEW_PROJECT_ID}:items`;
 const REVIEW_SUPABASE_TABLE =
   import.meta.env.VITE_REVIEW_SUPABASE_TABLE || 'review_items';
+
+window.__figma = {
+  desktopNodeId: 'p2DY6W7xu5WmDNtJK8v6zd->4:228',
+  mobileNodeId: 'p2DY6W7xu5WmDNtJK8v6zd->4:491',
+};
 
 const pages: ReviewShellPage[] = [
   { href: '/' },

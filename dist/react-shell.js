@@ -2153,7 +2153,7 @@ function ensureReviewShellStyle() {
 	    height: max-content;
 	    min-width: 100%;
 	    min-height: 100%;
-	    padding: 34px 40px 12px;
+	    padding: 34px 58px 12px 40px;
 	  }
 
   .df-review-device {
@@ -2176,6 +2176,170 @@ function ensureReviewShellStyle() {
     min-height: inherit;
     border: 0;
     background: #fff;
+  }
+
+  .df-review-frame-link-stack {
+    position: absolute;
+    z-index: 14;
+    top: 0;
+    right: -44px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .df-review-frame-link {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(15, 23, 42, 0.16);
+    border-radius: var(--df-review-radius-md);
+    color: #17202c;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.18);
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: transform 140ms ease, border-color 140ms ease, color 140ms ease,
+      background 140ms ease;
+  }
+
+  .df-review-frame-link:hover {
+    transform: translateY(-1px);
+    border-color: rgba(0, 102, 255, 0.42);
+    color: #005be8;
+    background: rgba(255, 255, 255, 0.98);
+  }
+
+  .df-review-frame-link svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .df-review-frame-link.is-target svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+
+  .df-review-frame-link.is-figma svg {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .df-review-source-outline {
+    position: fixed;
+    z-index: 880;
+    pointer-events: none;
+    border: 2px solid rgba(124, 199, 255, 0.96);
+    border-radius: 4px;
+    box-shadow:
+      0 0 0 1px rgba(15, 18, 24, 0.58),
+      0 0 0 5px rgba(124, 199, 255, 0.16);
+  }
+
+  .df-review-source-outline.is-pinned {
+    border-color: var(--df-review-note);
+    box-shadow:
+      0 0 0 1px rgba(15, 18, 24, 0.58),
+      0 0 0 5px rgba(243, 183, 95, 0.16);
+  }
+
+  .df-review-source-popover {
+    position: fixed;
+    z-index: 890;
+    display: grid;
+    width: 360px;
+    max-height: 260px;
+    overflow: hidden;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-md);
+    padding: 8px 6px 6px;
+    color: var(--df-review-text);
+    background: rgba(19, 24, 33, 0.96);
+    box-shadow: var(--df-review-shadow-panel);
+    backdrop-filter: blur(10px);
+  }
+
+  .df-review-source-popover-close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 1;
+  }
+
+  .df-review-source-popover-close button {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid transparent;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-subtle);
+    background: transparent;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .df-review-source-popover-close button:hover {
+    border-color: var(--df-review-line);
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+  }
+
+  .df-review-source-candidate-list {
+    display: grid;
+    gap: 0;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .df-review-source-candidate {
+    display: grid;
+    width: 100%;
+    min-height: 54px;
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    padding: 6px 30px 6px 8px;
+    color: var(--df-review-text);
+    background: transparent;
+    text-align: left;
+  }
+
+  .df-review-source-candidate:hover {
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-source-candidate-main {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .df-review-source-candidate-main strong,
+  .df-review-source-candidate-main span,
+  .df-review-source-candidate-main small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .df-review-source-candidate-main strong {
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 900;
+  }
+
+  .df-review-source-candidate-main span {
+    color: var(--df-review-muted);
+    font-family: var(--df-review-font-mono);
+    font-size: var(--df-review-font-size-2xs);
+  }
+
+  .df-review-source-candidate-main small {
+    color: var(--df-review-subtle);
+    font-family: var(--df-review-font-mono);
+    font-size: var(--df-review-font-size-2xs);
   }
 
   .df-review-device-frame {
@@ -2439,6 +2603,7 @@ function ensureReviewShellStyle() {
 import {
   useCallback as useCallback11,
   useEffect as useEffect10,
+  useMemo as useMemo6,
   useRef as useRef4,
   useState as useState8
 } from "react";
@@ -3691,6 +3856,40 @@ var SitemapModal = ({
   );
 };
 
+// src/react-shell/figma.ts
+function getTargetFigmaFrameConfig(targetWindow) {
+  try {
+    const config = targetWindow?.__figma;
+    if (!config || typeof config !== "object") return null;
+    const desktopNodeId = normalizeFigmaNodeValue(config.desktopNodeId);
+    const mobileNodeId = normalizeFigmaNodeValue(config.mobileNodeId);
+    if (!desktopNodeId && !mobileNodeId) return null;
+    return {
+      desktopNodeId,
+      mobileNodeId
+    };
+  } catch {
+    return null;
+  }
+}
+function getFigmaFrameUrl(config, preset) {
+  if (!config) return null;
+  const kind = getViewportPresetKind(preset);
+  const value = kind === "mobile" ? config.mobileNodeId : config.desktopNodeId;
+  return value ? createFigmaFrameUrl(value) : null;
+}
+function normalizeFigmaNodeValue(value) {
+  return typeof value === "string" ? value.trim() || void 0 : void 0;
+}
+function createFigmaFrameUrl(value) {
+  const [fileKey, nodeId] = value.split("->").map((part) => part.trim());
+  if (!fileKey || !nodeId) return null;
+  const urlNodeId = encodeURIComponent(nodeId.replace(/:/g, "-"));
+  return `https://www.figma.com/design/${encodeURIComponent(
+    fileKey
+  )}?node-id=${urlNodeId}`;
+}
+
 // src/react-shell/qa/item.edit.modal.tsx
 import { useEffect, useState } from "react";
 import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
@@ -4064,45 +4263,164 @@ var SOURCE_SELECTOR = [
   "[data-section-index]",
   "[data-section-id]"
 ].join(", ");
-var getSourceHintElement = (target) => {
-  return getEventElement(target)?.closest(SOURCE_SELECTOR) ?? null;
+var getSourceCandidates = (target) => {
+  const startElement = getEventElement(target);
+  if (!startElement) return [];
+  const candidates = [];
+  const seen = /* @__PURE__ */ new Set();
+  let element = startElement;
+  let depth = 0;
+  while (element && element.nodeType === 1) {
+    const source = getSourceHintFromElement(element);
+    if (source?.file) {
+      const key = getSourceCandidateKey(source);
+      if (!seen.has(key)) {
+        seen.add(key);
+        candidates.push(createSourceCandidate(element, source, depth));
+      }
+    }
+    if (element === element.ownerDocument.documentElement) break;
+    element = element.parentElement;
+    depth += 1;
+  }
+  return candidates.slice(0, 8);
 };
-var getElementSourceHint = (target) => {
-  const sourceElement = getSourceHintElement(target);
-  if (!sourceElement) return void 0;
-  const source = {
-    component: getSourceAttribute(
-      sourceElement,
-      "data-wrk-source-component",
-      "data-component"
-    ),
-    file: getSourceAttribute(sourceElement, "data-wrk-source-file", "data-file"),
-    line: getSourceAttribute(sourceElement, "data-wrk-source-line"),
-    column: getSourceAttribute(sourceElement, "data-wrk-source-column"),
-    sectionId: getSourceAttribute(sourceElement, "data-section-id"),
-    sectionIndex: getSourceAttribute(sourceElement, "data-section-index")
-  };
-  return Object.values(source).some(Boolean) ? source : void 0;
-};
-var getSourceOpenUrl = (source, sourceRoot) => {
+var getSourceOpenUrl = (source, options) => {
+  const normalizedOptions = normalizeSourceOpenOptions(options);
   const file = source?.file?.trim();
   if (!file) return null;
-  const sourcePath = getSourcePath(file, sourceRoot);
+  const sourcePath = getSourcePath(file, normalizedOptions.sourceRoot);
   if (!sourcePath) return null;
-  const line = getSourcePosition(source?.line);
-  const column = getSourcePosition(source?.column);
-  const encodedPath = encodeURI(sourcePath).replace(
-    /[#?]/g,
-    (match) => match === "#" ? "%23" : "%3F"
-  );
-  return `vscode://file/${encodedPath}:${line}:${column}`;
+  const hasPosition = !normalizedOptions.omitPosition;
+  const line = hasPosition ? getSourcePosition(source?.line) : null;
+  const column = hasPosition ? getSourcePosition(source?.column) : null;
+  const editor = normalizedOptions.editor ?? "vscode";
+  if (normalizedOptions.urlTemplate) {
+    return buildSourceUrlFromTemplate(normalizedOptions.urlTemplate, {
+      column,
+      file,
+      line,
+      sourcePath,
+      sourceRoot: normalizedOptions.sourceRoot
+    });
+  }
+  if (editor === "webstorm") {
+    const params = new URLSearchParams({ file: sourcePath });
+    if (line) params.set("line", String(line));
+    if (column) params.set("column", String(column));
+    return `webstorm://open?${params.toString()}`;
+  }
+  if (editor === "custom") return null;
+  const encodedPath = encodePathForFileScheme(sourcePath);
+  const scheme = editor === "cursor" ? "cursor" : "vscode";
+  if (!line) return `${scheme}://file/${encodedPath}`;
+  if (!column) return `${scheme}://file/${encodedPath}:${line}`;
+  return `${scheme}://file/${encodedPath}:${line}:${column}`;
 };
-var openSourceInEditor = (source, sourceRoot) => {
-  const url = getSourceOpenUrl(source, sourceRoot);
+var openSourceInEditor = (source, options) => {
+  const url = getSourceOpenUrl(source, options);
   if (!url) return false;
   window.open(url, "_blank", "noreferrer");
   return true;
 };
+function getSourceHintFromElement(element) {
+  const source = {
+    component: getSourceAttribute(
+      element,
+      "data-wrk-source-component",
+      "data-component"
+    ),
+    file: getSourceAttribute(element, "data-wrk-source-file", "data-file"),
+    line: getSourceAttribute(element, "data-wrk-source-line"),
+    column: getSourceAttribute(element, "data-wrk-source-column"),
+    sectionId: getSourceAttribute(element, "data-section-id"),
+    sectionIndex: getSourceAttribute(element, "data-section-index")
+  };
+  return Object.values(source).some(Boolean) ? source : void 0;
+}
+function createSourceCandidate(element, source, depth) {
+  const confidence = getSourceConfidence(source, depth);
+  const fileName = source.file?.split(/[\\/]/).pop() ?? source.file ?? "source";
+  const component = source.component?.trim();
+  const fallbackComponent = getComponentNameFromSourceFile(source.file);
+  const tag = element.tagName.toLowerCase();
+  const line = getSourcePosition(source.line);
+  const column = getSourcePosition(source.column);
+  const position = line ? `:${line}${column ? `:${column}` : ""}` : "";
+  return {
+    id: getSourceCandidateKey(source),
+    depth,
+    element,
+    filePath: getDisplaySourcePath(source.file) ?? fileName,
+    label: component || fallbackComponent || tag,
+    detail: `${fileName}${position}`,
+    positionLabel: line ? `${line}:${column ?? 1}` : "",
+    confidence,
+    confidenceLabel: confidence >= 0.82 ? "high" : confidence >= 0.58 ? "medium" : "low",
+    usesPosition: confidence >= 0.72 && Boolean(line),
+    source
+  };
+}
+function getComponentNameFromSourceFile(file) {
+  const normalizedFile = file?.trim().replace(/\\/g, "/");
+  if (!normalizedFile) return void 0;
+  const pathParts = normalizedFile.split("/").filter(Boolean);
+  const fileName = pathParts[pathParts.length - 1];
+  if (!fileName) return void 0;
+  const stem = fileName.replace(/\.[^.]+$/, "");
+  const sourceName = stem.toLowerCase() === "index" ? pathParts[pathParts.length - 2]?.replace(/\.[^.]+$/, "") : stem;
+  return toPascalCase2(sourceName);
+}
+function toPascalCase2(value) {
+  const words = value?.split(/[._\-\s]+/).map((part) => part.trim()).filter(Boolean);
+  if (!words?.length) return void 0;
+  return words.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`).join("");
+}
+function getDisplaySourcePath(file) {
+  const normalizedFile = file?.trim().replace(/\\/g, "/");
+  if (!normalizedFile) return void 0;
+  const sourceRootMatch = normalizedFile.match(
+    /(?:^|\/)((?:dev\/)?src\/.+|app\/.+|pages\/.+|components\/.+)$/
+  );
+  return sourceRootMatch?.[1] ?? normalizedFile;
+}
+function getSourceCandidateKey(source) {
+  return [
+    source.file,
+    source.component,
+    source.line,
+    source.column,
+    source.sectionId,
+    source.sectionIndex
+  ].filter(Boolean).join("|");
+}
+function getSourceConfidence(source, depth) {
+  let score = source.file ? 0.54 : 0.12;
+  if (source.component) score += 0.12;
+  if (getSourcePosition(source.line)) score += 0.22;
+  if (getSourcePosition(source.column)) score += 0.08;
+  if (source.sectionId || source.sectionIndex) score += 0.04;
+  score -= Math.min(depth, 5) * 0.045;
+  return Math.max(0.1, Math.min(1, Number(score.toFixed(2))));
+}
+function normalizeSourceOpenOptions(options) {
+  return typeof options === "string" ? { sourceRoot: options } : options ?? {};
+}
+function buildSourceUrlFromTemplate(template, values) {
+  const replacements = {
+    column: values.column ? String(values.column) : "",
+    encodedPath: encodeURIComponent(values.sourcePath),
+    file: values.file,
+    line: values.line ? String(values.line) : "",
+    path: values.sourcePath,
+    sourceRoot: values.sourceRoot ?? "",
+    uriPath: encodePathForFileScheme(values.sourcePath)
+  };
+  return template.replace(
+    /\{([a-zA-Z]+)\}/g,
+    (_, key) => replacements[key] ?? ""
+  );
+}
 function getSourceAttribute(element, ...names) {
   for (const name of names) {
     const value = element.getAttribute(name)?.trim();
@@ -4132,7 +4450,13 @@ function getSourcePath(file, sourceRoot) {
 }
 function getSourcePosition(value) {
   const position = Number(value);
-  return Number.isInteger(position) && position > 0 ? position : 1;
+  return Number.isInteger(position) && position > 0 ? position : null;
+}
+function encodePathForFileScheme(path) {
+  return encodeURI(path).replace(
+    /[#?]/g,
+    (match) => match === "#" ? "%23" : "%3F"
+  );
 }
 
 // src/react-shell/qa/item.card.tsx
@@ -4158,6 +4482,7 @@ var QaItemCard = ({
   copiedPromptKey,
   selectedItemId,
   sourceRoot,
+  sourceInspectorOptions,
   onChangeItemStatus,
   onClearSelectedItem,
   onRemoveItem,
@@ -4181,7 +4506,10 @@ var QaItemCard = ({
   const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
   const canEditItem = activeAdapterEntry.canUpdate && !isSubmitting;
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor].filter(Boolean).join(" | ");
-  const sourceOpenUrl = getSourceOpenUrl(item.anchor?.source, sourceRoot);
+  const sourceOpenUrl = sourceInspectorOptions?.enabled === false ? null : getSourceOpenUrl(item.anchor?.source, {
+    ...sourceInspectorOptions,
+    sourceRoot
+  });
   return /* @__PURE__ */ jsxs6(
     "article",
     {
@@ -4236,12 +4564,12 @@ var QaItemCard = ({
                 sourceOpenUrl && /* @__PURE__ */ jsx8(
                   "a",
                   {
-                    "aria-label": "Open source in VS Code",
+                    "aria-label": "Open source",
                     className: "df-review-item-source-open",
                     href: sourceOpenUrl,
                     rel: "noreferrer",
                     target: "_blank",
-                    title: "Open source in VS Code",
+                    title: "Open source",
                     children: /* @__PURE__ */ jsx8(FileCodeCorner, { "aria-hidden": "true" })
                   }
                 ),
@@ -4437,6 +4765,7 @@ var ReviewQaPanel = ({
   selectedItemId,
   showSourceSelect,
   sourceRoot,
+  sourceInspectorOptions,
   source,
   sourceEntries,
   onChangeItemStatus,
@@ -4497,6 +4826,7 @@ var ReviewQaPanel = ({
                 copiedPromptKey,
                 selectedItemId,
                 sourceRoot,
+                sourceInspectorOptions,
                 onChangeItemStatus,
                 onClearSelectedItem,
                 onCopyItemPrompt,
@@ -4693,6 +5023,7 @@ var ReviewTargetFrame = ({
   canWriteArea,
   canWriteDom,
   frameScrollRef,
+  figmaFrameUrl,
   iframeRef,
   isRulerAvailable,
   isRulerDragging,
@@ -4764,7 +5095,33 @@ var ReviewTargetFrame = ({
                 )
               ]
             }
-          )
+          ),
+          /* @__PURE__ */ jsxs13("div", { className: "df-review-frame-link-stack", children: [
+            /* @__PURE__ */ jsx15(
+              "a",
+              {
+                "aria-label": "Open target page",
+                className: "df-review-frame-link is-target",
+                href: targetSrc,
+                rel: "noreferrer",
+                target: "_blank",
+                title: "Open target page",
+                children: /* @__PURE__ */ jsx15(ExternalLink, { "aria-hidden": "true" })
+              }
+            ),
+            figmaFrameUrl && /* @__PURE__ */ jsx15(
+              "a",
+              {
+                "aria-label": "Open Figma frame",
+                className: "df-review-frame-link is-figma",
+                href: figmaFrameUrl,
+                rel: "noreferrer",
+                target: "_blank",
+                title: "Open Figma frame",
+                children: /* @__PURE__ */ jsx15(FigmaIcon, {})
+              }
+            )
+          ] })
         ]
       }
     ) }) }),
@@ -4779,6 +5136,15 @@ var ReviewTargetFrame = ({
     ) })
   ] }) });
 };
+var FigmaIcon = () => /* @__PURE__ */ jsx15(
+  "svg",
+  {
+    "aria-hidden": "true",
+    viewBox: "0 0 24 24",
+    xmlns: "http://www.w3.org/2000/svg",
+    children: /* @__PURE__ */ jsx15("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
+  }
+);
 
 // src/react-shell/topbar.tsx
 import { jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
@@ -4897,6 +5263,7 @@ var ReviewTopbar = ({
             "aria-disabled": !isFigmaOverlayAvailable,
             "aria-label": isFigmaOverlayAvailable ? "Toggle Figma overlay" : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
             className: `df-review-overlay-button is-figma${targetOverlayState.figma ? " is-active" : ""}${isFigmaOverlayAvailable ? "" : " is-disabled"}`,
+            disabled: !isFigmaOverlayAvailable,
             type: "button",
             onClick: () => onToggleTargetOverlay("figma"),
             children: /* @__PURE__ */ jsx16(Image, { "aria-hidden": "true" })
@@ -7130,12 +7497,14 @@ var removeReviewItem = async ({
 };
 
 // src/react-shell/review/shell.tsx
-import { jsx as jsx17, jsxs as jsxs15 } from "react/jsx-runtime";
+import { Fragment as Fragment4, jsx as jsx17, jsxs as jsxs15 } from "react/jsx-runtime";
 var getReviewModeWriteMode = (mode) => {
   if (mode === "element") return "dom";
   if (mode === "note" || mode === "area") return mode;
   return null;
 };
+var SOURCE_PANEL_WIDTH = 360;
+var SOURCE_PANEL_MAX_HEIGHT = 260;
 var ReviewShell = ({
   projectId,
   pages,
@@ -7145,6 +7514,7 @@ var ReviewShell = ({
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
   sourceRoot,
+  sourceInspector,
   presence
 }) => {
   const {
@@ -7161,7 +7531,7 @@ var ReviewShell = ({
     frameScrollRef,
     hiddenOverlayItemIdListRef,
     iframeRef,
-    isFigmaOverlayAvailable,
+    isFigmaOverlayAvailable: isViewportFigmaOverlayAvailable,
     isInitialPromptOpen,
     isListVisible,
     isRemoteSource,
@@ -7204,6 +7574,16 @@ var ReviewShell = ({
     reviewPathPrefix
   });
   const sourceShortcutCleanupRef = useRef4(null);
+  const sourceInspectorInteractionRef = useRef4(false);
+  const [sourceInspectorState, setSourceInspectorState] = useState8(null);
+  const sourceOpenOptions = useMemo6(
+    () => ({
+      ...sourceInspector,
+      sourceRoot
+    }),
+    [sourceInspector, sourceRoot]
+  );
+  const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
   const {
     activeItems,
     currentPresetScope,
@@ -7232,6 +7612,13 @@ var ReviewShell = ({
     target,
     viewportPresets
   });
+  const [targetFigmaState, setTargetFigmaState] = useState8(null);
+  const targetFigmaConfig = targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
+  const figmaFrameUrl = useMemo6(
+    () => getFigmaFrameUrl(targetFigmaConfig, size),
+    [targetFigmaConfig, size]
+  );
+  const isFigmaOverlayAvailable = isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
   const [editingItem, setEditingItem] = useState8(null);
   const initialPromptText = initialPrompt.trim();
   const refreshItems = useCallback11(
@@ -7486,6 +7873,117 @@ var ReviewShell = ({
     },
     [setToastMessage]
   );
+  const refreshTargetFigmaConfig = useCallback11(() => {
+    const config = getTargetFigmaFrameConfig(
+      iframeRef.current?.contentWindow
+    );
+    setTargetFigmaState(config ? { targetSrc, config } : null);
+  }, [iframeRef, targetSrc]);
+  const clearSourceInspector = useCallback11(() => {
+    sourceInspectorInteractionRef.current = false;
+    setSourceInspectorState(null);
+  }, []);
+  const getSourceInspectorRect = useCallback11(
+    (element) => {
+      const frame = iframeRef.current;
+      if (!frame) return null;
+      const frameRect = frame.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const left = Math.max(frameRect.left, frameRect.left + elementRect.left);
+      const top = Math.max(frameRect.top, frameRect.top + elementRect.top);
+      const right = Math.min(
+        frameRect.right,
+        frameRect.left + elementRect.right
+      );
+      const bottom = Math.min(
+        frameRect.bottom,
+        frameRect.top + elementRect.bottom
+      );
+      return {
+        height: Math.max(2, bottom - top),
+        left,
+        top,
+        width: Math.max(2, right - left)
+      };
+    },
+    [iframeRef]
+  );
+  const getSourceInspectorPanelPosition = useCallback11(
+    (rect) => {
+      const margin = 12;
+      const gap = 10;
+      const preferredLeft = rect.left + rect.width + gap;
+      const fallbackLeft = rect.left - SOURCE_PANEL_WIDTH - gap;
+      const left = preferredLeft + SOURCE_PANEL_WIDTH + margin <= window.innerWidth ? preferredLeft : Math.max(margin, fallbackLeft);
+      const top = Math.min(
+        Math.max(margin, rect.top),
+        Math.max(margin, window.innerHeight - SOURCE_PANEL_MAX_HEIGHT - margin)
+      );
+      return { left, top };
+    },
+    []
+  );
+  const showSourceInspectorForTarget = useCallback11(
+    (target2, isPinned = false) => {
+      const candidates = getSourceCandidates(target2).map((candidate) => ({
+        ...candidate,
+        openUrl: getSourceOpenUrl(candidate.source, {
+          ...sourceOpenOptions,
+          omitPosition: !candidate.usesPosition
+        })
+      }));
+      const firstCandidate = candidates[0];
+      const rect = firstCandidate ? getSourceInspectorRect(firstCandidate.element) : null;
+      if (!firstCandidate || !rect) {
+        setSourceInspectorState(null);
+        return [];
+      }
+      const { left, top } = getSourceInspectorPanelPosition(rect);
+      setSourceInspectorState({
+        candidates,
+        isPinned,
+        panelLeft: left,
+        panelTop: top,
+        rect
+      });
+      return candidates;
+    },
+    [
+      getSourceInspectorPanelPosition,
+      getSourceInspectorRect,
+      sourceOpenOptions
+    ]
+  );
+  const showSourceOutlineForTarget = useCallback11(
+    (target2) => {
+      const firstCandidate = getSourceCandidates(target2)[0];
+      const rect = firstCandidate ? getSourceInspectorRect(firstCandidate.element) : null;
+      if (!firstCandidate || !rect) {
+        setSourceInspectorState(null);
+        return null;
+      }
+      setSourceInspectorState({
+        candidates: [],
+        isPinned: false,
+        panelLeft: 0,
+        panelTop: 0,
+        rect
+      });
+      return firstCandidate;
+    },
+    [getSourceInspectorRect]
+  );
+  const openSourceCandidate = useCallback11(
+    (candidate) => {
+      const didOpen = openSourceInEditor(candidate.source, {
+        ...sourceOpenOptions,
+        omitPosition: !candidate.usesPosition
+      });
+      showToast(didOpen ? "Source opened" : "Source root required");
+      clearSourceInspector();
+    },
+    [clearSourceInspector, showToast, sourceOpenOptions]
+  );
   const cleanupSourceOpenShortcut = useCallback11(() => {
     sourceShortcutCleanupRef.current?.();
     sourceShortcutCleanupRef.current = null;
@@ -7498,8 +7996,7 @@ var ReviewShell = ({
     } catch {
       return;
     }
-    if (!frameDocument) return;
-    const hoverAttribute = "data-dfwr-source-hover";
+    if (!frameDocument || !isSourceInspectorEnabled) return;
     const optionAttribute = "data-dfwr-source-option";
     const fontOverlayAttribute = "data-dfwr-source-fonts";
     const style = frameDocument.createElement("style");
@@ -7526,11 +8023,6 @@ var ReviewShell = ({
         content: "Source select" !important;
         font: 700 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         pointer-events: none !important;
-      }
-
-      [${hoverAttribute}="true"] {
-        outline: 2px solid rgba(124, 199, 255, 0.96) !important;
-        outline-offset: 2px !important;
       }
 
       [${fontOverlayAttribute}] {
@@ -7566,8 +8058,9 @@ var ReviewShell = ({
     fontOverlay.hidden = true;
     (frameDocument.body ?? frameDocument.documentElement).append(fontOverlay);
     let hoveredElement = null;
-    let lastSourceElement = null;
+    let lastSourceTarget = null;
     let isSourceSelecting = false;
+    let isSourcePanelPinned = false;
     const getFontHints = (element) => {
       if (!element) return [];
       const values = [];
@@ -7611,48 +8104,60 @@ var ReviewShell = ({
       fontOverlay.hidden = false;
     };
     const setHoveredElement = (element) => {
-      if (hoveredElement !== element) {
-        hoveredElement?.removeAttribute(hoverAttribute);
-        hoveredElement = element;
-        hoveredElement?.setAttribute(hoverAttribute, "true");
-      }
+      hoveredElement = element;
       updateFontOverlay(element);
     };
     const setSourceSelecting = (isSelecting) => {
       isSourceSelecting = isSelecting;
       if (isSelecting) {
+        isSourcePanelPinned = false;
         frameDocument.documentElement.setAttribute(optionAttribute, "true");
-        setHoveredElement(lastSourceElement);
+        const candidate = showSourceOutlineForTarget(lastSourceTarget);
+        setHoveredElement(candidate?.element ?? hoveredElement);
         return;
       }
       setHoveredElement(null);
       fontOverlay.hidden = true;
       frameDocument.documentElement.removeAttribute(optionAttribute);
+      if (!isSourcePanelPinned && !sourceInspectorInteractionRef.current) {
+        clearSourceInspector();
+      }
     };
     const handleMouseMove = (event) => {
-      lastSourceElement = getSourceHintElement(event.target);
+      lastSourceTarget = event.target;
+      const candidates = getSourceCandidates(event.target);
+      const sourceElement = candidates[0]?.element ?? null;
       if (event.altKey && !isSourceSelecting) {
         setSourceSelecting(true);
       }
-      setHoveredElement(isSourceSelecting ? lastSourceElement : null);
+      if (isSourceSelecting && !isSourcePanelPinned) {
+        showSourceOutlineForTarget(event.target);
+      }
+      setHoveredElement(isSourceSelecting ? sourceElement : null);
     };
     const handleClick = (event) => {
       if (!isSourceSelecting && !event.altKey) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
-      const source2 = getElementSourceHint(event.target);
-      if (!source2?.file) {
+      const candidates = showSourceInspectorForTarget(event.target, true);
+      if (!candidates.length) {
         showToast("Source hint not found");
+        isSourcePanelPinned = false;
         setSourceSelecting(false);
         return;
       }
-      const didOpen = openSourceInEditor(source2, sourceRoot);
-      showToast(didOpen ? "Source opened" : "Source root required");
+      isSourcePanelPinned = true;
       setSourceSelecting(false);
     };
     const isOptionKeyEvent = (event) => event.key === "Alt" || event.code === "AltLeft" || event.code === "AltRight" || event.altKey;
     const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        isSourcePanelPinned = false;
+        setSourceSelecting(false);
+        clearSourceInspector();
+        return;
+      }
       if (!isOptionKeyEvent(event)) return;
       cancelReviewMode();
       setSourceSelecting(true);
@@ -7661,43 +8166,60 @@ var ReviewShell = ({
       if (isOptionKeyEvent(event) || !event.altKey) setSourceSelecting(false);
     };
     const handleBlur = () => {
+      isSourcePanelPinned = false;
       setSourceSelecting(false);
+    };
+    const handleWindowPointerDown = (event) => {
+      const target2 = event.target;
+      if (target2 instanceof Element && target2.closest(".df-review-source-popover")) {
+        sourceInspectorInteractionRef.current = true;
+        return;
+      }
+      isSourcePanelPinned = false;
+      sourceInspectorInteractionRef.current = false;
+      setSourceSelecting(false);
+      clearSourceInspector();
     };
     frameDocument.addEventListener("mousemove", handleMouseMove, true);
     frameDocument.addEventListener("click", handleClick, true);
     frameDocument.addEventListener("keydown", handleKeyDown, true);
     frameDocument.addEventListener("keyup", handleKeyUp, true);
-    frameDocument.defaultView?.addEventListener("blur", handleBlur);
     window.addEventListener("keydown", handleKeyDown, true);
     window.addEventListener("keyup", handleKeyUp, true);
     window.addEventListener("blur", handleBlur);
+    window.addEventListener("pointerdown", handleWindowPointerDown, true);
     sourceShortcutCleanupRef.current = () => {
       frameDocument.removeEventListener("mousemove", handleMouseMove, true);
       frameDocument.removeEventListener("click", handleClick, true);
       frameDocument.removeEventListener("keydown", handleKeyDown, true);
       frameDocument.removeEventListener("keyup", handleKeyUp, true);
-      frameDocument.defaultView?.removeEventListener("blur", handleBlur);
       window.removeEventListener("keydown", handleKeyDown, true);
       window.removeEventListener("keyup", handleKeyUp, true);
       window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("pointerdown", handleWindowPointerDown, true);
+      isSourcePanelPinned = false;
       setSourceSelecting(false);
       style.remove();
       fontOverlay.remove();
     };
   }, [
     cancelReviewMode,
+    clearSourceInspector,
     cleanupSourceOpenShortcut,
     iframeRef,
+    isSourceInspectorEnabled,
     showToast,
-    sourceRoot
+    showSourceOutlineForTarget,
+    showSourceInspectorForTarget
   ]);
   useEffect10(() => {
     return cleanupSourceOpenShortcut;
   }, [cleanupSourceOpenShortcut]);
   const loadTargetFrame = useCallback11(() => {
     initReviewKit();
+    refreshTargetFigmaConfig();
     bindSourceOpenShortcut();
-  }, [bindSourceOpenShortcut, initReviewKit]);
+  }, [bindSourceOpenShortcut, initReviewKit, refreshTargetFigmaConfig]);
   useEffect10(() => {
     const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
     return () => window.cancelAnimationFrame(frame);
@@ -7876,6 +8398,7 @@ var ReviewShell = ({
             selectedItemId,
             showSourceSelect,
             sourceRoot,
+            sourceInspectorOptions: sourceInspector,
             source,
             sourceEntries,
             onChangeItemStatus: changeItemStatus,
@@ -7896,6 +8419,7 @@ var ReviewShell = ({
           {
             canWriteArea,
             canWriteDom,
+            figmaFrameUrl,
             frameScrollRef,
             iframeRef,
             isRulerAvailable,
@@ -7914,7 +8438,70 @@ var ReviewShell = ({
             onLoadTarget: loadTargetFrame,
             onSetReviewMode: setReviewMode
           }
-        )
+        ),
+        sourceInspectorState && /* @__PURE__ */ jsxs15(Fragment4, { children: [
+          /* @__PURE__ */ jsx17(
+            "div",
+            {
+              className: `df-review-source-outline${sourceInspectorState.isPinned ? " is-pinned" : ""}`,
+              style: {
+                height: `${sourceInspectorState.rect.height}px`,
+                left: `${sourceInspectorState.rect.left}px`,
+                top: `${sourceInspectorState.rect.top}px`,
+                width: `${sourceInspectorState.rect.width}px`
+              }
+            }
+          ),
+          sourceInspectorState.candidates.length > 0 && /* @__PURE__ */ jsxs15(
+            "div",
+            {
+              className: `df-review-source-popover${sourceInspectorState.isPinned ? " is-pinned" : ""}`,
+              style: {
+                left: `${sourceInspectorState.panelLeft}px`,
+                top: `${sourceInspectorState.panelTop}px`
+              },
+              onPointerDown: () => {
+                sourceInspectorInteractionRef.current = true;
+              },
+              onPointerEnter: () => {
+                sourceInspectorInteractionRef.current = true;
+              },
+              onPointerLeave: () => {
+                sourceInspectorInteractionRef.current = false;
+              },
+              onClick: (event) => event.stopPropagation(),
+              children: [
+                /* @__PURE__ */ jsx17("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ jsx17(
+                  "button",
+                  {
+                    "aria-label": "Close source candidates",
+                    type: "button",
+                    onClick: clearSourceInspector,
+                    children: "\xD7"
+                  }
+                ) }),
+                /* @__PURE__ */ jsx17("div", { className: "df-review-source-candidate-list", children: sourceInspectorState.candidates.map((candidate) => /* @__PURE__ */ jsx17(
+                  "button",
+                  {
+                    className: "df-review-source-candidate",
+                    type: "button",
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      openSourceCandidate(candidate);
+                    },
+                    children: /* @__PURE__ */ jsxs15("span", { className: "df-review-source-candidate-main", children: [
+                      /* @__PURE__ */ jsx17("strong", { children: candidate.label }),
+                      /* @__PURE__ */ jsx17("span", { children: candidate.filePath }),
+                      /* @__PURE__ */ jsx17("small", { children: candidate.positionLabel || (candidate.usesPosition ? "" : "file only") })
+                    ] })
+                  },
+                  candidate.id
+                )) })
+              ]
+            }
+          )
+        ] })
       ]
     }
   );

@@ -189,7 +189,7 @@ export default defineConfig({
 });
 ```
 
-Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, and `data-wrk-source-column`. In the review shell, `Option` + click inside the target iframe opens that source in VS Code. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
+Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, and `data-wrk-source-column`. In the review shell, hold `Option` over the target iframe to show source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose which file to open. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
 
 ```tsx
 mountReviewShell({
@@ -198,8 +198,14 @@ mountReviewShell({
   adapters,
   reviewPathPrefix: REVIEW_PATH_PREFIX,
   sourceRoot: import.meta.env.VITE_REVIEW_SOURCE_ROOT,
+  sourceInspector: {
+    editor: 'vscode', // 'vscode' | 'cursor' | 'webstorm' | 'custom'
+    // urlTemplate: 'my-editor://open?file={encodedPath}&line={line}&column={column}',
+  },
 });
 ```
+
+Set `sourceInspector.enabled` to `false` when source code opening should be unavailable. The `data-font` overlay still belongs to the target project markup and is not required for source opening.
 
 Use this only in dev/review builds. Source paths are written into the browser DOM and can be persisted with QA items.
 

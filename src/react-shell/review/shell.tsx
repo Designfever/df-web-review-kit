@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -36,12 +37,19 @@ import {
   SitemapModal,
 } from '../shell.modals';
 import { buildReviewItemPrompt } from '../prompt/prompt';
+import {
+  getFigmaFrameUrl,
+  getTargetFigmaFrameConfig,
+  type ReviewFigmaFrameConfig,
+} from '../figma';
 import { QaItemEditModal } from '../qa/item.edit.modal';
 import { ReviewQaPanel } from '../qa/panel';
 import {
-  getElementSourceHint,
-  getSourceHintElement,
+  getSourceCandidates,
+  getSourceOpenUrl,
   openSourceInEditor,
+  type SourceCandidate,
+  type SourceOpenOptions,
 } from '../source.open';
 import { ReviewTargetFrame } from '../target/frame';
 import { ReviewTopbar } from '../topbar';
@@ -72,6 +80,28 @@ const getReviewModeWriteMode = (
   return null;
 };
 
+type SourceInspectorRect = {
+  height: number;
+  left: number;
+  top: number;
+  width: number;
+};
+
+type SourceInspectorCandidate = SourceCandidate & {
+  openUrl: string | null;
+};
+
+type SourceInspectorState = {
+  candidates: SourceInspectorCandidate[];
+  isPinned: boolean;
+  panelLeft: number;
+  panelTop: number;
+  rect: SourceInspectorRect;
+};
+
+const SOURCE_PANEL_WIDTH = 360;
+const SOURCE_PANEL_MAX_HEIGHT = 260;
+
 export const ReviewShell = ({
   projectId,
   pages,
@@ -81,6 +111,7 @@ export const ReviewShell = ({
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
   sourceRoot,
+  sourceInspector,
   presence
 }: ReviewShellProps) => {
   const {
@@ -97,7 +128,7 @@ export const ReviewShell = ({
     frameScrollRef,
     hiddenOverlayItemIdListRef,
     iframeRef,
-    isFigmaOverlayAvailable,
+    isFigmaOverlayAvailable: isViewportFigmaOverlayAvailable,
     isInitialPromptOpen,
     isListVisible,
     isRemoteSource,
@@ -140,6 +171,17 @@ export const ReviewShell = ({
     reviewPathPrefix,
   });
   const sourceShortcutCleanupRef = useRef<(() => void) | null>(null);
+  const sourceInspectorInteractionRef = useRef(false);
+  const [sourceInspectorState, setSourceInspectorState] =
+    useState<SourceInspectorState | null>(null);
+  const sourceOpenOptions = useMemo<SourceOpenOptions>(
+    () => ({
+      ...sourceInspector,
+      sourceRoot,
+    }),
+    [sourceInspector, sourceRoot]
+  );
+  const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
   const {
     activeItems,
     currentPresetScope,
@@ -168,6 +210,16 @@ export const ReviewShell = ({
     target,
     viewportPresets,
   });
+  const [targetFigmaState, setTargetFigmaState] =
+    useState<{ targetSrc: string; config: ReviewFigmaFrameConfig } | null>(null);
+  const targetFigmaConfig =
+    targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
+  const figmaFrameUrl = useMemo(
+    () => getFigmaFrameUrl(targetFigmaConfig, size),
+    [targetFigmaConfig, size]
+  );
+  const isFigmaOverlayAvailable =
+    isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
   const [editingItem, setEditingItem] = useState<ReviewItem | null>(null);
   const initialPromptText = initialPrompt.trim();
   const refreshItems = useCallback(
@@ -453,6 +505,138 @@ export const ReviewShell = ({
     [setToastMessage]
   );
 
+  const refreshTargetFigmaConfig = useCallback(() => {
+    const config = getTargetFigmaFrameConfig(
+      iframeRef.current?.contentWindow
+    );
+    setTargetFigmaState(config ? { targetSrc, config } : null);
+  }, [iframeRef, targetSrc]);
+
+  const clearSourceInspector = useCallback(() => {
+    sourceInspectorInteractionRef.current = false;
+    setSourceInspectorState(null);
+  }, []);
+
+  const getSourceInspectorRect = useCallback(
+    (element: Element): SourceInspectorRect | null => {
+      const frame = iframeRef.current;
+      if (!frame) return null;
+
+      const frameRect = frame.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const left = Math.max(frameRect.left, frameRect.left + elementRect.left);
+      const top = Math.max(frameRect.top, frameRect.top + elementRect.top);
+      const right = Math.min(
+        frameRect.right,
+        frameRect.left + elementRect.right
+      );
+      const bottom = Math.min(
+        frameRect.bottom,
+        frameRect.top + elementRect.bottom
+      );
+
+      return {
+        height: Math.max(2, bottom - top),
+        left,
+        top,
+        width: Math.max(2, right - left),
+      };
+    },
+    [iframeRef]
+  );
+
+  const getSourceInspectorPanelPosition = useCallback(
+    (rect: SourceInspectorRect) => {
+      const margin = 12;
+      const gap = 10;
+      const preferredLeft = rect.left + rect.width + gap;
+      const fallbackLeft = rect.left - SOURCE_PANEL_WIDTH - gap;
+      const left =
+        preferredLeft + SOURCE_PANEL_WIDTH + margin <= window.innerWidth
+          ? preferredLeft
+          : Math.max(margin, fallbackLeft);
+      const top = Math.min(
+        Math.max(margin, rect.top),
+        Math.max(margin, window.innerHeight - SOURCE_PANEL_MAX_HEIGHT - margin)
+      );
+
+      return { left, top };
+    },
+    []
+  );
+
+  const showSourceInspectorForTarget = useCallback(
+    (target: EventTarget | null, isPinned = false) => {
+      const candidates = getSourceCandidates(target).map((candidate) => ({
+        ...candidate,
+        openUrl: getSourceOpenUrl(candidate.source, {
+          ...sourceOpenOptions,
+          omitPosition: !candidate.usesPosition,
+        }),
+      }));
+      const firstCandidate = candidates[0];
+      const rect = firstCandidate
+        ? getSourceInspectorRect(firstCandidate.element)
+        : null;
+
+      if (!firstCandidate || !rect) {
+        setSourceInspectorState(null);
+        return [];
+      }
+
+      const { left, top } = getSourceInspectorPanelPosition(rect);
+      setSourceInspectorState({
+        candidates,
+        isPinned,
+        panelLeft: left,
+        panelTop: top,
+        rect,
+      });
+      return candidates;
+    },
+    [
+      getSourceInspectorPanelPosition,
+      getSourceInspectorRect,
+      sourceOpenOptions,
+    ]
+  );
+
+  const showSourceOutlineForTarget = useCallback(
+    (target: EventTarget | null) => {
+      const firstCandidate = getSourceCandidates(target)[0];
+      const rect = firstCandidate
+        ? getSourceInspectorRect(firstCandidate.element)
+        : null;
+
+      if (!firstCandidate || !rect) {
+        setSourceInspectorState(null);
+        return null;
+      }
+
+      setSourceInspectorState({
+        candidates: [],
+        isPinned: false,
+        panelLeft: 0,
+        panelTop: 0,
+        rect,
+      });
+      return firstCandidate;
+    },
+    [getSourceInspectorRect]
+  );
+
+  const openSourceCandidate = useCallback(
+    (candidate: SourceInspectorCandidate) => {
+      const didOpen = openSourceInEditor(candidate.source, {
+        ...sourceOpenOptions,
+        omitPosition: !candidate.usesPosition,
+      });
+      showToast(didOpen ? 'Source opened' : 'Source root required');
+      clearSourceInspector();
+    },
+    [clearSourceInspector, showToast, sourceOpenOptions]
+  );
+
   const cleanupSourceOpenShortcut = useCallback(() => {
     sourceShortcutCleanupRef.current?.();
     sourceShortcutCleanupRef.current = null;
@@ -468,9 +652,8 @@ export const ReviewShell = ({
       return;
     }
 
-    if (!frameDocument) return;
+    if (!frameDocument || !isSourceInspectorEnabled) return;
 
-    const hoverAttribute = 'data-dfwr-source-hover';
     const optionAttribute = 'data-dfwr-source-option';
     const fontOverlayAttribute = 'data-dfwr-source-fonts';
     const style = frameDocument.createElement('style');
@@ -497,11 +680,6 @@ export const ReviewShell = ({
         content: "Source select" !important;
         font: 700 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         pointer-events: none !important;
-      }
-
-      [${hoverAttribute}="true"] {
-        outline: 2px solid rgba(124, 199, 255, 0.96) !important;
-        outline-offset: 2px !important;
       }
 
       [${fontOverlayAttribute}] {
@@ -540,8 +718,9 @@ export const ReviewShell = ({
     (frameDocument.body ?? frameDocument.documentElement).append(fontOverlay);
 
     let hoveredElement: Element | null = null;
-    let lastSourceElement: Element | null = null;
+    let lastSourceTarget: EventTarget | null = null;
     let isSourceSelecting = false;
+    let isSourcePanelPinned = false;
 
     const getFontHints = (element: Element | null) => {
       if (!element) return [];
@@ -597,35 +776,42 @@ export const ReviewShell = ({
     };
 
     const setHoveredElement = (element: Element | null) => {
-      if (hoveredElement !== element) {
-        hoveredElement?.removeAttribute(hoverAttribute);
-        hoveredElement = element;
-        hoveredElement?.setAttribute(hoverAttribute, 'true');
-      }
+      hoveredElement = element;
       updateFontOverlay(element);
     };
 
     const setSourceSelecting = (isSelecting: boolean) => {
       isSourceSelecting = isSelecting;
       if (isSelecting) {
+        isSourcePanelPinned = false;
         frameDocument.documentElement.setAttribute(optionAttribute, 'true');
-        setHoveredElement(lastSourceElement);
+        const candidate = showSourceOutlineForTarget(lastSourceTarget);
+        setHoveredElement(candidate?.element ?? hoveredElement);
         return;
       }
 
       setHoveredElement(null);
       fontOverlay.hidden = true;
       frameDocument.documentElement.removeAttribute(optionAttribute);
+      if (!isSourcePanelPinned && !sourceInspectorInteractionRef.current) {
+        clearSourceInspector();
+      }
     };
 
     const handleMouseMove = (event: MouseEvent) => {
-      lastSourceElement = getSourceHintElement(event.target);
+      lastSourceTarget = event.target;
+      const candidates = getSourceCandidates(event.target);
+      const sourceElement = candidates[0]?.element ?? null;
 
       if (event.altKey && !isSourceSelecting) {
         setSourceSelecting(true);
       }
 
-      setHoveredElement(isSourceSelecting ? lastSourceElement : null);
+      if (isSourceSelecting && !isSourcePanelPinned) {
+        showSourceOutlineForTarget(event.target);
+      }
+
+      setHoveredElement(isSourceSelecting ? sourceElement : null);
     };
 
     const handleClick = (event: MouseEvent) => {
@@ -635,15 +821,15 @@ export const ReviewShell = ({
       event.stopPropagation();
       event.stopImmediatePropagation();
 
-      const source = getElementSourceHint(event.target);
-      if (!source?.file) {
+      const candidates = showSourceInspectorForTarget(event.target, true);
+      if (!candidates.length) {
         showToast('Source hint not found');
+        isSourcePanelPinned = false;
         setSourceSelecting(false);
         return;
       }
 
-      const didOpen = openSourceInEditor(source, sourceRoot);
-      showToast(didOpen ? 'Source opened' : 'Source root required');
+      isSourcePanelPinned = true;
       setSourceSelecting(false);
     };
 
@@ -654,6 +840,12 @@ export const ReviewShell = ({
       event.altKey;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        isSourcePanelPinned = false;
+        setSourceSelecting(false);
+        clearSourceInspector();
+        return;
+      }
       if (!isOptionKeyEvent(event)) return;
 
       cancelReviewMode();
@@ -665,37 +857,58 @@ export const ReviewShell = ({
     };
 
     const handleBlur = () => {
+      isSourcePanelPinned = false;
       setSourceSelecting(false);
+    };
+
+    const handleWindowPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (
+        target instanceof Element &&
+        target.closest('.df-review-source-popover')
+      ) {
+        sourceInspectorInteractionRef.current = true;
+        return;
+      }
+
+      isSourcePanelPinned = false;
+      sourceInspectorInteractionRef.current = false;
+      setSourceSelecting(false);
+      clearSourceInspector();
     };
 
     frameDocument.addEventListener('mousemove', handleMouseMove, true);
     frameDocument.addEventListener('click', handleClick, true);
     frameDocument.addEventListener('keydown', handleKeyDown, true);
     frameDocument.addEventListener('keyup', handleKeyUp, true);
-    frameDocument.defaultView?.addEventListener('blur', handleBlur);
     window.addEventListener('keydown', handleKeyDown, true);
     window.addEventListener('keyup', handleKeyUp, true);
     window.addEventListener('blur', handleBlur);
+    window.addEventListener('pointerdown', handleWindowPointerDown, true);
 
     sourceShortcutCleanupRef.current = () => {
       frameDocument.removeEventListener('mousemove', handleMouseMove, true);
       frameDocument.removeEventListener('click', handleClick, true);
       frameDocument.removeEventListener('keydown', handleKeyDown, true);
       frameDocument.removeEventListener('keyup', handleKeyUp, true);
-      frameDocument.defaultView?.removeEventListener('blur', handleBlur);
       window.removeEventListener('keydown', handleKeyDown, true);
       window.removeEventListener('keyup', handleKeyUp, true);
       window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('pointerdown', handleWindowPointerDown, true);
+      isSourcePanelPinned = false;
       setSourceSelecting(false);
       style.remove();
       fontOverlay.remove();
     };
   }, [
     cancelReviewMode,
+    clearSourceInspector,
     cleanupSourceOpenShortcut,
     iframeRef,
+    isSourceInspectorEnabled,
     showToast,
-    sourceRoot,
+    showSourceOutlineForTarget,
+    showSourceInspectorForTarget,
   ]);
 
   useEffect(() => {
@@ -704,8 +917,9 @@ export const ReviewShell = ({
 
   const loadTargetFrame = useCallback(() => {
     initReviewKit();
+    refreshTargetFigmaConfig();
     bindSourceOpenShortcut();
-  }, [bindSourceOpenShortcut, initReviewKit]);
+  }, [bindSourceOpenShortcut, initReviewKit, refreshTargetFigmaConfig]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
@@ -914,6 +1128,7 @@ export const ReviewShell = ({
         selectedItemId={selectedItemId}
         showSourceSelect={showSourceSelect}
         sourceRoot={sourceRoot}
+        sourceInspectorOptions={sourceInspector}
         source={source}
         sourceEntries={sourceEntries}
         onChangeItemStatus={changeItemStatus}
@@ -932,6 +1147,7 @@ export const ReviewShell = ({
       <ReviewTargetFrame
         canWriteArea={canWriteArea}
         canWriteDom={canWriteDom}
+        figmaFrameUrl={figmaFrameUrl}
         frameScrollRef={frameScrollRef}
         iframeRef={iframeRef}
         isRulerAvailable={isRulerAvailable}
@@ -950,6 +1166,76 @@ export const ReviewShell = ({
         onLoadTarget={loadTargetFrame}
         onSetReviewMode={setReviewMode}
       />
+
+      {sourceInspectorState && (
+        <>
+          <div
+            className={`df-review-source-outline${
+              sourceInspectorState.isPinned ? ' is-pinned' : ''
+            }`}
+            style={{
+              height: `${sourceInspectorState.rect.height}px`,
+              left: `${sourceInspectorState.rect.left}px`,
+              top: `${sourceInspectorState.rect.top}px`,
+              width: `${sourceInspectorState.rect.width}px`,
+            }}
+          />
+          {sourceInspectorState.candidates.length > 0 && (
+            <div
+              className={`df-review-source-popover${
+                sourceInspectorState.isPinned ? ' is-pinned' : ''
+              }`}
+              style={{
+                left: `${sourceInspectorState.panelLeft}px`,
+                top: `${sourceInspectorState.panelTop}px`,
+              }}
+              onPointerDown={() => {
+                sourceInspectorInteractionRef.current = true;
+              }}
+              onPointerEnter={() => {
+                sourceInspectorInteractionRef.current = true;
+              }}
+              onPointerLeave={() => {
+                sourceInspectorInteractionRef.current = false;
+              }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="df-review-source-popover-close">
+                <button
+                  aria-label="Close source candidates"
+                  type="button"
+                  onClick={clearSourceInspector}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="df-review-source-candidate-list">
+                {sourceInspectorState.candidates.map((candidate) => (
+                  <button
+                    key={candidate.id}
+                    className="df-review-source-candidate"
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      openSourceCandidate(candidate);
+                    }}
+                  >
+                    <span className="df-review-source-candidate-main">
+                      <strong>{candidate.label}</strong>
+                      <span>{candidate.filePath}</span>
+                      <small>
+                        {candidate.positionLabel ||
+                          (candidate.usesPosition ? '' : 'file only')}
+                      </small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

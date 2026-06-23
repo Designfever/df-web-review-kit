@@ -119,7 +119,20 @@ export default defineConfig({
 });
 ```
 
-When source hints are available, `Option` + click inside the review target opens the source file in VS Code. DOM QA cards also show a source action when the saved item has source hints. Keep this plugin disabled for production builds because it writes source paths into the DOM.
+When source hints are available, hold `Option` over the review target to inspect source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose a file to open. DOM QA cards also show a source action when the saved item has source hints. Keep this plugin disabled for production builds because it writes source paths into the DOM.
+
+```tsx
+mountReviewShell({
+  projectId: REVIEW_PROJECT_ID,
+  pages,
+  adapters,
+  sourceRoot: import.meta.env.VITE_REVIEW_SOURCE_ROOT,
+  sourceInspector: {
+    editor: 'cursor', // 'vscode' | 'cursor' | 'webstorm' | 'custom'
+    // urlTemplate: 'my-editor://open?file={encodedPath}&line={line}&column={column}',
+  },
+});
+```
 
 ## Local Dev Harness
 

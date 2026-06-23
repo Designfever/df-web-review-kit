@@ -14,6 +14,12 @@ type ReviewShellPage = {
     href: string;
 };
 type ReviewShellGlobEntries = Record<string, unknown>;
+type ReviewSourceEditor = 'vscode' | 'cursor' | 'webstorm' | 'custom';
+type ReviewSourceInspectorOptions = {
+    enabled?: boolean;
+    editor?: ReviewSourceEditor;
+    urlTemplate?: string;
+};
 type ReviewShellStatusOption = {
     value: ReviewItemStatus;
     label: string;
@@ -105,13 +111,14 @@ interface ReviewShellProps {
     initialPrompt?: string;
     reviewPathPrefix?: string;
     sourceRoot?: string;
+    sourceInspector?: ReviewSourceInspectorOptions;
     presence?: ReviewPresenceAdapter;
 }
 interface ReviewShellMountOptions extends ReviewShellProps {
     rootId?: string;
 }
 
-declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, reviewPathPrefix, sourceRoot, presence }: ReviewShellProps) => React.JSX.Element;
+declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, reviewPathPrefix, sourceRoot, sourceInspector, presence }: ReviewShellProps) => React.JSX.Element;
 
 declare const createReviewPagesFromGlob: (entries: ReviewShellGlobEntries, options?: CreateReviewPagesOptions) => ReviewShellPage[];
 
@@ -158,4 +165,4 @@ declare const createSupabasePresenceAdapter: ({ client, channelPrefix, private: 
 
 declare const mountReviewShell: (options: ReviewShellMountOptions) => void;
 
-export { type CreateReviewPagesOptions, DEFAULT_REVIEW_VIEWPORT_PRESETS, type LocalPresenceAdapterOptions, type ReviewPresenceAdapter, type ReviewPresenceContext, type ReviewPresenceSession, type ReviewPresenceState, type ReviewPresenceStatus, type ReviewPresenceUser, ReviewShell, type ReviewShellAdapter, type ReviewShellAdapters, type ReviewShellGlobEntries, type ReviewShellMountOptions, type ReviewShellPage, type ReviewShellProps, type ReviewShellStatusOption, type ReviewShellViewportKind, type ReviewShellViewportPreset, type SupabasePresenceAdapterOptions, type SupabasePresenceClient, createFallbackPresenceAdapter, createLocalPresenceAdapter, createReviewPagesFromGlob, createSupabasePresenceAdapter, mountReviewShell };
+export { type CreateReviewPagesOptions, DEFAULT_REVIEW_VIEWPORT_PRESETS, type LocalPresenceAdapterOptions, type ReviewPresenceAdapter, type ReviewPresenceContext, type ReviewPresenceSession, type ReviewPresenceState, type ReviewPresenceStatus, type ReviewPresenceUser, ReviewShell, type ReviewShellAdapter, type ReviewShellAdapters, type ReviewShellGlobEntries, type ReviewShellMountOptions, type ReviewShellPage, type ReviewShellProps, type ReviewShellStatusOption, type ReviewShellViewportKind, type ReviewShellViewportPreset, type ReviewSourceEditor, type ReviewSourceInspectorOptions, type SupabasePresenceAdapterOptions, type SupabasePresenceClient, createFallbackPresenceAdapter, createLocalPresenceAdapter, createReviewPagesFromGlob, createSupabasePresenceAdapter, mountReviewShell };

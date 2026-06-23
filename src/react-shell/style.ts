@@ -2142,7 +2142,7 @@ export function ensureReviewShellStyle() {
 	    height: max-content;
 	    min-width: 100%;
 	    min-height: 100%;
-	    padding: 34px 40px 12px;
+	    padding: 34px 58px 12px 40px;
 	  }
 
   .df-review-device {
@@ -2165,6 +2165,170 @@ export function ensureReviewShellStyle() {
     min-height: inherit;
     border: 0;
     background: #fff;
+  }
+
+  .df-review-frame-link-stack {
+    position: absolute;
+    z-index: 14;
+    top: 0;
+    right: -44px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .df-review-frame-link {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(15, 23, 42, 0.16);
+    border-radius: var(--df-review-radius-md);
+    color: #17202c;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.18);
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: transform 140ms ease, border-color 140ms ease, color 140ms ease,
+      background 140ms ease;
+  }
+
+  .df-review-frame-link:hover {
+    transform: translateY(-1px);
+    border-color: rgba(0, 102, 255, 0.42);
+    color: #005be8;
+    background: rgba(255, 255, 255, 0.98);
+  }
+
+  .df-review-frame-link svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .df-review-frame-link.is-target svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+
+  .df-review-frame-link.is-figma svg {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .df-review-source-outline {
+    position: fixed;
+    z-index: 880;
+    pointer-events: none;
+    border: 2px solid rgba(124, 199, 255, 0.96);
+    border-radius: 4px;
+    box-shadow:
+      0 0 0 1px rgba(15, 18, 24, 0.58),
+      0 0 0 5px rgba(124, 199, 255, 0.16);
+  }
+
+  .df-review-source-outline.is-pinned {
+    border-color: var(--df-review-note);
+    box-shadow:
+      0 0 0 1px rgba(15, 18, 24, 0.58),
+      0 0 0 5px rgba(243, 183, 95, 0.16);
+  }
+
+  .df-review-source-popover {
+    position: fixed;
+    z-index: 890;
+    display: grid;
+    width: 360px;
+    max-height: 260px;
+    overflow: hidden;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-md);
+    padding: 8px 6px 6px;
+    color: var(--df-review-text);
+    background: rgba(19, 24, 33, 0.96);
+    box-shadow: var(--df-review-shadow-panel);
+    backdrop-filter: blur(10px);
+  }
+
+  .df-review-source-popover-close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 1;
+  }
+
+  .df-review-source-popover-close button {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid transparent;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-subtle);
+    background: transparent;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .df-review-source-popover-close button:hover {
+    border-color: var(--df-review-line);
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+  }
+
+  .df-review-source-candidate-list {
+    display: grid;
+    gap: 0;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .df-review-source-candidate {
+    display: grid;
+    width: 100%;
+    min-height: 54px;
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    padding: 6px 30px 6px 8px;
+    color: var(--df-review-text);
+    background: transparent;
+    text-align: left;
+  }
+
+  .df-review-source-candidate:hover {
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-source-candidate-main {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .df-review-source-candidate-main strong,
+  .df-review-source-candidate-main span,
+  .df-review-source-candidate-main small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .df-review-source-candidate-main strong {
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 900;
+  }
+
+  .df-review-source-candidate-main span {
+    color: var(--df-review-muted);
+    font-family: var(--df-review-font-mono);
+    font-size: var(--df-review-font-size-2xs);
+  }
+
+  .df-review-source-candidate-main small {
+    color: var(--df-review-subtle);
+    font-family: var(--df-review-font-mono);
+    font-size: var(--df-review-font-size-2xs);
   }
 
   .df-review-device-frame {

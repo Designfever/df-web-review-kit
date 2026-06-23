@@ -2,10 +2,12 @@ import type { RefObject } from 'react';
 import { ExternalLink as ExternalLinkIcon } from 'lucide-react';
 import type { ReviewMode } from '../../types';
 import type {
+  ReviewPresenceUser,
   ReviewRulerMeasure,
   ReviewRulerPoint,
   ReviewShellViewportPreset,
 } from '../types';
+import { PresenceOverlay } from '../presence/overlay';
 import { ReviewModeToolbar } from '../review/mode.toolbar';
 import { RulerGutters } from '../ruler/gutters';
 import { RulerOverlay } from '../ruler/overlay';
@@ -20,6 +22,7 @@ interface ReviewTargetFrameProps {
   isRulerDragging: boolean;
   isRulerVisible: boolean;
   mode: ReviewMode;
+  presenceSessionId: string;
   rulerHover: ReviewRulerPoint | null;
   rulerMeasure: ReviewRulerMeasure | undefined;
   rulerMeasureLabel: string;
@@ -29,6 +32,7 @@ interface ReviewTargetFrameProps {
   rulerUnit: string;
   size: ReviewShellViewportPreset;
   targetSrc: string;
+  users: ReviewPresenceUser[];
   onLoadTarget: () => void;
   onSetReviewMode: (mode: ReviewMode) => void;
 }
@@ -43,6 +47,7 @@ export const ReviewTargetFrame = ({
   isRulerDragging,
   isRulerVisible,
   mode,
+  presenceSessionId,
   rulerHover,
   rulerMeasure,
   rulerMeasureLabel,
@@ -52,6 +57,7 @@ export const ReviewTargetFrame = ({
   rulerUnit,
   size,
   targetSrc,
+  users,
   onLoadTarget,
   onSetReviewMode,
 }: ReviewTargetFrameProps) => {
@@ -93,6 +99,10 @@ export const ReviewTargetFrame = ({
                   src={targetSrc}
                   title="Review target"
                   onLoad={onLoadTarget}
+                />
+                <PresenceOverlay
+                  presenceSessionId={presenceSessionId}
+                  users={users}
                 />
                 {showRuler && (
                   <RulerOverlay

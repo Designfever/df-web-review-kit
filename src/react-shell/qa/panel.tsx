@@ -8,7 +8,6 @@ import type { NormalizedReviewShellAdapter } from '../adapters';
 import { QaItemCard } from './item.card';
 import { QaPanelHeader } from './panel.header';
 import type {
-  ReviewPresenceUser,
   ReviewQaFilter,
   ReviewQaStatusFilter,
   ReviewShellViewportKind,
@@ -18,7 +17,6 @@ interface ReviewQaPanelProps {
   activeAdapterEntry: NormalizedReviewShellAdapter;
   activeItems: ReviewItem[];
   activeRemainingItemCount: number;
-  currentPagePresenceUsers: ReviewPresenceUser[];
   currentPresetScope: ReviewShellViewportKind;
   filteredNumberedActiveItems: NumberedReviewItem[];
   getItemPresetScope: (item: ReviewItem) => ReviewShellViewportKind;
@@ -26,7 +24,6 @@ interface ReviewQaPanelProps {
   isAllQaVisible: boolean;
   isListVisible: boolean;
   isRemoteSource: boolean;
-  presenceSessionId: string;
   copiedPromptKey: string | null;
   qaFilter: ReviewQaFilter;
   qaFilterCounts: ReadonlyMap<ReviewQaFilter, number>;
@@ -59,7 +56,6 @@ export const ReviewQaPanel = ({
   activeAdapterEntry,
   activeItems,
   activeRemainingItemCount,
-  currentPagePresenceUsers,
   currentPresetScope,
   filteredNumberedActiveItems,
   getItemPresetScope,
@@ -67,7 +63,6 @@ export const ReviewQaPanel = ({
   isAllQaVisible,
   isListVisible,
   isRemoteSource,
-  presenceSessionId,
   copiedPromptKey,
   qaFilter,
   qaFilterCounts,
@@ -105,11 +100,9 @@ export const ReviewQaPanel = ({
           <QaPanelHeader
             activeItemCount={activeItems.length}
             activeRemainingItemCount={activeRemainingItemCount}
-            currentPagePresenceUsers={currentPagePresenceUsers}
             filteredItemCount={filteredNumberedActiveItems.length}
             isAllQaVisible={isAllQaVisible}
             label={activeAdapterEntry.label}
-            presenceSessionId={presenceSessionId}
             qaFilter={qaFilter}
             qaFilterCounts={qaFilterCounts}
             qaStatusFilter={qaStatusFilter}

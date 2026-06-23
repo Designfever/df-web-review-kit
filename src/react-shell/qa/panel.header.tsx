@@ -6,10 +6,8 @@ import type { ReviewSource } from '../../types';
 import { normalizeReviewItemStatus } from '../../status';
 import type { NormalizedReviewShellAdapter } from '../adapters';
 import { REVIEW_QA_FILTERS } from '../constants';
-import { PresenceRow } from '../presence/row';
 import { ReviewScopeIcon } from '../review/item.icons';
 import type {
-  ReviewPresenceUser,
   ReviewQaFilter,
   ReviewQaStatusFilter,
   ReviewShellStatusOption,
@@ -18,11 +16,9 @@ import type {
 interface QaPanelHeaderProps {
   activeItemCount: number;
   activeRemainingItemCount: number;
-  currentPagePresenceUsers: ReviewPresenceUser[];
   filteredItemCount: number;
   isAllQaVisible: boolean;
   label: ReviewSource;
-  presenceSessionId: string;
   qaFilter: ReviewQaFilter;
   qaFilterCounts: ReadonlyMap<ReviewQaFilter, number>;
   qaStatusFilter: ReviewQaStatusFilter;
@@ -40,11 +36,9 @@ interface QaPanelHeaderProps {
 export const QaPanelHeader = ({
   activeItemCount,
   activeRemainingItemCount,
-  currentPagePresenceUsers,
   filteredItemCount,
   isAllQaVisible,
   label,
-  presenceSessionId,
   qaFilter,
   qaFilterCounts,
   qaStatusFilter,
@@ -147,10 +141,6 @@ export const QaPanelHeader = ({
           ))}
         </select>
       </div>
-      <PresenceRow
-        presenceSessionId={presenceSessionId}
-        users={currentPagePresenceUsers}
-      />
     </div>
   );
 };

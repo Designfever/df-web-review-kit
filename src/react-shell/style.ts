@@ -1585,78 +1585,73 @@ export function ensureReviewShellStyle() {
 		    font-variant-numeric: tabular-nums;
 		  }
 
-  .df-review-presence-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-    gap: 5px;
-    min-width: 0;
-  }
-
-  .df-review-presence-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    min-width: 0;
-    color: var(--df-review-muted);
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  .df-review-presence-label svg {
-    width: 12px;
-    height: 12px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2;
-  }
-
-  .df-review-presence-list {
+  .df-review-presence-overlay {
+    position: absolute;
+    z-index: 8;
+    top: 10px;
+    left: 10px;
     display: flex;
     align-items: center;
-    gap: 4px;
-    min-width: 0;
     flex-wrap: wrap;
+    gap: 5px;
+    max-width: calc(100% - 20px);
+    pointer-events: none;
   }
 
   .df-review-presence-chip {
     --df-review-presence-color: var(--df-review-accent);
     display: inline-flex;
     align-items: center;
-    gap: 5px;
     min-width: 0;
-    flex: 0 1 auto;
-    min-height: 22px;
-    border: 1px solid var(--df-review-line-soft);
+    max-width: min(220px, calc(100% - 20px));
+    min-height: 24px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
     border-radius: var(--df-review-radius-pill);
-    padding: 0 7px;
-    color: var(--df-review-text);
-    background: var(--df-review-chip-bg);
+    padding: 0 8px;
+    color: #17202c;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.14);
     font-size: var(--df-review-font-size-2xs);
     font-weight: 900;
     line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+    backdrop-filter: blur(8px);
   }
 
   .df-review-presence-chip.is-self {
     border-color: var(--df-review-presence-color);
-    background: var(--df-review-accent-soft);
+    box-shadow:
+      inset 0 0 0 1px var(--df-review-presence-color),
+      0 8px 22px rgba(15, 23, 42, 0.14);
   }
 
-  .df-review-presence-dot {
-    width: 7px;
-    min-width: 7px;
-    height: 7px;
+  .df-review-presence-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    min-height: 24px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
     border-radius: var(--df-review-radius-pill);
-    background: var(--df-review-presence-color);
+    padding: 0 8px;
+    color: #17202c;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.14);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: 900;
+    line-height: 1;
+    pointer-events: auto;
+    backdrop-filter: blur(8px);
   }
 
-  .df-review-presence-name {
-    min-width: 0;
+  .df-review-presence-more:hover {
+    border-color: rgba(0, 102, 255, 0.42);
+    color: #005be8;
+    background: rgba(255, 255, 255, 0.98);
   }
 
   .df-review-list-controls {

@@ -11,8 +11,10 @@ import type { ReviewPresenceUser, ReviewQaFilter } from '../types';
 
 interface QaPanelHeaderProps {
   activeItemCount: number;
+  activeRemainingItemCount: number;
   currentPagePresenceUsers: ReviewPresenceUser[];
   filteredItemCount: number;
+  isAllQaVisible: boolean;
   label: ReviewSource;
   presenceSessionId: string;
   qaFilter: ReviewQaFilter;
@@ -27,8 +29,10 @@ interface QaPanelHeaderProps {
 
 export const QaPanelHeader = ({
   activeItemCount,
+  activeRemainingItemCount,
   currentPagePresenceUsers,
   filteredItemCount,
+  isAllQaVisible,
   label,
   presenceSessionId,
   qaFilter,
@@ -98,10 +102,11 @@ export const QaPanelHeader = ({
         </div>
       </div>
       <div className="df-review-list-title">
-        <span>{label} QA</span>
-        <strong>
-          {filteredItemCount}
-          {qaFilter === 'all' ? '' : `/${activeItemCount}`}
+        <span>{isAllQaVisible ? `${label} QA · All pages` : `${label} QA`}</span>
+        <strong title={`${activeRemainingItemCount} remaining of ${activeItemCount}`}>
+          {qaFilter === 'all'
+            ? `${activeRemainingItemCount}/${activeItemCount}`
+            : `${filteredItemCount}/${activeItemCount}`}
         </strong>
       </div>
       <PresenceRow

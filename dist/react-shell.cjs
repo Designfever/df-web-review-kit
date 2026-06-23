@@ -39,7 +39,7 @@ __export(react_shell_exports, {
   mountReviewShell: () => mountReviewShell
 });
 module.exports = __toCommonJS(react_shell_exports);
-var import_react18 = __toESM(require("react"), 1);
+var import_react19 = __toESM(require("react"), 1);
 var import_client = require("react-dom/client");
 
 // src/react-shell/style.ts
@@ -442,7 +442,7 @@ function ensureReviewShellStyle() {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
 	    width: min(760px, calc(100vw - 48px));
 	    max-height: min(720px, calc(100vh - 48px));
 	    overflow: hidden;
@@ -498,6 +498,29 @@ function ensureReviewShellStyle() {
 	    background: var(--df-review-control-hover);
 	  }
 
+  .df-review-sitemap-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background: var(--df-review-panel);
+  }
+
+  .df-review-sitemap-controls select {
+    min-width: 138px;
+    min-height: 32px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 26px 0 10px;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 850;
+  }
+
   .df-review-sitemap-list {
     display: grid;
     align-content: start;
@@ -509,7 +532,7 @@ function ensureReviewShellStyle() {
   .df-review-sitemap-table-head,
   .df-review-sitemap-row {
     display: grid;
-    grid-template-columns: minmax(160px, 1fr) 70px 78px minmax(96px, 140px);
+    grid-template-columns: minmax(190px, 1fr) 76px 86px minmax(96px, 140px);
     align-items: center;
     column-gap: 0;
   }
@@ -548,6 +571,11 @@ function ensureReviewShellStyle() {
     cursor: pointer;
   }
 
+  .df-review-sitemap-row.is-all {
+    border-bottom-color: var(--df-review-line);
+    background: var(--df-review-card);
+  }
+
   .df-review-sitemap-row.is-folder {
     cursor: default;
   }
@@ -564,6 +592,7 @@ function ensureReviewShellStyle() {
   .df-review-sitemap-path {
     display: inline-flex;
     align-items: center;
+    gap: 7px;
     min-width: 0;
     overflow-wrap: anywhere;
     color: var(--df-review-text);
@@ -584,6 +613,35 @@ function ensureReviewShellStyle() {
     white-space: pre;
   }
 
+  .df-review-sitemap-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .df-review-sitemap-scope-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .df-review-sitemap-scope-badges span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 18px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 5px;
+    color: var(--df-review-muted);
+    background: var(--df-review-chip-bg);
+    font-size: var(--df-review-font-size-3xs);
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
   .df-review-sitemap-cell {
     min-width: 0;
     color: var(--df-review-muted);
@@ -594,12 +652,19 @@ function ensureReviewShellStyle() {
     text-align: right;
   }
 
-  .df-review-sitemap-cell.is-local {
+  .df-review-sitemap-cell.is-work {
     color: var(--df-review-accent);
   }
 
-  .df-review-sitemap-cell.is-remote {
-    color: var(--df-review-area);
+  .df-review-sitemap-cell.is-work strong {
+    font: inherit;
+  }
+
+  .df-review-sitemap-cell.is-source {
+    display: inline-flex;
+    justify-content: flex-end;
+    gap: 6px;
+    color: var(--df-review-muted);
   }
 
   .df-review-sitemap-cell.is-online {
@@ -2651,7 +2716,7 @@ function ensureReviewShellStyle() {
 }
 
 // src/react-shell/review/shell.tsx
-var import_react17 = require("react");
+var import_react18 = require("react");
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
 var import_react3 = require("react");
@@ -3707,11 +3772,46 @@ var ReviewSettingsModal = ({
   );
 };
 
+// src/react-shell/sitemap/modal.tsx
+var import_react4 = require("react");
+
 // src/react-shell/sitemap/tree.ts
-var EMPTY_SITEMAP_QA_COUNT = {
+var SITEMAP_STATUS_FILTERS = [
+  { key: "all", label: "All status" },
+  { key: "todo", label: "Todo" },
+  { key: "doing", label: "Doing" },
+  { key: "review", label: "Review" },
+  { key: "hold", label: "Hold" },
+  { key: "done", label: "Done" }
+];
+var SITEMAP_SORT_OPTIONS = [
+  { key: "tree", label: "Tree order" },
+  { key: "remaining", label: "Most remaining" },
+  { key: "total", label: "Most total" },
+  { key: "online", label: "Most online" }
+];
+var WORKFLOW_STATUSES = [
+  "todo",
+  "doing",
+  "review",
+  "hold",
+  "done"
+];
+var createEmptySitemapQaCount = () => ({
+  total: 0,
+  remaining: 0,
   local: 0,
-  remote: 0
-};
+  remote: 0,
+  status: {
+    todo: 0,
+    doing: 0,
+    review: 0,
+    hold: 0,
+    done: 0
+  },
+  scope: {}
+});
+var getSitemapStatusCount = (count, statusFilter) => statusFilter === "all" ? count.total : count.status[statusFilter];
 var normalizeSitemapHref = (href) => {
   const [path = "/"] = href.split(/[?#]/);
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -3736,10 +3836,33 @@ var mergeSitemapUsers = (users) => {
   return Array.from(userByKey.values());
 };
 var addSitemapQaCounts = (first, second) => ({
+  total: first.total + second.total,
+  remaining: first.remaining + second.remaining,
   local: first.local + second.local,
-  remote: first.remote + second.remote
+  remote: first.remote + second.remote,
+  status: WORKFLOW_STATUSES.reduce(
+    (statusCounts, status) => ({
+      ...statusCounts,
+      [status]: first.status[status] + second.status[status]
+    }),
+    {}
+  ),
+  scope: Array.from(
+    /* @__PURE__ */ new Set([
+      ...Object.keys(first.scope),
+      ...Object.keys(second.scope)
+    ])
+  ).reduce(
+    (scopeCounts, scope) => ({
+      ...scopeCounts,
+      [scope]: (first.scope[scope] ?? 0) + (second.scope[scope] ?? 0)
+    }),
+    {}
+  )
 });
-var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget) => {
+var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget, options = {}) => {
+  const sortKey = options.sortKey ?? "tree";
+  const statusFilter = options.statusFilter ?? "all";
   const root = createSitemapNode("/", "/", false);
   pages.forEach((page) => {
     const pageHref = page.href.startsWith("/") ? page.href : `/${page.href}`;
@@ -3766,75 +3889,108 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
     });
   });
   const getDirectCount = (node) => {
-    if (!node.isPage) return EMPTY_SITEMAP_QA_COUNT;
-    return pageQaCounts.get(getPageTarget(node.href)) ?? EMPTY_SITEMAP_QA_COUNT;
+    if (!node.isPage) return createEmptySitemapQaCount();
+    return pageQaCounts.get(getPageTarget(node.href)) ?? createEmptySitemapQaCount();
   };
   const getDirectUsers = (node) => {
     if (!node.isPage) return [];
     return pagePresenceUsers.get(getPageTarget(node.href)) ?? [];
   };
-  const rows = [];
-  const appendNodeRows = (node, depth, ancestorLastList, isLastNode) => {
-    const children = Array.from(node.children.values());
+  const createNodeSummary = (node) => {
     const directCount = getDirectCount(node);
     const directUsers = getDirectUsers(node);
-    let rowIndex = null;
+    const children = Array.from(node.children.values()).map(createNodeSummary);
+    const childAggregate = children.reduce(
+      (aggregate, child) => ({
+        count: addSitemapQaCounts(aggregate.count, child.count),
+        users: mergeSitemapUsers([...aggregate.users, ...child.users])
+      }),
+      {
+        count: createEmptySitemapQaCount(),
+        users: []
+      }
+    );
+    return {
+      node,
+      directCount,
+      directUsers,
+      count: node.isPage ? addSitemapQaCounts(directCount, childAggregate.count) : childAggregate.count,
+      users: mergeSitemapUsers([...directUsers, ...childAggregate.users]),
+      children
+    };
+  };
+  const getSortValue = (summary) => {
+    if (sortKey === "remaining") return summary.count.remaining;
+    if (sortKey === "total") return summary.count.total;
+    if (sortKey === "online") return summary.users.length;
+    return 0;
+  };
+  const sortSummaries = (summaries) => {
+    if (sortKey === "tree") return summaries;
+    return [...summaries].sort((a, b) => {
+      const valueDiff = getSortValue(b) - getSortValue(a);
+      if (valueDiff !== 0) return valueDiff;
+      const totalDiff = b.count.total - a.count.total;
+      if (totalDiff !== 0) return totalDiff;
+      return a.node.label.localeCompare(b.node.label);
+    });
+  };
+  const hasStatusMatch = (count) => getSitemapStatusCount(count, statusFilter) > 0;
+  const shouldShowSummary = (summary) => statusFilter === "all" || hasStatusMatch(summary.count);
+  const rows = [];
+  const appendSummaryRows = (summary, depth, ancestorLastList, isLastNode) => {
+    if (!shouldShowSummary(summary)) return;
+    const { node } = summary;
+    const rowCount = node.isPage ? summary.directCount : summary.count;
+    const rowUsers = node.isPage ? summary.directUsers : summary.users;
     if (node.isPage || depth > 0) {
       const prefix = depth === 0 ? "" : `${ancestorLastList.map((isLast) => isLast ? "   " : "\u2502  ").join("")}${isLastNode ? "\u2514\u2500 " : "\u251C\u2500 "}`;
       const pageTarget = node.isPage ? getPageTarget(node.href) : null;
-      rowIndex = rows.length;
-      rows.push({
-        href: node.href,
-        label: node.label,
-        prefix,
-        isPage: node.isPage,
-        isActive: pageTarget === activeRoute,
-        qaCount: directCount,
-        users: directUsers
-      });
+      const hasRowStatusMatch = statusFilter === "all" || hasStatusMatch(rowCount);
+      if (hasRowStatusMatch || !node.isPage) {
+        rows.push({
+          href: node.href,
+          label: node.label,
+          prefix,
+          isPage: node.isPage,
+          isActive: pageTarget === activeRoute,
+          qaCount: rowCount,
+          users: rowUsers
+        });
+      }
     }
-    const childAggregate = children.reduce(
-      (aggregate, child, childIndex) => {
-        const childResult = appendNodeRows(
-          child,
-          depth + 1,
-          depth === 0 ? [] : [...ancestorLastList, isLastNode],
-          childIndex === children.length - 1
-        );
-        return {
-          count: addSitemapQaCounts(aggregate.count, childResult.count),
-          users: mergeSitemapUsers([...aggregate.users, ...childResult.users])
-        };
-      },
-      { count: EMPTY_SITEMAP_QA_COUNT, users: [] }
+    const visibleChildren = sortSummaries(
+      summary.children.filter(shouldShowSummary)
     );
-    if (rowIndex !== null && !node.isPage) {
-      rows[rowIndex] = {
-        ...rows[rowIndex],
-        qaCount: childAggregate.count,
-        users: childAggregate.users
-      };
-    }
-    return {
-      count: node.isPage ? addSitemapQaCounts(directCount, childAggregate.count) : childAggregate.count,
-      users: mergeSitemapUsers([...directUsers, ...childAggregate.users])
-    };
+    visibleChildren.forEach((child, childIndex) => {
+      appendSummaryRows(
+        child,
+        depth + 1,
+        depth === 0 ? [] : [...ancestorLastList, isLastNode],
+        childIndex === visibleChildren.length - 1
+      );
+    });
   };
   if (root.isPage) {
     const directCount = getDirectCount(root);
     const directUsers = getDirectUsers(root);
-    rows.push({
-      href: root.href,
-      label: root.label,
-      prefix: "",
-      isPage: true,
-      isActive: getPageTarget(root.href) === activeRoute,
-      qaCount: directCount,
-      users: directUsers
-    });
+    if (statusFilter === "all" || hasStatusMatch(directCount)) {
+      rows.push({
+        href: root.href,
+        label: root.label,
+        prefix: "",
+        isPage: true,
+        isActive: getPageTarget(root.href) === activeRoute,
+        qaCount: directCount,
+        users: directUsers
+      });
+    }
   }
-  Array.from(root.children.values()).forEach((node, index, siblings) => {
-    appendNodeRows(node, 1, [], index === siblings.length - 1);
+  const rootSummaries = sortSummaries(
+    Array.from(root.children.values()).map(createNodeSummary)
+  ).filter(shouldShowSummary);
+  rootSummaries.forEach((summary, index, siblings) => {
+    appendSummaryRows(summary, 1, [], index === siblings.length - 1);
   });
   return rows;
 };
@@ -3844,19 +4000,28 @@ var import_jsx_runtime3 = require("react/jsx-runtime");
 var SitemapModal = ({
   pages,
   activeRoute,
+  allQaCount,
+  isAllQaVisible,
   pageQaCounts,
   pagePresenceUsers,
   getPageTarget,
   onClose,
+  onSelectAllQa,
   onSelectPage
 }) => {
+  const [statusFilter, setStatusFilter] = (0, import_react4.useState)("all");
+  const [sortKey, setSortKey] = (0, import_react4.useState)("tree");
   const sitemapRows = createSitemapRows(
     pages,
     activeRoute,
     pageQaCounts,
     pagePresenceUsers,
-    getPageTarget
+    getPageTarget,
+    { sortKey, statusFilter }
   );
+  const filteredAllCount = getSitemapStatusCount(allQaCount, statusFilter);
+  const allQaLabel = statusFilter === "all" ? `${allQaCount.remaining}/${allQaCount.total}` : String(filteredAllCount);
+  const allQaStatusLabel = SITEMAP_STATUS_FILTERS.find((filter) => filter.key === statusFilter)?.label ?? "All status";
   return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
     "div",
     {
@@ -3880,48 +4045,81 @@ var SitemapModal = ({
               /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { children: "Sitemap" }),
               /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { children: [
                 pages.length,
-                " pages"
+                " pages \xB7 ",
+                allQaCount.remaining,
+                "/",
+                allQaCount.total
               ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
           ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-sitemap-controls", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+              "select",
+              {
+                "aria-label": "Sitemap status filter",
+                value: statusFilter,
+                onChange: (event) => setStatusFilter(event.currentTarget.value),
+                children: SITEMAP_STATUS_FILTERS.map((filter) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("option", { value: filter.key, children: filter.label }, filter.key))
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+              "select",
+              {
+                "aria-label": "Sitemap sort",
+                value: sortKey,
+                onChange: (event) => setSortKey(event.currentTarget.value),
+                children: SITEMAP_SORT_OPTIONS.map((option) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("option", { value: option.key, children: option.label }, option.key))
+              }
+            )
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-sitemap-list", children: [
             /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-sitemap-table-head", "aria-hidden": "true", children: [
               /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: "Page" }),
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: "Local" }),
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: "Remote" }),
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: "Work" }),
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: "Source" }),
               /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: "Online" })
             ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+              "button",
+              {
+                "aria-label": `All QA / ${allQaStatusLabel} ${allQaLabel} / local ${allQaCount.local} QA / remote ${allQaCount.remote} QA`,
+                className: `df-review-sitemap-row is-page is-all${isAllQaVisible ? " is-active" : ""}`,
+                type: "button",
+                onClick: onSelectAllQa,
+                children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                  SitemapRowContent,
+                  {
+                    label: "All QA",
+                    prefix: "",
+                    qaCount: allQaCount,
+                    statusFilter,
+                    users: []
+                  }
+                )
+              }
+            ),
             sitemapRows.map((row) => {
               const rowClassName = [
                 "df-review-sitemap-row",
                 row.isPage ? "is-page" : "is-folder",
                 row.isActive ? "is-active" : ""
               ].filter(Boolean).join(" ");
-              const rowContent = /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(import_jsx_runtime3.Fragment, { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { className: "df-review-sitemap-path", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-tree-prefix", children: row.prefix }),
-                  /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: row.label })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-local", children: row.qaCount.local }),
-                /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-remote", children: row.qaCount.remote }),
-                /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-online", children: row.users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-users", children: row.users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-                  "span",
-                  {
-                    className: "df-review-sitemap-user",
-                    style: {
-                      "--df-review-presence-color": user.color
-                    },
-                    children: user.userId
-                  },
-                  user.sessionId
-                )) }) : /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
-              ] });
+              const rowContent = /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                SitemapRowContent,
+                {
+                  label: row.label,
+                  prefix: row.prefix,
+                  qaCount: row.qaCount,
+                  statusFilter,
+                  users: row.users
+                }
+              );
               if (!row.isPage) {
                 return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
                   "div",
                   {
-                    "aria-label": `${row.href} group / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                    "aria-label": `${row.href} group / remaining ${row.qaCount.remaining} of ${row.qaCount.total} QA / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
                     className: rowClassName,
                     role: "row",
                     children: rowContent
@@ -3932,7 +4130,7 @@ var SitemapModal = ({
               return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
                 "button",
                 {
-                  "aria-label": `${row.href} / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                  "aria-label": `${row.href} / remaining ${row.qaCount.remaining} of ${row.qaCount.total} QA / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
                   className: rowClassName,
                   type: "button",
                   onClick: () => onSelectPage(row.href),
@@ -3946,6 +4144,66 @@ var SitemapModal = ({
       ]
     }
   );
+};
+var SITEMAP_SCOPE_LABELS = [
+  { key: "mobile", label: "MO" },
+  { key: "tablet", label: "TA" },
+  { key: "desktop", label: "PC" },
+  { key: "wide", label: "WD" },
+  { key: "dom", label: "DOM" }
+];
+var SitemapRowContent = ({
+  label,
+  prefix,
+  qaCount,
+  statusFilter,
+  users
+}) => {
+  const visibleScopeCounts = (0, import_react4.useMemo)(
+    () => SITEMAP_SCOPE_LABELS.map((scope) => ({
+      ...scope,
+      count: qaCount.scope[scope.key] ?? 0
+    })).filter((scope) => scope.count > 0),
+    [qaCount.scope]
+  );
+  const statusCount = getSitemapStatusCount(qaCount, statusFilter);
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(import_jsx_runtime3.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { className: "df-review-sitemap-path", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-tree-prefix", children: prefix }),
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-label", children: label }),
+      visibleScopeCounts.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-scope-badges", children: visibleScopeCounts.map((scope) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { children: [
+        scope.label,
+        " ",
+        scope.count
+      ] }, scope.key)) })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-work", children: statusFilter === "all" ? /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("strong", { children: [
+      qaCount.remaining,
+      "/",
+      qaCount.total
+    ] }) : /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { children: statusCount }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { className: "df-review-sitemap-cell is-source", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { children: [
+        "L ",
+        qaCount.local
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { children: [
+        "R ",
+        qaCount.remote
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+      "span",
+      {
+        className: "df-review-sitemap-user",
+        style: {
+          "--df-review-presence-color": user.color
+        },
+        children: user.userId
+      },
+      user.sessionId
+    )) }) : /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
+  ] });
 };
 
 // src/react-shell/figma.ts
@@ -3983,17 +4241,17 @@ function createFigmaFrameUrl(value) {
 }
 
 // src/react-shell/qa/item.edit.modal.tsx
-var import_react4 = require("react");
+var import_react5 = require("react");
 var import_jsx_runtime4 = require("react/jsx-runtime");
 var QaItemEditModal = ({
   item,
   onClose,
   onSave
 }) => {
-  const [commentDraft, setCommentDraft] = (0, import_react4.useState)(item.comment);
-  const [error, setError] = (0, import_react4.useState)("");
-  const [isSaving, setIsSaving] = (0, import_react4.useState)(false);
-  (0, import_react4.useEffect)(() => {
+  const [commentDraft, setCommentDraft] = (0, import_react5.useState)(item.comment);
+  const [error, setError] = (0, import_react5.useState)("");
+  const [isSaving, setIsSaving] = (0, import_react5.useState)(false);
+  (0, import_react5.useEffect)(() => {
     setCommentDraft(item.comment);
     setError("");
     setIsSaving(false);
@@ -4576,8 +4834,10 @@ var PresenceRow = ({
 var import_jsx_runtime10 = require("react/jsx-runtime");
 var QaPanelHeader = ({
   activeItemCount,
+  activeRemainingItemCount,
   currentPagePresenceUsers,
   filteredItemCount,
+  isAllQaVisible,
   label,
   presenceSessionId,
   qaFilter,
@@ -4631,14 +4891,8 @@ var QaPanelHeader = ({
       }) })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-list-title", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { children: [
-        label,
-        " QA"
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("strong", { children: [
-        filteredItemCount,
-        qaFilter === "all" ? "" : `/${activeItemCount}`
-      ] })
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: isAllQaVisible ? `${label} QA \xB7 All pages` : `${label} QA` }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { title: `${activeRemainingItemCount} remaining of ${activeItemCount}`, children: qaFilter === "all" ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}` })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
       PresenceRow,
@@ -4655,11 +4909,13 @@ var import_jsx_runtime11 = require("react/jsx-runtime");
 var ReviewQaPanel = ({
   activeAdapterEntry,
   activeItems,
+  activeRemainingItemCount,
   currentPagePresenceUsers,
   currentPresetScope,
   filteredNumberedActiveItems,
   getItemPresetScope,
   hiddenOverlayItemIds,
+  isAllQaVisible,
   isListVisible,
   isRemoteSource,
   presenceSessionId,
@@ -4684,13 +4940,16 @@ var ReviewQaPanel = ({
   onSubmitItem,
   onToggleItemOverlayVisibility
 }) => {
+  const emptyMessage = isAllQaVisible ? `No ${activeAdapterEntry.label} QA.` : isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page.";
   return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "df-review-panel-body", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("section", { className: "df-review-item-list", children: [
     /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
       QaPanelHeader,
       {
         activeItemCount: activeItems.length,
+        activeRemainingItemCount,
         currentPagePresenceUsers,
         filteredItemCount: filteredNumberedActiveItems.length,
+        isAllQaVisible,
         label: activeAdapterEntry.label,
         presenceSessionId,
         qaFilter,
@@ -4713,7 +4972,7 @@ var ReviewQaPanel = ({
           }
         },
         children: [
-          activeItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "df-review-empty", children: isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page." }),
+          activeItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "df-review-empty", children: emptyMessage }),
           activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "df-review-empty", children: "No QA in this filter." }),
           filteredNumberedActiveItems.map((numberedItem) => {
             const { item } = numberedItem;
@@ -5406,10 +5665,10 @@ var ReviewTopbar = ({
 };
 
 // src/react-shell/hooks/use.review.controller.ts
-var import_react9 = require("react");
+var import_react10 = require("react");
 
 // src/react-shell/hooks/use.review.item.restore.ts
-var import_react5 = require("react");
+var import_react6 = require("react");
 function runWithAutoScrollBehavior(targetDocument, callback) {
   const elements = [
     targetDocument?.documentElement,
@@ -5486,7 +5745,7 @@ var useReviewItemRestore = ({
   onSyncTargetViewport,
   onTargetChange
 }) => {
-  const clearSelectedItem = (0, import_react5.useCallback)(() => {
+  const clearSelectedItem = (0, import_react6.useCallback)(() => {
     pendingRestoreRef.current = null;
     selectedItemIdRef.current = null;
     onSelectedItemIdChange(null);
@@ -5497,7 +5756,7 @@ var useReviewItemRestore = ({
     pendingRestoreRef,
     selectedItemIdRef
   ]);
-  const applyItemScroll = (0, import_react5.useCallback)(
+  const applyItemScroll = (0, import_react6.useCallback)(
     async (item) => {
       if (selectedItemIdRef.current !== item.id) return false;
       const targetWindow = iframeRef.current?.contentWindow;
@@ -5529,7 +5788,7 @@ var useReviewItemRestore = ({
     },
     [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
   );
-  const applyPendingRestore = (0, import_react5.useCallback)(() => {
+  const applyPendingRestore = (0, import_react6.useCallback)(() => {
     const item = pendingRestoreRef.current;
     if (!item) return;
     void applyItemScroll(item).then((didApply) => {
@@ -5538,7 +5797,7 @@ var useReviewItemRestore = ({
       }
     });
   }, [applyItemScroll, pendingRestoreRef]);
-  const restoreReviewItem = (0, import_react5.useCallback)(
+  const restoreReviewItem = (0, import_react6.useCallback)(
     (item) => {
       const nextTarget = getItemTarget(item, reviewPathPrefix);
       const nextSize = getRestoredSize(item, viewportPresets);
@@ -5570,7 +5829,7 @@ var useReviewItemRestore = ({
       viewportPresets
     ]
   );
-  const restoreInitialItem = (0, import_react5.useCallback)(async () => {
+  const restoreInitialItem = (0, import_react6.useCallback)(async () => {
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
     pendingInitialItemIdRef.current = null;
@@ -5588,7 +5847,7 @@ var useReviewItemRestore = ({
 };
 
 // src/react-shell/hooks/use.review.kit.lifecycle.ts
-var import_react6 = require("react");
+var import_react7 = require("react");
 
 // src/route.ts
 function getItemRouteKey(item) {
@@ -8900,13 +9159,13 @@ var useReviewKitLifecycle = ({
   onSyncShellTarget,
   onSyncTargetViewport
 }) => {
-  const destroyReviewKit = (0, import_react6.useCallback)(() => {
+  const destroyReviewKit = (0, import_react7.useCallback)(() => {
     cleanupTargetRef.current?.();
     cleanupTargetRef.current = null;
     controllerRef.current?.destroy();
     controllerRef.current = null;
   }, [cleanupTargetRef, controllerRef]);
-  const initReviewKit = (0, import_react6.useCallback)(() => {
+  const initReviewKit = (0, import_react7.useCallback)(() => {
     destroyReviewKit();
     const iframe = iframeRef.current;
     const targetWindow = iframe?.contentWindow;
@@ -8991,23 +9250,23 @@ var useReviewKitLifecycle = ({
     sizeRef,
     targetRef
   ]);
-  const reloadReviewKit = (0, import_react6.useCallback)(async () => {
+  const reloadReviewKit = (0, import_react7.useCallback)(async () => {
     await controllerRef.current?.reload();
   }, [controllerRef]);
-  const setControllerReviewMode = (0, import_react6.useCallback)(
+  const setControllerReviewMode = (0, import_react7.useCallback)(
     (nextMode) => {
       controllerRef.current?.setMode(nextMode);
       onModeChange(controllerRef.current?.getMode() ?? "idle");
     },
     [controllerRef, onModeChange]
   );
-  (0, import_react6.useEffect)(() => destroyReviewKit, [destroyReviewKit]);
-  (0, import_react6.useEffect)(() => {
+  (0, import_react7.useEffect)(() => destroyReviewKit, [destroyReviewKit]);
+  (0, import_react7.useEffect)(() => {
     const frameDocument = iframeRef.current?.contentDocument;
     if (!frameDocument || frameDocument.readyState !== "complete") return;
     initReviewKit();
   }, [iframeRef, initReviewKit]);
-  (0, import_react6.useEffect)(() => {
+  (0, import_react7.useEffect)(() => {
     hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
     controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
   }, [controllerRef, hiddenOverlayItemIdList, hiddenOverlayItemIdListRef]);
@@ -9020,19 +9279,19 @@ var useReviewKitLifecycle = ({
 };
 
 // src/react-shell/hooks/use.review.target.overlay.ts
-var import_react7 = require("react");
+var import_react8 = require("react");
 var useReviewTargetOverlay = ({
   iframeRef,
   isFigmaOverlayAvailable,
   targetOverlayState,
   onTargetOverlayStateChange
 }) => {
-  const refreshTargetOverlayState = (0, import_react7.useCallback)(() => {
+  const refreshTargetOverlayState = (0, import_react8.useCallback)(() => {
     onTargetOverlayStateChange(
       getTargetOverlayState(iframeRef.current?.contentDocument ?? void 0)
     );
   }, [iframeRef, onTargetOverlayStateChange]);
-  const dispatchTargetOverlayHotkey = (0, import_react7.useCallback)(
+  const dispatchTargetOverlayHotkey = (0, import_react8.useCallback)(
     (overlay) => {
       const targetWindow = iframeRef.current?.contentWindow;
       if (!targetWindow) return false;
@@ -9051,7 +9310,7 @@ var useReviewTargetOverlay = ({
     },
     [iframeRef, refreshTargetOverlayState]
   );
-  const toggleTargetOverlay = (0, import_react7.useCallback)(
+  const toggleTargetOverlay = (0, import_react8.useCallback)(
     (overlay) => {
       if (overlay === "figma" && !isFigmaOverlayAvailable) {
         refreshTargetOverlayState();
@@ -9065,7 +9324,7 @@ var useReviewTargetOverlay = ({
       refreshTargetOverlayState
     ]
   );
-  const closeTargetOverlay = (0, import_react7.useCallback)(
+  const closeTargetOverlay = (0, import_react8.useCallback)(
     (overlay) => {
       const currentState = getTargetOverlayState(
         iframeRef.current?.contentDocument ?? void 0
@@ -9076,7 +9335,7 @@ var useReviewTargetOverlay = ({
     },
     [dispatchTargetOverlayHotkey, iframeRef, onTargetOverlayStateChange]
   );
-  (0, import_react7.useEffect)(() => {
+  (0, import_react8.useEffect)(() => {
     if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
     closeTargetOverlay("figma");
   }, [closeTargetOverlay, isFigmaOverlayAvailable, targetOverlayState.figma]);
@@ -9088,7 +9347,7 @@ var useReviewTargetOverlay = ({
 };
 
 // src/react-shell/hooks/use.review.target.sync.ts
-var import_react8 = require("react");
+var import_react9 = require("react");
 var useReviewTargetSync = ({
   iframeRef,
   reviewPathPrefix,
@@ -9104,7 +9363,7 @@ var useReviewTargetSync = ({
   onSyncTargetViewport,
   onTargetChange
 }) => {
-  const syncShellTarget = (0, import_react8.useCallback)(
+  const syncShellTarget = (0, import_react9.useCallback)(
     (nextTarget) => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
       if (normalizedTarget !== targetRef.current) {
@@ -9137,11 +9396,11 @@ var useReviewTargetSync = ({
       targetRef
     ]
   );
-  (0, import_react8.useEffect)(() => {
+  (0, import_react9.useEffect)(() => {
     targetRef.current = target;
     onActiveRouteChange(target);
   }, [onActiveRouteChange, target, targetRef]);
-  (0, import_react8.useEffect)(() => {
+  (0, import_react9.useEffect)(() => {
     sizeRef.current = size;
     if (selectedItemIdRef.current) {
       updateShellUrlForItem(
@@ -9209,7 +9468,7 @@ var useReviewController = ({
   onTargetOverlayStateChange,
   onCloseRuler
 }) => {
-  const syncTargetViewport = (0, import_react9.useCallback)(() => {
+  const syncTargetViewport = (0, import_react10.useCallback)(() => {
     window.dispatchEvent(new Event("resize"));
   }, []);
   const {
@@ -9305,7 +9564,7 @@ var useReviewController = ({
 };
 
 // src/react-shell/hooks/use.review.presence.ts
-var import_react10 = require("react");
+var import_react11 = require("react");
 
 // src/react-shell/presence/presence.ts
 var REVIEW_PRESENCE_SESSION_KEY = "df-review-presence-session-id";
@@ -9520,10 +9779,10 @@ var useReviewPresence = ({
   size,
   source
 }) => {
-  const presenceSessionRef = (0, import_react10.useRef)(null);
-  const [presenceUsers, setPresenceUsers] = (0, import_react10.useState)([]);
-  const [presenceSessionVersion, setPresenceSessionVersion] = (0, import_react10.useState)(0);
-  const presenceSessionId = (0, import_react10.useMemo)(getReviewPresenceSessionId, []);
+  const presenceSessionRef = (0, import_react11.useRef)(null);
+  const [presenceUsers, setPresenceUsers] = (0, import_react11.useState)([]);
+  const [presenceSessionVersion, setPresenceSessionVersion] = (0, import_react11.useState)(0);
+  const presenceSessionId = (0, import_react11.useMemo)(getReviewPresenceSessionId, []);
   const normalizedReviewUserId = reviewUserId.trim();
   const presenceDisplayName = getReviewPresenceDisplayName(
     normalizedReviewUserId
@@ -9531,7 +9790,7 @@ var useReviewPresence = ({
   const presenceColor = getReviewPresenceColor(
     normalizedReviewUserId || presenceSessionId
   );
-  const presenceViewport = (0, import_react10.useMemo)(
+  const presenceViewport = (0, import_react11.useMemo)(
     () => ({
       label: size.label,
       width: size.width,
@@ -9541,7 +9800,7 @@ var useReviewPresence = ({
     [size]
   );
   const presenceStatus = mode === "idle" ? "reviewing" : "editing";
-  const visiblePresenceUsers = (0, import_react10.useMemo)(
+  const visiblePresenceUsers = (0, import_react11.useMemo)(
     () => {
       const projectPresenceUsers = presenceUsers.filter(
         (user) => user.projectId === projectId && user.userId.trim()
@@ -9553,14 +9812,14 @@ var useReviewPresence = ({
     },
     [presenceUsers, projectId, reviewPathPrefix]
   );
-  const currentPagePresenceUsers = (0, import_react10.useMemo)(
+  const currentPagePresenceUsers = (0, import_react11.useMemo)(
     () => visiblePresenceUsers.filter((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
       return userTarget === activeRoute;
     }),
     [activeRoute, reviewPathPrefix, visiblePresenceUsers]
   );
-  const pagePresenceUsers = (0, import_react10.useMemo)(() => {
+  const pagePresenceUsers = (0, import_react11.useMemo)(() => {
     const usersByTarget = /* @__PURE__ */ new Map();
     visiblePresenceUsers.forEach((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
@@ -9570,7 +9829,7 @@ var useReviewPresence = ({
     });
     return usersByTarget;
   }, [reviewPathPrefix, visiblePresenceUsers]);
-  const getCurrentPresenceState = (0, import_react10.useCallback)(
+  const getCurrentPresenceState = (0, import_react11.useCallback)(
     () => ({
       projectId,
       sessionId: presenceSessionId,
@@ -9601,9 +9860,9 @@ var useReviewPresence = ({
       source
     ]
   );
-  const getCurrentPresenceStateRef = (0, import_react10.useRef)(getCurrentPresenceState);
+  const getCurrentPresenceStateRef = (0, import_react11.useRef)(getCurrentPresenceState);
   getCurrentPresenceStateRef.current = getCurrentPresenceState;
-  (0, import_react10.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     if (!presence || !normalizedReviewUserId) {
       const session = presenceSessionRef.current;
       presenceSessionRef.current = null;
@@ -9653,7 +9912,7 @@ var useReviewPresence = ({
     presenceSessionId,
     projectId
   ]);
-  (0, import_react10.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     const session = presenceSessionRef.current;
     if (!session || !normalizedReviewUserId) return;
     void session.update(getCurrentPresenceState());
@@ -9670,10 +9929,10 @@ var useReviewPresence = ({
 };
 
 // src/react-shell/hooks/use.review.ruler.ts
-var import_react12 = require("react");
+var import_react13 = require("react");
 
 // src/react-shell/hooks/use.review.ruler.drag.ts
-var import_react11 = require("react");
+var import_react12 = require("react");
 
 // src/react-shell/ruler/ruler.ts
 var getRulerPointFromRect = (clientX, clientY, rect) => {
@@ -9702,19 +9961,19 @@ var useReviewRulerDrag = ({
   size,
   targetSrc
 }) => {
-  const rulerOverlayRef = (0, import_react11.useRef)(null);
-  const rulerDragRectRef = (0, import_react11.useRef)(null);
-  const isRulerDraggingRef = (0, import_react11.useRef)(false);
-  const sizeRef = (0, import_react11.useRef)(size);
-  const [rulerStart, setRulerStart] = (0, import_react11.useState)(null);
-  const [rulerPoint, setRulerPoint] = (0, import_react11.useState)(null);
-  const [rulerHover, setRulerHover] = (0, import_react11.useState)(null);
-  const [isRulerDragging, setIsRulerDragging] = (0, import_react11.useState)(false);
-  const rulerMeasure = (0, import_react11.useMemo)(
+  const rulerOverlayRef = (0, import_react12.useRef)(null);
+  const rulerDragRectRef = (0, import_react12.useRef)(null);
+  const isRulerDraggingRef = (0, import_react12.useRef)(false);
+  const sizeRef = (0, import_react12.useRef)(size);
+  const [rulerStart, setRulerStart] = (0, import_react12.useState)(null);
+  const [rulerPoint, setRulerPoint] = (0, import_react12.useState)(null);
+  const [rulerHover, setRulerHover] = (0, import_react12.useState)(null);
+  const [isRulerDragging, setIsRulerDragging] = (0, import_react12.useState)(false);
+  const rulerMeasure = (0, import_react12.useMemo)(
     () => getRulerMeasure(rulerStart, rulerPoint),
     [rulerPoint, rulerStart]
   );
-  const clearRulerMeasure = (0, import_react11.useCallback)(() => {
+  const clearRulerMeasure = (0, import_react12.useCallback)(() => {
     rulerDragRectRef.current = null;
     isRulerDraggingRef.current = false;
     setRulerStart(null);
@@ -9722,7 +9981,7 @@ var useReviewRulerDrag = ({
     setRulerHover(null);
     setIsRulerDragging(false);
   }, []);
-  const finishRulerDrag = (0, import_react11.useCallback)((point) => {
+  const finishRulerDrag = (0, import_react12.useCallback)((point) => {
     if (point) {
       setRulerPoint(point);
     }
@@ -9730,7 +9989,7 @@ var useReviewRulerDrag = ({
     isRulerDraggingRef.current = false;
     setIsRulerDragging(false);
   }, []);
-  const startRulerDrag = (0, import_react11.useCallback)(
+  const startRulerDrag = (0, import_react12.useCallback)(
     (clientX, clientY, rect) => {
       const point = getRulerPointFromRect(clientX, clientY, rect);
       rulerDragRectRef.current = rect;
@@ -9741,10 +10000,10 @@ var useReviewRulerDrag = ({
     },
     []
   );
-  (0, import_react11.useEffect)(() => {
+  (0, import_react12.useEffect)(() => {
     sizeRef.current = size;
   }, [size]);
-  (0, import_react11.useEffect)(() => {
+  (0, import_react12.useEffect)(() => {
     if (!isRulerVisible || !isRulerAvailable) return void 0;
     const getRulerEventClientPoint = (event) => {
       const frame2 = iframeRef.current;
@@ -9858,7 +10117,7 @@ var useReviewRulerDrag = ({
     isRulerVisible,
     startRulerDrag
   ]);
-  (0, import_react11.useEffect)(() => {
+  (0, import_react12.useEffect)(() => {
     clearRulerMeasure();
   }, [clearRulerMeasure, size.height, size.width, targetSrc]);
   return {
@@ -9879,7 +10138,7 @@ var useReviewRuler = ({
   onCancelReviewMode,
   onCloseTransientPanels
 }) => {
-  const [isRulerVisible, setIsRulerVisible] = (0, import_react12.useState)(false);
+  const [isRulerVisible, setIsRulerVisible] = (0, import_react13.useState)(false);
   const isRulerAvailable = ruler?.enabled !== false && typeof size.designWidth === "number" && size.designWidth > 0;
   const rulerUnit = ruler?.unit ?? "px";
   const rulerScaleX = isRulerAvailable && size.designWidth ? size.width / size.designWidth : 1;
@@ -9900,13 +10159,13 @@ var useReviewRuler = ({
   const rulerMeasureLabel = rulerMeasure ? `${Math.round(rulerMeasure.width / rulerScaleX)} \xD7 ${Math.round(
     rulerMeasure.height / rulerScaleY
   )} ${rulerUnit}` : "";
-  const closeRuler = (0, import_react12.useCallback)(() => {
+  const closeRuler = (0, import_react13.useCallback)(() => {
     if (!isRulerVisible) return false;
     setIsRulerVisible(false);
     clearRulerMeasure();
     return true;
   }, [clearRulerMeasure, isRulerVisible]);
-  const toggleRuler = (0, import_react12.useCallback)(() => {
+  const toggleRuler = (0, import_react13.useCallback)(() => {
     if (!isRulerAvailable) return;
     onCancelReviewMode();
     onCloseTransientPanels();
@@ -9918,7 +10177,7 @@ var useReviewRuler = ({
     onCancelReviewMode,
     onCloseTransientPanels
   ]);
-  (0, import_react12.useEffect)(() => {
+  (0, import_react13.useEffect)(() => {
     if (!isRulerVisible || isRulerAvailable) return;
     closeRuler();
   }, [closeRuler, isRulerAvailable, isRulerVisible]);
@@ -9939,33 +10198,33 @@ var useReviewRuler = ({
 };
 
 // src/react-shell/hooks/use.review.settings.ts
-var import_react13 = require("react");
+var import_react14 = require("react");
 var useReviewSettings = ({
   onCancelReviewMode,
   onCloseInitialPrompt,
   onCloseSitemap,
   onReloadTargetFrame
 }) => {
-  const [figmaTokenDraft, setFigmaTokenDraft] = (0, import_react13.useState)(getStoredFigmaToken);
-  const [reviewUserId, setReviewUserId] = (0, import_react13.useState)(getStoredReviewUserId);
-  const [reviewUserIdDraft, setReviewUserIdDraft] = (0, import_react13.useState)(
+  const [figmaTokenDraft, setFigmaTokenDraft] = (0, import_react14.useState)(getStoredFigmaToken);
+  const [reviewUserId, setReviewUserId] = (0, import_react14.useState)(getStoredReviewUserId);
+  const [reviewUserIdDraft, setReviewUserIdDraft] = (0, import_react14.useState)(
     getStoredReviewUserId
   );
-  const [reviewTheme, setReviewTheme] = (0, import_react13.useState)(getStoredReviewTheme);
-  const [reviewThemeDraft, setReviewThemeDraft] = (0, import_react13.useState)(getStoredReviewTheme);
-  const [systemReviewTheme, setSystemReviewTheme] = (0, import_react13.useState)(getSystemReviewTheme);
-  const [figmaSettingsStatus, setFigmaSettingsStatus] = (0, import_react13.useState)("");
-  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = (0, import_react13.useState)(false);
-  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = (0, import_react13.useState)(false);
-  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = (0, import_react13.useState)(false);
+  const [reviewTheme, setReviewTheme] = (0, import_react14.useState)(getStoredReviewTheme);
+  const [reviewThemeDraft, setReviewThemeDraft] = (0, import_react14.useState)(getStoredReviewTheme);
+  const [systemReviewTheme, setSystemReviewTheme] = (0, import_react14.useState)(getSystemReviewTheme);
+  const [figmaSettingsStatus, setFigmaSettingsStatus] = (0, import_react14.useState)("");
+  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = (0, import_react14.useState)(false);
+  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = (0, import_react14.useState)(false);
+  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = (0, import_react14.useState)(false);
   const effectiveReviewTheme = reviewTheme === "system" ? systemReviewTheme : reviewTheme;
-  const closeFigmaSettings = (0, import_react13.useCallback)(() => {
+  const closeFigmaSettings = (0, import_react14.useCallback)(() => {
     setIsFigmaSettingsOpen(false);
     setFigmaSettingsStatus("");
     setIsFigmaTokenVisible(false);
     setIsFigmaTokenGuideOpen(false);
   }, []);
-  const openFigmaSettings = (0, import_react13.useCallback)(() => {
+  const openFigmaSettings = (0, import_react14.useCallback)(() => {
     onCancelReviewMode();
     onCloseSitemap();
     onCloseInitialPrompt();
@@ -9982,7 +10241,7 @@ var useReviewSettings = ({
     onCloseSitemap,
     reviewTheme
   ]);
-  const saveReviewSettings = (0, import_react13.useCallback)(
+  const saveReviewSettings = (0, import_react14.useCallback)(
     (token, userId, theme) => {
       const nextToken = token.trim();
       const nextUserId = userId.trim();
@@ -10006,7 +10265,7 @@ var useReviewSettings = ({
     },
     [closeFigmaSettings, onReloadTargetFrame]
   );
-  (0, import_react13.useEffect)(() => {
+  (0, import_react14.useEffect)(() => {
     if (typeof window === "undefined" || !window.matchMedia) return void 0;
     const query = window.matchMedia("(prefers-color-scheme: light)");
     const syncSystemTheme = () => {
@@ -10020,7 +10279,7 @@ var useReviewSettings = ({
     query.addListener(syncSystemTheme);
     return () => query.removeListener(syncSystemTheme);
   }, []);
-  (0, import_react13.useEffect)(() => {
+  (0, import_react14.useEffect)(() => {
     document.body.classList.toggle(
       "df-review-theme-light",
       effectiveReviewTheme === "light"
@@ -10059,13 +10318,12 @@ var useReviewSettings = ({
 };
 
 // src/react-shell/hooks/use.review.shell.data.ts
-var import_react14 = require("react");
-var createEmptySitemapQaCount = () => ({
-  local: 0,
-  remote: 0
-});
+var import_react15 = require("react");
+var SITEMAP_STATUS_DONE = "done";
 var useReviewShellData = ({
   activeRoute,
+  isAllQaVisible,
+  isRemoteSource,
   pages,
   reviewPathPrefix,
   reviewViewportPresets,
@@ -10074,41 +10332,47 @@ var useReviewShellData = ({
   target,
   viewportPresets
 }) => {
-  const [items, setItems] = (0, import_react14.useState)([]);
-  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = (0, import_react14.useState)(
+  const [items, setItems] = (0, import_react15.useState)([]);
+  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = (0, import_react15.useState)(
     () => /* @__PURE__ */ new Set()
   );
-  const [qaFilter, setQaFilter] = (0, import_react14.useState)("all");
-  const [sitemapItems, setSitemapItems] = (0, import_react14.useState)(() => ({
+  const [qaFilter, setQaFilter] = (0, import_react15.useState)("all");
+  const [sitemapItems, setSitemapItems] = (0, import_react15.useState)(() => ({
     local: [],
     remote: []
   }));
-  const targetSrc = (0, import_react14.useMemo)(() => buildTargetSrc(target), [target]);
-  const pageTargets = (0, import_react14.useMemo)(
+  const targetSrc = (0, import_react15.useMemo)(() => buildTargetSrc(target), [target]);
+  const pageTargets = (0, import_react15.useMemo)(
     () => new Set(
       pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
     ),
     [pages, reviewPathPrefix]
   );
-  const activeItems = (0, import_react14.useMemo)(
-    () => items.filter((item) => getItemTarget(item, reviewPathPrefix) === activeRoute).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [activeRoute, items, reviewPathPrefix]
+  const sitemapSourceItems = (0, import_react15.useMemo)(
+    () => isRemoteSource ? sitemapItems.remote : sitemapItems.local,
+    [isRemoteSource, sitemapItems]
   );
-  const numberedActiveItems = (0, import_react14.useMemo)(
+  const activeItems = (0, import_react15.useMemo)(
+    () => (isAllQaVisible ? sitemapSourceItems : items.filter(
+      (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
+    )).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
+  );
+  const numberedActiveItems = (0, import_react15.useMemo)(
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
     [activeItems, reviewViewportPresets]
   );
-  const filteredNumberedActiveItems = (0, import_react14.useMemo)(
+  const filteredNumberedActiveItems = (0, import_react15.useMemo)(
     () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
       (numberedItem) => numberedItem.scope === qaFilter
     ),
     [numberedActiveItems, qaFilter]
   );
-  const hiddenOverlayItemIdList = (0, import_react14.useMemo)(
+  const hiddenOverlayItemIdList = (0, import_react15.useMemo)(
     () => Array.from(hiddenOverlayItemIds),
     [hiddenOverlayItemIds]
   );
-  const qaFilterCounts = (0, import_react14.useMemo)(() => {
+  const qaFilterCounts = (0, import_react15.useMemo)(() => {
     const counts = /* @__PURE__ */ new Map();
     counts.set("all", numberedActiveItems.length);
     numberedActiveItems.forEach((numberedItem) => {
@@ -10116,7 +10380,7 @@ var useReviewShellData = ({
     });
     return counts;
   }, [numberedActiveItems]);
-  const getItemPresetScope = (0, import_react14.useCallback)(
+  const getItemPresetScope = (0, import_react15.useCallback)(
     (item) => getViewportPresetKind(
       findViewportPreset(
         viewportPresets,
@@ -10126,7 +10390,17 @@ var useReviewShellData = ({
     ),
     [viewportPresets]
   );
-  const presetScopeCounts = (0, import_react14.useMemo)(() => {
+  const getItemCountScope = (0, import_react15.useCallback)(
+    (item) => item.scope === "dom" ? "dom" : getItemPresetScope(item),
+    [getItemPresetScope]
+  );
+  const activeRemainingItemCount = (0, import_react15.useMemo)(
+    () => activeItems.filter(
+      (item) => normalizeReviewItemStatus(item.status) !== SITEMAP_STATUS_DONE
+    ).length,
+    [activeItems]
+  );
+  const presetScopeCounts = (0, import_react15.useMemo)(() => {
     const counts = /* @__PURE__ */ new Map();
     activeItems.forEach((item) => {
       const scope = getItemPresetScope(item);
@@ -10135,7 +10409,7 @@ var useReviewShellData = ({
     return counts;
   }, [activeItems, getItemPresetScope]);
   const currentPresetScope = getViewportPresetKind(size);
-  const pageQaCounts = (0, import_react14.useMemo)(() => {
+  const pageQaCounts = (0, import_react15.useMemo)(() => {
     const counts = /* @__PURE__ */ new Map();
     const addItems = (sourceKey, sourceItems) => {
       sourceItems.forEach((item) => {
@@ -10143,16 +10417,38 @@ var useReviewShellData = ({
           getItemTarget(item, reviewPathPrefix),
           reviewPathPrefix
         );
-        const count = counts.get(pageTarget) ?? createEmptySitemapQaCount();
-        count[sourceKey] += 1;
-        counts.set(pageTarget, count);
+        const currentCount = counts.get(pageTarget) ?? createEmptySitemapQaCount();
+        const status = normalizeReviewItemStatus(item.status);
+        const scope = getItemCountScope(item);
+        counts.set(pageTarget, {
+          ...currentCount,
+          total: currentCount.total + 1,
+          remaining: status === SITEMAP_STATUS_DONE ? currentCount.remaining : currentCount.remaining + 1,
+          local: currentCount.local + (sourceKey === "local" ? 1 : 0),
+          remote: currentCount.remote + (sourceKey === "remote" ? 1 : 0),
+          status: {
+            ...currentCount.status,
+            [status]: currentCount.status[status] + 1
+          },
+          scope: {
+            ...currentCount.scope,
+            [scope]: (currentCount.scope[scope] ?? 0) + 1
+          }
+        });
       });
     };
     addItems("local", sitemapItems.local);
     addItems("remote", sitemapItems.remote);
     return counts;
-  }, [reviewPathPrefix, sitemapItems]);
-  const selectedNumberedItem = (0, import_react14.useMemo)(
+  }, [getItemCountScope, reviewPathPrefix, sitemapItems]);
+  const allQaCount = (0, import_react15.useMemo)(
+    () => Array.from(pageQaCounts.values()).reduce(
+      addSitemapQaCounts,
+      createEmptySitemapQaCount()
+    ),
+    [pageQaCounts]
+  );
+  const selectedNumberedItem = (0, import_react15.useMemo)(
     () => selectedItemId ? numberedActiveItems.find(
       (numberedItem) => numberedItem.item.id === selectedItemId
     ) : void 0,
@@ -10160,6 +10456,8 @@ var useReviewShellData = ({
   );
   return {
     activeItems,
+    activeRemainingItemCount,
+    allQaCount,
     currentPresetScope,
     filteredNumberedActiveItems,
     getItemPresetScope,
@@ -10180,7 +10478,7 @@ var useReviewShellData = ({
 };
 
 // src/react-shell/hooks/use.review.shell.hotkeys.ts
-var import_react15 = require("react");
+var import_react16 = require("react");
 var useReviewShellHotkeys = ({
   isFigmaSettingsOpen,
   isInitialPromptOpen,
@@ -10197,7 +10495,7 @@ var useReviewShellHotkeys = ({
   onToggleRuler,
   onToggleTargetOverlay
 }) => {
-  (0, import_react15.useEffect)(() => {
+  (0, import_react16.useEffect)(() => {
     if (mode === "idle" && !isRulerVisible && !isInitialPromptOpen && !isSitemapOpen && !isFigmaSettingsOpen) {
       return;
     }
@@ -10241,7 +10539,7 @@ var useReviewShellHotkeys = ({
     onCloseRuler,
     onCloseSitemap
   ]);
-  (0, import_react15.useEffect)(() => {
+  (0, import_react16.useEffect)(() => {
     const handleHotkey = (event) => {
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
         return;
@@ -10273,7 +10571,7 @@ var useReviewShellHotkeys = ({
 };
 
 // src/react-shell/hooks/use.review.shell.state.ts
-var import_react16 = require("react");
+var import_react17 = require("react");
 
 // src/react-shell/adapters.ts
 var ALL_REVIEW_WRITE_MODES = ["dom", "note", "area"];
@@ -10417,11 +10715,11 @@ var useReviewShellState = ({
   reviewPathPrefix
 }) => {
   const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const reviewViewportPresets = (0, import_react16.useMemo)(
+  const reviewViewportPresets = (0, import_react17.useMemo)(
     () => toReviewViewportPresets(viewportPresets),
     [viewportPresets]
   );
-  const normalizedAdapters = (0, import_react16.useMemo)(
+  const normalizedAdapters = (0, import_react17.useMemo)(
     () => normalizeReviewShellAdapters(adapters),
     [adapters]
   );
@@ -10429,7 +10727,7 @@ var useReviewShellState = ({
   const remoteAdapterEntry = normalizedAdapters.remote;
   const sourceEntries = normalizedAdapters.sources;
   const defaultSource = sourceEntries[0]?.label ?? "local";
-  const [source, setSource] = (0, import_react16.useState)(() => {
+  const [source, setSource] = (0, import_react17.useState)(() => {
     const initialSource = getInitialSource(remoteAdapterEntry?.label);
     return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
   });
@@ -10442,40 +10740,40 @@ var useReviewShellState = ({
   const canWriteArea = activeAdapterEntry.writeModes.includes("area");
   const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
   const adapter = activeAdapterEntry.adapter;
-  const iframeRef = (0, import_react16.useRef)(null);
-  const frameScrollRef = (0, import_react16.useRef)(null);
-  const controllerRef = (0, import_react16.useRef)(null);
-  const cleanupTargetRef = (0, import_react16.useRef)(null);
-  const pendingRestoreRef = (0, import_react16.useRef)(null);
-  const pendingInitialItemIdRef = (0, import_react16.useRef)(getInitialItemId());
-  const selectedItemIdRef = (0, import_react16.useRef)(getInitialItemId());
-  const hiddenOverlayItemIdListRef = (0, import_react16.useRef)([]);
-  const [target, setTarget] = (0, import_react16.useState)(
+  const iframeRef = (0, import_react17.useRef)(null);
+  const frameScrollRef = (0, import_react17.useRef)(null);
+  const controllerRef = (0, import_react17.useRef)(null);
+  const cleanupTargetRef = (0, import_react17.useRef)(null);
+  const pendingRestoreRef = (0, import_react17.useRef)(null);
+  const pendingInitialItemIdRef = (0, import_react17.useRef)(getInitialItemId());
+  const selectedItemIdRef = (0, import_react17.useRef)(getInitialItemId());
+  const hiddenOverlayItemIdListRef = (0, import_react17.useRef)([]);
+  const [target, setTarget] = (0, import_react17.useState)(
     () => getInitialTarget(reviewPathPrefix)
   );
-  const [draftTarget, setDraftTarget] = (0, import_react16.useState)(
+  const [draftTarget, setDraftTarget] = (0, import_react17.useState)(
     () => getInitialTarget(reviewPathPrefix)
   );
-  const [activeRoute, setActiveRoute] = (0, import_react16.useState)(
+  const [activeRoute, setActiveRoute] = (0, import_react17.useState)(
     () => getInitialTarget(reviewPathPrefix)
   );
-  const [size, setSize] = (0, import_react16.useState)(
+  const [size, setSize] = (0, import_react17.useState)(
     () => getInitialSize(viewportPresets)
   );
-  const [mode, setMode] = (0, import_react16.useState)("idle");
-  const [targetOverlayState, setTargetOverlayState] = (0, import_react16.useState)({
+  const [mode, setMode] = (0, import_react17.useState)("idle");
+  const [targetOverlayState, setTargetOverlayState] = (0, import_react17.useState)({
     grid: false,
     figma: false
   });
-  const [selectedItemId, setSelectedItemId] = (0, import_react16.useState)(getInitialItemId());
-  const [isListVisible, setIsListVisible] = (0, import_react16.useState)(true);
-  const [isSitemapOpen, setIsSitemapOpen] = (0, import_react16.useState)(false);
-  const [isInitialPromptOpen, setIsInitialPromptOpen] = (0, import_react16.useState)(false);
-  const [copyLabel, setCopyLabel] = (0, import_react16.useState)("Copy URL");
-  const [toastMessage, setToastMessage] = (0, import_react16.useState)("");
-  const [copiedPromptKey, setCopiedPromptKey] = (0, import_react16.useState)(null);
-  const targetRef = (0, import_react16.useRef)(target);
-  const sizeRef = (0, import_react16.useRef)(size);
+  const [selectedItemId, setSelectedItemId] = (0, import_react17.useState)(getInitialItemId());
+  const [isListVisible, setIsListVisible] = (0, import_react17.useState)(true);
+  const [isSitemapOpen, setIsSitemapOpen] = (0, import_react17.useState)(false);
+  const [isInitialPromptOpen, setIsInitialPromptOpen] = (0, import_react17.useState)(false);
+  const [copyLabel, setCopyLabel] = (0, import_react17.useState)("Copy URL");
+  const [toastMessage, setToastMessage] = (0, import_react17.useState)("");
+  const [copiedPromptKey, setCopiedPromptKey] = (0, import_react17.useState)(null);
+  const targetRef = (0, import_react17.useRef)(target);
+  const sizeRef = (0, import_react17.useRef)(size);
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
   return {
     activeAdapterEntry,
@@ -10842,10 +11140,11 @@ var ReviewShell = ({
     presets,
     reviewPathPrefix
   });
-  const sourceShortcutCleanupRef = (0, import_react17.useRef)(null);
-  const sourceInspectorInteractionRef = (0, import_react17.useRef)(false);
-  const [sourceInspectorState, setSourceInspectorState] = (0, import_react17.useState)(null);
-  const sourceOpenOptions = (0, import_react17.useMemo)(
+  const sourceShortcutCleanupRef = (0, import_react18.useRef)(null);
+  const sourceInspectorInteractionRef = (0, import_react18.useRef)(false);
+  const [sourceInspectorState, setSourceInspectorState] = (0, import_react18.useState)(null);
+  const [isAllQaVisible, setIsAllQaVisible] = (0, import_react18.useState)(false);
+  const sourceOpenOptions = (0, import_react18.useMemo)(
     () => ({
       ...sourceInspector,
       sourceRoot
@@ -10855,6 +11154,8 @@ var ReviewShell = ({
   const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
   const {
     activeItems,
+    activeRemainingItemCount,
+    allQaCount,
     currentPresetScope,
     filteredNumberedActiveItems,
     getItemPresetScope,
@@ -10873,6 +11174,8 @@ var ReviewShell = ({
     targetSrc
   } = useReviewShellData({
     activeRoute,
+    isAllQaVisible,
+    isRemoteSource,
     pages,
     reviewPathPrefix,
     reviewViewportPresets,
@@ -10881,16 +11184,16 @@ var ReviewShell = ({
     target,
     viewportPresets
   });
-  const [targetFigmaState, setTargetFigmaState] = (0, import_react17.useState)(null);
+  const [targetFigmaState, setTargetFigmaState] = (0, import_react18.useState)(null);
   const targetFigmaConfig = targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
-  const figmaFrameUrl = (0, import_react17.useMemo)(
+  const figmaFrameUrl = (0, import_react18.useMemo)(
     () => getFigmaFrameUrl(targetFigmaConfig, size),
     [targetFigmaConfig, size]
   );
   const isFigmaOverlayAvailable = isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
-  const [editingItem, setEditingItem] = (0, import_react17.useState)(null);
+  const [editingItem, setEditingItem] = (0, import_react18.useState)(null);
   const initialPromptText = initialPrompt.trim();
-  const refreshItems = (0, import_react17.useCallback)(
+  const refreshItems = (0, import_react18.useCallback)(
     () => refreshReviewItems({
       activeRoute,
       adapter,
@@ -10901,7 +11204,7 @@ var ReviewShell = ({
     }),
     [activeAdapterEntry.pageId, activeRoute, adapter, isRemoteSource, projectId]
   );
-  const refreshSitemapItems = (0, import_react17.useCallback)(
+  const refreshSitemapItems = (0, import_react18.useCallback)(
     () => refreshSitemapReviewItems({
       localAdapterEntry,
       projectId,
@@ -10910,20 +11213,20 @@ var ReviewShell = ({
     }),
     [localAdapterEntry, projectId, remoteAdapterEntry]
   );
-  const cancelReviewMode = (0, import_react17.useCallback)(() => {
+  const cancelReviewMode = (0, import_react18.useCallback)(() => {
     const controller = controllerRef.current;
     if (!controller || controller.getMode() === "idle") return false;
     controller.setMode("idle");
     setMode(controller.getMode());
     return true;
   }, []);
-  const closePromptModal = (0, import_react17.useCallback)(() => {
+  const closePromptModal = (0, import_react18.useCallback)(() => {
     setIsInitialPromptOpen(false);
   }, []);
-  const closeSitemap = (0, import_react17.useCallback)(() => {
+  const closeSitemap = (0, import_react18.useCallback)(() => {
     setIsSitemapOpen(false);
   }, []);
-  const reloadTargetFrame = (0, import_react17.useCallback)(() => {
+  const reloadTargetFrame = (0, import_react18.useCallback)(() => {
     try {
       iframeRef.current?.contentWindow?.location.reload();
     } catch {
@@ -10970,7 +11273,7 @@ var ReviewShell = ({
     size,
     source
   });
-  const closeRulerPanels = (0, import_react17.useCallback)(() => {
+  const closeRulerPanels = (0, import_react18.useCallback)(() => {
     closeSitemap();
     closeFigmaSettings();
   }, [closeFigmaSettings, closeSitemap]);
@@ -11040,14 +11343,14 @@ var ReviewShell = ({
     onTargetChange: setTarget,
     onTargetOverlayStateChange: setTargetOverlayState
   });
-  const refreshReviewData2 = (0, import_react17.useCallback)(() => {
+  const refreshReviewData2 = (0, import_react18.useCallback)(() => {
     return refreshReviewData({
       onRefreshItems: refreshItems,
       onRefreshSitemapItems: refreshSitemapItems,
       onReloadReviewKit: reloadReviewKit
     });
   }, [refreshItems, refreshSitemapItems, reloadReviewKit]);
-  const toggleItemOverlayVisibility = (0, import_react17.useCallback)((itemId) => {
+  const toggleItemOverlayVisibility = (0, import_react18.useCallback)((itemId) => {
     setHiddenOverlayItemIds((currentHiddenOverlayItemIds) => {
       const nextHiddenItemIds = new Set(currentHiddenOverlayItemIds);
       if (nextHiddenItemIds.has(itemId)) {
@@ -11058,17 +11361,17 @@ var ReviewShell = ({
       return nextHiddenItemIds;
     });
   }, []);
-  (0, import_react17.useEffect)(() => {
+  (0, import_react18.useEffect)(() => {
     void refreshItems();
   }, [refreshItems]);
-  (0, import_react17.useEffect)(() => {
+  (0, import_react18.useEffect)(() => {
     void refreshSitemapItems();
   }, [refreshSitemapItems]);
-  (0, import_react17.useEffect)(() => {
+  (0, import_react18.useEffect)(() => {
     if (!isSitemapOpen) return;
     void refreshSitemapItems();
   }, [isSitemapOpen, refreshSitemapItems]);
-  (0, import_react17.useEffect)(() => {
+  (0, import_react18.useEffect)(() => {
     const frameScroll = frameScrollRef.current;
     if (!frameScroll) return void 0;
     const centerFrameScroll = () => {
@@ -11099,12 +11402,14 @@ var ReviewShell = ({
     if (parsedInput.itemId) {
       const item = await nextAdapter.adapter.get(parsedInput.itemId);
       if (item) {
+        setIsAllQaVisible(false);
         setSource(nextSource);
         restoreReviewItem(item);
         return;
       }
     }
     clearSelectedItem();
+    setIsAllQaVisible(false);
     setSource(nextSource);
     targetRef.current = normalizedTarget;
     setActiveRoute(normalizedTarget);
@@ -11116,11 +11421,16 @@ var ReviewShell = ({
   const selectPage = (href) => {
     const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
     clearSelectedItem();
+    setIsAllQaVisible(false);
     targetRef.current = normalizedTarget;
     setActiveRoute(normalizedTarget);
     setDraftTarget(normalizedTarget);
     setTarget(normalizedTarget);
     updateShellUrl(normalizedTarget, sizeRef.current, source);
+    setIsSitemapOpen(false);
+  };
+  const selectAllQa = () => {
+    setIsAllQaVisible(true);
     setIsSitemapOpen(false);
   };
   const setReviewMode = (nextMode) => {
@@ -11151,7 +11461,7 @@ var ReviewShell = ({
   const copyCurrentUrl = () => copyCurrentReviewUrl({
     onCopyLabelChange: setCopyLabel
   });
-  const showToast = (0, import_react17.useCallback)(
+  const showToast = (0, import_react18.useCallback)(
     (message) => {
       setToastMessage(message);
       window.setTimeout(() => {
@@ -11160,17 +11470,17 @@ var ReviewShell = ({
     },
     [setToastMessage]
   );
-  const refreshTargetFigmaConfig = (0, import_react17.useCallback)(() => {
+  const refreshTargetFigmaConfig = (0, import_react18.useCallback)(() => {
     const config = getTargetFigmaFrameConfig(
       iframeRef.current?.contentWindow
     );
     setTargetFigmaState(config ? { targetSrc, config } : null);
   }, [iframeRef, targetSrc]);
-  const clearSourceInspector = (0, import_react17.useCallback)(() => {
+  const clearSourceInspector = (0, import_react18.useCallback)(() => {
     sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
-  const getSourceInspectorRect = (0, import_react17.useCallback)(
+  const getSourceInspectorRect = (0, import_react18.useCallback)(
     (element) => {
       const frame = iframeRef.current;
       if (!frame) return null;
@@ -11195,7 +11505,7 @@ var ReviewShell = ({
     },
     [iframeRef]
   );
-  const getSourceInspectorPanelPosition = (0, import_react17.useCallback)(
+  const getSourceInspectorPanelPosition = (0, import_react18.useCallback)(
     (rect) => {
       const margin = 12;
       const gap = 10;
@@ -11221,7 +11531,7 @@ var ReviewShell = ({
     },
     []
   );
-  const showSourceInspectorForTarget = (0, import_react17.useCallback)(
+  const showSourceInspectorForTarget = (0, import_react18.useCallback)(
     (target2, isPinned = false) => {
       const candidates = getSourceCandidates(target2).map((candidate) => ({
         ...candidate,
@@ -11254,7 +11564,7 @@ var ReviewShell = ({
       sourceOpenOptions
     ]
   );
-  const showSourceOutlineForTarget = (0, import_react17.useCallback)(
+  const showSourceOutlineForTarget = (0, import_react18.useCallback)(
     (target2) => {
       const firstCandidate = getSourceCandidates(target2)[0];
       const rect = firstCandidate ? getSourceInspectorRect(firstCandidate.element) : null;
@@ -11275,7 +11585,7 @@ var ReviewShell = ({
     },
     [getSourceInspectorRect]
   );
-  const openSourceCandidate = (0, import_react17.useCallback)(
+  const openSourceCandidate = (0, import_react18.useCallback)(
     (candidate) => {
       const didOpen = openSourceInEditor(candidate.source, {
         ...sourceOpenOptions,
@@ -11286,11 +11596,11 @@ var ReviewShell = ({
     },
     [clearSourceInspector, showToast, sourceOpenOptions]
   );
-  const cleanupSourceOpenShortcut = (0, import_react17.useCallback)(() => {
+  const cleanupSourceOpenShortcut = (0, import_react18.useCallback)(() => {
     sourceShortcutCleanupRef.current?.();
     sourceShortcutCleanupRef.current = null;
   }, []);
-  const bindSourceOpenShortcut = (0, import_react17.useCallback)(() => {
+  const bindSourceOpenShortcut = (0, import_react18.useCallback)(() => {
     cleanupSourceOpenShortcut();
     let frameDocument = null;
     try {
@@ -11514,19 +11824,19 @@ var ReviewShell = ({
     showSourceOutlineForTarget,
     showSourceInspectorForTarget
   ]);
-  (0, import_react17.useEffect)(() => {
+  (0, import_react18.useEffect)(() => {
     return cleanupSourceOpenShortcut;
   }, [cleanupSourceOpenShortcut]);
-  const loadTargetFrame = (0, import_react17.useCallback)(() => {
+  const loadTargetFrame = (0, import_react18.useCallback)(() => {
     initReviewKit();
     refreshTargetFigmaConfig();
     bindSourceOpenShortcut();
   }, [bindSourceOpenShortcut, initReviewKit, refreshTargetFigmaConfig]);
-  (0, import_react17.useEffect)(() => {
+  (0, import_react18.useEffect)(() => {
     const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
     return () => window.cancelAnimationFrame(frame);
   }, [bindSourceOpenShortcut, targetSrc]);
-  const clearSelectedReviewItem = (0, import_react17.useCallback)(() => {
+  const clearSelectedReviewItem = (0, import_react18.useCallback)(() => {
     clearSelectedItem();
     updateShellUrl(targetRef.current, sizeRef.current, source);
   }, [clearSelectedItem, sizeRef, source, targetRef]);
@@ -11636,10 +11946,13 @@ var ReviewShell = ({
           {
             pages,
             activeRoute,
+            allQaCount,
+            isAllQaVisible,
             pageQaCounts,
             pagePresenceUsers,
             getPageTarget: (href) => normalizeTarget(href, reviewPathPrefix),
             onClose: () => setIsSitemapOpen(false),
+            onSelectAllQa: selectAllQa,
             onSelectPage: selectPage
           }
         ),
@@ -11698,12 +12011,14 @@ var ReviewShell = ({
           {
             activeAdapterEntry,
             activeItems,
+            activeRemainingItemCount,
             currentPagePresenceUsers,
             currentPresetScope,
             filteredNumberedActiveItems,
             getItemPresetScope,
             hiddenOverlayItemIds,
             isListVisible,
+            isAllQaVisible,
             isRemoteSource,
             presenceSessionId,
             copiedPromptKey,
@@ -12008,7 +12323,7 @@ var mountReviewShell = (options) => {
   root.style.height = "100%";
   root.style.margin = "0";
   (0, import_client.createRoot)(root).render(
-    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(import_react18.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ReviewShell, { ...shellProps }) })
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(import_react19.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ReviewShell, { ...shellProps }) })
   );
 };
 // Annotate the CommonJS export names for ESM import in node:

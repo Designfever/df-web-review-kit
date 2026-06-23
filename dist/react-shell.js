@@ -409,7 +409,7 @@ function ensureReviewShellStyle() {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
 	    width: min(760px, calc(100vw - 48px));
 	    max-height: min(720px, calc(100vh - 48px));
 	    overflow: hidden;
@@ -465,6 +465,29 @@ function ensureReviewShellStyle() {
 	    background: var(--df-review-control-hover);
 	  }
 
+  .df-review-sitemap-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background: var(--df-review-panel);
+  }
+
+  .df-review-sitemap-controls select {
+    min-width: 138px;
+    min-height: 32px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 26px 0 10px;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 850;
+  }
+
   .df-review-sitemap-list {
     display: grid;
     align-content: start;
@@ -476,7 +499,7 @@ function ensureReviewShellStyle() {
   .df-review-sitemap-table-head,
   .df-review-sitemap-row {
     display: grid;
-    grid-template-columns: minmax(160px, 1fr) 70px 78px minmax(96px, 140px);
+    grid-template-columns: minmax(190px, 1fr) 76px 86px minmax(96px, 140px);
     align-items: center;
     column-gap: 0;
   }
@@ -515,6 +538,11 @@ function ensureReviewShellStyle() {
     cursor: pointer;
   }
 
+  .df-review-sitemap-row.is-all {
+    border-bottom-color: var(--df-review-line);
+    background: var(--df-review-card);
+  }
+
   .df-review-sitemap-row.is-folder {
     cursor: default;
   }
@@ -531,6 +559,7 @@ function ensureReviewShellStyle() {
   .df-review-sitemap-path {
     display: inline-flex;
     align-items: center;
+    gap: 7px;
     min-width: 0;
     overflow-wrap: anywhere;
     color: var(--df-review-text);
@@ -551,6 +580,35 @@ function ensureReviewShellStyle() {
     white-space: pre;
   }
 
+  .df-review-sitemap-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .df-review-sitemap-scope-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .df-review-sitemap-scope-badges span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 18px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 5px;
+    color: var(--df-review-muted);
+    background: var(--df-review-chip-bg);
+    font-size: var(--df-review-font-size-3xs);
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
   .df-review-sitemap-cell {
     min-width: 0;
     color: var(--df-review-muted);
@@ -561,12 +619,19 @@ function ensureReviewShellStyle() {
     text-align: right;
   }
 
-  .df-review-sitemap-cell.is-local {
+  .df-review-sitemap-cell.is-work {
     color: var(--df-review-accent);
   }
 
-  .df-review-sitemap-cell.is-remote {
-    color: var(--df-review-area);
+  .df-review-sitemap-cell.is-work strong {
+    font: inherit;
+  }
+
+  .df-review-sitemap-cell.is-source {
+    display: inline-flex;
+    justify-content: flex-end;
+    gap: 6px;
+    color: var(--df-review-muted);
   }
 
   .df-review-sitemap-cell.is-online {
@@ -2621,9 +2686,9 @@ function ensureReviewShellStyle() {
 import {
   useCallback as useCallback11,
   useEffect as useEffect10,
-  useMemo as useMemo6,
+  useMemo as useMemo7,
   useRef as useRef4,
-  useState as useState8
+  useState as useState9
 } from "react";
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
@@ -3680,11 +3745,49 @@ var ReviewSettingsModal = ({
   );
 };
 
+// src/react-shell/sitemap/modal.tsx
+import {
+  useMemo as useMemo2,
+  useState
+} from "react";
+
 // src/react-shell/sitemap/tree.ts
-var EMPTY_SITEMAP_QA_COUNT = {
+var SITEMAP_STATUS_FILTERS = [
+  { key: "all", label: "All status" },
+  { key: "todo", label: "Todo" },
+  { key: "doing", label: "Doing" },
+  { key: "review", label: "Review" },
+  { key: "hold", label: "Hold" },
+  { key: "done", label: "Done" }
+];
+var SITEMAP_SORT_OPTIONS = [
+  { key: "tree", label: "Tree order" },
+  { key: "remaining", label: "Most remaining" },
+  { key: "total", label: "Most total" },
+  { key: "online", label: "Most online" }
+];
+var WORKFLOW_STATUSES = [
+  "todo",
+  "doing",
+  "review",
+  "hold",
+  "done"
+];
+var createEmptySitemapQaCount = () => ({
+  total: 0,
+  remaining: 0,
   local: 0,
-  remote: 0
-};
+  remote: 0,
+  status: {
+    todo: 0,
+    doing: 0,
+    review: 0,
+    hold: 0,
+    done: 0
+  },
+  scope: {}
+});
+var getSitemapStatusCount = (count, statusFilter) => statusFilter === "all" ? count.total : count.status[statusFilter];
 var normalizeSitemapHref = (href) => {
   const [path = "/"] = href.split(/[?#]/);
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -3709,10 +3812,33 @@ var mergeSitemapUsers = (users) => {
   return Array.from(userByKey.values());
 };
 var addSitemapQaCounts = (first, second) => ({
+  total: first.total + second.total,
+  remaining: first.remaining + second.remaining,
   local: first.local + second.local,
-  remote: first.remote + second.remote
+  remote: first.remote + second.remote,
+  status: WORKFLOW_STATUSES.reduce(
+    (statusCounts, status) => ({
+      ...statusCounts,
+      [status]: first.status[status] + second.status[status]
+    }),
+    {}
+  ),
+  scope: Array.from(
+    /* @__PURE__ */ new Set([
+      ...Object.keys(first.scope),
+      ...Object.keys(second.scope)
+    ])
+  ).reduce(
+    (scopeCounts, scope) => ({
+      ...scopeCounts,
+      [scope]: (first.scope[scope] ?? 0) + (second.scope[scope] ?? 0)
+    }),
+    {}
+  )
 });
-var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget) => {
+var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget, options = {}) => {
+  const sortKey = options.sortKey ?? "tree";
+  const statusFilter = options.statusFilter ?? "all";
   const root = createSitemapNode("/", "/", false);
   pages.forEach((page) => {
     const pageHref = page.href.startsWith("/") ? page.href : `/${page.href}`;
@@ -3739,75 +3865,108 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
     });
   });
   const getDirectCount = (node) => {
-    if (!node.isPage) return EMPTY_SITEMAP_QA_COUNT;
-    return pageQaCounts.get(getPageTarget(node.href)) ?? EMPTY_SITEMAP_QA_COUNT;
+    if (!node.isPage) return createEmptySitemapQaCount();
+    return pageQaCounts.get(getPageTarget(node.href)) ?? createEmptySitemapQaCount();
   };
   const getDirectUsers = (node) => {
     if (!node.isPage) return [];
     return pagePresenceUsers.get(getPageTarget(node.href)) ?? [];
   };
-  const rows = [];
-  const appendNodeRows = (node, depth, ancestorLastList, isLastNode) => {
-    const children = Array.from(node.children.values());
+  const createNodeSummary = (node) => {
     const directCount = getDirectCount(node);
     const directUsers = getDirectUsers(node);
-    let rowIndex = null;
+    const children = Array.from(node.children.values()).map(createNodeSummary);
+    const childAggregate = children.reduce(
+      (aggregate, child) => ({
+        count: addSitemapQaCounts(aggregate.count, child.count),
+        users: mergeSitemapUsers([...aggregate.users, ...child.users])
+      }),
+      {
+        count: createEmptySitemapQaCount(),
+        users: []
+      }
+    );
+    return {
+      node,
+      directCount,
+      directUsers,
+      count: node.isPage ? addSitemapQaCounts(directCount, childAggregate.count) : childAggregate.count,
+      users: mergeSitemapUsers([...directUsers, ...childAggregate.users]),
+      children
+    };
+  };
+  const getSortValue = (summary) => {
+    if (sortKey === "remaining") return summary.count.remaining;
+    if (sortKey === "total") return summary.count.total;
+    if (sortKey === "online") return summary.users.length;
+    return 0;
+  };
+  const sortSummaries = (summaries) => {
+    if (sortKey === "tree") return summaries;
+    return [...summaries].sort((a, b) => {
+      const valueDiff = getSortValue(b) - getSortValue(a);
+      if (valueDiff !== 0) return valueDiff;
+      const totalDiff = b.count.total - a.count.total;
+      if (totalDiff !== 0) return totalDiff;
+      return a.node.label.localeCompare(b.node.label);
+    });
+  };
+  const hasStatusMatch = (count) => getSitemapStatusCount(count, statusFilter) > 0;
+  const shouldShowSummary = (summary) => statusFilter === "all" || hasStatusMatch(summary.count);
+  const rows = [];
+  const appendSummaryRows = (summary, depth, ancestorLastList, isLastNode) => {
+    if (!shouldShowSummary(summary)) return;
+    const { node } = summary;
+    const rowCount = node.isPage ? summary.directCount : summary.count;
+    const rowUsers = node.isPage ? summary.directUsers : summary.users;
     if (node.isPage || depth > 0) {
       const prefix = depth === 0 ? "" : `${ancestorLastList.map((isLast) => isLast ? "   " : "\u2502  ").join("")}${isLastNode ? "\u2514\u2500 " : "\u251C\u2500 "}`;
       const pageTarget = node.isPage ? getPageTarget(node.href) : null;
-      rowIndex = rows.length;
-      rows.push({
-        href: node.href,
-        label: node.label,
-        prefix,
-        isPage: node.isPage,
-        isActive: pageTarget === activeRoute,
-        qaCount: directCount,
-        users: directUsers
-      });
+      const hasRowStatusMatch = statusFilter === "all" || hasStatusMatch(rowCount);
+      if (hasRowStatusMatch || !node.isPage) {
+        rows.push({
+          href: node.href,
+          label: node.label,
+          prefix,
+          isPage: node.isPage,
+          isActive: pageTarget === activeRoute,
+          qaCount: rowCount,
+          users: rowUsers
+        });
+      }
     }
-    const childAggregate = children.reduce(
-      (aggregate, child, childIndex) => {
-        const childResult = appendNodeRows(
-          child,
-          depth + 1,
-          depth === 0 ? [] : [...ancestorLastList, isLastNode],
-          childIndex === children.length - 1
-        );
-        return {
-          count: addSitemapQaCounts(aggregate.count, childResult.count),
-          users: mergeSitemapUsers([...aggregate.users, ...childResult.users])
-        };
-      },
-      { count: EMPTY_SITEMAP_QA_COUNT, users: [] }
+    const visibleChildren = sortSummaries(
+      summary.children.filter(shouldShowSummary)
     );
-    if (rowIndex !== null && !node.isPage) {
-      rows[rowIndex] = {
-        ...rows[rowIndex],
-        qaCount: childAggregate.count,
-        users: childAggregate.users
-      };
-    }
-    return {
-      count: node.isPage ? addSitemapQaCounts(directCount, childAggregate.count) : childAggregate.count,
-      users: mergeSitemapUsers([...directUsers, ...childAggregate.users])
-    };
+    visibleChildren.forEach((child, childIndex) => {
+      appendSummaryRows(
+        child,
+        depth + 1,
+        depth === 0 ? [] : [...ancestorLastList, isLastNode],
+        childIndex === visibleChildren.length - 1
+      );
+    });
   };
   if (root.isPage) {
     const directCount = getDirectCount(root);
     const directUsers = getDirectUsers(root);
-    rows.push({
-      href: root.href,
-      label: root.label,
-      prefix: "",
-      isPage: true,
-      isActive: getPageTarget(root.href) === activeRoute,
-      qaCount: directCount,
-      users: directUsers
-    });
+    if (statusFilter === "all" || hasStatusMatch(directCount)) {
+      rows.push({
+        href: root.href,
+        label: root.label,
+        prefix: "",
+        isPage: true,
+        isActive: getPageTarget(root.href) === activeRoute,
+        qaCount: directCount,
+        users: directUsers
+      });
+    }
   }
-  Array.from(root.children.values()).forEach((node, index, siblings) => {
-    appendNodeRows(node, 1, [], index === siblings.length - 1);
+  const rootSummaries = sortSummaries(
+    Array.from(root.children.values()).map(createNodeSummary)
+  ).filter(shouldShowSummary);
+  rootSummaries.forEach((summary, index, siblings) => {
+    appendSummaryRows(summary, 1, [], index === siblings.length - 1);
   });
   return rows;
 };
@@ -3817,19 +3976,28 @@ import { Fragment, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
 var SitemapModal = ({
   pages,
   activeRoute,
+  allQaCount,
+  isAllQaVisible,
   pageQaCounts,
   pagePresenceUsers,
   getPageTarget,
   onClose,
+  onSelectAllQa,
   onSelectPage
 }) => {
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortKey, setSortKey] = useState("tree");
   const sitemapRows = createSitemapRows(
     pages,
     activeRoute,
     pageQaCounts,
     pagePresenceUsers,
-    getPageTarget
+    getPageTarget,
+    { sortKey, statusFilter }
   );
+  const filteredAllCount = getSitemapStatusCount(allQaCount, statusFilter);
+  const allQaLabel = statusFilter === "all" ? `${allQaCount.remaining}/${allQaCount.total}` : String(filteredAllCount);
+  const allQaStatusLabel = SITEMAP_STATUS_FILTERS.find((filter) => filter.key === statusFilter)?.label ?? "All status";
   return /* @__PURE__ */ jsxs3(
     "div",
     {
@@ -3853,48 +4021,81 @@ var SitemapModal = ({
               /* @__PURE__ */ jsx3("strong", { children: "Sitemap" }),
               /* @__PURE__ */ jsxs3("span", { children: [
                 pages.length,
-                " pages"
+                " pages \xB7 ",
+                allQaCount.remaining,
+                "/",
+                allQaCount.total
               ] })
             ] }),
             /* @__PURE__ */ jsx3("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
           ] }),
+          /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-controls", children: [
+            /* @__PURE__ */ jsx3(
+              "select",
+              {
+                "aria-label": "Sitemap status filter",
+                value: statusFilter,
+                onChange: (event) => setStatusFilter(event.currentTarget.value),
+                children: SITEMAP_STATUS_FILTERS.map((filter) => /* @__PURE__ */ jsx3("option", { value: filter.key, children: filter.label }, filter.key))
+              }
+            ),
+            /* @__PURE__ */ jsx3(
+              "select",
+              {
+                "aria-label": "Sitemap sort",
+                value: sortKey,
+                onChange: (event) => setSortKey(event.currentTarget.value),
+                children: SITEMAP_SORT_OPTIONS.map((option) => /* @__PURE__ */ jsx3("option", { value: option.key, children: option.label }, option.key))
+              }
+            )
+          ] }),
           /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-list", children: [
             /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-table-head", "aria-hidden": "true", children: [
               /* @__PURE__ */ jsx3("span", { children: "Page" }),
-              /* @__PURE__ */ jsx3("span", { children: "Local" }),
-              /* @__PURE__ */ jsx3("span", { children: "Remote" }),
+              /* @__PURE__ */ jsx3("span", { children: "Work" }),
+              /* @__PURE__ */ jsx3("span", { children: "Source" }),
               /* @__PURE__ */ jsx3("span", { children: "Online" })
             ] }),
+            /* @__PURE__ */ jsx3(
+              "button",
+              {
+                "aria-label": `All QA / ${allQaStatusLabel} ${allQaLabel} / local ${allQaCount.local} QA / remote ${allQaCount.remote} QA`,
+                className: `df-review-sitemap-row is-page is-all${isAllQaVisible ? " is-active" : ""}`,
+                type: "button",
+                onClick: onSelectAllQa,
+                children: /* @__PURE__ */ jsx3(
+                  SitemapRowContent,
+                  {
+                    label: "All QA",
+                    prefix: "",
+                    qaCount: allQaCount,
+                    statusFilter,
+                    users: []
+                  }
+                )
+              }
+            ),
             sitemapRows.map((row) => {
               const rowClassName = [
                 "df-review-sitemap-row",
                 row.isPage ? "is-page" : "is-folder",
                 row.isActive ? "is-active" : ""
               ].filter(Boolean).join(" ");
-              const rowContent = /* @__PURE__ */ jsxs3(Fragment, { children: [
-                /* @__PURE__ */ jsxs3("span", { className: "df-review-sitemap-path", children: [
-                  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-tree-prefix", children: row.prefix }),
-                  /* @__PURE__ */ jsx3("span", { children: row.label })
-                ] }),
-                /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-local", children: row.qaCount.local }),
-                /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-remote", children: row.qaCount.remote }),
-                /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-online", children: row.users.length > 0 ? /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-users", children: row.users.map((user) => /* @__PURE__ */ jsx3(
-                  "span",
-                  {
-                    className: "df-review-sitemap-user",
-                    style: {
-                      "--df-review-presence-color": user.color
-                    },
-                    children: user.userId
-                  },
-                  user.sessionId
-                )) }) : /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
-              ] });
+              const rowContent = /* @__PURE__ */ jsx3(
+                SitemapRowContent,
+                {
+                  label: row.label,
+                  prefix: row.prefix,
+                  qaCount: row.qaCount,
+                  statusFilter,
+                  users: row.users
+                }
+              );
               if (!row.isPage) {
                 return /* @__PURE__ */ jsx3(
                   "div",
                   {
-                    "aria-label": `${row.href} group / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                    "aria-label": `${row.href} group / remaining ${row.qaCount.remaining} of ${row.qaCount.total} QA / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
                     className: rowClassName,
                     role: "row",
                     children: rowContent
@@ -3905,7 +4106,7 @@ var SitemapModal = ({
               return /* @__PURE__ */ jsx3(
                 "button",
                 {
-                  "aria-label": `${row.href} / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
+                  "aria-label": `${row.href} / remaining ${row.qaCount.remaining} of ${row.qaCount.total} QA / local ${row.qaCount.local} QA / remote ${row.qaCount.remote} QA / ${row.users.length} online`,
                   className: rowClassName,
                   type: "button",
                   onClick: () => onSelectPage(row.href),
@@ -3919,6 +4120,66 @@ var SitemapModal = ({
       ]
     }
   );
+};
+var SITEMAP_SCOPE_LABELS = [
+  { key: "mobile", label: "MO" },
+  { key: "tablet", label: "TA" },
+  { key: "desktop", label: "PC" },
+  { key: "wide", label: "WD" },
+  { key: "dom", label: "DOM" }
+];
+var SitemapRowContent = ({
+  label,
+  prefix,
+  qaCount,
+  statusFilter,
+  users
+}) => {
+  const visibleScopeCounts = useMemo2(
+    () => SITEMAP_SCOPE_LABELS.map((scope) => ({
+      ...scope,
+      count: qaCount.scope[scope.key] ?? 0
+    })).filter((scope) => scope.count > 0),
+    [qaCount.scope]
+  );
+  const statusCount = getSitemapStatusCount(qaCount, statusFilter);
+  return /* @__PURE__ */ jsxs3(Fragment, { children: [
+    /* @__PURE__ */ jsxs3("span", { className: "df-review-sitemap-path", children: [
+      /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-tree-prefix", children: prefix }),
+      /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-label", children: label }),
+      visibleScopeCounts.length > 0 && /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-scope-badges", children: visibleScopeCounts.map((scope) => /* @__PURE__ */ jsxs3("span", { children: [
+        scope.label,
+        " ",
+        scope.count
+      ] }, scope.key)) })
+    ] }),
+    /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-work", children: statusFilter === "all" ? /* @__PURE__ */ jsxs3("strong", { children: [
+      qaCount.remaining,
+      "/",
+      qaCount.total
+    ] }) : /* @__PURE__ */ jsx3("strong", { children: statusCount }) }),
+    /* @__PURE__ */ jsxs3("span", { className: "df-review-sitemap-cell is-source", children: [
+      /* @__PURE__ */ jsxs3("span", { children: [
+        "L ",
+        qaCount.local
+      ] }),
+      /* @__PURE__ */ jsxs3("span", { children: [
+        "R ",
+        qaCount.remote
+      ] })
+    ] }),
+    /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ jsx3(
+      "span",
+      {
+        className: "df-review-sitemap-user",
+        style: {
+          "--df-review-presence-color": user.color
+        },
+        children: user.userId
+      },
+      user.sessionId
+    )) }) : /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-online-empty", children: "0" }) })
+  ] });
 };
 
 // src/react-shell/figma.ts
@@ -3956,16 +4217,16 @@ function createFigmaFrameUrl(value) {
 }
 
 // src/react-shell/qa/item.edit.modal.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useState as useState2 } from "react";
 import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
 var QaItemEditModal = ({
   item,
   onClose,
   onSave
 }) => {
-  const [commentDraft, setCommentDraft] = useState(item.comment);
-  const [error, setError] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const [commentDraft, setCommentDraft] = useState2(item.comment);
+  const [error, setError] = useState2("");
+  const [isSaving, setIsSaving] = useState2(false);
   useEffect(() => {
     setCommentDraft(item.comment);
     setError("");
@@ -4532,8 +4793,10 @@ var PresenceRow = ({
 import { jsx as jsx10, jsxs as jsxs8 } from "react/jsx-runtime";
 var QaPanelHeader = ({
   activeItemCount,
+  activeRemainingItemCount,
   currentPagePresenceUsers,
   filteredItemCount,
+  isAllQaVisible,
   label,
   presenceSessionId,
   qaFilter,
@@ -4587,14 +4850,8 @@ var QaPanelHeader = ({
       }) })
     ] }),
     /* @__PURE__ */ jsxs8("div", { className: "df-review-list-title", children: [
-      /* @__PURE__ */ jsxs8("span", { children: [
-        label,
-        " QA"
-      ] }),
-      /* @__PURE__ */ jsxs8("strong", { children: [
-        filteredItemCount,
-        qaFilter === "all" ? "" : `/${activeItemCount}`
-      ] })
+      /* @__PURE__ */ jsx10("span", { children: isAllQaVisible ? `${label} QA \xB7 All pages` : `${label} QA` }),
+      /* @__PURE__ */ jsx10("strong", { title: `${activeRemainingItemCount} remaining of ${activeItemCount}`, children: qaFilter === "all" ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}` })
     ] }),
     /* @__PURE__ */ jsx10(
       PresenceRow,
@@ -4611,11 +4868,13 @@ import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
 var ReviewQaPanel = ({
   activeAdapterEntry,
   activeItems,
+  activeRemainingItemCount,
   currentPagePresenceUsers,
   currentPresetScope,
   filteredNumberedActiveItems,
   getItemPresetScope,
   hiddenOverlayItemIds,
+  isAllQaVisible,
   isListVisible,
   isRemoteSource,
   presenceSessionId,
@@ -4640,13 +4899,16 @@ var ReviewQaPanel = ({
   onSubmitItem,
   onToggleItemOverlayVisibility
 }) => {
+  const emptyMessage = isAllQaVisible ? `No ${activeAdapterEntry.label} QA.` : isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page.";
   return /* @__PURE__ */ jsx11("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: /* @__PURE__ */ jsx11("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs9("section", { className: "df-review-item-list", children: [
     /* @__PURE__ */ jsx11(
       QaPanelHeader,
       {
         activeItemCount: activeItems.length,
+        activeRemainingItemCount,
         currentPagePresenceUsers,
         filteredItemCount: filteredNumberedActiveItems.length,
+        isAllQaVisible,
         label: activeAdapterEntry.label,
         presenceSessionId,
         qaFilter,
@@ -4669,7 +4931,7 @@ var ReviewQaPanel = ({
           }
         },
         children: [
-          activeItems.length === 0 && /* @__PURE__ */ jsx11("p", { className: "df-review-empty", children: isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page." }),
+          activeItems.length === 0 && /* @__PURE__ */ jsx11("p", { className: "df-review-empty", children: emptyMessage }),
           activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx11("p", { className: "df-review-empty", children: "No QA in this filter." }),
           filteredNumberedActiveItems.map((numberedItem) => {
             const { item } = numberedItem;
@@ -6136,9 +6398,9 @@ var useReviewController = ({
 import {
   useCallback as useCallback6,
   useEffect as useEffect5,
-  useMemo as useMemo2,
+  useMemo as useMemo3,
   useRef,
-  useState as useState2
+  useState as useState3
 } from "react";
 
 // src/react-shell/presence/presence.ts
@@ -6355,9 +6617,9 @@ var useReviewPresence = ({
   source
 }) => {
   const presenceSessionRef = useRef(null);
-  const [presenceUsers, setPresenceUsers] = useState2([]);
-  const [presenceSessionVersion, setPresenceSessionVersion] = useState2(0);
-  const presenceSessionId = useMemo2(getReviewPresenceSessionId, []);
+  const [presenceUsers, setPresenceUsers] = useState3([]);
+  const [presenceSessionVersion, setPresenceSessionVersion] = useState3(0);
+  const presenceSessionId = useMemo3(getReviewPresenceSessionId, []);
   const normalizedReviewUserId = reviewUserId.trim();
   const presenceDisplayName = getReviewPresenceDisplayName(
     normalizedReviewUserId
@@ -6365,7 +6627,7 @@ var useReviewPresence = ({
   const presenceColor = getReviewPresenceColor(
     normalizedReviewUserId || presenceSessionId
   );
-  const presenceViewport = useMemo2(
+  const presenceViewport = useMemo3(
     () => ({
       label: size.label,
       width: size.width,
@@ -6375,7 +6637,7 @@ var useReviewPresence = ({
     [size]
   );
   const presenceStatus = mode === "idle" ? "reviewing" : "editing";
-  const visiblePresenceUsers = useMemo2(
+  const visiblePresenceUsers = useMemo3(
     () => {
       const projectPresenceUsers = presenceUsers.filter(
         (user) => user.projectId === projectId && user.userId.trim()
@@ -6387,14 +6649,14 @@ var useReviewPresence = ({
     },
     [presenceUsers, projectId, reviewPathPrefix]
   );
-  const currentPagePresenceUsers = useMemo2(
+  const currentPagePresenceUsers = useMemo3(
     () => visiblePresenceUsers.filter((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
       return userTarget === activeRoute;
     }),
     [activeRoute, reviewPathPrefix, visiblePresenceUsers]
   );
-  const pagePresenceUsers = useMemo2(() => {
+  const pagePresenceUsers = useMemo3(() => {
     const usersByTarget = /* @__PURE__ */ new Map();
     visiblePresenceUsers.forEach((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
@@ -6507,16 +6769,16 @@ var useReviewPresence = ({
 import {
   useCallback as useCallback8,
   useEffect as useEffect7,
-  useState as useState4
+  useState as useState5
 } from "react";
 
 // src/react-shell/hooks/use.review.ruler.drag.ts
 import {
   useCallback as useCallback7,
   useEffect as useEffect6,
-  useMemo as useMemo3,
+  useMemo as useMemo4,
   useRef as useRef2,
-  useState as useState3
+  useState as useState4
 } from "react";
 
 // src/react-shell/ruler/ruler.ts
@@ -6550,11 +6812,11 @@ var useReviewRulerDrag = ({
   const rulerDragRectRef = useRef2(null);
   const isRulerDraggingRef = useRef2(false);
   const sizeRef = useRef2(size);
-  const [rulerStart, setRulerStart] = useState3(null);
-  const [rulerPoint, setRulerPoint] = useState3(null);
-  const [rulerHover, setRulerHover] = useState3(null);
-  const [isRulerDragging, setIsRulerDragging] = useState3(false);
-  const rulerMeasure = useMemo3(
+  const [rulerStart, setRulerStart] = useState4(null);
+  const [rulerPoint, setRulerPoint] = useState4(null);
+  const [rulerHover, setRulerHover] = useState4(null);
+  const [isRulerDragging, setIsRulerDragging] = useState4(false);
+  const rulerMeasure = useMemo4(
     () => getRulerMeasure(rulerStart, rulerPoint),
     [rulerPoint, rulerStart]
   );
@@ -6723,7 +6985,7 @@ var useReviewRuler = ({
   onCancelReviewMode,
   onCloseTransientPanels
 }) => {
-  const [isRulerVisible, setIsRulerVisible] = useState4(false);
+  const [isRulerVisible, setIsRulerVisible] = useState5(false);
   const isRulerAvailable = ruler?.enabled !== false && typeof size.designWidth === "number" && size.designWidth > 0;
   const rulerUnit = ruler?.unit ?? "px";
   const rulerScaleX = isRulerAvailable && size.designWidth ? size.width / size.designWidth : 1;
@@ -6783,25 +7045,25 @@ var useReviewRuler = ({
 };
 
 // src/react-shell/hooks/use.review.settings.ts
-import { useCallback as useCallback9, useEffect as useEffect8, useState as useState5 } from "react";
+import { useCallback as useCallback9, useEffect as useEffect8, useState as useState6 } from "react";
 var useReviewSettings = ({
   onCancelReviewMode,
   onCloseInitialPrompt,
   onCloseSitemap,
   onReloadTargetFrame
 }) => {
-  const [figmaTokenDraft, setFigmaTokenDraft] = useState5(getStoredFigmaToken);
-  const [reviewUserId, setReviewUserId] = useState5(getStoredReviewUserId);
-  const [reviewUserIdDraft, setReviewUserIdDraft] = useState5(
+  const [figmaTokenDraft, setFigmaTokenDraft] = useState6(getStoredFigmaToken);
+  const [reviewUserId, setReviewUserId] = useState6(getStoredReviewUserId);
+  const [reviewUserIdDraft, setReviewUserIdDraft] = useState6(
     getStoredReviewUserId
   );
-  const [reviewTheme, setReviewTheme] = useState5(getStoredReviewTheme);
-  const [reviewThemeDraft, setReviewThemeDraft] = useState5(getStoredReviewTheme);
-  const [systemReviewTheme, setSystemReviewTheme] = useState5(getSystemReviewTheme);
-  const [figmaSettingsStatus, setFigmaSettingsStatus] = useState5("");
-  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState5(false);
-  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState5(false);
-  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState5(false);
+  const [reviewTheme, setReviewTheme] = useState6(getStoredReviewTheme);
+  const [reviewThemeDraft, setReviewThemeDraft] = useState6(getStoredReviewTheme);
+  const [systemReviewTheme, setSystemReviewTheme] = useState6(getSystemReviewTheme);
+  const [figmaSettingsStatus, setFigmaSettingsStatus] = useState6("");
+  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState6(false);
+  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState6(false);
+  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState6(false);
   const effectiveReviewTheme = reviewTheme === "system" ? systemReviewTheme : reviewTheme;
   const closeFigmaSettings = useCallback9(() => {
     setIsFigmaSettingsOpen(false);
@@ -6903,13 +7165,12 @@ var useReviewSettings = ({
 };
 
 // src/react-shell/hooks/use.review.shell.data.ts
-import { useCallback as useCallback10, useMemo as useMemo4, useState as useState6 } from "react";
-var createEmptySitemapQaCount = () => ({
-  local: 0,
-  remote: 0
-});
+import { useCallback as useCallback10, useMemo as useMemo5, useState as useState7 } from "react";
+var SITEMAP_STATUS_DONE = "done";
 var useReviewShellData = ({
   activeRoute,
+  isAllQaVisible,
+  isRemoteSource,
   pages,
   reviewPathPrefix,
   reviewViewportPresets,
@@ -6918,41 +7179,47 @@ var useReviewShellData = ({
   target,
   viewportPresets
 }) => {
-  const [items, setItems] = useState6([]);
-  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = useState6(
+  const [items, setItems] = useState7([]);
+  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = useState7(
     () => /* @__PURE__ */ new Set()
   );
-  const [qaFilter, setQaFilter] = useState6("all");
-  const [sitemapItems, setSitemapItems] = useState6(() => ({
+  const [qaFilter, setQaFilter] = useState7("all");
+  const [sitemapItems, setSitemapItems] = useState7(() => ({
     local: [],
     remote: []
   }));
-  const targetSrc = useMemo4(() => buildTargetSrc(target), [target]);
-  const pageTargets = useMemo4(
+  const targetSrc = useMemo5(() => buildTargetSrc(target), [target]);
+  const pageTargets = useMemo5(
     () => new Set(
       pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
     ),
     [pages, reviewPathPrefix]
   );
-  const activeItems = useMemo4(
-    () => items.filter((item) => getItemTarget(item, reviewPathPrefix) === activeRoute).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [activeRoute, items, reviewPathPrefix]
+  const sitemapSourceItems = useMemo5(
+    () => isRemoteSource ? sitemapItems.remote : sitemapItems.local,
+    [isRemoteSource, sitemapItems]
   );
-  const numberedActiveItems = useMemo4(
+  const activeItems = useMemo5(
+    () => (isAllQaVisible ? sitemapSourceItems : items.filter(
+      (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
+    )).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
+  );
+  const numberedActiveItems = useMemo5(
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
     [activeItems, reviewViewportPresets]
   );
-  const filteredNumberedActiveItems = useMemo4(
+  const filteredNumberedActiveItems = useMemo5(
     () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
       (numberedItem) => numberedItem.scope === qaFilter
     ),
     [numberedActiveItems, qaFilter]
   );
-  const hiddenOverlayItemIdList = useMemo4(
+  const hiddenOverlayItemIdList = useMemo5(
     () => Array.from(hiddenOverlayItemIds),
     [hiddenOverlayItemIds]
   );
-  const qaFilterCounts = useMemo4(() => {
+  const qaFilterCounts = useMemo5(() => {
     const counts = /* @__PURE__ */ new Map();
     counts.set("all", numberedActiveItems.length);
     numberedActiveItems.forEach((numberedItem) => {
@@ -6970,7 +7237,17 @@ var useReviewShellData = ({
     ),
     [viewportPresets]
   );
-  const presetScopeCounts = useMemo4(() => {
+  const getItemCountScope = useCallback10(
+    (item) => item.scope === "dom" ? "dom" : getItemPresetScope(item),
+    [getItemPresetScope]
+  );
+  const activeRemainingItemCount = useMemo5(
+    () => activeItems.filter(
+      (item) => normalizeReviewItemStatus(item.status) !== SITEMAP_STATUS_DONE
+    ).length,
+    [activeItems]
+  );
+  const presetScopeCounts = useMemo5(() => {
     const counts = /* @__PURE__ */ new Map();
     activeItems.forEach((item) => {
       const scope = getItemPresetScope(item);
@@ -6979,7 +7256,7 @@ var useReviewShellData = ({
     return counts;
   }, [activeItems, getItemPresetScope]);
   const currentPresetScope = getViewportPresetKind(size);
-  const pageQaCounts = useMemo4(() => {
+  const pageQaCounts = useMemo5(() => {
     const counts = /* @__PURE__ */ new Map();
     const addItems = (sourceKey, sourceItems) => {
       sourceItems.forEach((item) => {
@@ -6987,16 +7264,38 @@ var useReviewShellData = ({
           getItemTarget(item, reviewPathPrefix),
           reviewPathPrefix
         );
-        const count = counts.get(pageTarget) ?? createEmptySitemapQaCount();
-        count[sourceKey] += 1;
-        counts.set(pageTarget, count);
+        const currentCount = counts.get(pageTarget) ?? createEmptySitemapQaCount();
+        const status = normalizeReviewItemStatus(item.status);
+        const scope = getItemCountScope(item);
+        counts.set(pageTarget, {
+          ...currentCount,
+          total: currentCount.total + 1,
+          remaining: status === SITEMAP_STATUS_DONE ? currentCount.remaining : currentCount.remaining + 1,
+          local: currentCount.local + (sourceKey === "local" ? 1 : 0),
+          remote: currentCount.remote + (sourceKey === "remote" ? 1 : 0),
+          status: {
+            ...currentCount.status,
+            [status]: currentCount.status[status] + 1
+          },
+          scope: {
+            ...currentCount.scope,
+            [scope]: (currentCount.scope[scope] ?? 0) + 1
+          }
+        });
       });
     };
     addItems("local", sitemapItems.local);
     addItems("remote", sitemapItems.remote);
     return counts;
-  }, [reviewPathPrefix, sitemapItems]);
-  const selectedNumberedItem = useMemo4(
+  }, [getItemCountScope, reviewPathPrefix, sitemapItems]);
+  const allQaCount = useMemo5(
+    () => Array.from(pageQaCounts.values()).reduce(
+      addSitemapQaCounts,
+      createEmptySitemapQaCount()
+    ),
+    [pageQaCounts]
+  );
+  const selectedNumberedItem = useMemo5(
     () => selectedItemId ? numberedActiveItems.find(
       (numberedItem) => numberedItem.item.id === selectedItemId
     ) : void 0,
@@ -7004,6 +7303,8 @@ var useReviewShellData = ({
   );
   return {
     activeItems,
+    activeRemainingItemCount,
+    allQaCount,
     currentPresetScope,
     filteredNumberedActiveItems,
     getItemPresetScope,
@@ -7118,9 +7419,9 @@ var useReviewShellHotkeys = ({
 
 // src/react-shell/hooks/use.review.shell.state.ts
 import {
-  useMemo as useMemo5,
+  useMemo as useMemo6,
   useRef as useRef3,
-  useState as useState7
+  useState as useState8
 } from "react";
 
 // src/react-shell/adapters.ts
@@ -7265,11 +7566,11 @@ var useReviewShellState = ({
   reviewPathPrefix
 }) => {
   const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const reviewViewportPresets = useMemo5(
+  const reviewViewportPresets = useMemo6(
     () => toReviewViewportPresets(viewportPresets),
     [viewportPresets]
   );
-  const normalizedAdapters = useMemo5(
+  const normalizedAdapters = useMemo6(
     () => normalizeReviewShellAdapters(adapters),
     [adapters]
   );
@@ -7277,7 +7578,7 @@ var useReviewShellState = ({
   const remoteAdapterEntry = normalizedAdapters.remote;
   const sourceEntries = normalizedAdapters.sources;
   const defaultSource = sourceEntries[0]?.label ?? "local";
-  const [source, setSource] = useState7(() => {
+  const [source, setSource] = useState8(() => {
     const initialSource = getInitialSource(remoteAdapterEntry?.label);
     return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
   });
@@ -7298,30 +7599,30 @@ var useReviewShellState = ({
   const pendingInitialItemIdRef = useRef3(getInitialItemId());
   const selectedItemIdRef = useRef3(getInitialItemId());
   const hiddenOverlayItemIdListRef = useRef3([]);
-  const [target, setTarget] = useState7(
+  const [target, setTarget] = useState8(
     () => getInitialTarget(reviewPathPrefix)
   );
-  const [draftTarget, setDraftTarget] = useState7(
+  const [draftTarget, setDraftTarget] = useState8(
     () => getInitialTarget(reviewPathPrefix)
   );
-  const [activeRoute, setActiveRoute] = useState7(
+  const [activeRoute, setActiveRoute] = useState8(
     () => getInitialTarget(reviewPathPrefix)
   );
-  const [size, setSize] = useState7(
+  const [size, setSize] = useState8(
     () => getInitialSize(viewportPresets)
   );
-  const [mode, setMode] = useState7("idle");
-  const [targetOverlayState, setTargetOverlayState] = useState7({
+  const [mode, setMode] = useState8("idle");
+  const [targetOverlayState, setTargetOverlayState] = useState8({
     grid: false,
     figma: false
   });
-  const [selectedItemId, setSelectedItemId] = useState7(getInitialItemId());
-  const [isListVisible, setIsListVisible] = useState7(true);
-  const [isSitemapOpen, setIsSitemapOpen] = useState7(false);
-  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState7(false);
-  const [copyLabel, setCopyLabel] = useState7("Copy URL");
-  const [toastMessage, setToastMessage] = useState7("");
-  const [copiedPromptKey, setCopiedPromptKey] = useState7(null);
+  const [selectedItemId, setSelectedItemId] = useState8(getInitialItemId());
+  const [isListVisible, setIsListVisible] = useState8(true);
+  const [isSitemapOpen, setIsSitemapOpen] = useState8(false);
+  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState8(false);
+  const [copyLabel, setCopyLabel] = useState8("Copy URL");
+  const [toastMessage, setToastMessage] = useState8("");
+  const [copiedPromptKey, setCopiedPromptKey] = useState8(null);
   const targetRef = useRef3(target);
   const sizeRef = useRef3(size);
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
@@ -7692,8 +7993,9 @@ var ReviewShell = ({
   });
   const sourceShortcutCleanupRef = useRef4(null);
   const sourceInspectorInteractionRef = useRef4(false);
-  const [sourceInspectorState, setSourceInspectorState] = useState8(null);
-  const sourceOpenOptions = useMemo6(
+  const [sourceInspectorState, setSourceInspectorState] = useState9(null);
+  const [isAllQaVisible, setIsAllQaVisible] = useState9(false);
+  const sourceOpenOptions = useMemo7(
     () => ({
       ...sourceInspector,
       sourceRoot
@@ -7703,6 +8005,8 @@ var ReviewShell = ({
   const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
   const {
     activeItems,
+    activeRemainingItemCount,
+    allQaCount,
     currentPresetScope,
     filteredNumberedActiveItems,
     getItemPresetScope,
@@ -7721,6 +8025,8 @@ var ReviewShell = ({
     targetSrc
   } = useReviewShellData({
     activeRoute,
+    isAllQaVisible,
+    isRemoteSource,
     pages,
     reviewPathPrefix,
     reviewViewportPresets,
@@ -7729,14 +8035,14 @@ var ReviewShell = ({
     target,
     viewportPresets
   });
-  const [targetFigmaState, setTargetFigmaState] = useState8(null);
+  const [targetFigmaState, setTargetFigmaState] = useState9(null);
   const targetFigmaConfig = targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
-  const figmaFrameUrl = useMemo6(
+  const figmaFrameUrl = useMemo7(
     () => getFigmaFrameUrl(targetFigmaConfig, size),
     [targetFigmaConfig, size]
   );
   const isFigmaOverlayAvailable = isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
-  const [editingItem, setEditingItem] = useState8(null);
+  const [editingItem, setEditingItem] = useState9(null);
   const initialPromptText = initialPrompt.trim();
   const refreshItems = useCallback11(
     () => refreshReviewItems({
@@ -7947,12 +8253,14 @@ var ReviewShell = ({
     if (parsedInput.itemId) {
       const item = await nextAdapter.adapter.get(parsedInput.itemId);
       if (item) {
+        setIsAllQaVisible(false);
         setSource(nextSource);
         restoreReviewItem(item);
         return;
       }
     }
     clearSelectedItem();
+    setIsAllQaVisible(false);
     setSource(nextSource);
     targetRef.current = normalizedTarget;
     setActiveRoute(normalizedTarget);
@@ -7964,11 +8272,16 @@ var ReviewShell = ({
   const selectPage = (href) => {
     const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
     clearSelectedItem();
+    setIsAllQaVisible(false);
     targetRef.current = normalizedTarget;
     setActiveRoute(normalizedTarget);
     setDraftTarget(normalizedTarget);
     setTarget(normalizedTarget);
     updateShellUrl(normalizedTarget, sizeRef.current, source);
+    setIsSitemapOpen(false);
+  };
+  const selectAllQa = () => {
+    setIsAllQaVisible(true);
     setIsSitemapOpen(false);
   };
   const setReviewMode = (nextMode) => {
@@ -8484,10 +8797,13 @@ var ReviewShell = ({
           {
             pages,
             activeRoute,
+            allQaCount,
+            isAllQaVisible,
             pageQaCounts,
             pagePresenceUsers,
             getPageTarget: (href) => normalizeTarget(href, reviewPathPrefix),
             onClose: () => setIsSitemapOpen(false),
+            onSelectAllQa: selectAllQa,
             onSelectPage: selectPage
           }
         ),
@@ -8546,12 +8862,14 @@ var ReviewShell = ({
           {
             activeAdapterEntry,
             activeItems,
+            activeRemainingItemCount,
             currentPagePresenceUsers,
             currentPresetScope,
             filteredNumberedActiveItems,
             getItemPresetScope,
             hiddenOverlayItemIds,
             isListVisible,
+            isAllQaVisible,
             isRemoteSource,
             presenceSessionId,
             copiedPromptKey,

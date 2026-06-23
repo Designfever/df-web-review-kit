@@ -16,11 +16,13 @@ import type {
 interface ReviewQaPanelProps {
   activeAdapterEntry: NormalizedReviewShellAdapter;
   activeItems: ReviewItem[];
+  activeRemainingItemCount: number;
   currentPagePresenceUsers: ReviewPresenceUser[];
   currentPresetScope: ReviewShellViewportKind;
   filteredNumberedActiveItems: NumberedReviewItem[];
   getItemPresetScope: (item: ReviewItem) => ReviewShellViewportKind;
   hiddenOverlayItemIds: ReadonlySet<string>;
+  isAllQaVisible: boolean;
   isListVisible: boolean;
   isRemoteSource: boolean;
   presenceSessionId: string;
@@ -52,11 +54,13 @@ interface ReviewQaPanelProps {
 export const ReviewQaPanel = ({
   activeAdapterEntry,
   activeItems,
+  activeRemainingItemCount,
   currentPagePresenceUsers,
   currentPresetScope,
   filteredNumberedActiveItems,
   getItemPresetScope,
   hiddenOverlayItemIds,
+  isAllQaVisible,
   isListVisible,
   isRemoteSource,
   presenceSessionId,
@@ -81,14 +85,22 @@ export const ReviewQaPanel = ({
   onSubmitItem,
   onToggleItemOverlayVisibility,
 }: ReviewQaPanelProps) => {
+  const emptyMessage = isAllQaVisible
+    ? `No ${activeAdapterEntry.label} QA.`
+    : isRemoteSource
+      ? `No ${activeAdapterEntry.label} QA on this page.`
+      : 'No QA on this page.';
+
   return (
     <aside className="df-review-qa-panel" aria-hidden={!isListVisible}>
       <div className="df-review-panel-body">
         <section className="df-review-item-list">
           <QaPanelHeader
             activeItemCount={activeItems.length}
+            activeRemainingItemCount={activeRemainingItemCount}
             currentPagePresenceUsers={currentPagePresenceUsers}
             filteredItemCount={filteredNumberedActiveItems.length}
+            isAllQaVisible={isAllQaVisible}
             label={activeAdapterEntry.label}
             presenceSessionId={presenceSessionId}
             qaFilter={qaFilter}
@@ -109,11 +121,7 @@ export const ReviewQaPanel = ({
             }}
           >
             {activeItems.length === 0 && (
-              <p className="df-review-empty">
-                {isRemoteSource
-                  ? `No ${activeAdapterEntry.label} QA on this page.`
-                  : 'No QA on this page.'}
-              </p>
+              <p className="df-review-empty">{emptyMessage}</p>
             )}
             {activeItems.length > 0 &&
               filteredNumberedActiveItems.length === 0 && (

@@ -182,6 +182,7 @@ export const ReviewShell = ({
   const sourceInspectorInteractionRef = useRef(false);
   const [sourceInspectorState, setSourceInspectorState] =
     useState<SourceInspectorState | null>(null);
+  const [isAllQaVisible, setIsAllQaVisible] = useState(false);
   const sourceOpenOptions = useMemo<SourceOpenOptions>(
     () => ({
       ...sourceInspector,
@@ -192,6 +193,8 @@ export const ReviewShell = ({
   const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
   const {
     activeItems,
+    activeRemainingItemCount,
+    allQaCount,
     currentPresetScope,
     filteredNumberedActiveItems,
     getItemPresetScope,
@@ -210,6 +213,8 @@ export const ReviewShell = ({
     targetSrc,
   } = useReviewShellData({
     activeRoute,
+    isAllQaVisible,
+    isRemoteSource,
     pages,
     reviewPathPrefix,
     reviewViewportPresets,
@@ -473,6 +478,7 @@ export const ReviewShell = ({
     if (parsedInput.itemId) {
       const item = await nextAdapter.adapter.get(parsedInput.itemId);
       if (item) {
+        setIsAllQaVisible(false);
         setSource(nextSource);
         restoreReviewItem(item);
         return;
@@ -480,6 +486,7 @@ export const ReviewShell = ({
     }
 
     clearSelectedItem();
+    setIsAllQaVisible(false);
     setSource(nextSource);
     targetRef.current = normalizedTarget;
     setActiveRoute(normalizedTarget);
@@ -492,11 +499,17 @@ export const ReviewShell = ({
   const selectPage = (href: string) => {
     const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
     clearSelectedItem();
+    setIsAllQaVisible(false);
     targetRef.current = normalizedTarget;
     setActiveRoute(normalizedTarget);
     setDraftTarget(normalizedTarget);
     setTarget(normalizedTarget);
     updateShellUrl(normalizedTarget, sizeRef.current, source);
+    setIsSitemapOpen(false);
+  };
+
+  const selectAllQa = () => {
+    setIsAllQaVisible(true);
     setIsSitemapOpen(false);
   };
 
@@ -1112,10 +1125,13 @@ export const ReviewShell = ({
         <SitemapModal
           pages={pages}
           activeRoute={activeRoute}
+          allQaCount={allQaCount}
+          isAllQaVisible={isAllQaVisible}
           pageQaCounts={pageQaCounts}
           pagePresenceUsers={pagePresenceUsers}
           getPageTarget={(href) => normalizeTarget(href, reviewPathPrefix)}
           onClose={() => setIsSitemapOpen(false)}
+          onSelectAllQa={selectAllQa}
           onSelectPage={selectPage}
         />
       )}
@@ -1183,12 +1199,14 @@ export const ReviewShell = ({
       <ReviewQaPanel
         activeAdapterEntry={activeAdapterEntry}
         activeItems={activeItems}
+        activeRemainingItemCount={activeRemainingItemCount}
         currentPagePresenceUsers={currentPagePresenceUsers}
         currentPresetScope={currentPresetScope}
         filteredNumberedActiveItems={filteredNumberedActiveItems}
         getItemPresetScope={getItemPresetScope}
         hiddenOverlayItemIds={hiddenOverlayItemIds}
         isListVisible={isListVisible}
+        isAllQaVisible={isAllQaVisible}
         isRemoteSource={isRemoteSource}
         presenceSessionId={presenceSessionId}
         copiedPromptKey={copiedPromptKey}

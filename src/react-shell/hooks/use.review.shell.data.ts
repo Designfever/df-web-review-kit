@@ -4,8 +4,11 @@ import {
 } from '../../core/review/scope';
 import type {
   ReviewItem,
+  ReviewItemScope,
+  ReviewWorkflowStatus,
   ReviewViewportPreset,
 } from '../../types';
+import { normalizeReviewItemStatus } from '../../status';
 import {
   buildTargetSrc,
   getItemTarget,
@@ -22,6 +25,10 @@ import {
   getViewportPresetKind,
 } from '../viewport';
 import type { SitemapQaCount } from '../sitemap/tree';
+import {
+  addSitemapQaCounts,
+  createEmptySitemapQaCount,
+} from '../sitemap/tree';
 
 export type SitemapItemsBySource = {
   local: ReviewItem[];
@@ -31,6 +38,8 @@ export type SitemapItemsBySource = {
 interface UseReviewShellDataOptions {
   activeRoute: string;
   pages: ReviewShellPage[];
+  isAllQaVisible: boolean;
+  isRemoteSource: boolean;
   reviewPathPrefix: string;
   reviewViewportPresets: ReviewViewportPreset[];
   selectedItemId: string | null;
@@ -39,13 +48,12 @@ interface UseReviewShellDataOptions {
   viewportPresets: ReviewShellViewportPreset[];
 }
 
-const createEmptySitemapQaCount = (): SitemapQaCount => ({
-  local: 0,
-  remote: 0,
-});
+const SITEMAP_STATUS_DONE: ReviewWorkflowStatus = 'done';
 
 export const useReviewShellData = ({
   activeRoute,
+  isAllQaVisible,
+  isRemoteSource,
   pages,
   reviewPathPrefix,
   reviewViewportPresets,
@@ -72,12 +80,19 @@ export const useReviewShellData = ({
       ),
     [pages, reviewPathPrefix]
   );
+  const sitemapSourceItems = useMemo(
+    () => (isRemoteSource ? sitemapItems.remote : sitemapItems.local),
+    [isRemoteSource, sitemapItems]
+  );
   const activeItems = useMemo(
     () =>
-      items
-        .filter((item) => getItemTarget(item, reviewPathPrefix) === activeRoute)
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [activeRoute, items, reviewPathPrefix]
+      (isAllQaVisible
+        ? sitemapSourceItems
+        : items.filter(
+            (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
+          )
+      ).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
   );
   const numberedActiveItems = useMemo(
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
@@ -115,6 +130,18 @@ export const useReviewShellData = ({
       ),
     [viewportPresets]
   );
+  const getItemCountScope = useCallback(
+    (item: ReviewItem): ReviewItemScope =>
+      item.scope === 'dom' ? 'dom' : getItemPresetScope(item),
+    [getItemPresetScope]
+  );
+  const activeRemainingItemCount = useMemo(
+    () =>
+      activeItems.filter(
+        (item) => normalizeReviewItemStatus(item.status) !== SITEMAP_STATUS_DONE
+      ).length,
+    [activeItems]
+  );
   const presetScopeCounts = useMemo(() => {
     const counts = new Map<ReviewShellViewportKind, number>();
     activeItems.forEach((item) => {
@@ -135,9 +162,29 @@ export const useReviewShellData = ({
           getItemTarget(item, reviewPathPrefix),
           reviewPathPrefix
         );
-        const count = counts.get(pageTarget) ?? createEmptySitemapQaCount();
-        count[sourceKey] += 1;
-        counts.set(pageTarget, count);
+        const currentCount =
+          counts.get(pageTarget) ?? createEmptySitemapQaCount();
+        const status = normalizeReviewItemStatus(item.status);
+        const scope = getItemCountScope(item);
+
+        counts.set(pageTarget, {
+          ...currentCount,
+          total: currentCount.total + 1,
+          remaining:
+            status === SITEMAP_STATUS_DONE
+              ? currentCount.remaining
+              : currentCount.remaining + 1,
+          local: currentCount.local + (sourceKey === 'local' ? 1 : 0),
+          remote: currentCount.remote + (sourceKey === 'remote' ? 1 : 0),
+          status: {
+            ...currentCount.status,
+            [status]: currentCount.status[status] + 1,
+          },
+          scope: {
+            ...currentCount.scope,
+            [scope]: (currentCount.scope[scope] ?? 0) + 1,
+          },
+        });
       });
     };
 
@@ -145,7 +192,15 @@ export const useReviewShellData = ({
     addItems('remote', sitemapItems.remote);
 
     return counts;
-  }, [reviewPathPrefix, sitemapItems]);
+  }, [getItemCountScope, reviewPathPrefix, sitemapItems]);
+  const allQaCount = useMemo(
+    () =>
+      Array.from(pageQaCounts.values()).reduce(
+        addSitemapQaCounts,
+        createEmptySitemapQaCount()
+      ),
+    [pageQaCounts]
+  );
   const selectedNumberedItem = useMemo(
     () =>
       selectedItemId
@@ -158,6 +213,8 @@ export const useReviewShellData = ({
 
   return {
     activeItems,
+    activeRemainingItemCount,
+    allQaCount,
     currentPresetScope,
     filteredNumberedActiveItems,
     getItemPresetScope,

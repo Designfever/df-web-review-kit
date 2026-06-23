@@ -1630,15 +1630,11 @@ function ensureReviewShellStyle() {
 		  }
 
   .df-review-presence-overlay {
-    position: absolute;
-    z-index: 8;
-    top: 10px;
-    left: 10px;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 5px;
-    max-width: calc(100% - 20px);
+    max-width: 100%;
     pointer-events: none;
   }
 
@@ -2318,6 +2314,14 @@ function ensureReviewShellStyle() {
 	    padding: 34px 58px 12px 40px;
 	  }
 
+  .df-review-target-stack {
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+    width: max-content;
+    max-width: 100%;
+  }
+
   .df-review-device {
 	    box-sizing: border-box;
 	    flex: 0 0 auto;
@@ -2518,6 +2522,10 @@ function ensureReviewShellStyle() {
     position: relative;
     box-sizing: border-box;
     flex: 0 0 auto;
+  }
+
+  .df-review-presence-overlay + .df-review-device-frame.is-ruler {
+    margin-top: 26px;
   }
 
   .df-review-ruler-corner {
@@ -5520,95 +5528,97 @@ var ReviewTargetFrame = ({
 }) => {
   const showRuler = isRulerVisible && isRulerAvailable;
   return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("main", { className: "df-review-stage", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-frame", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
-      "div",
-      {
-        className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
-        children: [
-          showRuler && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-            RulerGutters,
-            {
-              rulerHover,
-              rulerScaleX,
-              rulerScaleY,
-              rulerUnit,
-              size
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
-            "div",
-            {
-              className: "df-review-device",
-              style: {
-                width: `${size.width}px`,
-                height: `${size.height}px`,
-                minWidth: `${size.width}px`,
-                minHeight: `${size.height}px`
-              },
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-                  "iframe",
-                  {
-                    ref: iframeRef,
-                    width: size.width,
-                    height: size.height,
-                    src: targetSrc,
-                    title: "Review target",
-                    onLoad: onLoadTarget
-                  },
-                  targetSrc
-                ),
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-                  PresenceOverlay,
-                  {
-                    presenceSessionId,
-                    users
-                  }
-                ),
-                showRuler && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-                  RulerOverlay,
-                  {
-                    iframeRef,
-                    isRulerDragging,
-                    rulerHover,
-                    rulerMeasure,
-                    rulerMeasureLabel,
-                    rulerOverlayRef,
-                    size
-                  }
-                )
-              ]
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-frame-link-stack", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-              "a",
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-target-stack", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+        PresenceOverlay,
+        {
+          presenceSessionId,
+          users
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+        "div",
+        {
+          className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
+          children: [
+            showRuler && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+              RulerGutters,
               {
-                "aria-label": "Open target page",
-                className: "df-review-frame-link is-target",
-                href: targetSrc,
-                rel: "noreferrer",
-                target: "_blank",
-                title: "Open target page",
-                children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(ExternalLink, { "aria-hidden": "true" })
+                rulerHover,
+                rulerScaleX,
+                rulerScaleY,
+                rulerUnit,
+                size
               }
             ),
-            figmaFrameUrl && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
-              "a",
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+              "div",
               {
-                "aria-label": "Open Figma frame",
-                className: "df-review-frame-link is-figma",
-                href: figmaFrameUrl,
-                rel: "noreferrer",
-                target: "_blank",
-                title: "Open Figma frame",
-                children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(FigmaIcon, {})
+                className: "df-review-device",
+                style: {
+                  width: `${size.width}px`,
+                  height: `${size.height}px`,
+                  minWidth: `${size.width}px`,
+                  minHeight: `${size.height}px`
+                },
+                children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+                    "iframe",
+                    {
+                      ref: iframeRef,
+                      width: size.width,
+                      height: size.height,
+                      src: targetSrc,
+                      title: "Review target",
+                      onLoad: onLoadTarget
+                    },
+                    targetSrc
+                  ),
+                  showRuler && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+                    RulerOverlay,
+                    {
+                      iframeRef,
+                      isRulerDragging,
+                      rulerHover,
+                      rulerMeasure,
+                      rulerMeasureLabel,
+                      rulerOverlayRef,
+                      size
+                    }
+                  )
+                ]
               }
-            )
-          ] })
-        ]
-      }
-    ) }) }),
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-frame-link-stack", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+                "a",
+                {
+                  "aria-label": "Open target page",
+                  className: "df-review-frame-link is-target",
+                  href: targetSrc,
+                  rel: "noreferrer",
+                  target: "_blank",
+                  title: "Open target page",
+                  children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(ExternalLink, { "aria-hidden": "true" })
+                }
+              ),
+              figmaFrameUrl && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+                "a",
+                {
+                  "aria-label": "Open Figma frame",
+                  className: "df-review-frame-link is-figma",
+                  href: figmaFrameUrl,
+                  rel: "noreferrer",
+                  target: "_blank",
+                  title: "Open Figma frame",
+                  children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(FigmaIcon, {})
+                }
+              )
+            ] })
+          ]
+        }
+      )
+    ] }) }) }),
     /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
       ReviewModeToolbar,
       {

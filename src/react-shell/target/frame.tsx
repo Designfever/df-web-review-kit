@@ -68,77 +68,79 @@ export const ReviewTargetFrame = ({
       <div className="df-review-frame">
         <div className="df-review-frame-scroll" ref={frameScrollRef}>
           <div className="df-review-frame-canvas">
-            <div
-              className={`df-review-device-frame${
-                showRuler ? ' is-ruler' : ''
-              }`}
-            >
-              {showRuler && (
-                <RulerGutters
-                  rulerHover={rulerHover}
-                  rulerScaleX={rulerScaleX}
-                  rulerScaleY={rulerScaleY}
-                  rulerUnit={rulerUnit}
-                  size={size}
-                />
-              )}
+            <div className="df-review-target-stack">
+              <PresenceOverlay
+                presenceSessionId={presenceSessionId}
+                users={users}
+              />
               <div
-                className="df-review-device"
-                style={{
-                  width: `${size.width}px`,
-                  height: `${size.height}px`,
-                  minWidth: `${size.width}px`,
-                  minHeight: `${size.height}px`,
-                }}
+                className={`df-review-device-frame${
+                  showRuler ? ' is-ruler' : ''
+                }`}
               >
-                <iframe
-                  key={targetSrc}
-                  ref={iframeRef}
-                  width={size.width}
-                  height={size.height}
-                  src={targetSrc}
-                  title="Review target"
-                  onLoad={onLoadTarget}
-                />
-                <PresenceOverlay
-                  presenceSessionId={presenceSessionId}
-                  users={users}
-                />
                 {showRuler && (
-                  <RulerOverlay
-                    iframeRef={iframeRef}
-                    isRulerDragging={isRulerDragging}
+                  <RulerGutters
                     rulerHover={rulerHover}
-                    rulerMeasure={rulerMeasure}
-                    rulerMeasureLabel={rulerMeasureLabel}
-                    rulerOverlayRef={rulerOverlayRef}
+                    rulerScaleX={rulerScaleX}
+                    rulerScaleY={rulerScaleY}
+                    rulerUnit={rulerUnit}
                     size={size}
                   />
                 )}
-              </div>
-              <div className="df-review-frame-link-stack">
-                <a
-                  aria-label="Open target page"
-                  className="df-review-frame-link is-target"
-                  href={targetSrc}
-                  rel="noreferrer"
-                  target="_blank"
-                  title="Open target page"
+                <div
+                  className="df-review-device"
+                  style={{
+                    width: `${size.width}px`,
+                    height: `${size.height}px`,
+                    minWidth: `${size.width}px`,
+                    minHeight: `${size.height}px`,
+                  }}
                 >
-                  <ExternalLinkIcon aria-hidden="true" />
-                </a>
-                {figmaFrameUrl && (
+                  <iframe
+                    key={targetSrc}
+                    ref={iframeRef}
+                    width={size.width}
+                    height={size.height}
+                    src={targetSrc}
+                    title="Review target"
+                    onLoad={onLoadTarget}
+                  />
+                  {showRuler && (
+                    <RulerOverlay
+                      iframeRef={iframeRef}
+                      isRulerDragging={isRulerDragging}
+                      rulerHover={rulerHover}
+                      rulerMeasure={rulerMeasure}
+                      rulerMeasureLabel={rulerMeasureLabel}
+                      rulerOverlayRef={rulerOverlayRef}
+                      size={size}
+                    />
+                  )}
+                </div>
+                <div className="df-review-frame-link-stack">
                   <a
-                    aria-label="Open Figma frame"
-                    className="df-review-frame-link is-figma"
-                    href={figmaFrameUrl}
+                    aria-label="Open target page"
+                    className="df-review-frame-link is-target"
+                    href={targetSrc}
                     rel="noreferrer"
                     target="_blank"
-                    title="Open Figma frame"
+                    title="Open target page"
                   >
-                    <FigmaIcon />
+                    <ExternalLinkIcon aria-hidden="true" />
                   </a>
-                )}
+                  {figmaFrameUrl && (
+                    <a
+                      aria-label="Open Figma frame"
+                      className="df-review-frame-link is-figma"
+                      href={figmaFrameUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                      title="Open Figma frame"
+                    >
+                      <FigmaIcon />
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -1586,15 +1586,11 @@ export function ensureReviewShellStyle() {
 		  }
 
   .df-review-presence-overlay {
-    position: absolute;
-    z-index: 8;
-    top: 10px;
-    left: 10px;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 5px;
-    max-width: calc(100% - 20px);
+    max-width: 100%;
     pointer-events: none;
   }
 
@@ -2274,6 +2270,14 @@ export function ensureReviewShellStyle() {
 	    padding: 34px 58px 12px 40px;
 	  }
 
+  .df-review-target-stack {
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+    width: max-content;
+    max-width: 100%;
+  }
+
   .df-review-device {
 	    box-sizing: border-box;
 	    flex: 0 0 auto;
@@ -2474,6 +2478,10 @@ export function ensureReviewShellStyle() {
     position: relative;
     box-sizing: border-box;
     flex: 0 0 auto;
+  }
+
+  .df-review-presence-overlay + .df-review-device-frame.is-ruler {
+    margin-top: 26px;
   }
 
   .df-review-ruler-corner {

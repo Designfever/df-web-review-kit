@@ -554,10 +554,38 @@ export function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
-    .dfwr-note-popover.is-docked {
+    .dfwr-note-popover.is-composer,
+    .dfwr-area-draft.is-composer {
       max-height: min(360px, calc(100vh - 32px));
       overflow: auto;
       border-color: rgba(99, 215, 199, 0.56);
+    }
+
+    .dfwr-note-popover.is-dragging,
+    .dfwr-area-draft.is-dragging {
+      user-select: none;
+    }
+
+    .dfwr-draft-drag-handle {
+      display: block;
+      width: 42px;
+      height: 6px;
+      margin: 0 auto 10px;
+      padding: 0;
+      cursor: grab;
+      pointer-events: auto;
+      background: rgba(247, 247, 242, 0.28);
+      border: 0;
+      border-radius: 999px;
+    }
+
+    .dfwr-draft-drag-handle:hover,
+    .dfwr-draft-drag-handle:focus-visible {
+      background: rgba(215, 255, 95, 0.62);
+    }
+
+    .dfwr-draft-drag-handle:active {
+      cursor: grabbing;
     }
 
     .dfwr-area-draft {

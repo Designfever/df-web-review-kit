@@ -4,6 +4,7 @@ import type {
   ReviewItemScope,
   ReviewMode,
   ReviewPoint,
+  ViewportSize,
   WebReviewKitOptions,
 } from '../types';
 import {
@@ -13,12 +14,11 @@ import {
 } from './dom.anchor';
 import {
   clampPoint,
-  getAreaPopoverPosition,
+  clamp,
   getPopoverPosition,
   getViewportSize,
   isPointInViewport,
   placeLayerOverTarget,
-  rectanglesIntersect,
   roundPoint,
   toHostPoint,
   toHostSelection,
@@ -31,11 +31,7 @@ import {
 import { getRouteKey } from './location';
 import { createStyleElement } from './overlay.style';
 import type { AreaDraft, NoteDraft } from './review/draft';
-import {
-  formatAreaDraftMeta,
-  formatItemMeta,
-  formatNoteDraftMeta,
-} from './review/format';
+import { formatItemMeta, formatNoteDraftMeta } from './review/format';
 import {
   getBoundMarkerPoint,
   getItemHighlightSelection,
@@ -73,6 +69,7 @@ interface WebReviewKitViewActions {
   setModeState: (mode: ReviewMode) => void;
   clearDrafts: () => void;
   setNoteDraft: (draft?: NoteDraft) => void;
+  setAreaDraft: (draft?: AreaDraft) => void;
   setSelectingArea: (isSelectingArea: boolean) => void;
   createItem: (input: CreateReviewItemInput) => Promise<void>;
   bindNoteDraftToPoint: (point: ReviewPoint, comment?: string) => Promise<void>;
@@ -181,15 +178,9 @@ export class WebReviewKitView {
     const adjustment = draft.adjustment;
     const x = adjustment?.x ?? 0;
     const y = adjustment?.y ?? 0;
-    const preset = findReviewViewportPreset(
-      draft.viewport,
-      this.config.options.viewports?.presets
+    const { scale, designWidth, presetLabel } = this.getDraftViewportScale(
+      draft.viewport
     );
-    const designWidth =
-      typeof preset.designWidth === 'number' && preset.designWidth > 0
-        ? preset.designWidth
-        : draft.viewport.width;
-    const scale = designWidth > 0 ? draft.viewport.width / designWidth : 1;
 
     return {
       x,
@@ -198,7 +189,7 @@ export class WebReviewKitView {
       cssY: y * scale,
       scale,
       designWidth,
-      presetLabel: preset.label,
+      presetLabel,
       viewportWidth: draft.viewport.width,
     };
   }
@@ -228,51 +219,98 @@ export class WebReviewKitView {
     };
   }
 
-  private getDockPopoverPosition(
-    draft: NoteDraft,
-    environment: ReviewEnvironment
+  private getDraftViewportScale(viewport: ViewportSize) {
+    const preset = findReviewViewportPreset(
+      viewport,
+      this.config.options.viewports?.presets
+    );
+    const designWidth =
+      typeof preset.designWidth === 'number' && preset.designWidth > 0
+        ? preset.designWidth
+        : viewport.width;
+    const scale = designWidth > 0 ? viewport.width / designWidth : 1;
+
+    return { scale, designWidth, presetLabel: preset.label };
+  }
+
+  private getDraftComposerWidth(environment: ReviewEnvironment) {
+    const bounds = environment.overlayRect;
+    const margin = 12;
+    return Math.min(360, Math.max(240, bounds.width - margin * 2));
+  }
+
+  private getClampedComposerPosition(
+    position: ReviewPoint,
+    environment: ReviewEnvironment,
+    size?: { width?: number; height?: number }
   ) {
     const bounds = environment.overlayRect;
     const margin = 12;
-    const width = Math.min(360, Math.max(240, bounds.width - margin * 2));
-    const height = 240;
-    const selection = draft.selection
-      ? toHostSelection(
-          this.getAdjustedDraftSelection(
-            toViewportSelection(draft.selection.viewport),
-            draft
-          ),
-          environment
-        )
-      : undefined;
-
-    const positions = [
-      {
-        left: bounds.left + bounds.width - width - margin,
-        top: bounds.top + bounds.height - height - margin,
-      },
-      {
-        left: bounds.left + bounds.width - width - margin,
-        top: bounds.top + margin,
-      },
-      {
-        left: bounds.left + margin,
-        top: bounds.top + bounds.height - height - margin,
-      },
-    ];
-    const position =
-      positions.find((candidate) => {
-        if (!selection) return true;
-        return !rectanglesIntersect(
-          { ...candidate, width, height },
-          selection
-        );
-      }) ?? positions[0];
+    const width = size?.width ?? this.getDraftComposerWidth(environment);
+    const height = size?.height ?? 236;
 
     return {
+      x: clamp(
+        position.x,
+        bounds.left + margin,
+        bounds.left + bounds.width - width - margin
+      ),
+      y: clamp(
+        position.y,
+        bounds.top + margin,
+        bounds.top + bounds.height - height - margin
+      ),
+    };
+  }
+
+  private getDraftComposerPosition({
+    selection,
+    environment,
+    composerPosition,
+    estimatedHeight,
+  }: {
+    selection?: ViewportSelection;
+    environment: ReviewEnvironment;
+    composerPosition?: ReviewPoint;
+    estimatedHeight?: number;
+  }) {
+    const width = this.getDraftComposerWidth(environment);
+
+    if (composerPosition) {
+      const clamped = this.getClampedComposerPosition(
+        composerPosition,
+        environment,
+        { width, height: estimatedHeight }
+      );
+      return { width, left: clamped.x, top: clamped.y };
+    }
+
+    const anchor = selection
+      ? {
+          x: selection.left + selection.width,
+          y: selection.top,
+        }
+      : { x: environment.overlayRect.left, y: environment.overlayRect.top };
+    const position = getPopoverPosition(anchor, environment, {
       width,
-      left: Math.max(bounds.left + margin, position.left),
-      top: Math.max(bounds.top + margin, position.top),
+      estimatedHeight,
+    });
+
+    return { width, left: position.left, top: position.top };
+  }
+
+  private getSelectionMqMetrics(
+    selection: ViewportSelection,
+    viewport: ViewportSize
+  ) {
+    const { scale } = this.getDraftViewportScale(viewport);
+    const ratio = scale > 0 ? 1 / scale : 1;
+
+    return {
+      x: selection.left * ratio,
+      y: selection.top * ratio,
+      width: selection.width * ratio,
+      height: selection.height * ratio,
     };
   }
 
@@ -281,9 +319,43 @@ export class WebReviewKitView {
     return `${value > 0 ? '+' : ''}${value}px`;
   }
 
+  private formatRoundedPx(value: number) {
+    return `${Math.round(value)}px`;
+  }
+
+  private formatDraftSelectionStatus(
+    selection: ViewportSelection | undefined,
+    viewport: ViewportSize
+  ) {
+    if (!selection) return 'area none';
+
+    const metrics = this.getSelectionMqMetrics(selection, viewport);
+    return [
+      `area x ${this.formatRoundedPx(metrics.x)}`,
+      `y ${this.formatRoundedPx(metrics.y)}`,
+      `w ${this.formatRoundedPx(metrics.width)}`,
+      `h ${this.formatRoundedPx(metrics.height)}`,
+    ].join(' / ');
+  }
+
+  private getNoteDraftMetricSelection(draft: NoteDraft) {
+    if (!draft.selection) return undefined;
+
+    return this.getAdjustedDraftSelection(
+      toViewportSelection(draft.selection.viewport),
+      draft
+    );
+  }
+
+  private getAreaDraftMetricSelection(draft: AreaDraft) {
+    if (!draft.selection) return undefined;
+
+    return toViewportSelection(draft.selection.viewport);
+  }
+
   private formatDraftAdjustmentStatus(draft: NoteDraft) {
     const metrics = this.getDraftAdjustmentMetrics(draft);
-    return `x ${this.formatSignedPx(metrics.x)} / y ${this.formatSignedPx(
+    return `move x ${this.formatSignedPx(metrics.x)} / y ${this.formatSignedPx(
       metrics.y
     )}`;
   }
@@ -523,13 +595,27 @@ export class WebReviewKitView {
     const position = getPopoverPosition(hostPoint, environment);
 
     popover.className = `dfwr-note-popover${
-      isElementDraft ? ' is-docked' : ''
+      isElementDraft ? ' is-composer' : ''
     }`;
     if (isElementDraft) {
-      const dock = this.getDockPopoverPosition(draft, environment);
-      popover.style.left = `${dock.left}px`;
-      popover.style.top = `${dock.top}px`;
-      popover.style.width = `${dock.width}px`;
+      const selection = draft.selection
+        ? toHostSelection(
+            this.getAdjustedDraftSelection(
+              toViewportSelection(draft.selection.viewport),
+              draft
+            ),
+            environment
+          )
+        : undefined;
+      const composer = this.getDraftComposerPosition({
+        selection,
+        environment,
+        composerPosition: draft.composerPosition,
+        estimatedHeight: 252,
+      });
+      popover.style.left = `${composer.left}px`;
+      popover.style.top = `${composer.top}px`;
+      popover.style.width = `${composer.width}px`;
     } else {
       popover.style.left = `${position.left}px`;
       popover.style.top = `${position.top}px`;
@@ -601,8 +687,22 @@ export class WebReviewKitView {
       ...(adjustmentControls ? [adjustmentControls.panel] : []),
       actions
     );
-    popover.append(form);
+    const dragHandle = isElementDraft
+      ? this.createDraftDragHandle('Move DOM composer')
+      : undefined;
+    popover.append(...(dragHandle ? [dragHandle] : []), form);
     group.append(pin, popover);
+
+    if (dragHandle) {
+      this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
+        const noteDraft = this.state.noteDraft ?? draft;
+        this.config.actions.setNoteDraft({
+          ...noteDraft,
+          composerPosition,
+          comment: textarea.value,
+        });
+      });
+    }
 
     this.attachDraftPinDrag(
       pin,
@@ -621,6 +721,80 @@ export class WebReviewKitView {
     }, 0);
 
     return group;
+  }
+
+  private createDraftDragHandle(label: string) {
+    const handle = document.createElement('button');
+    handle.className = 'dfwr-draft-drag-handle';
+    handle.type = 'button';
+    handle.setAttribute('aria-label', label);
+    return handle;
+  }
+
+  private attachDraftComposerDrag(
+    popover: HTMLDivElement,
+    handle: HTMLButtonElement,
+    onMove: (position: ReviewPoint) => void
+  ) {
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    const movePopover = (event: PointerEvent) => {
+      const environment = this.config.getEnvironment();
+      if (!environment) return;
+
+      const position = this.getClampedComposerPosition(
+        {
+          x: event.clientX - offsetX,
+          y: event.clientY - offsetY,
+        },
+        environment,
+        {
+          width: popover.offsetWidth,
+          height: popover.offsetHeight,
+        }
+      );
+
+      popover.style.left = `${position.x}px`;
+      popover.style.top = `${position.y}px`;
+      onMove(position);
+    };
+
+    handle.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+
+      const rect = popover.getBoundingClientRect();
+      offsetX = event.clientX - rect.left;
+      offsetY = event.clientY - rect.top;
+      isDragging = true;
+
+      event.preventDefault();
+      event.stopPropagation();
+      handle.setPointerCapture(event.pointerId);
+      popover.classList.add('is-dragging');
+    });
+
+    handle.addEventListener('pointermove', (event) => {
+      if (!isDragging || !handle.hasPointerCapture(event.pointerId)) return;
+
+      event.preventDefault();
+      movePopover(event);
+    });
+
+    const stopDrag = (event: PointerEvent) => {
+      if (!isDragging || !handle.hasPointerCapture(event.pointerId)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      isDragging = false;
+      handle.releasePointerCapture(event.pointerId);
+      popover.classList.remove('is-dragging');
+      movePopover(event);
+    };
+
+    handle.addEventListener('pointerup', stopDrag);
+    handle.addEventListener('pointercancel', stopDrag);
   }
 
   private createAdjustmentControls({
@@ -643,7 +817,10 @@ export class WebReviewKitView {
 
     const help = document.createElement('div');
     help.className = 'dfwr-adjust-help';
-    help.textContent = 'MQ 기준 CSS px로 이동값을 기록합니다.';
+    help.textContent = 'MQ 기준 CSS px';
+
+    const selectionStatus = document.createElement('div');
+    selectionStatus.className = 'dfwr-adjust-status';
 
     const status = document.createElement('div');
     status.className = 'dfwr-adjust-status';
@@ -669,6 +846,7 @@ export class WebReviewKitView {
         hud,
         pin,
         selectionHighlight,
+        selectionStatus,
         status,
       });
     };
@@ -727,7 +905,7 @@ export class WebReviewKitView {
       }));
     });
 
-    panel.append(help, status);
+    panel.append(help, selectionStatus, status);
     syncControls(draft);
 
     return {
@@ -764,12 +942,14 @@ export class WebReviewKitView {
     hud,
     pin,
     selectionHighlight,
+    selectionStatus,
     status,
   }: {
     draft: NoteDraft;
     hud?: HTMLDivElement;
     pin: HTMLButtonElement;
     selectionHighlight?: HTMLDivElement;
+    selectionStatus?: HTMLDivElement;
     status?: HTMLDivElement;
   }) {
     const environment = this.config.getEnvironment();
@@ -798,6 +978,13 @@ export class WebReviewKitView {
 
     if (status) {
       status.textContent = this.formatDraftAdjustmentStatus(draft);
+    }
+
+    if (selectionStatus) {
+      selectionStatus.textContent = this.formatDraftSelectionStatus(
+        this.getNoteDraftMetricSelection(draft),
+        draft.viewport
+      );
     }
 
     if (hud) {
@@ -843,15 +1030,21 @@ export class WebReviewKitView {
       return form;
     }
 
-    const meta = document.createElement('div');
-    meta.className = 'dfwr-item-date';
-    meta.textContent = formatAreaDraftMeta(areaDraft);
-    form.append(meta);
+    form.append(this.createAreaMetricsPanel(areaDraft));
 
     const textarea = document.createElement('textarea');
     textarea.className = 'dfwr-textarea';
     textarea.placeholder = 'Area comment';
     textarea.rows = 4;
+    textarea.value = areaDraft.comment ?? '';
+    textarea.addEventListener('input', () => {
+      const draft = this.state.areaDraft;
+      if (!draft) return;
+      this.config.actions.setAreaDraft({
+        ...draft,
+        comment: textarea.value,
+      });
+    });
 
     const actions = this.createFormActions('Save area', () => {
       const comment = textarea.value.trim();
@@ -869,6 +1062,25 @@ export class WebReviewKitView {
 
     form.append(textarea, actions);
     return form;
+  }
+
+  private createAreaMetricsPanel(draft: AreaDraft) {
+    const panel = document.createElement('div');
+    panel.className = 'dfwr-adjust-panel';
+
+    const help = document.createElement('div');
+    help.className = 'dfwr-adjust-help';
+    help.textContent = 'MQ 기준 CSS px';
+
+    const status = document.createElement('div');
+    status.className = 'dfwr-adjust-status';
+    status.textContent = this.formatDraftSelectionStatus(
+      this.getAreaDraftMetricSelection(draft),
+      draft.viewport
+    );
+
+    panel.append(help, status);
+    return panel;
   }
 
   private createAreaDraftOverlay(draft: AreaDraft) {
@@ -904,18 +1116,32 @@ export class WebReviewKitView {
   private createAreaDraftPopover(draft: AreaDraft) {
     const environment = this.config.getEnvironment();
     const popover = document.createElement('div');
-    popover.className = 'dfwr-area-draft';
+    popover.className = 'dfwr-area-draft is-composer';
     if (environment && draft.selection) {
       const selection = toHostSelection(
         toViewportSelection(draft.selection.viewport),
         environment
       );
-      const position = getAreaPopoverPosition(selection, environment);
-      popover.style.left = `${position.left}px`;
-      popover.style.top = `${position.top}px`;
+      const composer = this.getDraftComposerPosition({
+        selection,
+        environment,
+        composerPosition: draft.composerPosition,
+        estimatedHeight: 220,
+      });
+      popover.style.left = `${composer.left}px`;
+      popover.style.top = `${composer.top}px`;
+      popover.style.width = `${composer.width}px`;
       popover.style.right = 'auto';
     }
-    popover.append(this.createAreaForm());
+    const dragHandle = this.createDraftDragHandle('Move area composer');
+    popover.append(dragHandle, this.createAreaForm());
+    this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
+      const areaDraft = this.state.areaDraft ?? draft;
+      this.config.actions.setAreaDraft({
+        ...areaDraft,
+        composerPosition,
+      });
+    });
     return popover;
   }
 

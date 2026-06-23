@@ -301,19 +301,6 @@ function getPopoverPosition(point, environment, options) {
     )
   };
 }
-function getAreaPopoverPosition(selection, environment) {
-  return getPopoverPosition(
-    {
-      x: selection.left + selection.width,
-      y: selection.top
-    },
-    environment,
-    {
-      width: 360,
-      estimatedHeight: 206
-    }
-  );
-}
 function getPopoverBounds(environment) {
   if (!environment) {
     return {
@@ -1687,10 +1674,38 @@ function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
-    .dfwr-note-popover.is-docked {
+    .dfwr-note-popover.is-composer,
+    .dfwr-area-draft.is-composer {
       max-height: min(360px, calc(100vh - 32px));
       overflow: auto;
       border-color: rgba(99, 215, 199, 0.56);
+    }
+
+    .dfwr-note-popover.is-dragging,
+    .dfwr-area-draft.is-dragging {
+      user-select: none;
+    }
+
+    .dfwr-draft-drag-handle {
+      display: block;
+      width: 42px;
+      height: 6px;
+      margin: 0 auto 10px;
+      padding: 0;
+      cursor: grab;
+      pointer-events: auto;
+      background: rgba(247, 247, 242, 0.28);
+      border: 0;
+      border-radius: 999px;
+    }
+
+    .dfwr-draft-drag-handle:hover,
+    .dfwr-draft-drag-handle:focus-visible {
+      background: rgba(215, 255, 95, 0.62);
+    }
+
+    .dfwr-draft-drag-handle:active {
+      cursor: grabbing;
     }
 
     .dfwr-area-draft {
@@ -2023,16 +2038,6 @@ function createStyleElement() {
 }
 
 // src/core/review/format.ts
-function formatAreaDraftMeta(draft) {
-  const parts = [`viewport ${formatSize(draft.viewport)}`];
-  if (draft.selection) {
-    parts.push(`rect ${formatSelection(draft.selection.viewport)}`);
-  }
-  if (draft.marker) {
-    parts.push(`point ${formatPoint(draft.marker.viewport)}`);
-  }
-  return parts.join(" / ");
-}
 function formatNoteDraftMeta(draft) {
   const parts = [
     `viewport ${formatSize(draft.viewport)}`,
@@ -2153,12 +2158,9 @@ var WebReviewKitView = class {
     const adjustment = draft.adjustment;
     const x = adjustment?.x ?? 0;
     const y = adjustment?.y ?? 0;
-    const preset = findReviewViewportPreset(
-      draft.viewport,
-      this.config.options.viewports?.presets
+    const { scale, designWidth, presetLabel } = this.getDraftViewportScale(
+      draft.viewport
     );
-    const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : draft.viewport.width;
-    const scale = designWidth > 0 ? draft.viewport.width / designWidth : 1;
     return {
       x,
       y,
@@ -2166,7 +2168,7 @@ var WebReviewKitView = class {
       cssY: y * scale,
       scale,
       designWidth,
-      presetLabel: preset.label,
+      presetLabel,
       viewportWidth: draft.viewport.width
     };
   }
@@ -2189,52 +2191,104 @@ var WebReviewKitView = class {
       top: selection.top + metrics.cssY
     };
   }
-  getDockPopoverPosition(draft, environment) {
+  getDraftViewportScale(viewport) {
+    const preset = findReviewViewportPreset(
+      viewport,
+      this.config.options.viewports?.presets
+    );
+    const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : viewport.width;
+    const scale = designWidth > 0 ? viewport.width / designWidth : 1;
+    return { scale, designWidth, presetLabel: preset.label };
+  }
+  getDraftComposerWidth(environment) {
     const bounds = environment.overlayRect;
     const margin = 12;
-    const width = Math.min(360, Math.max(240, bounds.width - margin * 2));
-    const height = 240;
-    const selection = draft.selection ? toHostSelection(
-      this.getAdjustedDraftSelection(
-        toViewportSelection(draft.selection.viewport),
-        draft
-      ),
-      environment
-    ) : void 0;
-    const positions = [
-      {
-        left: bounds.left + bounds.width - width - margin,
-        top: bounds.top + bounds.height - height - margin
-      },
-      {
-        left: bounds.left + bounds.width - width - margin,
-        top: bounds.top + margin
-      },
-      {
-        left: bounds.left + margin,
-        top: bounds.top + bounds.height - height - margin
-      }
-    ];
-    const position = positions.find((candidate) => {
-      if (!selection) return true;
-      return !rectanglesIntersect(
-        { ...candidate, width, height },
-        selection
-      );
-    }) ?? positions[0];
+    return Math.min(360, Math.max(240, bounds.width - margin * 2));
+  }
+  getClampedComposerPosition(position, environment, size) {
+    const bounds = environment.overlayRect;
+    const margin = 12;
+    const width = size?.width ?? this.getDraftComposerWidth(environment);
+    const height = size?.height ?? 236;
     return {
+      x: clamp(
+        position.x,
+        bounds.left + margin,
+        bounds.left + bounds.width - width - margin
+      ),
+      y: clamp(
+        position.y,
+        bounds.top + margin,
+        bounds.top + bounds.height - height - margin
+      )
+    };
+  }
+  getDraftComposerPosition({
+    selection,
+    environment,
+    composerPosition,
+    estimatedHeight
+  }) {
+    const width = this.getDraftComposerWidth(environment);
+    if (composerPosition) {
+      const clamped = this.getClampedComposerPosition(
+        composerPosition,
+        environment,
+        { width, height: estimatedHeight }
+      );
+      return { width, left: clamped.x, top: clamped.y };
+    }
+    const anchor = selection ? {
+      x: selection.left + selection.width,
+      y: selection.top
+    } : { x: environment.overlayRect.left, y: environment.overlayRect.top };
+    const position = getPopoverPosition(anchor, environment, {
       width,
-      left: Math.max(bounds.left + margin, position.left),
-      top: Math.max(bounds.top + margin, position.top)
+      estimatedHeight
+    });
+    return { width, left: position.left, top: position.top };
+  }
+  getSelectionMqMetrics(selection, viewport) {
+    const { scale } = this.getDraftViewportScale(viewport);
+    const ratio = scale > 0 ? 1 / scale : 1;
+    return {
+      x: selection.left * ratio,
+      y: selection.top * ratio,
+      width: selection.width * ratio,
+      height: selection.height * ratio
     };
   }
   formatSignedPx(value) {
     if (value === 0) return "+0px";
     return `${value > 0 ? "+" : ""}${value}px`;
   }
+  formatRoundedPx(value) {
+    return `${Math.round(value)}px`;
+  }
+  formatDraftSelectionStatus(selection, viewport) {
+    if (!selection) return "area none";
+    const metrics = this.getSelectionMqMetrics(selection, viewport);
+    return [
+      `area x ${this.formatRoundedPx(metrics.x)}`,
+      `y ${this.formatRoundedPx(metrics.y)}`,
+      `w ${this.formatRoundedPx(metrics.width)}`,
+      `h ${this.formatRoundedPx(metrics.height)}`
+    ].join(" / ");
+  }
+  getNoteDraftMetricSelection(draft) {
+    if (!draft.selection) return void 0;
+    return this.getAdjustedDraftSelection(
+      toViewportSelection(draft.selection.viewport),
+      draft
+    );
+  }
+  getAreaDraftMetricSelection(draft) {
+    if (!draft.selection) return void 0;
+    return toViewportSelection(draft.selection.viewport);
+  }
   formatDraftAdjustmentStatus(draft) {
     const metrics = this.getDraftAdjustmentMetrics(draft);
-    return `x ${this.formatSignedPx(metrics.x)} / y ${this.formatSignedPx(
+    return `move x ${this.formatSignedPx(metrics.x)} / y ${this.formatSignedPx(
       metrics.y
     )}`;
   }
@@ -2416,12 +2470,24 @@ ${adjustment}`;
     pin.style.top = `${hostPoint.y}px`;
     const popover = document.createElement("div");
     const position = getPopoverPosition(hostPoint, environment);
-    popover.className = `dfwr-note-popover${isElementDraft ? " is-docked" : ""}`;
+    popover.className = `dfwr-note-popover${isElementDraft ? " is-composer" : ""}`;
     if (isElementDraft) {
-      const dock = this.getDockPopoverPosition(draft, environment);
-      popover.style.left = `${dock.left}px`;
-      popover.style.top = `${dock.top}px`;
-      popover.style.width = `${dock.width}px`;
+      const selection = draft.selection ? toHostSelection(
+        this.getAdjustedDraftSelection(
+          toViewportSelection(draft.selection.viewport),
+          draft
+        ),
+        environment
+      ) : void 0;
+      const composer = this.getDraftComposerPosition({
+        selection,
+        environment,
+        composerPosition: draft.composerPosition,
+        estimatedHeight: 252
+      });
+      popover.style.left = `${composer.left}px`;
+      popover.style.top = `${composer.top}px`;
+      popover.style.width = `${composer.width}px`;
     } else {
       popover.style.left = `${position.left}px`;
       popover.style.top = `${position.top}px`;
@@ -2481,8 +2547,19 @@ ${adjustment}`;
       ...adjustmentControls ? [adjustmentControls.panel] : [],
       actions
     );
-    popover.append(form);
+    const dragHandle = isElementDraft ? this.createDraftDragHandle("Move DOM composer") : void 0;
+    popover.append(...dragHandle ? [dragHandle] : [], form);
     group.append(pin, popover);
+    if (dragHandle) {
+      this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
+        const noteDraft = this.state.noteDraft ?? draft;
+        this.config.actions.setNoteDraft({
+          ...noteDraft,
+          composerPosition,
+          comment: textarea.value
+        });
+      });
+    }
     this.attachDraftPinDrag(
       pin,
       isElementDraft ? void 0 : popover,
@@ -2498,6 +2575,63 @@ ${adjustment}`;
     }, 0);
     return group;
   }
+  createDraftDragHandle(label) {
+    const handle = document.createElement("button");
+    handle.className = "dfwr-draft-drag-handle";
+    handle.type = "button";
+    handle.setAttribute("aria-label", label);
+    return handle;
+  }
+  attachDraftComposerDrag(popover, handle, onMove) {
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+    const movePopover = (event) => {
+      const environment = this.config.getEnvironment();
+      if (!environment) return;
+      const position = this.getClampedComposerPosition(
+        {
+          x: event.clientX - offsetX,
+          y: event.clientY - offsetY
+        },
+        environment,
+        {
+          width: popover.offsetWidth,
+          height: popover.offsetHeight
+        }
+      );
+      popover.style.left = `${position.x}px`;
+      popover.style.top = `${position.y}px`;
+      onMove(position);
+    };
+    handle.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      const rect = popover.getBoundingClientRect();
+      offsetX = event.clientX - rect.left;
+      offsetY = event.clientY - rect.top;
+      isDragging = true;
+      event.preventDefault();
+      event.stopPropagation();
+      handle.setPointerCapture(event.pointerId);
+      popover.classList.add("is-dragging");
+    });
+    handle.addEventListener("pointermove", (event) => {
+      if (!isDragging || !handle.hasPointerCapture(event.pointerId)) return;
+      event.preventDefault();
+      movePopover(event);
+    });
+    const stopDrag = (event) => {
+      if (!isDragging || !handle.hasPointerCapture(event.pointerId)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      isDragging = false;
+      handle.releasePointerCapture(event.pointerId);
+      popover.classList.remove("is-dragging");
+      movePopover(event);
+    };
+    handle.addEventListener("pointerup", stopDrag);
+    handle.addEventListener("pointercancel", stopDrag);
+  }
   createAdjustmentControls({
     draft,
     hud,
@@ -2510,7 +2644,9 @@ ${adjustment}`;
     panel.className = "dfwr-adjust-panel";
     const help = document.createElement("div");
     help.className = "dfwr-adjust-help";
-    help.textContent = "MQ \uAE30\uC900 CSS px\uB85C \uC774\uB3D9\uAC12\uC744 \uAE30\uB85D\uD569\uB2C8\uB2E4.";
+    help.textContent = "MQ \uAE30\uC900 CSS px";
+    const selectionStatus = document.createElement("div");
+    selectionStatus.className = "dfwr-adjust-status";
     const status = document.createElement("div");
     status.className = "dfwr-adjust-status";
     const reset = document.createElement("button");
@@ -2532,6 +2668,7 @@ ${adjustment}`;
         hud,
         pin,
         selectionHighlight,
+        selectionStatus,
         status
       });
     };
@@ -2582,7 +2719,7 @@ ${adjustment}`;
         }
       }));
     });
-    panel.append(help, status);
+    panel.append(help, selectionStatus, status);
     syncControls(draft);
     return {
       panel,
@@ -2610,6 +2747,7 @@ ${adjustment}`;
     hud,
     pin,
     selectionHighlight,
+    selectionStatus,
     status
   }) {
     const environment = this.config.getEnvironment();
@@ -2635,6 +2773,12 @@ ${adjustment}`;
     }
     if (status) {
       status.textContent = this.formatDraftAdjustmentStatus(draft);
+    }
+    if (selectionStatus) {
+      selectionStatus.textContent = this.formatDraftSelectionStatus(
+        this.getNoteDraftMetricSelection(draft),
+        draft.viewport
+      );
     }
     if (hud) {
       this.syncAdjustmentHud(hud, draft, environment);
@@ -2667,14 +2811,20 @@ ${adjustment}`;
       form.append(empty);
       return form;
     }
-    const meta = document.createElement("div");
-    meta.className = "dfwr-item-date";
-    meta.textContent = formatAreaDraftMeta(areaDraft);
-    form.append(meta);
+    form.append(this.createAreaMetricsPanel(areaDraft));
     const textarea = document.createElement("textarea");
     textarea.className = "dfwr-textarea";
     textarea.placeholder = "Area comment";
     textarea.rows = 4;
+    textarea.value = areaDraft.comment ?? "";
+    textarea.addEventListener("input", () => {
+      const draft = this.state.areaDraft;
+      if (!draft) return;
+      this.config.actions.setAreaDraft({
+        ...draft,
+        comment: textarea.value
+      });
+    });
     const actions = this.createFormActions("Save area", () => {
       const comment = textarea.value.trim();
       const draft = this.state.areaDraft;
@@ -2690,6 +2840,21 @@ ${adjustment}`;
     });
     form.append(textarea, actions);
     return form;
+  }
+  createAreaMetricsPanel(draft) {
+    const panel = document.createElement("div");
+    panel.className = "dfwr-adjust-panel";
+    const help = document.createElement("div");
+    help.className = "dfwr-adjust-help";
+    help.textContent = "MQ \uAE30\uC900 CSS px";
+    const status = document.createElement("div");
+    status.className = "dfwr-adjust-status";
+    status.textContent = this.formatDraftSelectionStatus(
+      this.getAreaDraftMetricSelection(draft),
+      draft.viewport
+    );
+    panel.append(help, status);
+    return panel;
   }
   createAreaDraftOverlay(draft) {
     const layer = document.createElement("div");
@@ -2719,18 +2884,32 @@ ${adjustment}`;
   createAreaDraftPopover(draft) {
     const environment = this.config.getEnvironment();
     const popover = document.createElement("div");
-    popover.className = "dfwr-area-draft";
+    popover.className = "dfwr-area-draft is-composer";
     if (environment && draft.selection) {
       const selection = toHostSelection(
         toViewportSelection(draft.selection.viewport),
         environment
       );
-      const position = getAreaPopoverPosition(selection, environment);
-      popover.style.left = `${position.left}px`;
-      popover.style.top = `${position.top}px`;
+      const composer = this.getDraftComposerPosition({
+        selection,
+        environment,
+        composerPosition: draft.composerPosition,
+        estimatedHeight: 220
+      });
+      popover.style.left = `${composer.left}px`;
+      popover.style.top = `${composer.top}px`;
+      popover.style.width = `${composer.width}px`;
       popover.style.right = "auto";
     }
-    popover.append(this.createAreaForm());
+    const dragHandle = this.createDraftDragHandle("Move area composer");
+    popover.append(dragHandle, this.createAreaForm());
+    this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
+      const areaDraft = this.state.areaDraft ?? draft;
+      this.config.actions.setAreaDraft({
+        ...areaDraft,
+        composerPosition
+      });
+    });
     return popover;
   }
   createFormActions(saveLabel, onSave, options) {
@@ -3211,6 +3390,9 @@ var WebReviewKitApp = class {
         setNoteDraft: (draft) => {
           this.noteDraft = draft;
         },
+        setAreaDraft: (draft) => {
+          this.areaDraft = draft;
+        },
         setSelectingArea: (isSelectingArea) => {
           this.isSelectingArea = isSelectingArea;
         },
@@ -3605,4 +3787,4 @@ export {
   getNumberedReviewItems,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-KIJMDLMA.js.map
+//# sourceMappingURL=chunk-WBURKWBL.js.map

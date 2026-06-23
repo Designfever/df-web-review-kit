@@ -136,6 +136,9 @@ class WebReviewKitApp {
         setNoteDraft: (draft) => {
           this.noteDraft = draft;
         },
+        setAreaDraft: (draft) => {
+          this.areaDraft = draft;
+        },
         setSelectingArea: (isSelectingArea) => {
           this.isSelectingArea = isSelectingArea;
         },

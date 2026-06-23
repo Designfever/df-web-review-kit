@@ -8124,8 +8124,7 @@ var WebReviewKitView = class {
     const margin = 12;
     return Math.min(360, Math.max(240, bounds.width - margin * 2));
   }
-  getClampedComposerPosition(position, environment, size) {
-    const bounds = environment.overlayRect;
+  getClampedComposerPosition(position, environment, size, bounds = environment.overlayRect) {
     const margin = 12;
     const width = size?.width ?? this.getDraftComposerWidth(environment);
     const height = size?.height ?? 236;
@@ -8142,6 +8141,15 @@ var WebReviewKitView = class {
       )
     };
   }
+  getHostComposerBounds() {
+    const root = document.documentElement;
+    return {
+      left: 0,
+      top: 0,
+      width: root.clientWidth || window.innerWidth,
+      height: root.clientHeight || window.innerHeight
+    };
+  }
   getDraftComposerPosition({
     selection,
     environment,
@@ -8153,7 +8161,8 @@ var WebReviewKitView = class {
       const clamped = this.getClampedComposerPosition(
         composerPosition,
         environment,
-        { width, height: estimatedHeight }
+        { width, height: estimatedHeight },
+        this.getHostComposerBounds()
       );
       return { width, left: clamped.x, top: clamped.y };
     }
@@ -8527,7 +8536,8 @@ ${adjustment}`;
         {
           width: popover.offsetWidth,
           height: popover.offsetHeight
-        }
+        },
+        this.getHostComposerBounds()
       );
       popover.style.left = `${position.x}px`;
       popover.style.top = `${position.y}px`;

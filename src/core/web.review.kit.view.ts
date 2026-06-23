@@ -295,9 +295,9 @@ export class WebReviewKitView {
   private getClampedComposerPosition(
     position: ReviewPoint,
     environment: ReviewEnvironment,
-    size?: { width?: number; height?: number }
+    size?: { width?: number; height?: number },
+    bounds = environment.overlayRect
   ) {
-    const bounds = environment.overlayRect;
     const margin = 12;
     const width = size?.width ?? this.getDraftComposerWidth(environment);
     const height = size?.height ?? 236;
@@ -313,6 +313,16 @@ export class WebReviewKitView {
         bounds.top + margin,
         bounds.top + bounds.height - height - margin
       ),
+    };
+  }
+
+  private getHostComposerBounds() {
+    const root = document.documentElement;
+    return {
+      left: 0,
+      top: 0,
+      width: root.clientWidth || window.innerWidth,
+      height: root.clientHeight || window.innerHeight,
     };
   }
 
@@ -333,7 +343,8 @@ export class WebReviewKitView {
       const clamped = this.getClampedComposerPosition(
         composerPosition,
         environment,
-        { width, height: estimatedHeight }
+        { width, height: estimatedHeight },
+        this.getHostComposerBounds()
       );
       return { width, left: clamped.x, top: clamped.y };
     }
@@ -820,7 +831,8 @@ export class WebReviewKitView {
         {
           width: popover.offsetWidth,
           height: popover.offsetHeight,
-        }
+        },
+        this.getHostComposerBounds()
       );
 
       popover.style.left = `${position.x}px`;

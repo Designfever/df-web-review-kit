@@ -2539,6 +2539,34 @@ var WebReviewKitView = class {
       height: root.clientHeight || window.innerHeight
     };
   }
+  getInitialDraftComposerPosition(selection, environment, size) {
+    const bounds = this.getHostComposerBounds();
+    const margin = 12;
+    const gap = 20;
+    if (!selection) {
+      return this.getClampedComposerPosition(
+        {
+          x: environment.overlayRect.left + margin,
+          y: environment.overlayRect.top + margin
+        },
+        environment,
+        size,
+        bounds
+      );
+    }
+    const preferredX = selection.left + selection.width + gap;
+    const maxX = bounds.left + bounds.width - size.width - margin;
+    const x = preferredX <= maxX ? preferredX : selection.left - size.width - gap;
+    return this.getClampedComposerPosition(
+      {
+        x,
+        y: selection.top
+      },
+      environment,
+      size,
+      bounds
+    );
+  }
   getDraftComposerPosition({
     selection,
     environment,
@@ -2555,15 +2583,11 @@ var WebReviewKitView = class {
       );
       return { width, left: clamped.x, top: clamped.y };
     }
-    const anchor = selection ? {
-      x: selection.left + selection.width,
-      y: selection.top
-    } : { x: environment.overlayRect.left, y: environment.overlayRect.top };
-    const position = getPopoverPosition(anchor, environment, {
+    const position = this.getInitialDraftComposerPosition(selection, environment, {
       width,
-      estimatedHeight
+      height: estimatedHeight
     });
-    return { width, left: position.left, top: position.top };
+    return { width, left: position.x, top: position.y };
   }
   getSelectionMqMetrics(selection, viewport) {
     const { scale } = this.getDraftViewportScale(viewport);

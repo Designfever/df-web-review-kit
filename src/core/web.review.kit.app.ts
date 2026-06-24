@@ -39,7 +39,11 @@ import {
 } from './location';
 import { getReviewViewportScope } from './review/scope';
 import { createSelectionCenterMarker } from './review/item';
-import type { AreaDraft, NoteDraft } from './review/draft';
+import type {
+  AreaDraft,
+  NoteDraft,
+  ReviewDraftPreviewElement,
+} from './review/draft';
 import {
   runWithAutoScrollBehavior,
   setDocumentScrollInstantly,
@@ -453,15 +457,35 @@ class WebReviewKitApp {
     const nextPoint = clampPoint(point, environment);
 
     const draft = await this.withOverlayHidden(() => {
+      const pointSelection = getPointSelection(nextPoint);
+      const targetElement = environment.document.elementFromPoint(
+        nextPoint.x,
+        nextPoint.y
+      );
+      const previewElement =
+        targetElement && 'style' in targetElement
+          ? (targetElement as ReviewDraftPreviewElement)
+          : undefined;
+      const targetRect = targetElement?.getBoundingClientRect();
+      const clickedSelection =
+        targetRect && targetRect.width > 0 && targetRect.height > 0
+          ? {
+              left: targetRect.left,
+              top: targetRect.top,
+              width: targetRect.width,
+              height: targetRect.height,
+            }
+          : undefined;
       const anchor = getDomAnchorFromPoint(
         nextPoint,
         this.options.anchors?.attribute,
         environment
       );
       const elementSelection = anchor
-        ? getElementViewportSelection(anchor, environment)
+        ? (clickedSelection ??
+          getElementViewportSelection(anchor, environment, pointSelection))
         : undefined;
-      const selection = elementSelection ?? getPointSelection(nextPoint);
+      const selection = elementSelection ?? pointSelection;
       const markerPoint = elementSelection
         ? { x: selection.left, y: selection.top }
         : getSelectionCenter(selection);
@@ -488,6 +512,7 @@ class WebReviewKitApp {
         marker,
         selection: reviewSelection,
         comment,
+        previewElement,
       };
     });
 

@@ -58,6 +58,7 @@ import {
   type SourceOpenOptions,
 } from '../source.open';
 import { ReviewTargetFrame } from '../target/frame';
+import { setTargetFigmaOverlayLocked } from '../target/target';
 import { ReviewTopbar } from '../topbar';
 import { useReviewController } from '../hooks/use.review.controller';
 import { useReviewPresence } from '../hooks/use.review.presence';
@@ -360,7 +361,6 @@ export const ReviewShell = ({
 
   const {
     clearSelectedItem,
-    closeTargetOverlay,
     initReviewKit,
     reloadReviewKit,
     restoreReviewItem,
@@ -523,9 +523,6 @@ export const ReviewShell = ({
     const writeMode = getReviewModeWriteMode(nextMode);
     if (writeMode && !activeAdapterEntry.writeModes.includes(writeMode)) return;
     closeRuler();
-    if (nextMode === 'element') {
-      closeTargetOverlay('figma');
-    }
     setControllerReviewMode(nextMode);
   };
 
@@ -567,6 +564,14 @@ export const ReviewShell = ({
     );
     setTargetFigmaState(config ? { targetSrc, config } : null);
   }, [iframeRef, targetSrc]);
+
+  useEffect(() => {
+    const targetDocument = iframeRef.current?.contentDocument;
+    setTargetFigmaOverlayLocked(targetDocument, mode === 'element');
+    return () => {
+      setTargetFigmaOverlayLocked(targetDocument, false);
+    };
+  }, [iframeRef, mode, targetSrc]);
 
   const clearSourceInspector = useCallback(() => {
     sourceInspectorInteractionRef.current = false;
@@ -741,6 +746,13 @@ export const ReviewShell = ({
       html[${optionAttribute}="true"],
       html[${optionAttribute}="true"] * {
         cursor: crosshair !important;
+      }
+
+      html[${optionAttribute}="true"] .helper-figma-root,
+      html[${optionAttribute}="true"] .helper-figma-root *,
+      html[${optionAttribute}="true"] .helper-figma-loading-backdrop,
+      html[${optionAttribute}="true"] .helper-figma-loading-backdrop * {
+        pointer-events: none !important;
       }
 
       html[${optionAttribute}="true"] body::before {
@@ -1012,8 +1024,18 @@ export const ReviewShell = ({
   const loadTargetFrame = useCallback(() => {
     initReviewKit();
     refreshTargetFigmaConfig();
+    setTargetFigmaOverlayLocked(
+      iframeRef.current?.contentDocument,
+      mode === 'element'
+    );
     bindSourceOpenShortcut();
-  }, [bindSourceOpenShortcut, initReviewKit, refreshTargetFigmaConfig]);
+  }, [
+    bindSourceOpenShortcut,
+    iframeRef,
+    initReviewKit,
+    mode,
+    refreshTargetFigmaConfig,
+  ]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(bindSourceOpenShortcut);

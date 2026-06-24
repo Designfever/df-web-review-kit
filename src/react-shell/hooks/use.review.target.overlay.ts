@@ -1,4 +1,4 @@
-import { useCallback, useEffect, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, type RefObject } from 'react';
 import { getTargetOverlayState } from '../target/target';
 import type {
   TargetOverlayKey,
@@ -12,17 +12,36 @@ interface UseReviewTargetOverlayOptions {
   onTargetOverlayStateChange: (state: TargetOverlayState) => void;
 }
 
+const TARGET_OVERLAY_REFRESH_DELAYS = [80, 240, 600];
+
 export const useReviewTargetOverlay = ({
   iframeRef,
   isFigmaOverlayAvailable,
   targetOverlayState,
   onTargetOverlayStateChange,
 }: UseReviewTargetOverlayOptions) => {
-  const refreshTargetOverlayState = useCallback(() => {
-    onTargetOverlayStateChange(
-      getTargetOverlayState(iframeRef.current?.contentDocument ?? undefined)
+  const refreshTimersRef = useRef<number[]>([]);
+
+  const clearRefreshTimers = useCallback(() => {
+    refreshTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    refreshTimersRef.current = [];
+  }, []);
+
+  const updateTargetOverlayState = useCallback(() => {
+    const state = getTargetOverlayState(
+      iframeRef.current?.contentDocument ?? undefined
     );
+    onTargetOverlayStateChange(state);
+    return state;
   }, [iframeRef, onTargetOverlayStateChange]);
+
+  const refreshTargetOverlayState = useCallback(() => {
+    clearRefreshTimers();
+    updateTargetOverlayState();
+    refreshTimersRef.current = TARGET_OVERLAY_REFRESH_DELAYS.map((delay) =>
+      window.setTimeout(updateTargetOverlayState, delay)
+    );
+  }, [clearRefreshTimers, updateTargetOverlayState]);
 
   const dispatchTargetOverlayHotkey = useCallback(
     (overlay: TargetOverlayKey) => {
@@ -63,21 +82,20 @@ export const useReviewTargetOverlay = ({
 
   const closeTargetOverlay = useCallback(
     (overlay: TargetOverlayKey) => {
-      const currentState = getTargetOverlayState(
-        iframeRef.current?.contentDocument ?? undefined
-      );
-      onTargetOverlayStateChange(currentState);
+      const currentState = updateTargetOverlayState();
       if (!currentState[overlay]) return false;
 
       return dispatchTargetOverlayHotkey(overlay);
     },
-    [dispatchTargetOverlayHotkey, iframeRef, onTargetOverlayStateChange]
+    [dispatchTargetOverlayHotkey, updateTargetOverlayState]
   );
 
   useEffect(() => {
     if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
     closeTargetOverlay('figma');
   }, [closeTargetOverlay, isFigmaOverlayAvailable, targetOverlayState.figma]);
+
+  useEffect(() => clearRefreshTimers, [clearRefreshTimers]);
 
   return {
     closeTargetOverlay,

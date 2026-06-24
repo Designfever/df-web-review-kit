@@ -66,9 +66,10 @@ export function getDomAnchorFromPoint(
 /** Reads the current target-space rectangle for a previously captured anchor. */
 export function getElementViewportSelection(
   anchor: DomAnchor,
-  environment: ReviewEnvironment
+  environment: ReviewEnvironment,
+  preferredSelection?: ViewportSelection
 ): ViewportSelection | undefined {
-  const element = getAnchorElement(anchor, environment);
+  const element = getAnchorElement(anchor, environment, preferredSelection);
   if (!element) return undefined;
 
   const rect = element.getBoundingClientRect();
@@ -131,27 +132,46 @@ export function getAnchorCandidates(anchor: DomAnchor) {
 /** Finds the best current DOM element for a persisted anchor candidate set. */
 export function resolveAnchorElement(
   anchor: DomAnchor,
-  environment: ReviewEnvironment
+  environment: ReviewEnvironment,
+  preferredSelection?: ViewportSelection
 ) {
   // Try every persisted candidate because IDs/classes can disappear between builds.
   const matches = getAnchorCandidates(anchor).flatMap((candidate) => {
-    const match = queryBestAnchorCandidate(
-      candidate,
-      candidate.textFingerprint ?? anchor.textFingerprint,
-      environment
-    );
+    const textFingerprint = candidate.textFingerprint ?? anchor.textFingerprint;
 
-    if (!match) return [];
+    if (!preferredSelection) {
+      const match = queryBestAnchorCandidate(
+        candidate,
+        textFingerprint,
+        environment
+      );
 
-    const confidence = roundRatio(
-      (candidate.confidence ?? 0.5) * match.score
-    );
+      if (!match) return [];
 
-    return [{
-      element: match.element,
-      candidate,
-      confidence,
-    }];
+      const confidence = roundRatio(
+        (candidate.confidence ?? 0.5) * match.score
+      );
+
+      return [{
+        element: match.element,
+        candidate,
+        confidence,
+      }];
+    }
+
+    return queryAnchorElements(candidate.selector, environment).map((element) => {
+      const confidence = roundRatio(
+        (candidate.confidence ?? 0.5) *
+          getTextFingerprintScore(textFingerprint, getTextFingerprint(element)) *
+          getSelectionMatchScore(element, preferredSelection)
+      );
+
+      return {
+        element,
+        candidate,
+        confidence,
+      };
+    });
   });
 
   return matches.sort((a, b) => b.confidence - a.confidence)[0];
@@ -168,11 +188,12 @@ export function cssEscape(value: string) {
 
 function getAnchorElement(
   anchor: DomAnchor | string,
-  environment: ReviewEnvironment
+  environment: ReviewEnvironment,
+  preferredSelection?: ViewportSelection
 ) {
   return typeof anchor === 'string'
     ? queryAnchorElement(anchor, environment)
-    : resolveAnchorElement(anchor, environment)?.element;
+    : resolveAnchorElement(anchor, environment, preferredSelection)?.element;
 }
 
 function createAnchorCandidates(
@@ -678,6 +699,46 @@ function getTextFingerprintScore(expected?: string, actual?: string) {
 
   const matches = expectedTokens.filter((token) => actualTokens.has(token));
   return clamp(matches.length / expectedTokens.length, 0.25, 0.76);
+}
+
+function getSelectionMatchScore(
+  element: Element,
+  selection: ViewportSelection
+) {
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return 0.05;
+
+  const overlapLeft = Math.max(rect.left, selection.left);
+  const overlapTop = Math.max(rect.top, selection.top);
+  const overlapRight = Math.min(rect.right, selection.left + selection.width);
+  const overlapBottom = Math.min(rect.bottom, selection.top + selection.height);
+  const overlapWidth = Math.max(0, overlapRight - overlapLeft);
+  const overlapHeight = Math.max(0, overlapBottom - overlapTop);
+  const overlapArea = overlapWidth * overlapHeight;
+
+  if (overlapArea > 0) {
+    const selectionArea = Math.max(1, selection.width * selection.height);
+    const rectArea = Math.max(1, rect.width * rect.height);
+    return 1 + overlapArea / Math.min(selectionArea, rectArea);
+  }
+
+  const rectCenterX = rect.left + rect.width / 2;
+  const rectCenterY = rect.top + rect.height / 2;
+  const selectionCenterX = selection.left + selection.width / 2;
+  const selectionCenterY = selection.top + selection.height / 2;
+  const distance = Math.hypot(
+    rectCenterX - selectionCenterX,
+    rectCenterY - selectionCenterY
+  );
+  const basis = Math.max(
+    1,
+    rect.width,
+    rect.height,
+    selection.width,
+    selection.height
+  );
+
+  return clamp(1 / (1 + distance / basis), 0.05, 0.95);
 }
 
 function getFingerprintTokens(value: string) {

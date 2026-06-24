@@ -64,6 +64,7 @@ mountReviewShell({
       get: (id) => local.get(id),
       list: (query) => local.list(query),
       create: (item) => local.create(item),
+      update: (id, patch) => local.update(id, patch),
       statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
       updateStatus: ({ id, status }) => local.update(id, { status }),
       syncSubmission: ({ id, patch }) => local.update(id, patch),
@@ -73,6 +74,22 @@ mountReviewShell({
   reviewPathPrefix: REVIEW_PATH_PREFIX,
 });
 ```
+
+## Adjustment Label
+
+DOM adjust mode appends adjustment metrics to the saved QA comment. Use `adjustmentLabel` when a host project wants that prompt line to match its own responsive CSS workflow.
+
+```tsx
+mountReviewShell({
+  projectId: REVIEW_PROJECT_ID,
+  pages,
+  adapters,
+  adjustmentLabel: 'Responsive CSS px adjustments',
+  reviewPathPrefix: REVIEW_PATH_PREFIX,
+});
+```
+
+If omitted, the default label is `Responsive CSS px adjustments`. This option only changes the label before the generated `x`, `y`, and `scale` values.
 
 ## Supabase Adapter
 
@@ -124,6 +141,7 @@ const adapters = [
     get: (id) => local.get(id),
     list: (query) => local.list(query),
     create: (item) => local.create(item),
+    update: (id, patch) => local.update(id, patch),
     statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
     updateStatus: ({ id, status }) => local.update(id, { status }),
     syncSubmission: ({ id, patch }) => local.update(id, patch),
@@ -136,6 +154,7 @@ const adapters = [
           get: (id) => remote.get(id),
           list: (query) => remote.list(query),
           create: (item) => remote.create(item),
+          update: (id, patch) => remote.update(id, patch),
           statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
           updateStatus: ({ id, status }) => remote.update(id, { status }),
           remove: (id) => remote.remove(id),

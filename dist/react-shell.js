@@ -3,7 +3,7 @@ import {
   createWebReviewKit,
   getNumberedReviewItems,
   normalizeReviewItemStatus
-} from "./chunk-QFNYQCTA.js";
+} from "./chunk-6L2KJ7XL.js";
 
 // src/react-shell.tsx
 import React2 from "react";
@@ -152,6 +152,7 @@ function ensureReviewShellStyle() {
 
 	    /* Semantic aliases consumed by the existing shell chrome. */
 	    --df-review-bg: var(--df-review-color-canvas);
+	    --df-review-surface: var(--df-review-color-surface);
 	    --df-review-topbar: var(--df-review-color-surface);
 	    --df-review-panel: var(--df-review-color-panel);
 	    --df-review-panel-strong: var(--df-review-color-panel-strong);
@@ -506,10 +507,13 @@ function ensureReviewShellStyle() {
 
   .df-review-sitemap-list {
     --df-review-sitemap-grid-template: minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px);
+    position: relative;
     display: grid;
     align-content: start;
     min-height: 0;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 8px;
   }
 
@@ -524,11 +528,14 @@ function ensureReviewShellStyle() {
   .df-review-sitemap-table-head {
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 3;
     min-height: 32px;
     border-bottom: 1px solid var(--df-review-line);
     padding: 0 10px;
-    background: var(--df-review-surface);
+    background: var(--df-review-panel);
+    box-shadow:
+      0 -8px 0 0 var(--df-review-panel),
+      0 1px 0 var(--df-review-line);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
     font-weight: 720;
@@ -599,10 +606,13 @@ function ensureReviewShellStyle() {
   .df-review-sitemap-row.is-summary {
     position: sticky;
     bottom: 0;
-    z-index: 1;
+    z-index: 3;
     border-top: 1px solid var(--df-review-line);
     border-bottom: 0;
-    background: var(--df-review-surface);
+    background: var(--df-review-panel);
+    box-shadow:
+      0 8px 0 0 var(--df-review-panel),
+      0 -1px 0 var(--df-review-line);
   }
 
   .df-review-sitemap-row.is-folder {
@@ -2456,8 +2466,12 @@ function ensureReviewShellStyle() {
   .df-review-source-candidate-list {
     display: grid;
     gap: 0;
+    max-height: min(220px, calc(100vh - 96px));
     min-height: 0;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-gutter: stable;
   }
 
   .df-review-source-candidate {
@@ -2771,7 +2785,7 @@ import {
   useCallback as useCallback11,
   useEffect as useEffect10,
   useMemo as useMemo7,
-  useRef as useRef4,
+  useRef as useRef5,
   useState as useState10
 } from "react";
 
@@ -5614,6 +5628,97 @@ var FigmaIcon = () => /* @__PURE__ */ jsx15(
   }
 );
 
+// src/react-shell/target/target.ts
+var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
+var FIGMA_POINTER_LOCK_STYLE_ID = "df-review-figma-pointer-lock";
+var setTargetScrollbarHidden = (targetDocument, hidden) => {
+  if (!targetDocument) return;
+  const existing = targetDocument.getElementById(HIDE_SCROLLBAR_STYLE_ID);
+  if (hidden) {
+    if (existing) return;
+    const style = targetDocument.createElement("style");
+    style.id = HIDE_SCROLLBAR_STYLE_ID;
+    style.textContent = "html{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}";
+    targetDocument.head?.appendChild(style);
+  } else {
+    existing?.remove();
+  }
+};
+var setTargetFigmaOverlayLocked = (targetDocument, locked) => {
+  if (!targetDocument) return;
+  const existing = targetDocument.getElementById(FIGMA_POINTER_LOCK_STYLE_ID);
+  if (locked) {
+    if (existing) return;
+    const style = targetDocument.createElement("style");
+    style.id = FIGMA_POINTER_LOCK_STYLE_ID;
+    style.textContent = [
+      ".helper-figma-root,",
+      ".helper-figma-root *,",
+      ".helper-figma-loading-backdrop,",
+      ".helper-figma-loading-backdrop * {",
+      "pointer-events: none !important;",
+      "}"
+    ].join("\n");
+    targetDocument.head?.appendChild(style);
+  } else {
+    existing?.remove();
+  }
+};
+var isEditableEventTarget = (event) => {
+  const path = event.composedPath?.() ?? [];
+  const element = path[0] ?? event.target;
+  if (!element || typeof element.tagName !== "string") return false;
+  const tag = element.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || element.isContentEditable === true;
+};
+var TRUE_STORAGE_VALUES = /* @__PURE__ */ new Set([
+  "1",
+  "true",
+  "on",
+  "show",
+  "shown",
+  "visible",
+  "enabled",
+  "yes"
+]);
+var OVERLAY_STORAGE_KEYS = {
+  grid: ["isHelp", "df-review-grid-overlay", "dfReviewGridOverlay"],
+  figma: ["isFigmaHelp", "df-review-figma-overlay", "dfReviewFigmaOverlay"]
+};
+var isStoredOverlayEnabled = (value) => TRUE_STORAGE_VALUES.has(value?.trim().toLowerCase() ?? "");
+var getCookieValue = (targetDocument, name) => {
+  const cookies = targetDocument?.cookie ? targetDocument.cookie.split(";") : [];
+  const prefix = `${name}=`;
+  const match = cookies.map((cookie) => cookie.trim()).find((cookie) => cookie.startsWith(prefix));
+  return match ? decodeURIComponent(match.slice(prefix.length)) : null;
+};
+var getStorageValue = (storage, key) => {
+  try {
+    return storage?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+};
+var getStoredOverlayState = (targetDocument, overlay) => {
+  const targetWindow = targetDocument?.defaultView;
+  return OVERLAY_STORAGE_KEYS[overlay].some((key) => {
+    if (isStoredOverlayEnabled(getCookieValue(targetDocument, key))) {
+      return true;
+    }
+    return isStoredOverlayEnabled(getStorageValue(targetWindow?.localStorage, key)) || isStoredOverlayEnabled(getStorageValue(targetWindow?.sessionStorage, key));
+  });
+};
+var getTargetOverlayState = (targetDocument) => ({
+  grid: Boolean(
+    targetDocument?.body.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow") || getStoredOverlayState(targetDocument, "grid")
+  ),
+  figma: Boolean(
+    targetDocument?.querySelector(
+      ".helper-figma-root, .helper-figma-loading-backdrop"
+    ) || getStoredOverlayState(targetDocument, "figma")
+  )
+});
+
 // src/react-shell/topbar.tsx
 import { jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
 var ReviewScopeIcon2 = ({ scope }) => {
@@ -5955,39 +6060,6 @@ import {
   useEffect as useEffect2
 } from "react";
 
-// src/react-shell/target/target.ts
-var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
-var setTargetScrollbarHidden = (targetDocument, hidden) => {
-  if (!targetDocument) return;
-  const existing = targetDocument.getElementById(HIDE_SCROLLBAR_STYLE_ID);
-  if (hidden) {
-    if (existing) return;
-    const style = targetDocument.createElement("style");
-    style.id = HIDE_SCROLLBAR_STYLE_ID;
-    style.textContent = "html{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}";
-    targetDocument.head?.appendChild(style);
-  } else {
-    existing?.remove();
-  }
-};
-var isEditableEventTarget = (event) => {
-  const path = event.composedPath?.() ?? [];
-  const element = path[0] ?? event.target;
-  if (!element || typeof element.tagName !== "string") return false;
-  const tag = element.tagName;
-  return tag === "INPUT" || tag === "TEXTAREA" || element.isContentEditable === true;
-};
-var getTargetOverlayState = (targetDocument) => ({
-  grid: Boolean(
-    targetDocument?.body.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow")
-  ),
-  figma: Boolean(
-    targetDocument?.querySelector(
-      ".helper-figma-root, .helper-figma-loading-backdrop"
-    )
-  )
-});
-
 // src/react-shell/hooks/review.frame.navigation.ts
 var bindReviewFrameNavigation = ({
   pageTargets,
@@ -6250,18 +6322,33 @@ var useReviewKitLifecycle = ({
 };
 
 // src/react-shell/hooks/use.review.target.overlay.ts
-import { useCallback as useCallback3, useEffect as useEffect3 } from "react";
+import { useCallback as useCallback3, useEffect as useEffect3, useRef } from "react";
+var TARGET_OVERLAY_REFRESH_DELAYS = [80, 240, 600];
 var useReviewTargetOverlay = ({
   iframeRef,
   isFigmaOverlayAvailable,
   targetOverlayState,
   onTargetOverlayStateChange
 }) => {
-  const refreshTargetOverlayState = useCallback3(() => {
-    onTargetOverlayStateChange(
-      getTargetOverlayState(iframeRef.current?.contentDocument ?? void 0)
+  const refreshTimersRef = useRef([]);
+  const clearRefreshTimers = useCallback3(() => {
+    refreshTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    refreshTimersRef.current = [];
+  }, []);
+  const updateTargetOverlayState = useCallback3(() => {
+    const state = getTargetOverlayState(
+      iframeRef.current?.contentDocument ?? void 0
     );
+    onTargetOverlayStateChange(state);
+    return state;
   }, [iframeRef, onTargetOverlayStateChange]);
+  const refreshTargetOverlayState = useCallback3(() => {
+    clearRefreshTimers();
+    updateTargetOverlayState();
+    refreshTimersRef.current = TARGET_OVERLAY_REFRESH_DELAYS.map(
+      (delay) => window.setTimeout(updateTargetOverlayState, delay)
+    );
+  }, [clearRefreshTimers, updateTargetOverlayState]);
   const dispatchTargetOverlayHotkey = useCallback3(
     (overlay) => {
       const targetWindow = iframeRef.current?.contentWindow;
@@ -6297,19 +6384,17 @@ var useReviewTargetOverlay = ({
   );
   const closeTargetOverlay = useCallback3(
     (overlay) => {
-      const currentState = getTargetOverlayState(
-        iframeRef.current?.contentDocument ?? void 0
-      );
-      onTargetOverlayStateChange(currentState);
+      const currentState = updateTargetOverlayState();
       if (!currentState[overlay]) return false;
       return dispatchTargetOverlayHotkey(overlay);
     },
-    [dispatchTargetOverlayHotkey, iframeRef, onTargetOverlayStateChange]
+    [dispatchTargetOverlayHotkey, updateTargetOverlayState]
   );
   useEffect3(() => {
     if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
     closeTargetOverlay("figma");
   }, [closeTargetOverlay, isFigmaOverlayAvailable, targetOverlayState.figma]);
+  useEffect3(() => clearRefreshTimers, [clearRefreshTimers]);
   return {
     closeTargetOverlay,
     refreshTargetOverlayState,
@@ -6544,7 +6629,7 @@ import {
   useCallback as useCallback6,
   useEffect as useEffect5,
   useMemo as useMemo3,
-  useRef,
+  useRef as useRef2,
   useState as useState4
 } from "react";
 
@@ -6761,7 +6846,7 @@ var useReviewPresence = ({
   size,
   source
 }) => {
-  const presenceSessionRef = useRef(null);
+  const presenceSessionRef = useRef2(null);
   const [presenceUsers, setPresenceUsers] = useState4([]);
   const [presenceSessionVersion, setPresenceSessionVersion] = useState4(0);
   const presenceSessionId = useMemo3(getReviewPresenceSessionId, []);
@@ -6842,7 +6927,7 @@ var useReviewPresence = ({
       source
     ]
   );
-  const getCurrentPresenceStateRef = useRef(getCurrentPresenceState);
+  const getCurrentPresenceStateRef = useRef2(getCurrentPresenceState);
   getCurrentPresenceStateRef.current = getCurrentPresenceState;
   useEffect5(() => {
     if (!presence || !normalizedReviewUserId) {
@@ -6922,7 +7007,7 @@ import {
   useCallback as useCallback7,
   useEffect as useEffect6,
   useMemo as useMemo4,
-  useRef as useRef2,
+  useRef as useRef3,
   useState as useState5
 } from "react";
 
@@ -6953,10 +7038,10 @@ var useReviewRulerDrag = ({
   size,
   targetSrc
 }) => {
-  const rulerOverlayRef = useRef2(null);
-  const rulerDragRectRef = useRef2(null);
-  const isRulerDraggingRef = useRef2(false);
-  const sizeRef = useRef2(size);
+  const rulerOverlayRef = useRef3(null);
+  const rulerDragRectRef = useRef3(null);
+  const isRulerDraggingRef = useRef3(false);
+  const sizeRef = useRef3(size);
   const [rulerStart, setRulerStart] = useState5(null);
   const [rulerPoint, setRulerPoint] = useState5(null);
   const [rulerHover, setRulerHover] = useState5(null);
@@ -7615,7 +7700,7 @@ var useReviewShellHotkeys = ({
 // src/react-shell/hooks/use.review.shell.state.ts
 import {
   useMemo as useMemo6,
-  useRef as useRef3,
+  useRef as useRef4,
   useState as useState9
 } from "react";
 
@@ -7786,14 +7871,14 @@ var useReviewShellState = ({
   const canWriteArea = activeAdapterEntry.writeModes.includes("area");
   const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
   const adapter = activeAdapterEntry.adapter;
-  const iframeRef = useRef3(null);
-  const frameScrollRef = useRef3(null);
-  const controllerRef = useRef3(null);
-  const cleanupTargetRef = useRef3(null);
-  const pendingRestoreRef = useRef3(null);
-  const pendingInitialItemIdRef = useRef3(getInitialItemId());
-  const selectedItemIdRef = useRef3(getInitialItemId());
-  const hiddenOverlayItemIdListRef = useRef3([]);
+  const iframeRef = useRef4(null);
+  const frameScrollRef = useRef4(null);
+  const controllerRef = useRef4(null);
+  const cleanupTargetRef = useRef4(null);
+  const pendingRestoreRef = useRef4(null);
+  const pendingInitialItemIdRef = useRef4(getInitialItemId());
+  const selectedItemIdRef = useRef4(getInitialItemId());
+  const hiddenOverlayItemIdListRef = useRef4([]);
   const [target, setTarget] = useState9(
     () => getInitialTarget(reviewPathPrefix)
   );
@@ -7818,8 +7903,8 @@ var useReviewShellState = ({
   const [copyLabel, setCopyLabel] = useState9("Copy URL");
   const [toastMessage, setToastMessage] = useState9("");
   const [copiedPromptKey, setCopiedPromptKey] = useState9(null);
-  const targetRef = useRef3(target);
-  const sizeRef = useRef3(size);
+  const targetRef = useRef4(target);
+  const sizeRef = useRef4(size);
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
   return {
     activeAdapterEntry,
@@ -8187,8 +8272,8 @@ var ReviewShell = ({
     presets,
     reviewPathPrefix
   });
-  const sourceShortcutCleanupRef = useRef4(null);
-  const sourceInspectorInteractionRef = useRef4(false);
+  const sourceShortcutCleanupRef = useRef5(null);
+  const sourceInspectorInteractionRef = useRef5(false);
   const [sourceInspectorState, setSourceInspectorState] = useState10(null);
   const [isAllQaVisible, setIsAllQaVisible] = useState10(false);
   const sourceOpenOptions = useMemo7(
@@ -8350,7 +8435,6 @@ var ReviewShell = ({
   });
   const {
     clearSelectedItem,
-    closeTargetOverlay,
     initReviewKit,
     reloadReviewKit,
     restoreReviewItem,
@@ -8488,9 +8572,6 @@ var ReviewShell = ({
     const writeMode = getReviewModeWriteMode(nextMode);
     if (writeMode && !activeAdapterEntry.writeModes.includes(writeMode)) return;
     closeRuler();
-    if (nextMode === "element") {
-      closeTargetOverlay("figma");
-    }
     setControllerReviewMode(nextMode);
   };
   useReviewShellHotkeys({
@@ -8527,6 +8608,13 @@ var ReviewShell = ({
     );
     setTargetFigmaState(config ? { targetSrc, config } : null);
   }, [iframeRef, targetSrc]);
+  useEffect10(() => {
+    const targetDocument = iframeRef.current?.contentDocument;
+    setTargetFigmaOverlayLocked(targetDocument, mode === "element");
+    return () => {
+      setTargetFigmaOverlayLocked(targetDocument, false);
+    };
+  }, [iframeRef, mode, targetSrc]);
   const clearSourceInspector = useCallback11(() => {
     sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
@@ -8671,6 +8759,13 @@ var ReviewShell = ({
       html[${optionAttribute}="true"],
       html[${optionAttribute}="true"] * {
         cursor: crosshair !important;
+      }
+
+      html[${optionAttribute}="true"] .helper-figma-root,
+      html[${optionAttribute}="true"] .helper-figma-root *,
+      html[${optionAttribute}="true"] .helper-figma-loading-backdrop,
+      html[${optionAttribute}="true"] .helper-figma-loading-backdrop * {
+        pointer-events: none !important;
       }
 
       html[${optionAttribute}="true"] body::before {
@@ -8899,8 +8994,18 @@ var ReviewShell = ({
   const loadTargetFrame = useCallback11(() => {
     initReviewKit();
     refreshTargetFigmaConfig();
+    setTargetFigmaOverlayLocked(
+      iframeRef.current?.contentDocument,
+      mode === "element"
+    );
     bindSourceOpenShortcut();
-  }, [bindSourceOpenShortcut, initReviewKit, refreshTargetFigmaConfig]);
+  }, [
+    bindSourceOpenShortcut,
+    iframeRef,
+    initReviewKit,
+    mode,
+    refreshTargetFigmaConfig
+  ]);
   useEffect10(() => {
     const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
     return () => window.cancelAnimationFrame(frame);

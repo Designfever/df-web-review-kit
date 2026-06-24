@@ -400,8 +400,8 @@ function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", enviro
     source: getDomSourceHint(target)
   };
 }
-function getElementViewportSelection(anchor, environment) {
-  const element = getAnchorElement(anchor, environment);
+function getElementViewportSelection(anchor, environment, preferredSelection) {
+  const element = getAnchorElement(anchor, environment, preferredSelection);
   if (!element) return void 0;
   const rect = element.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return void 0;
@@ -440,22 +440,35 @@ function getAnchorCandidates(anchor) {
     ...anchor.candidates ?? []
   ]);
 }
-function resolveAnchorElement(anchor, environment) {
+function resolveAnchorElement(anchor, environment, preferredSelection) {
   const matches = getAnchorCandidates(anchor).flatMap((candidate) => {
-    const match = queryBestAnchorCandidate(
-      candidate,
-      candidate.textFingerprint ?? anchor.textFingerprint,
-      environment
-    );
-    if (!match) return [];
-    const confidence = roundRatio(
-      (candidate.confidence ?? 0.5) * match.score
-    );
-    return [{
-      element: match.element,
-      candidate,
-      confidence
-    }];
+    const textFingerprint = candidate.textFingerprint ?? anchor.textFingerprint;
+    if (!preferredSelection) {
+      const match = queryBestAnchorCandidate(
+        candidate,
+        textFingerprint,
+        environment
+      );
+      if (!match) return [];
+      const confidence = roundRatio(
+        (candidate.confidence ?? 0.5) * match.score
+      );
+      return [{
+        element: match.element,
+        candidate,
+        confidence
+      }];
+    }
+    return queryAnchorElements(candidate.selector, environment).map((element) => {
+      const confidence = roundRatio(
+        (candidate.confidence ?? 0.5) * getTextFingerprintScore(textFingerprint, getTextFingerprint(element)) * getSelectionMatchScore(element, preferredSelection)
+      );
+      return {
+        element,
+        candidate,
+        confidence
+      };
+    });
   });
   return matches.sort((a, b) => b.confidence - a.confidence)[0];
 }
@@ -465,8 +478,8 @@ function cssEscape(value) {
   }
   return value.replace(/[^a-zA-Z0-9_-]/g, "\\$&");
 }
-function getAnchorElement(anchor, environment) {
-  return typeof anchor === "string" ? queryAnchorElement(anchor, environment) : resolveAnchorElement(anchor, environment)?.element;
+function getAnchorElement(anchor, environment, preferredSelection) {
+  return typeof anchor === "string" ? queryAnchorElement(anchor, environment) : resolveAnchorElement(anchor, environment, preferredSelection)?.element;
 }
 function createAnchorCandidates(target, configuredAttribute) {
   const targetCandidates = [];
@@ -829,6 +842,38 @@ function getTextFingerprintScore(expected, actual) {
   if (expectedTokens.length === 0 || actualTokens.size === 0) return 0.5;
   const matches = expectedTokens.filter((token) => actualTokens.has(token));
   return clamp(matches.length / expectedTokens.length, 0.25, 0.76);
+}
+function getSelectionMatchScore(element, selection) {
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return 0.05;
+  const overlapLeft = Math.max(rect.left, selection.left);
+  const overlapTop = Math.max(rect.top, selection.top);
+  const overlapRight = Math.min(rect.right, selection.left + selection.width);
+  const overlapBottom = Math.min(rect.bottom, selection.top + selection.height);
+  const overlapWidth = Math.max(0, overlapRight - overlapLeft);
+  const overlapHeight = Math.max(0, overlapBottom - overlapTop);
+  const overlapArea = overlapWidth * overlapHeight;
+  if (overlapArea > 0) {
+    const selectionArea = Math.max(1, selection.width * selection.height);
+    const rectArea = Math.max(1, rect.width * rect.height);
+    return 1 + overlapArea / Math.min(selectionArea, rectArea);
+  }
+  const rectCenterX = rect.left + rect.width / 2;
+  const rectCenterY = rect.top + rect.height / 2;
+  const selectionCenterX = selection.left + selection.width / 2;
+  const selectionCenterY = selection.top + selection.height / 2;
+  const distance = Math.hypot(
+    rectCenterX - selectionCenterX,
+    rectCenterY - selectionCenterY
+  );
+  const basis = Math.max(
+    1,
+    rect.width,
+    rect.height,
+    selection.width,
+    selection.height
+  );
+  return clamp(1 / (1 + distance / basis), 0.05, 0.95);
 }
 function getFingerprintTokens(value) {
   return value.toLowerCase().split(/[\s/|,.:;()[\]{}"'`~!?<>]+/).map((token) => token.trim()).filter((token) => token.length > 1);
@@ -1864,32 +1909,6 @@ function createStyleElement() {
       pointer-events: none;
     }
 
-    .dfwr-adjust-hud {
-      position: fixed;
-      z-index: 5;
-      display: inline-flex;
-      align-items: center;
-      min-height: 22px;
-      padding: 0 8px;
-      border: 1px solid rgba(99, 215, 199, 0.72);
-      border-radius: var(--df-review-radius-sm);
-      background: rgba(21, 25, 29, 0.92);
-      box-shadow:
-        0 0 0 3px rgba(99, 215, 199, 0.14),
-        0 8px 18px rgba(0, 0, 0, 0.26);
-      color: #63d7c7;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: var(--df-review-font-size-2xs);
-      font-weight: 800;
-      line-height: 1;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .dfwr-adjust-hud[hidden] {
-      display: none;
-    }
-
     .dfwr-empty,
     .dfwr-error {
       margin: 0;
@@ -2252,7 +2271,6 @@ var WebReviewKitView = class {
       if (event.button !== 0) return;
       cancel(event);
     });
-    layer.addEventListener("click", cancel);
     return layer;
   }
   getDraftAdjustmentMetrics(draft) {
@@ -2432,14 +2450,6 @@ var WebReviewKitView = class {
     if (!draft.selection) return void 0;
     return toViewportSelection(draft.selection.viewport);
   }
-  formatDraftAdjustmentStatus(draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return [
-      `x ${this.formatSignedPx(metrics.x)}`,
-      `y ${this.formatSignedPx(metrics.y)}`,
-      `scale ${this.formatSignedPx(metrics.scale)}`
-    ].join(" / ");
-  }
   getDraftAdjustmentMetricLines(draft) {
     const metrics = this.getDraftAdjustmentMetrics(draft);
     return [
@@ -2451,6 +2461,7 @@ var WebReviewKitView = class {
   }
   withDraftAdjustmentComment(comment, draft) {
     if (!this.hasDraftAdjustment(draft)) return comment;
+    const trimmedComment = comment.trim();
     const metrics = this.getDraftAdjustmentMetrics(draft);
     const adjustment = [
       `${this.getAdjustmentLabel()}: x ${this.formatSignedPx(
@@ -2462,12 +2473,20 @@ var WebReviewKitView = class {
         metrics.viewportWidth
       )}/design ${Math.round(metrics.designWidth)})`
     ].join(" ");
-    return `${comment.trim()}
-${adjustment}`;
+    return trimmedComment ? `${trimmedComment}
+${adjustment}` : adjustment;
   }
   getStyleableDraftElement(draft, environment) {
+    if (draft.previewElement && draft.previewElement.ownerDocument === environment.document && "style" in draft.previewElement) {
+      return draft.previewElement;
+    }
     if (!draft.anchor) return void 0;
-    const element = resolveAnchorElement(draft.anchor, environment)?.element;
+    const preferredSelection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
+    const element = resolveAnchorElement(
+      draft.anchor,
+      environment,
+      preferredSelection
+    )?.element;
     if (!element) return void 0;
     if ("style" in element) return element;
     return void 0;
@@ -2487,38 +2506,76 @@ ${adjustment}`;
       this.restoreDraftPreview();
     }
     if (!this.draftPreview) {
-      const computedTransform = environment.window.getComputedStyle(element).transform;
+      const computedStyle = environment.window.getComputedStyle(element);
+      const clone = element.cloneNode(true);
+      this.removeDuplicateIds(clone);
+      this.copyComputedStyle(element, clone, environment);
+      this.positionDraftPreviewClone(clone, element, computedStyle);
+      environment.document.body?.appendChild(clone);
       this.draftPreview = {
         element,
-        transform: element.style.transform,
-        transformOrigin: element.style.transformOrigin,
-        transition: element.style.transition,
-        willChange: element.style.willChange,
-        baseTransform: element.style.transform || (computedTransform && computedTransform !== "none" ? computedTransform : "")
+        clone,
+        visibility: element.style.visibility
       };
+      element.style.visibility = "hidden";
     }
     const metrics = this.getDraftAdjustmentMetrics(draft);
     const translate = `translate(${this.toCssNumber(metrics.cssX)}px, ${this.toCssNumber(
       metrics.cssY
     )}px)`;
     const scale = metrics.scaleFactor === 1 ? "" : `scale(${this.toCssNumber(metrics.scaleFactor)})`;
-    element.style.transition = "none";
-    element.style.willChange = "transform";
-    element.style.transformOrigin = "top left";
-    element.style.transform = [
-      this.draftPreview.baseTransform,
-      translate,
-      scale
-    ].filter(Boolean).join(" ");
+    this.draftPreview.clone.style.transform = [translate, scale].filter(Boolean).join(" ");
   }
   restoreDraftPreview() {
     if (!this.draftPreview) return;
-    const { element, transform, transformOrigin, transition, willChange } = this.draftPreview;
-    element.style.transform = transform;
-    element.style.transformOrigin = transformOrigin;
-    element.style.transition = transition;
-    element.style.willChange = willChange;
+    const { element, clone, visibility } = this.draftPreview;
+    clone.remove();
+    element.style.visibility = visibility;
     this.draftPreview = void 0;
+  }
+  positionDraftPreviewClone(clone, element, computedStyle) {
+    const rect = element.getBoundingClientRect();
+    clone.setAttribute("data-dfwr-adjust-preview", "true");
+    clone.setAttribute("aria-hidden", "true");
+    clone.style.position = "fixed";
+    clone.style.left = `${this.toCssNumber(rect.left)}px`;
+    clone.style.top = `${this.toCssNumber(rect.top)}px`;
+    clone.style.right = "auto";
+    clone.style.bottom = "auto";
+    clone.style.width = `${this.toCssNumber(rect.width)}px`;
+    clone.style.height = `${this.toCssNumber(rect.height)}px`;
+    clone.style.maxWidth = "none";
+    clone.style.maxHeight = "none";
+    clone.style.margin = "0";
+    clone.style.boxSizing = "border-box";
+    clone.style.display = this.getDraftPreviewDisplay(computedStyle.display);
+    clone.style.zIndex = "2147483646";
+    clone.style.pointerEvents = "none";
+    clone.style.transition = "none";
+    clone.style.willChange = "transform";
+    clone.style.transformOrigin = "top left";
+    clone.style.transform = "none";
+  }
+  getDraftPreviewDisplay(display) {
+    if (display === "inline" || display === "contents") return "inline-block";
+    return display || "block";
+  }
+  copyComputedStyle(element, clone, environment) {
+    const computedStyle = environment.window.getComputedStyle(element);
+    for (let index = 0; index < computedStyle.length; index += 1) {
+      const property = computedStyle.item(index);
+      clone.style.setProperty(
+        property,
+        computedStyle.getPropertyValue(property),
+        computedStyle.getPropertyPriority(property)
+      );
+    }
+  }
+  removeDuplicateIds(element) {
+    element.removeAttribute("id");
+    element.querySelectorAll("[id]").forEach((child) => {
+      child.removeAttribute("id");
+    });
   }
   toCssNumber(value) {
     return Math.round(value * 1e3) / 1e3;
@@ -2681,8 +2738,8 @@ ${adjustment}`;
     });
     const saveDraft = () => {
       const comment = textarea.value.trim();
-      if (!comment) return;
       const currentDraft = this.state.noteDraft ?? draft;
+      if (!comment && !this.hasDraftAdjustment(currentDraft)) return;
       void this.config.actions.createItem({
         kind: "note",
         comment: this.withDraftAdjustmentComment(comment, currentDraft),
@@ -2692,13 +2749,8 @@ ${adjustment}`;
         selection: currentDraft.selection
       });
     };
-    const adjustmentHud = isElementDraft ? this.createAdjustmentHud(draft, environment) : void 0;
-    if (adjustmentHud) {
-      group.append(adjustmentHud);
-    }
     const adjustmentControls = isElementDraft ? this.createAdjustmentControls({
       draft,
-      hud: adjustmentHud,
       pin,
       popover,
       selectionHighlight,
@@ -2826,7 +2878,6 @@ ${adjustment}`;
   }
   createAdjustmentControls({
     draft,
-    hud,
     pin,
     popover,
     selectionHighlight,
@@ -2864,7 +2915,6 @@ ${adjustment}`;
       scaleStatus.textContent = scaleLine;
       this.syncDraftAdjustmentUi({
         draft: nextDraft,
-        hud,
         pin,
         selectionHighlight
       });
@@ -2925,16 +2975,8 @@ ${adjustment}`;
     if (event.key.toLowerCase() === "s") return { x: 0, y: 0, scale: -step };
     return void 0;
   }
-  createAdjustmentHud(draft, environment) {
-    const hud = document.createElement("div");
-    hud.className = "dfwr-adjust-hud";
-    hud.setAttribute("aria-hidden", "true");
-    this.syncAdjustmentHud(hud, draft, environment);
-    return hud;
-  }
   syncDraftAdjustmentUi({
     draft,
-    hud,
     pin,
     selectionHighlight
   }) {
@@ -2959,25 +3001,7 @@ ${adjustment}`;
       selectionHighlight.style.width = `${rect.width}px`;
       selectionHighlight.style.height = `${rect.height}px`;
     }
-    if (hud) {
-      this.syncAdjustmentHud(hud, draft, environment);
-    }
     this.syncDraftPreview(draft);
-  }
-  syncAdjustmentHud(hud, draft, environment) {
-    if (!draft.selection) return;
-    const rect = toHostSelection(
-      this.getAdjustedDraftSelection(
-        toViewportSelection(draft.selection.viewport),
-        draft
-      ),
-      environment
-    );
-    const isVisible = draft.adjustment?.isActive === true || this.hasDraftAdjustment(draft);
-    hud.hidden = !isVisible;
-    hud.textContent = this.formatDraftAdjustmentStatus(draft);
-    hud.style.left = `${Math.max(4, rect.left)}px`;
-    hud.style.top = `${Math.max(4, rect.top - 28)}px`;
   }
   createAreaForm() {
     const form = document.createElement("form");
@@ -3102,12 +3126,18 @@ ${adjustment}`;
     save.className = "dfwr-button is-primary";
     save.type = "button";
     save.textContent = saveLabel;
-    save.addEventListener("click", onSave);
+    save.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onSave();
+    });
     const cancel = document.createElement("button");
     cancel.className = "dfwr-button";
     cancel.type = "button";
     cancel.textContent = "Cancel";
-    cancel.addEventListener("click", () => {
+    cancel.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       this.config.actions.setModeState("idle");
       this.config.actions.clearDrafts();
       this.config.actions.render();
@@ -3805,13 +3835,26 @@ var WebReviewKitApp = class {
     const viewport = getViewportSize(environment);
     const nextPoint = clampPoint(point, environment);
     const draft = await this.withOverlayHidden(() => {
+      const pointSelection = getPointSelection(nextPoint);
+      const targetElement = environment.document.elementFromPoint(
+        nextPoint.x,
+        nextPoint.y
+      );
+      const previewElement = targetElement && "style" in targetElement ? targetElement : void 0;
+      const targetRect = targetElement?.getBoundingClientRect();
+      const clickedSelection = targetRect && targetRect.width > 0 && targetRect.height > 0 ? {
+        left: targetRect.left,
+        top: targetRect.top,
+        width: targetRect.width,
+        height: targetRect.height
+      } : void 0;
       const anchor = getDomAnchorFromPoint(
         nextPoint,
         this.options.anchors?.attribute,
         environment
       );
-      const elementSelection = anchor ? getElementViewportSelection(anchor, environment) : void 0;
-      const selection = elementSelection ?? getPointSelection(nextPoint);
+      const elementSelection = anchor ? clickedSelection ?? getElementViewportSelection(anchor, environment, pointSelection) : void 0;
+      const selection = elementSelection ?? pointSelection;
       const markerPoint = elementSelection ? { x: selection.left, y: selection.top } : getSelectionCenter(selection);
       const reviewSelection = elementSelection ? {
         viewport: toPublicSelection(elementSelection),
@@ -3830,7 +3873,8 @@ var WebReviewKitApp = class {
         anchor,
         marker,
         selection: reviewSelection,
-        comment
+        comment,
+        previewElement
       };
     });
     this.noteDraft = draft;
@@ -3970,4 +4014,4 @@ export {
   getNumberedReviewItems,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-QFNYQCTA.js.map
+//# sourceMappingURL=chunk-6L2KJ7XL.js.map

@@ -6,6 +6,8 @@ import type {
   ViewportSize,
 } from '../../types';
 
+export type ReviewDraftPreviewElement = HTMLElement | SVGElement;
+
 export interface ReviewAdjustmentDraft extends ReviewPoint {
   isActive?: boolean;
   scale?: number;
@@ -33,4 +35,5 @@ export interface NoteDraft extends ReviewDraftComposer {
   selection?: ReviewSelection;
   comment?: string;
   adjustment?: ReviewAdjustmentDraft;
+  previewElement?: ReviewDraftPreviewElement;
 }

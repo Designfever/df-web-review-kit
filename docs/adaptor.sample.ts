@@ -98,6 +98,7 @@ export function createRemoteReviewAdapter(
  * label becomes the URL source, for example /review?source=remote.
  * create controls whether the shell can write to this adapter.
  * canWrite can be true or limited to ['dom', 'note', 'area'].
+ * update enables comment edits in the QA panel.
  * updateStatus drives the status buttons in the QA panel.
  * remove enables delete actions for this source.
  */
@@ -111,6 +112,7 @@ export function createRemoteReviewShellAdapter(
     get: (id) => adapter.get(id),
     list: (query) => adapter.list(query),
     create: (item) => adapter.create(item),
+    update: (id, patch) => adapter.update(id, patch),
     canWrite: true,
     statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
     updateStatus: ({ id, status }) =>

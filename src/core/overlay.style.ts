@@ -731,32 +731,6 @@ export function createStyleElement() {
       pointer-events: none;
     }
 
-    .dfwr-adjust-hud {
-      position: fixed;
-      z-index: 5;
-      display: inline-flex;
-      align-items: center;
-      min-height: 22px;
-      padding: 0 8px;
-      border: 1px solid rgba(99, 215, 199, 0.72);
-      border-radius: var(--df-review-radius-sm);
-      background: rgba(21, 25, 29, 0.92);
-      box-shadow:
-        0 0 0 3px rgba(99, 215, 199, 0.14),
-        0 8px 18px rgba(0, 0, 0, 0.26);
-      color: #63d7c7;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: var(--df-review-font-size-2xs);
-      font-weight: 800;
-      line-height: 1;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .dfwr-adjust-hud[hidden] {
-      display: none;
-    }
-
     .dfwr-empty,
     .dfwr-error {
       margin: 0;

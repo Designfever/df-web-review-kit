@@ -93,11 +93,8 @@ type DraftPreviewElement = HTMLElement | SVGElement;
 
 interface DraftPreviewSnapshot {
   element: DraftPreviewElement;
-  transform: string;
-  transformOrigin: string;
-  transition: string;
-  willChange: string;
-  baseTransform: string;
+  clone: DraftPreviewElement;
+  visibility: string;
 }
 
 /** Vanilla DOM renderer for the core overlay, separate from React shell chrome. */
@@ -206,7 +203,6 @@ export class WebReviewKitView {
       if (event.button !== 0) return;
       cancel(event);
     });
-    layer.addEventListener('click', cancel);
 
     return layer;
   }
@@ -452,15 +448,6 @@ export class WebReviewKitView {
     return toViewportSelection(draft.selection.viewport);
   }
 
-  private formatDraftAdjustmentStatus(draft: NoteDraft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return [
-      `x ${this.formatSignedPx(metrics.x)}`,
-      `y ${this.formatSignedPx(metrics.y)}`,
-      `scale ${this.formatSignedPx(metrics.scale)}`,
-    ].join(' / ');
-  }
-
   private getDraftAdjustmentMetricLines(draft: NoteDraft) {
     const metrics = this.getDraftAdjustmentMetrics(draft);
     return [
@@ -474,6 +461,7 @@ export class WebReviewKitView {
   private withDraftAdjustmentComment(comment: string, draft: NoteDraft) {
     if (!this.hasDraftAdjustment(draft)) return comment;
 
+    const trimmedComment = comment.trim();
     const metrics = this.getDraftAdjustmentMetrics(draft);
     const adjustment = [
       `${this.getAdjustmentLabel()}: x ${this.formatSignedPx(
@@ -486,16 +474,31 @@ export class WebReviewKitView {
       )}/design ${Math.round(metrics.designWidth)})`,
     ].join(' ');
 
-    return `${comment.trim()}\n${adjustment}`;
+    return trimmedComment ? `${trimmedComment}\n${adjustment}` : adjustment;
   }
 
   private getStyleableDraftElement(
     draft: NoteDraft,
     environment: ReviewEnvironment
   ): DraftPreviewElement | undefined {
+    if (
+      draft.previewElement &&
+      draft.previewElement.ownerDocument === environment.document &&
+      'style' in draft.previewElement
+    ) {
+      return draft.previewElement;
+    }
+
     if (!draft.anchor) return undefined;
 
-    const element = resolveAnchorElement(draft.anchor, environment)?.element;
+    const preferredSelection = draft.selection
+      ? toViewportSelection(draft.selection.viewport)
+      : undefined;
+    const element = resolveAnchorElement(
+      draft.anchor,
+      environment,
+      preferredSelection
+    )?.element;
     if (!element) return undefined;
 
     if ('style' in element) return element as DraftPreviewElement;
@@ -521,20 +524,18 @@ export class WebReviewKitView {
     }
 
     if (!this.draftPreview) {
-      const computedTransform =
-        environment.window.getComputedStyle(element).transform;
+      const computedStyle = environment.window.getComputedStyle(element);
+      const clone = element.cloneNode(true) as DraftPreviewElement;
+      this.removeDuplicateIds(clone);
+      this.copyComputedStyle(element, clone, environment);
+      this.positionDraftPreviewClone(clone, element, computedStyle);
+      environment.document.body?.appendChild(clone);
       this.draftPreview = {
         element,
-        transform: element.style.transform,
-        transformOrigin: element.style.transformOrigin,
-        transition: element.style.transition,
-        willChange: element.style.willChange,
-        baseTransform:
-          element.style.transform ||
-          (computedTransform && computedTransform !== 'none'
-            ? computedTransform
-            : ''),
+        clone,
+        visibility: element.style.visibility,
       };
+      element.style.visibility = 'hidden';
     }
 
     const metrics = this.getDraftAdjustmentMetrics(draft);
@@ -545,14 +546,7 @@ export class WebReviewKitView {
       metrics.scaleFactor === 1
         ? ''
         : `scale(${this.toCssNumber(metrics.scaleFactor)})`;
-    element.style.transition = 'none';
-    element.style.willChange = 'transform';
-    element.style.transformOrigin = 'top left';
-    element.style.transform = [
-      this.draftPreview.baseTransform,
-      translate,
-      scale,
-    ]
+    this.draftPreview.clone.style.transform = [translate, scale]
       .filter(Boolean)
       .join(' ');
   }
@@ -560,13 +554,66 @@ export class WebReviewKitView {
   private restoreDraftPreview() {
     if (!this.draftPreview) return;
 
-    const { element, transform, transformOrigin, transition, willChange } =
-      this.draftPreview;
-    element.style.transform = transform;
-    element.style.transformOrigin = transformOrigin;
-    element.style.transition = transition;
-    element.style.willChange = willChange;
+    const { element, clone, visibility } = this.draftPreview;
+    clone.remove();
+    element.style.visibility = visibility;
     this.draftPreview = undefined;
+  }
+
+  private positionDraftPreviewClone(
+    clone: DraftPreviewElement,
+    element: DraftPreviewElement,
+    computedStyle: CSSStyleDeclaration
+  ) {
+    const rect = element.getBoundingClientRect();
+    clone.setAttribute('data-dfwr-adjust-preview', 'true');
+    clone.setAttribute('aria-hidden', 'true');
+    clone.style.position = 'fixed';
+    clone.style.left = `${this.toCssNumber(rect.left)}px`;
+    clone.style.top = `${this.toCssNumber(rect.top)}px`;
+    clone.style.right = 'auto';
+    clone.style.bottom = 'auto';
+    clone.style.width = `${this.toCssNumber(rect.width)}px`;
+    clone.style.height = `${this.toCssNumber(rect.height)}px`;
+    clone.style.maxWidth = 'none';
+    clone.style.maxHeight = 'none';
+    clone.style.margin = '0';
+    clone.style.boxSizing = 'border-box';
+    clone.style.display = this.getDraftPreviewDisplay(computedStyle.display);
+    clone.style.zIndex = '2147483646';
+    clone.style.pointerEvents = 'none';
+    clone.style.transition = 'none';
+    clone.style.willChange = 'transform';
+    clone.style.transformOrigin = 'top left';
+    clone.style.transform = 'none';
+  }
+
+  private getDraftPreviewDisplay(display: string) {
+    if (display === 'inline' || display === 'contents') return 'inline-block';
+    return display || 'block';
+  }
+
+  private copyComputedStyle(
+    element: DraftPreviewElement,
+    clone: DraftPreviewElement,
+    environment: ReviewEnvironment
+  ) {
+    const computedStyle = environment.window.getComputedStyle(element);
+    for (let index = 0; index < computedStyle.length; index += 1) {
+      const property = computedStyle.item(index);
+      clone.style.setProperty(
+        property,
+        computedStyle.getPropertyValue(property),
+        computedStyle.getPropertyPriority(property)
+      );
+    }
+  }
+
+  private removeDuplicateIds(element: Element) {
+    element.removeAttribute('id');
+    element.querySelectorAll('[id]').forEach((child) => {
+      child.removeAttribute('id');
+    });
   }
 
   private toCssNumber(value: number) {
@@ -771,8 +818,8 @@ export class WebReviewKitView {
 
     const saveDraft = () => {
       const comment = textarea.value.trim();
-      if (!comment) return;
       const currentDraft = this.state.noteDraft ?? draft;
+      if (!comment && !this.hasDraftAdjustment(currentDraft)) return;
       void this.config.actions.createItem({
         kind: 'note',
         comment: this.withDraftAdjustmentComment(comment, currentDraft),
@@ -783,17 +830,9 @@ export class WebReviewKitView {
       });
     };
 
-    const adjustmentHud = isElementDraft
-      ? this.createAdjustmentHud(draft, environment)
-      : undefined;
-    if (adjustmentHud) {
-      group.append(adjustmentHud);
-    }
-
     const adjustmentControls = isElementDraft
       ? this.createAdjustmentControls({
           draft,
-          hud: adjustmentHud,
           pin,
           popover,
           selectionHighlight,
@@ -955,14 +994,12 @@ export class WebReviewKitView {
 
   private createAdjustmentControls({
     draft,
-    hud,
     pin,
     popover,
     selectionHighlight,
     textarea,
   }: {
     draft: NoteDraft;
-    hud?: HTMLDivElement;
     pin: HTMLButtonElement;
     popover: HTMLDivElement;
     selectionHighlight?: HTMLDivElement;
@@ -1009,7 +1046,6 @@ export class WebReviewKitView {
       scaleStatus.textContent = scaleLine;
       this.syncDraftAdjustmentUi({
         draft: nextDraft,
-        hud,
         pin,
         selectionHighlight,
       });
@@ -1082,25 +1118,12 @@ export class WebReviewKitView {
     return undefined;
   }
 
-  private createAdjustmentHud(
-    draft: NoteDraft,
-    environment: ReviewEnvironment
-  ) {
-    const hud = document.createElement('div');
-    hud.className = 'dfwr-adjust-hud';
-    hud.setAttribute('aria-hidden', 'true');
-    this.syncAdjustmentHud(hud, draft, environment);
-    return hud;
-  }
-
   private syncDraftAdjustmentUi({
     draft,
-    hud,
     pin,
     selectionHighlight,
   }: {
     draft: NoteDraft;
-    hud?: HTMLDivElement;
     pin: HTMLButtonElement;
     selectionHighlight?: HTMLDivElement;
   }) {
@@ -1128,34 +1151,7 @@ export class WebReviewKitView {
       selectionHighlight.style.height = `${rect.height}px`;
     }
 
-    if (hud) {
-      this.syncAdjustmentHud(hud, draft, environment);
-    }
-
     this.syncDraftPreview(draft);
-  }
-
-  private syncAdjustmentHud(
-    hud: HTMLDivElement,
-    draft: NoteDraft,
-    environment: ReviewEnvironment
-  ) {
-    if (!draft.selection) return;
-
-    const rect = toHostSelection(
-      this.getAdjustedDraftSelection(
-        toViewportSelection(draft.selection.viewport),
-        draft
-      ),
-      environment
-    );
-    const isVisible =
-      draft.adjustment?.isActive === true || this.hasDraftAdjustment(draft);
-
-    hud.hidden = !isVisible;
-    hud.textContent = this.formatDraftAdjustmentStatus(draft);
-    hud.style.left = `${Math.max(4, rect.left)}px`;
-    hud.style.top = `${Math.max(4, rect.top - 28)}px`;
   }
 
   private createAreaForm() {
@@ -1308,13 +1304,19 @@ export class WebReviewKitView {
     save.className = 'dfwr-button is-primary';
     save.type = 'button';
     save.textContent = saveLabel;
-    save.addEventListener('click', onSave);
+    save.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onSave();
+    });
 
     const cancel = document.createElement('button');
     cancel.className = 'dfwr-button';
     cancel.type = 'button';
     cancel.textContent = 'Cancel';
-    cancel.addEventListener('click', () => {
+    cancel.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       this.config.actions.setModeState('idle');
       this.config.actions.clearDrafts();
       this.config.actions.render();

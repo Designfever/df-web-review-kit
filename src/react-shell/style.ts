@@ -141,6 +141,7 @@ export function ensureReviewShellStyle() {
 
 	    /* Semantic aliases consumed by the existing shell chrome. */
 	    --df-review-bg: var(--df-review-color-canvas);
+	    --df-review-surface: var(--df-review-color-surface);
 	    --df-review-topbar: var(--df-review-color-surface);
 	    --df-review-panel: var(--df-review-color-panel);
 	    --df-review-panel-strong: var(--df-review-color-panel-strong);
@@ -495,10 +496,13 @@ export function ensureReviewShellStyle() {
 
   .df-review-sitemap-list {
     --df-review-sitemap-grid-template: minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px);
+    position: relative;
     display: grid;
     align-content: start;
     min-height: 0;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 8px;
   }
 
@@ -513,11 +517,14 @@ export function ensureReviewShellStyle() {
   .df-review-sitemap-table-head {
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 3;
     min-height: 32px;
     border-bottom: 1px solid var(--df-review-line);
     padding: 0 10px;
-    background: var(--df-review-surface);
+    background: var(--df-review-panel);
+    box-shadow:
+      0 -8px 0 0 var(--df-review-panel),
+      0 1px 0 var(--df-review-line);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
     font-weight: 720;
@@ -588,10 +595,13 @@ export function ensureReviewShellStyle() {
   .df-review-sitemap-row.is-summary {
     position: sticky;
     bottom: 0;
-    z-index: 1;
+    z-index: 3;
     border-top: 1px solid var(--df-review-line);
     border-bottom: 0;
-    background: var(--df-review-surface);
+    background: var(--df-review-panel);
+    box-shadow:
+      0 8px 0 0 var(--df-review-panel),
+      0 -1px 0 var(--df-review-line);
   }
 
   .df-review-sitemap-row.is-folder {
@@ -2445,8 +2455,12 @@ export function ensureReviewShellStyle() {
   .df-review-source-candidate-list {
     display: grid;
     gap: 0;
+    max-height: min(220px, calc(100vh - 96px));
     min-height: 0;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-gutter: stable;
   }
 
   .df-review-source-candidate {

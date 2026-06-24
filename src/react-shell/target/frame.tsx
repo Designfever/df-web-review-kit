@@ -1,5 +1,8 @@
 import type { RefObject } from 'react';
-import { ExternalLink as ExternalLinkIcon } from 'lucide-react';
+import {
+  Code2 as Code2Icon,
+  ExternalLink as ExternalLinkIcon,
+} from 'lucide-react';
 import type { ReviewMode } from '../../types';
 import type {
   ReviewRulerMeasure,
@@ -19,6 +22,8 @@ interface ReviewTargetFrameProps {
   isRulerAvailable: boolean;
   isRulerDragging: boolean;
   isRulerVisible: boolean;
+  isSectionOutlineOpen: boolean;
+  showSectionOutlineToggle: boolean;
   mode: ReviewMode;
   rulerHover: ReviewRulerPoint | null;
   rulerMeasure: ReviewRulerMeasure | undefined;
@@ -31,6 +36,7 @@ interface ReviewTargetFrameProps {
   targetSrc: string;
   onLoadTarget: () => void;
   onSetReviewMode: (mode: ReviewMode) => void;
+  onToggleSectionOutline: (anchorRect: DOMRect) => void;
 }
 
 export const ReviewTargetFrame = ({
@@ -42,6 +48,8 @@ export const ReviewTargetFrame = ({
   isRulerAvailable,
   isRulerDragging,
   isRulerVisible,
+  isSectionOutlineOpen,
+  showSectionOutlineToggle,
   mode,
   rulerHover,
   rulerMeasure,
@@ -54,6 +62,7 @@ export const ReviewTargetFrame = ({
   targetSrc,
   onLoadTarget,
   onSetReviewMode,
+  onToggleSectionOutline,
 }: ReviewTargetFrameProps) => {
   const showRuler = isRulerVisible && isRulerAvailable;
   const targetHref = getTargetOpenHref(targetSrc);
@@ -130,6 +139,24 @@ export const ReviewTargetFrame = ({
                     >
                       <FigmaIcon />
                     </a>
+                  )}
+                  {showSectionOutlineToggle && (
+                    <button
+                      aria-label="Toggle section outline"
+                      aria-pressed={isSectionOutlineOpen}
+                      className={`df-review-frame-link is-sections${
+                        isSectionOutlineOpen ? ' is-active' : ''
+                      }`}
+                      type="button"
+                      title="Section outline"
+                      onClick={(event) =>
+                        onToggleSectionOutline(
+                          event.currentTarget.getBoundingClientRect()
+                        )
+                      }
+                    >
+                      <Code2Icon aria-hidden="true" />
+                    </button>
                   )}
                 </div>
               </div>

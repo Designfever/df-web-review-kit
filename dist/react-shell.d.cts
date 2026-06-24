@@ -19,6 +19,11 @@ type ReviewSourceInspectorOptions = {
     enabled?: boolean;
     editor?: ReviewSourceEditor;
     urlTemplate?: string;
+    /**
+     * 소스 후보에서 숨길 파일 패턴. 문자열은 경로 부분 일치, RegExp 는 정규식 매칭.
+     * (예: core.section / control.render 등 인프라 파일 제외)
+     */
+    ignore?: readonly (string | RegExp)[];
 };
 type ReviewShellStatusOption = {
     value: ReviewItemStatus;

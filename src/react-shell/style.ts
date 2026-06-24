@@ -2512,6 +2512,150 @@ export function ensureReviewShellStyle() {
     font-size: var(--df-review-font-size-2xs);
   }
 
+  .df-review-frame-link.is-sections {
+    border: 0;
+    color: #eaf2ff;
+    background: linear-gradient(180deg, #2f6bff 0%, #1f4fd6 100%);
+    box-shadow: 0 10px 26px rgba(31, 79, 214, 0.4);
+  }
+
+  .df-review-frame-link.is-sections svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+
+  .df-review-frame-link.is-sections:hover {
+    color: #ffffff;
+    background: linear-gradient(180deg, #3d76ff 0%, #2a5ae6 100%);
+  }
+
+  .df-review-frame-link.is-sections.is-active {
+    color: #ffffff;
+    background: linear-gradient(180deg, #1f4fd6 0%, #1740b8 100%);
+    box-shadow: 0 0 0 2px rgba(124, 199, 255, 0.55);
+  }
+
+  .df-review-section-outline {
+    position: fixed;
+    right: 60px;
+    top: 80px;
+    z-index: 895;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    width: min(260px, calc(100vw - 24px));
+    max-height: min(70vh, 640px);
+    border: 1px solid rgba(226, 233, 245, 0.16);
+    border-radius: var(--df-review-radius-md);
+    color: #edf3fb;
+    color-scheme: dark;
+    background: rgba(19, 24, 33, 0.96);
+    box-shadow: var(--df-review-shadow-panel);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+  }
+
+  .df-review-section-outline-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 8px 8px 12px;
+    border-bottom: 1px solid rgba(226, 233, 245, 0.12);
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(237, 243, 251, 0.6);
+  }
+
+  .df-review-section-outline-head button {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: rgba(237, 243, 251, 0.5);
+    background: transparent;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .df-review-section-outline-head button:hover {
+    color: #edf3fb;
+    background: rgba(124, 199, 255, 0.14);
+  }
+
+  .df-review-section-outline-list {
+    display: grid;
+    gap: 1px;
+    overflow-y: auto;
+    padding: 4px;
+    scrollbar-gutter: stable;
+  }
+
+  .df-review-section-outline-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    border-radius: var(--df-review-radius-sm);
+    padding: 6px 6px 8px;
+  }
+
+  .df-review-section-outline-item:hover {
+    background: rgba(124, 199, 255, 0.1);
+  }
+
+  .df-review-section-outline-name {
+    min-width: 0;
+    overflow: hidden;
+    border: 0;
+    padding: 0;
+    color: #edf3fb;
+    background: transparent;
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 800;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .df-review-section-outline-name:hover {
+    color: #7cc7ff;
+  }
+
+  .df-review-section-outline-links {
+    display: flex;
+    gap: 6px;
+  }
+
+  .df-review-section-outline-link {
+    border: 1px solid transparent;
+    border-radius: var(--df-review-radius-sm);
+    padding: 4px 6px;
+    color: rgba(237, 243, 251, 0.66);
+    background: transparent;
+    font-family: var(--df-review-font-mono);
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .df-review-section-outline-link:hover {
+    border-color: rgba(124, 199, 255, 0.4);
+    color: #edf3fb;
+    background: rgba(124, 199, 255, 0.16);
+  }
+
+  .df-review-section-outline-link:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
   .df-review-device-frame {
     position: relative;
     box-sizing: border-box;

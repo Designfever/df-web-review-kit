@@ -20,6 +20,54 @@ var reviewSourceLocator = (options = {}) => {
     }
   };
 };
+var reviewDataLocator = (options = {}) => {
+  let root = normalizePath(options.root ?? "");
+  let enabled = options.enabled ?? false;
+  const include = (options.include ?? []).map(createRuntimeMatcher);
+  const exclude = (options.exclude ?? ["node_modules", "dist"]).map(
+    createRuntimeMatcher
+  );
+  const componentPattern = options.componentPattern ?? /Section[A-Za-z0-9_]*/;
+  const fileKey = options.fileAttribute ?? "__wrkDataFile";
+  const lineKey = options.lineAttribute ?? "__wrkDataLine";
+  const componentSource = `(^|[\\n,{(\\[]\\s*)(component:\\s*)(['"\`])(${componentPattern.source})\\3`;
+  return {
+    name: "df-web-review-kit-data-locator",
+    enforce: "pre",
+    configResolved(config) {
+      root = normalizePath(options.root ?? config.root ?? "");
+      enabled = options.enabled ?? config.command === "serve";
+    },
+    transform(code, id) {
+      if (!enabled) return null;
+      const file = normalizePath(id.split("?")[0]);
+      const relativeFile = root && file.startsWith(root + "/") ? file.slice(root.length + 1) : file;
+      if (include.length > 0 && !include.some((m) => matchesPath(m, file, relativeFile)))
+        return null;
+      if (exclude.some((m) => matchesPath(m, file, relativeFile))) return null;
+      const sourceFile = (options.filePath ?? "relative") === "absolute" ? file : relativeFile;
+      const regex = new RegExp(componentSource, "g");
+      let changed = false;
+      const out = code.replace(
+        regex,
+        (_match, pre, comp, quote, name, offset) => {
+          const line = code.slice(0, offset + pre.length).split("\n").length;
+          changed = true;
+          return `${pre}${JSON.stringify(fileKey)}: ${JSON.stringify(sourceFile)}, ${JSON.stringify(lineKey)}: ${line}, ${comp}${quote}${name}${quote}`;
+        }
+      );
+      return changed ? { code: out, map: null } : null;
+    }
+  };
+};
+function matchesPath(matcher, absoluteFile, relativeFile) {
+  if (matcher.type === "regex") {
+    const regex = new RegExp(matcher.value, matcher.flags);
+    return regex.test(absoluteFile) || regex.test(relativeFile);
+  }
+  const target = matcher.value.startsWith("/") ? absoluteFile : relativeFile;
+  return target === matcher.value || target.startsWith(matcher.value + "/") || target.includes("/" + matcher.value);
+}
 function createRuntimeOptions(options, config) {
   const attributePrefix = (options.attributePrefix ?? "data-wrk-source").replace(
     /-+$/,
@@ -156,6 +204,7 @@ function normalizePath(value) {
 `;
 }
 export {
+  reviewDataLocator,
   reviewSourceLocator
 };
 //# sourceMappingURL=vite.js.map

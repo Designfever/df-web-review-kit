@@ -44,33 +44,91 @@ export const getElementSourceHint = (
   return getSourceHintFromElement(sourceElement);
 };
 
+export type SourceIgnorePattern = string | RegExp;
+
+export type GetSourceCandidatesOptions = {
+  ignore?: readonly SourceIgnorePattern[];
+};
+
+const matchesIgnore = (
+  file: string,
+  patterns: readonly SourceIgnorePattern[]
+) => {
+  const normalized = file.replace(/\\/g, '/');
+  return patterns.some((pattern) =>
+    typeof pattern === 'string'
+      ? normalized.includes(pattern)
+      : pattern.test(normalized)
+  );
+};
+
 export const getSourceCandidates = (
-  target: EventTarget | null
+  target: EventTarget | null,
+  options?: GetSourceCandidatesOptions
 ): SourceCandidate[] => {
   const startElement = getEventElement(target);
   if (!startElement) return [];
 
   const candidates: SourceCandidate[] = [];
   const seen = new Set<string>();
+  const add = (element: Element, source: DomSourceHint | undefined, depth: number) => {
+    if (!source?.file) return;
+    // 같은 파일은 1개만(가장 안쪽=클릭에 가까운 것). 중첩 primitive 의 줄 단위 중복을 막는다.
+    const key = source.file.replace(/\\/g, '/');
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push(createSourceCandidate(element, source, depth));
+  };
+
+  // 클릭 지점에서 부모로 거슬러 올라가며 수집
   let element: Element | null = startElement;
   let depth = 0;
-
   while (element && element.nodeType === 1) {
-    const source = getSourceHintFromElement(element);
-    if (source?.file) {
-      const key = getSourceCandidateKey(source);
-      if (!seen.has(key)) {
-        seen.add(key);
-        candidates.push(createSourceCandidate(element, source, depth));
-      }
-    }
-
+    add(element, getSourceHintFromElement(element), depth);
+    // page data 파일 출처(__wrkDataFile)는 별도 후보로. 라인이 있으므로 depth 0 으로 위치 유지.
+    add(element, getDataHintFromElement(element), 0);
     if (element === element.ownerDocument.documentElement) break;
     element = element.parentElement;
     depth += 1;
   }
 
-  return candidates.slice(0, 8);
+  // 인프라/래퍼 파일 숨김. 전부 걸러지면 빈 후보 대신 원본을 그대로 노출.
+  const ignore = options?.ignore;
+  const visible = ignore?.length
+    ? candidates.filter((c) => !matchesIgnore(c.source.file ?? '', ignore))
+    : candidates;
+  return (visible.length ? visible : candidates).slice(0, 8);
+};
+
+export type SectionOutlineEntry = {
+  id: string;
+  label: string;
+  filePath: string;
+  element: Element;
+  source: DomSourceHint | undefined;
+  data: DomSourceHint | undefined;
+};
+
+/**
+ * 섹션 래퍼(`data-wrk-source-component` 가진 요소)를 문서 순서대로 모은다.
+ * Option 좌측 아웃라인 패널에서 사용한다.
+ */
+export const getSectionOutline = (root: ParentNode): SectionOutlineEntry[] => {
+  return Array.from(root.querySelectorAll('[data-wrk-source-component]')).map(
+    (element, index) => {
+      const label =
+        element.getAttribute('data-wrk-source-component')?.trim() || 'section';
+      const source = getSourceHintFromElement(element);
+      return {
+        id: `${label}-${index}`,
+        label,
+        filePath: getDisplaySourcePath(source?.file) ?? label,
+        element,
+        source,
+        data: getDataHintFromElement(element),
+      };
+    }
+  );
 };
 
 export const getSourceOpenUrl = (
@@ -125,6 +183,20 @@ export const openSourceInEditor = (
   window.open(url, '_blank', 'noreferrer');
   return true;
 };
+
+function getDataHintFromElement(element: Element): DomSourceHint | undefined {
+  const file = getSourceAttribute(element, 'data-wrk-data-file');
+  if (!file) return undefined;
+
+  return {
+    component: undefined,
+    file,
+    line: getSourceAttribute(element, 'data-wrk-data-line'),
+    column: undefined,
+    sectionId: undefined,
+    sectionIndex: undefined,
+  };
+}
 
 function getSourceHintFromElement(element: Element): DomSourceHint | undefined {
   const source: DomSourceHint = {
@@ -208,7 +280,7 @@ function getDisplaySourcePath(file: string | undefined) {
   if (!normalizedFile) return undefined;
 
   const sourceRootMatch = normalizedFile.match(
-    /(?:^|\/)((?:dev\/)?src\/.+|app\/.+|pages\/.+|components\/.+)$/
+    /(?:^|\/)((?:dev\/)?src\/.+|app\/.+|pages?\/.+|components\/.+)$/
   );
   return sourceRootMatch?.[1] ?? normalizedFile;
 }

@@ -58,6 +58,83 @@ export const reviewSourceLocator = (
   };
 };
 
+export interface ReviewDataLocatorOptions {
+  enabled?: boolean;
+  root?: string;
+  include?: readonly SourceLocatorPattern[];
+  exclude?: readonly SourceLocatorPattern[];
+  filePath?: 'relative' | 'absolute';
+  /** 매칭할 component 이름 패턴. 기본은 `Section`으로 시작하는 이름. */
+  componentPattern?: RegExp;
+  fileAttribute?: string;
+  lineAttribute?: string;
+}
+
+/**
+ * page data 파일의 section 객체(`component: 'SectionXxx'`)에 출처 파일/라인을
+ * `__wrkDataFile`/`__wrkDataLine` prop 으로 주입한다. 라인 보존을 위해 같은 줄에만 삽입한다.
+ */
+export const reviewDataLocator = (
+  options: ReviewDataLocatorOptions = {}
+): Plugin => {
+  let root = normalizePath(options.root ?? '');
+  let enabled = options.enabled ?? false;
+  const include = (options.include ?? []).map(createRuntimeMatcher);
+  const exclude = (options.exclude ?? ['node_modules', 'dist']).map(
+    createRuntimeMatcher
+  );
+  const componentPattern = options.componentPattern ?? /Section[A-Za-z0-9_]*/;
+  const fileKey = options.fileAttribute ?? '__wrkDataFile';
+  const lineKey = options.lineAttribute ?? '__wrkDataLine';
+
+  const componentSource = `(^|[\\n,{(\\[]\\s*)(component:\\s*)(['"\`])(${componentPattern.source})\\3`;
+
+  return {
+    name: 'df-web-review-kit-data-locator',
+    enforce: 'pre',
+    configResolved(config) {
+      root = normalizePath(options.root ?? config.root ?? '');
+      enabled = options.enabled ?? config.command === 'serve';
+    },
+    transform(code, id) {
+      if (!enabled) return null;
+      const file = normalizePath(id.split('?')[0]);
+      const relativeFile =
+        root && file.startsWith(root + '/') ? file.slice(root.length + 1) : file;
+      if (include.length > 0 && !include.some((m) => matchesPath(m, file, relativeFile)))
+        return null;
+      if (exclude.some((m) => matchesPath(m, file, relativeFile))) return null;
+
+      const sourceFile = (options.filePath ?? 'relative') === 'absolute' ? file : relativeFile;
+      const regex = new RegExp(componentSource, 'g');
+      let changed = false;
+      const out = code.replace(
+        regex,
+        (_match, pre: string, comp: string, quote: string, name: string, offset: number) => {
+          const line = code.slice(0, offset + pre.length).split('\n').length;
+          changed = true;
+          return `${pre}${JSON.stringify(fileKey)}: ${JSON.stringify(sourceFile)}, ${JSON.stringify(lineKey)}: ${line}, ${comp}${quote}${name}${quote}`;
+        }
+      );
+
+      return changed ? { code: out, map: null } : null;
+    },
+  };
+};
+
+function matchesPath(
+  matcher: RuntimeMatcher,
+  absoluteFile: string,
+  relativeFile: string
+) {
+  if (matcher.type === 'regex') {
+    const regex = new RegExp(matcher.value, matcher.flags);
+    return regex.test(absoluteFile) || regex.test(relativeFile);
+  }
+  const target = matcher.value.startsWith('/') ? absoluteFile : relativeFile;
+  return target === matcher.value || target.startsWith(matcher.value + '/') || target.includes('/' + matcher.value);
+}
+
 function createRuntimeOptions(
   options: ReviewSourceLocatorOptions,
   config?: ResolvedConfig

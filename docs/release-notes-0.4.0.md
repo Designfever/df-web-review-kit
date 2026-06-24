@@ -3,7 +3,7 @@
 0.3.0 release 이후 변경 사항 정리.
 
 비교 기준: `a82b204` (`release: 0.3.0`)
-검토 기준 HEAD: `e77b822` (`Move presence chips below toolbar`)
+검토 기준: `0.4.0` release commit
 
 ## 주요 변경
 
@@ -140,5 +140,5 @@ Page presence 표시를 QA list header에서 제거했다. 대신 상단 toolbar
 ## 메모
 
 - 이 노트는 0.4.0 publishing 전 검토용이다.
-- `package.json` version bump, git tag, npm publish는 아직 하지 않았다.
-- 0.4.0 publish 전에는 최종 commit hash와 package version을 한 번 더 확인해야 한다.
+- `package.json` version은 `0.4.0`이다.
+- npm publish 전에는 registry login 상태를 확인해야 한다.

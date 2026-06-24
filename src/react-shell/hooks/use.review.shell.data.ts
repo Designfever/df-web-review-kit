@@ -89,13 +89,17 @@ export const useReviewShellData = ({
     [isRemoteSource, sitemapItems]
   );
   const activeItems = useMemo(
-    () =>
-      (isAllQaVisible
+    () => {
+      const sourceItems = isAllQaVisible
         ? sitemapSourceItems
         : items.filter(
             (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
-          )
-      ).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+          );
+
+      return [...sourceItems].sort((a, b) =>
+        b.createdAt.localeCompare(a.createdAt)
+      );
+    },
     [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
   );
   const numberedActiveItems = useMemo(

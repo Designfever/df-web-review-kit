@@ -200,23 +200,29 @@ function HomeFixture() {
       </section>
       <section className="dev-grid" aria-label="Smoke targets">
         <article className="dev-card" data-qa-id="smoke-card-alpha">
-          <span data-font="12<24">01</span>
-          <h2 data-font="34<10">Anchor target</h2>
-          <p data-font="40<20">
+          <span data-font="12<24 - Label/XXS/Medium<Label/XS/Medium">
+            01
+          </span>
+          <h2 data-font="34<10 - Heading/H5<Heading/H2">Anchor target</h2>
+          <p data-font="40<20 - Body/S/Regular<Body/M/Regular">
             DOM marker mode should capture this card with a stable data-qa-id selector.
           </p>
         </article>
         <article className="dev-card dev-card-accent" data-qa-id="smoke-card-beta">
-          <span data-font="12<24">02</span>
-          <h2 data-font="34<10">Area target</h2>
-          <p data-font="40<20">
+          <span data-font="12<24 - Label/XXS/Medium<Label/XS/Medium">
+            02
+          </span>
+          <h2 data-font="34<10 - Heading/H5<Heading/H2">Area target</h2>
+          <p data-font="40<20 - Body/S/Regular<Body/M/Regular">
             Area mode should keep the relative selection across viewport presets.
           </p>
         </article>
         <article className="dev-card" data-qa-id="smoke-card-gamma">
-          <span data-font="12<24">03</span>
-          <h2 data-font="34<10">Prompt target</h2>
-          <p data-font="40<20">
+          <span data-font="12<24 - Label/XXS/Medium<Label/XS/Medium">
+            03
+          </span>
+          <h2 data-font="34<10 - Heading/H5<Heading/H2">Prompt target</h2>
+          <p data-font="40<20 - Body/S/Regular<Body/M/Regular">
             Item prompt should include page, viewport, marker, anchor, and comment context.
           </p>
         </article>

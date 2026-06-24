@@ -56,6 +56,7 @@ export const ReviewTargetFrame = ({
   onSetReviewMode,
 }: ReviewTargetFrameProps) => {
   const showRuler = isRulerVisible && isRulerAvailable;
+  const targetHref = getTargetOpenHref(targetSrc);
 
   return (
     <main className="df-review-stage">
@@ -111,7 +112,7 @@ export const ReviewTargetFrame = ({
                   <a
                     aria-label="Open target page"
                     className="df-review-frame-link is-target"
-                    href={targetSrc}
+                    href={targetHref}
                     rel="noreferrer"
                     target="_blank"
                     title="Open target page"
@@ -147,6 +148,12 @@ export const ReviewTargetFrame = ({
     </main>
   );
 };
+
+function getTargetOpenHref(targetSrc: string) {
+  const url = new URL(targetSrc, window.location.origin);
+  url.searchParams.delete('__dfwr_target');
+  return `${url.pathname}${url.search}${url.hash}`;
+}
 
 const FigmaIcon = () => (
   <svg

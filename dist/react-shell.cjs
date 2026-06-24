@@ -5545,6 +5545,7 @@ var ReviewTargetFrame = ({
   onSetReviewMode
 }) => {
   const showRuler = isRulerVisible && isRulerAvailable;
+  const targetHref = getTargetOpenHref(targetSrc);
   return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("main", { className: "df-review-stage", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-frame", children: [
     /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-target-stack", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
       "div",
@@ -5605,7 +5606,7 @@ var ReviewTargetFrame = ({
               {
                 "aria-label": "Open target page",
                 className: "df-review-frame-link is-target",
-                href: targetSrc,
+                href: targetHref,
                 rel: "noreferrer",
                 target: "_blank",
                 title: "Open target page",
@@ -5639,6 +5640,11 @@ var ReviewTargetFrame = ({
     ) })
   ] }) });
 };
+function getTargetOpenHref(targetSrc) {
+  const url = new URL(targetSrc, window.location.origin);
+  url.searchParams.delete("__dfwr_target");
+  return `${url.pathname}${url.search}${url.hash}`;
+}
 var FigmaIcon = () => /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
   "svg",
   {
@@ -11298,9 +11304,14 @@ var useReviewShellData = ({
     [isRemoteSource, sitemapItems]
   );
   const activeItems = (0, import_react16.useMemo)(
-    () => (isAllQaVisible ? sitemapSourceItems : items.filter(
-      (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
-    )).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    () => {
+      const sourceItems = isAllQaVisible ? sitemapSourceItems : items.filter(
+        (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
+      );
+      return [...sourceItems].sort(
+        (a, b) => b.createdAt.localeCompare(a.createdAt)
+      );
+    },
     [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
   );
   const numberedActiveItems = (0, import_react16.useMemo)(
@@ -12603,6 +12614,9 @@ var ReviewShell = ({
       return;
     }
     if (!frameDocument || !isSourceInspectorEnabled) return;
+    const frameRoot = frameDocument.head ?? frameDocument.documentElement;
+    const frameBody = frameDocument.body ?? frameDocument.documentElement;
+    if (!frameRoot || !frameBody) return;
     const optionAttribute = "data-dfwr-source-option";
     const fontOverlayAttribute = "data-dfwr-source-fonts";
     const style = frameDocument.createElement("style");
@@ -12636,7 +12650,8 @@ var ReviewShell = ({
         z-index: 2147483647 !important;
         display: flex !important;
         flex-direction: column !important;
-        max-width: 180px !important;
+        width: max-content !important;
+        max-width: calc(100vw - 8px) !important;
         border: 1px solid rgba(124, 199, 255, 0.72) !important;
         border-radius: 6px !important;
         padding: 4px 6px !important;
@@ -12644,25 +12659,32 @@ var ReviewShell = ({
         background: rgba(15, 23, 42, 0.9) !important;
         box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28) !important;
         font: 800 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+        overflow-wrap: anywhere !important;
         pointer-events: none !important;
-        white-space: nowrap !important;
+        white-space: normal !important;
       }
 
       [${fontOverlayAttribute}] > span {
-        display: flex !important;
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) !important;
         justify-content: space-between !important;
         gap: 10px !important;
+      }
+
+      [${fontOverlayAttribute}] > span > span:last-child {
+        min-width: 0 !important;
+        text-align: right !important;
       }
 
       [${fontOverlayAttribute}][hidden] {
         display: none !important;
       }
     `;
-    (frameDocument.head ?? frameDocument.documentElement).append(style);
+    frameRoot.append(style);
     const fontOverlay = frameDocument.createElement("div");
     fontOverlay.setAttribute(fontOverlayAttribute, "true");
     fontOverlay.hidden = true;
-    (frameDocument.body ?? frameDocument.documentElement).append(fontOverlay);
+    frameBody.append(fontOverlay);
     let hoveredElement = null;
     let lastSourceTarget = null;
     let isSourceSelecting = false;
@@ -12690,10 +12712,13 @@ var ReviewShell = ({
       const rect = element.getBoundingClientRect();
       const frameWidth = frameDocument.documentElement.clientWidth;
       const showAbove = rect.top > 48;
-      const left = Math.max(4, Math.min(rect.left, frameWidth - 96));
       const top = Math.max(4, showAbove ? rect.top : rect.bottom);
       fontOverlay.replaceChildren();
       fontOverlay.style.minWidth = "72px";
+      fontOverlay.style.left = "4px";
+      fontOverlay.style.top = `${top}px`;
+      fontOverlay.style.transform = showAbove ? "translateY(calc(-100% - 6px))" : "translateY(6px)";
+      fontOverlay.style.visibility = "hidden";
       const rows = values.map(({ tag, value }) => {
         const row = frameDocument.createElement("span");
         const tagText = frameDocument.createElement("span");
@@ -12704,10 +12729,14 @@ var ReviewShell = ({
         return row;
       });
       fontOverlay.append(...rows);
-      fontOverlay.style.left = `${left}px`;
-      fontOverlay.style.top = `${top}px`;
-      fontOverlay.style.transform = showAbove ? "translateY(calc(-100% - 6px))" : "translateY(6px)";
       fontOverlay.hidden = false;
+      const overlayWidth = fontOverlay.getBoundingClientRect().width;
+      const left = Math.max(
+        4,
+        Math.min(rect.left, frameWidth - overlayWidth - 4)
+      );
+      fontOverlay.style.left = `${left}px`;
+      fontOverlay.style.visibility = "";
     };
     const setHoveredElement = (element) => {
       hoveredElement = element;

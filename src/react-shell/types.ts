@@ -37,6 +37,15 @@ export type ReviewSourceInspectorOptions = {
    */
   maxDepth?: number;
   /**
+   * Source Tree item hover 시 iframe target outline 표시 여부.
+   */
+  hoverOutline?: boolean;
+  /**
+   * Source Tree에서 Placer primitive node까지 표시할지 여부.
+   * 기본값은 false 로, wrapper noise를 줄이기 위해 Placer branch를 숨긴다.
+   */
+  includePlacer?: boolean;
+  /**
    * 소스 후보에서 숨길 파일 패턴. 문자열은 경로 부분 일치, RegExp 는 정규식 매칭.
    * (예: core.section / control.render 등 인프라 파일 제외)
    */

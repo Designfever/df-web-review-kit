@@ -13,6 +13,7 @@ import type {
 import {
   cssEscape,
   getDomAnchor,
+  getDomAnchorFromElement,
   getDomAnchorFromPoint,
   getElementViewportSelection,
   getRelativePoint,
@@ -86,6 +87,8 @@ export function createWebReviewKit(
     close: () => app.close(),
     toggle: () => app.toggle(),
     setMode: (mode) => app.setMode(mode),
+    startElementReview: (element, comment) =>
+      app.startElementReview(element, comment),
     getMode: () => app.getMode(),
     highlightItem: (itemId) => app.highlightItem(itemId),
     setHiddenItemIds: (itemIds) => app.setHiddenItemIds(itemIds),
@@ -223,6 +226,18 @@ class WebReviewKitApp {
     this.noteDraft = undefined;
     this.areaDraft = undefined;
     this.render();
+  }
+
+  async startElementReview(element: Element, comment?: string) {
+    if (!this.isOpen) {
+      this.isOpen = true;
+    }
+
+    this.setModeState('element');
+    this.noteDraft = undefined;
+    this.areaDraft = undefined;
+    this.isSelectingArea = false;
+    await this.bindElementDraftToElement(element, comment);
   }
 
   getMode() {
@@ -520,6 +535,62 @@ class WebReviewKitApp {
     this.render();
   }
 
+  private async bindElementDraftToElement(
+    element: Element,
+    comment?: string
+  ) {
+    const environment = this.getEnvironment();
+    if (!environment || element.ownerDocument !== environment.document) return;
+
+    const viewport = getViewportSize(environment);
+
+    const draft = await this.withOverlayHidden(() => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return undefined;
+
+      const selection: ViewportSelection = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+      };
+      const anchor = getDomAnchorFromElement(
+        element,
+        this.options.anchors?.attribute,
+        environment
+      );
+      const markerPoint = { x: selection.left, y: selection.top };
+      const marker: ReviewMarker = {
+        viewport: roundPoint(markerPoint),
+        relative: anchor
+          ? getRelativePoint(markerPoint, anchor, environment)
+          : undefined,
+      };
+      const reviewSelection: ReviewSelection = {
+        viewport: toPublicSelection(selection),
+        relative: anchor
+          ? getRelativeSelection(selection, anchor, environment)
+          : undefined,
+      };
+      const previewElement =
+        'style' in element ? (element as ReviewDraftPreviewElement) : undefined;
+
+      return {
+        viewport,
+        anchor,
+        marker,
+        selection: reviewSelection,
+        comment,
+        previewElement,
+      };
+    });
+
+    if (!draft) return;
+
+    this.noteDraft = draft;
+    this.render();
+  }
+
   private async createAreaDraft(selection: ViewportSelection) {
     const environment = this.getEnvironment();
     if (!environment) return;
@@ -638,6 +709,7 @@ function createNoopController(): WebReviewKitController {
     close() {},
     toggle() {},
     setMode() {},
+    async startElementReview() {},
     getMode() {
       return 'idle';
     },

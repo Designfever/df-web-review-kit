@@ -194,6 +194,7 @@ export interface WebReviewKitController {
   close(): void;
   toggle(): void;
   setMode(mode: ReviewMode): void;
+  startElementReview(element: Element, comment?: string): Promise<void>;
   getMode(): ReviewMode;
   highlightItem(itemId?: string): void;
   setHiddenItemIds(itemIds?: string[]): void;

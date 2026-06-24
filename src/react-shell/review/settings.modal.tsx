@@ -2,6 +2,9 @@ import {
   CircleHelp as CircleHelpIcon,
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
+  Monitor as MonitorIcon,
+  Moon as MoonIcon,
+  Sun as SunIcon,
 } from 'lucide-react';
 import {
   DEFAULT_REVIEW_THEME,
@@ -13,6 +16,12 @@ import {
 } from '../constants';
 import { normalizeReviewTheme } from '../settings';
 import type { ReviewShellTheme } from '../types';
+
+const getReviewThemeIcon = (theme: ReviewShellTheme) => {
+  if (theme === 'light') return SunIcon;
+  if (theme === 'system') return MonitorIcon;
+  return MoonIcon;
+};
 
 interface ReviewSettingsModalProps {
   figmaTokenDraft: string;
@@ -89,22 +98,29 @@ export const ReviewSettingsModal = ({
           <div className="df-review-settings-row">
             <span>Theme</span>
             <div className="df-review-settings-theme-options">
-              {REVIEW_THEME_OPTIONS.map((option) => (
-                <button
-                  aria-pressed={reviewThemeDraft === option.value}
-                  className={`df-review-settings-theme-option${
-                    reviewThemeDraft === option.value ? ' is-active' : ''
-                  }`}
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    onReviewThemeDraftChange(normalizeReviewTheme(option.value));
-                    onClearStatus();
-                  }}
-                >
-                  {option.label}
-                </button>
-              ))}
+              {REVIEW_THEME_OPTIONS.map((option) => {
+                const ThemeIcon = getReviewThemeIcon(option.value);
+
+                return (
+                  <button
+                    aria-pressed={reviewThemeDraft === option.value}
+                    className={`df-review-settings-theme-option${
+                      reviewThemeDraft === option.value ? ' is-active' : ''
+                    }`}
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      onReviewThemeDraftChange(
+                        normalizeReviewTheme(option.value)
+                      );
+                      onClearStatus();
+                    }}
+                  >
+                    <ThemeIcon aria-hidden="true" />
+                    <span>{option.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div className="df-review-settings-field">

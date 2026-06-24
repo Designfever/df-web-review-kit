@@ -92,12 +92,15 @@ Browser env must use a Supabase `anon` key only. Do not put `service_role` or Op
 ```ts
 import { createWebReviewKit, localAdapter } from '@designfever/web-review-kit';
 import { mountReviewShell } from '@designfever/web-review-kit/react-shell';
-import { reviewSourceLocator } from '@designfever/web-review-kit/vite';
+import {
+  reviewDataLocator,
+  reviewSourceLocator,
+} from '@designfever/web-review-kit/vite';
 ```
 
 - `@designfever/web-review-kit`: core API, adapters, shared types.
 - `@designfever/web-review-kit/react-shell`: review shell UI, presence adapters, page glob helper.
-- `@designfever/web-review-kit/vite`: dev-only JSX source locator for source file hints.
+- `@designfever/web-review-kit/vite`: dev-only source/data locators for review hints.
 - `src/*` is not a public import path.
 
 ## Optional Source Locator
@@ -106,7 +109,10 @@ For local QA, add the Vite plugin to inject source hints into rendered DOM nodes
 
 ```ts
 import { defineConfig } from 'vite';
-import { reviewSourceLocator } from '@designfever/web-review-kit/vite';
+import {
+  reviewDataLocator,
+  reviewSourceLocator,
+} from '@designfever/web-review-kit/vite';
 
 export default defineConfig({
   plugins: [
@@ -115,11 +121,16 @@ export default defineConfig({
       include: ['src'],
       filePath: 'absolute',
     }),
+    reviewDataLocator({
+      enabled: true,
+      include: ['src/data'],
+      filePath: 'absolute',
+    }),
   ],
 });
 ```
 
-When source hints are available, hold `Option` over the review target to inspect source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose a file to open. DOM QA cards also show a source action when the saved item has source hints. Keep this plugin disabled for production builds because it writes source paths into the DOM.
+When source hints are available, hold `Option` over the review target to inspect source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose a file to open. The side rail can also open a Source Tree panel with section/source/data links. DOM QA cards show a source action when the saved item has source hints. Keep these plugins disabled for production builds because they write source paths into the DOM.
 
 ```tsx
 mountReviewShell({
@@ -129,6 +140,10 @@ mountReviewShell({
   sourceRoot: import.meta.env.VITE_REVIEW_SOURCE_ROOT,
   sourceInspector: {
     editor: 'cursor', // 'vscode' | 'cursor' | 'webstorm' | 'custom'
+    maxDepth: 9,
+    hoverOutline: true,
+    includePlacer: false,
+    ignore: ['core.section', 'control.render'],
     // urlTemplate: 'my-editor://open?file={encodedPath}&line={line}&column={column}',
   },
 });

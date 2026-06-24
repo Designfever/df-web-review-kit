@@ -1,9 +1,11 @@
 import {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
+  clamp,
   createWebReviewKit,
   getNumberedReviewItems,
-  normalizeReviewItemStatus
-} from "./chunk-6L2KJ7XL.js";
+  normalizeReviewItemStatus,
+  runWithAutoScrollBehavior
+} from "./chunk-TWCSIBMY.js";
 
 // src/react-shell.tsx
 import React2 from "react";
@@ -68,10 +70,10 @@ function ensureReviewShellStyle() {
 	    --df-review-font-size-lg: 14px;
 	    --df-review-font-size-xl: 15px;
 	    --df-review-font-size-2xl: 18px;
-	    --df-review-font-weight-medium: 650;
-	    --df-review-font-weight-bold: 700;
-	    --df-review-font-weight-strong: 800;
-	    --df-review-font-weight-heavy: 900;
+	    --df-review-font-weight-medium: 400;
+	    --df-review-font-weight-bold: 500;
+	    --df-review-font-weight-strong: 500;
+	    --df-review-font-weight-heavy: 600;
 	    --df-review-line-height-tight: 1.25;
 	    --df-review-line-height-base: 1.42;
 	    --df-review-line-height-relaxed: 1.55;
@@ -88,7 +90,7 @@ function ensureReviewShellStyle() {
 	    --df-review-space-8: 32px;
 	    --df-review-control-height-sm: 32px;
 	    --df-review-control-height-md: 34px;
-	    --df-review-control-height-lg: 38px;
+	    --df-review-control-height-lg: 34px;
 	    --df-review-radius-xs: 3px;
 	    --df-review-radius-sm: 6px;
 	    --df-review-radius-md: 8px;
@@ -262,7 +264,7 @@ function ensureReviewShellStyle() {
   .df-review-shell {
     --df-review-frame-gutter-x: var(--df-review-space-4);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 0 32px;
+    grid-template-columns: minmax(0, 1fr) 0 48px;
     grid-template-rows: auto auto minmax(0, 1fr);
     width: 100%;
     height: 100%;
@@ -271,7 +273,7 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-shell.is-list-visible {
-    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 420px) 32px;
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 420px) 48px;
   }
 
 	  .df-review-topbar {
@@ -290,20 +292,6 @@ function ensureReviewShellStyle() {
 	    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.025);
 	  }
 
-  .df-review-presence-row {
-    grid-column: 1;
-    grid-row: 2;
-    position: relative;
-    z-index: 590;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    min-width: 0;
-    padding: var(--df-review-space-2) var(--df-review-frame-gutter-x);
-    border-bottom: 1px solid var(--df-review-line-soft);
-    background: var(--df-review-panel);
-  }
-
 		  .df-review-address {
 		    display: grid;
 		    grid-template-columns: auto minmax(160px, 1fr) auto auto;
@@ -316,6 +304,7 @@ function ensureReviewShellStyle() {
 
   .df-review-address input {
 	    width: 100%;
+	    height: var(--df-review-control-height-md);
 	    min-height: var(--df-review-control-height-md);
 	    border: 1px solid var(--df-review-line);
 	    border-radius: var(--df-review-radius-sm);
@@ -333,7 +322,6 @@ function ensureReviewShellStyle() {
 	  }
 
 		  .df-review-address button,
-		  .df-review-side-toggle,
 		  .df-review-presets button,
 		  .df-review-overlay-button,
 			  .df-review-mode-button,
@@ -342,6 +330,7 @@ function ensureReviewShellStyle() {
 			  .df-review-settings-actions button,
 			  .df-review-prompt-block-header button,
 			  .df-review-item-actions button {
+		    height: var(--df-review-control-height-md);
 		    min-height: var(--df-review-control-height-md);
 		    border: 1px solid var(--df-review-line);
 		    border-radius: var(--df-review-radius-sm);
@@ -349,12 +338,11 @@ function ensureReviewShellStyle() {
 	    box-shadow: var(--df-review-shadow-control);
 	    color: var(--df-review-text);
 	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 700;
+	    font-weight: 500;
 	    transition: border-color 140ms ease, background 140ms ease, color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 	  }
 
 		  .df-review-address button:hover,
-	  .df-review-side-toggle:hover,
 		  .df-review-presets button:hover,
 		  .df-review-overlay-button:hover,
 		  .df-review-mode-button:hover,
@@ -455,12 +443,13 @@ function ensureReviewShellStyle() {
 
   .df-review-sitemap-header strong {
     font-size: var(--df-review-font-size-lg);
+    font-weight: 600;
   }
 
 	  .df-review-sitemap-header span {
 	    color: var(--df-review-muted);
 	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 700;
+	    font-weight: 500;
 	  }
 
   .df-review-sitemap-header button {
@@ -474,7 +463,7 @@ function ensureReviewShellStyle() {
 	    background: var(--df-review-control);
 	    color: var(--df-review-text);
 	    font-size: var(--df-review-font-size-md);
-	    font-weight: 800;
+	    font-weight: 500;
 	  }
 
 	  .df-review-sitemap-header button:hover {
@@ -502,7 +491,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-control);
     box-shadow: var(--df-review-shadow-control);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 850;
+    font-weight: 600;
   }
 
   .df-review-sitemap-list {
@@ -538,7 +527,7 @@ function ensureReviewShellStyle() {
       0 1px 0 var(--df-review-line);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 720;
+    font-weight: 500;
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
@@ -636,7 +625,7 @@ function ensureReviewShellStyle() {
     overflow-wrap: anywhere;
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-md);
-    font-weight: 650;
+    font-weight: 400;
     line-height: 1.35;
   }
 
@@ -648,7 +637,7 @@ function ensureReviewShellStyle() {
     flex: 0 0 auto;
     color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
-    font-weight: 500;
+    font-weight: 400;
     white-space: pre;
   }
 
@@ -663,14 +652,14 @@ function ensureReviewShellStyle() {
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
     font-variant-numeric: tabular-nums;
-    font-weight: 650;
+    font-weight: 400;
     line-height: 1;
     text-align: right;
   }
 
   .df-review-sitemap-cell.is-total {
     color: var(--df-review-accent);
-    font-weight: 760;
+    font-weight: 500;
   }
 
   .df-review-sitemap-cell.is-total strong {
@@ -703,7 +692,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-chip-bg);
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 900;
+    font-weight: 600;
     line-height: 1.1;
     white-space: nowrap;
   }
@@ -775,12 +764,13 @@ function ensureReviewShellStyle() {
 		  .df-review-settings-header strong {
 		    color: var(--df-review-text);
 		    font-size: var(--df-review-font-size-lg);
+        font-weight: 600;
 		  }
 
 		  .df-review-settings-header span {
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 800;
+		    font-weight: 500;
 		  }
 
 		  .df-review-settings-header button {
@@ -790,7 +780,7 @@ function ensureReviewShellStyle() {
 		    min-width: 34px;
 		    padding: 0;
 		    font-size: var(--df-review-font-size-md);
-		    font-weight: 800;
+		    font-weight: 500;
 		  }
 
 		  .df-review-settings-body {
@@ -816,7 +806,7 @@ function ensureReviewShellStyle() {
 		  .df-review-settings-label-row label {
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 800;
+		    font-weight: 500;
 		  }
 
 		  .df-review-settings-theme-options {
@@ -828,16 +818,31 @@ function ensureReviewShellStyle() {
 		  }
 
 		  .df-review-settings-theme-option {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
 		    min-height: 30px;
 		    border: 1px solid var(--df-review-line);
 		    border-radius: var(--df-review-radius-sm);
-		    padding: 0 10px;
+		    padding: 0 11px;
 		    color: var(--df-review-muted);
 		    background: var(--df-review-control);
 		    box-shadow: var(--df-review-shadow-control);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 800;
+		    font-weight: 500;
 		  }
+
+      .df-review-settings-theme-option svg {
+        width: 15px;
+        height: 15px;
+        flex: 0 0 auto;
+        stroke-width: 2.2;
+      }
+
+      .df-review-settings-theme-option span {
+        color: inherit;
+      }
 
 		  .df-review-settings-theme-option:hover {
 		    border-color: var(--df-review-accent);
@@ -983,7 +988,7 @@ function ensureReviewShellStyle() {
 		    background: var(--df-review-chip-bg);
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 700;
+		    font-weight: 500;
 		    line-height: 1.55;
 		  }
 
@@ -999,7 +1004,7 @@ function ensureReviewShellStyle() {
 		    margin: 0;
 		    color: var(--df-review-accent);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 800;
+		    font-weight: 500;
 		  }
 
 		  .df-review-settings-actions {
@@ -1065,7 +1070,7 @@ function ensureReviewShellStyle() {
     margin: 0;
     color: var(--df-review-danger);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 800;
+    font-weight: 500;
   }
 
   .df-review-edit-actions {
@@ -1118,7 +1123,7 @@ function ensureReviewShellStyle() {
     box-shadow: var(--df-review-shadow-modal);
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 800;
+    font-weight: 500;
     line-height: 1.25;
     pointer-events: none;
   }
@@ -1142,13 +1147,14 @@ function ensureReviewShellStyle() {
 			  .df-review-prompt-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-lg);
+          font-weight: 600;
 			  }
 
 			  .df-review-prompt-header span {
 			    overflow: hidden;
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 800;
+			    font-weight: 500;
 			    text-overflow: ellipsis;
 			    white-space: nowrap;
 			  }
@@ -1160,7 +1166,7 @@ function ensureReviewShellStyle() {
 			    min-width: 34px;
 			    padding: 0;
 			    font-size: var(--df-review-font-size-md);
-			    font-weight: 800;
+			    font-weight: 500;
 			  }
 
 			  .df-review-prompt-body {
@@ -1194,13 +1200,13 @@ function ensureReviewShellStyle() {
 			  .df-review-prompt-block-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 900;
+			    font-weight: 600;
 			  }
 
 			  .df-review-prompt-block-header span {
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 800;
+			    font-weight: 500;
 			  }
 
 			  .df-review-prompt-block-header button {
@@ -1239,7 +1245,7 @@ function ensureReviewShellStyle() {
 			    color: var(--df-review-text);
 			    font-family: var(--df-review-font-mono);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 600;
+			    font-weight: 400;
 			    line-height: 1.5;
 			    white-space: pre;
 			  }
@@ -1258,13 +1264,13 @@ function ensureReviewShellStyle() {
 			  .df-review-prompt-section-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-md);
-			    font-weight: 900;
+			    font-weight: 600;
 			  }
 
 			  .df-review-prompt-section-header span {
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 800;
+			    font-weight: 500;
 			  }
 
 			  .df-review-prompt-about {
@@ -1293,14 +1299,14 @@ function ensureReviewShellStyle() {
 			  .df-review-prompt-about-grid strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 900;
+			    font-weight: 600;
 			  }
 
 			  .df-review-prompt-about-grid p {
 			    margin: 0;
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 700;
+			    font-weight: 500;
 			    line-height: 1.55;
 			  }
 
@@ -1330,8 +1336,9 @@ function ensureReviewShellStyle() {
 	    display: flex;
 	    align-items: center;
 	    gap: var(--df-review-space-1-5);
-	    min-height: calc(var(--df-review-control-height-lg) + 6px);
-	    padding: 3px;
+	    height: var(--df-review-control-height-md);
+	    min-height: var(--df-review-control-height-md);
+	    padding: 0;
 	    border: 1px solid var(--df-review-line-soft);
 	    border-radius: var(--df-review-radius-md);
 	    background: var(--df-review-card);
@@ -1343,28 +1350,50 @@ function ensureReviewShellStyle() {
 		    align-items: center;
 		    color: var(--df-review-line);
 		    font-size: var(--df-review-font-size-2xl);
-		    font-weight: 700;
+		    font-weight: 500;
 	    line-height: 1;
 		    user-select: none;
 	  }
 
-		  .df-review-active-size {
+  .df-review-active-size {
 		    flex: 0 0 auto;
 		    display: inline-flex;
 		    align-items: center;
-		    min-height: var(--df-review-control-height-lg);
+		    min-height: var(--df-review-control-height-md);
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-sm);
 		    font-variant-numeric: tabular-nums;
-	    font-weight: 800;
+	    font-weight: 500;
 	    line-height: 1;
 	  }
+
+  .df-review-preset-select {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    min-width: 154px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-md);
+    padding: 0 42px 0 14px;
+    color: var(--df-review-text);
+    background-color: var(--df-review-control);
+    background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6' stroke='%23d7deea' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-position: right 14px center;
+    background-repeat: no-repeat;
+    background-size: 18px 18px;
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 500;
+  }
 
 	  .df-review-presets button {
 	    display: inline-flex;
 	    align-items: center;
     gap: 7px;
-    min-height: var(--df-review-control-height-lg);
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
     padding: 0 11px 0 9px;
     border-color: transparent;
     background: transparent;
@@ -1389,7 +1418,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-line-soft);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-2xs);
-    font-weight: 800;
+    font-weight: 500;
     line-height: 16px;
     text-align: center;
   }
@@ -1415,6 +1444,7 @@ function ensureReviewShellStyle() {
   .df-review-preset-copy strong {
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-sm);
+    font-weight: 500;
   }
 
 	  .df-review-overlay-button,
@@ -1422,14 +1452,82 @@ function ensureReviewShellStyle() {
     position: relative;
     display: inline-grid;
     place-items: center;
-	    width: 38px;
-	    min-width: 38px;
+	    width: var(--df-review-control-height-md);
+	    min-width: var(--df-review-control-height-md);
+	    height: var(--df-review-control-height-md);
+	    min-height: var(--df-review-control-height-md);
 	    padding: 0;
 	    border-color: transparent;
 	    background: transparent;
 	    box-shadow: none;
 	    color: var(--df-review-muted);
 	  }
+
+  .df-review-overlays-menu {
+    position: relative;
+    display: none;
+    flex: 0 0 auto;
+  }
+
+  .df-review-overlays-menu summary {
+    display: grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    height: var(--df-review-control-height-md);
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-md);
+    padding: 0;
+    color: var(--df-review-muted);
+    background: var(--df-review-card);
+    box-shadow: var(--df-review-shadow-control);
+    cursor: pointer;
+  }
+
+  .df-review-overlays-menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .df-review-overlays-menu summary::marker {
+    content: '';
+  }
+
+  .df-review-overlays-menu summary:hover,
+  .df-review-overlays-menu[open] summary {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-control-hover);
+    color: var(--df-review-accent);
+  }
+
+  .df-review-overlays-menu summary svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+  }
+
+  .df-review-overlays-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 700;
+    display: none;
+    align-items: center;
+    gap: var(--df-review-space-1-5);
+    min-height: var(--df-review-control-height-md);
+    padding: 0;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-md);
+    background: var(--df-review-card);
+    box-shadow: var(--df-review-shadow-modal);
+  }
+
+  .df-review-overlays-menu[open] .df-review-overlays-popover {
+    display: flex;
+  }
 
   .df-review-overlay-button svg,
   .df-review-mode-button svg {
@@ -1466,34 +1564,46 @@ function ensureReviewShellStyle() {
 
 	  @container (max-width: 1040px) {
 	    .df-review-tools {
-	      flex-direction: column;
-	      align-items: stretch;
-	      justify-content: flex-start;
+	      flex-direction: row;
+	      align-items: center;
+	      justify-content: space-between;
 	    }
 
 	    .df-review-tool-controls {
-	      width: 100%;
+	      flex: 1 1 auto;
+	      width: auto;
+        min-width: 0;
+        flex-wrap: nowrap;
 	    }
 
 	    .df-review-presets {
-	      flex-wrap: wrap;
+	      display: none;
+	    }
+
+      .df-review-preset-select {
+        display: block;
+        flex: 0 1 190px;
+        width: clamp(154px, 26vw, 190px);
 	    }
 
 	    .df-review-overlays {
-	      width: 100%;
-	      justify-content: flex-start;
+	      display: none;
 	    }
+
+      .df-review-overlays-menu {
+        display: block;
+      }
 	  }
 
 	  .df-review-side-rail {
 	    grid-column: 3;
 	    grid-row: 1 / span 3;
 	    position: relative;
-	    z-index: 600;
+	    z-index: 640;
 	    display: flex;
 	    flex-direction: column;
 	    align-items: stretch;
-	    justify-content: center;
+	    justify-content: flex-start;
 	    min-width: 0;
 	    min-height: 0;
 	    border-left: 1px solid var(--df-review-line);
@@ -1501,57 +1611,166 @@ function ensureReviewShellStyle() {
 	  }
 
   .df-review-side-toggle {
-    flex: 1 1 0;
+    position: relative;
+    flex: 0 0 58px;
     display: grid;
-    grid-template-rows: 24px auto;
-    align-items: start;
-    justify-items: center;
-    gap: 8px;
+    place-items: center;
     width: 100%;
-    min-height: 0;
+    min-height: 58px;
     border: 0;
 	    border-radius: 0;
-	    padding: 10px 0;
+	    padding: 0;
 	    background: transparent;
 	    color: var(--df-review-muted);
+    transition: color 140ms ease, background 140ms ease;
 	  }
 
 	  .df-review-side-toggle:hover {
-	    background: var(--df-review-accent-soft);
 	    color: var(--df-review-text);
 	  }
 
   .df-review-side-toggle.is-active {
-    background: var(--df-review-accent-soft);
     color: var(--df-review-accent);
-    box-shadow: inset 2px 0 0 var(--df-review-accent);
+  }
+
+  .df-review-side-toggle.is-active::after {
+    position: absolute;
+    top: 12px;
+    right: 0;
+    bottom: 12px;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+    background: var(--df-review-accent);
+    content: '';
+  }
+
+  .df-review-side-toggle:focus-visible {
+    outline: 0;
+    color: var(--df-review-text);
+  }
+
+  .df-review-side-toggle:focus-visible span {
+    border-radius: 6px;
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 3px;
   }
 
   .df-review-side-toggle span {
     display: grid;
     place-items: center;
-	    width: 20px;
-	    height: 24px;
+	    width: 30px;
+	    height: 30px;
 	    line-height: 1;
 	  }
 
 	  .df-review-side-toggle svg {
-	    width: 18px;
-	    height: 18px;
+	    width: 30px;
+	    height: 30px;
 	    fill: none;
 	    stroke: currentColor;
 	    stroke-linecap: round;
-	    stroke-width: 2;
+	    stroke-width: 1.55;
 	  }
 
-  .df-review-side-toggle strong {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    color: inherit;
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
-    letter-spacing: 0;
-    text-transform: uppercase;
+  .df-review-presence-overlay {
+    position: relative;
+    margin-top: auto;
+  }
+
+  .df-review-presence-button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-height: 58px;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    color: var(--df-review-muted);
+    background: transparent;
+  }
+
+  .df-review-presence-button:hover,
+  .df-review-presence-button[aria-expanded="true"] {
+    color: var(--df-review-text);
+  }
+
+  .df-review-presence-button:focus-visible {
+    outline: 0;
+  }
+
+  .df-review-presence-button:focus-visible svg {
+    border-radius: 6px;
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 3px;
+  }
+
+  .df-review-presence-button svg {
+    width: 30px;
+    height: 30px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.55;
+  }
+
+  .df-review-presence-badge {
+    position: absolute;
+    top: 10px;
+    right: 7px;
+    display: grid;
+    place-items: center;
+    min-width: 17px;
+    height: 17px;
+    border: 1px solid var(--df-review-side-rail);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 4px;
+    color: #17202c;
+    background: var(--df-review-accent);
+    font-size: var(--df-review-font-size-3xs);
+    font-weight: 600;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .df-review-presence-list {
+    position: absolute;
+    right: calc(100% + 8px);
+    bottom: 8px;
+    display: grid;
+    gap: 5px;
+    min-width: 132px;
+    max-width: 220px;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-md);
+    padding: 8px;
+    background: var(--df-review-panel);
+    box-shadow: var(--df-review-shadow-modal);
+  }
+
+  .df-review-presence-chip {
+    --df-review-presence-color: var(--df-review-accent);
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 24px;
+    border-left: 2px solid var(--df-review-presence-color);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 8px;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 500;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .df-review-presence-chip.is-self {
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
   }
 
 	  .df-review-qa-panel {
@@ -1613,14 +1832,16 @@ function ensureReviewShellStyle() {
 
 			  .df-review-list-header {
 			    display: grid;
-			    grid-template-rows: auto auto;
+			    grid-template-rows:
+      var(--df-review-control-height-md)
+      var(--df-review-control-height-md);
 			    gap: var(--df-review-space-2);
 			    padding: var(--df-review-space-3) var(--df-review-frame-gutter-x);
 			    border-bottom: 1px solid var(--df-review-line-soft);
 			    background: var(--df-review-card);
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 800;
+			    font-weight: 500;
 			  }
 
 			  .df-review-list-toolbar {
@@ -1628,104 +1849,40 @@ function ensureReviewShellStyle() {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
+    min-height: var(--df-review-control-height-md);
     min-width: 0;
   }
 
 			  .df-review-list-title {
-			    display: flex;
+			    display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
 			    align-items: center;
 			    gap: 8px;
+          min-height: var(--df-review-control-height-md);
 		    min-width: 0;
 		  }
 
-		  .df-review-list-title span {
+  .df-review-list-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+		  .df-review-list-meta span {
 		    min-width: 0;
 		    overflow: hidden;
 		    text-overflow: ellipsis;
 		    white-space: nowrap;
 		  }
 
-		  .df-review-list-title strong {
-		    flex: 0 0 auto;
-		    color: var(--df-review-muted);
-		    font-size: var(--df-review-font-size-xs);
-		    font-variant-numeric: tabular-nums;
-		  }
-
-  .df-review-presence-overlay {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 5px;
-    max-width: 100%;
-    pointer-events: none;
-  }
-
-  .df-review-presence-row .df-review-presence-overlay {
-    width: 100%;
-    max-width: 1440px;
-    margin: 0 auto;
-  }
-
-  .df-review-presence-chip {
-    --df-review-presence-color: var(--df-review-accent);
-    display: inline-flex;
-    align-items: center;
-    min-width: 0;
-    max-width: min(220px, calc(100% - 20px));
-    min-height: 24px;
-    border: 1px solid rgba(15, 23, 42, 0.12);
-    border-radius: var(--df-review-radius-pill);
-    padding: 0 8px;
-    color: #17202c;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.14);
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
-    line-height: 1.1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    backdrop-filter: blur(8px);
-  }
-
-  .df-review-presence-row .df-review-presence-chip {
-    max-width: none;
-  }
-
-  .df-review-presence-chip.is-self {
-    border-color: var(--df-review-presence-color);
-    box-shadow:
-      inset 0 0 0 1px var(--df-review-presence-color),
-      0 8px 22px rgba(15, 23, 42, 0.14);
-  }
-
-  .df-review-presence-more {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 28px;
-    min-height: 24px;
-    border: 1px solid rgba(15, 23, 42, 0.12);
-    border-radius: var(--df-review-radius-pill);
-    padding: 0 8px;
-    color: #17202c;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.14);
-    cursor: pointer;
-    font: inherit;
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
-    line-height: 1;
-    pointer-events: auto;
-    backdrop-filter: blur(8px);
-  }
-
-  .df-review-presence-more:hover {
-    border-color: rgba(0, 102, 255, 0.42);
-    color: #005be8;
-    background: rgba(255, 255, 255, 0.98);
-  }
+			  .df-review-list-meta strong {
+			    flex: 0 0 auto;
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-xs);
+			    font-variant-numeric: tabular-nums;
+          font-weight: 500;
+			  }
 
   .df-review-list-controls {
     display: flex;
@@ -1735,7 +1892,8 @@ function ensureReviewShellStyle() {
 
   .df-review-source-select,
   .df-review-status-filter-select {
-    min-height: 30px;
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
     border: 1px solid var(--df-review-line-soft);
     border-radius: var(--df-review-radius-sm);
     padding: 0 24px 0 8px;
@@ -1743,7 +1901,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-control);
     box-shadow: var(--df-review-shadow-control);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 800;
+    font-weight: 500;
   }
 
   .df-review-source-select {
@@ -1754,17 +1912,13 @@ function ensureReviewShellStyle() {
     width: 124px;
   }
 
-  .df-review-list-title .df-review-status-filter-select {
-    margin-left: auto;
-  }
-
   .df-review-source-refresh {
     position: relative;
 		    display: inline-grid;
 		    place-items: center;
-		    width: 30px;
-		    min-width: 30px;
-		    height: 30px;
+		    width: var(--df-review-control-height-md);
+		    min-width: var(--df-review-control-height-md);
+		    height: var(--df-review-control-height-md);
 		    border: 1px solid var(--df-review-line-soft);
 		    border-radius: var(--df-review-radius-sm);
 		    padding: 0;
@@ -1774,16 +1928,18 @@ function ensureReviewShellStyle() {
 		  }
 
 		  .df-review-source-refresh svg {
-		    width: 14px;
-		    height: 14px;
+		    width: 16px;
+		    height: 16px;
 		  }
 
 			  .df-review-filter-tabs {
     display: flex;
     align-items: center;
-    gap: 2px;
-    height: 30px;
-    padding: 2px;
+    justify-self: end;
+    gap: var(--df-review-space-1-5);
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    padding: 0;
     border: 1px solid var(--df-review-line-soft);
     border-radius: var(--df-review-radius-md);
     background: var(--df-review-card);
@@ -1794,11 +1950,11 @@ function ensureReviewShellStyle() {
     position: relative;
     display: grid;
     place-items: center;
-    width: 26px;
-    min-width: 26px;
-    height: 26px;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    height: var(--df-review-control-height-md);
     border: 0;
-    border-radius: 5px;
+    border-radius: var(--df-review-radius-sm);
     background: transparent;
     color: var(--df-review-subtle);
   }
@@ -1831,19 +1987,19 @@ function ensureReviewShellStyle() {
 		  }
 
 				  .df-review-filter-icon svg {
-				    width: 15px;
-				    height: 15px;
+				    width: 18px;
+				    height: 18px;
 		    fill: none;
 		    stroke: currentColor;
 		    stroke-linecap: round;
 		    stroke-linejoin: round;
-			    stroke-width: 2;
+			    stroke-width: 1.9;
 			  }
 
 			  .df-review-filter-count {
 			    color: currentColor;
 			    font-size: var(--df-review-font-size-3xs);
-			    font-weight: 900;
+			    font-weight: 600;
 			    font-variant-numeric: tabular-nums;
 			    line-height: 1;
 			  }
@@ -1924,6 +2080,7 @@ function ensureReviewShellStyle() {
   .df-review-item-main strong {
     overflow-wrap: anywhere;
     font-size: var(--df-review-font-size-md);
+    font-weight: 500;
     line-height: 1.35;
   }
 
@@ -1971,7 +2128,7 @@ function ensureReviewShellStyle() {
     border-radius: var(--df-review-radius-pill);
     padding: 0 7px;
     font-size: var(--df-review-font-size-2xs);
-    font-weight: 900;
+    font-weight: 600;
     line-height: 1;
     text-transform: uppercase;
   }
@@ -2038,7 +2195,7 @@ function ensureReviewShellStyle() {
     border-radius: var(--df-review-radius-sm);
     padding: 0 11px;
     font-size: var(--df-review-font-size-xs);
-    font-weight: 750;
+    font-weight: 500;
     text-transform: none;
   }
 
@@ -2051,7 +2208,7 @@ function ensureReviewShellStyle() {
     cursor: pointer;
     outline: 0;
     font-size: var(--df-review-font-size-xs);
-    font-weight: 750;
+    font-weight: 500;
     text-transform: none;
   }
 
@@ -2276,7 +2433,7 @@ function ensureReviewShellStyle() {
 
 		  .df-review-item-submit-button span {
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 750;
+		    font-weight: 500;
 		    line-height: 1;
 		    text-transform: none;
 		    white-space: nowrap;
@@ -2448,6 +2605,9 @@ function ensureReviewShellStyle() {
     --df-review-source-popover-text: #edf3fb;
     --df-review-source-popover-muted: rgba(237, 243, 251, 0.68);
     --df-review-source-popover-subtle: rgba(237, 243, 251, 0.5);
+    --df-review-source-popover-data: #f3b75f;
+    --df-review-source-popover-data-muted: rgba(243, 183, 95, 0.78);
+    --df-review-source-popover-data-subtle: rgba(243, 183, 95, 0.62);
     --df-review-source-popover-hover: rgba(124, 199, 255, 0.14);
     position: fixed;
     z-index: 890;
@@ -2485,7 +2645,7 @@ function ensureReviewShellStyle() {
     color: var(--df-review-source-popover-subtle);
     background: transparent;
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 500;
     line-height: 1;
   }
 
@@ -2509,13 +2669,17 @@ function ensureReviewShellStyle() {
   .df-review-source-candidate {
     display: grid;
     width: 100%;
-    min-height: 54px;
     border: 0;
+    border-top: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
-    padding: 8px 30px 8px 8px;
+    padding: 9px 30px 9px 8px;
     color: var(--df-review-source-popover-text);
     background: transparent;
     text-align: left;
+  }
+
+  .df-review-source-candidate + .df-review-source-candidate {
+    border-top-color: var(--df-review-source-popover-line);
   }
 
   .df-review-source-candidate:hover {
@@ -2524,7 +2688,7 @@ function ensureReviewShellStyle() {
 
   .df-review-source-candidate-main {
     display: grid;
-    gap: 2px;
+    gap: 1px;
     min-width: 0;
   }
 
@@ -2537,7 +2701,8 @@ function ensureReviewShellStyle() {
 
   .df-review-source-candidate-main strong {
     font-size: var(--df-review-font-size-xs);
-    font-weight: 900;
+    font-weight: 600;
+    line-height: 1.2;
   }
 
   .df-review-source-candidate-main span {
@@ -2545,7 +2710,7 @@ function ensureReviewShellStyle() {
     color: var(--df-review-source-popover-muted);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
-    line-height: 1.25;
+    line-height: 1.24;
     white-space: normal;
   }
 
@@ -2553,6 +2718,19 @@ function ensureReviewShellStyle() {
     color: var(--df-review-source-popover-subtle);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
+    line-height: 1.2;
+  }
+
+  .df-review-source-candidate.is-data .df-review-source-candidate-main strong {
+    color: var(--df-review-source-popover-data);
+  }
+
+  .df-review-source-candidate.is-data .df-review-source-candidate-main span {
+    color: var(--df-review-source-popover-data-muted);
+  }
+
+  .df-review-source-candidate.is-data .df-review-source-candidate-main small {
+    color: var(--df-review-source-popover-data-subtle);
   }
 
   .df-review-section-outline {
@@ -2574,12 +2752,15 @@ function ensureReviewShellStyle() {
 
   .df-review-section-outline-head {
     display: grid;
+    grid-template-rows:
+      var(--df-review-control-height-md)
+      var(--df-review-control-height-md);
     align-items: center;
     gap: 8px;
     min-width: 0;
-    min-height: 88px;
-    padding: 10px 14px;
+    padding: var(--df-review-space-3) var(--df-review-frame-gutter-x);
     border-bottom: 1px solid var(--df-review-line-soft);
+    background: var(--df-review-card);
     color: var(--df-review-muted);
   }
 
@@ -2593,7 +2774,7 @@ function ensureReviewShellStyle() {
     overflow: hidden;
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-lg);
-    font-weight: 900;
+    font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -2602,21 +2783,23 @@ function ensureReviewShellStyle() {
     overflow: hidden;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 800;
+    font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .df-review-section-outline-filter {
     display: grid;
-    grid-template-columns: 16px minmax(0, 1fr);
+    grid-template-columns: 18px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 7px;
+    align-self: stretch;
+    gap: 8px;
     min-width: 0;
-    min-height: 30px;
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
     border: 1px solid var(--df-review-line-soft);
-    border-radius: var(--df-review-radius-sm);
-    padding: 0 9px;
+    border-radius: var(--df-review-radius-md);
+    padding: 0 7px 0 11px;
     color: var(--df-review-muted);
     background: var(--df-review-control);
     box-shadow: var(--df-review-shadow-control);
@@ -2628,35 +2811,59 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-section-outline-filter svg {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-width: 2;
+    stroke-width: 1.9;
   }
 
   .df-review-section-outline-filter input {
     width: 100%;
     min-width: 0;
-    height: 28px;
+    height: 100%;
     border: 0;
     padding: 0;
     color: var(--df-review-text);
     background: transparent;
     font-size: var(--df-review-font-size-xs);
-    font-weight: 800;
+    font-weight: 500;
     outline: 0;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   .df-review-section-outline-filter input::placeholder {
     color: var(--df-review-subtle);
   }
 
-  .df-review-section-outline-filter input::-webkit-search-cancel-button {
-    filter: invert(1);
-    opacity: 0.55;
+  .df-review-section-outline-filter input::-webkit-search-cancel-button,
+  .df-review-section-outline-filter input::-webkit-search-decoration {
+    display: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .df-review-section-outline-filter-clear {
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    height: var(--df-review-control-height-md);
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-muted);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .df-review-section-outline-filter-clear:hover,
+  .df-review-section-outline-filter-clear:focus-visible {
+    color: var(--df-review-text);
+    background: var(--df-review-accent-soft);
+    outline: 0;
   }
 
   .df-review-section-outline-list {
@@ -2671,6 +2878,12 @@ function ensureReviewShellStyle() {
 
   .df-review-section-outline-item {
     display: grid;
+  }
+
+  .df-review-section-outline-item.is-depth-1:not(:last-child) {
+    margin-bottom: 7px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--df-review-line-soft);
   }
 
   .df-review-section-outline-row {
@@ -2732,7 +2945,7 @@ function ensureReviewShellStyle() {
     color: var(--df-review-text);
     background: transparent;
     font-size: var(--df-review-font-size-sm);
-    font-weight: 800;
+    font-weight: 500;
     text-align: left;
     white-space: normal;
     cursor: pointer;
@@ -2750,7 +2963,7 @@ function ensureReviewShellStyle() {
     color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .df-review-section-outline-name:hover {
@@ -2762,6 +2975,13 @@ function ensureReviewShellStyle() {
     align-items: center;
     justify-content: flex-end;
     gap: 2px;
+  }
+
+  .df-review-section-outline-divider {
+    color: var(--df-review-subtle);
+    font-size: var(--df-review-font-size-xs);
+    line-height: 1;
+    user-select: none;
   }
 
   .df-review-section-outline-link {
@@ -2777,6 +2997,17 @@ function ensureReviewShellStyle() {
     cursor: pointer;
     transition: border-color 140ms ease, background 140ms ease,
       color 140ms ease, opacity 140ms ease;
+  }
+
+  .df-review-section-outline-link.is-dom-select {
+    width: 26px;
+    min-width: 26px;
+    padding: 0;
+  }
+
+  .df-review-section-outline-link.is-dom-select svg {
+    width: 16px;
+    height: 16px;
   }
 
   .df-review-section-outline-link:hover {
@@ -2815,7 +3046,7 @@ function ensureReviewShellStyle() {
     padding: 14px 12px 16px;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .df-review-device-frame {
@@ -2912,13 +3143,13 @@ function ensureReviewShellStyle() {
   .df-review-ruler-frame-label strong {
     color: var(--df-review-color-ruler-label-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 900;
+    font-weight: 600;
   }
 
   .df-review-ruler-frame-label span {
     color: var(--df-review-color-ruler-label-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 900;
+    font-weight: 600;
     opacity: 0.78;
   }
 
@@ -2931,7 +3162,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-color-ruler-coord-bg);
     color: var(--df-review-color-ruler-coord-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 900;
+    font-weight: 600;
     line-height: 1;
     white-space: nowrap;
     pointer-events: none;
@@ -3009,7 +3240,7 @@ function ensureReviewShellStyle() {
     color: var(--df-review-color-ruler-popover-text);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-lg);
-    font-weight: 900;
+    font-weight: 600;
     line-height: 1;
     white-space: nowrap;
     letter-spacing: -0.02em;
@@ -3022,12 +3253,12 @@ function ensureReviewShellStyle() {
 	  @media (max-width: 860px) {
 	    .df-review-shell,
 	    .df-review-shell.is-list-visible {
-	      grid-template-columns: minmax(0, 1fr) 0 32px;
+	      grid-template-columns: minmax(0, 1fr) 0 48px;
 	      grid-template-rows: auto auto minmax(0, 1fr);
 	    }
 
 	    .df-review-shell.is-list-visible {
-	      grid-template-columns: minmax(0, 1fr) minmax(260px, 70vw) 32px;
+	      grid-template-columns: minmax(0, 1fr) minmax(260px, 70vw) 48px;
 	    }
 
 	    .df-review-qa-panel {
@@ -3036,7 +3267,7 @@ function ensureReviewShellStyle() {
 	    }
 
 	    .df-review-tools {
-	      flex-wrap: wrap;
+	      flex-wrap: nowrap;
 	    }
 
 	    .df-review-tool-controls {
@@ -3066,11 +3297,19 @@ function ensureReviewShellStyle() {
 		      max-height: calc(100vh - 270px);
 		    }
 
-	    .df-review-panel-body {
-	      min-height: 0;
-	    }
-  }
-    `;
+		    .df-review-panel-body {
+		      min-height: 0;
+		    }
+	  }
+
+    @media (hover: none) and (pointer: coarse) {
+      .df-review-edit-textarea textarea,
+      .df-review-preset-select,
+      .df-review-prompt-block textarea {
+        font-size: 16px;
+      }
+    }
+	    `;
     document.head.append(style);
   }
 }
@@ -3234,16 +3473,24 @@ var __iconNode6 = [
 ];
 var Database = createLucideIcon("database", __iconNode6);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/external-link.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ellipsis.mjs
 var __iconNode7 = [
+  ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }],
+  ["circle", { cx: "19", cy: "12", r: "1", key: "1wjl8i" }],
+  ["circle", { cx: "5", cy: "12", r: "1", key: "1pcz8c" }]
+];
+var Ellipsis = createLucideIcon("ellipsis", __iconNode7);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/external-link.mjs
+var __iconNode8 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "M10 14 21 3", key: "gplh6r" }],
   ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
 ];
-var ExternalLink = createLucideIcon("external-link", __iconNode7);
+var ExternalLink = createLucideIcon("external-link", __iconNode8);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye-off.mjs
-var __iconNode8 = [
+var __iconNode9 = [
   [
     "path",
     {
@@ -3261,10 +3508,10 @@ var __iconNode8 = [
   ],
   ["path", { d: "m2 2 20 20", key: "1ooewy" }]
 ];
-var EyeOff = createLucideIcon("eye-off", __iconNode8);
+var EyeOff = createLucideIcon("eye-off", __iconNode9);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye.mjs
-var __iconNode9 = [
+var __iconNode10 = [
   [
     "path",
     {
@@ -3274,54 +3521,59 @@ var __iconNode9 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Eye = createLucideIcon("eye", __iconNode9);
+var Eye = createLucideIcon("eye", __iconNode10);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/grip-vertical.mjs
-var __iconNode10 = [
-  ["circle", { cx: "9", cy: "12", r: "1", key: "1vctgf" }],
-  ["circle", { cx: "9", cy: "5", r: "1", key: "hp0tcf" }],
-  ["circle", { cx: "9", cy: "19", r: "1", key: "fkjjf6" }],
-  ["circle", { cx: "15", cy: "12", r: "1", key: "1tmaij" }],
-  ["circle", { cx: "15", cy: "5", r: "1", key: "19l28e" }],
-  ["circle", { cx: "15", cy: "19", r: "1", key: "f4zoj3" }]
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/file-text.mjs
+var __iconNode11 = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "M10 9H8", key: "b1mrlr" }],
+  ["path", { d: "M16 13H8", key: "t4e002" }],
+  ["path", { d: "M16 17H8", key: "z1uh3a" }]
 ];
-var GripVertical = createLucideIcon("grip-vertical", __iconNode10);
+var FileText = createLucideIcon("file-text", __iconNode11);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
-var __iconNode11 = [
+var __iconNode12 = [
   ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
   ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
   ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
 ];
-var Image = createLucideIcon("image", __iconNode11);
+var Image = createLucideIcon("image", __iconNode12);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
-var __iconNode12 = [
+var __iconNode13 = [
   ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
   ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
   ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
   ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
 ];
-var LayoutGrid = createLucideIcon("layout-grid", __iconNode12);
+var LayoutGrid = createLucideIcon("layout-grid", __iconNode13);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/link-2.mjs
-var __iconNode13 = [
+var __iconNode14 = [
   ["path", { d: "M9 17H7A5 5 0 0 1 7 7h2", key: "8i5ue5" }],
   ["path", { d: "M15 7h2a5 5 0 1 1 0 10h-2", key: "1b9ql8" }],
   ["line", { x1: "8", x2: "16", y1: "12", y2: "12", key: "1jonct" }]
 ];
-var Link2 = createLucideIcon("link-2", __iconNode13);
+var Link2 = createLucideIcon("link-2", __iconNode14);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
-var __iconNode14 = [
+var __iconNode15 = [
   ["path", { d: "M2 5h20", key: "1fs1ex" }],
   ["path", { d: "M6 12h12", key: "8npq4p" }],
   ["path", { d: "M9 19h6", key: "456am0" }]
 ];
-var ListFilter = createLucideIcon("list-filter", __iconNode14);
+var ListFilter = createLucideIcon("list-filter", __iconNode15);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
-var __iconNode15 = [
+var __iconNode16 = [
   [
     "path",
     {
@@ -3332,27 +3584,39 @@ var __iconNode15 = [
   ["path", { d: "M15 5.764v15", key: "1pn4in" }],
   ["path", { d: "M9 3.236v15", key: "1uimfh" }]
 ];
-var Map2 = createLucideIcon("map", __iconNode15);
+var Map2 = createLucideIcon("map", __iconNode16);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
-var __iconNode16 = [
+var __iconNode17 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "m21 3-7 7", key: "1l2asr" }],
   ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
   ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
 ];
-var Maximize2 = createLucideIcon("maximize-2", __iconNode16);
+var Maximize2 = createLucideIcon("maximize-2", __iconNode17);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
-var __iconNode17 = [
+var __iconNode18 = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
   ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
 ];
-var Monitor = createLucideIcon("monitor", __iconNode17);
+var Monitor = createLucideIcon("monitor", __iconNode18);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/moon.mjs
+var __iconNode19 = [
+  [
+    "path",
+    {
+      d: "M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401",
+      key: "kfwtm"
+    }
+  ]
+];
+var Moon = createLucideIcon("moon", __iconNode19);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/pencil.mjs
-var __iconNode18 = [
+var __iconNode20 = [
   [
     "path",
     {
@@ -3362,25 +3626,25 @@ var __iconNode18 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-var Pencil = createLucideIcon("pencil", __iconNode18);
+var Pencil = createLucideIcon("pencil", __iconNode20);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
-var __iconNode19 = [
+var __iconNode21 = [
   ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
 ];
-var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode19);
+var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode21);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
-var __iconNode20 = [
+var __iconNode22 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode20);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode22);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
-var __iconNode21 = [
+var __iconNode23 = [
   [
     "path",
     {
@@ -3393,26 +3657,26 @@ var __iconNode21 = [
   ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
   ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
 ];
-var Ruler = createLucideIcon("ruler", __iconNode21);
+var Ruler = createLucideIcon("ruler", __iconNode23);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
-var __iconNode22 = [
+var __iconNode24 = [
   ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
   ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
   ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
   ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
 ];
-var Scan = createLucideIcon("scan", __iconNode22);
+var Scan = createLucideIcon("scan", __iconNode24);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/search.mjs
-var __iconNode23 = [
+var __iconNode25 = [
   ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-var Search = createLucideIcon("search", __iconNode23);
+var Search = createLucideIcon("search", __iconNode25);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
-var __iconNode24 = [
+var __iconNode26 = [
   [
     "path",
     {
@@ -3422,17 +3686,17 @@ var __iconNode24 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Settings = createLucideIcon("settings", __iconNode24);
+var Settings = createLucideIcon("settings", __iconNode26);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
-var __iconNode25 = [
+var __iconNode27 = [
   ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
   ["path", { d: "M12 18h.01", key: "mhygvu" }]
 ];
-var Smartphone = createLucideIcon("smartphone", __iconNode25);
+var Smartphone = createLucideIcon("smartphone", __iconNode27);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode26 = [
+var __iconNode28 = [
   [
     "path",
     {
@@ -3442,10 +3706,10 @@ var __iconNode26 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode26);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode28);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode27 = [
+var __iconNode29 = [
   [
     "path",
     {
@@ -3455,22 +3719,43 @@ var __iconNode27 = [
   ],
   ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
 ];
-var StickyNote = createLucideIcon("sticky-note", __iconNode27);
+var StickyNote = createLucideIcon("sticky-note", __iconNode29);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sun.mjs
+var __iconNode30 = [
+  ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
+  ["path", { d: "M12 2v2", key: "tus03m" }],
+  ["path", { d: "M12 20v2", key: "1lh1kg" }],
+  ["path", { d: "m4.93 4.93 1.41 1.41", key: "149t6j" }],
+  ["path", { d: "m17.66 17.66 1.41 1.41", key: "ptbguv" }],
+  ["path", { d: "M2 12h2", key: "1t8f8n" }],
+  ["path", { d: "M20 12h2", key: "1q8mjw" }],
+  ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
+  ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
+];
+var Sun = createLucideIcon("sun", __iconNode30);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode28 = [
+var __iconNode31 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode28);
+var Upload = createLucideIcon("upload", __iconNode31);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/user-round.mjs
+var __iconNode32 = [
+  ["circle", { cx: "12", cy: "8", r: "5", key: "1hypcn" }],
+  ["path", { d: "M20 21a8 8 0 0 0-16 0", key: "rfgkzh" }]
+];
+var UserRound = createLucideIcon("user-round", __iconNode32);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode29 = [
+var __iconNode33 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode29);
+var X = createLucideIcon("x", __iconNode33);
 
 // src/react-shell/constants.ts
 var REVIEW_QA_FILTERS = [
@@ -3979,6 +4264,11 @@ var getSystemReviewTheme = () => {
 
 // src/react-shell/review/settings.modal.tsx
 import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
+var getReviewThemeIcon = (theme) => {
+  if (theme === "light") return Sun;
+  if (theme === "system") return Monitor;
+  return Moon;
+};
 var ReviewSettingsModal = ({
   figmaTokenDraft,
   reviewUserIdDraft,
@@ -4038,20 +4328,28 @@ var ReviewSettingsModal = ({
               /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-body", children: [
                 /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-row", children: [
                   /* @__PURE__ */ jsx2("span", { children: "Theme" }),
-                  /* @__PURE__ */ jsx2("div", { className: "df-review-settings-theme-options", children: REVIEW_THEME_OPTIONS.map((option) => /* @__PURE__ */ jsx2(
-                    "button",
-                    {
-                      "aria-pressed": reviewThemeDraft === option.value,
-                      className: `df-review-settings-theme-option${reviewThemeDraft === option.value ? " is-active" : ""}`,
-                      type: "button",
-                      onClick: () => {
-                        onReviewThemeDraftChange(normalizeReviewTheme(option.value));
-                        onClearStatus();
+                  /* @__PURE__ */ jsx2("div", { className: "df-review-settings-theme-options", children: REVIEW_THEME_OPTIONS.map((option) => {
+                    const ThemeIcon = getReviewThemeIcon(option.value);
+                    return /* @__PURE__ */ jsxs2(
+                      "button",
+                      {
+                        "aria-pressed": reviewThemeDraft === option.value,
+                        className: `df-review-settings-theme-option${reviewThemeDraft === option.value ? " is-active" : ""}`,
+                        type: "button",
+                        onClick: () => {
+                          onReviewThemeDraftChange(
+                            normalizeReviewTheme(option.value)
+                          );
+                          onClearStatus();
+                        },
+                        children: [
+                          /* @__PURE__ */ jsx2(ThemeIcon, { "aria-hidden": "true" }),
+                          /* @__PURE__ */ jsx2("span", { children: option.label })
+                        ]
                       },
-                      children: option.label
-                    },
-                    option.value
-                  )) })
+                      option.value
+                    );
+                  }) })
                 ] }),
                 /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-field", children: [
                   /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-label-row", children: [
@@ -5229,6 +5527,33 @@ var QaPanelHeader = ({
           }
         )
       ] }),
+      /* @__PURE__ */ jsxs7(
+        "select",
+        {
+          "aria-label": "QA status filter",
+          className: "df-review-status-filter-select",
+          value: qaStatusFilter,
+          onChange: (event) => onQaStatusFilterChange(
+            event.currentTarget.value
+          ),
+          children: [
+            /* @__PURE__ */ jsx9("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
+            statusFilterOptions.map((statusOption) => /* @__PURE__ */ jsx9("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
+          ]
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxs7("div", { className: "df-review-list-title", children: [
+      /* @__PURE__ */ jsxs7("span", { className: "df-review-list-meta", children: [
+        /* @__PURE__ */ jsx9("span", { children: isAllQaVisible ? `${label} QA \xB7 All pages` : `${label} QA` }),
+        /* @__PURE__ */ jsx9(
+          "strong",
+          {
+            title: `${activeRemainingItemCount} remaining of ${activeItemCount}`,
+            children: !hasActiveFilter ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}`
+          }
+        )
+      ] }),
       /* @__PURE__ */ jsx9("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
         const count = qaFilterCounts.get(filter.key) ?? 0;
         const isActive = qaFilter === filter.key;
@@ -5245,25 +5570,6 @@ var QaPanelHeader = ({
           filter.key
         );
       }) })
-    ] }),
-    /* @__PURE__ */ jsxs7("div", { className: "df-review-list-title", children: [
-      /* @__PURE__ */ jsx9("span", { children: isAllQaVisible ? `${label} QA \xB7 All pages` : `${label} QA` }),
-      /* @__PURE__ */ jsx9("strong", { title: `${activeRemainingItemCount} remaining of ${activeItemCount}`, children: !hasActiveFilter ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}` }),
-      /* @__PURE__ */ jsxs7(
-        "select",
-        {
-          "aria-label": "QA status filter",
-          className: "df-review-status-filter-select",
-          value: qaStatusFilter,
-          onChange: (event) => onQaStatusFilterChange(
-            event.currentTarget.value
-          ),
-          children: [
-            /* @__PURE__ */ jsx9("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
-            statusFilterOptions.map((statusOption) => /* @__PURE__ */ jsx9("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
-          ]
-        }
-      )
     ] })
   ] });
 };
@@ -5389,7 +5695,6 @@ var ReviewQaPanel = ({
 // src/react-shell/presence/overlay.tsx
 import { useState as useState3 } from "react";
 import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
-var COLLAPSED_USER_COUNT = 1;
 var getPresenceName = (user) => user.displayName || user.userId;
 var PresenceOverlay = ({
   presenceSessionId,
@@ -5397,18 +5702,31 @@ var PresenceOverlay = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState3(false);
   if (users.length === 0) return null;
-  const visibleUsers = isExpanded ? users : users.slice(0, COLLAPSED_USER_COUNT);
-  const hiddenUserCount = users.length - visibleUsers.length;
   return /* @__PURE__ */ jsxs9(
     "div",
     {
       "aria-label": `Review presence, ${users.length} online`,
       className: `df-review-presence-overlay${isExpanded ? " is-expanded" : ""}`,
       children: [
-        visibleUsers.map((user) => /* @__PURE__ */ jsx11(
+        /* @__PURE__ */ jsxs9(
+          "button",
+          {
+            "aria-label": `Show online reviewers, ${users.length} online`,
+            "aria-expanded": isExpanded,
+            className: "df-review-presence-button",
+            type: "button",
+            onClick: () => setIsExpanded((current) => !current),
+            children: [
+              /* @__PURE__ */ jsx11(UserRound, { "aria-hidden": "true" }),
+              /* @__PURE__ */ jsx11("span", { className: "df-review-presence-badge", children: users.length })
+            ]
+          }
+        ),
+        isExpanded && /* @__PURE__ */ jsx11("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ jsx11(
           "span",
           {
             className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
+            role: "listitem",
             style: {
               "--df-review-presence-color": user.color
             },
@@ -5416,21 +5734,7 @@ var PresenceOverlay = ({
             children: getPresenceName(user)
           },
           user.sessionId
-        )),
-        hiddenUserCount > 0 && /* @__PURE__ */ jsxs9(
-          "button",
-          {
-            "aria-label": `Show ${hiddenUserCount} more online reviewers`,
-            "aria-expanded": isExpanded,
-            className: "df-review-presence-more",
-            type: "button",
-            onClick: () => setIsExpanded(true),
-            children: [
-              "+",
-              hiddenUserCount
-            ]
-          }
-        )
+        )) })
       ]
     }
   );
@@ -5465,33 +5769,36 @@ var getSourceCandidates = (target, options) => {
   if (!startElement) return [];
   const candidates = [];
   const seen = /* @__PURE__ */ new Set();
-  const add = (element2, source, depth2) => {
+  const add = (element2, source, depth2, kind) => {
     if (!source?.file) return;
-    const key = source.file.replace(/\\/g, "/");
-    if (seen.has(key)) return;
-    seen.add(key);
-    candidates.push(createSourceCandidate(element2, source, depth2));
+    const key = getSourceFileCompareKey(source.file);
+    if (!addSourceFileCompareKey(seen, key)) return;
+    candidates.push(createSourceCandidate(element2, source, depth2, kind));
   };
   let element = startElement;
   let depth = 0;
   while (element && element.nodeType === 1) {
-    add(element, getSourceHintFromElement(element), depth);
-    add(element, getDataHintFromElement(element), 0);
+    add(element, getSourceHintFromElement(element), depth, "source");
+    add(element, getDataHintFromElement(element), 0, "data");
     if (element === element.ownerDocument.documentElement) break;
     element = element.parentElement;
     depth += 1;
   }
   const ignore = options?.ignore;
-  const visible = ignore?.length ? candidates.filter((c) => !matchesIgnore(c.source.file ?? "", ignore)) : candidates;
-  return (visible.length ? visible : candidates).slice(0, 8);
+  const visible = candidates.filter(
+    (candidate) => !isCoreOutlineNode(candidate.label, candidate.source.file) && !(ignore?.length && matchesIgnore(candidate.source.file ?? "", ignore))
+  );
+  return visible.slice(0, 8);
 };
 var getSectionOutline = (root, options) => {
   const maxDepth = options?.maxDepth ?? 9;
-  return getSectionOutlineRoots(root, options?.ignore).map((element, index) => {
+  return getSectionOutlineRoots(root, options).map((element, index) => {
     const source = getSourceHintFromElement(element);
     const label = getOutlineLabel(element, source, "section");
     const seen = /* @__PURE__ */ new Set();
-    if (source?.file) seen.add(getOutlineSourceKey(source));
+    if (source?.file) {
+      addSourceFileCompareKey(seen, getOutlineSourceKey(source));
+    }
     return {
       id: `${label}-${index}`,
       label,
@@ -5505,33 +5812,40 @@ var getSectionOutline = (root, options) => {
         2,
         maxDepth,
         seen,
-        options?.ignore
+        options
       )
     };
   });
 };
-function getSectionOutlineRoots(root, ignore) {
+function getSectionOutlineRoots(root, options) {
   return Array.from(root.querySelectorAll(SECTION_OUTLINE_ROOT_SELECTOR)).filter(
     (element) => {
       const source = getSourceHintFromElement(element);
       const label = getOutlineLabel(element, source, "");
-      return !isSkippedOutlineNode(label, source?.file, ignore);
+      return !isSkippedOutlineNode(label, source?.file, options);
     }
   );
 }
-function getSectionOutlineChildren(parent, depth, maxDepth, seen, ignore) {
+function getSectionOutlineChildren(parent, depth, maxDepth, seen, options) {
   if (depth > maxDepth) return [];
   const entries = [];
   for (const child of Array.from(parent.children)) {
     const source = getSourceHintFromElement(child);
     const label = getOutlineLabel(child, source, child.tagName.toLowerCase());
     const sourceKey = source?.file ? getOutlineSourceKey(source) : "";
-    const isNewSource = Boolean(sourceKey) && !seen.has(sourceKey);
-    if (isSkippedOutlineNode(label, source?.file, ignore)) continue;
+    const isNewSource = Boolean(sourceKey) && !hasEquivalentSourceFileKey(seen, sourceKey);
+    if (shouldStopOutlineBranch(label, source?.file, options)) continue;
+    if (isHiddenOutlineNode(label, source?.file, options)) {
+      entries.push(
+        ...getSectionOutlineChildren(child, depth, maxDepth, seen, options)
+      );
+      continue;
+    }
     if (source?.file && isNewSource) {
-      seen.add(sourceKey);
+      const childSeen = new Set(seen);
+      addSourceFileCompareKey(childSeen, sourceKey);
       entries.push({
-        id: `${sourceKey}-${entries.length}`,
+        id: `${sourceKey}-${getElementOutlinePath(child)}-${entries.length}`,
         label,
         depth,
         filePath: getDisplaySourcePath(source.file) ?? source.file,
@@ -5542,27 +5856,64 @@ function getSectionOutlineChildren(parent, depth, maxDepth, seen, ignore) {
           child,
           depth + 1,
           maxDepth,
-          seen,
-          ignore
+          childSeen,
+          options
         )
       });
       continue;
     }
     entries.push(
-      ...getSectionOutlineChildren(child, depth, maxDepth, seen, ignore)
+      ...getSectionOutlineChildren(child, depth, maxDepth, seen, options)
     );
   }
   return entries;
 }
+function getElementOutlinePath(element) {
+  const indices = [];
+  let current = element;
+  while (current?.parentElement) {
+    indices.unshift(Array.from(current.parentElement.children).indexOf(current));
+    current = current.parentElement;
+  }
+  return indices.join("-");
+}
 function getOutlineSourceKey(source) {
-  return source.file?.replace(/\\/g, "/") ?? "";
+  return getSourceFileCompareKey(source.file);
+}
+function getSourceFileCompareKey(file) {
+  return file?.trim().replace(/\\/g, "/") ?? "";
+}
+function addSourceFileCompareKey(seen, key) {
+  if (!key || hasEquivalentSourceFileKey(seen, key)) return false;
+  seen.add(key);
+  return true;
+}
+function hasEquivalentSourceFileKey(seen, key) {
+  for (const seenKey of seen) {
+    if (isEquivalentSourceFileKey(seenKey, key)) return true;
+  }
+  return false;
+}
+function isEquivalentSourceFileKey(a, b) {
+  return a === b || a.endsWith(`/${b}`) || b.endsWith(`/${a}`);
 }
 function getOutlineLabel(element, source, fallback) {
   return source?.component?.trim() || getComponentNameFromSourceFile(source?.file) || element.id.trim() || fallback;
 }
-function isSkippedOutlineNode(label, file, ignore) {
+function isHiddenOutlineNode(label, file, options) {
+  const ignore = options?.ignore;
   const isIgnoredSource = file && ignore?.length ? matchesIgnore(file, ignore) : false;
-  return isPlacerOutlineNode(label, file) || isIgnoredSource;
+  return isCoreOutlineNode(label, file) || isIgnoredSource;
+}
+function shouldStopOutlineBranch(label, file, options) {
+  return !options?.includePlacer && isPlacerOutlineNode(label, file);
+}
+function isSkippedOutlineNode(label, file, options) {
+  return shouldStopOutlineBranch(label, file, options) || isHiddenOutlineNode(label, file, options);
+}
+function isCoreOutlineNode(label, file) {
+  const text = `${label} ${file ?? ""}`.toLowerCase();
+  return text.includes("core.section") || text.includes("core.content") || text.includes("core.column") || ["coresection", "corecontent", "corecolumn"].includes(label.toLowerCase());
 }
 function isPlacerOutlineNode(label, file) {
   return `${label} ${file ?? ""}`.toLowerCase().includes("placer");
@@ -5632,7 +5983,7 @@ function getSourceHintFromElement(element) {
   };
   return Object.values(source).some(Boolean) ? source : void 0;
 }
-function createSourceCandidate(element, source, depth) {
+function createSourceCandidate(element, source, depth, kind) {
   const confidence = getSourceConfidence(source, depth);
   const fileName = source.file?.split(/[\\/]/).pop() ?? source.file ?? "source";
   const component = source.component?.trim();
@@ -5642,7 +5993,7 @@ function createSourceCandidate(element, source, depth) {
   const column = getSourcePosition(source.column);
   const position = line ? `:${line}${column ? `:${column}` : ""}` : "";
   return {
-    id: getSourceCandidateKey(source),
+    id: `${kind}:${getSourceCandidateKey(source)}`,
     depth,
     element,
     filePath: getDisplaySourcePath(source.file) ?? fileName,
@@ -5651,6 +6002,7 @@ function createSourceCandidate(element, source, depth) {
     positionLabel: line ? `${line}:${column ?? 1}` : "",
     confidence,
     confidenceLabel: confidence >= 0.82 ? "high" : confidence >= 0.58 ? "medium" : "low",
+    kind,
     usesPosition: confidence >= 0.72 && Boolean(line),
     source
   };
@@ -6165,6 +6517,7 @@ var ViewportPresetIcon = ({
 }) => {
   return /* @__PURE__ */ jsx16(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
 };
+var getPresetSelectValue = (preset) => `${preset.label}:${preset.width}x${preset.height}`;
 var ReviewTopbar = ({
   draftTarget,
   copyLabel,
@@ -6185,6 +6538,13 @@ var ReviewTopbar = ({
   onOpenInitialPrompt,
   onOpenSettings
 }) => {
+  const selectedPresetValue = getPresetSelectValue(size);
+  const handlePresetSelectChange = (event) => {
+    const nextPreset = viewportPresets.find(
+      (preset) => getPresetSelectValue(preset) === event.currentTarget.value
+    );
+    if (nextPreset) onSizeChange(nextPreset);
+  };
   return /* @__PURE__ */ jsxs14("header", { className: "df-review-topbar", children: [
     /* @__PURE__ */ jsxs14(
       "form",
@@ -6234,6 +6594,27 @@ var ReviewTopbar = ({
           },
           preset.label
         )) }),
+        /* @__PURE__ */ jsx16(
+          "select",
+          {
+            "aria-label": "Viewport preset",
+            className: "df-review-preset-select",
+            value: selectedPresetValue,
+            onChange: handlePresetSelectChange,
+            children: viewportPresets.map((preset) => {
+              const scope = getViewportPresetKind(preset);
+              const count = presetScopeCounts.get(scope) ?? 0;
+              return /* @__PURE__ */ jsx16(
+                "option",
+                {
+                  value: getPresetSelectValue(preset),
+                  children: `${preset.label} (${count})`
+                },
+                getPresetSelectValue(preset)
+              );
+            })
+          }
+        ),
         /* @__PURE__ */ jsx16("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
         /* @__PURE__ */ jsxs14("span", { className: "df-review-active-size", children: [
           size.width,
@@ -6295,6 +6676,64 @@ var ReviewTopbar = ({
             children: /* @__PURE__ */ jsx16(Settings, { "aria-hidden": "true" })
           }
         )
+      ] }),
+      /* @__PURE__ */ jsxs14("details", { className: "df-review-overlays-menu", children: [
+        /* @__PURE__ */ jsx16("summary", { "aria-label": "Open target tools", title: "Tools", children: /* @__PURE__ */ jsx16(Ellipsis, { "aria-hidden": "true" }) }),
+        /* @__PURE__ */ jsxs14("div", { className: "df-review-overlays-popover", "aria-label": "Target tools", children: [
+          isRulerAvailable && /* @__PURE__ */ jsx16(
+            "button",
+            {
+              "aria-label": "Toggle ruler",
+              className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
+              type: "button",
+              onClick: onToggleRuler,
+              children: /* @__PURE__ */ jsx16(Ruler, { "aria-hidden": "true" })
+            }
+          ),
+          /* @__PURE__ */ jsx16(
+            "button",
+            {
+              "aria-label": "Toggle grid overlay",
+              className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
+              type: "button",
+              onClick: () => onToggleTargetOverlay("grid"),
+              children: /* @__PURE__ */ jsx16(LayoutGrid, { "aria-hidden": "true" })
+            }
+          ),
+          /* @__PURE__ */ jsx16(
+            "button",
+            {
+              "aria-disabled": !isFigmaOverlayAvailable,
+              "aria-label": isFigmaOverlayAvailable ? "Toggle Figma overlay" : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
+              className: `df-review-overlay-button is-figma${targetOverlayState.figma ? " is-active" : ""}${isFigmaOverlayAvailable ? "" : " is-disabled"}`,
+              disabled: !isFigmaOverlayAvailable,
+              type: "button",
+              onClick: () => onToggleTargetOverlay("figma"),
+              children: /* @__PURE__ */ jsx16(Image, { "aria-hidden": "true" })
+            }
+          ),
+          /* @__PURE__ */ jsx16("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+          /* @__PURE__ */ jsx16(
+            "button",
+            {
+              "aria-label": "Open initial prompt",
+              className: "df-review-overlay-button is-prompt",
+              type: "button",
+              onClick: onOpenInitialPrompt,
+              children: /* @__PURE__ */ jsx16(CircleQuestionMark, { "aria-hidden": "true" })
+            }
+          ),
+          /* @__PURE__ */ jsx16(
+            "button",
+            {
+              "aria-label": "Open settings",
+              className: "df-review-overlay-button is-settings",
+              type: "button",
+              onClick: onOpenSettings,
+              children: /* @__PURE__ */ jsx16(Settings, { "aria-hidden": "true" })
+            }
+          )
+        ] })
       ] })
     ] })
   ] });
@@ -6309,7 +6748,7 @@ import {
 import {
   useCallback
 } from "react";
-function runWithAutoScrollBehavior(targetDocument, callback) {
+function runWithAutoScrollBehavior2(targetDocument, callback) {
   const elements = [
     targetDocument?.documentElement,
     targetDocument?.body
@@ -6410,7 +6849,7 @@ var useReviewItemRestore = ({
         isCurrentRestore
       );
       if (!isCurrentRestore()) return false;
-      runWithAutoScrollBehavior(targetDocument, () => {
+      runWithAutoScrollBehavior2(targetDocument, () => {
         setDocumentScrollInstantly(
           targetWindow,
           targetDocument,
@@ -7896,8 +8335,18 @@ var useReviewShellData = ({
     [qaStatusFilter, scopeFilteredNumberedActiveItems]
   );
   const hiddenOverlayItemIdList = useMemo5(
-    () => Array.from(hiddenOverlayItemIds),
-    [hiddenOverlayItemIds]
+    () => {
+      const nextHiddenItemIds = new Set(hiddenOverlayItemIds);
+      if (qaStatusFilter !== "all") {
+        activeItems.forEach((item) => {
+          if (normalizeReviewItemStatus(item.status) !== qaStatusFilter) {
+            nextHiddenItemIds.add(item.id);
+          }
+        });
+      }
+      return Array.from(nextHiddenItemIds);
+    },
+    [activeItems, hiddenOverlayItemIds, qaStatusFilter]
   );
   const qaFilterCounts = useMemo5(() => {
     const counts = /* @__PURE__ */ new Map();
@@ -8635,11 +9084,92 @@ var getReviewModeWriteMode = (mode) => {
 var SOURCE_PANEL_MAX_WIDTH = 440;
 var SOURCE_PANEL_MIN_WIDTH = 240;
 var SOURCE_PANEL_MAX_HEIGHT = 260;
+var SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
+var waitForFrame = (targetWindow) => new Promise((resolve) => {
+  (targetWindow ?? window).requestAnimationFrame(() => resolve());
+});
+var waitForMs = (ms) => new Promise((resolve) => {
+  window.setTimeout(resolve, ms);
+});
+var getScrollElement = (targetDocument) => targetDocument.scrollingElement;
+var scrollElementInTarget = (element, block) => {
+  const targetWindow = element.ownerDocument.defaultView;
+  if (!targetWindow) return;
+  const targetDocument = element.ownerDocument;
+  const scrollElement = getScrollElement(targetDocument);
+  const rect = element.getBoundingClientRect();
+  const currentLeft = scrollElement?.scrollLeft ?? targetWindow.scrollX;
+  const currentTop = scrollElement?.scrollTop ?? targetWindow.scrollY;
+  const clientWidth = scrollElement?.clientWidth ?? targetWindow.innerWidth;
+  const clientHeight = scrollElement?.clientHeight ?? targetWindow.innerHeight;
+  const scrollWidth = scrollElement?.scrollWidth ?? targetDocument.documentElement.scrollWidth;
+  const scrollHeight = scrollElement?.scrollHeight ?? targetDocument.documentElement.scrollHeight;
+  const nextLeft = clamp(
+    currentLeft + rect.left + rect.width / 2 - clientWidth / 2,
+    0,
+    Math.max(0, scrollWidth - clientWidth)
+  );
+  const nextTop = block === "center" ? clamp(
+    currentTop + rect.top + rect.height / 2 - clientHeight / 2,
+    0,
+    Math.max(0, scrollHeight - clientHeight)
+  ) : clamp(
+    currentTop + rect.top,
+    0,
+    Math.max(0, scrollHeight - clientHeight)
+  );
+  runWithAutoScrollBehavior(targetDocument, () => {
+    if (scrollElement) {
+      scrollElement.scrollLeft = Math.round(nextLeft);
+      scrollElement.scrollTop = Math.round(nextTop);
+      return;
+    }
+    targetWindow.scrollTo(Math.round(nextLeft), Math.round(nextTop));
+  });
+};
+var centerFrameScrollOnElement = (frameScroll, frame, element) => {
+  if (!frameScroll || !frame) return;
+  const frameScrollRect = frameScroll.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+  const elementHostCenterX = frameRect.left + elementRect.left + elementRect.width / 2;
+  const elementHostCenterY = frameRect.top + elementRect.top + elementRect.height / 2;
+  const visibleCenterX = frameScrollRect.left + frameScrollRect.width / 2;
+  const visibleCenterY = frameScrollRect.top + frameScrollRect.height / 2;
+  const nextLeft = clamp(
+    frameScroll.scrollLeft + elementHostCenterX - visibleCenterX,
+    0,
+    Math.max(0, frameScroll.scrollWidth - frameScroll.clientWidth)
+  );
+  const nextTop = clamp(
+    frameScroll.scrollTop + elementHostCenterY - visibleCenterY,
+    0,
+    Math.max(0, frameScroll.scrollHeight - frameScroll.clientHeight)
+  );
+  const previousScrollBehavior = frameScroll.style.scrollBehavior;
+  frameScroll.style.scrollBehavior = "auto";
+  frameScroll.scrollLeft = Math.round(nextLeft);
+  frameScroll.scrollTop = Math.round(nextTop);
+  frameScroll.style.scrollBehavior = previousScrollBehavior;
+};
 var getSectionOutlineFilterTerms = (value) => value.trim().toLowerCase().split(/\s+/).filter(Boolean);
 var getSectionOutlineEntryCount = (entries) => entries.reduce(
   (count, entry) => count + 1 + getSectionOutlineEntryCount(entry.children),
   0
 );
+var DEFAULT_COLLAPSED_ROOT_LABELS = /* @__PURE__ */ new Set(["FrameHeader", "FrameFooter"]);
+var getDefaultCollapsedSectionOutlineIds = (entries) => {
+  const collapsedIds = /* @__PURE__ */ new Set();
+  const visit = (entry) => {
+    const shouldCollapseRoot = entry.depth === 1 && DEFAULT_COLLAPSED_ROOT_LABELS.has(entry.label);
+    if ((entry.depth >= 2 || shouldCollapseRoot) && entry.children.length > 0) {
+      collapsedIds.add(entry.id);
+    }
+    entry.children.forEach(visit);
+  };
+  entries.forEach(visit);
+  return collapsedIds;
+};
 var matchesSectionOutlineFilter = (entry, terms) => {
   if (terms.length === 0) return true;
   const text = [
@@ -8745,17 +9275,22 @@ var ReviewShell = ({
     [sourceInspector, sourceRoot]
   );
   const sourceCandidateOptions = useMemo7(
-    () => ({ ignore: sourceInspector?.ignore }),
+    () => ({
+      ignore: sourceInspector?.ignore,
+      includePlacer: sourceInspector?.includePlacer
+    }),
     [sourceInspector]
   );
   const sectionOutlineOptions = useMemo7(
     () => ({
+      includePlacer: sourceInspector?.includePlacer,
       ignore: sourceInspector?.ignore,
       maxDepth: sourceInspector?.maxDepth
     }),
     [sourceInspector]
   );
   const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
+  const isSourceTreeHoverOutlineEnabled = sourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === "qa";
   const isSourceTreePanelVisible = isSourceInspectorEnabled && isListVisible && sidePanel === "source";
   const sectionOutlineFilterTerms = useMemo7(
@@ -9110,6 +9645,12 @@ var ReviewShell = ({
     sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
+  useEffect10(() => {
+    clearSourceInspector();
+    setSectionOutlineFilter("");
+    setCollapsedSectionOutlineIds(/* @__PURE__ */ new Set());
+    setSectionOutline(null);
+  }, [clearSourceInspector, targetSrc]);
   const getSourceInspectorRect = useCallback11(
     (element) => {
       const frame = iframeRef.current;
@@ -9221,6 +9762,33 @@ var ReviewShell = ({
     },
     [getSourceInspectorRect, sourceCandidateOptions]
   );
+  const showSourceOutlineForElement = useCallback11(
+    (element) => {
+      if (!isSourceTreeHoverOutlineEnabled) return;
+      const rect = getSourceInspectorRect(element);
+      if (!rect) {
+        setSourceInspectorState(
+          (current) => current?.isPinned ? current : null
+        );
+        return;
+      }
+      setSourceInspectorState(
+        (current) => current?.isPinned ? current : {
+          candidates: [],
+          isPinned: false,
+          panelLeft: 0,
+          panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
+          panelRight: null,
+          panelTop: 0,
+          rect
+        }
+      );
+    },
+    [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
+  );
+  const clearSourceOutlineHover = useCallback11(() => {
+    setSourceInspectorState((current) => current?.isPinned ? current : null);
+  }, []);
   const openSourceCandidate = useCallback11(
     (candidate) => {
       const didOpen = openSourceInEditor(candidate.source, {
@@ -9244,6 +9812,35 @@ var ReviewShell = ({
     },
     [iframeRef, sectionOutlineOptions]
   );
+  const setSectionOutlineWithDefaultCollapse = useCallback11(
+    (nextSectionOutline) => {
+      setSectionOutline(nextSectionOutline);
+      setCollapsedSectionOutlineIds(
+        getDefaultCollapsedSectionOutlineIds(nextSectionOutline)
+      );
+    },
+    []
+  );
+  useEffect10(() => {
+    if (sidePanel !== "source" || !isListVisible) return void 0;
+    const refreshSectionOutline = () => {
+      setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
+    };
+    const animationFrame = window.requestAnimationFrame(refreshSectionOutline);
+    const firstTimeout = window.setTimeout(refreshSectionOutline, 120);
+    const secondTimeout = window.setTimeout(refreshSectionOutline, 500);
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(firstTimeout);
+      window.clearTimeout(secondTimeout);
+    };
+  }, [
+    getCurrentSectionOutline,
+    isListVisible,
+    setSectionOutlineWithDefaultCollapse,
+    sidePanel,
+    targetSrc
+  ]);
   const toggleQaPanel = useCallback11(() => {
     setSidePanel("qa");
     setIsListVisible((current) => sidePanel === "qa" ? !current : true);
@@ -9255,13 +9852,13 @@ var ReviewShell = ({
       return;
     }
     setSidePanel("source");
-    setCollapsedSectionOutlineIds(/* @__PURE__ */ new Set());
-    setSectionOutline(getCurrentSectionOutline());
+    setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
     setIsListVisible(true);
   }, [
     getCurrentSectionOutline,
     isListVisible,
     isSourceInspectorEnabled,
+    setSectionOutlineWithDefaultCollapse,
     setIsListVisible,
     sidePanel
   ]);
@@ -9277,8 +9874,13 @@ var ReviewShell = ({
     });
   }, []);
   const scrollToSection = useCallback11((entry) => {
-    entry.element.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+    scrollElementInTarget(entry.element, "start");
+    centerFrameScrollOnElement(
+      frameScrollRef.current,
+      iframeRef.current,
+      entry.element
+    );
+  }, [frameScrollRef, iframeRef]);
   const openSectionSource = useCallback11(
     (entry) => {
       const didOpen = openSourceInEditor(entry.source, {
@@ -9295,6 +9897,55 @@ var ReviewShell = ({
       showToast(didOpen ? "Data opened" : "Data hint not found");
     },
     [showToast, sourceOpenOptions]
+  );
+  const startSectionDomReview = useCallback11(
+    (entry) => {
+      if (!canWriteDom) {
+        showToast("DOM QA unavailable");
+        return;
+      }
+      clearSourceInspector();
+      setIsListVisible(false);
+      let targetWindow = null;
+      try {
+        targetWindow = entry.element.ownerDocument.defaultView ?? iframeRef.current?.contentWindow ?? null;
+      } catch {
+        targetWindow = null;
+      }
+      void waitForMs(SOURCE_TREE_PANEL_CLOSE_DELAY_MS).then(async () => {
+        initReviewKit();
+        await waitForFrame(targetWindow);
+        const controller = controllerRef.current;
+        if (!controller) {
+          showToast("DOM QA unavailable");
+          return;
+        }
+        scrollElementInTarget(entry.element, "center");
+        await waitForFrame(targetWindow);
+        centerFrameScrollOnElement(
+          frameScrollRef.current,
+          iframeRef.current,
+          entry.element
+        );
+        await waitForFrame(targetWindow);
+        await controller.startElementReview(entry.element);
+        await waitForFrame(targetWindow);
+        setMode(controller.getMode());
+      }).catch(() => {
+        setMode(controllerRef.current?.getMode() ?? "idle");
+      });
+    },
+    [
+      canWriteDom,
+      clearSourceInspector,
+      controllerRef,
+      frameScrollRef,
+      iframeRef,
+      initReviewKit,
+      setIsListVisible,
+      setMode,
+      showToast
+    ]
   );
   const cleanupSourceOpenShortcut = useCallback11(() => {
     sourceShortcutCleanupRef.current?.();
@@ -9343,7 +9994,7 @@ var ReviewShell = ({
         background: rgba(15, 23, 42, 0.86) !important;
         box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24) !important;
         content: "Source select" !important;
-        font: 700 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+        font: 500 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         pointer-events: none !important;
       }
 
@@ -9360,7 +10011,7 @@ var ReviewShell = ({
         color: #ffffff !important;
         background: rgba(15, 23, 42, 0.9) !important;
         box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28) !important;
-        font: 800 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+        font: 500 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
         overflow-wrap: anywhere !important;
         pointer-events: none !important;
         white-space: normal !important;
@@ -9564,8 +10215,7 @@ var ReviewShell = ({
     );
     bindSourceOpenShortcut();
     if (sidePanel === "source" && isListVisible) {
-      setCollapsedSectionOutlineIds(/* @__PURE__ */ new Set());
-      setSectionOutline(getCurrentSectionOutline());
+      setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
     }
   }, [
     bindSourceOpenShortcut,
@@ -9575,6 +10225,7 @@ var ReviewShell = ({
     isListVisible,
     mode,
     refreshTargetFigmaConfig,
+    setSectionOutlineWithDefaultCollapse,
     sidePanel
   ]);
   useEffect10(() => {
@@ -9659,73 +10310,108 @@ var ReviewShell = ({
   const renderSectionOutlineEntry = (entry) => {
     const hasChildren = entry.children.length > 0;
     const isCollapsed = !isSectionOutlineFiltering && collapsedSectionOutlineIds.has(entry.id);
-    return /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-item", children: [
-      /* @__PURE__ */ jsxs15(
-        "div",
-        {
-          className: "df-review-section-outline-row",
-          style: { paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` },
-          children: [
-            hasChildren ? /* @__PURE__ */ jsx17(
-              "button",
-              {
-                "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
-                "aria-expanded": !isCollapsed,
-                className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
-                type: "button",
-                onClick: () => toggleSectionOutlineEntry(entry.id),
-                children: /* @__PURE__ */ jsx17(ChevronDown, { "aria-hidden": "true" })
-              }
-            ) : /* @__PURE__ */ jsx17(
-              "span",
-              {
-                "aria-hidden": "true",
-                className: "df-review-section-outline-toggle is-placeholder"
-              }
-            ),
-            /* @__PURE__ */ jsxs15(
-              "button",
-              {
-                className: "df-review-section-outline-name",
-                type: "button",
-                onClick: () => scrollToSection(entry),
-                children: [
-                  /* @__PURE__ */ jsx17("span", { children: entry.label }),
-                  /* @__PURE__ */ jsx17("small", { children: entry.filePath })
-                ]
-              }
-            ),
-            /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-links", children: [
-              /* @__PURE__ */ jsx17(
-                "button",
-                {
-                  "aria-label": `Open ${entry.label} data`,
-                  className: "df-review-section-outline-link",
-                  title: "Open data",
-                  type: "button",
-                  disabled: !entry.data?.file,
-                  onClick: () => openSectionData(entry),
-                  children: /* @__PURE__ */ jsx17(Database, { "aria-hidden": "true" })
+    return /* @__PURE__ */ jsxs15(
+      "div",
+      {
+        className: `df-review-section-outline-item is-depth-${entry.depth}`,
+        children: [
+          /* @__PURE__ */ jsxs15(
+            "div",
+            {
+              className: "df-review-section-outline-row",
+              style: { paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` },
+              onMouseEnter: () => showSourceOutlineForElement(entry.element),
+              onMouseLeave: clearSourceOutlineHover,
+              onMouseOver: () => showSourceOutlineForElement(entry.element),
+              onMouseOut: (event) => {
+                if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) {
+                  return;
                 }
-              ),
-              /* @__PURE__ */ jsx17(
-                "button",
-                {
-                  "aria-label": `Open ${entry.label} source`,
-                  className: "df-review-section-outline-link",
-                  title: "Open source",
-                  type: "button",
-                  disabled: !entry.source?.file,
-                  onClick: () => openSectionSource(entry),
-                  children: /* @__PURE__ */ jsx17(CodeXml, { "aria-hidden": "true" })
-                }
-              )
-            ] })
-          ]
-        }
-      ),
-      hasChildren && !isCollapsed && /* @__PURE__ */ jsx17("div", { className: "df-review-section-outline-children", children: entry.children.map(renderSectionOutlineEntry) })
-    ] }, entry.id);
+                clearSourceOutlineHover();
+              },
+              onPointerEnter: () => showSourceOutlineForElement(entry.element),
+              onPointerLeave: clearSourceOutlineHover,
+              children: [
+                hasChildren ? /* @__PURE__ */ jsx17(
+                  "button",
+                  {
+                    "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
+                    "aria-expanded": !isCollapsed,
+                    className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
+                    type: "button",
+                    onClick: () => toggleSectionOutlineEntry(entry.id),
+                    children: /* @__PURE__ */ jsx17(ChevronDown, { "aria-hidden": "true" })
+                  }
+                ) : /* @__PURE__ */ jsx17(
+                  "span",
+                  {
+                    "aria-hidden": "true",
+                    className: "df-review-section-outline-toggle is-placeholder"
+                  }
+                ),
+                /* @__PURE__ */ jsx17(
+                  "button",
+                  {
+                    className: "df-review-section-outline-name",
+                    type: "button",
+                    onClick: () => scrollToSection(entry),
+                    children: /* @__PURE__ */ jsx17("span", { children: entry.label })
+                  }
+                ),
+                /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-links", children: [
+                  /* @__PURE__ */ jsx17(
+                    "button",
+                    {
+                      "aria-label": `Open ${entry.label} data`,
+                      className: "df-review-section-outline-link",
+                      title: "Open data",
+                      type: "button",
+                      disabled: !entry.data?.file,
+                      onClick: () => openSectionData(entry),
+                      children: /* @__PURE__ */ jsx17(Database, { "aria-hidden": "true" })
+                    }
+                  ),
+                  /* @__PURE__ */ jsx17(
+                    "button",
+                    {
+                      "aria-label": `Open ${entry.label} source`,
+                      className: "df-review-section-outline-link",
+                      title: "Open source",
+                      type: "button",
+                      disabled: !entry.source?.file,
+                      onClick: () => openSectionSource(entry),
+                      children: /* @__PURE__ */ jsx17(CodeXml, { "aria-hidden": "true" })
+                    }
+                  ),
+                  /* @__PURE__ */ jsx17(
+                    "span",
+                    {
+                      "aria-hidden": "true",
+                      className: "df-review-section-outline-divider",
+                      children: "|"
+                    }
+                  ),
+                  /* @__PURE__ */ jsx17(
+                    "button",
+                    {
+                      "aria-label": `Start DOM QA for ${entry.label}`,
+                      className: "df-review-section-outline-link is-dom-select",
+                      title: "DOM select",
+                      type: "button",
+                      disabled: !canWriteDom,
+                      onClick: () => startSectionDomReview(entry),
+                      children: /* @__PURE__ */ jsx17(SquareMousePointer, { "aria-hidden": "true" })
+                    }
+                  )
+                ] })
+              ]
+            }
+          ),
+          hasChildren && !isCollapsed && /* @__PURE__ */ jsx17("div", { className: "df-review-section-outline-children", children: entry.children.map(renderSectionOutlineEntry) })
+        ]
+      },
+      entry.id
+    );
   };
   return /* @__PURE__ */ jsxs15(
     "div",
@@ -9757,13 +10443,6 @@ var ReviewShell = ({
             onOpenSettings: openFigmaSettings
           }
         ),
-        currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsx17("div", { className: "df-review-presence-row", children: /* @__PURE__ */ jsx17(
-          PresenceOverlay,
-          {
-            presenceSessionId,
-            users: currentPagePresenceUsers
-          }
-        ) }),
         isSitemapOpen && /* @__PURE__ */ jsx17(
           SitemapModal,
           {
@@ -9817,7 +10496,7 @@ var ReviewShell = ({
         ),
         toastMessage && /* @__PURE__ */ jsx17("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
         /* @__PURE__ */ jsxs15("div", { className: "df-review-side-rail", children: [
-          /* @__PURE__ */ jsxs15(
+          /* @__PURE__ */ jsx17(
             "button",
             {
               "aria-label": isQaPanelVisible ? "Hide QA list" : "Show QA list",
@@ -9825,13 +10504,11 @@ var ReviewShell = ({
               className: `df-review-side-toggle${isQaPanelVisible ? " is-active" : ""}`,
               type: "button",
               onClick: toggleQaPanel,
-              children: [
-                /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(GripVertical, {}) }),
-                /* @__PURE__ */ jsx17("strong", { children: "QA" })
-              ]
+              title: "QA",
+              children: /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(FileText, {}) })
             }
           ),
-          isSourceInspectorEnabled && /* @__PURE__ */ jsxs15(
+          isSourceInspectorEnabled && /* @__PURE__ */ jsx17(
             "button",
             {
               "aria-controls": "df-review-section-outline",
@@ -9840,10 +10517,15 @@ var ReviewShell = ({
               className: `df-review-side-toggle${isSourceTreePanelVisible ? " is-active" : ""}`,
               type: "button",
               onClick: toggleSourceTreePanel,
-              children: [
-                /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(CodeXml, {}) }),
-                /* @__PURE__ */ jsx17("strong", { children: "SOURCE" })
-              ]
+              title: "Source Tree",
+              children: /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(Search, {}) })
+            }
+          ),
+          currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsx17(
+            PresenceOverlay,
+            {
+              presenceSessionId,
+              users: currentPagePresenceUsers
             }
           )
         ] }),
@@ -9896,22 +10578,35 @@ var ReviewShell = ({
                   /* @__PURE__ */ jsx17("strong", { children: "Source Tree" }),
                   /* @__PURE__ */ jsx17("small", { children: isSectionOutlineFiltering ? `${filteredSectionOutlineCount} / ${sectionOutlineTotalCount} results` : `${sectionOutline?.length ?? 0} roots` })
                 ] }),
-                /* @__PURE__ */ jsxs15("label", { className: "df-review-section-outline-filter", children: [
+                /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-filter", children: [
                   /* @__PURE__ */ jsx17(Search, { "aria-hidden": "true" }),
                   /* @__PURE__ */ jsx17(
                     "input",
                     {
                       "aria-label": "Filter source tree",
-                      type: "search",
+                      type: "text",
                       value: sectionOutlineFilter,
                       placeholder: "Filter",
+                      autoComplete: "off",
+                      enterKeyHint: "search",
                       spellCheck: false,
                       onChange: (event) => setSectionOutlineFilter(event.currentTarget.value)
+                    }
+                  ),
+                  sectionOutlineFilter && /* @__PURE__ */ jsx17(
+                    "button",
+                    {
+                      "aria-label": "Clear source tree filter",
+                      className: "df-review-section-outline-filter-clear",
+                      type: "button",
+                      onMouseDown: (event) => event.preventDefault(),
+                      onClick: () => setSectionOutlineFilter(""),
+                      children: /* @__PURE__ */ jsx17(X, { "aria-hidden": "true" })
                     }
                   )
                 ] })
               ] }),
-              filteredSectionOutline.length > 0 ? /* @__PURE__ */ jsx17("div", { className: "df-review-section-outline-list", children: filteredSectionOutline.map(renderSectionOutlineEntry) }) : /* @__PURE__ */ jsx17("div", { className: "df-review-section-outline-empty", children: sectionOutline ? "No source matches" : "No sections found" })
+              filteredSectionOutline.length > 0 ? /* @__PURE__ */ jsx17("div", { className: "df-review-section-outline-list", children: filteredSectionOutline.map(renderSectionOutlineEntry) }) : /* @__PURE__ */ jsx17("div", { className: "df-review-section-outline-empty", children: isSectionOutlineFiltering ? "No source matches" : "No sections found" })
             ] })
           }
         ),
@@ -9986,7 +10681,7 @@ var ReviewShell = ({
                 /* @__PURE__ */ jsx17("div", { className: "df-review-source-candidate-list", children: sourceInspectorState.candidates.map((candidate) => /* @__PURE__ */ jsx17(
                   "button",
                   {
-                    className: "df-review-source-candidate",
+                    className: `df-review-source-candidate is-${candidate.kind}`,
                     type: "button",
                     onClick: (event) => {
                       event.preventDefault();
@@ -9996,7 +10691,7 @@ var ReviewShell = ({
                     children: /* @__PURE__ */ jsxs15("span", { className: "df-review-source-candidate-main", children: [
                       /* @__PURE__ */ jsx17("strong", { children: candidate.label }),
                       /* @__PURE__ */ jsx17("span", { children: candidate.filePath }),
-                      /* @__PURE__ */ jsx17("small", { children: candidate.positionLabel || (candidate.usesPosition ? "" : "file only") })
+                      /* @__PURE__ */ jsx17("small", { children: candidate.positionLabel || "-:-" })
                     ] })
                   },
                   candidate.id
@@ -10224,10 +10919,11 @@ lucide-react/dist/esm/icons/circle-question-mark.mjs:
 lucide-react/dist/esm/icons/code-xml.mjs:
 lucide-react/dist/esm/icons/copy.mjs:
 lucide-react/dist/esm/icons/database.mjs:
+lucide-react/dist/esm/icons/ellipsis.mjs:
 lucide-react/dist/esm/icons/external-link.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
 lucide-react/dist/esm/icons/eye.mjs:
-lucide-react/dist/esm/icons/grip-vertical.mjs:
+lucide-react/dist/esm/icons/file-text.mjs:
 lucide-react/dist/esm/icons/image.mjs:
 lucide-react/dist/esm/icons/layout-grid.mjs:
 lucide-react/dist/esm/icons/link-2.mjs:
@@ -10235,6 +10931,7 @@ lucide-react/dist/esm/icons/list-filter.mjs:
 lucide-react/dist/esm/icons/map.mjs:
 lucide-react/dist/esm/icons/maximize-2.mjs:
 lucide-react/dist/esm/icons/monitor.mjs:
+lucide-react/dist/esm/icons/moon.mjs:
 lucide-react/dist/esm/icons/pencil.mjs:
 lucide-react/dist/esm/icons/rectangle-horizontal.mjs:
 lucide-react/dist/esm/icons/refresh-cw.mjs:
@@ -10245,7 +10942,9 @@ lucide-react/dist/esm/icons/settings.mjs:
 lucide-react/dist/esm/icons/smartphone.mjs:
 lucide-react/dist/esm/icons/square-mouse-pointer.mjs:
 lucide-react/dist/esm/icons/sticky-note.mjs:
+lucide-react/dist/esm/icons/sun.mjs:
 lucide-react/dist/esm/icons/upload.mjs:
+lucide-react/dist/esm/icons/user-round.mjs:
 lucide-react/dist/esm/icons/x.mjs:
 lucide-react/dist/esm/lucide-react.mjs:
   (**

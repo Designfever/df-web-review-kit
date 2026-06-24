@@ -138,8 +138,20 @@ export const useReviewShellData = ({
     [qaStatusFilter, scopeFilteredNumberedActiveItems]
   );
   const hiddenOverlayItemIdList = useMemo(
-    () => Array.from(hiddenOverlayItemIds),
-    [hiddenOverlayItemIds]
+    () => {
+      const nextHiddenItemIds = new Set(hiddenOverlayItemIds);
+
+      if (qaStatusFilter !== 'all') {
+        activeItems.forEach((item) => {
+          if (normalizeReviewItemStatus(item.status) !== qaStatusFilter) {
+            nextHiddenItemIds.add(item.id);
+          }
+        });
+      }
+
+      return Array.from(nextHiddenItemIds);
+    },
+    [activeItems, hiddenOverlayItemIds, qaStatusFilter]
   );
   const qaFilterCounts = useMemo(() => {
     const counts = new Map<ReviewQaFilter, number>();

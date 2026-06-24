@@ -84,6 +84,41 @@ export const QaPanelHeader = ({
             <RefreshCwIcon aria-hidden="true" />
           </button>
         </div>
+        <select
+          aria-label="QA status filter"
+          className="df-review-status-filter-select"
+          value={qaStatusFilter}
+          onChange={(event) =>
+            onQaStatusFilterChange(
+              event.currentTarget.value as ReviewQaStatusFilter
+            )
+          }
+        >
+          <option value="all">
+            {`All status (${qaStatusFilterCounts.get('all') ?? 0})`}
+          </option>
+          {statusFilterOptions.map((statusOption) => (
+            <option key={statusOption.value} value={statusOption.value}>
+              {`${statusOption.label} (${
+                qaStatusFilterCounts.get(statusOption.value) ?? 0
+              })`}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="df-review-list-title">
+        <span className="df-review-list-meta">
+          <span>
+            {isAllQaVisible ? `${label} QA · All pages` : `${label} QA`}
+          </span>
+          <strong
+            title={`${activeRemainingItemCount} remaining of ${activeItemCount}`}
+          >
+            {!hasActiveFilter
+              ? `${activeRemainingItemCount}/${activeItemCount}`
+              : `${filteredItemCount}/${activeItemCount}`}
+          </strong>
+        </span>
         <div className="df-review-filter-tabs" aria-label="QA filters">
           {REVIEW_QA_FILTERS.map((filter) => {
             const count = qaFilterCounts.get(filter.key) ?? 0;
@@ -111,35 +146,6 @@ export const QaPanelHeader = ({
             );
           })}
         </div>
-      </div>
-      <div className="df-review-list-title">
-        <span>{isAllQaVisible ? `${label} QA · All pages` : `${label} QA`}</span>
-        <strong title={`${activeRemainingItemCount} remaining of ${activeItemCount}`}>
-          {!hasActiveFilter
-            ? `${activeRemainingItemCount}/${activeItemCount}`
-            : `${filteredItemCount}/${activeItemCount}`}
-        </strong>
-        <select
-          aria-label="QA status filter"
-          className="df-review-status-filter-select"
-          value={qaStatusFilter}
-          onChange={(event) =>
-            onQaStatusFilterChange(
-              event.currentTarget.value as ReviewQaStatusFilter
-            )
-          }
-        >
-          <option value="all">
-            {`All status (${qaStatusFilterCounts.get('all') ?? 0})`}
-          </option>
-          {statusFilterOptions.map((statusOption) => (
-            <option key={statusOption.value} value={statusOption.value}>
-              {`${statusOption.label} (${
-                qaStatusFilterCounts.get(statusOption.value) ?? 0
-              })`}
-            </option>
-          ))}
-        </select>
       </div>
     </div>
   );

@@ -1,12 +1,11 @@
 import { useState, type CSSProperties } from 'react';
+import { UserRound as UserRoundIcon } from 'lucide-react';
 import type { ReviewPresenceUser } from '../types';
 
 interface PresenceOverlayProps {
   presenceSessionId: string;
   users: ReviewPresenceUser[];
 }
-
-const COLLAPSED_USER_COUNT = 1;
 
 const getPresenceName = (user: ReviewPresenceUser) =>
   user.displayName || user.userId;
@@ -19,9 +18,6 @@ export const PresenceOverlay = ({
 
   if (users.length === 0) return null;
 
-  const visibleUsers = isExpanded ? users : users.slice(0, COLLAPSED_USER_COUNT);
-  const hiddenUserCount = users.length - visibleUsers.length;
-
   return (
     <div
       aria-label={`Review presence, ${users.length} online`}
@@ -29,32 +25,36 @@ export const PresenceOverlay = ({
         isExpanded ? ' is-expanded' : ''
       }`}
     >
-      {visibleUsers.map((user) => (
-        <span
-          key={user.sessionId}
-          className={`df-review-presence-chip${
-            user.sessionId === presenceSessionId ? ' is-self' : ''
-          }`}
-          style={
-            {
-              '--df-review-presence-color': user.color,
-            } as CSSProperties
-          }
-          title={getPresenceName(user)}
-        >
-          {getPresenceName(user)}
-        </span>
-      ))}
-      {hiddenUserCount > 0 && (
-        <button
-          aria-label={`Show ${hiddenUserCount} more online reviewers`}
-          aria-expanded={isExpanded}
-          className="df-review-presence-more"
-          type="button"
-          onClick={() => setIsExpanded(true)}
-        >
-          +{hiddenUserCount}
-        </button>
+      <button
+        aria-label={`Show online reviewers, ${users.length} online`}
+        aria-expanded={isExpanded}
+        className="df-review-presence-button"
+        type="button"
+        onClick={() => setIsExpanded((current) => !current)}
+      >
+        <UserRoundIcon aria-hidden="true" />
+        <span className="df-review-presence-badge">{users.length}</span>
+      </button>
+      {isExpanded && (
+        <div className="df-review-presence-list" role="list">
+          {users.map((user) => (
+            <span
+              key={user.sessionId}
+              className={`df-review-presence-chip${
+                user.sessionId === presenceSessionId ? ' is-self' : ''
+              }`}
+              role="listitem"
+              style={
+                {
+                  '--df-review-presence-color': user.color,
+                } as CSSProperties
+              }
+              title={getPresenceName(user)}
+            >
+              {getPresenceName(user)}
+            </span>
+          ))}
+        </div>
       )}
     </div>
   );

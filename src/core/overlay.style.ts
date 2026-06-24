@@ -658,6 +658,12 @@ export function createStyleElement() {
       outline-offset: 1px;
     }
 
+    @media (hover: none) and (pointer: coarse) {
+      .dfwr-textarea {
+        font-size: 16px;
+      }
+    }
+
     .dfwr-adjust-panel {
       display: grid;
       gap: 4px;

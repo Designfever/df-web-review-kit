@@ -5,12 +5,14 @@ import {
   Map as MapIcon,
   Maximize2 as Maximize2Icon,
   Monitor as MonitorIcon,
+  MoreHorizontal as MoreHorizontalIcon,
   RectangleHorizontal as TabletIcon,
   Ruler as RulerIcon,
   Settings as SettingsIcon,
   Smartphone as SmartphoneIcon,
   SquareMousePointer as SquareMousePointerIcon,
 } from 'lucide-react';
+import type { ChangeEvent } from 'react';
 import type { ReviewItemScope } from '../index';
 import { FIGMA_OVERLAY_UNAVAILABLE_MESSAGE } from './constants';
 import type {
@@ -57,6 +59,9 @@ const ViewportPresetIcon = ({
   return <ReviewScopeIcon scope={getViewportPresetKind(preset)} />;
 };
 
+const getPresetSelectValue = (preset: ReviewShellViewportPreset) =>
+  `${preset.label}:${preset.width}x${preset.height}`;
+
 export const ReviewTopbar = ({
   draftTarget,
   copyLabel,
@@ -77,6 +82,14 @@ export const ReviewTopbar = ({
   onOpenInitialPrompt,
   onOpenSettings,
 }: ReviewTopbarProps) => {
+  const selectedPresetValue = getPresetSelectValue(size);
+  const handlePresetSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextPreset = viewportPresets.find(
+      (preset) => getPresetSelectValue(preset) === event.currentTarget.value
+    );
+    if (nextPreset) onSizeChange(nextPreset);
+  };
+
   return (
     <header className="df-review-topbar">
       <form
@@ -125,6 +138,26 @@ export const ReviewTopbar = ({
               </button>
             ))}
           </div>
+          <select
+            aria-label="Viewport preset"
+            className="df-review-preset-select"
+            value={selectedPresetValue}
+            onChange={handlePresetSelectChange}
+          >
+            {viewportPresets.map((preset) => {
+              const scope = getViewportPresetKind(preset);
+              const count = presetScopeCounts.get(scope) ?? 0;
+
+              return (
+                <option
+                  key={getPresetSelectValue(preset)}
+                  value={getPresetSelectValue(preset)}
+                >
+                  {`${preset.label} (${count})`}
+                </option>
+              );
+            })}
+          </select>
 
           <span className="df-review-tool-divider" aria-hidden="true">
             |
@@ -194,6 +227,70 @@ export const ReviewTopbar = ({
             <SettingsIcon aria-hidden="true" />
           </button>
         </div>
+        <details className="df-review-overlays-menu">
+          <summary aria-label="Open target tools" title="Tools">
+            <MoreHorizontalIcon aria-hidden="true" />
+          </summary>
+          <div className="df-review-overlays-popover" aria-label="Target tools">
+            {isRulerAvailable && (
+              <button
+                aria-label="Toggle ruler"
+                className={`df-review-overlay-button is-ruler${
+                  isRulerVisible ? ' is-active' : ''
+                }`}
+                type="button"
+                onClick={onToggleRuler}
+              >
+                <RulerIcon aria-hidden="true" />
+              </button>
+            )}
+            <button
+              aria-label="Toggle grid overlay"
+              className={`df-review-overlay-button is-grid${
+                targetOverlayState.grid ? ' is-active' : ''
+              }`}
+              type="button"
+              onClick={() => onToggleTargetOverlay('grid')}
+            >
+              <LayoutGridIcon aria-hidden="true" />
+            </button>
+            <button
+              aria-disabled={!isFigmaOverlayAvailable}
+              aria-label={
+                isFigmaOverlayAvailable
+                  ? 'Toggle Figma overlay'
+                  : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE
+              }
+              className={`df-review-overlay-button is-figma${
+                targetOverlayState.figma ? ' is-active' : ''
+              }${isFigmaOverlayAvailable ? '' : ' is-disabled'}`}
+              disabled={!isFigmaOverlayAvailable}
+              type="button"
+              onClick={() => onToggleTargetOverlay('figma')}
+            >
+              <ImageIcon aria-hidden="true" />
+            </button>
+            <span className="df-review-tool-divider" aria-hidden="true">
+              |
+            </span>
+            <button
+              aria-label="Open initial prompt"
+              className="df-review-overlay-button is-prompt"
+              type="button"
+              onClick={onOpenInitialPrompt}
+            >
+              <CircleHelpIcon aria-hidden="true" />
+            </button>
+            <button
+              aria-label="Open settings"
+              className="df-review-overlay-button is-settings"
+              type="button"
+              onClick={onOpenSettings}
+            >
+              <SettingsIcon aria-hidden="true" />
+            </button>
+          </div>
+        </details>
       </div>
     </header>
   );

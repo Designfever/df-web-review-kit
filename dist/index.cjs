@@ -558,6 +558,20 @@ function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", enviro
     source: getDomSourceHint(target)
   };
 }
+function getDomAnchorFromElement(target, configuredAttribute = "data-qa-id", environment) {
+  if (target.ownerDocument !== environment.document) return void 0;
+  const candidates = createAnchorCandidates(target, configuredAttribute);
+  const primary = candidates[0];
+  if (!primary) return void 0;
+  return {
+    ...primary,
+    candidates,
+    htmlSnippet: getElementHtmlSnippet(
+      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+    ),
+    source: getDomSourceHint(target)
+  };
+}
 function getElementViewportSelection(anchor, environment, preferredSelection) {
   const element = getAnchorElement(anchor, environment, preferredSelection);
   if (!element) return void 0;
@@ -2088,6 +2102,12 @@ function createStyleElement() {
     .dfwr-textarea:focus {
       outline: 2px solid var(--df-review-color-accent-ring);
       outline-offset: 1px;
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .dfwr-textarea {
+        font-size: 16px;
+      }
     }
 
     .dfwr-adjust-panel {
@@ -3796,6 +3816,7 @@ function createWebReviewKit(options) {
     close: () => app.close(),
     toggle: () => app.toggle(),
     setMode: (mode) => app.setMode(mode),
+    startElementReview: (element, comment) => app.startElementReview(element, comment),
     getMode: () => app.getMode(),
     highlightItem: (itemId) => app.highlightItem(itemId),
     setHiddenItemIds: (itemIds) => app.setHiddenItemIds(itemIds),
@@ -3925,6 +3946,16 @@ var WebReviewKitApp = class {
     this.noteDraft = void 0;
     this.areaDraft = void 0;
     this.render();
+  }
+  async startElementReview(element, comment) {
+    if (!this.isOpen) {
+      this.isOpen = true;
+    }
+    this.setModeState("element");
+    this.noteDraft = void 0;
+    this.areaDraft = void 0;
+    this.isSelectingArea = false;
+    await this.bindElementDraftToElement(element, comment);
   }
   getMode() {
     return this.mode;
@@ -4134,6 +4165,47 @@ var WebReviewKitApp = class {
     this.noteDraft = draft;
     this.render();
   }
+  async bindElementDraftToElement(element, comment) {
+    const environment = this.getEnvironment();
+    if (!environment || element.ownerDocument !== environment.document) return;
+    const viewport = getViewportSize(environment);
+    const draft = await this.withOverlayHidden(() => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return void 0;
+      const selection = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height
+      };
+      const anchor = getDomAnchorFromElement(
+        element,
+        this.options.anchors?.attribute,
+        environment
+      );
+      const markerPoint = { x: selection.left, y: selection.top };
+      const marker = {
+        viewport: roundPoint(markerPoint),
+        relative: anchor ? getRelativePoint(markerPoint, anchor, environment) : void 0
+      };
+      const reviewSelection = {
+        viewport: toPublicSelection(selection),
+        relative: anchor ? getRelativeSelection(selection, anchor, environment) : void 0
+      };
+      const previewElement = "style" in element ? element : void 0;
+      return {
+        viewport,
+        anchor,
+        marker,
+        selection: reviewSelection,
+        comment,
+        previewElement
+      };
+    });
+    if (!draft) return;
+    this.noteDraft = draft;
+    this.render();
+  }
   async createAreaDraft(selection) {
     const environment = this.getEnvironment();
     if (!environment) return;
@@ -4237,6 +4309,8 @@ function createNoopController() {
     toggle() {
     },
     setMode() {
+    },
+    async startElementReview() {
     },
     getMode() {
       return "idle";

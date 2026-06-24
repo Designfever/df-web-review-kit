@@ -63,6 +63,28 @@ export function getDomAnchorFromPoint(
   };
 }
 
+/** Builds the best DOM anchor candidate set from an exact target element. */
+export function getDomAnchorFromElement(
+  target: Element,
+  configuredAttribute = 'data-qa-id',
+  environment: ReviewEnvironment
+): DomAnchor | undefined {
+  if (target.ownerDocument !== environment.document) return undefined;
+
+  const candidates = createAnchorCandidates(target, configuredAttribute);
+  const primary = candidates[0];
+  if (!primary) return undefined;
+
+  return {
+    ...primary,
+    candidates,
+    htmlSnippet: getElementHtmlSnippet(
+      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+    ),
+    source: getDomSourceHint(target),
+  };
+}
+
 /** Reads the current target-space rectangle for a previously captured anchor. */
 export function getElementViewportSelection(
   anchor: DomAnchor,

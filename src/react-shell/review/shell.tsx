@@ -9,8 +9,10 @@ import {
   ChevronDown as ChevronDownIcon,
   Code2 as Code2Icon,
   Database as DatabaseIcon,
-  GripVertical as GripVerticalIcon,
+  FileText as FileTextIcon,
   Search as SearchIcon,
+  SquareMousePointer as SquareMousePointerIcon,
+  X as XIcon,
 } from 'lucide-react';
 import type {
   NumberedReviewItem,
@@ -19,6 +21,8 @@ import type {
   ReviewMode,
   ReviewSource,
 } from '../../types';
+import { clamp } from '../../core/geometry';
+import { runWithAutoScrollBehavior } from '../../core/scroll';
 
 import type {
   ReviewShellProps,
@@ -121,6 +125,102 @@ type ReviewSidePanel = 'qa' | 'source';
 const SOURCE_PANEL_MAX_WIDTH = 440;
 const SOURCE_PANEL_MIN_WIDTH = 240;
 const SOURCE_PANEL_MAX_HEIGHT = 260;
+const SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
+
+const waitForFrame = (targetWindow: Window | null | undefined) =>
+  new Promise<void>((resolve) => {
+    (targetWindow ?? window).requestAnimationFrame(() => resolve());
+  });
+
+const waitForMs = (ms: number) =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+
+const getScrollElement = (targetDocument: Document) =>
+  targetDocument.scrollingElement as HTMLElement | null;
+
+const scrollElementInTarget = (
+  element: Element,
+  block: 'center' | 'start'
+) => {
+  const targetWindow = element.ownerDocument.defaultView;
+  if (!targetWindow) return;
+
+  const targetDocument = element.ownerDocument;
+  const scrollElement = getScrollElement(targetDocument);
+  const rect = element.getBoundingClientRect();
+  const currentLeft = scrollElement?.scrollLeft ?? targetWindow.scrollX;
+  const currentTop = scrollElement?.scrollTop ?? targetWindow.scrollY;
+  const clientWidth = scrollElement?.clientWidth ?? targetWindow.innerWidth;
+  const clientHeight = scrollElement?.clientHeight ?? targetWindow.innerHeight;
+  const scrollWidth =
+    scrollElement?.scrollWidth ?? targetDocument.documentElement.scrollWidth;
+  const scrollHeight =
+    scrollElement?.scrollHeight ??
+    targetDocument.documentElement.scrollHeight;
+  const nextLeft = clamp(
+    currentLeft + rect.left + rect.width / 2 - clientWidth / 2,
+    0,
+    Math.max(0, scrollWidth - clientWidth)
+  );
+  const nextTop =
+    block === 'center'
+      ? clamp(
+          currentTop + rect.top + rect.height / 2 - clientHeight / 2,
+          0,
+          Math.max(0, scrollHeight - clientHeight)
+        )
+      : clamp(
+          currentTop + rect.top,
+          0,
+          Math.max(0, scrollHeight - clientHeight)
+        );
+
+  runWithAutoScrollBehavior(targetDocument, () => {
+    if (scrollElement) {
+      scrollElement.scrollLeft = Math.round(nextLeft);
+      scrollElement.scrollTop = Math.round(nextTop);
+      return;
+    }
+
+    targetWindow.scrollTo(Math.round(nextLeft), Math.round(nextTop));
+  });
+};
+
+const centerFrameScrollOnElement = (
+  frameScroll: HTMLDivElement | null,
+  frame: HTMLIFrameElement | null,
+  element: Element
+) => {
+  if (!frameScroll || !frame) return;
+
+  const frameScrollRect = frameScroll.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+  const elementHostCenterX =
+    frameRect.left + elementRect.left + elementRect.width / 2;
+  const elementHostCenterY =
+    frameRect.top + elementRect.top + elementRect.height / 2;
+  const visibleCenterX = frameScrollRect.left + frameScrollRect.width / 2;
+  const visibleCenterY = frameScrollRect.top + frameScrollRect.height / 2;
+  const nextLeft = clamp(
+    frameScroll.scrollLeft + elementHostCenterX - visibleCenterX,
+    0,
+    Math.max(0, frameScroll.scrollWidth - frameScroll.clientWidth)
+  );
+  const nextTop = clamp(
+    frameScroll.scrollTop + elementHostCenterY - visibleCenterY,
+    0,
+    Math.max(0, frameScroll.scrollHeight - frameScroll.clientHeight)
+  );
+  const previousScrollBehavior = frameScroll.style.scrollBehavior;
+
+  frameScroll.style.scrollBehavior = 'auto';
+  frameScroll.scrollLeft = Math.round(nextLeft);
+  frameScroll.scrollTop = Math.round(nextTop);
+  frameScroll.style.scrollBehavior = previousScrollBehavior;
+};
 
 const getSectionOutlineFilterTerms = (value: string) =>
   value
@@ -134,6 +234,25 @@ const getSectionOutlineEntryCount = (entries: SectionOutlineEntry[]): number =>
     (count, entry) => count + 1 + getSectionOutlineEntryCount(entry.children),
     0
   );
+
+const DEFAULT_COLLAPSED_ROOT_LABELS = new Set(['FrameHeader', 'FrameFooter']);
+
+const getDefaultCollapsedSectionOutlineIds = (
+  entries: SectionOutlineEntry[]
+) => {
+  const collapsedIds = new Set<string>();
+  const visit = (entry: SectionOutlineEntry) => {
+    const shouldCollapseRoot =
+      entry.depth === 1 && DEFAULT_COLLAPSED_ROOT_LABELS.has(entry.label);
+    if ((entry.depth >= 2 || shouldCollapseRoot) && entry.children.length > 0) {
+      collapsedIds.add(entry.id);
+    }
+    entry.children.forEach(visit);
+  };
+
+  entries.forEach(visit);
+  return collapsedIds;
+};
 
 const matchesSectionOutlineFilter = (
   entry: SectionOutlineEntry,
@@ -260,17 +379,23 @@ export const ReviewShell = ({
     [sourceInspector, sourceRoot]
   );
   const sourceCandidateOptions = useMemo<GetSourceCandidatesOptions>(
-    () => ({ ignore: sourceInspector?.ignore }),
+    () => ({
+      ignore: sourceInspector?.ignore,
+      includePlacer: sourceInspector?.includePlacer,
+    }),
     [sourceInspector]
   );
   const sectionOutlineOptions = useMemo<GetSectionOutlineOptions>(
     () => ({
+      includePlacer: sourceInspector?.includePlacer,
       ignore: sourceInspector?.ignore,
       maxDepth: sourceInspector?.maxDepth,
     }),
     [sourceInspector]
   );
   const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
+  const isSourceTreeHoverOutlineEnabled =
+    sourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === 'qa';
   const isSourceTreePanelVisible =
     isSourceInspectorEnabled && isListVisible && sidePanel === 'source';
@@ -678,6 +803,13 @@ export const ReviewShell = ({
     setSourceInspectorState(null);
   }, []);
 
+  useEffect(() => {
+    clearSourceInspector();
+    setSectionOutlineFilter('');
+    setCollapsedSectionOutlineIds(new Set());
+    setSectionOutline(null);
+  }, [clearSourceInspector, targetSrc]);
+
   const getSourceInspectorRect = useCallback(
     (element: Element): SourceInspectorRect | null => {
       const frame = iframeRef.current;
@@ -811,6 +943,40 @@ export const ReviewShell = ({
     [getSourceInspectorRect, sourceCandidateOptions]
   );
 
+  const showSourceOutlineForElement = useCallback(
+    (element: Element) => {
+      if (!isSourceTreeHoverOutlineEnabled) return;
+
+      const rect = getSourceInspectorRect(element);
+
+      if (!rect) {
+        setSourceInspectorState((current) =>
+          current?.isPinned ? current : null
+        );
+        return;
+      }
+
+      setSourceInspectorState((current) =>
+        current?.isPinned
+          ? current
+          : {
+              candidates: [],
+              isPinned: false,
+              panelLeft: 0,
+              panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
+              panelRight: null,
+              panelTop: 0,
+              rect,
+            }
+      );
+    },
+    [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
+  );
+
+  const clearSourceOutlineHover = useCallback(() => {
+    setSourceInspectorState((current) => (current?.isPinned ? current : null));
+  }, []);
+
   const openSourceCandidate = useCallback(
     (candidate: SourceInspectorCandidate) => {
       const didOpen = openSourceInEditor(candidate.source, {
@@ -838,6 +1004,40 @@ export const ReviewShell = ({
     [iframeRef, sectionOutlineOptions]
   );
 
+  const setSectionOutlineWithDefaultCollapse = useCallback(
+    (nextSectionOutline: SectionOutlineEntry[]) => {
+      setSectionOutline(nextSectionOutline);
+      setCollapsedSectionOutlineIds(
+        getDefaultCollapsedSectionOutlineIds(nextSectionOutline)
+      );
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (sidePanel !== 'source' || !isListVisible) return undefined;
+
+    const refreshSectionOutline = () => {
+      setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
+    };
+
+    const animationFrame = window.requestAnimationFrame(refreshSectionOutline);
+    const firstTimeout = window.setTimeout(refreshSectionOutline, 120);
+    const secondTimeout = window.setTimeout(refreshSectionOutline, 500);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(firstTimeout);
+      window.clearTimeout(secondTimeout);
+    };
+  }, [
+    getCurrentSectionOutline,
+    isListVisible,
+    setSectionOutlineWithDefaultCollapse,
+    sidePanel,
+    targetSrc,
+  ]);
+
   const toggleQaPanel = useCallback(() => {
     setSidePanel('qa');
     setIsListVisible((current) => (sidePanel === 'qa' ? !current : true));
@@ -852,13 +1052,13 @@ export const ReviewShell = ({
     }
 
     setSidePanel('source');
-    setCollapsedSectionOutlineIds(new Set());
-    setSectionOutline(getCurrentSectionOutline());
+    setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
     setIsListVisible(true);
   }, [
     getCurrentSectionOutline,
     isListVisible,
     isSourceInspectorEnabled,
+    setSectionOutlineWithDefaultCollapse,
     setIsListVisible,
     sidePanel,
   ]);
@@ -876,8 +1076,13 @@ export const ReviewShell = ({
   }, []);
 
   const scrollToSection = useCallback((entry: SectionOutlineEntry) => {
-    entry.element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
+    scrollElementInTarget(entry.element, 'start');
+    centerFrameScrollOnElement(
+      frameScrollRef.current,
+      iframeRef.current,
+      entry.element
+    );
+  }, [frameScrollRef, iframeRef]);
 
   const openSectionSource = useCallback(
     (entry: SectionOutlineEntry) => {
@@ -896,6 +1101,65 @@ export const ReviewShell = ({
       showToast(didOpen ? 'Data opened' : 'Data hint not found');
     },
     [showToast, sourceOpenOptions]
+  );
+
+  const startSectionDomReview = useCallback(
+    (entry: SectionOutlineEntry) => {
+      if (!canWriteDom) {
+        showToast('DOM QA unavailable');
+        return;
+      }
+
+      clearSourceInspector();
+      setIsListVisible(false);
+
+      let targetWindow: Window | null = null;
+      try {
+        targetWindow =
+          entry.element.ownerDocument.defaultView ??
+          iframeRef.current?.contentWindow ??
+          null;
+      } catch {
+        targetWindow = null;
+      }
+
+      void waitForMs(SOURCE_TREE_PANEL_CLOSE_DELAY_MS)
+        .then(async () => {
+          initReviewKit();
+          await waitForFrame(targetWindow);
+          const controller = controllerRef.current;
+          if (!controller) {
+            showToast('DOM QA unavailable');
+            return;
+          }
+
+          scrollElementInTarget(entry.element, 'center');
+          await waitForFrame(targetWindow);
+          centerFrameScrollOnElement(
+            frameScrollRef.current,
+            iframeRef.current,
+            entry.element
+          );
+          await waitForFrame(targetWindow);
+          await controller.startElementReview(entry.element);
+          await waitForFrame(targetWindow);
+          setMode(controller.getMode());
+        })
+        .catch(() => {
+          setMode(controllerRef.current?.getMode() ?? 'idle');
+        });
+    },
+    [
+      canWriteDom,
+      clearSourceInspector,
+      controllerRef,
+      frameScrollRef,
+      iframeRef,
+      initReviewKit,
+      setIsListVisible,
+      setMode,
+      showToast,
+    ]
   );
 
   const cleanupSourceOpenShortcut = useCallback(() => {
@@ -950,7 +1214,7 @@ export const ReviewShell = ({
         background: rgba(15, 23, 42, 0.86) !important;
         box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24) !important;
         content: "Source select" !important;
-        font: 700 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+        font: 500 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         pointer-events: none !important;
       }
 
@@ -967,7 +1231,7 @@ export const ReviewShell = ({
         color: #ffffff !important;
         background: rgba(15, 23, 42, 0.9) !important;
         box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28) !important;
-        font: 800 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+        font: 500 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
         overflow-wrap: anywhere !important;
         pointer-events: none !important;
         white-space: normal !important;
@@ -1218,8 +1482,7 @@ export const ReviewShell = ({
     );
     bindSourceOpenShortcut();
     if (sidePanel === 'source' && isListVisible) {
-      setCollapsedSectionOutlineIds(new Set());
-      setSectionOutline(getCurrentSectionOutline());
+      setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
     }
   }, [
     bindSourceOpenShortcut,
@@ -1229,6 +1492,7 @@ export const ReviewShell = ({
     isListVisible,
     mode,
     refreshTargetFigmaConfig,
+    setSectionOutlineWithDefaultCollapse,
     sidePanel,
   ]);
 
@@ -1342,10 +1606,27 @@ export const ReviewShell = ({
       !isSectionOutlineFiltering && collapsedSectionOutlineIds.has(entry.id);
 
     return (
-      <div className="df-review-section-outline-item" key={entry.id}>
+      <div
+        className={`df-review-section-outline-item is-depth-${entry.depth}`}
+        key={entry.id}
+      >
         <div
           className="df-review-section-outline-row"
           style={{ paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` }}
+          onMouseEnter={() => showSourceOutlineForElement(entry.element)}
+          onMouseLeave={clearSourceOutlineHover}
+          onMouseOver={() => showSourceOutlineForElement(entry.element)}
+          onMouseOut={(event) => {
+            if (
+              event.relatedTarget instanceof Node &&
+              event.currentTarget.contains(event.relatedTarget)
+            ) {
+              return;
+            }
+            clearSourceOutlineHover();
+          }}
+          onPointerEnter={() => showSourceOutlineForElement(entry.element)}
+          onPointerLeave={clearSourceOutlineHover}
         >
           {hasChildren ? (
             <button
@@ -1375,7 +1656,6 @@ export const ReviewShell = ({
             onClick={() => scrollToSection(entry)}
           >
             <span>{entry.label}</span>
-            <small>{entry.filePath}</small>
           </button>
           <span className="df-review-section-outline-links">
             <button
@@ -1397,6 +1677,22 @@ export const ReviewShell = ({
               onClick={() => openSectionSource(entry)}
             >
               <Code2Icon aria-hidden="true" />
+            </button>
+            <span
+              aria-hidden="true"
+              className="df-review-section-outline-divider"
+            >
+              |
+            </span>
+            <button
+              aria-label={`Start DOM QA for ${entry.label}`}
+              className="df-review-section-outline-link is-dom-select"
+              title="DOM select"
+              type="button"
+              disabled={!canWriteDom}
+              onClick={() => startSectionDomReview(entry)}
+            >
+              <SquareMousePointerIcon aria-hidden="true" />
             </button>
           </span>
         </div>
@@ -1437,15 +1733,6 @@ export const ReviewShell = ({
         }}
         onOpenSettings={openFigmaSettings}
       />
-
-      {currentPagePresenceUsers.length > 0 && (
-        <div className="df-review-presence-row">
-          <PresenceOverlay
-            presenceSessionId={presenceSessionId}
-            users={currentPagePresenceUsers}
-          />
-        </div>
-      )}
 
       {isSitemapOpen && (
         <SitemapModal
@@ -1517,11 +1804,11 @@ export const ReviewShell = ({
           }`}
           type="button"
           onClick={toggleQaPanel}
+          title="QA"
         >
           <span aria-hidden="true">
-            <GripVerticalIcon />
+            <FileTextIcon />
           </span>
-          <strong>QA</strong>
         </button>
         {isSourceInspectorEnabled && (
           <button
@@ -1537,12 +1824,18 @@ export const ReviewShell = ({
             }`}
             type="button"
             onClick={toggleSourceTreePanel}
+            title="Source Tree"
           >
             <span aria-hidden="true">
-              <Code2Icon />
+              <SearchIcon />
             </span>
-            <strong>SOURCE</strong>
           </button>
+        )}
+        {currentPagePresenceUsers.length > 0 && (
+          <PresenceOverlay
+            presenceSessionId={presenceSessionId}
+            users={currentPagePresenceUsers}
+          />
         )}
       </div>
 
@@ -1597,19 +1890,32 @@ export const ReviewShell = ({
                     : `${sectionOutline?.length ?? 0} roots`}
                 </small>
               </span>
-              <label className="df-review-section-outline-filter">
+              <div className="df-review-section-outline-filter">
                 <SearchIcon aria-hidden="true" />
                 <input
                   aria-label="Filter source tree"
-                  type="search"
+                  type="text"
                   value={sectionOutlineFilter}
                   placeholder="Filter"
+                  autoComplete="off"
+                  enterKeyHint="search"
                   spellCheck={false}
                   onChange={(event) =>
                     setSectionOutlineFilter(event.currentTarget.value)
                   }
                 />
-              </label>
+                {sectionOutlineFilter && (
+                  <button
+                    aria-label="Clear source tree filter"
+                    className="df-review-section-outline-filter-clear"
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => setSectionOutlineFilter('')}
+                  >
+                    <XIcon aria-hidden="true" />
+                  </button>
+                )}
+              </div>
             </div>
             {filteredSectionOutline.length > 0 ? (
               <div className="df-review-section-outline-list">
@@ -1617,7 +1923,7 @@ export const ReviewShell = ({
               </div>
             ) : (
               <div className="df-review-section-outline-empty">
-                {sectionOutline
+                {isSectionOutlineFiltering
                   ? 'No source matches'
                   : 'No sections found'}
               </div>
@@ -1703,7 +2009,7 @@ export const ReviewShell = ({
                 {sourceInspectorState.candidates.map((candidate) => (
                   <button
                     key={candidate.id}
-                    className="df-review-source-candidate"
+                    className={`df-review-source-candidate is-${candidate.kind}`}
                     type="button"
                     onClick={(event) => {
                       event.preventDefault();
@@ -1714,10 +2020,7 @@ export const ReviewShell = ({
                     <span className="df-review-source-candidate-main">
                       <strong>{candidate.label}</strong>
                       <span>{candidate.filePath}</span>
-                      <small>
-                        {candidate.positionLabel ||
-                          (candidate.usesPosition ? '' : 'file only')}
-                      </small>
+                      <small>{candidate.positionLabel || '-:-'}</small>
                     </span>
                   </button>
                 ))}

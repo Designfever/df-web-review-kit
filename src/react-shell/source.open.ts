@@ -39,6 +39,7 @@ export type SourceCandidate = {
   positionLabel: string;
   confidence: number;
   confidenceLabel: 'high' | 'medium' | 'low';
+  kind: 'source' | 'data';
   usesPosition: boolean;
   source: DomSourceHint;
 };
@@ -55,6 +56,7 @@ export const getElementSourceHint = (
 export type SourceIgnorePattern = string | RegExp;
 
 export type GetSourceCandidatesOptions = {
+  includePlacer?: boolean;
   ignore?: readonly SourceIgnorePattern[];
 };
 
@@ -79,22 +81,26 @@ export const getSourceCandidates = (
 
   const candidates: SourceCandidate[] = [];
   const seen = new Set<string>();
-  const add = (element: Element, source: DomSourceHint | undefined, depth: number) => {
+  const add = (
+    element: Element,
+    source: DomSourceHint | undefined,
+    depth: number,
+    kind: SourceCandidate['kind']
+  ) => {
     if (!source?.file) return;
     // 같은 파일은 1개만(가장 안쪽=클릭에 가까운 것). 중첩 primitive 의 줄 단위 중복을 막는다.
-    const key = source.file.replace(/\\/g, '/');
-    if (seen.has(key)) return;
-    seen.add(key);
-    candidates.push(createSourceCandidate(element, source, depth));
+    const key = getSourceFileCompareKey(source.file);
+    if (!addSourceFileCompareKey(seen, key)) return;
+    candidates.push(createSourceCandidate(element, source, depth, kind));
   };
 
   // 클릭 지점에서 부모로 거슬러 올라가며 수집
   let element: Element | null = startElement;
   let depth = 0;
   while (element && element.nodeType === 1) {
-    add(element, getSourceHintFromElement(element), depth);
+    add(element, getSourceHintFromElement(element), depth, 'source');
     // page data 파일 출처(__wrkDataFile)는 별도 후보로. 라인이 있으므로 depth 0 으로 위치 유지.
-    add(element, getDataHintFromElement(element), 0);
+    add(element, getDataHintFromElement(element), 0, 'data');
     if (element === element.ownerDocument.documentElement) break;
     element = element.parentElement;
     depth += 1;
@@ -102,10 +108,12 @@ export const getSourceCandidates = (
 
   // 인프라/래퍼 파일 숨김. 전부 걸러지면 빈 후보 대신 원본을 그대로 노출.
   const ignore = options?.ignore;
-  const visible = ignore?.length
-    ? candidates.filter((c) => !matchesIgnore(c.source.file ?? '', ignore))
-    : candidates;
-  return (visible.length ? visible : candidates).slice(0, 8);
+  const visible = candidates.filter(
+    (candidate) =>
+      !isCoreOutlineNode(candidate.label, candidate.source.file) &&
+      !(ignore?.length && matchesIgnore(candidate.source.file ?? '', ignore))
+  );
+  return visible.slice(0, 8);
 };
 
 export type SectionOutlineEntry = {
@@ -125,46 +133,48 @@ export type GetSectionOutlineOptions = GetSourceCandidatesOptions & {
 
 /**
  * 섹션 래퍼와 frame landmark(header/footer)를 루트로 source tree를 만든다.
- * Placer 계열 primitive는 tree noise가 커서 내려가지 않는다.
+ * Placer 계열 primitive는 기본으로 숨기고, includePlacer 옵션에서만 표시한다.
  */
 export const getSectionOutline = (
   root: ParentNode,
   options?: GetSectionOutlineOptions
 ): SectionOutlineEntry[] => {
   const maxDepth = options?.maxDepth ?? 9;
-  return getSectionOutlineRoots(root, options?.ignore).map((element, index) => {
-      const source = getSourceHintFromElement(element);
-      const label = getOutlineLabel(element, source, 'section');
-      const seen = new Set<string>();
-      if (source?.file) seen.add(getOutlineSourceKey(source));
-      return {
-        id: `${label}-${index}`,
-        label,
-        depth: 1,
-        filePath: getDisplaySourcePath(source?.file) ?? label,
+  return getSectionOutlineRoots(root, options).map((element, index) => {
+    const source = getSourceHintFromElement(element);
+    const label = getOutlineLabel(element, source, 'section');
+    const seen = new Set<string>();
+    if (source?.file) {
+      addSourceFileCompareKey(seen, getOutlineSourceKey(source));
+    }
+    return {
+      id: `${label}-${index}`,
+      label,
+      depth: 1,
+      filePath: getDisplaySourcePath(source?.file) ?? label,
+      element,
+      source,
+      data: getDataHintFromElement(element),
+      children: getSectionOutlineChildren(
         element,
-        source,
-        data: getDataHintFromElement(element),
-        children: getSectionOutlineChildren(
-          element,
-          2,
-          maxDepth,
-          seen,
-          options?.ignore
-        ),
-      };
-    });
+        2,
+        maxDepth,
+        seen,
+        options
+      ),
+    };
+  });
 };
 
 function getSectionOutlineRoots(
   root: ParentNode,
-  ignore: readonly SourceIgnorePattern[] | undefined
+  options: GetSectionOutlineOptions | undefined
 ) {
   return Array.from(root.querySelectorAll(SECTION_OUTLINE_ROOT_SELECTOR)).filter(
     (element) => {
       const source = getSourceHintFromElement(element);
       const label = getOutlineLabel(element, source, '');
-      return !isSkippedOutlineNode(label, source?.file, ignore);
+      return !isSkippedOutlineNode(label, source?.file, options);
     }
   );
 }
@@ -174,7 +184,7 @@ function getSectionOutlineChildren(
   depth: number,
   maxDepth: number,
   seen: Set<string>,
-  ignore: readonly SourceIgnorePattern[] | undefined
+  options: GetSectionOutlineOptions | undefined
 ): SectionOutlineEntry[] {
   if (depth > maxDepth) return [];
 
@@ -183,14 +193,23 @@ function getSectionOutlineChildren(
     const source = getSourceHintFromElement(child);
     const label = getOutlineLabel(child, source, child.tagName.toLowerCase());
     const sourceKey = source?.file ? getOutlineSourceKey(source) : '';
-    const isNewSource = Boolean(sourceKey) && !seen.has(sourceKey);
+    const isNewSource =
+      Boolean(sourceKey) && !hasEquivalentSourceFileKey(seen, sourceKey);
 
-    if (isSkippedOutlineNode(label, source?.file, ignore)) continue;
+    if (shouldStopOutlineBranch(label, source?.file, options)) continue;
+
+    if (isHiddenOutlineNode(label, source?.file, options)) {
+      entries.push(
+        ...getSectionOutlineChildren(child, depth, maxDepth, seen, options)
+      );
+      continue;
+    }
 
     if (source?.file && isNewSource) {
-      seen.add(sourceKey);
+      const childSeen = new Set(seen);
+      addSourceFileCompareKey(childSeen, sourceKey);
       entries.push({
-        id: `${sourceKey}-${entries.length}`,
+        id: `${sourceKey}-${getElementOutlinePath(child)}-${entries.length}`,
         label,
         depth,
         filePath: getDisplaySourcePath(source.file) ?? source.file,
@@ -201,23 +220,56 @@ function getSectionOutlineChildren(
           child,
           depth + 1,
           maxDepth,
-          seen,
-          ignore
+          childSeen,
+          options
         ),
       });
       continue;
     }
 
     entries.push(
-      ...getSectionOutlineChildren(child, depth, maxDepth, seen, ignore)
+      ...getSectionOutlineChildren(child, depth, maxDepth, seen, options)
     );
   }
 
   return entries;
 }
 
+function getElementOutlinePath(element: Element) {
+  const indices: number[] = [];
+  let current: Element | null = element;
+
+  while (current?.parentElement) {
+    indices.unshift(Array.from(current.parentElement.children).indexOf(current));
+    current = current.parentElement;
+  }
+
+  return indices.join('-');
+}
+
 function getOutlineSourceKey(source: DomSourceHint) {
-  return source.file?.replace(/\\/g, '/') ?? '';
+  return getSourceFileCompareKey(source.file);
+}
+
+function getSourceFileCompareKey(file: string | undefined) {
+  return file?.trim().replace(/\\/g, '/') ?? '';
+}
+
+function addSourceFileCompareKey(seen: Set<string>, key: string) {
+  if (!key || hasEquivalentSourceFileKey(seen, key)) return false;
+  seen.add(key);
+  return true;
+}
+
+function hasEquivalentSourceFileKey(seen: Set<string>, key: string) {
+  for (const seenKey of seen) {
+    if (isEquivalentSourceFileKey(seenKey, key)) return true;
+  }
+  return false;
+}
+
+function isEquivalentSourceFileKey(a: string, b: string) {
+  return a === b || a.endsWith(`/${b}`) || b.endsWith(`/${a}`);
 }
 
 function getOutlineLabel(
@@ -233,14 +285,44 @@ function getOutlineLabel(
   );
 }
 
+function isHiddenOutlineNode(
+  label: string,
+  file: string | undefined,
+  options: GetSourceCandidatesOptions | undefined
+) {
+  const ignore = options?.ignore;
+  const isIgnoredSource =
+    file && ignore?.length ? matchesIgnore(file, ignore) : false;
+  return isCoreOutlineNode(label, file) || isIgnoredSource;
+}
+
+function shouldStopOutlineBranch(
+  label: string,
+  file: string | undefined,
+  options: GetSourceCandidatesOptions | undefined
+) {
+  return !options?.includePlacer && isPlacerOutlineNode(label, file);
+}
+
 function isSkippedOutlineNode(
   label: string,
   file: string | undefined,
-  ignore: readonly SourceIgnorePattern[] | undefined
+  options: GetSourceCandidatesOptions | undefined
 ) {
-  const isIgnoredSource =
-    file && ignore?.length ? matchesIgnore(file, ignore) : false;
-  return isPlacerOutlineNode(label, file) || isIgnoredSource;
+  return (
+    shouldStopOutlineBranch(label, file, options) ||
+    isHiddenOutlineNode(label, file, options)
+  );
+}
+
+function isCoreOutlineNode(label: string, file: string | undefined) {
+  const text = `${label} ${file ?? ''}`.toLowerCase();
+  return (
+    text.includes('core.section') ||
+    text.includes('core.content') ||
+    text.includes('core.column') ||
+    ['coresection', 'corecontent', 'corecolumn'].includes(label.toLowerCase())
+  );
 }
 
 function isPlacerOutlineNode(label: string, file: string | undefined) {
@@ -334,7 +416,8 @@ function getSourceHintFromElement(element: Element): DomSourceHint | undefined {
 function createSourceCandidate(
   element: Element,
   source: DomSourceHint,
-  depth: number
+  depth: number,
+  kind: SourceCandidate['kind']
 ): SourceCandidate {
   const confidence = getSourceConfidence(source, depth);
   const fileName = source.file?.split(/[\\/]/).pop() ?? source.file ?? 'source';
@@ -346,7 +429,7 @@ function createSourceCandidate(
   const position = line ? `:${line}${column ? `:${column}` : ''}` : '';
 
   return {
-    id: getSourceCandidateKey(source),
+    id: `${kind}:${getSourceCandidateKey(source)}`,
     depth,
     element,
     filePath: getDisplaySourcePath(source.file) ?? fileName,
@@ -356,6 +439,7 @@ function createSourceCandidate(
     confidence,
     confidenceLabel:
       confidence >= 0.82 ? 'high' : confidence >= 0.58 ? 'medium' : 'low',
+    kind,
     usesPosition: confidence >= 0.72 && Boolean(line),
     source,
   };

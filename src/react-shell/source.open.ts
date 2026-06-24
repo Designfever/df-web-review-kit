@@ -12,6 +12,14 @@ const SOURCE_SELECTOR = [
   '[data-section-id]',
 ].join(', ');
 
+const SECTION_OUTLINE_ROOT_SELECTOR = [
+  '[data-wrk-source-component]',
+  'header[data-wrk-source-file]',
+  'footer[data-wrk-source-file]',
+  '[role="banner"][data-wrk-source-file]',
+  '[role="contentinfo"][data-wrk-source-file]',
+].join(', ');
+
 export const getSourceHintElement = (target: EventTarget | null) => {
   return getEventElement(target)?.closest(SOURCE_SELECTOR) ?? null;
 };
@@ -104,32 +112,140 @@ export type SectionOutlineEntry = {
   id: string;
   label: string;
   filePath: string;
+  depth: number;
   element: Element;
   source: DomSourceHint | undefined;
   data: DomSourceHint | undefined;
+  children: SectionOutlineEntry[];
+};
+
+export type GetSectionOutlineOptions = GetSourceCandidatesOptions & {
+  maxDepth?: number;
 };
 
 /**
- * 섹션 래퍼(`data-wrk-source-component` 가진 요소)를 문서 순서대로 모은다.
- * Option 좌측 아웃라인 패널에서 사용한다.
+ * 섹션 래퍼와 frame landmark(header/footer)를 루트로 source tree를 만든다.
+ * Placer 계열 primitive는 tree noise가 커서 내려가지 않는다.
  */
-export const getSectionOutline = (root: ParentNode): SectionOutlineEntry[] => {
-  return Array.from(root.querySelectorAll('[data-wrk-source-component]')).map(
-    (element, index) => {
-      const label =
-        element.getAttribute('data-wrk-source-component')?.trim() || 'section';
+export const getSectionOutline = (
+  root: ParentNode,
+  options?: GetSectionOutlineOptions
+): SectionOutlineEntry[] => {
+  const maxDepth = options?.maxDepth ?? 9;
+  return getSectionOutlineRoots(root, options?.ignore).map((element, index) => {
       const source = getSourceHintFromElement(element);
+      const label = getOutlineLabel(element, source, 'section');
+      const seen = new Set<string>();
+      if (source?.file) seen.add(getOutlineSourceKey(source));
       return {
         id: `${label}-${index}`,
         label,
+        depth: 1,
         filePath: getDisplaySourcePath(source?.file) ?? label,
         element,
         source,
         data: getDataHintFromElement(element),
+        children: getSectionOutlineChildren(
+          element,
+          2,
+          maxDepth,
+          seen,
+          options?.ignore
+        ),
       };
+    });
+};
+
+function getSectionOutlineRoots(
+  root: ParentNode,
+  ignore: readonly SourceIgnorePattern[] | undefined
+) {
+  return Array.from(root.querySelectorAll(SECTION_OUTLINE_ROOT_SELECTOR)).filter(
+    (element) => {
+      const source = getSourceHintFromElement(element);
+      const label = getOutlineLabel(element, source, '');
+      return !isSkippedOutlineNode(label, source?.file, ignore);
     }
   );
-};
+}
+
+function getSectionOutlineChildren(
+  parent: Element,
+  depth: number,
+  maxDepth: number,
+  seen: Set<string>,
+  ignore: readonly SourceIgnorePattern[] | undefined
+): SectionOutlineEntry[] {
+  if (depth > maxDepth) return [];
+
+  const entries: SectionOutlineEntry[] = [];
+  for (const child of Array.from(parent.children)) {
+    const source = getSourceHintFromElement(child);
+    const label = getOutlineLabel(child, source, child.tagName.toLowerCase());
+    const sourceKey = source?.file ? getOutlineSourceKey(source) : '';
+    const isNewSource = Boolean(sourceKey) && !seen.has(sourceKey);
+
+    if (isSkippedOutlineNode(label, source?.file, ignore)) continue;
+
+    if (source?.file && isNewSource) {
+      seen.add(sourceKey);
+      entries.push({
+        id: `${sourceKey}-${entries.length}`,
+        label,
+        depth,
+        filePath: getDisplaySourcePath(source.file) ?? source.file,
+        element: child,
+        source,
+        data: getDataHintFromElement(child),
+        children: getSectionOutlineChildren(
+          child,
+          depth + 1,
+          maxDepth,
+          seen,
+          ignore
+        ),
+      });
+      continue;
+    }
+
+    entries.push(
+      ...getSectionOutlineChildren(child, depth, maxDepth, seen, ignore)
+    );
+  }
+
+  return entries;
+}
+
+function getOutlineSourceKey(source: DomSourceHint) {
+  return source.file?.replace(/\\/g, '/') ?? '';
+}
+
+function getOutlineLabel(
+  element: Element,
+  source: DomSourceHint | undefined,
+  fallback: string
+) {
+  return (
+    source?.component?.trim() ||
+    getComponentNameFromSourceFile(source?.file) ||
+    element.id.trim() ||
+    fallback
+  );
+}
+
+function isSkippedOutlineNode(
+  label: string,
+  file: string | undefined,
+  ignore: readonly SourceIgnorePattern[] | undefined
+) {
+  const isIgnoredSource =
+    file && ignore?.length ? matchesIgnore(file, ignore) : false;
+  return isPlacerOutlineNode(label, file) || isIgnoredSource;
+}
+
+function isPlacerOutlineNode(label: string, file: string | undefined) {
+  return `${label} ${file ?? ''}`.toLowerCase().includes('placer');
+}
 
 export const getSourceOpenUrl = (
   source: DomSourceHint | undefined,

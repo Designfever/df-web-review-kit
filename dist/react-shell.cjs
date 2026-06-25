@@ -8663,6 +8663,14 @@ function createStyleElement() {
       border-color: rgba(99, 215, 199, 0.56);
     }
 
+    .dfwr-note-popover.is-compact-composer,
+    .dfwr-area-draft.is-compact-composer {
+      padding: 36px 12px 12px;
+      border-color: rgba(99, 215, 199, 0.68);
+      background: var(--df-review-color-panel);
+      box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.38);
+    }
+
     .dfwr-note-popover.is-dragging,
     .dfwr-area-draft.is-dragging {
       user-select: none;
@@ -8688,6 +8696,51 @@ function createStyleElement() {
 
     .dfwr-draft-drag-handle:active {
       cursor: grabbing;
+    }
+
+    .dfwr-draft-close {
+      appearance: none;
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--df-review-radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--df-review-color-text-muted);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .dfwr-draft-close:hover,
+    .dfwr-draft-close:focus-visible {
+      border-color: rgba(255, 255, 255, 0.36);
+      background: var(--df-review-color-control-hover);
+      color: var(--df-review-color-text);
+      outline: none;
+    }
+
+    .dfwr-draft-close::before,
+    .dfwr-draft-close::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .dfwr-draft-close::before {
+      transform: rotate(45deg);
+    }
+
+    .dfwr-draft-close::after {
+      transform: rotate(-45deg);
     }
 
     .dfwr-area-draft {
@@ -8723,6 +8776,11 @@ function createStyleElement() {
       padding: 0;
     }
 
+    .dfwr-note-popover.is-compact-composer .dfwr-actions,
+    .dfwr-area-draft.is-compact-composer .dfwr-actions {
+      flex-wrap: nowrap;
+    }
+
     .dfwr-form {
       display: grid;
       gap: 10px;
@@ -8745,6 +8803,12 @@ function createStyleElement() {
     .dfwr-textarea:focus {
       outline: 2px solid var(--df-review-color-accent-ring);
       outline-offset: 1px;
+    }
+
+    .dfwr-note-popover.is-compact-composer .dfwr-textarea,
+    .dfwr-area-draft.is-compact-composer .dfwr-textarea {
+      min-height: 96px;
+      max-height: 160px;
     }
 
     @media (hover: none) and (pointer: coarse) {
@@ -9033,11 +9097,18 @@ function createStyleElement() {
       }
     }
 
-    @media (max-width: 520px) {
+    @media (max-width: 768px) {
       .dfwr-panel {
+        left: 8px;
         right: 8px;
-        top: 8px;
-        width: calc(100vw - 16px);
+        top: auto;
+        bottom: 8px;
+        width: auto;
+        max-height: min(70vh, calc(100vh - 16px));
+      }
+
+      .dfwr-note-popover.is-compact-composer,
+      .dfwr-area-draft.is-compact-composer {
         max-height: calc(100vh - 16px);
       }
     }
@@ -9112,6 +9183,7 @@ function formatAnchorMeta(anchor) {
 
 // src/core/web.review.kit.view.ts
 var DEFAULT_ADJUSTMENT_LABEL = "Responsive CSS px adjustments";
+var COMPACT_DRAFT_VIEWPORT_MAX_WIDTH = 768;
 var WebReviewKitView = class {
   constructor(config) {
     this.config = config;
@@ -9175,20 +9247,20 @@ var WebReviewKitView = class {
     const layer = document.createElement("div");
     layer.className = "dfwr-draft-cancel-layer";
     layer.setAttribute("aria-hidden", "true");
-    const cancel = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      this.config.actions.setModeState("idle");
-      this.config.actions.clearDrafts();
-      this.config.actions.setSelectingArea(false);
-      this.config.actions.render();
-    };
     layer.addEventListener("pointerdown", (event) => {
       if (event.button !== 0) return;
-      cancel(event);
+      this.cancelDraft(event);
     });
     return layer;
+  }
+  cancelDraft(event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    event?.stopImmediatePropagation();
+    this.config.actions.setModeState("idle");
+    this.config.actions.clearDrafts();
+    this.config.actions.setSelectingArea(false);
+    this.config.actions.render();
   }
   getDraftAdjustmentMetrics(draft) {
     const adjustment = draft.adjustment;
@@ -9329,6 +9401,36 @@ var WebReviewKitView = class {
       height: estimatedHeight
     });
     return { width, left: position.x, top: position.y };
+  }
+  isCompactDraftViewport(viewport) {
+    return viewport.width <= COMPACT_DRAFT_VIEWPORT_MAX_WIDTH;
+  }
+  applyCompactDraftComposerPosition(popover, environment) {
+    const margin = 12;
+    const bounds = environment.overlayRect;
+    const hostBounds = this.getHostComposerBounds();
+    const availableWidth = Math.max(
+      0,
+      Math.min(bounds.width, hostBounds.width) - margin * 2
+    );
+    const width = Math.max(240, availableWidth);
+    const left = clamp(
+      bounds.left + margin,
+      margin,
+      hostBounds.width - width - margin
+    );
+    const visibleBottom = Math.min(
+      bounds.top + bounds.height,
+      hostBounds.height
+    );
+    const bottom = Math.max(margin, hostBounds.height - visibleBottom + margin);
+    const maxHeight = Math.max(180, Math.min(320, bounds.height - margin * 2));
+    popover.style.left = `${left}px`;
+    popover.style.right = "auto";
+    popover.style.top = "auto";
+    popover.style.bottom = `${bottom}px`;
+    popover.style.width = `${width}px`;
+    popover.style.maxHeight = `${maxHeight}px`;
   }
   getSelectionMqMetrics(selection, viewport) {
     const { scale } = this.getDraftViewportScale(viewport);
@@ -9589,6 +9691,7 @@ ${adjustment}` : adjustment;
     group.className = "dfwr-note-draft";
     if (!environment) return group;
     const isElementDraft = this.state.mode === "element" && Boolean(draft.selection);
+    const isCompactComposer = this.isCompactDraftViewport(draft.viewport);
     const hostPoint = toHostPoint(
       isElementDraft ? this.getAdjustedDraftPoint(draft.marker.viewport, draft) : draft.marker.viewport,
       environment
@@ -9611,8 +9714,14 @@ ${adjustment}` : adjustment;
     pin.style.top = `${hostPoint.y}px`;
     const popover = document.createElement("div");
     const position = getPopoverPosition(hostPoint, environment);
-    popover.className = `dfwr-note-popover${isElementDraft ? " is-composer" : ""}`;
-    if (isElementDraft) {
+    popover.className = [
+      "dfwr-note-popover",
+      isElementDraft || isCompactComposer ? "is-composer" : "",
+      isCompactComposer ? "is-compact-composer" : ""
+    ].filter(Boolean).join(" ");
+    if (isCompactComposer) {
+      this.applyCompactDraftComposerPosition(popover, environment);
+    } else if (isElementDraft) {
       const selection = draft.selection ? toHostSelection(
         this.getAdjustedDraftSelection(
           toViewportSelection(draft.selection.viewport),
@@ -9635,7 +9744,7 @@ ${adjustment}` : adjustment;
     }
     const form = document.createElement("form");
     form.className = "dfwr-form";
-    const meta = isElementDraft ? void 0 : document.createElement("div");
+    const meta = isElementDraft || isCompactComposer ? void 0 : document.createElement("div");
     if (meta) {
       meta.className = "dfwr-item-date";
       meta.textContent = formatNoteDraftMeta(draft);
@@ -9666,7 +9775,7 @@ ${adjustment}` : adjustment;
         selection: currentDraft.selection
       });
     };
-    const adjustmentControls = isElementDraft ? this.createAdjustmentControls({
+    const adjustmentControls = isElementDraft && !isCompactComposer ? this.createAdjustmentControls({
       draft,
       pin,
       popover,
@@ -9680,8 +9789,13 @@ ${adjustment}` : adjustment;
       textarea,
       actions
     );
-    const dragHandle = isElementDraft ? this.createDraftDragHandle("Move DOM composer") : void 0;
-    popover.append(...dragHandle ? [dragHandle] : [], form);
+    const dragHandle = isElementDraft && !isCompactComposer ? this.createDraftDragHandle("Move DOM composer") : void 0;
+    const close = isCompactComposer ? this.createDraftCloseButton() : void 0;
+    popover.append(
+      ...close ? [close] : [],
+      ...dragHandle ? [dragHandle] : [],
+      form
+    );
     group.append(pin, popover);
     if (dragHandle) {
       this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
@@ -9695,7 +9809,7 @@ ${adjustment}` : adjustment;
     }
     this.attachDraftPinDrag(
       pin,
-      isElementDraft ? void 0 : popover,
+      isElementDraft || isCompactComposer ? void 0 : popover,
       meta,
       textarea
     );
@@ -9714,6 +9828,16 @@ ${adjustment}` : adjustment;
     handle.type = "button";
     handle.setAttribute("aria-label", label);
     return handle;
+  }
+  createDraftCloseButton() {
+    const close = document.createElement("button");
+    close.className = "dfwr-draft-close";
+    close.type = "button";
+    close.setAttribute("aria-label", "Close composer");
+    close.addEventListener("click", (event) => {
+      this.cancelDraft(event);
+    });
+    return close;
   }
   createIcon(paths) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -9920,7 +10044,7 @@ ${adjustment}` : adjustment;
     }
     this.syncDraftPreview(draft);
   }
-  createAreaForm() {
+  createAreaForm(options) {
     const form = document.createElement("form");
     form.className = "dfwr-form";
     const areaDraft = this.state.areaDraft;
@@ -9931,7 +10055,9 @@ ${adjustment}` : adjustment;
       form.append(empty);
       return form;
     }
-    form.append(this.createAreaMetricsPanel(areaDraft));
+    if (!options?.compact) {
+      form.append(this.createAreaMetricsPanel(areaDraft));
+    }
     const textarea = document.createElement("textarea");
     textarea.className = "dfwr-textarea";
     textarea.placeholder = "Area comment";
@@ -10008,32 +10134,48 @@ ${adjustment}` : adjustment;
   createAreaDraftPopover(draft) {
     const environment = this.config.getEnvironment();
     const popover = document.createElement("div");
-    popover.className = "dfwr-area-draft is-composer";
+    const isCompactComposer = this.isCompactDraftViewport(draft.viewport);
+    popover.className = [
+      "dfwr-area-draft",
+      "is-composer",
+      isCompactComposer ? "is-compact-composer" : ""
+    ].filter(Boolean).join(" ");
     if (environment && draft.selection) {
-      const selection = toHostSelection(
-        toViewportSelection(draft.selection.viewport),
-        environment
-      );
-      const composer = this.getDraftComposerPosition({
-        selection,
-        environment,
-        composerPosition: draft.composerPosition,
-        estimatedHeight: 220
-      });
-      popover.style.left = `${composer.left}px`;
-      popover.style.top = `${composer.top}px`;
-      popover.style.width = `${composer.width}px`;
-      popover.style.right = "auto";
+      if (isCompactComposer) {
+        this.applyCompactDraftComposerPosition(popover, environment);
+      } else {
+        const selection = toHostSelection(
+          toViewportSelection(draft.selection.viewport),
+          environment
+        );
+        const composer = this.getDraftComposerPosition({
+          selection,
+          environment,
+          composerPosition: draft.composerPosition,
+          estimatedHeight: 220
+        });
+        popover.style.left = `${composer.left}px`;
+        popover.style.top = `${composer.top}px`;
+        popover.style.width = `${composer.width}px`;
+        popover.style.right = "auto";
+      }
     }
-    const dragHandle = this.createDraftDragHandle("Move area composer");
-    popover.append(dragHandle, this.createAreaForm());
-    this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
-      const areaDraft = this.state.areaDraft ?? draft;
-      this.config.actions.setAreaDraft({
-        ...areaDraft,
-        composerPosition
+    const close = isCompactComposer ? this.createDraftCloseButton() : void 0;
+    const dragHandle = !isCompactComposer ? this.createDraftDragHandle("Move area composer") : void 0;
+    popover.append(
+      ...close ? [close] : [],
+      ...dragHandle ? [dragHandle] : [],
+      this.createAreaForm({ compact: isCompactComposer })
+    );
+    if (dragHandle) {
+      this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
+        const areaDraft = this.state.areaDraft ?? draft;
+        this.config.actions.setAreaDraft({
+          ...areaDraft,
+          composerPosition
+        });
       });
-    });
+    }
     return popover;
   }
   createFormActions(saveLabel, onSave, options) {
@@ -10053,11 +10195,7 @@ ${adjustment}` : adjustment;
     cancel.type = "button";
     cancel.textContent = "Cancel";
     cancel.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      this.config.actions.setModeState("idle");
-      this.config.actions.clearDrafts();
-      this.config.actions.render();
+      this.cancelDraft(event);
     });
     if (options?.beforeSave?.length || options?.className) {
       actions.append(cancel, ...options.beforeSave ?? [], save);

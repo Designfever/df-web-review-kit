@@ -574,6 +574,14 @@ export function createStyleElement() {
       border-color: rgba(99, 215, 199, 0.56);
     }
 
+    .dfwr-note-popover.is-compact-composer,
+    .dfwr-area-draft.is-compact-composer {
+      padding: 36px 12px 12px;
+      border-color: rgba(99, 215, 199, 0.68);
+      background: var(--df-review-color-panel);
+      box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.38);
+    }
+
     .dfwr-note-popover.is-dragging,
     .dfwr-area-draft.is-dragging {
       user-select: none;
@@ -599,6 +607,51 @@ export function createStyleElement() {
 
     .dfwr-draft-drag-handle:active {
       cursor: grabbing;
+    }
+
+    .dfwr-draft-close {
+      appearance: none;
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--df-review-radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--df-review-color-text-muted);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .dfwr-draft-close:hover,
+    .dfwr-draft-close:focus-visible {
+      border-color: rgba(255, 255, 255, 0.36);
+      background: var(--df-review-color-control-hover);
+      color: var(--df-review-color-text);
+      outline: none;
+    }
+
+    .dfwr-draft-close::before,
+    .dfwr-draft-close::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .dfwr-draft-close::before {
+      transform: rotate(45deg);
+    }
+
+    .dfwr-draft-close::after {
+      transform: rotate(-45deg);
     }
 
     .dfwr-area-draft {
@@ -634,6 +687,11 @@ export function createStyleElement() {
       padding: 0;
     }
 
+    .dfwr-note-popover.is-compact-composer .dfwr-actions,
+    .dfwr-area-draft.is-compact-composer .dfwr-actions {
+      flex-wrap: nowrap;
+    }
+
     .dfwr-form {
       display: grid;
       gap: 10px;
@@ -656,6 +714,12 @@ export function createStyleElement() {
     .dfwr-textarea:focus {
       outline: 2px solid var(--df-review-color-accent-ring);
       outline-offset: 1px;
+    }
+
+    .dfwr-note-popover.is-compact-composer .dfwr-textarea,
+    .dfwr-area-draft.is-compact-composer .dfwr-textarea {
+      min-height: 96px;
+      max-height: 160px;
     }
 
     @media (hover: none) and (pointer: coarse) {
@@ -944,11 +1008,18 @@ export function createStyleElement() {
       }
     }
 
-    @media (max-width: 520px) {
+    @media (max-width: 768px) {
       .dfwr-panel {
+        left: 8px;
         right: 8px;
-        top: 8px;
-        width: calc(100vw - 16px);
+        top: auto;
+        bottom: 8px;
+        width: auto;
+        max-height: min(70vh, calc(100vh - 16px));
+      }
+
+      .dfwr-note-popover.is-compact-composer,
+      .dfwr-area-draft.is-compact-composer {
         max-height: calc(100vh - 16px);
       }
     }

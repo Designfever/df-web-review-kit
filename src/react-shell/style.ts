@@ -1569,8 +1569,9 @@ export function ensureReviewShellStyle() {
 
       .df-review-preset-select {
         display: block;
-        flex: 0 1 190px;
-        width: clamp(154px, 26vw, 190px);
+        flex: 0 1 150px;
+        min-width: 128px;
+        width: clamp(128px, 20vw, 150px);
 	    }
 
       .df-review-tool-divider,
@@ -1657,9 +1658,21 @@ export function ensureReviewShellStyle() {
 	    stroke-width: 1.55;
 	  }
 
+  .df-review-side-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    margin-top: auto;
+  }
+
   .df-review-presence-overlay {
     position: relative;
     margin-top: auto;
+  }
+
+  .df-review-side-actions .df-review-presence-overlay {
+    margin-top: 0;
   }
 
   .df-review-presence-button {

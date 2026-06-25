@@ -1,14 +1,11 @@
 import {
-  CircleHelp as CircleHelpIcon,
   Image as ImageIcon,
   LayoutGrid as LayoutGridIcon,
   Map as MapIcon,
   Maximize2 as Maximize2Icon,
   Monitor as MonitorIcon,
-  MoreHorizontal as MoreHorizontalIcon,
   RectangleHorizontal as TabletIcon,
   Ruler as RulerIcon,
-  Settings as SettingsIcon,
   Smartphone as SmartphoneIcon,
   SquareMousePointer as SquareMousePointerIcon,
 } from 'lucide-react';
@@ -39,8 +36,6 @@ interface ReviewTopbarProps {
   onSizeChange: (preset: ReviewShellViewportPreset) => void;
   onToggleRuler: () => void;
   onToggleTargetOverlay: (key: TargetOverlayKey) => void;
-  onOpenInitialPrompt: () => void;
-  onOpenSettings: () => void;
 }
 
 const ReviewScopeIcon = ({ scope }: { scope: ReviewItemScope }) => {
@@ -79,8 +74,6 @@ export const ReviewTopbar = ({
   onSizeChange,
   onToggleRuler,
   onToggleTargetOverlay,
-  onOpenInitialPrompt,
-  onOpenSettings,
 }: ReviewTopbarProps) => {
   const selectedPresetValue = getPresetSelectValue(size);
   const handlePresetSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -207,90 +200,7 @@ export const ReviewTopbar = ({
           >
             <ImageIcon aria-hidden="true" />
           </button>
-          <span className="df-review-tool-divider" aria-hidden="true">
-            |
-          </span>
-          <button
-            aria-label="Open initial prompt"
-            className="df-review-overlay-button is-prompt"
-            type="button"
-            onClick={onOpenInitialPrompt}
-          >
-            <CircleHelpIcon aria-hidden="true" />
-          </button>
-          <button
-            aria-label="Open settings"
-            className="df-review-overlay-button is-settings"
-            type="button"
-            onClick={onOpenSettings}
-          >
-            <SettingsIcon aria-hidden="true" />
-          </button>
         </div>
-        <details className="df-review-overlays-menu">
-          <summary aria-label="Open target tools" title="Tools">
-            <MoreHorizontalIcon aria-hidden="true" />
-          </summary>
-          <div className="df-review-overlays-popover" aria-label="Target tools">
-            {isRulerAvailable && (
-              <button
-                aria-label="Toggle ruler"
-                className={`df-review-overlay-button is-ruler${
-                  isRulerVisible ? ' is-active' : ''
-                }`}
-                type="button"
-                onClick={onToggleRuler}
-              >
-                <RulerIcon aria-hidden="true" />
-              </button>
-            )}
-            <button
-              aria-label="Toggle grid overlay"
-              className={`df-review-overlay-button is-grid${
-                targetOverlayState.grid ? ' is-active' : ''
-              }`}
-              type="button"
-              onClick={() => onToggleTargetOverlay('grid')}
-            >
-              <LayoutGridIcon aria-hidden="true" />
-            </button>
-            <button
-              aria-disabled={!isFigmaOverlayAvailable}
-              aria-label={
-                isFigmaOverlayAvailable
-                  ? 'Toggle Figma overlay'
-                  : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE
-              }
-              className={`df-review-overlay-button is-figma${
-                targetOverlayState.figma ? ' is-active' : ''
-              }${isFigmaOverlayAvailable ? '' : ' is-disabled'}`}
-              disabled={!isFigmaOverlayAvailable}
-              type="button"
-              onClick={() => onToggleTargetOverlay('figma')}
-            >
-              <ImageIcon aria-hidden="true" />
-            </button>
-            <span className="df-review-tool-divider" aria-hidden="true">
-              |
-            </span>
-            <button
-              aria-label="Open initial prompt"
-              className="df-review-overlay-button is-prompt"
-              type="button"
-              onClick={onOpenInitialPrompt}
-            >
-              <CircleHelpIcon aria-hidden="true" />
-            </button>
-            <button
-              aria-label="Open settings"
-              className="df-review-overlay-button is-settings"
-              type="button"
-              onClick={onOpenSettings}
-            >
-              <SettingsIcon aria-hidden="true" />
-            </button>
-          </div>
-        </details>
       </div>
     </header>
   );

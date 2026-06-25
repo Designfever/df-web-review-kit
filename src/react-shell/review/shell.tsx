@@ -7,10 +7,12 @@ import React, {
 } from 'react';
 import {
   ChevronDown as ChevronDownIcon,
+  CircleHelp as CircleHelpIcon,
   Code2 as Code2Icon,
   Database as DatabaseIcon,
   FileText as FileTextIcon,
   Search as SearchIcon,
+  Settings as SettingsIcon,
   SquareMousePointer as SquareMousePointerIcon,
   X as XIcon,
 } from 'lucide-react';
@@ -1728,10 +1730,6 @@ export const ReviewShell = ({
         onSizeChange={setSize}
         onToggleRuler={toggleRuler}
         onToggleTargetOverlay={toggleTargetOverlay}
-        onOpenInitialPrompt={() => {
-          setIsInitialPromptOpen(true);
-        }}
-        onOpenSettings={openFigmaSettings}
       />
 
       {isSitemapOpen && (
@@ -1831,12 +1829,38 @@ export const ReviewShell = ({
             </span>
           </button>
         )}
-        {currentPagePresenceUsers.length > 0 && (
-          <PresenceOverlay
-            presenceSessionId={presenceSessionId}
-            users={currentPagePresenceUsers}
-          />
-        )}
+        <div className="df-review-side-actions">
+          <button
+            aria-label="Open initial prompt"
+            className="df-review-side-toggle"
+            type="button"
+            onClick={() => {
+              setIsInitialPromptOpen(true);
+            }}
+            title="Help"
+          >
+            <span aria-hidden="true">
+              <CircleHelpIcon />
+            </span>
+          </button>
+          <button
+            aria-label="Open settings"
+            className="df-review-side-toggle"
+            type="button"
+            onClick={openFigmaSettings}
+            title="Settings"
+          >
+            <span aria-hidden="true">
+              <SettingsIcon />
+            </span>
+          </button>
+          {currentPagePresenceUsers.length > 0 && (
+            <PresenceOverlay
+              presenceSessionId={presenceSessionId}
+              users={currentPagePresenceUsers}
+            />
+          )}
+        </div>
       </div>
 
       <ReviewQaPanel

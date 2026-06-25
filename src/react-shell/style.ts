@@ -250,6 +250,7 @@ export function ensureReviewShellStyle() {
 
   .df-review-shell {
     --df-review-frame-gutter-x: var(--df-review-space-4);
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 0 48px;
     grid-template-rows: auto auto minmax(0, 1fr);
@@ -3259,15 +3260,37 @@ export function ensureReviewShellStyle() {
       inset 0 1px 0 rgba(255, 255, 255, 0.18);
   }
 
+  @media (max-width: 1024px) {
+    .df-review-shell {
+      grid-template-columns: minmax(0, 1fr) 0;
+    }
+
+    .df-review-shell.is-list-visible {
+      grid-template-columns: minmax(0, 1fr) clamp(320px, 34vw, 420px);
+    }
+
+    .df-review-side-rail {
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 48px;
+      z-index: 900;
+      box-shadow: -1px 0 0 var(--df-review-line);
+    }
+  }
+
 	  @media (max-width: 860px) {
 	    .df-review-shell,
 	    .df-review-shell.is-list-visible {
-	      grid-template-columns: minmax(0, 1fr) 0 48px;
+	      grid-template-columns: minmax(0, 1fr) 0;
 	      grid-template-rows: auto auto minmax(0, 1fr);
 	    }
 
 	    .df-review-shell.is-list-visible {
-	      grid-template-columns: minmax(0, 1fr) minmax(260px, 70vw) 48px;
+	      grid-template-columns: minmax(0, 1fr) minmax(260px, 70vw);
 	    }
 
 	    .df-review-qa-panel {

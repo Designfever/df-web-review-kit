@@ -3746,19 +3746,12 @@ var __iconNode30 = [
 ];
 var Upload = createLucideIcon("upload", __iconNode30);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/user-round.mjs
-var __iconNode31 = [
-  ["circle", { cx: "12", cy: "8", r: "5", key: "1hypcn" }],
-  ["path", { d: "M20 21a8 8 0 0 0-16 0", key: "rfgkzh" }]
-];
-var UserRound = createLucideIcon("user-round", __iconNode31);
-
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode32 = [
+var __iconNode31 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode32);
+var X = createLucideIcon("x", __iconNode31);
 
 // src/react-shell/constants.ts
 var REVIEW_QA_FILTERS = [
@@ -5699,6 +5692,28 @@ var ReviewQaPanel = ({
 import { useState as useState3 } from "react";
 import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
 var getPresenceName = (user) => user.displayName || user.userId;
+var PresenceUserIcon = () => /* @__PURE__ */ jsxs9("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
+  /* @__PURE__ */ jsx11(
+    "circle",
+    {
+      cx: "15",
+      cy: "15",
+      r: "12.5",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2.6"
+    }
+  ),
+  /* @__PURE__ */ jsx11("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
+  /* @__PURE__ */ jsx11(
+    "path",
+    {
+      d: "M7.8 22.1c.9-4.1 3.4-6.1 7.2-6.1s6.3 2 7.2 6.1c-1.7 1.5-4.1 2.4-7.2 2.4s-5.5-.9-7.2-2.4z",
+      fill: "currentColor",
+      stroke: "none"
+    }
+  )
+] });
 var PresenceOverlay = ({
   presenceSessionId,
   users
@@ -5720,7 +5735,7 @@ var PresenceOverlay = ({
             type: "button",
             onClick: () => setIsExpanded((current) => !current),
             children: [
-              /* @__PURE__ */ jsx11(UserRound, { "aria-hidden": "true" }),
+              /* @__PURE__ */ jsx11(PresenceUserIcon, {}),
               /* @__PURE__ */ jsx11("span", { className: "df-review-presence-badge", children: users.length })
             ]
           }
@@ -10887,7 +10902,6 @@ lucide-react/dist/esm/icons/square-mouse-pointer.mjs:
 lucide-react/dist/esm/icons/sticky-note.mjs:
 lucide-react/dist/esm/icons/sun.mjs:
 lucide-react/dist/esm/icons/upload.mjs:
-lucide-react/dist/esm/icons/user-round.mjs:
 lucide-react/dist/esm/icons/x.mjs:
 lucide-react/dist/esm/lucide-react.mjs:
   (**

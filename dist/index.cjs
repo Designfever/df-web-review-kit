@@ -1520,6 +1520,14 @@ function createStyleElement() {
       cursor: default;
     }
 
+    .dfwr-shell.is-docked-composer {
+      position: relative;
+      inset: auto;
+      z-index: auto;
+      padding: 0;
+      pointer-events: auto;
+    }
+
     .dfwr-panel {
       position: fixed;
       right: 16px;
@@ -2020,12 +2028,18 @@ function createStyleElement() {
       border-color: rgba(99, 215, 199, 0.56);
     }
 
-    .dfwr-note-popover.is-compact-composer,
-    .dfwr-area-draft.is-compact-composer {
-      padding: 36px 12px 12px;
-      border-color: rgba(99, 215, 199, 0.68);
-      background: var(--df-review-color-panel);
-      box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.38);
+    .dfwr-shell.is-docked-composer .dfwr-note-popover.is-docked-composer,
+    .dfwr-shell.is-docked-composer .dfwr-area-draft.is-docked-composer {
+      position: relative;
+      left: auto;
+      right: auto;
+      top: auto;
+      z-index: auto;
+      max-height: none;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-textarea {
+      min-height: 184px;
     }
 
     .dfwr-note-popover.is-dragging,
@@ -2055,51 +2069,6 @@ function createStyleElement() {
       cursor: grabbing;
     }
 
-    .dfwr-draft-close {
-      appearance: none;
-      position: absolute;
-      right: 8px;
-      top: 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      padding: 0;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: var(--df-review-radius-sm);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--df-review-color-text-muted);
-      cursor: pointer;
-      pointer-events: auto;
-    }
-
-    .dfwr-draft-close:hover,
-    .dfwr-draft-close:focus-visible {
-      border-color: rgba(255, 255, 255, 0.36);
-      background: var(--df-review-color-control-hover);
-      color: var(--df-review-color-text);
-      outline: none;
-    }
-
-    .dfwr-draft-close::before,
-    .dfwr-draft-close::after {
-      content: "";
-      position: absolute;
-      width: 12px;
-      height: 2px;
-      border-radius: 999px;
-      background: currentColor;
-    }
-
-    .dfwr-draft-close::before {
-      transform: rotate(45deg);
-    }
-
-    .dfwr-draft-close::after {
-      transform: rotate(-45deg);
-    }
-
     .dfwr-area-draft {
       position: fixed;
       right: 16px;
@@ -2121,6 +2090,50 @@ function createStyleElement() {
       padding: 0;
     }
 
+    .dfwr-actions.has-leading {
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .dfwr-actions-leading,
+    .dfwr-actions-primary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .dfwr-actions-primary {
+      margin-left: auto;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading {
+      align-items: stretch;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-button,
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle {
+      height: var(--df-review-control-height-md);
+      min-height: var(--df-review-control-height-md);
+      border-radius: var(--df-review-radius-sm);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-button {
+      min-width: 96px;
+      padding: 0 12px;
+      font-size: var(--df-review-font-size-sm);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle {
+      width: var(--df-review-control-height-md);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle svg {
+      width: 18px;
+      height: 18px;
+    }
+
     .dfwr-note-actions {
       justify-content: flex-end;
     }
@@ -2131,11 +2144,6 @@ function createStyleElement() {
 
     .dfwr-area-draft .dfwr-actions {
       padding: 0;
-    }
-
-    .dfwr-note-popover.is-compact-composer .dfwr-actions,
-    .dfwr-area-draft.is-compact-composer .dfwr-actions {
-      flex-wrap: nowrap;
     }
 
     .dfwr-form {
@@ -2160,12 +2168,6 @@ function createStyleElement() {
     .dfwr-textarea:focus {
       outline: 2px solid var(--df-review-color-accent-ring);
       outline-offset: 1px;
-    }
-
-    .dfwr-note-popover.is-compact-composer .dfwr-textarea,
-    .dfwr-area-draft.is-compact-composer .dfwr-textarea {
-      min-height: 96px;
-      max-height: 160px;
     }
 
     @media (hover: none) and (pointer: coarse) {
@@ -2454,7 +2456,7 @@ function createStyleElement() {
       }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 520px) {
       .dfwr-panel {
         left: 8px;
         right: 8px;
@@ -2462,11 +2464,6 @@ function createStyleElement() {
         bottom: 8px;
         width: auto;
         max-height: min(70vh, calc(100vh - 16px));
-      }
-
-      .dfwr-note-popover.is-compact-composer,
-      .dfwr-area-draft.is-compact-composer {
-        max-height: calc(100vh - 16px);
       }
     }
   `;
@@ -2540,13 +2537,13 @@ function formatAnchorMeta(anchor) {
 
 // src/core/web.review.kit.view.ts
 var DEFAULT_ADJUSTMENT_LABEL = "Responsive CSS px adjustments";
-var COMPACT_DRAFT_VIEWPORT_MAX_WIDTH = 768;
 var WebReviewKitView = class {
   constructor(config) {
     this.config = config;
   }
   clearDraftPreview() {
     this.restoreDraftPreview();
+    this.clearShellComposer();
   }
   render(shadow, hiddenItemsStyle) {
     const state = this.state;
@@ -2557,11 +2554,13 @@ var WebReviewKitView = class {
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
     const hasDismissableDraft = Boolean(state.noteDraft || state.areaDraft);
+    const shouldDockComposer = this.config.options.ui?.panel === false && hasDismissableDraft && Boolean(this.getShellComposerHost());
+    let dockedComposer;
     const shell = document.createElement("div");
     shell.className = [
       "dfwr-shell",
       state.isOpen ? "is-open" : "",
-      hasDismissableDraft ? "has-dismissible-draft" : ""
+      hasDismissableDraft && !shouldDockComposer ? "has-dismissible-draft" : ""
     ].filter(Boolean).join(" ");
     shell.setAttribute("aria-hidden", state.isOpen ? "false" : "true");
     if (this.config.options.ui?.panel !== false) {
@@ -2578,13 +2577,21 @@ var WebReviewKitView = class {
       shell.append(panel);
     }
     shell.append(this.createMarkerLayer());
-    if (state.isOpen && hasDismissableDraft) {
+    if (state.isOpen && hasDismissableDraft && !shouldDockComposer) {
       shell.append(this.createDraftCancelLayer());
     }
     if (state.isOpen && (state.mode === "note" || state.mode === "element")) {
-      shell.append(
-        state.noteDraft ? this.createNotePopover(state.noteDraft) : state.mode === "element" ? this.createElementLayer() : this.createNoteLayer()
-      );
+      if (state.noteDraft) {
+        const noteDraft = this.createNotePopover(state.noteDraft, {
+          dockComposer: shouldDockComposer
+        });
+        shell.append(noteDraft.layer);
+        dockedComposer = noteDraft.composer;
+      } else {
+        shell.append(
+          state.mode === "element" ? this.createElementLayer() : this.createNoteLayer()
+        );
+      }
     }
     if (state.isOpen && state.mode === "area" && !state.areaDraft) {
       shell.append(this.createAreaLayer());
@@ -2593,12 +2600,53 @@ var WebReviewKitView = class {
       if (state.areaDraft.selection) {
         shell.append(this.createAreaDraftOverlay(state.areaDraft));
       }
-      shell.append(this.createAreaDraftPopover(state.areaDraft));
+      const areaComposer = this.createAreaDraftPopover(state.areaDraft, {
+        dockComposer: shouldDockComposer
+      });
+      if (shouldDockComposer) {
+        dockedComposer = areaComposer;
+      } else {
+        shell.append(areaComposer);
+      }
     }
     shadow.append(shell);
+    this.renderShellComposer(dockedComposer);
   }
   get state() {
     return this.config.getState();
+  }
+  getShellComposerHost() {
+    const environment = this.config.getEnvironment();
+    if (this.config.options.ui?.panel !== false) return void 0;
+    return environment?.composerHost ?? void 0;
+  }
+  renderShellComposer(composer) {
+    const host = composer ? this.getShellComposerHost() : void 0;
+    if (!host || !composer) {
+      this.clearShellComposer();
+      return;
+    }
+    if (this.shellComposerHost && this.shellComposerHost !== host) {
+      this.clearShellComposer();
+    }
+    this.shellComposerHost = host;
+    host.dataset.hasDraftComposer = "true";
+    if (host.parentElement) {
+      host.parentElement.dataset.hasDraftComposer = "true";
+    }
+    const shell = document.createElement("div");
+    shell.className = "dfwr-shell is-open is-shell-draft is-docked-composer";
+    shell.append(composer);
+    host.replaceChildren(createStyleElement(), shell);
+  }
+  clearShellComposer() {
+    const host = this.shellComposerHost;
+    host?.replaceChildren();
+    if (host) {
+      delete host.dataset.hasDraftComposer;
+      delete host.parentElement?.dataset.hasDraftComposer;
+    }
+    this.shellComposerHost = void 0;
   }
   createDraftCancelLayer() {
     const layer = document.createElement("div");
@@ -2758,36 +2806,6 @@ var WebReviewKitView = class {
       height: estimatedHeight
     });
     return { width, left: position.x, top: position.y };
-  }
-  isCompactDraftViewport(viewport) {
-    return viewport.width <= COMPACT_DRAFT_VIEWPORT_MAX_WIDTH;
-  }
-  applyCompactDraftComposerPosition(popover, environment) {
-    const margin = 12;
-    const bounds = environment.overlayRect;
-    const hostBounds = this.getHostComposerBounds();
-    const availableWidth = Math.max(
-      0,
-      Math.min(bounds.width, hostBounds.width) - margin * 2
-    );
-    const width = Math.max(240, availableWidth);
-    const left = clamp(
-      bounds.left + margin,
-      margin,
-      hostBounds.width - width - margin
-    );
-    const visibleBottom = Math.min(
-      bounds.top + bounds.height,
-      hostBounds.height
-    );
-    const bottom = Math.max(margin, hostBounds.height - visibleBottom + margin);
-    const maxHeight = Math.max(180, Math.min(320, bounds.height - margin * 2));
-    popover.style.left = `${left}px`;
-    popover.style.right = "auto";
-    popover.style.top = "auto";
-    popover.style.bottom = `${bottom}px`;
-    popover.style.width = `${width}px`;
-    popover.style.maxHeight = `${maxHeight}px`;
   }
   getSelectionMqMetrics(selection, viewport) {
     const { scale } = this.getDraftViewportScale(viewport);
@@ -3042,13 +3060,12 @@ ${adjustment}` : adjustment;
     empty.textContent = this.state.noteDraft ? "Write the note in the page box." : this.state.mode === "element" ? "Click an element to add QA." : "Click on the page to place a note.";
     return empty;
   }
-  createNotePopover(draft) {
+  createNotePopover(draft, options = {}) {
     const environment = this.config.getEnvironment();
     const group = document.createElement("div");
     group.className = "dfwr-note-draft";
-    if (!environment) return group;
+    if (!environment) return { layer: group, composer: void 0 };
     const isElementDraft = this.state.mode === "element" && Boolean(draft.selection);
-    const isCompactComposer = this.isCompactDraftViewport(draft.viewport);
     const hostPoint = toHostPoint(
       isElementDraft ? this.getAdjustedDraftPoint(draft.marker.viewport, draft) : draft.marker.viewport,
       environment
@@ -3073,11 +3090,11 @@ ${adjustment}` : adjustment;
     const position = getPopoverPosition(hostPoint, environment);
     popover.className = [
       "dfwr-note-popover",
-      isElementDraft || isCompactComposer ? "is-composer" : "",
-      isCompactComposer ? "is-compact-composer" : ""
+      isElementDraft ? "is-composer" : "",
+      options.dockComposer ? "is-docked-composer" : ""
     ].filter(Boolean).join(" ");
-    if (isCompactComposer) {
-      this.applyCompactDraftComposerPosition(popover, environment);
+    if (options.dockComposer) {
+      popover.style.width = "100%";
     } else if (isElementDraft) {
       const selection = draft.selection ? toHostSelection(
         this.getAdjustedDraftSelection(
@@ -3101,7 +3118,7 @@ ${adjustment}` : adjustment;
     }
     const form = document.createElement("form");
     form.className = "dfwr-form";
-    const meta = isElementDraft || isCompactComposer ? void 0 : document.createElement("div");
+    const meta = isElementDraft ? void 0 : document.createElement("div");
     if (meta) {
       meta.className = "dfwr-item-date";
       meta.textContent = formatNoteDraftMeta(draft);
@@ -3132,28 +3149,32 @@ ${adjustment}` : adjustment;
         selection: currentDraft.selection
       });
     };
-    const adjustmentControls = isElementDraft && !isCompactComposer ? this.createAdjustmentControls({
+    const adjustmentControls = isElementDraft ? this.createAdjustmentControls({
       draft,
       pin,
       popover,
       selectionHighlight,
-      textarea
+      textarea,
+      dockToggle: options.dockComposer
     }) : void 0;
-    const actions = this.createFormActions("Save note", saveDraft);
+    const actions = this.createFormActions("Save note", saveDraft, {
+      leading: adjustmentControls?.actionButton ? [adjustmentControls.actionButton] : void 0
+    });
     form.append(
       ...meta ? [meta] : [],
       ...adjustmentControls ? [adjustmentControls.panel] : [],
       textarea,
       actions
     );
-    const dragHandle = isElementDraft && !isCompactComposer ? this.createDraftDragHandle("Move DOM composer") : void 0;
-    const close = isCompactComposer ? this.createDraftCloseButton() : void 0;
+    const dragHandle = isElementDraft && !options.dockComposer ? this.createDraftDragHandle("Move DOM composer") : void 0;
     popover.append(
-      ...close ? [close] : [],
       ...dragHandle ? [dragHandle] : [],
       form
     );
-    group.append(pin, popover);
+    group.append(pin);
+    if (!options.dockComposer) {
+      group.append(popover);
+    }
     if (dragHandle) {
       this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
         const noteDraft = this.state.noteDraft ?? draft;
@@ -3166,18 +3187,23 @@ ${adjustment}` : adjustment;
     }
     this.attachDraftPinDrag(
       pin,
-      isElementDraft || isCompactComposer ? void 0 : popover,
+      isElementDraft || options.dockComposer ? void 0 : popover,
       meta,
       textarea
     );
-    window.setTimeout(() => {
-      if (draft.adjustment?.isActive) {
-        adjustmentControls?.focusTarget.focus();
-        return;
-      }
-      textarea.focus();
-    }, 0);
-    return group;
+    if (!options.dockComposer) {
+      window.setTimeout(() => {
+        if (draft.adjustment?.isActive) {
+          adjustmentControls?.focusTarget.focus();
+          return;
+        }
+        textarea.focus();
+      }, 0);
+    }
+    return {
+      layer: group,
+      composer: options.dockComposer ? popover : void 0
+    };
   }
   createDraftDragHandle(label) {
     const handle = document.createElement("button");
@@ -3185,16 +3211,6 @@ ${adjustment}` : adjustment;
     handle.type = "button";
     handle.setAttribute("aria-label", label);
     return handle;
-  }
-  createDraftCloseButton() {
-    const close = document.createElement("button");
-    close.className = "dfwr-draft-close";
-    close.type = "button";
-    close.setAttribute("aria-label", "Close composer");
-    close.addEventListener("click", (event) => {
-      this.cancelDraft(event);
-    });
-    return close;
   }
   createIcon(paths) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -3279,7 +3295,8 @@ ${adjustment}` : adjustment;
     pin,
     popover,
     selectionHighlight,
-    textarea
+    textarea,
+    dockToggle
   }) {
     const panel = document.createElement("div");
     panel.className = "dfwr-adjust-panel is-dom-adjust-panel";
@@ -3355,12 +3372,16 @@ ${adjustment}` : adjustment;
         }
       }));
     });
-    header.append(help, adjust);
+    header.append(help);
+    if (!dockToggle) {
+      header.append(adjust);
+    }
     panel.append(header, xyStatus, scaleStatus);
     syncControls(draft);
     return {
       panel,
-      focusTarget: adjust
+      focusTarget: adjust,
+      actionButton: dockToggle ? adjust : void 0
     };
   }
   getAdjustmentKeyDelta(event) {
@@ -3401,7 +3422,7 @@ ${adjustment}` : adjustment;
     }
     this.syncDraftPreview(draft);
   }
-  createAreaForm(options) {
+  createAreaForm() {
     const form = document.createElement("form");
     form.className = "dfwr-form";
     const areaDraft = this.state.areaDraft;
@@ -3412,9 +3433,7 @@ ${adjustment}` : adjustment;
       form.append(empty);
       return form;
     }
-    if (!options?.compact) {
-      form.append(this.createAreaMetricsPanel(areaDraft));
-    }
+    form.append(this.createAreaMetricsPanel(areaDraft));
     const textarea = document.createElement("textarea");
     textarea.className = "dfwr-textarea";
     textarea.placeholder = "Area comment";
@@ -3488,41 +3507,36 @@ ${adjustment}` : adjustment;
     }
     return layer;
   }
-  createAreaDraftPopover(draft) {
+  createAreaDraftPopover(draft, options = {}) {
     const environment = this.config.getEnvironment();
     const popover = document.createElement("div");
-    const isCompactComposer = this.isCompactDraftViewport(draft.viewport);
     popover.className = [
       "dfwr-area-draft",
       "is-composer",
-      isCompactComposer ? "is-compact-composer" : ""
+      options.dockComposer ? "is-docked-composer" : ""
     ].filter(Boolean).join(" ");
-    if (environment && draft.selection) {
-      if (isCompactComposer) {
-        this.applyCompactDraftComposerPosition(popover, environment);
-      } else {
-        const selection = toHostSelection(
-          toViewportSelection(draft.selection.viewport),
-          environment
-        );
-        const composer = this.getDraftComposerPosition({
-          selection,
-          environment,
-          composerPosition: draft.composerPosition,
-          estimatedHeight: 220
-        });
-        popover.style.left = `${composer.left}px`;
-        popover.style.top = `${composer.top}px`;
-        popover.style.width = `${composer.width}px`;
-        popover.style.right = "auto";
-      }
+    if (options.dockComposer) {
+      popover.style.width = "100%";
+    } else if (environment && draft.selection) {
+      const selection = toHostSelection(
+        toViewportSelection(draft.selection.viewport),
+        environment
+      );
+      const composer = this.getDraftComposerPosition({
+        selection,
+        environment,
+        composerPosition: draft.composerPosition,
+        estimatedHeight: 220
+      });
+      popover.style.left = `${composer.left}px`;
+      popover.style.top = `${composer.top}px`;
+      popover.style.width = `${composer.width}px`;
+      popover.style.right = "auto";
     }
-    const close = isCompactComposer ? this.createDraftCloseButton() : void 0;
-    const dragHandle = !isCompactComposer ? this.createDraftDragHandle("Move area composer") : void 0;
+    const dragHandle = options.dockComposer ? void 0 : this.createDraftDragHandle("Move area composer");
     popover.append(
-      ...close ? [close] : [],
       ...dragHandle ? [dragHandle] : [],
-      this.createAreaForm({ compact: isCompactComposer })
+      this.createAreaForm()
     );
     if (dragHandle) {
       this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
@@ -3554,6 +3568,17 @@ ${adjustment}` : adjustment;
     cancel.addEventListener("click", (event) => {
       this.cancelDraft(event);
     });
+    if (options?.leading?.length) {
+      actions.classList.add("has-leading");
+      const leading = document.createElement("div");
+      leading.className = "dfwr-actions-leading";
+      leading.append(...options.leading);
+      const primary = document.createElement("div");
+      primary.className = "dfwr-actions-primary";
+      primary.append(save, cancel);
+      actions.append(leading, primary);
+      return actions;
+    }
     if (options?.beforeSave?.length || options?.className) {
       actions.append(cancel, ...options.beforeSave ?? [], save);
       return actions;
@@ -3982,9 +4007,10 @@ var WebReviewKitApp = class {
       this.toggle();
     };
     this.handleViewportChange = () => {
-      if (!this.isOpen || this.renderFrame) return;
+      if (!this.isOpen || this.renderFrame || this.isDraftComposerFocused()) return;
       this.renderFrame = window.requestAnimationFrame(() => {
         this.renderFrame = void 0;
+        if (this.isDraftComposerFocused()) return;
         this.render();
       });
     };
@@ -4161,6 +4187,14 @@ var WebReviewKitApp = class {
     this.render();
     return true;
   }
+  isDraftComposerFocused() {
+    if (!this.noteDraft && !this.areaDraft) return false;
+    const composerHost = this.getEnvironment()?.composerHost;
+    const activeElement = composerHost?.ownerDocument.activeElement;
+    return Boolean(
+      composerHost && activeElement && composerHost.contains(activeElement)
+    );
+  }
   getEnvironment() {
     const target = typeof this.options.target === "function" ? this.options.target() : this.options.target;
     if (!target) {
@@ -4189,6 +4223,7 @@ var WebReviewKitApp = class {
         height: target.window.innerHeight
       };
       const overlayRect = target.getOverlayRect?.() ?? rect;
+      const composerHost = target.getComposerHost?.();
       return {
         window: target.window,
         document: target.document,
@@ -4203,7 +4238,8 @@ var WebReviewKitApp = class {
           top: overlayRect.top,
           width: overlayRect.width,
           height: overlayRect.height
-        }
+        },
+        composerHost
       };
     } catch {
       return void 0;

@@ -43,5 +43,7 @@ export const getReviewKitTarget = ({
         height: Math.max(0, bottom - top),
       };
     },
+    getComposerHost: () =>
+      document.querySelector<HTMLElement>('.df-review-qa-draft-host'),
   };
 };

@@ -28,6 +28,7 @@ export interface ReviewEnvironment {
     width: number;
     height: number;
   };
+  composerHost?: HTMLElement | null;
 }
 
 /** Returns true when two viewport rectangles overlap. */

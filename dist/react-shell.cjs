@@ -326,13 +326,20 @@ function ensureReviewShellStyle() {
 
 		  .df-review-address {
 		    display: grid;
-		    grid-template-columns: auto minmax(160px, 1fr) auto auto;
+		    grid-template-columns: auto minmax(160px, 1fr) auto;
 		    align-items: stretch;
 		    gap: var(--df-review-space-2);
 		    width: 100%;
 		    max-width: 1440px;
 		    margin: 0 auto;
 		  }
+
+  .df-review-address-actions {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    min-width: 0;
+  }
 
   .df-review-address input {
 	    width: 100%;
@@ -411,6 +418,24 @@ function ensureReviewShellStyle() {
 	    padding: 0;
 	    color: var(--df-review-accent);
 	  }
+
+  .df-review-address-refresh {
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    padding: 0;
+  }
+
+  .df-review-address-refresh svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+  }
 
   .df-review-sitemap-button svg,
   .df-review-sitemap-header button svg {
@@ -1363,8 +1388,7 @@ function ensureReviewShellStyle() {
 	  }
 
 		  .df-review-presets,
-		  .df-review-mode,
-	  .df-review-overlays {
+		  .df-review-mode {
 	    display: flex;
 	    align-items: center;
 	    gap: var(--df-review-space-1-5);
@@ -1375,6 +1399,24 @@ function ensureReviewShellStyle() {
 	    border-radius: var(--df-review-radius-md);
 	    background: var(--df-review-card);
 	  }
+
+  .df-review-overlays {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .df-review-mode {
+    gap: 3px;
+    padding: 3px;
+  }
 
 		  .df-review-tool-divider,
 		  .df-review-mode-divider {
@@ -1494,6 +1536,35 @@ function ensureReviewShellStyle() {
 	    box-shadow: none;
 	    color: var(--df-review-muted);
 	  }
+
+  .df-review-overlay-button {
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+  }
+
+  .df-review-overlay-button:hover,
+  .df-review-overlay-button:focus-visible {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-control-hover);
+    color: var(--df-review-text);
+    outline: 0;
+  }
+
+  .df-review-overlay-button.is-active {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
+    color: var(--df-review-accent);
+  }
+
+  .df-review-mode-button {
+    width: calc(var(--df-review-control-height-md) - 6px);
+    min-width: calc(var(--df-review-control-height-md) - 6px);
+    height: calc(var(--df-review-control-height-md) - 6px);
+    min-height: calc(var(--df-review-control-height-md) - 6px);
+  }
 
   .df-review-overlays-menu {
     position: relative;
@@ -1783,16 +1854,11 @@ function ensureReviewShellStyle() {
     bottom: 8px;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-end;
     gap: 5px;
     width: max-content;
     min-width: 0;
     max-width: 220px;
-    border: 1px solid var(--df-review-line);
-    border-radius: var(--df-review-radius-md);
-    padding: 8px;
-    background: var(--df-review-panel);
-    box-shadow: var(--df-review-shadow-modal);
   }
 
   .df-review-presence-chip {
@@ -1803,6 +1869,7 @@ function ensureReviewShellStyle() {
     max-width: 180px;
     min-width: 0;
     min-height: 22px;
+    justify-content: flex-end;
     border: 1px solid var(--df-review-line-soft);
     border-radius: var(--df-review-radius-pill);
     padding: 0 9px;
@@ -1818,6 +1885,7 @@ function ensureReviewShellStyle() {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: right;
     white-space: nowrap;
   }
 
@@ -1833,7 +1901,7 @@ function ensureReviewShellStyle() {
 	    position: relative;
 	    z-index: 600;
 	    display: grid;
-	    grid-template-rows: minmax(0, 1fr);
+	    grid-template-rows: minmax(0, 1fr) auto;
 	    min-width: 0;
 	    min-height: 0;
 	    overflow: hidden;
@@ -1841,6 +1909,25 @@ function ensureReviewShellStyle() {
 	    background:
 	      linear-gradient(180deg, var(--df-review-panel), var(--df-review-bg));
 	  }
+
+  .df-review-qa-draft-host {
+    position: relative;
+    z-index: 2;
+    display: none;
+    justify-self: end;
+    width: calc(100% - var(--df-review-space-4));
+    margin: 0 var(--df-review-space-2) var(--df-review-space-2) auto;
+    min-width: 0;
+  }
+
+  .df-review-qa-draft-host[data-has-draft-composer="true"] {
+    display: block;
+  }
+
+  .df-review-qa-panel[data-has-draft-composer="true"] .df-review-panel-body {
+    opacity: 0.36;
+    pointer-events: none;
+  }
 
 	  .df-review-shell:not(.is-list-visible) .df-review-qa-panel,
   .df-review-qa-panel[aria-hidden="true"] {
@@ -1926,13 +2013,14 @@ function ensureReviewShellStyle() {
 		  .df-review-list-meta span {
 		    min-width: 0;
 		    overflow: hidden;
+		    color: #fff;
 		    text-overflow: ellipsis;
 		    white-space: nowrap;
 		  }
 
 			  .df-review-list-meta strong {
 			    flex: 0 0 auto;
-			    color: var(--df-review-muted);
+			    color: #fff;
 			    font-size: var(--df-review-font-size-xs);
 			    font-variant-numeric: tabular-nums;
           font-weight: 500;
@@ -1990,27 +2078,28 @@ function ensureReviewShellStyle() {
     display: flex;
     align-items: center;
     justify-self: end;
-    gap: var(--df-review-space-1-5);
-    height: var(--df-review-control-height-md);
-    min-height: var(--df-review-control-height-md);
+    gap: 2px;
+    height: 26px;
+    min-height: 26px;
     padding: 0;
-    border: 1px solid var(--df-review-line-soft);
-    border-radius: var(--df-review-radius-md);
-    background: var(--df-review-card);
-    box-shadow: var(--df-review-shadow-control);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
 				  .df-review-filter-tab {
     position: relative;
     display: grid;
     place-items: center;
-    width: var(--df-review-control-height-md);
-    min-width: var(--df-review-control-height-md);
-    height: var(--df-review-control-height-md);
+    width: 26px;
+    min-width: 26px;
+    height: 26px;
     border: 0;
-    border-radius: var(--df-review-radius-sm);
+    border-radius: 0;
     background: transparent;
     color: var(--df-review-subtle);
+    opacity: 0.3;
   }
 
 				  .df-review-filter-icon {
@@ -2031,18 +2120,18 @@ function ensureReviewShellStyle() {
 
 		  .df-review-filter-tab:hover,
 		  .df-review-filter-tab.is-active {
-		    background: var(--df-review-accent-soft);
 		    color: var(--df-review-text);
+        opacity: 1;
 		  }
 
 		  .df-review-filter-tab.is-active {
-		    box-shadow: inset 0 0 0 1px rgba(124, 199, 255, 0.42);
+		    box-shadow: none;
 		    color: var(--df-review-accent);
 		  }
 
 				  .df-review-filter-icon svg {
-				    width: 18px;
-				    height: 18px;
+				    width: 14px;
+				    height: 14px;
 		    fill: none;
 		    stroke: currentColor;
 		    stroke-linecap: round;
@@ -2188,9 +2277,21 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-item-id {
+    appearance: none;
     border-color: var(--df-review-line);
     background: rgba(255, 255, 255, 0.03);
     color: var(--df-review-text);
+    cursor: copy;
+    font-family: inherit;
+  }
+
+  .df-review-item-id:hover,
+  .df-review-item-id:focus-visible,
+  .df-review-item-id.is-copied {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    color: var(--df-review-accent);
+    outline: none;
   }
 
   .df-review-item-scope {
@@ -2810,36 +2911,104 @@ function ensureReviewShellStyle() {
       var(--df-review-control-height-md)
       var(--df-review-control-height-md);
     align-items: center;
-    gap: 8px;
+    gap: var(--df-review-space-2);
     min-width: 0;
     padding: var(--df-review-space-3) var(--df-review-frame-gutter-x);
     border-bottom: 1px solid var(--df-review-line-soft);
     background: var(--df-review-card);
     color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 500;
   }
 
-  .df-review-section-outline-head span {
+  .df-review-section-outline-summary {
     display: grid;
-    gap: 2px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--df-review-control-height-md);
+    min-width: 0;
+  }
+
+  .df-review-section-outline-summary span {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
     min-width: 0;
   }
 
   .df-review-section-outline-head strong {
     overflow: hidden;
     color: var(--df-review-text);
-    font-size: var(--df-review-font-size-lg);
+    font-size: inherit;
     font-weight: 600;
+    line-height: 1;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .df-review-section-outline-head small {
+    flex: 0 0 auto;
     overflow: hidden;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
     font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .df-review-section-outline-meta-controls {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    height: 26px;
+    min-height: 26px;
+    min-width: 0;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .df-review-section-outline-meta-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    min-width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    color: var(--df-review-subtle);
+    background: transparent;
+    box-shadow: none;
+    cursor: pointer;
+    opacity: 0.3;
+  }
+
+  .df-review-section-outline-meta-toggle:hover,
+  .df-review-section-outline-meta-toggle:focus-visible,
+  .df-review-section-outline-meta-toggle.is-active {
+    color: var(--df-review-text);
+    opacity: 1;
+    outline: 0;
+  }
+
+  .df-review-section-outline-meta-toggle.is-active {
+    box-shadow: none;
+    color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-meta-toggle svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
   }
 
   .df-review-section-outline-filter {
@@ -2852,7 +3021,7 @@ function ensureReviewShellStyle() {
     height: var(--df-review-control-height-md);
     min-height: var(--df-review-control-height-md);
     border: 1px solid var(--df-review-line-soft);
-    border-radius: var(--df-review-radius-md);
+    border-radius: var(--df-review-radius-sm);
     padding: 0 7px 0 11px;
     color: var(--df-review-muted);
     background: var(--df-review-control);
@@ -2934,6 +3103,15 @@ function ensureReviewShellStyle() {
     display: grid;
   }
 
+  .df-review-section-outline-entry-body {
+    display: grid;
+    border-radius: var(--df-review-radius-sm);
+  }
+
+  .df-review-section-outline-entry-body:hover {
+    background: var(--df-review-accent-soft);
+  }
+
   .df-review-section-outline-item.is-depth-1:not(:last-child) {
     margin-bottom: 7px;
     padding-bottom: 7px;
@@ -2947,10 +3125,6 @@ function ensureReviewShellStyle() {
     gap: 5px;
     border-radius: var(--df-review-radius-sm);
     padding: 7px 6px;
-  }
-
-  .df-review-section-outline-row:hover {
-    background: var(--df-review-accent-soft);
   }
 
   .df-review-section-outline-toggle {
@@ -3022,6 +3196,86 @@ function ensureReviewShellStyle() {
 
   .df-review-section-outline-name:hover {
     color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-meta {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    padding: 0 6px 7px;
+  }
+
+  .df-review-section-outline-meta-row {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: start;
+    gap: 6px;
+    min-width: 0;
+    color: var(--df-review-muted);
+    font-family: var(--df-review-font-mono);
+    font-size: var(--df-review-font-size-2xs);
+    line-height: 1.35;
+  }
+
+  .df-review-section-outline-meta-row b {
+    color: var(--df-review-subtle);
+    font-weight: 600;
+  }
+
+  .df-review-section-outline-meta-row code {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--df-review-muted);
+    font-family: inherit;
+  }
+
+  .df-review-section-outline-meta-row.is-text code {
+    color: var(--df-review-text);
+  }
+
+  .df-review-section-outline-meta-row.is-media code {
+    color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-media-link {
+    display: block;
+    min-width: 0;
+    color: var(--df-review-accent);
+    text-decoration: none;
+  }
+
+  .df-review-section-outline-media-link:hover,
+  .df-review-section-outline-media-link:focus-visible {
+    color: var(--df-review-text);
+    outline: 0;
+  }
+
+  .df-review-section-outline-meta-row.is-class code {
+    color: var(--df-review-source-popover-data-subtle);
+  }
+
+  .df-review-section-outline-meta-row.is-class {
+    align-items: center;
+  }
+
+  .df-review-section-outline-class-tags {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .df-review-section-outline-class-tags code {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 20px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 6px;
+    background: var(--df-review-control);
+    line-height: 1;
   }
 
   .df-review-section-outline-links {
@@ -3735,8 +3989,25 @@ var __iconNode26 = [
 ];
 var Smartphone = createLucideIcon("smartphone", __iconNode26);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
 var __iconNode27 = [
+  ["path", { d: "M5 3a2 2 0 0 0-2 2", key: "y57alp" }],
+  ["path", { d: "M19 3a2 2 0 0 1 2 2", key: "18rm91" }],
+  ["path", { d: "M21 19a2 2 0 0 1-2 2", key: "1j7049" }],
+  ["path", { d: "M5 21a2 2 0 0 1-2-2", key: "sbafld" }],
+  ["path", { d: "M9 3h1", key: "1yesri" }],
+  ["path", { d: "M9 21h1", key: "15o7lz" }],
+  ["path", { d: "M14 3h1", key: "1ec4yj" }],
+  ["path", { d: "M14 21h1", key: "v9vybs" }],
+  ["path", { d: "M3 9v1", key: "1r0deq" }],
+  ["path", { d: "M21 9v1", key: "mxsmne" }],
+  ["path", { d: "M3 14v1", key: "vnatye" }],
+  ["path", { d: "M21 14v1", key: "169vum" }]
+];
+var SquareDashed = createLucideIcon("square-dashed", __iconNode27);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
+var __iconNode28 = [
   [
     "path",
     {
@@ -3746,10 +4017,10 @@ var __iconNode27 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode27);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode28);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode28 = [
+var __iconNode29 = [
   [
     "path",
     {
@@ -3759,10 +4030,10 @@ var __iconNode28 = [
   ],
   ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
 ];
-var StickyNote = createLucideIcon("sticky-note", __iconNode28);
+var StickyNote = createLucideIcon("sticky-note", __iconNode29);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sun.mjs
-var __iconNode29 = [
+var __iconNode30 = [
   ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
   ["path", { d: "M12 2v2", key: "tus03m" }],
   ["path", { d: "M12 20v2", key: "1lh1kg" }],
@@ -3773,22 +4044,38 @@ var __iconNode29 = [
   ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
   ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
 ];
-var Sun = createLucideIcon("sun", __iconNode29);
+var Sun = createLucideIcon("sun", __iconNode30);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/type.mjs
+var __iconNode31 = [
+  ["path", { d: "M12 4v16", key: "1654pz" }],
+  ["path", { d: "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2", key: "e0r10z" }],
+  ["path", { d: "M9 20h6", key: "s66wpe" }]
+];
+var Type = createLucideIcon("type", __iconNode31);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode30 = [
+var __iconNode32 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode30);
+var Upload = createLucideIcon("upload", __iconNode32);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/workflow.mjs
+var __iconNode33 = [
+  ["rect", { width: "8", height: "8", x: "3", y: "3", rx: "2", key: "by2w9f" }],
+  ["path", { d: "M7 11v4a2 2 0 0 0 2 2h4", key: "xkn7yn" }],
+  ["rect", { width: "8", height: "8", x: "13", y: "13", rx: "2", key: "1cgmvn" }]
+];
+var Workflow = createLucideIcon("workflow", __iconNode33);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode31 = [
+var __iconNode34 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode31);
+var X = createLucideIcon("x", __iconNode34);
 
 // src/core/geometry.ts
 function rectanglesIntersect(a, b) {
@@ -3995,6 +4282,11 @@ var FIGMA_OVERLAY_UNAVAILABLE_MESSAGE = "\uD53C\uADF8\uB9C8 \uC624\uBC84\uB808\u
 var FIGMA_TOKEN_STORAGE_KEY = "figma-token";
 var REVIEW_USER_ID_STORAGE_KEY = "user-id";
 var REVIEW_THEME_STORAGE_KEY = "df-review-theme";
+var REVIEW_SIDE_PANEL_STORAGE_KEY = "df-review-side-panel";
+var REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY = "df-review-side-panel-visible";
+var REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY = "df-review-source-tree-filter";
+var REVIEW_SOURCE_TREE_META_STORAGE_KEY = "df-review-source-tree-meta-visibility";
+var REVIEW_QA_STATUS_FILTER_STORAGE_KEY = "df-review-qa-status-filter";
 var DEFAULT_REVIEW_THEME = "dark";
 var FIGMA_TOKEN_GUIDE_ID = "df-review-figma-token-guide";
 var DEFAULT_INITIAL_REVIEW_PROMPT = "You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, DOM metadata, coordinates, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.";
@@ -4420,7 +4712,35 @@ var PromptModal = ({
 };
 
 // src/react-shell/settings.ts
+var DEFAULT_SOURCE_TREE_META_VISIBILITY = {
+  box: true,
+  font: true,
+  media: true,
+  className: false
+};
+var REVIEW_QA_STATUS_FILTER_VALUES = /* @__PURE__ */ new Set([
+  "all",
+  "todo",
+  "doing",
+  "review",
+  "hold",
+  "done"
+]);
 var normalizeReviewTheme = (value) => value === "light" || value === "system" || value === "dark" ? value : DEFAULT_REVIEW_THEME;
+var normalizeStoredReviewSidePanel = (value) => value === "source" ? "source" : "qa";
+var normalizeStoredReviewQaStatusFilter = (value) => value && REVIEW_QA_STATUS_FILTER_VALUES.has(value) ? value : "all";
+var normalizeStoredSourceTreeMetaVisibility = (value) => {
+  if (!value || typeof value !== "object") {
+    return DEFAULT_SOURCE_TREE_META_VISIBILITY;
+  }
+  const metaVisibility = value;
+  return {
+    box: typeof metaVisibility.box === "boolean" ? metaVisibility.box : DEFAULT_SOURCE_TREE_META_VISIBILITY.box,
+    font: typeof metaVisibility.font === "boolean" ? metaVisibility.font : DEFAULT_SOURCE_TREE_META_VISIBILITY.font,
+    media: typeof metaVisibility.media === "boolean" ? metaVisibility.media : DEFAULT_SOURCE_TREE_META_VISIBILITY.media,
+    className: typeof metaVisibility.className === "boolean" ? metaVisibility.className : DEFAULT_SOURCE_TREE_META_VISIBILITY.className
+  };
+};
 var getStoredFigmaToken = () => {
   if (typeof window === "undefined") return "";
   try {
@@ -4479,6 +4799,118 @@ var writeStoredReviewTheme = (theme) => {
     } else {
       window.localStorage.setItem(REVIEW_THEME_STORAGE_KEY, theme);
     }
+  } catch {
+    return;
+  }
+};
+var getStoredReviewSidePanel = () => {
+  if (typeof window === "undefined") return "qa";
+  try {
+    return normalizeStoredReviewSidePanel(
+      window.localStorage.getItem(REVIEW_SIDE_PANEL_STORAGE_KEY)
+    );
+  } catch {
+    return "qa";
+  }
+};
+var writeStoredReviewSidePanel = (sidePanel) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      REVIEW_SIDE_PANEL_STORAGE_KEY,
+      normalizeStoredReviewSidePanel(sidePanel)
+    );
+  } catch {
+    return;
+  }
+};
+var getStoredReviewSidePanelVisible = () => {
+  if (typeof window === "undefined") return true;
+  try {
+    const value = window.localStorage.getItem(
+      REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY
+    );
+    return value === null ? true : value === "true";
+  } catch {
+    return true;
+  }
+};
+var writeStoredReviewSidePanelVisible = (isVisible) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY,
+      isVisible ? "true" : "false"
+    );
+  } catch {
+    return;
+  }
+};
+var getStoredReviewQaStatusFilter = () => {
+  if (typeof window === "undefined") return "all";
+  try {
+    return normalizeStoredReviewQaStatusFilter(
+      window.localStorage.getItem(REVIEW_QA_STATUS_FILTER_STORAGE_KEY)
+    );
+  } catch {
+    return "all";
+  }
+};
+var writeStoredReviewQaStatusFilter = (filter) => {
+  if (typeof window === "undefined") return;
+  try {
+    const normalizedFilter = normalizeStoredReviewQaStatusFilter(filter);
+    if (normalizedFilter === "all") {
+      window.localStorage.removeItem(REVIEW_QA_STATUS_FILTER_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(
+        REVIEW_QA_STATUS_FILTER_STORAGE_KEY,
+        normalizedFilter
+      );
+    }
+  } catch {
+    return;
+  }
+};
+var getStoredSourceTreeFilter = () => {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+var writeStoredSourceTreeFilter = (filter) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (filter) {
+      window.localStorage.setItem(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY, filter);
+    } else {
+      window.localStorage.removeItem(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY);
+    }
+  } catch {
+    return;
+  }
+};
+var getStoredSourceTreeMetaVisibility = () => {
+  if (typeof window === "undefined") return DEFAULT_SOURCE_TREE_META_VISIBILITY;
+  try {
+    const value = window.localStorage.getItem(
+      REVIEW_SOURCE_TREE_META_STORAGE_KEY
+    );
+    if (!value) return DEFAULT_SOURCE_TREE_META_VISIBILITY;
+    return normalizeStoredSourceTreeMetaVisibility(JSON.parse(value));
+  } catch {
+    return DEFAULT_SOURCE_TREE_META_VISIBILITY;
+  }
+};
+var writeStoredSourceTreeMetaVisibility = (metaVisibility) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      REVIEW_SOURCE_TREE_META_STORAGE_KEY,
+      JSON.stringify(normalizeStoredSourceTreeMetaVisibility(metaVisibility))
+    );
   } catch {
     return;
   }
@@ -5564,6 +5996,7 @@ var QaItemCard = ({
   onChangeItemStatus,
   onClearSelectedItem,
   onRemoveItem,
+  onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
   onEditItem,
@@ -5579,8 +6012,10 @@ var QaItemCard = ({
   const itemComment = item.comment.trim() || getItemTitle(item);
   const itemAuthor = item.createdBy?.trim();
   const promptCopyKey = `qa:${item.id}`;
+  const labelCopyKey = `label:${item.id}`;
   const linkCopyKey = `link:${item.id}`;
   const isPromptCopied = copiedPromptKey === promptCopyKey;
+  const isLabelCopied = copiedPromptKey === labelCopyKey;
   const isLinkCopied = copiedPromptKey === linkCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
   const isActive = item.id === selectedItemId;
@@ -5602,7 +6037,20 @@ var QaItemCard = ({
         /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "df-review-item-header", children: [
           /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "df-review-item-main", children: [
             /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "df-review-item-badges", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "df-review-item-id", children: numberedItem.displayLabel }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                "button",
+                {
+                  "aria-label": isLabelCopied ? "Copied QA number" : "Copy QA number",
+                  className: `df-review-item-id${isLabelCopied ? " is-copied" : ""}`,
+                  title: isLabelCopied ? "Copied QA number" : "Copy QA number",
+                  type: "button",
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    onCopyItemLabel(numberedItem);
+                  },
+                  children: numberedItem.displayLabel
+                }
+              ),
               /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
                 "span",
                 {
@@ -5743,7 +6191,36 @@ var QaPanelHeader = ({
 }) => {
   const statusFilterOptions = getStatusFilterOptions(statusOptions);
   const hasActiveFilter = qaFilter !== "all" || qaStatusFilter !== "all";
+  const displayLabel = getQaSourceDisplayLabel(label);
   return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-list-header", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-list-title", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "df-review-list-meta", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: isAllQaVisible ? `${displayLabel} QA \xB7 All pages` : `${displayLabel} QA` }),
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+          "strong",
+          {
+            title: `${activeRemainingItemCount} remaining of ${activeItemCount}`,
+            children: !hasActiveFilter ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}`
+          }
+        )
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
+        const count = qaFilterCounts.get(filter.key) ?? 0;
+        const isActive = qaFilter === filter.key;
+        return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+          "button",
+          {
+            "aria-label": `${filter.label} QA (${count})`,
+            "aria-pressed": isActive,
+            className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
+            type: "button",
+            onClick: () => onQaFilterChange(filter.key),
+            children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(ListFilter, { "aria-hidden": "true" }) })
+          },
+          filter.key
+        );
+      }) })
+    ] }),
     /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-list-toolbar", children: [
       /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-list-controls", children: [
         showSourceSelect && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
@@ -5782,37 +6259,12 @@ var QaPanelHeader = ({
           ]
         }
       )
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-list-title", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "df-review-list-meta", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: isAllQaVisible ? `${label} QA \xB7 All pages` : `${label} QA` }),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
-          "strong",
-          {
-            title: `${activeRemainingItemCount} remaining of ${activeItemCount}`,
-            children: !hasActiveFilter ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}`
-          }
-        )
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
-        const count = qaFilterCounts.get(filter.key) ?? 0;
-        const isActive = qaFilter === filter.key;
-        return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
-          "button",
-          {
-            "aria-label": `${filter.label} QA (${count})`,
-            "aria-pressed": isActive,
-            className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
-            type: "button",
-            onClick: () => onQaFilterChange(filter.key),
-            children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(ListFilter, { "aria-hidden": "true" }) })
-          },
-          filter.key
-        );
-      }) })
     ] })
   ] });
 };
+function getQaSourceDisplayLabel(label) {
+  return label === "local" ? "Local" : label;
+}
 function getStatusFilterOptions(statusOptions) {
   const seen = /* @__PURE__ */ new Set();
   return statusOptions.flatMap((statusOption) => {
@@ -5852,6 +6304,7 @@ var ReviewQaPanel = ({
   onChangeItemStatus,
   onClearSelectedItem,
   onChangeReviewSource,
+  onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
   onEditItem,
@@ -5864,72 +6317,76 @@ var ReviewQaPanel = ({
   onToggleItemOverlayVisibility
 }) => {
   const emptyMessage = isAllQaVisible ? `No ${activeAdapterEntry.label} QA.` : isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page.";
-  return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "df-review-panel-body", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("section", { className: "df-review-item-list", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
-      QaPanelHeader,
-      {
-        activeItemCount: activeItems.length,
-        activeRemainingItemCount,
-        filteredItemCount: filteredNumberedActiveItems.length,
-        isAllQaVisible,
-        label: activeAdapterEntry.label,
-        qaFilter,
-        qaFilterCounts,
-        qaStatusFilter,
-        qaStatusFilterCounts,
-        showSourceSelect,
-        source,
-        sourceEntries,
-        statusOptions: activeAdapterEntry.statusOptions,
-        onChangeReviewSource,
-        onQaFilterChange,
-        onQaStatusFilterChange,
-        onRefreshReviewData
-      }
-    ),
-    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
-      "div",
-      {
-        className: "df-review-list-scroll",
-        onClick: (event) => {
-          if (event.target === event.currentTarget) {
-            onClearSelectedItem();
-          }
-        },
-        children: [
-          activeItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "df-review-empty", children: emptyMessage }),
-          activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "df-review-empty", children: "No QA in this filter." }),
-          filteredNumberedActiveItems.map((numberedItem) => {
-            const { item } = numberedItem;
-            return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
-              QaItemCard,
-              {
-                activeAdapterEntry,
-                currentPresetScope,
-                getItemPresetScope,
-                isOverlayVisible: !hiddenOverlayItemIds.has(item.id),
-                isRemoteSource,
-                numberedItem,
-                remoteAdapterEntry,
-                copiedPromptKey,
-                selectedItemId,
-                onChangeItemStatus,
-                onClearSelectedItem,
-                onCopyItemLink,
-                onCopyItemPrompt,
-                onEditItem,
-                onRemoveItem,
-                onRestoreReviewItem,
-                onSubmitItem,
-                onToggleItemOverlayVisibility
-              },
-              item.id
-            );
-          })
-        ]
-      }
-    )
-  ] }) }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "df-review-panel-body", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("section", { className: "df-review-item-list", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+        QaPanelHeader,
+        {
+          activeItemCount: activeItems.length,
+          activeRemainingItemCount,
+          filteredItemCount: filteredNumberedActiveItems.length,
+          isAllQaVisible,
+          label: activeAdapterEntry.label,
+          qaFilter,
+          qaFilterCounts,
+          qaStatusFilter,
+          qaStatusFilterCounts,
+          showSourceSelect,
+          source,
+          sourceEntries,
+          statusOptions: activeAdapterEntry.statusOptions,
+          onChangeReviewSource,
+          onQaFilterChange,
+          onQaStatusFilterChange,
+          onRefreshReviewData
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+        "div",
+        {
+          className: "df-review-list-scroll",
+          onClick: (event) => {
+            if (event.target === event.currentTarget) {
+              onClearSelectedItem();
+            }
+          },
+          children: [
+            activeItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "df-review-empty", children: emptyMessage }),
+            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "df-review-empty", children: "No QA in this filter." }),
+            filteredNumberedActiveItems.map((numberedItem) => {
+              const { item } = numberedItem;
+              return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+                QaItemCard,
+                {
+                  activeAdapterEntry,
+                  currentPresetScope,
+                  getItemPresetScope,
+                  isOverlayVisible: !hiddenOverlayItemIds.has(item.id),
+                  isRemoteSource,
+                  numberedItem,
+                  remoteAdapterEntry,
+                  copiedPromptKey,
+                  selectedItemId,
+                  onChangeItemStatus,
+                  onClearSelectedItem,
+                  onCopyItemLabel,
+                  onCopyItemLink,
+                  onCopyItemPrompt,
+                  onEditItem,
+                  onRemoveItem,
+                  onRestoreReviewItem,
+                  onSubmitItem,
+                  onToggleItemOverlayVisibility
+                },
+                item.id
+              );
+            })
+          ]
+        }
+      )
+    ] }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "df-review-qa-draft-host" })
+  ] });
 };
 
 // src/react-shell/presence/overlay.tsx
@@ -6061,7 +6518,7 @@ var getSectionOutline = (root, options) => {
     if (source?.file) {
       addSourceFileCompareKey(seen, getOutlineSourceKey(source));
     }
-    return {
+    return createSectionOutlineEntry({
       id: `${label}-${index}`,
       label,
       depth: 1,
@@ -6076,7 +6533,7 @@ var getSectionOutline = (root, options) => {
         seen,
         options
       )
-    };
+    });
   });
 };
 function getSectionOutlineRoots(root, options) {
@@ -6106,7 +6563,7 @@ function getSectionOutlineChildren(parent, depth, maxDepth, seen, options) {
     if (source?.file && isNewSource) {
       const childSeen = new Set(seen);
       addSourceFileCompareKey(childSeen, sourceKey);
-      entries.push({
+      entries.push(createSectionOutlineEntry({
         id: `${sourceKey}-${getElementOutlinePath(child)}-${entries.length}`,
         label,
         depth,
@@ -6121,7 +6578,7 @@ function getSectionOutlineChildren(parent, depth, maxDepth, seen, options) {
           childSeen,
           options
         )
-      });
+      }));
       continue;
     }
     entries.push(
@@ -6138,6 +6595,114 @@ function getElementOutlinePath(element) {
     current = current.parentElement;
   }
   return indices.join("-");
+}
+function createSectionOutlineEntry(entry) {
+  return {
+    ...entry,
+    metadata: getSectionOutlineMetadata(entry.element, entry.label, entry.source)
+  };
+}
+var truncateOutlineValue = (value, maxLength) => value.length > maxLength ? `${value.slice(0, maxLength - 1)}\u2026` : value;
+var normalizeOutlineValue = (value) => value?.replace(/\s+/g, " ").trim() ?? "";
+function getSectionOutlineMetadata(element, label, source) {
+  const textElement = getPlacerTextElement(element, label, source?.file);
+  return {
+    rect: getSectionOutlineRect(element),
+    textValue: textElement ? truncateOutlineValue(
+      normalizeOutlineValue(textElement.textContent),
+      180
+    ) : void 0,
+    fontLabel: textElement ? getFontLabel(textElement) : void 0,
+    mediaItems: getPlacerMediaItems(element, label, source?.file),
+    classNames: getElementClassNames(element)
+  };
+}
+function getSectionOutlineRect(element) {
+  const rect = element.getBoundingClientRect();
+  return {
+    top: Math.round(rect.top),
+    left: Math.round(rect.left),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height)
+  };
+}
+function getElementClassNames(element) {
+  const classNames = Array.from(element.classList).filter(Boolean);
+  return classNames.length > 0 ? classNames : void 0;
+}
+function getPlacerTextElement(element, label, file) {
+  if (!isPlacerTextOutlineNode(label, file) && !element.hasAttribute("data-font")) {
+    return null;
+  }
+  return element.hasAttribute("data-font") ? element : element.querySelector("[data-font]");
+}
+function isPlacerTextOutlineNode(label, file) {
+  return `${label} ${file ?? ""}`.toLowerCase().includes("placertext");
+}
+function getFontLabel(element) {
+  const dataFont = element.getAttribute("data-font");
+  if (dataFont) {
+    return dataFont.replace(/\bs\b/g, "sb").replace(/\bsemibold\b/g, "sb").replace(/\bregular\b/g, "r");
+  }
+  const style = window.getComputedStyle(element);
+  return `${Math.round(parseFloat(style.fontSize))}px ${style.fontWeight}`;
+}
+function getPlacerMediaItems(element, label, file) {
+  if (!isPlacerMediaOutlineNode(label, file)) return void 0;
+  const mediaItems = [];
+  const seen = /* @__PURE__ */ new Set();
+  const addMediaItem = (target, type, url) => {
+    const normalizedUrl = normalizeOutlineValue(url);
+    if (!normalizedUrl) return;
+    const variant = getPlacerMediaVariant(target, element);
+    const key = `${variant}:${type}:${normalizedUrl}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    mediaItems.push({ type, url: normalizedUrl, variant });
+  };
+  if (element instanceof HTMLVideoElement) {
+    addMediaItem(element, "video", getVideoElementUrl(element));
+    addMediaItem(element, "image", element.getAttribute("poster"));
+  }
+  if (element instanceof HTMLImageElement) {
+    addMediaItem(element, "image", getMediaElementUrl(element));
+  }
+  if (element instanceof HTMLSourceElement) {
+    addMediaItem(element, "video", getSourceElementUrl(element));
+  }
+  Array.from(element.querySelectorAll("video")).forEach((video) => {
+    addMediaItem(video, "video", getVideoElementUrl(video));
+    addMediaItem(video, "image", video.getAttribute("poster"));
+  });
+  Array.from(element.querySelectorAll("source")).forEach((source) => {
+    addMediaItem(source, "video", getSourceElementUrl(source));
+  });
+  Array.from(element.querySelectorAll("img")).forEach((img) => {
+    addMediaItem(img, "image", getMediaElementUrl(img));
+  });
+  return mediaItems.length > 0 ? mediaItems : void 0;
+}
+function isPlacerMediaOutlineNode(label, file) {
+  return `${label} ${file ?? ""}`.toLowerCase().includes("placermedia");
+}
+function getPlacerMediaVariant(target, root) {
+  let current = target;
+  while (current) {
+    if (current.classList.contains("d-block-pc")) return "desktop";
+    if (current.classList.contains("d-block-m")) return "mobile";
+    if (current === root) break;
+    current = current.parentElement;
+  }
+  return "media";
+}
+function getVideoElementUrl(video) {
+  return video.currentSrc || video.getAttribute("src") || video.querySelector("source")?.getAttribute("src") || video.getAttribute("poster") || video.src;
+}
+function getSourceElementUrl(source) {
+  return source.getAttribute("src") || source.src;
+}
+function getMediaElementUrl(img) {
+  return img.currentSrc || img.getAttribute("src") || img.src;
 }
 function getOutlineSourceKey(source) {
   return getSourceFileCompareKey(source.file);
@@ -6756,7 +7321,7 @@ var getStoredOverlayState = (targetDocument, overlay) => {
 };
 var getTargetOverlayState = (targetDocument) => ({
   grid: Boolean(
-    targetDocument?.body.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow") || getStoredOverlayState(targetDocument, "grid")
+    targetDocument?.body?.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow") || getStoredOverlayState(targetDocument, "grid")
   ),
   figma: Boolean(
     targetDocument?.querySelector(
@@ -6833,8 +7398,19 @@ var ReviewTopbar = ({
               onChange: (event) => onDraftTargetChange(event.target.value)
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("button", { type: "submit", children: "Load" }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "df-review-address-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+              "button",
+              {
+                "aria-label": "Refresh target",
+                className: "df-review-address-refresh",
+                title: "Refresh target",
+                type: "submit",
+                children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(RefreshCw, { "aria-hidden": "true" })
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
+          ] })
         ]
       }
     ),
@@ -8163,6 +8739,14 @@ function createStyleElement() {
       cursor: default;
     }
 
+    .dfwr-shell.is-docked-composer {
+      position: relative;
+      inset: auto;
+      z-index: auto;
+      padding: 0;
+      pointer-events: auto;
+    }
+
     .dfwr-panel {
       position: fixed;
       right: 16px;
@@ -8663,12 +9247,18 @@ function createStyleElement() {
       border-color: rgba(99, 215, 199, 0.56);
     }
 
-    .dfwr-note-popover.is-compact-composer,
-    .dfwr-area-draft.is-compact-composer {
-      padding: 36px 12px 12px;
-      border-color: rgba(99, 215, 199, 0.68);
-      background: var(--df-review-color-panel);
-      box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.38);
+    .dfwr-shell.is-docked-composer .dfwr-note-popover.is-docked-composer,
+    .dfwr-shell.is-docked-composer .dfwr-area-draft.is-docked-composer {
+      position: relative;
+      left: auto;
+      right: auto;
+      top: auto;
+      z-index: auto;
+      max-height: none;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-textarea {
+      min-height: 184px;
     }
 
     .dfwr-note-popover.is-dragging,
@@ -8698,51 +9288,6 @@ function createStyleElement() {
       cursor: grabbing;
     }
 
-    .dfwr-draft-close {
-      appearance: none;
-      position: absolute;
-      right: 8px;
-      top: 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      padding: 0;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: var(--df-review-radius-sm);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--df-review-color-text-muted);
-      cursor: pointer;
-      pointer-events: auto;
-    }
-
-    .dfwr-draft-close:hover,
-    .dfwr-draft-close:focus-visible {
-      border-color: rgba(255, 255, 255, 0.36);
-      background: var(--df-review-color-control-hover);
-      color: var(--df-review-color-text);
-      outline: none;
-    }
-
-    .dfwr-draft-close::before,
-    .dfwr-draft-close::after {
-      content: "";
-      position: absolute;
-      width: 12px;
-      height: 2px;
-      border-radius: 999px;
-      background: currentColor;
-    }
-
-    .dfwr-draft-close::before {
-      transform: rotate(45deg);
-    }
-
-    .dfwr-draft-close::after {
-      transform: rotate(-45deg);
-    }
-
     .dfwr-area-draft {
       position: fixed;
       right: 16px;
@@ -8764,6 +9309,50 @@ function createStyleElement() {
       padding: 0;
     }
 
+    .dfwr-actions.has-leading {
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .dfwr-actions-leading,
+    .dfwr-actions-primary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .dfwr-actions-primary {
+      margin-left: auto;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading {
+      align-items: stretch;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-button,
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle {
+      height: var(--df-review-control-height-md);
+      min-height: var(--df-review-control-height-md);
+      border-radius: var(--df-review-radius-sm);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-button {
+      min-width: 96px;
+      padding: 0 12px;
+      font-size: var(--df-review-font-size-sm);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle {
+      width: var(--df-review-control-height-md);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle svg {
+      width: 18px;
+      height: 18px;
+    }
+
     .dfwr-note-actions {
       justify-content: flex-end;
     }
@@ -8774,11 +9363,6 @@ function createStyleElement() {
 
     .dfwr-area-draft .dfwr-actions {
       padding: 0;
-    }
-
-    .dfwr-note-popover.is-compact-composer .dfwr-actions,
-    .dfwr-area-draft.is-compact-composer .dfwr-actions {
-      flex-wrap: nowrap;
     }
 
     .dfwr-form {
@@ -8803,12 +9387,6 @@ function createStyleElement() {
     .dfwr-textarea:focus {
       outline: 2px solid var(--df-review-color-accent-ring);
       outline-offset: 1px;
-    }
-
-    .dfwr-note-popover.is-compact-composer .dfwr-textarea,
-    .dfwr-area-draft.is-compact-composer .dfwr-textarea {
-      min-height: 96px;
-      max-height: 160px;
     }
 
     @media (hover: none) and (pointer: coarse) {
@@ -9097,7 +9675,7 @@ function createStyleElement() {
       }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 520px) {
       .dfwr-panel {
         left: 8px;
         right: 8px;
@@ -9105,11 +9683,6 @@ function createStyleElement() {
         bottom: 8px;
         width: auto;
         max-height: min(70vh, calc(100vh - 16px));
-      }
-
-      .dfwr-note-popover.is-compact-composer,
-      .dfwr-area-draft.is-compact-composer {
-        max-height: calc(100vh - 16px);
       }
     }
   `;
@@ -9183,13 +9756,13 @@ function formatAnchorMeta(anchor) {
 
 // src/core/web.review.kit.view.ts
 var DEFAULT_ADJUSTMENT_LABEL = "Responsive CSS px adjustments";
-var COMPACT_DRAFT_VIEWPORT_MAX_WIDTH = 768;
 var WebReviewKitView = class {
   constructor(config) {
     this.config = config;
   }
   clearDraftPreview() {
     this.restoreDraftPreview();
+    this.clearShellComposer();
   }
   render(shadow, hiddenItemsStyle) {
     const state = this.state;
@@ -9200,11 +9773,13 @@ var WebReviewKitView = class {
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
     const hasDismissableDraft = Boolean(state.noteDraft || state.areaDraft);
+    const shouldDockComposer = this.config.options.ui?.panel === false && hasDismissableDraft && Boolean(this.getShellComposerHost());
+    let dockedComposer;
     const shell = document.createElement("div");
     shell.className = [
       "dfwr-shell",
       state.isOpen ? "is-open" : "",
-      hasDismissableDraft ? "has-dismissible-draft" : ""
+      hasDismissableDraft && !shouldDockComposer ? "has-dismissible-draft" : ""
     ].filter(Boolean).join(" ");
     shell.setAttribute("aria-hidden", state.isOpen ? "false" : "true");
     if (this.config.options.ui?.panel !== false) {
@@ -9221,13 +9796,21 @@ var WebReviewKitView = class {
       shell.append(panel);
     }
     shell.append(this.createMarkerLayer());
-    if (state.isOpen && hasDismissableDraft) {
+    if (state.isOpen && hasDismissableDraft && !shouldDockComposer) {
       shell.append(this.createDraftCancelLayer());
     }
     if (state.isOpen && (state.mode === "note" || state.mode === "element")) {
-      shell.append(
-        state.noteDraft ? this.createNotePopover(state.noteDraft) : state.mode === "element" ? this.createElementLayer() : this.createNoteLayer()
-      );
+      if (state.noteDraft) {
+        const noteDraft = this.createNotePopover(state.noteDraft, {
+          dockComposer: shouldDockComposer
+        });
+        shell.append(noteDraft.layer);
+        dockedComposer = noteDraft.composer;
+      } else {
+        shell.append(
+          state.mode === "element" ? this.createElementLayer() : this.createNoteLayer()
+        );
+      }
     }
     if (state.isOpen && state.mode === "area" && !state.areaDraft) {
       shell.append(this.createAreaLayer());
@@ -9236,12 +9819,53 @@ var WebReviewKitView = class {
       if (state.areaDraft.selection) {
         shell.append(this.createAreaDraftOverlay(state.areaDraft));
       }
-      shell.append(this.createAreaDraftPopover(state.areaDraft));
+      const areaComposer = this.createAreaDraftPopover(state.areaDraft, {
+        dockComposer: shouldDockComposer
+      });
+      if (shouldDockComposer) {
+        dockedComposer = areaComposer;
+      } else {
+        shell.append(areaComposer);
+      }
     }
     shadow.append(shell);
+    this.renderShellComposer(dockedComposer);
   }
   get state() {
     return this.config.getState();
+  }
+  getShellComposerHost() {
+    const environment = this.config.getEnvironment();
+    if (this.config.options.ui?.panel !== false) return void 0;
+    return environment?.composerHost ?? void 0;
+  }
+  renderShellComposer(composer) {
+    const host = composer ? this.getShellComposerHost() : void 0;
+    if (!host || !composer) {
+      this.clearShellComposer();
+      return;
+    }
+    if (this.shellComposerHost && this.shellComposerHost !== host) {
+      this.clearShellComposer();
+    }
+    this.shellComposerHost = host;
+    host.dataset.hasDraftComposer = "true";
+    if (host.parentElement) {
+      host.parentElement.dataset.hasDraftComposer = "true";
+    }
+    const shell = document.createElement("div");
+    shell.className = "dfwr-shell is-open is-shell-draft is-docked-composer";
+    shell.append(composer);
+    host.replaceChildren(createStyleElement(), shell);
+  }
+  clearShellComposer() {
+    const host = this.shellComposerHost;
+    host?.replaceChildren();
+    if (host) {
+      delete host.dataset.hasDraftComposer;
+      delete host.parentElement?.dataset.hasDraftComposer;
+    }
+    this.shellComposerHost = void 0;
   }
   createDraftCancelLayer() {
     const layer = document.createElement("div");
@@ -9401,36 +10025,6 @@ var WebReviewKitView = class {
       height: estimatedHeight
     });
     return { width, left: position.x, top: position.y };
-  }
-  isCompactDraftViewport(viewport) {
-    return viewport.width <= COMPACT_DRAFT_VIEWPORT_MAX_WIDTH;
-  }
-  applyCompactDraftComposerPosition(popover, environment) {
-    const margin = 12;
-    const bounds = environment.overlayRect;
-    const hostBounds = this.getHostComposerBounds();
-    const availableWidth = Math.max(
-      0,
-      Math.min(bounds.width, hostBounds.width) - margin * 2
-    );
-    const width = Math.max(240, availableWidth);
-    const left = clamp(
-      bounds.left + margin,
-      margin,
-      hostBounds.width - width - margin
-    );
-    const visibleBottom = Math.min(
-      bounds.top + bounds.height,
-      hostBounds.height
-    );
-    const bottom = Math.max(margin, hostBounds.height - visibleBottom + margin);
-    const maxHeight = Math.max(180, Math.min(320, bounds.height - margin * 2));
-    popover.style.left = `${left}px`;
-    popover.style.right = "auto";
-    popover.style.top = "auto";
-    popover.style.bottom = `${bottom}px`;
-    popover.style.width = `${width}px`;
-    popover.style.maxHeight = `${maxHeight}px`;
   }
   getSelectionMqMetrics(selection, viewport) {
     const { scale } = this.getDraftViewportScale(viewport);
@@ -9685,13 +10279,12 @@ ${adjustment}` : adjustment;
     empty.textContent = this.state.noteDraft ? "Write the note in the page box." : this.state.mode === "element" ? "Click an element to add QA." : "Click on the page to place a note.";
     return empty;
   }
-  createNotePopover(draft) {
+  createNotePopover(draft, options = {}) {
     const environment = this.config.getEnvironment();
     const group = document.createElement("div");
     group.className = "dfwr-note-draft";
-    if (!environment) return group;
+    if (!environment) return { layer: group, composer: void 0 };
     const isElementDraft = this.state.mode === "element" && Boolean(draft.selection);
-    const isCompactComposer = this.isCompactDraftViewport(draft.viewport);
     const hostPoint = toHostPoint(
       isElementDraft ? this.getAdjustedDraftPoint(draft.marker.viewport, draft) : draft.marker.viewport,
       environment
@@ -9716,11 +10309,11 @@ ${adjustment}` : adjustment;
     const position = getPopoverPosition(hostPoint, environment);
     popover.className = [
       "dfwr-note-popover",
-      isElementDraft || isCompactComposer ? "is-composer" : "",
-      isCompactComposer ? "is-compact-composer" : ""
+      isElementDraft ? "is-composer" : "",
+      options.dockComposer ? "is-docked-composer" : ""
     ].filter(Boolean).join(" ");
-    if (isCompactComposer) {
-      this.applyCompactDraftComposerPosition(popover, environment);
+    if (options.dockComposer) {
+      popover.style.width = "100%";
     } else if (isElementDraft) {
       const selection = draft.selection ? toHostSelection(
         this.getAdjustedDraftSelection(
@@ -9744,7 +10337,7 @@ ${adjustment}` : adjustment;
     }
     const form = document.createElement("form");
     form.className = "dfwr-form";
-    const meta = isElementDraft || isCompactComposer ? void 0 : document.createElement("div");
+    const meta = isElementDraft ? void 0 : document.createElement("div");
     if (meta) {
       meta.className = "dfwr-item-date";
       meta.textContent = formatNoteDraftMeta(draft);
@@ -9775,28 +10368,32 @@ ${adjustment}` : adjustment;
         selection: currentDraft.selection
       });
     };
-    const adjustmentControls = isElementDraft && !isCompactComposer ? this.createAdjustmentControls({
+    const adjustmentControls = isElementDraft ? this.createAdjustmentControls({
       draft,
       pin,
       popover,
       selectionHighlight,
-      textarea
+      textarea,
+      dockToggle: options.dockComposer
     }) : void 0;
-    const actions = this.createFormActions("Save note", saveDraft);
+    const actions = this.createFormActions("Save note", saveDraft, {
+      leading: adjustmentControls?.actionButton ? [adjustmentControls.actionButton] : void 0
+    });
     form.append(
       ...meta ? [meta] : [],
       ...adjustmentControls ? [adjustmentControls.panel] : [],
       textarea,
       actions
     );
-    const dragHandle = isElementDraft && !isCompactComposer ? this.createDraftDragHandle("Move DOM composer") : void 0;
-    const close = isCompactComposer ? this.createDraftCloseButton() : void 0;
+    const dragHandle = isElementDraft && !options.dockComposer ? this.createDraftDragHandle("Move DOM composer") : void 0;
     popover.append(
-      ...close ? [close] : [],
       ...dragHandle ? [dragHandle] : [],
       form
     );
-    group.append(pin, popover);
+    group.append(pin);
+    if (!options.dockComposer) {
+      group.append(popover);
+    }
     if (dragHandle) {
       this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
         const noteDraft = this.state.noteDraft ?? draft;
@@ -9809,18 +10406,23 @@ ${adjustment}` : adjustment;
     }
     this.attachDraftPinDrag(
       pin,
-      isElementDraft || isCompactComposer ? void 0 : popover,
+      isElementDraft || options.dockComposer ? void 0 : popover,
       meta,
       textarea
     );
-    window.setTimeout(() => {
-      if (draft.adjustment?.isActive) {
-        adjustmentControls?.focusTarget.focus();
-        return;
-      }
-      textarea.focus();
-    }, 0);
-    return group;
+    if (!options.dockComposer) {
+      window.setTimeout(() => {
+        if (draft.adjustment?.isActive) {
+          adjustmentControls?.focusTarget.focus();
+          return;
+        }
+        textarea.focus();
+      }, 0);
+    }
+    return {
+      layer: group,
+      composer: options.dockComposer ? popover : void 0
+    };
   }
   createDraftDragHandle(label) {
     const handle = document.createElement("button");
@@ -9828,16 +10430,6 @@ ${adjustment}` : adjustment;
     handle.type = "button";
     handle.setAttribute("aria-label", label);
     return handle;
-  }
-  createDraftCloseButton() {
-    const close = document.createElement("button");
-    close.className = "dfwr-draft-close";
-    close.type = "button";
-    close.setAttribute("aria-label", "Close composer");
-    close.addEventListener("click", (event) => {
-      this.cancelDraft(event);
-    });
-    return close;
   }
   createIcon(paths) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -9922,7 +10514,8 @@ ${adjustment}` : adjustment;
     pin,
     popover,
     selectionHighlight,
-    textarea
+    textarea,
+    dockToggle
   }) {
     const panel = document.createElement("div");
     panel.className = "dfwr-adjust-panel is-dom-adjust-panel";
@@ -9998,12 +10591,16 @@ ${adjustment}` : adjustment;
         }
       }));
     });
-    header.append(help, adjust);
+    header.append(help);
+    if (!dockToggle) {
+      header.append(adjust);
+    }
     panel.append(header, xyStatus, scaleStatus);
     syncControls(draft);
     return {
       panel,
-      focusTarget: adjust
+      focusTarget: adjust,
+      actionButton: dockToggle ? adjust : void 0
     };
   }
   getAdjustmentKeyDelta(event) {
@@ -10044,7 +10641,7 @@ ${adjustment}` : adjustment;
     }
     this.syncDraftPreview(draft);
   }
-  createAreaForm(options) {
+  createAreaForm() {
     const form = document.createElement("form");
     form.className = "dfwr-form";
     const areaDraft = this.state.areaDraft;
@@ -10055,9 +10652,7 @@ ${adjustment}` : adjustment;
       form.append(empty);
       return form;
     }
-    if (!options?.compact) {
-      form.append(this.createAreaMetricsPanel(areaDraft));
-    }
+    form.append(this.createAreaMetricsPanel(areaDraft));
     const textarea = document.createElement("textarea");
     textarea.className = "dfwr-textarea";
     textarea.placeholder = "Area comment";
@@ -10131,41 +10726,36 @@ ${adjustment}` : adjustment;
     }
     return layer;
   }
-  createAreaDraftPopover(draft) {
+  createAreaDraftPopover(draft, options = {}) {
     const environment = this.config.getEnvironment();
     const popover = document.createElement("div");
-    const isCompactComposer = this.isCompactDraftViewport(draft.viewport);
     popover.className = [
       "dfwr-area-draft",
       "is-composer",
-      isCompactComposer ? "is-compact-composer" : ""
+      options.dockComposer ? "is-docked-composer" : ""
     ].filter(Boolean).join(" ");
-    if (environment && draft.selection) {
-      if (isCompactComposer) {
-        this.applyCompactDraftComposerPosition(popover, environment);
-      } else {
-        const selection = toHostSelection(
-          toViewportSelection(draft.selection.viewport),
-          environment
-        );
-        const composer = this.getDraftComposerPosition({
-          selection,
-          environment,
-          composerPosition: draft.composerPosition,
-          estimatedHeight: 220
-        });
-        popover.style.left = `${composer.left}px`;
-        popover.style.top = `${composer.top}px`;
-        popover.style.width = `${composer.width}px`;
-        popover.style.right = "auto";
-      }
+    if (options.dockComposer) {
+      popover.style.width = "100%";
+    } else if (environment && draft.selection) {
+      const selection = toHostSelection(
+        toViewportSelection(draft.selection.viewport),
+        environment
+      );
+      const composer = this.getDraftComposerPosition({
+        selection,
+        environment,
+        composerPosition: draft.composerPosition,
+        estimatedHeight: 220
+      });
+      popover.style.left = `${composer.left}px`;
+      popover.style.top = `${composer.top}px`;
+      popover.style.width = `${composer.width}px`;
+      popover.style.right = "auto";
     }
-    const close = isCompactComposer ? this.createDraftCloseButton() : void 0;
-    const dragHandle = !isCompactComposer ? this.createDraftDragHandle("Move area composer") : void 0;
+    const dragHandle = options.dockComposer ? void 0 : this.createDraftDragHandle("Move area composer");
     popover.append(
-      ...close ? [close] : [],
       ...dragHandle ? [dragHandle] : [],
-      this.createAreaForm({ compact: isCompactComposer })
+      this.createAreaForm()
     );
     if (dragHandle) {
       this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
@@ -10197,6 +10787,17 @@ ${adjustment}` : adjustment;
     cancel.addEventListener("click", (event) => {
       this.cancelDraft(event);
     });
+    if (options?.leading?.length) {
+      actions.classList.add("has-leading");
+      const leading = document.createElement("div");
+      leading.className = "dfwr-actions-leading";
+      leading.append(...options.leading);
+      const primary = document.createElement("div");
+      primary.className = "dfwr-actions-primary";
+      primary.append(save, cancel);
+      actions.append(leading, primary);
+      return actions;
+    }
     if (options?.beforeSave?.length || options?.className) {
       actions.append(cancel, ...options.beforeSave ?? [], save);
       return actions;
@@ -10625,9 +11226,10 @@ var WebReviewKitApp = class {
       this.toggle();
     };
     this.handleViewportChange = () => {
-      if (!this.isOpen || this.renderFrame) return;
+      if (!this.isOpen || this.renderFrame || this.isDraftComposerFocused()) return;
       this.renderFrame = window.requestAnimationFrame(() => {
         this.renderFrame = void 0;
+        if (this.isDraftComposerFocused()) return;
         this.render();
       });
     };
@@ -10804,6 +11406,14 @@ var WebReviewKitApp = class {
     this.render();
     return true;
   }
+  isDraftComposerFocused() {
+    if (!this.noteDraft && !this.areaDraft) return false;
+    const composerHost = this.getEnvironment()?.composerHost;
+    const activeElement = composerHost?.ownerDocument.activeElement;
+    return Boolean(
+      composerHost && activeElement && composerHost.contains(activeElement)
+    );
+  }
   getEnvironment() {
     const target = typeof this.options.target === "function" ? this.options.target() : this.options.target;
     if (!target) {
@@ -10832,6 +11442,7 @@ var WebReviewKitApp = class {
         height: target.window.innerHeight
       };
       const overlayRect = target.getOverlayRect?.() ?? rect;
+      const composerHost = target.getComposerHost?.();
       return {
         window: target.window,
         document: target.document,
@@ -10846,7 +11457,8 @@ var WebReviewKitApp = class {
           top: overlayRect.top,
           width: overlayRect.width,
           height: overlayRect.height
-        }
+        },
+        composerHost
       };
     } catch {
       return void 0;
@@ -11217,7 +11829,8 @@ var getReviewKitTarget = ({
         width: Math.max(0, right - left),
         height: Math.max(0, bottom - top)
       };
-    }
+    },
+    getComposerHost: () => document.querySelector(".df-review-qa-draft-host")
   };
 };
 
@@ -12355,7 +12968,7 @@ var useReviewSettings = ({
       const nextToken = token.trim();
       const nextUserId = userId.trim();
       const nextTheme = normalizeReviewTheme(theme);
-      const shouldReload = nextToken !== getStoredFigmaToken() || nextUserId !== getStoredReviewUserId();
+      const shouldReload = nextToken !== getStoredFigmaToken();
       writeStoredFigmaToken(nextToken);
       writeStoredReviewUserId(nextUserId);
       writeStoredReviewTheme(nextTheme);
@@ -12446,7 +13059,7 @@ var useReviewShellData = ({
     () => /* @__PURE__ */ new Set()
   );
   const [qaFilter, setQaFilter] = (0, import_react16.useState)("all");
-  const [qaStatusFilter, setQaStatusFilter] = (0, import_react16.useState)("all");
+  const [qaStatusFilter, setQaStatusFilterState] = (0, import_react16.useState)(getStoredReviewQaStatusFilter);
   const [sitemapItems, setSitemapItems] = (0, import_react16.useState)(() => ({
     local: [],
     remote: []
@@ -12565,6 +13178,10 @@ var useReviewShellData = ({
     return counts;
   }, [activeItems, getItemPresetScope]);
   const currentPresetScope = getViewportPresetKind(size);
+  const setQaStatusFilter = (0, import_react16.useCallback)((filter) => {
+    setQaStatusFilterState(filter);
+    writeStoredReviewQaStatusFilter(filter);
+  }, []);
   const pageQaCounts = (0, import_react16.useMemo)(() => {
     const counts = /* @__PURE__ */ new Map();
     const addItems = (sourceKey, sourceItems) => {
@@ -12935,7 +13552,9 @@ var useReviewShellState = ({
     figma: false
   });
   const [selectedItemId, setSelectedItemId] = (0, import_react18.useState)(getInitialItemId());
-  const [isListVisible, setIsListVisible] = (0, import_react18.useState)(true);
+  const [isListVisible, setIsListVisible] = (0, import_react18.useState)(
+    getStoredReviewSidePanelVisible
+  );
   const [isSitemapOpen, setIsSitemapOpen] = (0, import_react18.useState)(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = (0, import_react18.useState)(false);
   const [copyLabel, setCopyLabel] = (0, import_react18.useState)("Copy URL");
@@ -12999,34 +13618,40 @@ var useReviewShellState = ({
 };
 
 // src/react-shell/review/shell.actions.ts
+var writeClipboardTextFallback = (value) => {
+  const selection = document.getSelection();
+  const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const ranges = selection ? Array.from(
+    { length: selection.rangeCount },
+    (_, index) => selection.getRangeAt(index)
+  ) : [];
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  const isCopied = document.execCommand("copy");
+  textarea.remove();
+  selection?.removeAllRanges();
+  ranges.forEach((range) => selection?.addRange(range));
+  activeElement?.focus();
+  if (!isCopied) {
+    throw new Error("Failed to copy to clipboard");
+  }
+};
 var writeClipboardText = async (value) => {
   try {
-    await navigator.clipboard.writeText(value);
+    writeClipboardTextFallback(value);
     return;
-  } catch {
-    const selection = document.getSelection();
-    const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const ranges = selection ? Array.from(
-      { length: selection.rangeCount },
-      (_, index) => selection.getRangeAt(index)
-    ) : [];
-    const textarea = document.createElement("textarea");
-    textarea.value = value;
-    textarea.setAttribute("readonly", "");
-    textarea.style.position = "fixed";
-    textarea.style.left = "-9999px";
-    textarea.style.top = "0";
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-    const isCopied = document.execCommand("copy");
-    textarea.remove();
-    selection?.removeAllRanges();
-    ranges.forEach((range) => selection?.addRange(range));
-    activeElement?.focus();
-    if (!isCopied) {
-      throw new Error("Failed to copy to clipboard");
+  } catch (error) {
+    if (!navigator.clipboard?.writeText) {
+      throw error;
     }
+    await navigator.clipboard.writeText(value);
   }
 };
 var listReviewItems = async ({
@@ -13314,12 +13939,10 @@ var getSectionOutlineEntryCount = (entries) => entries.reduce(
   (count, entry) => count + 1 + getSectionOutlineEntryCount(entry.children),
   0
 );
-var DEFAULT_COLLAPSED_ROOT_LABELS = /* @__PURE__ */ new Set(["FrameHeader", "FrameFooter"]);
 var getDefaultCollapsedSectionOutlineIds = (entries) => {
   const collapsedIds = /* @__PURE__ */ new Set();
   const visit = (entry) => {
-    const shouldCollapseRoot = entry.depth === 1 && DEFAULT_COLLAPSED_ROOT_LABELS.has(entry.label);
-    if ((entry.depth >= 2 || shouldCollapseRoot) && entry.children.length > 0) {
+    if (entry.children.length > 0) {
       collapsedIds.add(entry.id);
     }
     entry.children.forEach(visit);
@@ -13327,13 +13950,27 @@ var getDefaultCollapsedSectionOutlineIds = (entries) => {
   entries.forEach(visit);
   return collapsedIds;
 };
+var getLiveSectionOutlineRect = (entry) => {
+  if (!entry.element.isConnected) return entry.metadata.rect;
+  const rect = entry.element.getBoundingClientRect();
+  return {
+    top: Math.round(rect.top),
+    left: Math.round(rect.left),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height)
+  };
+};
 var matchesSectionOutlineFilter = (entry, terms) => {
   if (terms.length === 0) return true;
   const text = [
     entry.label,
     entry.filePath,
     entry.source?.file,
-    entry.data?.file
+    entry.data?.file,
+    entry.metadata.textValue,
+    entry.metadata.fontLabel,
+    entry.metadata.mediaItems?.map((mediaItem) => `${mediaItem.variant} ${mediaItem.type} ${mediaItem.url}`).join(" "),
+    entry.metadata.classNames?.join(" ")
   ].filter(Boolean).join(" ").toLowerCase();
   return terms.every((term) => text.includes(term));
 };
@@ -13418,10 +14055,16 @@ var ReviewShell = ({
   });
   const sourceShortcutCleanupRef = (0, import_react19.useRef)(null);
   const sourceInspectorInteractionRef = (0, import_react19.useRef)(false);
-  const [sidePanel, setSidePanel] = (0, import_react19.useState)("qa");
   const [sourceInspectorState, setSourceInspectorState] = (0, import_react19.useState)(null);
   const [sectionOutline, setSectionOutline] = (0, import_react19.useState)(null);
-  const [sectionOutlineFilter, setSectionOutlineFilter] = (0, import_react19.useState)("");
+  const [sectionOutlineFilter, setSectionOutlineFilter] = (0, import_react19.useState)(
+    () => getStoredSourceTreeFilter()
+  );
+  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] = (0, import_react19.useState)(() => getStoredSourceTreeMetaVisibility());
+  const isSectionOutlineBoxMetaVisible = sectionOutlineMetaVisibility.box;
+  const isSectionOutlineFontMetaVisible = sectionOutlineMetaVisibility.font;
+  const isSectionOutlineMediaMetaVisible = sectionOutlineMetaVisibility.media;
+  const isSectionOutlineClassMetaVisible = sectionOutlineMetaVisibility.className;
   const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = (0, import_react19.useState)(() => /* @__PURE__ */ new Set());
   const [isAllQaVisible, setIsAllQaVisible] = (0, import_react19.useState)(false);
   const sourceOpenOptions = (0, import_react19.useMemo)(
@@ -13447,9 +14090,36 @@ var ReviewShell = ({
     [sourceInspector]
   );
   const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
+  const [sidePanel, setSidePanel] = (0, import_react19.useState)(
+    () => isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa"
+  );
   const isSourceTreeHoverOutlineEnabled = sourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === "qa";
   const isSourceTreePanelVisible = isSourceInspectorEnabled && isListVisible && sidePanel === "source";
+  (0, import_react19.useEffect)(() => {
+    if (isSourceInspectorEnabled || sidePanel !== "source") return;
+    setSidePanel("qa");
+  }, [isSourceInspectorEnabled, sidePanel]);
+  (0, import_react19.useEffect)(() => {
+    writeStoredReviewSidePanel(sidePanel);
+  }, [sidePanel]);
+  (0, import_react19.useEffect)(() => {
+    writeStoredReviewSidePanelVisible(isListVisible);
+  }, [isListVisible]);
+  const updateSectionOutlineFilter = (0, import_react19.useCallback)((nextFilter) => {
+    setSectionOutlineFilter(nextFilter);
+    writeStoredSourceTreeFilter(nextFilter);
+  }, []);
+  const updateSectionOutlineMetaVisibility = (0, import_react19.useCallback)(
+    (key) => {
+      setSectionOutlineMetaVisibility((current) => {
+        const next = { ...current, [key]: !current[key] };
+        writeStoredSourceTreeMetaVisibility(next);
+        return next;
+      });
+    },
+    []
+  );
   const sectionOutlineFilterTerms = (0, import_react19.useMemo)(
     () => getSectionOutlineFilterTerms(sectionOutlineFilter),
     [sectionOutlineFilter]
@@ -13717,6 +14387,7 @@ var ReviewShell = ({
       parsedInput.height
     ) : sizeRef.current;
     const nextAdapter = sourceEntries.find((entry) => entry.label === nextSource) ?? activeAdapterEntry;
+    const isCurrentTarget = targetRef.current === normalizedTarget && source === nextSource && sizeRef.current.width === nextSize.width && sizeRef.current.height === nextSize.height;
     if (parsedInput.itemId) {
       const item = await nextAdapter.adapter.get(parsedInput.itemId);
       if (item) {
@@ -13735,6 +14406,7 @@ var ReviewShell = ({
     setSize(nextSize);
     setTarget(normalizedTarget);
     updateShellUrl(normalizedTarget, nextSize, nextSource);
+    if (isCurrentTarget) reloadTargetFrame();
   };
   const selectPage = (href) => {
     const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
@@ -13755,6 +14427,10 @@ var ReviewShell = ({
     const writeMode = getReviewModeWriteMode(nextMode);
     if (writeMode && !activeAdapterEntry.writeModes.includes(writeMode)) return;
     closeRuler();
+    if (writeMode && mode !== nextMode) {
+      setSidePanel("qa");
+      setIsListVisible(true);
+    }
     setControllerReviewMode(nextMode);
   };
   useReviewShellHotkeys({
@@ -13804,7 +14480,6 @@ var ReviewShell = ({
   }, []);
   (0, import_react19.useEffect)(() => {
     clearSourceInspector();
-    setSectionOutlineFilter("");
     setCollapsedSectionOutlineIds(/* @__PURE__ */ new Set());
     setSectionOutline(null);
   }, [clearSourceInspector, targetSrc]);
@@ -13965,7 +14640,10 @@ var ReviewShell = ({
       } catch {
         frameDocument = null;
       }
-      return frameDocument ? getSectionOutline(frameDocument, sectionOutlineOptions) : [];
+      if (!frameDocument || frameDocument.readyState !== "complete") {
+        return null;
+      }
+      return getSectionOutline(frameDocument, sectionOutlineOptions);
     },
     [iframeRef, sectionOutlineOptions]
   );
@@ -13981,7 +14659,9 @@ var ReviewShell = ({
   (0, import_react19.useEffect)(() => {
     if (sidePanel !== "source" || !isListVisible) return void 0;
     const refreshSectionOutline = () => {
-      setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
+      const nextSectionOutline = getCurrentSectionOutline();
+      if (!nextSectionOutline) return;
+      setSectionOutlineWithDefaultCollapse(nextSectionOutline);
     };
     const animationFrame = window.requestAnimationFrame(refreshSectionOutline);
     const firstTimeout = window.setTimeout(refreshSectionOutline, 120);
@@ -14009,7 +14689,10 @@ var ReviewShell = ({
       return;
     }
     setSidePanel("source");
-    setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
+    const nextSectionOutline = getCurrentSectionOutline();
+    if (nextSectionOutline) {
+      setSectionOutlineWithDefaultCollapse(nextSectionOutline);
+    }
     setIsListVisible(true);
   }, [
     getCurrentSectionOutline,
@@ -14062,7 +14745,8 @@ var ReviewShell = ({
         return;
       }
       clearSourceInspector();
-      setIsListVisible(false);
+      setSidePanel("qa");
+      setIsListVisible(true);
       let targetWindow = null;
       try {
         targetWindow = entry.element.ownerDocument.defaultView ?? iframeRef.current?.contentWindow ?? null;
@@ -14372,7 +15056,10 @@ var ReviewShell = ({
     );
     bindSourceOpenShortcut();
     if (sidePanel === "source" && isListVisible) {
-      setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
+      const nextSectionOutline = getCurrentSectionOutline();
+      if (nextSectionOutline) {
+        setSectionOutlineWithDefaultCollapse(nextSectionOutline);
+      }
     }
   }, [
     bindSourceOpenShortcut,
@@ -14439,6 +15126,11 @@ var ReviewShell = ({
     `qa:${numberedItem.item.id}`,
     "QA prompt copied"
   );
+  const copyItemLabel = (numberedItem) => copyPrompt(
+    numberedItem.displayLabel,
+    `label:${numberedItem.item.id}`,
+    "QA number copied"
+  );
   const copyItemLink = (numberedItem) => {
     const { item } = numberedItem;
     return copyPrompt(
@@ -14464,6 +15156,99 @@ var ReviewShell = ({
     onRefreshReviewData: refreshReviewData2,
     onToast: showToast
   });
+  const renderSectionOutlineMeta = (entry) => {
+    const { metadata } = entry;
+    const rows = [];
+    const metaPaddingLeft = Math.max(0, entry.depth - 1) * 12 + 29;
+    const rect = getLiveSectionOutlineRect(entry);
+    if (isSectionOutlineBoxMetaVisible) {
+      rows.push(
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: "box" }),
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("code", { children: [
+            "top ",
+            rect.top,
+            " / left ",
+            rect.left,
+            " / width ",
+            rect.width,
+            " / height",
+            " ",
+            rect.height
+          ] })
+        ] }, "box")
+      );
+    }
+    if (metadata.textValue) {
+      rows.push(
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
+          "span",
+          {
+            className: "df-review-section-outline-meta-row is-text",
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: "text" }),
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("code", { children: metadata.textValue })
+            ]
+          },
+          "text"
+        )
+      );
+    }
+    if (isSectionOutlineFontMetaVisible && metadata.fontLabel) {
+      rows.push(
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: "font" }),
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("code", { children: metadata.fontLabel })
+        ] }, "font")
+      );
+    }
+    if (isSectionOutlineMediaMetaVisible && metadata.mediaItems?.length) {
+      metadata.mediaItems.forEach((mediaItem) => {
+        const mediaKey = `${mediaItem.variant}:${mediaItem.type}:${mediaItem.url}`;
+        const mediaLabel = mediaItem.variant === "media" ? mediaItem.type : mediaItem.variant;
+        rows.push(
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
+            "span",
+            {
+              className: "df-review-section-outline-meta-row is-media",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: mediaLabel }),
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                  "a",
+                  {
+                    className: "df-review-section-outline-media-link",
+                    href: mediaItem.url,
+                    rel: "noopener noreferrer",
+                    target: "_blank",
+                    title: `${mediaLabel} ${mediaItem.type}`,
+                    children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("code", { children: mediaItem.url })
+                  }
+                )
+              ]
+            },
+            mediaKey
+          )
+        );
+      });
+    }
+    if (isSectionOutlineClassMetaVisible && metadata.classNames?.length) {
+      rows.push(
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-section-outline-meta-row is-class", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: "class" }),
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("code", { children: className }, className)) })
+        ] }, "class")
+      );
+    }
+    if (rows.length === 0) return null;
+    return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      "div",
+      {
+        className: "df-review-section-outline-meta",
+        style: { paddingLeft: `${metaPaddingLeft}px` },
+        children: rows
+      }
+    );
+  };
   const renderSectionOutlineEntry = (entry) => {
     const hasChildren = entry.children.length > 0;
     const isCollapsed = !isSectionOutlineFiltering && collapsedSectionOutlineIds.has(entry.id);
@@ -14475,8 +15260,7 @@ var ReviewShell = ({
           /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
             "div",
             {
-              className: "df-review-section-outline-row",
-              style: { paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` },
+              className: "df-review-section-outline-entry-body",
               onMouseEnter: () => showSourceOutlineForElement(entry.element),
               onMouseLeave: clearSourceOutlineHover,
               onMouseOver: () => showSourceOutlineForElement(entry.element),
@@ -14489,78 +15273,88 @@ var ReviewShell = ({
               onPointerEnter: () => showSourceOutlineForElement(entry.element),
               onPointerLeave: clearSourceOutlineHover,
               children: [
-                hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                  "button",
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
+                  "div",
                   {
-                    "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
-                    "aria-expanded": !isCollapsed,
-                    className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
-                    type: "button",
-                    onClick: () => toggleSectionOutlineEntry(entry.id),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(ChevronDown, { "aria-hidden": "true" })
-                  }
-                ) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                  "span",
-                  {
-                    "aria-hidden": "true",
-                    className: "df-review-section-outline-toggle is-placeholder"
+                    className: "df-review-section-outline-row",
+                    style: { paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` },
+                    children: [
+                      hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                        "button",
+                        {
+                          "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
+                          "aria-expanded": !isCollapsed,
+                          className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
+                          type: "button",
+                          onClick: () => toggleSectionOutlineEntry(entry.id),
+                          children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(ChevronDown, { "aria-hidden": "true" })
+                        }
+                      ) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                        "span",
+                        {
+                          "aria-hidden": "true",
+                          className: "df-review-section-outline-toggle is-placeholder"
+                        }
+                      ),
+                      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                        "button",
+                        {
+                          className: "df-review-section-outline-name",
+                          type: "button",
+                          onClick: () => scrollToSection(entry),
+                          children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: entry.label })
+                        }
+                      ),
+                      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-section-outline-links", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                          "button",
+                          {
+                            "aria-label": `Open ${entry.label} data`,
+                            className: "df-review-section-outline-link",
+                            title: "Open data",
+                            type: "button",
+                            disabled: !entry.data?.file,
+                            onClick: () => openSectionData(entry),
+                            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Database, { "aria-hidden": "true" })
+                          }
+                        ),
+                        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                          "button",
+                          {
+                            "aria-label": `Open ${entry.label} source`,
+                            className: "df-review-section-outline-link",
+                            title: "Open source",
+                            type: "button",
+                            disabled: !entry.source?.file,
+                            onClick: () => openSectionSource(entry),
+                            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(CodeXml, { "aria-hidden": "true" })
+                          }
+                        ),
+                        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                          "span",
+                          {
+                            "aria-hidden": "true",
+                            className: "df-review-section-outline-divider",
+                            children: "|"
+                          }
+                        ),
+                        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                          "button",
+                          {
+                            "aria-label": `Start DOM QA for ${entry.label}`,
+                            className: "df-review-section-outline-link is-dom-select",
+                            title: "DOM select",
+                            type: "button",
+                            disabled: !canWriteDom,
+                            onClick: () => startSectionDomReview(entry),
+                            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SquareMousePointer, { "aria-hidden": "true" })
+                          }
+                        )
+                      ] })
+                    ]
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                  "button",
-                  {
-                    className: "df-review-section-outline-name",
-                    type: "button",
-                    onClick: () => scrollToSection(entry),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: entry.label })
-                  }
-                ),
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-section-outline-links", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                    "button",
-                    {
-                      "aria-label": `Open ${entry.label} data`,
-                      className: "df-review-section-outline-link",
-                      title: "Open data",
-                      type: "button",
-                      disabled: !entry.data?.file,
-                      onClick: () => openSectionData(entry),
-                      children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Database, { "aria-hidden": "true" })
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                    "button",
-                    {
-                      "aria-label": `Open ${entry.label} source`,
-                      className: "df-review-section-outline-link",
-                      title: "Open source",
-                      type: "button",
-                      disabled: !entry.source?.file,
-                      onClick: () => openSectionSource(entry),
-                      children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(CodeXml, { "aria-hidden": "true" })
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                    "span",
-                    {
-                      "aria-hidden": "true",
-                      className: "df-review-section-outline-divider",
-                      children: "|"
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                    "button",
-                    {
-                      "aria-label": `Start DOM QA for ${entry.label}`,
-                      className: "df-review-section-outline-link is-dom-select",
-                      title: "DOM select",
-                      type: "button",
-                      disabled: !canWriteDom,
-                      onClick: () => startSectionDomReview(entry),
-                      children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SquareMousePointer, { "aria-hidden": "true" })
-                    }
-                  )
-                ] })
+                renderSectionOutlineMeta(entry)
               ]
             }
           ),
@@ -14671,7 +15465,7 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleSourceTreePanel,
               title: "Source Tree",
-              children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Search, {}) })
+              children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Workflow, {}) })
             }
           ),
           /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-side-actions", children: [
@@ -14734,6 +15528,7 @@ var ReviewShell = ({
             onChangeItemStatus: changeItemStatus,
             onClearSelectedItem: clearSelectedReviewItem,
             onChangeReviewSource: changeReviewSource,
+            onCopyItemLabel: (numberedItem) => void copyItemLabel(numberedItem),
             onCopyItemLink: (numberedItem) => void copyItemLink(numberedItem),
             onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
             onEditItem: setEditingItem,
@@ -14753,9 +15548,61 @@ var ReviewShell = ({
             "aria-hidden": !isSourceTreePanelVisible,
             children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
               /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-section-outline-head", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { children: "Source Tree" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("small", { children: isSectionOutlineFiltering ? `${filteredSectionOutlineCount} / ${sectionOutlineTotalCount} results` : `${sectionOutline?.length ?? 0} roots` })
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-section-outline-summary", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { children: "Component" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("small", { children: isSectionOutlineFiltering ? `${filteredSectionOutlineCount} / ${sectionOutlineTotalCount} results` : `${sectionOutline?.length ?? 0} ${sectionOutline?.length === 1 ? "root" : "roots"}` })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-section-outline-meta-controls", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                      "button",
+                      {
+                        "aria-label": "Toggle source tree box metadata",
+                        "aria-pressed": isSectionOutlineBoxMetaVisible,
+                        className: `df-review-section-outline-meta-toggle${isSectionOutlineBoxMetaVisible ? " is-active" : ""}`,
+                        title: "top / left / width / height",
+                        type: "button",
+                        onClick: () => updateSectionOutlineMetaVisibility("box"),
+                        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SquareDashed, { "aria-hidden": "true" })
+                      }
+                    ),
+                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                      "button",
+                      {
+                        "aria-label": "Toggle source tree font metadata",
+                        "aria-pressed": isSectionOutlineFontMetaVisible,
+                        className: `df-review-section-outline-meta-toggle${isSectionOutlineFontMetaVisible ? " is-active" : ""}`,
+                        title: "font size / weight",
+                        type: "button",
+                        onClick: () => updateSectionOutlineMetaVisibility("font"),
+                        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Type, { "aria-hidden": "true" })
+                      }
+                    ),
+                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                      "button",
+                      {
+                        "aria-label": "Toggle source tree media metadata",
+                        "aria-pressed": isSectionOutlineMediaMetaVisible,
+                        className: `df-review-section-outline-meta-toggle${isSectionOutlineMediaMetaVisible ? " is-active" : ""}`,
+                        title: "media urls",
+                        type: "button",
+                        onClick: () => updateSectionOutlineMetaVisibility("media"),
+                        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Image, { "aria-hidden": "true" })
+                      }
+                    ),
+                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                      "button",
+                      {
+                        "aria-label": "Toggle source tree class metadata",
+                        "aria-pressed": isSectionOutlineClassMetaVisible,
+                        className: `df-review-section-outline-meta-toggle${isSectionOutlineClassMetaVisible ? " is-active" : ""}`,
+                        title: "class names",
+                        type: "button",
+                        onClick: () => updateSectionOutlineMetaVisibility("className"),
+                        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(CodeXml, { "aria-hidden": "true" })
+                      }
+                    )
+                  ] })
                 ] }),
                 /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-section-outline-filter", children: [
                   /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Search, { "aria-hidden": "true" }),
@@ -14769,7 +15616,7 @@ var ReviewShell = ({
                       autoComplete: "off",
                       enterKeyHint: "search",
                       spellCheck: false,
-                      onChange: (event) => setSectionOutlineFilter(event.currentTarget.value)
+                      onChange: (event) => updateSectionOutlineFilter(event.currentTarget.value)
                     }
                   ),
                   sectionOutlineFilter && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
@@ -14779,7 +15626,7 @@ var ReviewShell = ({
                       className: "df-review-section-outline-filter-clear",
                       type: "button",
                       onMouseDown: (event) => event.preventDefault(),
-                      onClick: () => setSectionOutlineFilter(""),
+                      onClick: () => updateSectionOutlineFilter(""),
                       children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(X, { "aria-hidden": "true" })
                     }
                   )
@@ -15119,10 +15966,13 @@ lucide-react/dist/esm/icons/scan.mjs:
 lucide-react/dist/esm/icons/search.mjs:
 lucide-react/dist/esm/icons/settings.mjs:
 lucide-react/dist/esm/icons/smartphone.mjs:
+lucide-react/dist/esm/icons/square-dashed.mjs:
 lucide-react/dist/esm/icons/square-mouse-pointer.mjs:
 lucide-react/dist/esm/icons/sticky-note.mjs:
 lucide-react/dist/esm/icons/sun.mjs:
+lucide-react/dist/esm/icons/type.mjs:
 lucide-react/dist/esm/icons/upload.mjs:
+lucide-react/dist/esm/icons/workflow.mjs:
 lucide-react/dist/esm/icons/x.mjs:
 lucide-react/dist/esm/lucide-react.mjs:
   (**

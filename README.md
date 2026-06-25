@@ -26,6 +26,7 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, and extension boundaries.
 - [Figma overlay](docs/figma-overlay.md): how the shell toggles a host Figma overlay.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
+- [Release notes 0.6.0](docs/release-notes-0.6.0.md): latest shell/source tree changes and validation notes.
 
 ## Quick Start
 
@@ -130,7 +131,7 @@ export default defineConfig({
 });
 ```
 
-When source hints are available, hold `Option` over the review target to inspect source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose a file to open. The side rail can also open a Source Tree panel with section/source/data links. DOM QA cards show a source action when the saved item has source hints. Keep these plugins disabled for production builds because they write source paths into the DOM.
+When source hints are available, hold `Option` over the review target to inspect source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose a file to open. The side rail can also open a Source Tree panel with section/source/data links, live box metrics, text/font/media metadata, and class tags. DOM QA cards show a source action when the saved item has source hints. Source Tree filter/options, QA panel mode, and QA status filter are stored in browser localStorage. Keep these plugins disabled for production builds because they write source paths into the DOM.
 
 ```tsx
 mountReviewShell({

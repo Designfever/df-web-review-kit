@@ -18,6 +18,15 @@ export const FIGMA_OVERLAY_UNAVAILABLE_MESSAGE =
 export const FIGMA_TOKEN_STORAGE_KEY = 'figma-token';
 export const REVIEW_USER_ID_STORAGE_KEY = 'user-id';
 export const REVIEW_THEME_STORAGE_KEY = 'df-review-theme';
+export const REVIEW_SIDE_PANEL_STORAGE_KEY = 'df-review-side-panel';
+export const REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY =
+  'df-review-side-panel-visible';
+export const REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY =
+  'df-review-source-tree-filter';
+export const REVIEW_SOURCE_TREE_META_STORAGE_KEY =
+  'df-review-source-tree-meta-visibility';
+export const REVIEW_QA_STATUS_FILTER_STORAGE_KEY =
+  'df-review-qa-status-filter';
 export const DEFAULT_REVIEW_THEME: ReviewShellTheme = 'dark';
 export const FIGMA_TOKEN_GUIDE_ID = 'df-review-figma-token-guide';
 export const DEFAULT_INITIAL_REVIEW_PROMPT =

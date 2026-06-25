@@ -25,6 +25,10 @@ import {
   findViewportPreset,
   getViewportPresetKind,
 } from '../viewport';
+import {
+  getStoredReviewQaStatusFilter,
+  writeStoredReviewQaStatusFilter,
+} from '../settings';
 import type { SitemapQaCount } from '../sitemap/tree';
 import {
   addSitemapQaCounts,
@@ -69,8 +73,8 @@ export const useReviewShellData = ({
     () => new Set()
   );
   const [qaFilter, setQaFilter] = useState<ReviewQaFilter>('all');
-  const [qaStatusFilter, setQaStatusFilter] =
-    useState<ReviewQaStatusFilter>('all');
+  const [qaStatusFilter, setQaStatusFilterState] =
+    useState<ReviewQaStatusFilter>(getStoredReviewQaStatusFilter);
   const [sitemapItems, setSitemapItems] = useState<SitemapItemsBySource>(() => ({
     local: [],
     remote: [],
@@ -213,6 +217,10 @@ export const useReviewShellData = ({
     return counts;
   }, [activeItems, getItemPresetScope]);
   const currentPresetScope = getViewportPresetKind(size);
+  const setQaStatusFilter = useCallback((filter: ReviewQaStatusFilter) => {
+    setQaStatusFilterState(filter);
+    writeStoredReviewQaStatusFilter(filter);
+  }, []);
   const pageQaCounts = useMemo(() => {
     const counts = new Map<string, SitemapQaCount>();
     const addItems = (

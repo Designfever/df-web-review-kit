@@ -35,6 +35,8 @@ createWebReviewKit({
 
 `ui.panel: false` means the React shell owns the side panel and toolbar. Core still owns target overlays such as note pins, area selection boxes, DOM hover outlines, saved item markers, and highlights.
 
+When the React shell provides a composer host, core docks DOM/area draft composer UI into the QA panel instead of rendering it as a floating target overlay. Core still owns draft creation, anchor capture, geometry, and adapter submission; React shell only provides the stable panel host.
+
 ## Core Modules
 
 - `web.review.kit.app.ts`: controller lifecycle, state transitions, adapter calls, item creation, restore flow.
@@ -95,6 +97,8 @@ The default local adapter is for draft/local review work. Supabase is optional h
 - ruler UI
 - presence UI
 - host overlay toggles such as grid and Figma
+- Source Tree UI, metadata toggles, and browser-local UI state persistence
+- QA panel composer host for shell-owned layout
 
 React shell should call the core controller instead of duplicating target overlay logic.
 

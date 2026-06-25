@@ -40,6 +40,7 @@ interface ReviewQaPanelProps {
   ) => Promise<void>;
   onClearSelectedItem: () => void;
   onChangeReviewSource: (nextSource: ReviewSource) => void;
+  onCopyItemLabel: (numberedItem: NumberedReviewItem) => void;
   onCopyItemLink: (numberedItem: NumberedReviewItem) => void;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onEditItem: (item: ReviewItem) => void;
@@ -76,6 +77,7 @@ export const ReviewQaPanel = ({
   onChangeItemStatus,
   onClearSelectedItem,
   onChangeReviewSource,
+  onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
   onEditItem,
@@ -148,6 +150,7 @@ export const ReviewQaPanel = ({
                   selectedItemId={selectedItemId}
                   onChangeItemStatus={onChangeItemStatus}
                   onClearSelectedItem={onClearSelectedItem}
+                  onCopyItemLabel={onCopyItemLabel}
                   onCopyItemLink={onCopyItemLink}
                   onCopyItemPrompt={onCopyItemPrompt}
                   onEditItem={onEditItem}
@@ -161,6 +164,7 @@ export const ReviewQaPanel = ({
           </div>
         </section>
       </div>
+      <div className="df-review-qa-draft-host" />
     </aside>
   );
 };

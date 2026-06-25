@@ -95,41 +95,48 @@ interface RemoveReviewItemOptions {
   onToast?: (message: string) => void;
 }
 
+const writeClipboardTextFallback = (value: string) => {
+  const selection = document.getSelection();
+  const activeElement = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
+  const ranges = selection
+    ? Array.from({ length: selection.rangeCount }, (_, index) =>
+        selection.getRangeAt(index)
+      )
+    : [];
+  const textarea = document.createElement('textarea');
+  textarea.value = value;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  textarea.style.top = '0';
+
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  const isCopied = document.execCommand('copy');
+  textarea.remove();
+
+  selection?.removeAllRanges();
+  ranges.forEach((range) => selection?.addRange(range));
+  activeElement?.focus();
+
+  if (!isCopied) {
+    throw new Error('Failed to copy to clipboard');
+  }
+};
+
 const writeClipboardText = async (value: string) => {
   try {
-    await navigator.clipboard.writeText(value);
+    writeClipboardTextFallback(value);
     return;
-  } catch {
-    const selection = document.getSelection();
-    const activeElement = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
-    const ranges = selection
-      ? Array.from({ length: selection.rangeCount }, (_, index) =>
-          selection.getRangeAt(index)
-        )
-      : [];
-    const textarea = document.createElement('textarea');
-    textarea.value = value;
-    textarea.setAttribute('readonly', '');
-    textarea.style.position = 'fixed';
-    textarea.style.left = '-9999px';
-    textarea.style.top = '0';
-
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-
-    const isCopied = document.execCommand('copy');
-    textarea.remove();
-
-    selection?.removeAllRanges();
-    ranges.forEach((range) => selection?.addRange(range));
-    activeElement?.focus();
-
-    if (!isCopied) {
-      throw new Error('Failed to copy to clipboard');
+  } catch (error) {
+    if (!navigator.clipboard?.writeText) {
+      throw error;
     }
+    await navigator.clipboard.writeText(value);
   }
 };
 

@@ -74,6 +74,14 @@ export function createStyleElement() {
       cursor: default;
     }
 
+    .dfwr-shell.is-docked-composer {
+      position: relative;
+      inset: auto;
+      z-index: auto;
+      padding: 0;
+      pointer-events: auto;
+    }
+
     .dfwr-panel {
       position: fixed;
       right: 16px;
@@ -574,12 +582,18 @@ export function createStyleElement() {
       border-color: rgba(99, 215, 199, 0.56);
     }
 
-    .dfwr-note-popover.is-compact-composer,
-    .dfwr-area-draft.is-compact-composer {
-      padding: 36px 12px 12px;
-      border-color: rgba(99, 215, 199, 0.68);
-      background: var(--df-review-color-panel);
-      box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.38);
+    .dfwr-shell.is-docked-composer .dfwr-note-popover.is-docked-composer,
+    .dfwr-shell.is-docked-composer .dfwr-area-draft.is-docked-composer {
+      position: relative;
+      left: auto;
+      right: auto;
+      top: auto;
+      z-index: auto;
+      max-height: none;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-textarea {
+      min-height: 184px;
     }
 
     .dfwr-note-popover.is-dragging,
@@ -609,51 +623,6 @@ export function createStyleElement() {
       cursor: grabbing;
     }
 
-    .dfwr-draft-close {
-      appearance: none;
-      position: absolute;
-      right: 8px;
-      top: 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      padding: 0;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: var(--df-review-radius-sm);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--df-review-color-text-muted);
-      cursor: pointer;
-      pointer-events: auto;
-    }
-
-    .dfwr-draft-close:hover,
-    .dfwr-draft-close:focus-visible {
-      border-color: rgba(255, 255, 255, 0.36);
-      background: var(--df-review-color-control-hover);
-      color: var(--df-review-color-text);
-      outline: none;
-    }
-
-    .dfwr-draft-close::before,
-    .dfwr-draft-close::after {
-      content: "";
-      position: absolute;
-      width: 12px;
-      height: 2px;
-      border-radius: 999px;
-      background: currentColor;
-    }
-
-    .dfwr-draft-close::before {
-      transform: rotate(45deg);
-    }
-
-    .dfwr-draft-close::after {
-      transform: rotate(-45deg);
-    }
-
     .dfwr-area-draft {
       position: fixed;
       right: 16px;
@@ -675,6 +644,50 @@ export function createStyleElement() {
       padding: 0;
     }
 
+    .dfwr-actions.has-leading {
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .dfwr-actions-leading,
+    .dfwr-actions-primary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .dfwr-actions-primary {
+      margin-left: auto;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading {
+      align-items: stretch;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-button,
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle {
+      height: var(--df-review-control-height-md);
+      min-height: var(--df-review-control-height-md);
+      border-radius: var(--df-review-radius-sm);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-button {
+      min-width: 96px;
+      padding: 0 12px;
+      font-size: var(--df-review-font-size-sm);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle {
+      width: var(--df-review-control-height-md);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle svg {
+      width: 18px;
+      height: 18px;
+    }
+
     .dfwr-note-actions {
       justify-content: flex-end;
     }
@@ -685,11 +698,6 @@ export function createStyleElement() {
 
     .dfwr-area-draft .dfwr-actions {
       padding: 0;
-    }
-
-    .dfwr-note-popover.is-compact-composer .dfwr-actions,
-    .dfwr-area-draft.is-compact-composer .dfwr-actions {
-      flex-wrap: nowrap;
     }
 
     .dfwr-form {
@@ -714,12 +722,6 @@ export function createStyleElement() {
     .dfwr-textarea:focus {
       outline: 2px solid var(--df-review-color-accent-ring);
       outline-offset: 1px;
-    }
-
-    .dfwr-note-popover.is-compact-composer .dfwr-textarea,
-    .dfwr-area-draft.is-compact-composer .dfwr-textarea {
-      min-height: 96px;
-      max-height: 160px;
     }
 
     @media (hover: none) and (pointer: coarse) {
@@ -1008,7 +1010,7 @@ export function createStyleElement() {
       }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 520px) {
       .dfwr-panel {
         left: 8px;
         right: 8px;
@@ -1016,11 +1018,6 @@ export function createStyleElement() {
         bottom: 8px;
         width: auto;
         max-height: min(70vh, calc(100vh - 16px));
-      }
-
-      .dfwr-note-popover.is-compact-composer,
-      .dfwr-area-draft.is-compact-composer {
-        max-height: calc(100vh - 16px);
       }
     }
   `;

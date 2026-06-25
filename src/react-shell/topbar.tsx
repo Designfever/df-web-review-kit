@@ -5,6 +5,7 @@ import {
   Maximize2 as Maximize2Icon,
   Monitor as MonitorIcon,
   RectangleHorizontal as TabletIcon,
+  RefreshCw as RefreshCwIcon,
   Ruler as RulerIcon,
   Smartphone as SmartphoneIcon,
   SquareMousePointer as SquareMousePointerIcon,
@@ -105,10 +106,19 @@ export const ReviewTopbar = ({
           value={draftTarget}
           onChange={(event) => onDraftTargetChange(event.target.value)}
         />
-        <button type="submit">Load</button>
-        <button type="button" onClick={onCopyCurrentUrl}>
-          {copyLabel}
-        </button>
+        <div className="df-review-address-actions">
+          <button
+            aria-label="Refresh target"
+            className="df-review-address-refresh"
+            title="Refresh target"
+            type="submit"
+          >
+            <RefreshCwIcon aria-hidden="true" />
+          </button>
+          <button type="button" onClick={onCopyCurrentUrl}>
+            {copyLabel}
+          </button>
+        </div>
       </form>
 
       <div className="df-review-tools">

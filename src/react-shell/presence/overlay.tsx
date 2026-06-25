@@ -69,7 +69,7 @@ export const PresenceOverlay = ({
               }
               title={getPresenceName(user)}
             >
-              {getPresenceName(user)}
+              <span>{getPresenceName(user)}</span>
             </span>
           ))}
         </div>

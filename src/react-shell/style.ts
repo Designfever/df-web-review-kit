@@ -1736,9 +1736,12 @@ export function ensureReviewShellStyle() {
     position: absolute;
     right: calc(100% + 8px);
     bottom: 8px;
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 5px;
-    min-width: 132px;
+    width: max-content;
+    min-width: 0;
     max-width: 220px;
     border: 1px solid var(--df-review-line);
     border-radius: var(--df-review-radius-md);
@@ -1749,18 +1752,25 @@ export function ensureReviewShellStyle() {
 
   .df-review-presence-chip {
     --df-review-presence-color: var(--df-review-accent);
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    width: fit-content;
+    max-width: 180px;
     min-width: 0;
-    min-height: 24px;
-    border-left: 2px solid var(--df-review-presence-color);
-    border-radius: var(--df-review-radius-sm);
-    padding: 0 8px;
+    min-height: 22px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 9px;
     color: var(--df-review-text);
     background: var(--df-review-control);
     font-size: var(--df-review-font-size-xs);
     font-weight: 500;
     line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .df-review-presence-chip span {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1768,6 +1778,7 @@ export function ensureReviewShellStyle() {
 
   .df-review-presence-chip.is-self {
     color: var(--df-review-accent);
+    border-color: var(--df-review-accent-soft);
     background: var(--df-review-accent-soft);
   }
 

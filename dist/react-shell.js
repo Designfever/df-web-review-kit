@@ -1586,17 +1586,12 @@ function ensureReviewShellStyle() {
         width: clamp(154px, 26vw, 190px);
 	    }
 
-		  }
-
-    @container (max-width: 480px) {
-      .df-review-overlays {
+      .df-review-tool-divider,
+      .df-review-active-size {
         display: none;
       }
 
-      .df-review-overlays-menu {
-        display: block;
-      }
-    }
+		  }
 
 		  .df-review-side-rail {
 	    grid-column: 3;

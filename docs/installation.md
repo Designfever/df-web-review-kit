@@ -218,7 +218,7 @@ export default defineConfig({
 
 Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, and `data-wrk-source-column`. Data locator also injects `__wrkDataFile` and `__wrkDataLine` props into page data section objects so the shell can expose matching `data-wrk-data-*` hints when host components forward those props to section wrappers.
 
-In the review shell, hold `Option` over the target iframe to show source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose which file to open. The side rail Source Tree panel lists section/source/data candidates and can scroll to a section or open its source/data file. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
+In the review shell, hold `Option` over the target iframe to show source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose which file to open. The side rail Source Tree panel lists section/source/data candidates and can scroll to a section or open its source/data file. It can also show live box metrics, text/font metadata, media URLs, and class tags for each node. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
 
 ```tsx
 mountReviewShell({
@@ -241,6 +241,10 @@ mountReviewShell({
 Set `sourceInspector.enabled` to `false` when source code opening should be unavailable. Use `sourceInspector.ignore` to hide infrastructure files from source candidates and the Source Tree. Use `sourceInspector.maxDepth` to cap Source Tree traversal depth. Set `sourceInspector.hoverOutline` to `false` to disable iframe target outlines while hovering Source Tree items. Set `sourceInspector.includePlacer` to `true` when primitive Placer nodes should appear in Source Tree. The `data-font` overlay still belongs to the target project markup and is not required for source opening.
 
 Use this only in dev/review builds. Source paths are written into the browser DOM and can be persisted with QA items.
+
+Source Tree filter/options, side panel state, and QA status filter are browser-local UI preferences. They are stored in localStorage and are not sent through the adapter.
+
+In React shell mode, DOM/area draft composers dock into the QA panel when the shell provides a composer host. This keeps mobile Safari keyboard/viewport resize from moving a floating composer layer over the target frame.
 
 ## Custom Adapter
 

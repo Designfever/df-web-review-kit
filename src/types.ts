@@ -208,4 +208,5 @@ export interface WebReviewKitTarget {
   document: Document;
   getViewportRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
   getOverlayRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
+  getComposerHost?: () => HTMLElement | null | undefined;
 }

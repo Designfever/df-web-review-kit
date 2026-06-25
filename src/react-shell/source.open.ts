@@ -124,7 +124,29 @@ export type SectionOutlineEntry = {
   element: Element;
   source: DomSourceHint | undefined;
   data: DomSourceHint | undefined;
+  metadata: SectionOutlineMetadata;
   children: SectionOutlineEntry[];
+};
+
+export type SectionOutlineRect = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+};
+
+export type SectionOutlineMetadata = {
+  rect: SectionOutlineRect;
+  textValue?: string;
+  fontLabel?: string;
+  mediaItems?: SectionOutlineMediaItem[];
+  classNames?: string[];
+};
+
+export type SectionOutlineMediaItem = {
+  type: 'image' | 'video';
+  url: string;
+  variant: 'desktop' | 'mobile' | 'media';
 };
 
 export type GetSectionOutlineOptions = GetSourceCandidatesOptions & {
@@ -147,7 +169,7 @@ export const getSectionOutline = (
     if (source?.file) {
       addSourceFileCompareKey(seen, getOutlineSourceKey(source));
     }
-    return {
+    return createSectionOutlineEntry({
       id: `${label}-${index}`,
       label,
       depth: 1,
@@ -162,7 +184,7 @@ export const getSectionOutline = (
         seen,
         options
       ),
-    };
+    });
   });
 };
 
@@ -208,7 +230,7 @@ function getSectionOutlineChildren(
     if (source?.file && isNewSource) {
       const childSeen = new Set(seen);
       addSourceFileCompareKey(childSeen, sourceKey);
-      entries.push({
+      entries.push(createSectionOutlineEntry({
         id: `${sourceKey}-${getElementOutlinePath(child)}-${entries.length}`,
         label,
         depth,
@@ -223,7 +245,7 @@ function getSectionOutlineChildren(
           childSeen,
           options
         ),
-      });
+      }));
       continue;
     }
 
@@ -245,6 +267,174 @@ function getElementOutlinePath(element: Element) {
   }
 
   return indices.join('-');
+}
+
+function createSectionOutlineEntry(
+  entry: Omit<SectionOutlineEntry, 'metadata'>
+): SectionOutlineEntry {
+  return {
+    ...entry,
+    metadata: getSectionOutlineMetadata(entry.element, entry.label, entry.source),
+  };
+}
+
+const truncateOutlineValue = (value: string, maxLength: number) =>
+  value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
+
+const normalizeOutlineValue = (value: string | null | undefined) =>
+  value?.replace(/\s+/g, ' ').trim() ?? '';
+
+function getSectionOutlineMetadata(
+  element: Element,
+  label: string,
+  source: DomSourceHint | undefined
+): SectionOutlineMetadata {
+  const textElement = getPlacerTextElement(element, label, source?.file);
+
+  return {
+    rect: getSectionOutlineRect(element),
+    textValue: textElement
+      ? truncateOutlineValue(
+          normalizeOutlineValue(textElement.textContent),
+          180
+        )
+      : undefined,
+    fontLabel: textElement ? getFontLabel(textElement) : undefined,
+    mediaItems: getPlacerMediaItems(element, label, source?.file),
+    classNames: getElementClassNames(element),
+  };
+}
+
+function getSectionOutlineRect(element: Element): SectionOutlineRect {
+  const rect = element.getBoundingClientRect();
+  return {
+    top: Math.round(rect.top),
+    left: Math.round(rect.left),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  };
+}
+
+function getElementClassNames(element: Element) {
+  const classNames = Array.from(element.classList).filter(Boolean);
+  return classNames.length > 0 ? classNames : undefined;
+}
+
+function getPlacerTextElement(
+  element: Element,
+  label: string,
+  file: string | undefined
+) {
+  if (!isPlacerTextOutlineNode(label, file) && !element.hasAttribute('data-font')) {
+    return null;
+  }
+
+  return element.hasAttribute('data-font')
+    ? element
+    : element.querySelector('[data-font]');
+}
+
+function isPlacerTextOutlineNode(label: string, file: string | undefined) {
+  return `${label} ${file ?? ''}`.toLowerCase().includes('placertext');
+}
+
+function getFontLabel(element: Element) {
+  const dataFont = element.getAttribute('data-font');
+  if (dataFont) {
+    return dataFont
+      .replace(/\bs\b/g, 'sb')
+      .replace(/\bsemibold\b/g, 'sb')
+      .replace(/\bregular\b/g, 'r');
+  }
+
+  const style = window.getComputedStyle(element);
+  return `${Math.round(parseFloat(style.fontSize))}px ${style.fontWeight}`;
+}
+
+function getPlacerMediaItems(
+  element: Element,
+  label: string,
+  file: string | undefined
+) {
+  if (!isPlacerMediaOutlineNode(label, file)) return undefined;
+
+  const mediaItems: SectionOutlineMediaItem[] = [];
+  const seen = new Set<string>();
+  const addMediaItem = (
+    target: Element,
+    type: SectionOutlineMediaItem['type'],
+    url: string | null | undefined
+  ) => {
+    const normalizedUrl = normalizeOutlineValue(url);
+    if (!normalizedUrl) return;
+
+    const variant = getPlacerMediaVariant(target, element);
+    const key = `${variant}:${type}:${normalizedUrl}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    mediaItems.push({ type, url: normalizedUrl, variant });
+  };
+
+  if (element instanceof HTMLVideoElement) {
+    addMediaItem(element, 'video', getVideoElementUrl(element));
+    addMediaItem(element, 'image', element.getAttribute('poster'));
+  }
+  if (element instanceof HTMLImageElement) {
+    addMediaItem(element, 'image', getMediaElementUrl(element));
+  }
+  if (element instanceof HTMLSourceElement) {
+    addMediaItem(element, 'video', getSourceElementUrl(element));
+  }
+
+  Array.from(element.querySelectorAll('video')).forEach((video) => {
+    addMediaItem(video, 'video', getVideoElementUrl(video));
+    addMediaItem(video, 'image', video.getAttribute('poster'));
+  });
+  Array.from(element.querySelectorAll('source')).forEach((source) => {
+    addMediaItem(source, 'video', getSourceElementUrl(source));
+  });
+  Array.from(element.querySelectorAll('img')).forEach((img) => {
+    addMediaItem(img, 'image', getMediaElementUrl(img));
+  });
+
+  return mediaItems.length > 0 ? mediaItems : undefined;
+}
+
+function isPlacerMediaOutlineNode(label: string, file: string | undefined) {
+  return `${label} ${file ?? ''}`.toLowerCase().includes('placermedia');
+}
+
+function getPlacerMediaVariant(
+  target: Element,
+  root: Element
+): SectionOutlineMediaItem['variant'] {
+  let current: Element | null = target;
+  while (current) {
+    if (current.classList.contains('d-block-pc')) return 'desktop';
+    if (current.classList.contains('d-block-m')) return 'mobile';
+    if (current === root) break;
+    current = current.parentElement;
+  }
+
+  return 'media';
+}
+
+function getVideoElementUrl(video: HTMLVideoElement) {
+  return (
+    video.currentSrc ||
+    video.getAttribute('src') ||
+    video.querySelector('source')?.getAttribute('src') ||
+    video.getAttribute('poster') ||
+    video.src
+  );
+}
+
+function getSourceElementUrl(source: HTMLSourceElement) {
+  return source.getAttribute('src') || source.src;
+}
+
+function getMediaElementUrl(img: HTMLImageElement) {
+  return img.currentSrc || img.getAttribute('src') || img.src;
 }
 
 function getOutlineSourceKey(source: DomSourceHint) {

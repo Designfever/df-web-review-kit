@@ -1,5 +1,4 @@
 import { useState, type CSSProperties } from 'react';
-import { UserRound as UserRoundIcon } from 'lucide-react';
 import type { ReviewPresenceUser } from '../types';
 
 interface PresenceOverlayProps {
@@ -9,6 +8,25 @@ interface PresenceOverlayProps {
 
 const getPresenceName = (user: ReviewPresenceUser) =>
   user.displayName || user.userId;
+
+const PresenceUserIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 30 30">
+    <circle
+      cx="15"
+      cy="15"
+      r="12.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+    />
+    <circle cx="15" cy="10.5" r="3.4" fill="currentColor" stroke="none" />
+    <path
+      d="M7.8 22.1c.9-4.1 3.4-6.1 7.2-6.1s6.3 2 7.2 6.1c-1.7 1.5-4.1 2.4-7.2 2.4s-5.5-.9-7.2-2.4z"
+      fill="currentColor"
+      stroke="none"
+    />
+  </svg>
+);
 
 export const PresenceOverlay = ({
   presenceSessionId,
@@ -32,7 +50,7 @@ export const PresenceOverlay = ({
         type="button"
         onClick={() => setIsExpanded((current) => !current)}
       >
-        <UserRoundIcon aria-hidden="true" />
+        <PresenceUserIcon />
         <span className="df-review-presence-badge">{users.length}</span>
       </button>
       {isExpanded && (
@@ -51,7 +69,7 @@ export const PresenceOverlay = ({
               }
               title={getPresenceName(user)}
             >
-              {getPresenceName(user)}
+              <span>{getPresenceName(user)}</span>
             </span>
           ))}
         </div>

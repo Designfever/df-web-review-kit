@@ -347,13 +347,25 @@ class WebReviewKitApp {
   };
 
   private readonly handleViewportChange = () => {
-    if (!this.isOpen || this.renderFrame) return;
+    if (!this.isOpen || this.renderFrame || this.isDraftComposerFocused()) return;
 
     this.renderFrame = window.requestAnimationFrame(() => {
       this.renderFrame = undefined;
+      if (this.isDraftComposerFocused()) return;
       this.render();
     });
   };
+
+  private isDraftComposerFocused() {
+    if (!this.noteDraft && !this.areaDraft) return false;
+    const composerHost = this.getEnvironment()?.composerHost;
+    const activeElement = composerHost?.ownerDocument.activeElement;
+    return Boolean(
+      composerHost &&
+        activeElement &&
+        composerHost.contains(activeElement)
+    );
+  }
 
   private getEnvironment(): ReviewEnvironment | undefined {
     const target =
@@ -388,6 +400,7 @@ class WebReviewKitApp {
         height: target.window.innerHeight,
       };
       const overlayRect = target.getOverlayRect?.() ?? rect;
+      const composerHost = target.getComposerHost?.();
 
       return {
         window: target.window,
@@ -404,6 +417,7 @@ class WebReviewKitApp {
           width: overlayRect.width,
           height: overlayRect.height,
         },
+        composerHost,
       };
     } catch {
       return undefined;

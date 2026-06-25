@@ -74,6 +74,14 @@ export function createStyleElement() {
       cursor: default;
     }
 
+    .dfwr-shell.is-docked-composer {
+      position: relative;
+      inset: auto;
+      z-index: auto;
+      padding: 0;
+      pointer-events: auto;
+    }
+
     .dfwr-panel {
       position: fixed;
       right: 16px;
@@ -574,6 +582,20 @@ export function createStyleElement() {
       border-color: rgba(99, 215, 199, 0.56);
     }
 
+    .dfwr-shell.is-docked-composer .dfwr-note-popover.is-docked-composer,
+    .dfwr-shell.is-docked-composer .dfwr-area-draft.is-docked-composer {
+      position: relative;
+      left: auto;
+      right: auto;
+      top: auto;
+      z-index: auto;
+      max-height: none;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-textarea {
+      min-height: 184px;
+    }
+
     .dfwr-note-popover.is-dragging,
     .dfwr-area-draft.is-dragging {
       user-select: none;
@@ -620,6 +642,50 @@ export function createStyleElement() {
 
     .dfwr-note-popover .dfwr-actions {
       padding: 0;
+    }
+
+    .dfwr-actions.has-leading {
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .dfwr-actions-leading,
+    .dfwr-actions-primary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .dfwr-actions-primary {
+      margin-left: auto;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading {
+      align-items: stretch;
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-button,
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle {
+      height: var(--df-review-control-height-md);
+      min-height: var(--df-review-control-height-md);
+      border-radius: var(--df-review-radius-sm);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-button {
+      min-width: 96px;
+      padding: 0 12px;
+      font-size: var(--df-review-font-size-sm);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle {
+      width: var(--df-review-control-height-md);
+    }
+
+    .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle svg {
+      width: 18px;
+      height: 18px;
     }
 
     .dfwr-note-actions {
@@ -946,10 +1012,12 @@ export function createStyleElement() {
 
     @media (max-width: 520px) {
       .dfwr-panel {
+        left: 8px;
         right: 8px;
-        top: 8px;
-        width: calc(100vw - 16px);
-        max-height: calc(100vh - 16px);
+        top: auto;
+        bottom: 8px;
+        width: auto;
+        max-height: min(70vh, calc(100vh - 16px));
       }
     }
   `;

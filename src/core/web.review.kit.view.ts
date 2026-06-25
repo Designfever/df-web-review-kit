@@ -100,11 +100,13 @@ interface DraftPreviewSnapshot {
 /** Vanilla DOM renderer for the core overlay, separate from React shell chrome. */
 export class WebReviewKitView {
   private draftPreview?: DraftPreviewSnapshot;
+  private shellComposerHost?: HTMLElement;
 
   constructor(private readonly config: WebReviewKitViewConfig) {}
 
   clearDraftPreview() {
     this.restoreDraftPreview();
+    this.clearShellComposer();
   }
 
   render(shadow: ShadowRoot, hiddenItemsStyle: HTMLStyleElement) {
@@ -118,11 +120,16 @@ export class WebReviewKitView {
     shadow.append(hiddenItemsStyle);
 
     const hasDismissableDraft = Boolean(state.noteDraft || state.areaDraft);
+    const shouldDockComposer =
+      this.config.options.ui?.panel === false &&
+      hasDismissableDraft &&
+      Boolean(this.getShellComposerHost());
+    let dockedComposer: HTMLElement | undefined;
     const shell = document.createElement('div');
     shell.className = [
       'dfwr-shell',
       state.isOpen ? 'is-open' : '',
-      hasDismissableDraft ? 'has-dismissible-draft' : '',
+      hasDismissableDraft && !shouldDockComposer ? 'has-dismissible-draft' : '',
     ]
       .filter(Boolean)
       .join(' ');
@@ -146,18 +153,24 @@ export class WebReviewKitView {
     }
 
     shell.append(this.createMarkerLayer());
-    if (state.isOpen && hasDismissableDraft) {
+    if (state.isOpen && hasDismissableDraft && !shouldDockComposer) {
       shell.append(this.createDraftCancelLayer());
     }
 
     if (state.isOpen && (state.mode === 'note' || state.mode === 'element')) {
-      shell.append(
-        state.noteDraft
-          ? this.createNotePopover(state.noteDraft)
-          : state.mode === 'element'
+      if (state.noteDraft) {
+        const noteDraft = this.createNotePopover(state.noteDraft, {
+          dockComposer: shouldDockComposer,
+        });
+        shell.append(noteDraft.layer);
+        dockedComposer = noteDraft.composer;
+      } else {
+        shell.append(
+          state.mode === 'element'
             ? this.createElementLayer()
             : this.createNoteLayer()
-      );
+        );
+      }
     }
 
     if (state.isOpen && state.mode === 'area' && !state.areaDraft) {
@@ -174,14 +187,62 @@ export class WebReviewKitView {
       if (state.areaDraft.selection) {
         shell.append(this.createAreaDraftOverlay(state.areaDraft));
       }
-      shell.append(this.createAreaDraftPopover(state.areaDraft));
+      const areaComposer = this.createAreaDraftPopover(state.areaDraft, {
+        dockComposer: shouldDockComposer,
+      });
+      if (shouldDockComposer) {
+        dockedComposer = areaComposer;
+      } else {
+        shell.append(areaComposer);
+      }
     }
 
     shadow.append(shell);
+    this.renderShellComposer(dockedComposer);
   }
 
   private get state() {
     return this.config.getState();
+  }
+
+  private getShellComposerHost() {
+    const environment = this.config.getEnvironment();
+    if (this.config.options.ui?.panel !== false) return undefined;
+    return environment?.composerHost ?? undefined;
+  }
+
+  private renderShellComposer(composer?: HTMLElement) {
+    const host = composer ? this.getShellComposerHost() : undefined;
+    if (!host || !composer) {
+      this.clearShellComposer();
+      return;
+    }
+
+    if (this.shellComposerHost && this.shellComposerHost !== host) {
+      this.clearShellComposer();
+    }
+
+    this.shellComposerHost = host;
+    host.dataset.hasDraftComposer = 'true';
+    if (host.parentElement) {
+      host.parentElement.dataset.hasDraftComposer = 'true';
+    }
+
+    const shell = document.createElement('div');
+    shell.className = 'dfwr-shell is-open is-shell-draft is-docked-composer';
+    shell.append(composer);
+
+    host.replaceChildren(createStyleElement(), shell);
+  }
+
+  private clearShellComposer() {
+    const host = this.shellComposerHost;
+    host?.replaceChildren();
+    if (host) {
+      delete host.dataset.hasDraftComposer;
+      delete host.parentElement?.dataset.hasDraftComposer;
+    }
+    this.shellComposerHost = undefined;
   }
 
   private createDraftCancelLayer() {
@@ -189,22 +250,22 @@ export class WebReviewKitView {
     layer.className = 'dfwr-draft-cancel-layer';
     layer.setAttribute('aria-hidden', 'true');
 
-    const cancel = (event: Event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      this.config.actions.setModeState('idle');
-      this.config.actions.clearDrafts();
-      this.config.actions.setSelectingArea(false);
-      this.config.actions.render();
-    };
-
     layer.addEventListener('pointerdown', (event) => {
       if (event.button !== 0) return;
-      cancel(event);
+      this.cancelDraft(event);
     });
 
     return layer;
+  }
+
+  private cancelDraft(event?: Event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    event?.stopImmediatePropagation();
+    this.config.actions.setModeState('idle');
+    this.config.actions.clearDrafts();
+    this.config.actions.setSelectingArea(false);
+    this.config.actions.render();
   }
 
   private getDraftAdjustmentMetrics(draft: NoteDraft) {
@@ -729,13 +790,17 @@ export class WebReviewKitView {
     return empty;
   }
 
-  private createNotePopover(draft: NoteDraft) {
+  private createNotePopover(
+    draft: NoteDraft,
+    options: { dockComposer?: boolean } = {}
+  ) {
     const environment = this.config.getEnvironment();
     const group = document.createElement('div');
     group.className = 'dfwr-note-draft';
-    if (!environment) return group;
+    if (!environment) return { layer: group, composer: undefined };
 
-    const isElementDraft = this.state.mode === 'element' && Boolean(draft.selection);
+    const isElementDraft =
+      this.state.mode === 'element' && Boolean(draft.selection);
     const hostPoint = toHostPoint(
       isElementDraft
         ? this.getAdjustedDraftPoint(draft.marker.viewport, draft)
@@ -766,10 +831,16 @@ export class WebReviewKitView {
     const popover = document.createElement('div');
     const position = getPopoverPosition(hostPoint, environment);
 
-    popover.className = `dfwr-note-popover${
-      isElementDraft ? ' is-composer' : ''
-    }`;
-    if (isElementDraft) {
+    popover.className = [
+      'dfwr-note-popover',
+      isElementDraft ? 'is-composer' : '',
+      options.dockComposer ? 'is-docked-composer' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    if (options.dockComposer) {
+      popover.style.width = '100%';
+    } else if (isElementDraft) {
       const selection = draft.selection
         ? toHostSelection(
             this.getAdjustedDraftSelection(
@@ -796,7 +867,8 @@ export class WebReviewKitView {
     const form = document.createElement('form');
     form.className = 'dfwr-form';
 
-    const meta = isElementDraft ? undefined : document.createElement('div');
+    const meta =
+      isElementDraft ? undefined : document.createElement('div');
     if (meta) {
       meta.className = 'dfwr-item-date';
       meta.textContent = formatNoteDraftMeta(draft);
@@ -830,17 +902,23 @@ export class WebReviewKitView {
       });
     };
 
-    const adjustmentControls = isElementDraft
-      ? this.createAdjustmentControls({
-          draft,
-          pin,
-          popover,
-          selectionHighlight,
-          textarea,
-        })
-      : undefined;
+    const adjustmentControls =
+      isElementDraft
+        ? this.createAdjustmentControls({
+            draft,
+            pin,
+            popover,
+            selectionHighlight,
+            textarea,
+            dockToggle: options.dockComposer,
+          })
+        : undefined;
 
-    const actions = this.createFormActions('Save note', saveDraft);
+    const actions = this.createFormActions('Save note', saveDraft, {
+      leading: adjustmentControls?.actionButton
+        ? [adjustmentControls.actionButton]
+        : undefined,
+    });
 
     form.append(
       ...(meta ? [meta] : []),
@@ -848,11 +926,18 @@ export class WebReviewKitView {
       textarea,
       actions
     );
-    const dragHandle = isElementDraft
-      ? this.createDraftDragHandle('Move DOM composer')
-      : undefined;
-    popover.append(...(dragHandle ? [dragHandle] : []), form);
-    group.append(pin, popover);
+    const dragHandle =
+      isElementDraft && !options.dockComposer
+        ? this.createDraftDragHandle('Move DOM composer')
+        : undefined;
+    popover.append(
+      ...(dragHandle ? [dragHandle] : []),
+      form
+    );
+    group.append(pin);
+    if (!options.dockComposer) {
+      group.append(popover);
+    }
 
     if (dragHandle) {
       this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
@@ -867,21 +952,26 @@ export class WebReviewKitView {
 
     this.attachDraftPinDrag(
       pin,
-      isElementDraft ? undefined : popover,
+      isElementDraft || options.dockComposer ? undefined : popover,
       meta,
       textarea
     );
 
-    window.setTimeout(() => {
-      if (draft.adjustment?.isActive) {
-        adjustmentControls?.focusTarget.focus();
-        return;
-      }
+    if (!options.dockComposer) {
+      window.setTimeout(() => {
+        if (draft.adjustment?.isActive) {
+          adjustmentControls?.focusTarget.focus();
+          return;
+        }
 
-      textarea.focus();
-    }, 0);
+        textarea.focus();
+      }, 0);
+    }
 
-    return group;
+    return {
+      layer: group,
+      composer: options.dockComposer ? popover : undefined,
+    };
   }
 
   private createDraftDragHandle(label: string) {
@@ -998,12 +1088,14 @@ export class WebReviewKitView {
     popover,
     selectionHighlight,
     textarea,
+    dockToggle,
   }: {
     draft: NoteDraft;
     pin: HTMLButtonElement;
     popover: HTMLDivElement;
     selectionHighlight?: HTMLDivElement;
     textarea: HTMLTextAreaElement;
+    dockToggle?: boolean;
   }) {
     const panel = document.createElement('div');
     panel.className = 'dfwr-adjust-panel is-dom-adjust-panel';
@@ -1095,13 +1187,17 @@ export class WebReviewKitView {
       }));
     });
 
-    header.append(help, adjust);
+    header.append(help);
+    if (!dockToggle) {
+      header.append(adjust);
+    }
     panel.append(header, xyStatus, scaleStatus);
     syncControls(draft);
 
     return {
       panel,
       focusTarget: adjust,
+      actionButton: dockToggle ? adjust : undefined,
     };
   }
 
@@ -1255,11 +1351,22 @@ export class WebReviewKitView {
     return layer;
   }
 
-  private createAreaDraftPopover(draft: AreaDraft) {
+  private createAreaDraftPopover(
+    draft: AreaDraft,
+    options: { dockComposer?: boolean } = {}
+  ) {
     const environment = this.config.getEnvironment();
     const popover = document.createElement('div');
-    popover.className = 'dfwr-area-draft is-composer';
-    if (environment && draft.selection) {
+    popover.className = [
+      'dfwr-area-draft',
+      'is-composer',
+      options.dockComposer ? 'is-docked-composer' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    if (options.dockComposer) {
+      popover.style.width = '100%';
+    } else if (environment && draft.selection) {
       const selection = toHostSelection(
         toViewportSelection(draft.selection.viewport),
         environment
@@ -1275,15 +1382,22 @@ export class WebReviewKitView {
       popover.style.width = `${composer.width}px`;
       popover.style.right = 'auto';
     }
-    const dragHandle = this.createDraftDragHandle('Move area composer');
-    popover.append(dragHandle, this.createAreaForm());
-    this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
-      const areaDraft = this.state.areaDraft ?? draft;
-      this.config.actions.setAreaDraft({
-        ...areaDraft,
-        composerPosition,
+    const dragHandle = options.dockComposer
+      ? undefined
+      : this.createDraftDragHandle('Move area composer');
+    popover.append(
+      ...(dragHandle ? [dragHandle] : []),
+      this.createAreaForm()
+    );
+    if (dragHandle) {
+      this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
+        const areaDraft = this.state.areaDraft ?? draft;
+        this.config.actions.setAreaDraft({
+          ...areaDraft,
+          composerPosition,
+        });
       });
-    });
+    }
     return popover;
   }
 
@@ -1293,6 +1407,7 @@ export class WebReviewKitView {
     options?: {
       beforeSave?: HTMLButtonElement[];
       className?: string;
+      leading?: HTMLElement[];
     }
   ) {
     const actions = document.createElement('div');
@@ -1315,12 +1430,20 @@ export class WebReviewKitView {
     cancel.type = 'button';
     cancel.textContent = 'Cancel';
     cancel.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      this.config.actions.setModeState('idle');
-      this.config.actions.clearDrafts();
-      this.config.actions.render();
+      this.cancelDraft(event);
     });
+
+    if (options?.leading?.length) {
+      actions.classList.add('has-leading');
+      const leading = document.createElement('div');
+      leading.className = 'dfwr-actions-leading';
+      leading.append(...options.leading);
+      const primary = document.createElement('div');
+      primary.className = 'dfwr-actions-primary';
+      primary.append(save, cancel);
+      actions.append(leading, primary);
+      return actions;
+    }
 
     if (options?.beforeSave?.length || options?.className) {
       actions.append(cancel, ...(options.beforeSave ?? []), save);

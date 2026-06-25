@@ -41,6 +41,7 @@ interface QaItemCardProps {
   ) => Promise<void>;
   onClearSelectedItem: () => void;
   onRemoveItem: (item: ReviewItem) => Promise<void>;
+  onCopyItemLabel: (numberedItem: NumberedReviewItem) => void;
   onCopyItemLink: (numberedItem: NumberedReviewItem) => void;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onEditItem: (item: ReviewItem) => void;
@@ -74,6 +75,7 @@ export const QaItemCard = ({
   onChangeItemStatus,
   onClearSelectedItem,
   onRemoveItem,
+  onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
   onEditItem,
@@ -92,8 +94,10 @@ export const QaItemCard = ({
   const itemComment = item.comment.trim() || getItemTitle(item);
   const itemAuthor = item.createdBy?.trim();
   const promptCopyKey = `qa:${item.id}`;
+  const labelCopyKey = `label:${item.id}`;
   const linkCopyKey = `link:${item.id}`;
   const isPromptCopied = copiedPromptKey === promptCopyKey;
+  const isLabelCopied = copiedPromptKey === labelCopyKey;
   const isLinkCopied = copiedPromptKey === linkCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
   const isActive = item.id === selectedItemId;
@@ -123,9 +127,22 @@ export const QaItemCard = ({
       <div className="df-review-item-header">
         <div className="df-review-item-main">
           <span className="df-review-item-badges">
-            <span className="df-review-item-id">
+            <button
+              aria-label={
+                isLabelCopied ? 'Copied QA number' : 'Copy QA number'
+              }
+              className={`df-review-item-id${
+                isLabelCopied ? ' is-copied' : ''
+              }`}
+              title={isLabelCopied ? 'Copied QA number' : 'Copy QA number'}
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onCopyItemLabel(numberedItem);
+              }}
+            >
               {numberedItem.displayLabel}
-            </span>
+            </button>
             <span
               className={`df-review-item-scope is-scope-${numberedItem.scope}`}
             >

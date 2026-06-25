@@ -122,7 +122,7 @@ export const getTargetOverlayState = (
   targetDocument: Document | undefined
 ): TargetOverlayState => ({
   grid: Boolean(
-    targetDocument?.body.classList.contains('is-help') ||
+    targetDocument?.body?.classList.contains('is-help') ||
       targetDocument?.querySelector('.helper.onShow') ||
       getStoredOverlayState(targetDocument, 'grid')
   ),

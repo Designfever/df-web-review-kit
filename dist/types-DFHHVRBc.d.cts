@@ -176,6 +176,7 @@ interface WebReviewKitTarget {
     document: Document;
     getViewportRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
     getOverlayRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
+    getComposerHost?: () => HTMLElement | null | undefined;
 }
 
 export type { DomAnchor as D, LocalAdapterOptions as L, NumberedReviewItem as N, ReviewWorkflowStatus as R, SupabaseReviewAdapterOptions as S, ViewportSize as V, WebReviewKitAdapter as W, ReviewItemStatus as a, WebReviewKitOptions as b, WebReviewKitController as c, ReviewViewportPreset as d, ReviewItem as e, ReviewItemScope as f, DomAnchorCandidate as g, DomAnchorStrategy as h, DomSourceHint as i, RelativeSelection as j, ReviewItemKind as k, ReviewItemQuery as l, ReviewMarker as m, ReviewMode as n, ReviewPoint as o, ReviewRulerConfig as p, ReviewSelection as q, ReviewSource as r, ReviewSubmitStatus as s, ReviewViewportScope as t, SupabaseReviewClient as u, WebReviewKitTarget as v };

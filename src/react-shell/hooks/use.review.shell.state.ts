@@ -15,6 +15,7 @@ import {
   getInitialSource,
   getInitialTarget,
 } from '../route';
+import { getStoredReviewSidePanelVisible } from '../settings';
 import type {
   ReviewShellAdapters,
   ReviewShellViewportPreset,
@@ -96,7 +97,9 @@ export const useReviewShellState = ({
       figma: false,
     });
   const [selectedItemId, setSelectedItemId] = useState(getInitialItemId());
-  const [isListVisible, setIsListVisible] = useState(true);
+  const [isListVisible, setIsListVisible] = useState(
+    getStoredReviewSidePanelVisible
+  );
   const [isSitemapOpen, setIsSitemapOpen] = useState(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState(false);
   const [copyLabel, setCopyLabel] = useState('Copy URL');

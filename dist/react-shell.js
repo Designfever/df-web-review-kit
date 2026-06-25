@@ -5,7 +5,7 @@ import {
   getNumberedReviewItems,
   normalizeReviewItemStatus,
   runWithAutoScrollBehavior
-} from "./chunk-TWCSIBMY.js";
+} from "./chunk-IN36JHEU.js";
 
 // src/react-shell.tsx
 import React2 from "react";
@@ -263,6 +263,7 @@ function ensureReviewShellStyle() {
 
   .df-review-shell {
     --df-review-frame-gutter-x: var(--df-review-space-4);
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 0 48px;
     grid-template-rows: auto auto minmax(0, 1fr);
@@ -294,13 +295,20 @@ function ensureReviewShellStyle() {
 
 		  .df-review-address {
 		    display: grid;
-		    grid-template-columns: auto minmax(160px, 1fr) auto auto;
+		    grid-template-columns: auto minmax(160px, 1fr) auto;
 		    align-items: stretch;
 		    gap: var(--df-review-space-2);
 		    width: 100%;
 		    max-width: 1440px;
 		    margin: 0 auto;
 		  }
+
+  .df-review-address-actions {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    min-width: 0;
+  }
 
   .df-review-address input {
 	    width: 100%;
@@ -379,6 +387,24 @@ function ensureReviewShellStyle() {
 	    padding: 0;
 	    color: var(--df-review-accent);
 	  }
+
+  .df-review-address-refresh {
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    padding: 0;
+  }
+
+  .df-review-address-refresh svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+  }
 
   .df-review-sitemap-button svg,
   .df-review-sitemap-header button svg {
@@ -1331,8 +1357,7 @@ function ensureReviewShellStyle() {
 	  }
 
 		  .df-review-presets,
-		  .df-review-mode,
-	  .df-review-overlays {
+		  .df-review-mode {
 	    display: flex;
 	    align-items: center;
 	    gap: var(--df-review-space-1-5);
@@ -1343,6 +1368,24 @@ function ensureReviewShellStyle() {
 	    border-radius: var(--df-review-radius-md);
 	    background: var(--df-review-card);
 	  }
+
+  .df-review-overlays {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .df-review-mode {
+    gap: 3px;
+    padding: 3px;
+  }
 
 		  .df-review-tool-divider,
 		  .df-review-mode-divider {
@@ -1463,6 +1506,35 @@ function ensureReviewShellStyle() {
 	    color: var(--df-review-muted);
 	  }
 
+  .df-review-overlay-button {
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+  }
+
+  .df-review-overlay-button:hover,
+  .df-review-overlay-button:focus-visible {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-control-hover);
+    color: var(--df-review-text);
+    outline: 0;
+  }
+
+  .df-review-overlay-button.is-active {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
+    color: var(--df-review-accent);
+  }
+
+  .df-review-mode-button {
+    width: calc(var(--df-review-control-height-md) - 6px);
+    min-width: calc(var(--df-review-control-height-md) - 6px);
+    height: calc(var(--df-review-control-height-md) - 6px);
+    min-height: calc(var(--df-review-control-height-md) - 6px);
+  }
+
   .df-review-overlays-menu {
     position: relative;
     display: none;
@@ -1582,20 +1654,19 @@ function ensureReviewShellStyle() {
 
       .df-review-preset-select {
         display: block;
-        flex: 0 1 190px;
-        width: clamp(154px, 26vw, 190px);
+        flex: 0 1 150px;
+        min-width: 128px;
+        width: clamp(128px, 20vw, 150px);
 	    }
 
-	    .df-review-overlays {
-	      display: none;
-	    }
-
-      .df-review-overlays-menu {
-        display: block;
+      .df-review-tool-divider,
+      .df-review-active-size {
+        display: none;
       }
-	  }
 
-	  .df-review-side-rail {
+		  }
+
+		  .df-review-side-rail {
 	    grid-column: 3;
 	    grid-row: 1 / span 3;
 	    position: relative;
@@ -1612,11 +1683,11 @@ function ensureReviewShellStyle() {
 
   .df-review-side-toggle {
     position: relative;
-    flex: 0 0 58px;
+    flex: 0 0 48px;
     display: grid;
     place-items: center;
     width: 100%;
-    min-height: 58px;
+    min-height: 48px;
     border: 0;
 	    border-radius: 0;
 	    padding: 0;
@@ -1635,9 +1706,9 @@ function ensureReviewShellStyle() {
 
   .df-review-side-toggle.is-active::after {
     position: absolute;
-    top: 12px;
+    top: 9px;
     right: 0;
-    bottom: 12px;
+    bottom: 9px;
     width: 3px;
     border-radius: 3px 0 0 3px;
     background: var(--df-review-accent);
@@ -1672,9 +1743,21 @@ function ensureReviewShellStyle() {
 	    stroke-width: 1.55;
 	  }
 
+  .df-review-side-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    margin-top: auto;
+  }
+
   .df-review-presence-overlay {
     position: relative;
     margin-top: auto;
+  }
+
+  .df-review-side-actions .df-review-presence-overlay {
+    margin-top: 0;
   }
 
   .df-review-presence-button {
@@ -1682,7 +1765,7 @@ function ensureReviewShellStyle() {
     display: grid;
     place-items: center;
     width: 100%;
-    min-height: 58px;
+    min-height: 48px;
     border: 0;
     border-radius: 0;
     padding: 0;
@@ -1717,8 +1800,8 @@ function ensureReviewShellStyle() {
 
   .df-review-presence-badge {
     position: absolute;
-    top: 10px;
-    right: 7px;
+    top: 6px;
+    right: 6px;
     display: grid;
     place-items: center;
     min-width: 17px;
@@ -1738,38 +1821,46 @@ function ensureReviewShellStyle() {
     position: absolute;
     right: calc(100% + 8px);
     bottom: 8px;
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
     gap: 5px;
-    min-width: 132px;
+    width: max-content;
+    min-width: 0;
     max-width: 220px;
-    border: 1px solid var(--df-review-line);
-    border-radius: var(--df-review-radius-md);
-    padding: 8px;
-    background: var(--df-review-panel);
-    box-shadow: var(--df-review-shadow-modal);
   }
 
   .df-review-presence-chip {
     --df-review-presence-color: var(--df-review-accent);
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    width: fit-content;
+    max-width: 180px;
     min-width: 0;
-    min-height: 24px;
-    border-left: 2px solid var(--df-review-presence-color);
-    border-radius: var(--df-review-radius-sm);
-    padding: 0 8px;
+    min-height: 22px;
+    justify-content: flex-end;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 9px;
     color: var(--df-review-text);
     background: var(--df-review-control);
     font-size: var(--df-review-font-size-xs);
     font-weight: 500;
     line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .df-review-presence-chip span {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: right;
     white-space: nowrap;
   }
 
   .df-review-presence-chip.is-self {
     color: var(--df-review-accent);
+    border-color: var(--df-review-accent-soft);
     background: var(--df-review-accent-soft);
   }
 
@@ -1779,7 +1870,7 @@ function ensureReviewShellStyle() {
 	    position: relative;
 	    z-index: 600;
 	    display: grid;
-	    grid-template-rows: minmax(0, 1fr);
+	    grid-template-rows: minmax(0, 1fr) auto;
 	    min-width: 0;
 	    min-height: 0;
 	    overflow: hidden;
@@ -1787,6 +1878,25 @@ function ensureReviewShellStyle() {
 	    background:
 	      linear-gradient(180deg, var(--df-review-panel), var(--df-review-bg));
 	  }
+
+  .df-review-qa-draft-host {
+    position: relative;
+    z-index: 2;
+    display: none;
+    justify-self: end;
+    width: calc(100% - var(--df-review-space-4));
+    margin: 0 var(--df-review-space-2) var(--df-review-space-2) auto;
+    min-width: 0;
+  }
+
+  .df-review-qa-draft-host[data-has-draft-composer="true"] {
+    display: block;
+  }
+
+  .df-review-qa-panel[data-has-draft-composer="true"] .df-review-panel-body {
+    opacity: 0.36;
+    pointer-events: none;
+  }
 
 	  .df-review-shell:not(.is-list-visible) .df-review-qa-panel,
   .df-review-qa-panel[aria-hidden="true"] {
@@ -1872,13 +1982,14 @@ function ensureReviewShellStyle() {
 		  .df-review-list-meta span {
 		    min-width: 0;
 		    overflow: hidden;
+		    color: #fff;
 		    text-overflow: ellipsis;
 		    white-space: nowrap;
 		  }
 
 			  .df-review-list-meta strong {
 			    flex: 0 0 auto;
-			    color: var(--df-review-muted);
+			    color: #fff;
 			    font-size: var(--df-review-font-size-xs);
 			    font-variant-numeric: tabular-nums;
           font-weight: 500;
@@ -1936,27 +2047,28 @@ function ensureReviewShellStyle() {
     display: flex;
     align-items: center;
     justify-self: end;
-    gap: var(--df-review-space-1-5);
-    height: var(--df-review-control-height-md);
-    min-height: var(--df-review-control-height-md);
+    gap: 2px;
+    height: 26px;
+    min-height: 26px;
     padding: 0;
-    border: 1px solid var(--df-review-line-soft);
-    border-radius: var(--df-review-radius-md);
-    background: var(--df-review-card);
-    box-shadow: var(--df-review-shadow-control);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
 				  .df-review-filter-tab {
     position: relative;
     display: grid;
     place-items: center;
-    width: var(--df-review-control-height-md);
-    min-width: var(--df-review-control-height-md);
-    height: var(--df-review-control-height-md);
+    width: 26px;
+    min-width: 26px;
+    height: 26px;
     border: 0;
-    border-radius: var(--df-review-radius-sm);
+    border-radius: 0;
     background: transparent;
     color: var(--df-review-subtle);
+    opacity: 0.3;
   }
 
 				  .df-review-filter-icon {
@@ -1977,18 +2089,18 @@ function ensureReviewShellStyle() {
 
 		  .df-review-filter-tab:hover,
 		  .df-review-filter-tab.is-active {
-		    background: var(--df-review-accent-soft);
 		    color: var(--df-review-text);
+        opacity: 1;
 		  }
 
 		  .df-review-filter-tab.is-active {
-		    box-shadow: inset 0 0 0 1px rgba(124, 199, 255, 0.42);
+		    box-shadow: none;
 		    color: var(--df-review-accent);
 		  }
 
 				  .df-review-filter-icon svg {
-				    width: 18px;
-				    height: 18px;
+				    width: 14px;
+				    height: 14px;
 		    fill: none;
 		    stroke: currentColor;
 		    stroke-linecap: round;
@@ -2134,9 +2246,21 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-item-id {
+    appearance: none;
     border-color: var(--df-review-line);
     background: rgba(255, 255, 255, 0.03);
     color: var(--df-review-text);
+    cursor: copy;
+    font-family: inherit;
+  }
+
+  .df-review-item-id:hover,
+  .df-review-item-id:focus-visible,
+  .df-review-item-id.is-copied {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    color: var(--df-review-accent);
+    outline: none;
   }
 
   .df-review-item-scope {
@@ -2756,36 +2880,104 @@ function ensureReviewShellStyle() {
       var(--df-review-control-height-md)
       var(--df-review-control-height-md);
     align-items: center;
-    gap: 8px;
+    gap: var(--df-review-space-2);
     min-width: 0;
     padding: var(--df-review-space-3) var(--df-review-frame-gutter-x);
     border-bottom: 1px solid var(--df-review-line-soft);
     background: var(--df-review-card);
     color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 500;
   }
 
-  .df-review-section-outline-head span {
+  .df-review-section-outline-summary {
     display: grid;
-    gap: 2px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--df-review-control-height-md);
+    min-width: 0;
+  }
+
+  .df-review-section-outline-summary span {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
     min-width: 0;
   }
 
   .df-review-section-outline-head strong {
     overflow: hidden;
     color: var(--df-review-text);
-    font-size: var(--df-review-font-size-lg);
+    font-size: inherit;
     font-weight: 600;
+    line-height: 1;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .df-review-section-outline-head small {
+    flex: 0 0 auto;
     overflow: hidden;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
     font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .df-review-section-outline-meta-controls {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    height: 26px;
+    min-height: 26px;
+    min-width: 0;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .df-review-section-outline-meta-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    min-width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    color: var(--df-review-subtle);
+    background: transparent;
+    box-shadow: none;
+    cursor: pointer;
+    opacity: 0.3;
+  }
+
+  .df-review-section-outline-meta-toggle:hover,
+  .df-review-section-outline-meta-toggle:focus-visible,
+  .df-review-section-outline-meta-toggle.is-active {
+    color: var(--df-review-text);
+    opacity: 1;
+    outline: 0;
+  }
+
+  .df-review-section-outline-meta-toggle.is-active {
+    box-shadow: none;
+    color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-meta-toggle svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
   }
 
   .df-review-section-outline-filter {
@@ -2798,7 +2990,7 @@ function ensureReviewShellStyle() {
     height: var(--df-review-control-height-md);
     min-height: var(--df-review-control-height-md);
     border: 1px solid var(--df-review-line-soft);
-    border-radius: var(--df-review-radius-md);
+    border-radius: var(--df-review-radius-sm);
     padding: 0 7px 0 11px;
     color: var(--df-review-muted);
     background: var(--df-review-control);
@@ -2880,6 +3072,15 @@ function ensureReviewShellStyle() {
     display: grid;
   }
 
+  .df-review-section-outline-entry-body {
+    display: grid;
+    border-radius: var(--df-review-radius-sm);
+  }
+
+  .df-review-section-outline-entry-body:hover {
+    background: var(--df-review-accent-soft);
+  }
+
   .df-review-section-outline-item.is-depth-1:not(:last-child) {
     margin-bottom: 7px;
     padding-bottom: 7px;
@@ -2893,10 +3094,6 @@ function ensureReviewShellStyle() {
     gap: 5px;
     border-radius: var(--df-review-radius-sm);
     padding: 7px 6px;
-  }
-
-  .df-review-section-outline-row:hover {
-    background: var(--df-review-accent-soft);
   }
 
   .df-review-section-outline-toggle {
@@ -2968,6 +3165,86 @@ function ensureReviewShellStyle() {
 
   .df-review-section-outline-name:hover {
     color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-meta {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    padding: 0 6px 7px;
+  }
+
+  .df-review-section-outline-meta-row {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: start;
+    gap: 6px;
+    min-width: 0;
+    color: var(--df-review-muted);
+    font-family: var(--df-review-font-mono);
+    font-size: var(--df-review-font-size-2xs);
+    line-height: 1.35;
+  }
+
+  .df-review-section-outline-meta-row b {
+    color: var(--df-review-subtle);
+    font-weight: 600;
+  }
+
+  .df-review-section-outline-meta-row code {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--df-review-muted);
+    font-family: inherit;
+  }
+
+  .df-review-section-outline-meta-row.is-text code {
+    color: var(--df-review-text);
+  }
+
+  .df-review-section-outline-meta-row.is-media code {
+    color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-media-link {
+    display: block;
+    min-width: 0;
+    color: var(--df-review-accent);
+    text-decoration: none;
+  }
+
+  .df-review-section-outline-media-link:hover,
+  .df-review-section-outline-media-link:focus-visible {
+    color: var(--df-review-text);
+    outline: 0;
+  }
+
+  .df-review-section-outline-meta-row.is-class code {
+    color: var(--df-review-source-popover-data-subtle);
+  }
+
+  .df-review-section-outline-meta-row.is-class {
+    align-items: center;
+  }
+
+  .df-review-section-outline-class-tags {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .df-review-section-outline-class-tags code {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 20px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-pill);
+    padding: 0 6px;
+    background: var(--df-review-control);
+    line-height: 1;
   }
 
   .df-review-section-outline-links {
@@ -3473,24 +3750,16 @@ var __iconNode6 = [
 ];
 var Database = createLucideIcon("database", __iconNode6);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ellipsis.mjs
-var __iconNode7 = [
-  ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }],
-  ["circle", { cx: "19", cy: "12", r: "1", key: "1wjl8i" }],
-  ["circle", { cx: "5", cy: "12", r: "1", key: "1pcz8c" }]
-];
-var Ellipsis = createLucideIcon("ellipsis", __iconNode7);
-
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/external-link.mjs
-var __iconNode8 = [
+var __iconNode7 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "M10 14 21 3", key: "gplh6r" }],
   ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
 ];
-var ExternalLink = createLucideIcon("external-link", __iconNode8);
+var ExternalLink = createLucideIcon("external-link", __iconNode7);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye-off.mjs
-var __iconNode9 = [
+var __iconNode8 = [
   [
     "path",
     {
@@ -3508,10 +3777,10 @@ var __iconNode9 = [
   ],
   ["path", { d: "m2 2 20 20", key: "1ooewy" }]
 ];
-var EyeOff = createLucideIcon("eye-off", __iconNode9);
+var EyeOff = createLucideIcon("eye-off", __iconNode8);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye.mjs
-var __iconNode10 = [
+var __iconNode9 = [
   [
     "path",
     {
@@ -3521,10 +3790,10 @@ var __iconNode10 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Eye = createLucideIcon("eye", __iconNode10);
+var Eye = createLucideIcon("eye", __iconNode9);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/file-text.mjs
-var __iconNode11 = [
+var __iconNode10 = [
   [
     "path",
     {
@@ -3537,43 +3806,43 @@ var __iconNode11 = [
   ["path", { d: "M16 13H8", key: "t4e002" }],
   ["path", { d: "M16 17H8", key: "z1uh3a" }]
 ];
-var FileText = createLucideIcon("file-text", __iconNode11);
+var FileText = createLucideIcon("file-text", __iconNode10);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
-var __iconNode12 = [
+var __iconNode11 = [
   ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
   ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
   ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
 ];
-var Image = createLucideIcon("image", __iconNode12);
+var Image = createLucideIcon("image", __iconNode11);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
-var __iconNode13 = [
+var __iconNode12 = [
   ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
   ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
   ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
   ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
 ];
-var LayoutGrid = createLucideIcon("layout-grid", __iconNode13);
+var LayoutGrid = createLucideIcon("layout-grid", __iconNode12);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/link-2.mjs
-var __iconNode14 = [
+var __iconNode13 = [
   ["path", { d: "M9 17H7A5 5 0 0 1 7 7h2", key: "8i5ue5" }],
   ["path", { d: "M15 7h2a5 5 0 1 1 0 10h-2", key: "1b9ql8" }],
   ["line", { x1: "8", x2: "16", y1: "12", y2: "12", key: "1jonct" }]
 ];
-var Link2 = createLucideIcon("link-2", __iconNode14);
+var Link2 = createLucideIcon("link-2", __iconNode13);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
-var __iconNode15 = [
+var __iconNode14 = [
   ["path", { d: "M2 5h20", key: "1fs1ex" }],
   ["path", { d: "M6 12h12", key: "8npq4p" }],
   ["path", { d: "M9 19h6", key: "456am0" }]
 ];
-var ListFilter = createLucideIcon("list-filter", __iconNode15);
+var ListFilter = createLucideIcon("list-filter", __iconNode14);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
-var __iconNode16 = [
+var __iconNode15 = [
   [
     "path",
     {
@@ -3584,27 +3853,27 @@ var __iconNode16 = [
   ["path", { d: "M15 5.764v15", key: "1pn4in" }],
   ["path", { d: "M9 3.236v15", key: "1uimfh" }]
 ];
-var Map2 = createLucideIcon("map", __iconNode16);
+var Map2 = createLucideIcon("map", __iconNode15);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
-var __iconNode17 = [
+var __iconNode16 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "m21 3-7 7", key: "1l2asr" }],
   ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
   ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
 ];
-var Maximize2 = createLucideIcon("maximize-2", __iconNode17);
+var Maximize2 = createLucideIcon("maximize-2", __iconNode16);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
-var __iconNode18 = [
+var __iconNode17 = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
   ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
 ];
-var Monitor = createLucideIcon("monitor", __iconNode18);
+var Monitor = createLucideIcon("monitor", __iconNode17);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/moon.mjs
-var __iconNode19 = [
+var __iconNode18 = [
   [
     "path",
     {
@@ -3613,10 +3882,10 @@ var __iconNode19 = [
     }
   ]
 ];
-var Moon = createLucideIcon("moon", __iconNode19);
+var Moon = createLucideIcon("moon", __iconNode18);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/pencil.mjs
-var __iconNode20 = [
+var __iconNode19 = [
   [
     "path",
     {
@@ -3626,25 +3895,25 @@ var __iconNode20 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-var Pencil = createLucideIcon("pencil", __iconNode20);
+var Pencil = createLucideIcon("pencil", __iconNode19);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
-var __iconNode21 = [
+var __iconNode20 = [
   ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
 ];
-var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode21);
+var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode20);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
-var __iconNode22 = [
+var __iconNode21 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode22);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode21);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
-var __iconNode23 = [
+var __iconNode22 = [
   [
     "path",
     {
@@ -3657,26 +3926,26 @@ var __iconNode23 = [
   ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
   ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
 ];
-var Ruler = createLucideIcon("ruler", __iconNode23);
+var Ruler = createLucideIcon("ruler", __iconNode22);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
-var __iconNode24 = [
+var __iconNode23 = [
   ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
   ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
   ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
   ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
 ];
-var Scan = createLucideIcon("scan", __iconNode24);
+var Scan = createLucideIcon("scan", __iconNode23);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/search.mjs
-var __iconNode25 = [
+var __iconNode24 = [
   ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-var Search = createLucideIcon("search", __iconNode25);
+var Search = createLucideIcon("search", __iconNode24);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
-var __iconNode26 = [
+var __iconNode25 = [
   [
     "path",
     {
@@ -3686,14 +3955,31 @@ var __iconNode26 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Settings = createLucideIcon("settings", __iconNode26);
+var Settings = createLucideIcon("settings", __iconNode25);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
-var __iconNode27 = [
+var __iconNode26 = [
   ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
   ["path", { d: "M12 18h.01", key: "mhygvu" }]
 ];
-var Smartphone = createLucideIcon("smartphone", __iconNode27);
+var Smartphone = createLucideIcon("smartphone", __iconNode26);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
+var __iconNode27 = [
+  ["path", { d: "M5 3a2 2 0 0 0-2 2", key: "y57alp" }],
+  ["path", { d: "M19 3a2 2 0 0 1 2 2", key: "18rm91" }],
+  ["path", { d: "M21 19a2 2 0 0 1-2 2", key: "1j7049" }],
+  ["path", { d: "M5 21a2 2 0 0 1-2-2", key: "sbafld" }],
+  ["path", { d: "M9 3h1", key: "1yesri" }],
+  ["path", { d: "M9 21h1", key: "15o7lz" }],
+  ["path", { d: "M14 3h1", key: "1ec4yj" }],
+  ["path", { d: "M14 21h1", key: "v9vybs" }],
+  ["path", { d: "M3 9v1", key: "1r0deq" }],
+  ["path", { d: "M21 9v1", key: "mxsmne" }],
+  ["path", { d: "M3 14v1", key: "vnatye" }],
+  ["path", { d: "M21 14v1", key: "169vum" }]
+];
+var SquareDashed = createLucideIcon("square-dashed", __iconNode27);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
 var __iconNode28 = [
@@ -3735,27 +4021,36 @@ var __iconNode30 = [
 ];
 var Sun = createLucideIcon("sun", __iconNode30);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/type.mjs
 var __iconNode31 = [
+  ["path", { d: "M12 4v16", key: "1654pz" }],
+  ["path", { d: "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2", key: "e0r10z" }],
+  ["path", { d: "M9 20h6", key: "s66wpe" }]
+];
+var Type = createLucideIcon("type", __iconNode31);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
+var __iconNode32 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode31);
+var Upload = createLucideIcon("upload", __iconNode32);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/user-round.mjs
-var __iconNode32 = [
-  ["circle", { cx: "12", cy: "8", r: "5", key: "1hypcn" }],
-  ["path", { d: "M20 21a8 8 0 0 0-16 0", key: "rfgkzh" }]
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/workflow.mjs
+var __iconNode33 = [
+  ["rect", { width: "8", height: "8", x: "3", y: "3", rx: "2", key: "by2w9f" }],
+  ["path", { d: "M7 11v4a2 2 0 0 0 2 2h4", key: "xkn7yn" }],
+  ["rect", { width: "8", height: "8", x: "13", y: "13", rx: "2", key: "1cgmvn" }]
 ];
-var UserRound = createLucideIcon("user-round", __iconNode32);
+var Workflow = createLucideIcon("workflow", __iconNode33);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode33 = [
+var __iconNode34 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode33);
+var X = createLucideIcon("x", __iconNode34);
 
 // src/react-shell/constants.ts
 var REVIEW_QA_FILTERS = [
@@ -3769,6 +4064,11 @@ var FIGMA_OVERLAY_UNAVAILABLE_MESSAGE = "\uD53C\uADF8\uB9C8 \uC624\uBC84\uB808\u
 var FIGMA_TOKEN_STORAGE_KEY = "figma-token";
 var REVIEW_USER_ID_STORAGE_KEY = "user-id";
 var REVIEW_THEME_STORAGE_KEY = "df-review-theme";
+var REVIEW_SIDE_PANEL_STORAGE_KEY = "df-review-side-panel";
+var REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY = "df-review-side-panel-visible";
+var REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY = "df-review-source-tree-filter";
+var REVIEW_SOURCE_TREE_META_STORAGE_KEY = "df-review-source-tree-meta-visibility";
+var REVIEW_QA_STATUS_FILTER_STORAGE_KEY = "df-review-qa-status-filter";
 var DEFAULT_REVIEW_THEME = "dark";
 var FIGMA_TOKEN_GUIDE_ID = "df-review-figma-token-guide";
 var DEFAULT_INITIAL_REVIEW_PROMPT = "You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, DOM metadata, coordinates, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.";
@@ -4194,7 +4494,35 @@ var PromptModal = ({
 };
 
 // src/react-shell/settings.ts
+var DEFAULT_SOURCE_TREE_META_VISIBILITY = {
+  box: true,
+  font: true,
+  media: true,
+  className: false
+};
+var REVIEW_QA_STATUS_FILTER_VALUES = /* @__PURE__ */ new Set([
+  "all",
+  "todo",
+  "doing",
+  "review",
+  "hold",
+  "done"
+]);
 var normalizeReviewTheme = (value) => value === "light" || value === "system" || value === "dark" ? value : DEFAULT_REVIEW_THEME;
+var normalizeStoredReviewSidePanel = (value) => value === "source" ? "source" : "qa";
+var normalizeStoredReviewQaStatusFilter = (value) => value && REVIEW_QA_STATUS_FILTER_VALUES.has(value) ? value : "all";
+var normalizeStoredSourceTreeMetaVisibility = (value) => {
+  if (!value || typeof value !== "object") {
+    return DEFAULT_SOURCE_TREE_META_VISIBILITY;
+  }
+  const metaVisibility = value;
+  return {
+    box: typeof metaVisibility.box === "boolean" ? metaVisibility.box : DEFAULT_SOURCE_TREE_META_VISIBILITY.box,
+    font: typeof metaVisibility.font === "boolean" ? metaVisibility.font : DEFAULT_SOURCE_TREE_META_VISIBILITY.font,
+    media: typeof metaVisibility.media === "boolean" ? metaVisibility.media : DEFAULT_SOURCE_TREE_META_VISIBILITY.media,
+    className: typeof metaVisibility.className === "boolean" ? metaVisibility.className : DEFAULT_SOURCE_TREE_META_VISIBILITY.className
+  };
+};
 var getStoredFigmaToken = () => {
   if (typeof window === "undefined") return "";
   try {
@@ -4253,6 +4581,118 @@ var writeStoredReviewTheme = (theme) => {
     } else {
       window.localStorage.setItem(REVIEW_THEME_STORAGE_KEY, theme);
     }
+  } catch {
+    return;
+  }
+};
+var getStoredReviewSidePanel = () => {
+  if (typeof window === "undefined") return "qa";
+  try {
+    return normalizeStoredReviewSidePanel(
+      window.localStorage.getItem(REVIEW_SIDE_PANEL_STORAGE_KEY)
+    );
+  } catch {
+    return "qa";
+  }
+};
+var writeStoredReviewSidePanel = (sidePanel) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      REVIEW_SIDE_PANEL_STORAGE_KEY,
+      normalizeStoredReviewSidePanel(sidePanel)
+    );
+  } catch {
+    return;
+  }
+};
+var getStoredReviewSidePanelVisible = () => {
+  if (typeof window === "undefined") return true;
+  try {
+    const value = window.localStorage.getItem(
+      REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY
+    );
+    return value === null ? true : value === "true";
+  } catch {
+    return true;
+  }
+};
+var writeStoredReviewSidePanelVisible = (isVisible) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY,
+      isVisible ? "true" : "false"
+    );
+  } catch {
+    return;
+  }
+};
+var getStoredReviewQaStatusFilter = () => {
+  if (typeof window === "undefined") return "all";
+  try {
+    return normalizeStoredReviewQaStatusFilter(
+      window.localStorage.getItem(REVIEW_QA_STATUS_FILTER_STORAGE_KEY)
+    );
+  } catch {
+    return "all";
+  }
+};
+var writeStoredReviewQaStatusFilter = (filter) => {
+  if (typeof window === "undefined") return;
+  try {
+    const normalizedFilter = normalizeStoredReviewQaStatusFilter(filter);
+    if (normalizedFilter === "all") {
+      window.localStorage.removeItem(REVIEW_QA_STATUS_FILTER_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(
+        REVIEW_QA_STATUS_FILTER_STORAGE_KEY,
+        normalizedFilter
+      );
+    }
+  } catch {
+    return;
+  }
+};
+var getStoredSourceTreeFilter = () => {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+var writeStoredSourceTreeFilter = (filter) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (filter) {
+      window.localStorage.setItem(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY, filter);
+    } else {
+      window.localStorage.removeItem(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY);
+    }
+  } catch {
+    return;
+  }
+};
+var getStoredSourceTreeMetaVisibility = () => {
+  if (typeof window === "undefined") return DEFAULT_SOURCE_TREE_META_VISIBILITY;
+  try {
+    const value = window.localStorage.getItem(
+      REVIEW_SOURCE_TREE_META_STORAGE_KEY
+    );
+    if (!value) return DEFAULT_SOURCE_TREE_META_VISIBILITY;
+    return normalizeStoredSourceTreeMetaVisibility(JSON.parse(value));
+  } catch {
+    return DEFAULT_SOURCE_TREE_META_VISIBILITY;
+  }
+};
+var writeStoredSourceTreeMetaVisibility = (metaVisibility) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      REVIEW_SOURCE_TREE_META_STORAGE_KEY,
+      JSON.stringify(normalizeStoredSourceTreeMetaVisibility(metaVisibility))
+    );
   } catch {
     return;
   }
@@ -5324,6 +5764,7 @@ var QaItemCard = ({
   onChangeItemStatus,
   onClearSelectedItem,
   onRemoveItem,
+  onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
   onEditItem,
@@ -5339,8 +5780,10 @@ var QaItemCard = ({
   const itemComment = item.comment.trim() || getItemTitle(item);
   const itemAuthor = item.createdBy?.trim();
   const promptCopyKey = `qa:${item.id}`;
+  const labelCopyKey = `label:${item.id}`;
   const linkCopyKey = `link:${item.id}`;
   const isPromptCopied = copiedPromptKey === promptCopyKey;
+  const isLabelCopied = copiedPromptKey === labelCopyKey;
   const isLinkCopied = copiedPromptKey === linkCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
   const isActive = item.id === selectedItemId;
@@ -5362,7 +5805,20 @@ var QaItemCard = ({
         /* @__PURE__ */ jsxs6("div", { className: "df-review-item-header", children: [
           /* @__PURE__ */ jsxs6("div", { className: "df-review-item-main", children: [
             /* @__PURE__ */ jsxs6("span", { className: "df-review-item-badges", children: [
-              /* @__PURE__ */ jsx8("span", { className: "df-review-item-id", children: numberedItem.displayLabel }),
+              /* @__PURE__ */ jsx8(
+                "button",
+                {
+                  "aria-label": isLabelCopied ? "Copied QA number" : "Copy QA number",
+                  className: `df-review-item-id${isLabelCopied ? " is-copied" : ""}`,
+                  title: isLabelCopied ? "Copied QA number" : "Copy QA number",
+                  type: "button",
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    onCopyItemLabel(numberedItem);
+                  },
+                  children: numberedItem.displayLabel
+                }
+              ),
               /* @__PURE__ */ jsxs6(
                 "span",
                 {
@@ -5503,7 +5959,36 @@ var QaPanelHeader = ({
 }) => {
   const statusFilterOptions = getStatusFilterOptions(statusOptions);
   const hasActiveFilter = qaFilter !== "all" || qaStatusFilter !== "all";
+  const displayLabel = getQaSourceDisplayLabel(label);
   return /* @__PURE__ */ jsxs7("div", { className: "df-review-list-header", children: [
+    /* @__PURE__ */ jsxs7("div", { className: "df-review-list-title", children: [
+      /* @__PURE__ */ jsxs7("span", { className: "df-review-list-meta", children: [
+        /* @__PURE__ */ jsx9("span", { children: isAllQaVisible ? `${displayLabel} QA \xB7 All pages` : `${displayLabel} QA` }),
+        /* @__PURE__ */ jsx9(
+          "strong",
+          {
+            title: `${activeRemainingItemCount} remaining of ${activeItemCount}`,
+            children: !hasActiveFilter ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}`
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsx9("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
+        const count = qaFilterCounts.get(filter.key) ?? 0;
+        const isActive = qaFilter === filter.key;
+        return /* @__PURE__ */ jsx9(
+          "button",
+          {
+            "aria-label": `${filter.label} QA (${count})`,
+            "aria-pressed": isActive,
+            className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
+            type: "button",
+            onClick: () => onQaFilterChange(filter.key),
+            children: /* @__PURE__ */ jsx9("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ jsx9(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ jsx9(ListFilter, { "aria-hidden": "true" }) })
+          },
+          filter.key
+        );
+      }) })
+    ] }),
     /* @__PURE__ */ jsxs7("div", { className: "df-review-list-toolbar", children: [
       /* @__PURE__ */ jsxs7("div", { className: "df-review-list-controls", children: [
         showSourceSelect && /* @__PURE__ */ jsx9(
@@ -5542,37 +6027,12 @@ var QaPanelHeader = ({
           ]
         }
       )
-    ] }),
-    /* @__PURE__ */ jsxs7("div", { className: "df-review-list-title", children: [
-      /* @__PURE__ */ jsxs7("span", { className: "df-review-list-meta", children: [
-        /* @__PURE__ */ jsx9("span", { children: isAllQaVisible ? `${label} QA \xB7 All pages` : `${label} QA` }),
-        /* @__PURE__ */ jsx9(
-          "strong",
-          {
-            title: `${activeRemainingItemCount} remaining of ${activeItemCount}`,
-            children: !hasActiveFilter ? `${activeRemainingItemCount}/${activeItemCount}` : `${filteredItemCount}/${activeItemCount}`
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsx9("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
-        const count = qaFilterCounts.get(filter.key) ?? 0;
-        const isActive = qaFilter === filter.key;
-        return /* @__PURE__ */ jsx9(
-          "button",
-          {
-            "aria-label": `${filter.label} QA (${count})`,
-            "aria-pressed": isActive,
-            className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
-            type: "button",
-            onClick: () => onQaFilterChange(filter.key),
-            children: /* @__PURE__ */ jsx9("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ jsx9(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ jsx9(ListFilter, { "aria-hidden": "true" }) })
-          },
-          filter.key
-        );
-      }) })
     ] })
   ] });
 };
+function getQaSourceDisplayLabel(label) {
+  return label === "local" ? "Local" : label;
+}
 function getStatusFilterOptions(statusOptions) {
   const seen = /* @__PURE__ */ new Set();
   return statusOptions.flatMap((statusOption) => {
@@ -5612,6 +6072,7 @@ var ReviewQaPanel = ({
   onChangeItemStatus,
   onClearSelectedItem,
   onChangeReviewSource,
+  onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
   onEditItem,
@@ -5624,78 +6085,104 @@ var ReviewQaPanel = ({
   onToggleItemOverlayVisibility
 }) => {
   const emptyMessage = isAllQaVisible ? `No ${activeAdapterEntry.label} QA.` : isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page.";
-  return /* @__PURE__ */ jsx10("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: /* @__PURE__ */ jsx10("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs8("section", { className: "df-review-item-list", children: [
-    /* @__PURE__ */ jsx10(
-      QaPanelHeader,
-      {
-        activeItemCount: activeItems.length,
-        activeRemainingItemCount,
-        filteredItemCount: filteredNumberedActiveItems.length,
-        isAllQaVisible,
-        label: activeAdapterEntry.label,
-        qaFilter,
-        qaFilterCounts,
-        qaStatusFilter,
-        qaStatusFilterCounts,
-        showSourceSelect,
-        source,
-        sourceEntries,
-        statusOptions: activeAdapterEntry.statusOptions,
-        onChangeReviewSource,
-        onQaFilterChange,
-        onQaStatusFilterChange,
-        onRefreshReviewData
-      }
-    ),
-    /* @__PURE__ */ jsxs8(
-      "div",
-      {
-        className: "df-review-list-scroll",
-        onClick: (event) => {
-          if (event.target === event.currentTarget) {
-            onClearSelectedItem();
-          }
-        },
-        children: [
-          activeItems.length === 0 && /* @__PURE__ */ jsx10("p", { className: "df-review-empty", children: emptyMessage }),
-          activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx10("p", { className: "df-review-empty", children: "No QA in this filter." }),
-          filteredNumberedActiveItems.map((numberedItem) => {
-            const { item } = numberedItem;
-            return /* @__PURE__ */ jsx10(
-              QaItemCard,
-              {
-                activeAdapterEntry,
-                currentPresetScope,
-                getItemPresetScope,
-                isOverlayVisible: !hiddenOverlayItemIds.has(item.id),
-                isRemoteSource,
-                numberedItem,
-                remoteAdapterEntry,
-                copiedPromptKey,
-                selectedItemId,
-                onChangeItemStatus,
-                onClearSelectedItem,
-                onCopyItemLink,
-                onCopyItemPrompt,
-                onEditItem,
-                onRemoveItem,
-                onRestoreReviewItem,
-                onSubmitItem,
-                onToggleItemOverlayVisibility
-              },
-              item.id
-            );
-          })
-        ]
-      }
-    )
-  ] }) }) });
+  return /* @__PURE__ */ jsxs8("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: [
+    /* @__PURE__ */ jsx10("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs8("section", { className: "df-review-item-list", children: [
+      /* @__PURE__ */ jsx10(
+        QaPanelHeader,
+        {
+          activeItemCount: activeItems.length,
+          activeRemainingItemCount,
+          filteredItemCount: filteredNumberedActiveItems.length,
+          isAllQaVisible,
+          label: activeAdapterEntry.label,
+          qaFilter,
+          qaFilterCounts,
+          qaStatusFilter,
+          qaStatusFilterCounts,
+          showSourceSelect,
+          source,
+          sourceEntries,
+          statusOptions: activeAdapterEntry.statusOptions,
+          onChangeReviewSource,
+          onQaFilterChange,
+          onQaStatusFilterChange,
+          onRefreshReviewData
+        }
+      ),
+      /* @__PURE__ */ jsxs8(
+        "div",
+        {
+          className: "df-review-list-scroll",
+          onClick: (event) => {
+            if (event.target === event.currentTarget) {
+              onClearSelectedItem();
+            }
+          },
+          children: [
+            activeItems.length === 0 && /* @__PURE__ */ jsx10("p", { className: "df-review-empty", children: emptyMessage }),
+            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx10("p", { className: "df-review-empty", children: "No QA in this filter." }),
+            filteredNumberedActiveItems.map((numberedItem) => {
+              const { item } = numberedItem;
+              return /* @__PURE__ */ jsx10(
+                QaItemCard,
+                {
+                  activeAdapterEntry,
+                  currentPresetScope,
+                  getItemPresetScope,
+                  isOverlayVisible: !hiddenOverlayItemIds.has(item.id),
+                  isRemoteSource,
+                  numberedItem,
+                  remoteAdapterEntry,
+                  copiedPromptKey,
+                  selectedItemId,
+                  onChangeItemStatus,
+                  onClearSelectedItem,
+                  onCopyItemLabel,
+                  onCopyItemLink,
+                  onCopyItemPrompt,
+                  onEditItem,
+                  onRemoveItem,
+                  onRestoreReviewItem,
+                  onSubmitItem,
+                  onToggleItemOverlayVisibility
+                },
+                item.id
+              );
+            })
+          ]
+        }
+      )
+    ] }) }),
+    /* @__PURE__ */ jsx10("div", { className: "df-review-qa-draft-host" })
+  ] });
 };
 
 // src/react-shell/presence/overlay.tsx
 import { useState as useState3 } from "react";
 import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
 var getPresenceName = (user) => user.displayName || user.userId;
+var PresenceUserIcon = () => /* @__PURE__ */ jsxs9("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
+  /* @__PURE__ */ jsx11(
+    "circle",
+    {
+      cx: "15",
+      cy: "15",
+      r: "12.5",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2.6"
+    }
+  ),
+  /* @__PURE__ */ jsx11("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
+  /* @__PURE__ */ jsx11(
+    "path",
+    {
+      d: "M7.8 22.1c.9-4.1 3.4-6.1 7.2-6.1s6.3 2 7.2 6.1c-1.7 1.5-4.1 2.4-7.2 2.4s-5.5-.9-7.2-2.4z",
+      fill: "currentColor",
+      stroke: "none"
+    }
+  )
+] });
 var PresenceOverlay = ({
   presenceSessionId,
   users
@@ -5717,7 +6204,7 @@ var PresenceOverlay = ({
             type: "button",
             onClick: () => setIsExpanded((current) => !current),
             children: [
-              /* @__PURE__ */ jsx11(UserRound, { "aria-hidden": "true" }),
+              /* @__PURE__ */ jsx11(PresenceUserIcon, {}),
               /* @__PURE__ */ jsx11("span", { className: "df-review-presence-badge", children: users.length })
             ]
           }
@@ -5731,7 +6218,7 @@ var PresenceOverlay = ({
               "--df-review-presence-color": user.color
             },
             title: getPresenceName(user),
-            children: getPresenceName(user)
+            children: /* @__PURE__ */ jsx11("span", { children: getPresenceName(user) })
           },
           user.sessionId
         )) })
@@ -5799,7 +6286,7 @@ var getSectionOutline = (root, options) => {
     if (source?.file) {
       addSourceFileCompareKey(seen, getOutlineSourceKey(source));
     }
-    return {
+    return createSectionOutlineEntry({
       id: `${label}-${index}`,
       label,
       depth: 1,
@@ -5814,7 +6301,7 @@ var getSectionOutline = (root, options) => {
         seen,
         options
       )
-    };
+    });
   });
 };
 function getSectionOutlineRoots(root, options) {
@@ -5844,7 +6331,7 @@ function getSectionOutlineChildren(parent, depth, maxDepth, seen, options) {
     if (source?.file && isNewSource) {
       const childSeen = new Set(seen);
       addSourceFileCompareKey(childSeen, sourceKey);
-      entries.push({
+      entries.push(createSectionOutlineEntry({
         id: `${sourceKey}-${getElementOutlinePath(child)}-${entries.length}`,
         label,
         depth,
@@ -5859,7 +6346,7 @@ function getSectionOutlineChildren(parent, depth, maxDepth, seen, options) {
           childSeen,
           options
         )
-      });
+      }));
       continue;
     }
     entries.push(
@@ -5876,6 +6363,114 @@ function getElementOutlinePath(element) {
     current = current.parentElement;
   }
   return indices.join("-");
+}
+function createSectionOutlineEntry(entry) {
+  return {
+    ...entry,
+    metadata: getSectionOutlineMetadata(entry.element, entry.label, entry.source)
+  };
+}
+var truncateOutlineValue = (value, maxLength) => value.length > maxLength ? `${value.slice(0, maxLength - 1)}\u2026` : value;
+var normalizeOutlineValue = (value) => value?.replace(/\s+/g, " ").trim() ?? "";
+function getSectionOutlineMetadata(element, label, source) {
+  const textElement = getPlacerTextElement(element, label, source?.file);
+  return {
+    rect: getSectionOutlineRect(element),
+    textValue: textElement ? truncateOutlineValue(
+      normalizeOutlineValue(textElement.textContent),
+      180
+    ) : void 0,
+    fontLabel: textElement ? getFontLabel(textElement) : void 0,
+    mediaItems: getPlacerMediaItems(element, label, source?.file),
+    classNames: getElementClassNames(element)
+  };
+}
+function getSectionOutlineRect(element) {
+  const rect = element.getBoundingClientRect();
+  return {
+    top: Math.round(rect.top),
+    left: Math.round(rect.left),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height)
+  };
+}
+function getElementClassNames(element) {
+  const classNames = Array.from(element.classList).filter(Boolean);
+  return classNames.length > 0 ? classNames : void 0;
+}
+function getPlacerTextElement(element, label, file) {
+  if (!isPlacerTextOutlineNode(label, file) && !element.hasAttribute("data-font")) {
+    return null;
+  }
+  return element.hasAttribute("data-font") ? element : element.querySelector("[data-font]");
+}
+function isPlacerTextOutlineNode(label, file) {
+  return `${label} ${file ?? ""}`.toLowerCase().includes("placertext");
+}
+function getFontLabel(element) {
+  const dataFont = element.getAttribute("data-font");
+  if (dataFont) {
+    return dataFont.replace(/\bs\b/g, "sb").replace(/\bsemibold\b/g, "sb").replace(/\bregular\b/g, "r");
+  }
+  const style = window.getComputedStyle(element);
+  return `${Math.round(parseFloat(style.fontSize))}px ${style.fontWeight}`;
+}
+function getPlacerMediaItems(element, label, file) {
+  if (!isPlacerMediaOutlineNode(label, file)) return void 0;
+  const mediaItems = [];
+  const seen = /* @__PURE__ */ new Set();
+  const addMediaItem = (target, type, url) => {
+    const normalizedUrl = normalizeOutlineValue(url);
+    if (!normalizedUrl) return;
+    const variant = getPlacerMediaVariant(target, element);
+    const key = `${variant}:${type}:${normalizedUrl}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    mediaItems.push({ type, url: normalizedUrl, variant });
+  };
+  if (element instanceof HTMLVideoElement) {
+    addMediaItem(element, "video", getVideoElementUrl(element));
+    addMediaItem(element, "image", element.getAttribute("poster"));
+  }
+  if (element instanceof HTMLImageElement) {
+    addMediaItem(element, "image", getMediaElementUrl(element));
+  }
+  if (element instanceof HTMLSourceElement) {
+    addMediaItem(element, "video", getSourceElementUrl(element));
+  }
+  Array.from(element.querySelectorAll("video")).forEach((video) => {
+    addMediaItem(video, "video", getVideoElementUrl(video));
+    addMediaItem(video, "image", video.getAttribute("poster"));
+  });
+  Array.from(element.querySelectorAll("source")).forEach((source) => {
+    addMediaItem(source, "video", getSourceElementUrl(source));
+  });
+  Array.from(element.querySelectorAll("img")).forEach((img) => {
+    addMediaItem(img, "image", getMediaElementUrl(img));
+  });
+  return mediaItems.length > 0 ? mediaItems : void 0;
+}
+function isPlacerMediaOutlineNode(label, file) {
+  return `${label} ${file ?? ""}`.toLowerCase().includes("placermedia");
+}
+function getPlacerMediaVariant(target, root) {
+  let current = target;
+  while (current) {
+    if (current.classList.contains("d-block-pc")) return "desktop";
+    if (current.classList.contains("d-block-m")) return "mobile";
+    if (current === root) break;
+    current = current.parentElement;
+  }
+  return "media";
+}
+function getVideoElementUrl(video) {
+  return video.currentSrc || video.getAttribute("src") || video.querySelector("source")?.getAttribute("src") || video.getAttribute("poster") || video.src;
+}
+function getSourceElementUrl(source) {
+  return source.getAttribute("src") || source.src;
+}
+function getMediaElementUrl(img) {
+  return img.currentSrc || img.getAttribute("src") || img.src;
 }
 function getOutlineSourceKey(source) {
   return getSourceFileCompareKey(source.file);
@@ -6494,7 +7089,7 @@ var getStoredOverlayState = (targetDocument, overlay) => {
 };
 var getTargetOverlayState = (targetDocument) => ({
   grid: Boolean(
-    targetDocument?.body.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow") || getStoredOverlayState(targetDocument, "grid")
+    targetDocument?.body?.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow") || getStoredOverlayState(targetDocument, "grid")
   ),
   figma: Boolean(
     targetDocument?.querySelector(
@@ -6534,9 +7129,7 @@ var ReviewTopbar = ({
   onCopyCurrentUrl,
   onSizeChange,
   onToggleRuler,
-  onToggleTargetOverlay,
-  onOpenInitialPrompt,
-  onOpenSettings
+  onToggleTargetOverlay
 }) => {
   const selectedPresetValue = getPresetSelectValue(size);
   const handlePresetSelectChange = (event) => {
@@ -6573,8 +7166,19 @@ var ReviewTopbar = ({
               onChange: (event) => onDraftTargetChange(event.target.value)
             }
           ),
-          /* @__PURE__ */ jsx16("button", { type: "submit", children: "Load" }),
-          /* @__PURE__ */ jsx16("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
+          /* @__PURE__ */ jsxs14("div", { className: "df-review-address-actions", children: [
+            /* @__PURE__ */ jsx16(
+              "button",
+              {
+                "aria-label": "Refresh target",
+                className: "df-review-address-refresh",
+                title: "Refresh target",
+                type: "submit",
+                children: /* @__PURE__ */ jsx16(RefreshCw, { "aria-hidden": "true" })
+              }
+            ),
+            /* @__PURE__ */ jsx16("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
+          ] })
         ]
       }
     ),
@@ -6654,86 +7258,7 @@ var ReviewTopbar = ({
             onClick: () => onToggleTargetOverlay("figma"),
             children: /* @__PURE__ */ jsx16(Image, { "aria-hidden": "true" })
           }
-        ),
-        /* @__PURE__ */ jsx16("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ jsx16(
-          "button",
-          {
-            "aria-label": "Open initial prompt",
-            className: "df-review-overlay-button is-prompt",
-            type: "button",
-            onClick: onOpenInitialPrompt,
-            children: /* @__PURE__ */ jsx16(CircleQuestionMark, { "aria-hidden": "true" })
-          }
-        ),
-        /* @__PURE__ */ jsx16(
-          "button",
-          {
-            "aria-label": "Open settings",
-            className: "df-review-overlay-button is-settings",
-            type: "button",
-            onClick: onOpenSettings,
-            children: /* @__PURE__ */ jsx16(Settings, { "aria-hidden": "true" })
-          }
         )
-      ] }),
-      /* @__PURE__ */ jsxs14("details", { className: "df-review-overlays-menu", children: [
-        /* @__PURE__ */ jsx16("summary", { "aria-label": "Open target tools", title: "Tools", children: /* @__PURE__ */ jsx16(Ellipsis, { "aria-hidden": "true" }) }),
-        /* @__PURE__ */ jsxs14("div", { className: "df-review-overlays-popover", "aria-label": "Target tools", children: [
-          isRulerAvailable && /* @__PURE__ */ jsx16(
-            "button",
-            {
-              "aria-label": "Toggle ruler",
-              className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
-              type: "button",
-              onClick: onToggleRuler,
-              children: /* @__PURE__ */ jsx16(Ruler, { "aria-hidden": "true" })
-            }
-          ),
-          /* @__PURE__ */ jsx16(
-            "button",
-            {
-              "aria-label": "Toggle grid overlay",
-              className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
-              type: "button",
-              onClick: () => onToggleTargetOverlay("grid"),
-              children: /* @__PURE__ */ jsx16(LayoutGrid, { "aria-hidden": "true" })
-            }
-          ),
-          /* @__PURE__ */ jsx16(
-            "button",
-            {
-              "aria-disabled": !isFigmaOverlayAvailable,
-              "aria-label": isFigmaOverlayAvailable ? "Toggle Figma overlay" : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
-              className: `df-review-overlay-button is-figma${targetOverlayState.figma ? " is-active" : ""}${isFigmaOverlayAvailable ? "" : " is-disabled"}`,
-              disabled: !isFigmaOverlayAvailable,
-              type: "button",
-              onClick: () => onToggleTargetOverlay("figma"),
-              children: /* @__PURE__ */ jsx16(Image, { "aria-hidden": "true" })
-            }
-          ),
-          /* @__PURE__ */ jsx16("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-          /* @__PURE__ */ jsx16(
-            "button",
-            {
-              "aria-label": "Open initial prompt",
-              className: "df-review-overlay-button is-prompt",
-              type: "button",
-              onClick: onOpenInitialPrompt,
-              children: /* @__PURE__ */ jsx16(CircleQuestionMark, { "aria-hidden": "true" })
-            }
-          ),
-          /* @__PURE__ */ jsx16(
-            "button",
-            {
-              "aria-label": "Open settings",
-              className: "df-review-overlay-button is-settings",
-              type: "button",
-              onClick: onOpenSettings,
-              children: /* @__PURE__ */ jsx16(Settings, { "aria-hidden": "true" })
-            }
-          )
-        ] })
       ] })
     ] })
   ] });
@@ -7037,7 +7562,8 @@ var getReviewKitTarget = ({
         width: Math.max(0, right - left),
         height: Math.max(0, bottom - top)
       };
-    }
+    },
+    getComposerHost: () => document.querySelector(".df-review-qa-draft-host")
   };
 };
 
@@ -8194,7 +8720,7 @@ var useReviewSettings = ({
       const nextToken = token.trim();
       const nextUserId = userId.trim();
       const nextTheme = normalizeReviewTheme(theme);
-      const shouldReload = nextToken !== getStoredFigmaToken() || nextUserId !== getStoredReviewUserId();
+      const shouldReload = nextToken !== getStoredFigmaToken();
       writeStoredFigmaToken(nextToken);
       writeStoredReviewUserId(nextUserId);
       writeStoredReviewTheme(nextTheme);
@@ -8285,7 +8811,7 @@ var useReviewShellData = ({
     () => /* @__PURE__ */ new Set()
   );
   const [qaFilter, setQaFilter] = useState8("all");
-  const [qaStatusFilter, setQaStatusFilter] = useState8("all");
+  const [qaStatusFilter, setQaStatusFilterState] = useState8(getStoredReviewQaStatusFilter);
   const [sitemapItems, setSitemapItems] = useState8(() => ({
     local: [],
     remote: []
@@ -8404,6 +8930,10 @@ var useReviewShellData = ({
     return counts;
   }, [activeItems, getItemPresetScope]);
   const currentPresetScope = getViewportPresetKind(size);
+  const setQaStatusFilter = useCallback10((filter) => {
+    setQaStatusFilterState(filter);
+    writeStoredReviewQaStatusFilter(filter);
+  }, []);
   const pageQaCounts = useMemo5(() => {
     const counts = /* @__PURE__ */ new Map();
     const addItems = (sourceKey, sourceItems) => {
@@ -8778,7 +9308,9 @@ var useReviewShellState = ({
     figma: false
   });
   const [selectedItemId, setSelectedItemId] = useState9(getInitialItemId());
-  const [isListVisible, setIsListVisible] = useState9(true);
+  const [isListVisible, setIsListVisible] = useState9(
+    getStoredReviewSidePanelVisible
+  );
   const [isSitemapOpen, setIsSitemapOpen] = useState9(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState9(false);
   const [copyLabel, setCopyLabel] = useState9("Copy URL");
@@ -8842,34 +9374,40 @@ var useReviewShellState = ({
 };
 
 // src/react-shell/review/shell.actions.ts
+var writeClipboardTextFallback = (value) => {
+  const selection = document.getSelection();
+  const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const ranges = selection ? Array.from(
+    { length: selection.rangeCount },
+    (_, index) => selection.getRangeAt(index)
+  ) : [];
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  const isCopied = document.execCommand("copy");
+  textarea.remove();
+  selection?.removeAllRanges();
+  ranges.forEach((range) => selection?.addRange(range));
+  activeElement?.focus();
+  if (!isCopied) {
+    throw new Error("Failed to copy to clipboard");
+  }
+};
 var writeClipboardText = async (value) => {
   try {
-    await navigator.clipboard.writeText(value);
+    writeClipboardTextFallback(value);
     return;
-  } catch {
-    const selection = document.getSelection();
-    const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const ranges = selection ? Array.from(
-      { length: selection.rangeCount },
-      (_, index) => selection.getRangeAt(index)
-    ) : [];
-    const textarea = document.createElement("textarea");
-    textarea.value = value;
-    textarea.setAttribute("readonly", "");
-    textarea.style.position = "fixed";
-    textarea.style.left = "-9999px";
-    textarea.style.top = "0";
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-    const isCopied = document.execCommand("copy");
-    textarea.remove();
-    selection?.removeAllRanges();
-    ranges.forEach((range) => selection?.addRange(range));
-    activeElement?.focus();
-    if (!isCopied) {
-      throw new Error("Failed to copy to clipboard");
+  } catch (error) {
+    if (!navigator.clipboard?.writeText) {
+      throw error;
     }
+    await navigator.clipboard.writeText(value);
   }
 };
 var listReviewItems = async ({
@@ -9157,12 +9695,10 @@ var getSectionOutlineEntryCount = (entries) => entries.reduce(
   (count, entry) => count + 1 + getSectionOutlineEntryCount(entry.children),
   0
 );
-var DEFAULT_COLLAPSED_ROOT_LABELS = /* @__PURE__ */ new Set(["FrameHeader", "FrameFooter"]);
 var getDefaultCollapsedSectionOutlineIds = (entries) => {
   const collapsedIds = /* @__PURE__ */ new Set();
   const visit = (entry) => {
-    const shouldCollapseRoot = entry.depth === 1 && DEFAULT_COLLAPSED_ROOT_LABELS.has(entry.label);
-    if ((entry.depth >= 2 || shouldCollapseRoot) && entry.children.length > 0) {
+    if (entry.children.length > 0) {
       collapsedIds.add(entry.id);
     }
     entry.children.forEach(visit);
@@ -9170,13 +9706,27 @@ var getDefaultCollapsedSectionOutlineIds = (entries) => {
   entries.forEach(visit);
   return collapsedIds;
 };
+var getLiveSectionOutlineRect = (entry) => {
+  if (!entry.element.isConnected) return entry.metadata.rect;
+  const rect = entry.element.getBoundingClientRect();
+  return {
+    top: Math.round(rect.top),
+    left: Math.round(rect.left),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height)
+  };
+};
 var matchesSectionOutlineFilter = (entry, terms) => {
   if (terms.length === 0) return true;
   const text = [
     entry.label,
     entry.filePath,
     entry.source?.file,
-    entry.data?.file
+    entry.data?.file,
+    entry.metadata.textValue,
+    entry.metadata.fontLabel,
+    entry.metadata.mediaItems?.map((mediaItem) => `${mediaItem.variant} ${mediaItem.type} ${mediaItem.url}`).join(" "),
+    entry.metadata.classNames?.join(" ")
   ].filter(Boolean).join(" ").toLowerCase();
   return terms.every((term) => text.includes(term));
 };
@@ -9261,10 +9811,16 @@ var ReviewShell = ({
   });
   const sourceShortcutCleanupRef = useRef5(null);
   const sourceInspectorInteractionRef = useRef5(false);
-  const [sidePanel, setSidePanel] = useState10("qa");
   const [sourceInspectorState, setSourceInspectorState] = useState10(null);
   const [sectionOutline, setSectionOutline] = useState10(null);
-  const [sectionOutlineFilter, setSectionOutlineFilter] = useState10("");
+  const [sectionOutlineFilter, setSectionOutlineFilter] = useState10(
+    () => getStoredSourceTreeFilter()
+  );
+  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] = useState10(() => getStoredSourceTreeMetaVisibility());
+  const isSectionOutlineBoxMetaVisible = sectionOutlineMetaVisibility.box;
+  const isSectionOutlineFontMetaVisible = sectionOutlineMetaVisibility.font;
+  const isSectionOutlineMediaMetaVisible = sectionOutlineMetaVisibility.media;
+  const isSectionOutlineClassMetaVisible = sectionOutlineMetaVisibility.className;
   const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = useState10(() => /* @__PURE__ */ new Set());
   const [isAllQaVisible, setIsAllQaVisible] = useState10(false);
   const sourceOpenOptions = useMemo7(
@@ -9290,9 +9846,36 @@ var ReviewShell = ({
     [sourceInspector]
   );
   const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
+  const [sidePanel, setSidePanel] = useState10(
+    () => isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa"
+  );
   const isSourceTreeHoverOutlineEnabled = sourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === "qa";
   const isSourceTreePanelVisible = isSourceInspectorEnabled && isListVisible && sidePanel === "source";
+  useEffect10(() => {
+    if (isSourceInspectorEnabled || sidePanel !== "source") return;
+    setSidePanel("qa");
+  }, [isSourceInspectorEnabled, sidePanel]);
+  useEffect10(() => {
+    writeStoredReviewSidePanel(sidePanel);
+  }, [sidePanel]);
+  useEffect10(() => {
+    writeStoredReviewSidePanelVisible(isListVisible);
+  }, [isListVisible]);
+  const updateSectionOutlineFilter = useCallback11((nextFilter) => {
+    setSectionOutlineFilter(nextFilter);
+    writeStoredSourceTreeFilter(nextFilter);
+  }, []);
+  const updateSectionOutlineMetaVisibility = useCallback11(
+    (key) => {
+      setSectionOutlineMetaVisibility((current) => {
+        const next = { ...current, [key]: !current[key] };
+        writeStoredSourceTreeMetaVisibility(next);
+        return next;
+      });
+    },
+    []
+  );
   const sectionOutlineFilterTerms = useMemo7(
     () => getSectionOutlineFilterTerms(sectionOutlineFilter),
     [sectionOutlineFilter]
@@ -9560,6 +10143,7 @@ var ReviewShell = ({
       parsedInput.height
     ) : sizeRef.current;
     const nextAdapter = sourceEntries.find((entry) => entry.label === nextSource) ?? activeAdapterEntry;
+    const isCurrentTarget = targetRef.current === normalizedTarget && source === nextSource && sizeRef.current.width === nextSize.width && sizeRef.current.height === nextSize.height;
     if (parsedInput.itemId) {
       const item = await nextAdapter.adapter.get(parsedInput.itemId);
       if (item) {
@@ -9578,6 +10162,7 @@ var ReviewShell = ({
     setSize(nextSize);
     setTarget(normalizedTarget);
     updateShellUrl(normalizedTarget, nextSize, nextSource);
+    if (isCurrentTarget) reloadTargetFrame();
   };
   const selectPage = (href) => {
     const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
@@ -9598,6 +10183,10 @@ var ReviewShell = ({
     const writeMode = getReviewModeWriteMode(nextMode);
     if (writeMode && !activeAdapterEntry.writeModes.includes(writeMode)) return;
     closeRuler();
+    if (writeMode && mode !== nextMode) {
+      setSidePanel("qa");
+      setIsListVisible(true);
+    }
     setControllerReviewMode(nextMode);
   };
   useReviewShellHotkeys({
@@ -9647,7 +10236,6 @@ var ReviewShell = ({
   }, []);
   useEffect10(() => {
     clearSourceInspector();
-    setSectionOutlineFilter("");
     setCollapsedSectionOutlineIds(/* @__PURE__ */ new Set());
     setSectionOutline(null);
   }, [clearSourceInspector, targetSrc]);
@@ -9808,7 +10396,10 @@ var ReviewShell = ({
       } catch {
         frameDocument = null;
       }
-      return frameDocument ? getSectionOutline(frameDocument, sectionOutlineOptions) : [];
+      if (!frameDocument || frameDocument.readyState !== "complete") {
+        return null;
+      }
+      return getSectionOutline(frameDocument, sectionOutlineOptions);
     },
     [iframeRef, sectionOutlineOptions]
   );
@@ -9824,7 +10415,9 @@ var ReviewShell = ({
   useEffect10(() => {
     if (sidePanel !== "source" || !isListVisible) return void 0;
     const refreshSectionOutline = () => {
-      setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
+      const nextSectionOutline = getCurrentSectionOutline();
+      if (!nextSectionOutline) return;
+      setSectionOutlineWithDefaultCollapse(nextSectionOutline);
     };
     const animationFrame = window.requestAnimationFrame(refreshSectionOutline);
     const firstTimeout = window.setTimeout(refreshSectionOutline, 120);
@@ -9852,7 +10445,10 @@ var ReviewShell = ({
       return;
     }
     setSidePanel("source");
-    setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
+    const nextSectionOutline = getCurrentSectionOutline();
+    if (nextSectionOutline) {
+      setSectionOutlineWithDefaultCollapse(nextSectionOutline);
+    }
     setIsListVisible(true);
   }, [
     getCurrentSectionOutline,
@@ -9905,7 +10501,8 @@ var ReviewShell = ({
         return;
       }
       clearSourceInspector();
-      setIsListVisible(false);
+      setSidePanel("qa");
+      setIsListVisible(true);
       let targetWindow = null;
       try {
         targetWindow = entry.element.ownerDocument.defaultView ?? iframeRef.current?.contentWindow ?? null;
@@ -10215,7 +10812,10 @@ var ReviewShell = ({
     );
     bindSourceOpenShortcut();
     if (sidePanel === "source" && isListVisible) {
-      setSectionOutlineWithDefaultCollapse(getCurrentSectionOutline());
+      const nextSectionOutline = getCurrentSectionOutline();
+      if (nextSectionOutline) {
+        setSectionOutlineWithDefaultCollapse(nextSectionOutline);
+      }
     }
   }, [
     bindSourceOpenShortcut,
@@ -10282,6 +10882,11 @@ var ReviewShell = ({
     `qa:${numberedItem.item.id}`,
     "QA prompt copied"
   );
+  const copyItemLabel = (numberedItem) => copyPrompt(
+    numberedItem.displayLabel,
+    `label:${numberedItem.item.id}`,
+    "QA number copied"
+  );
   const copyItemLink = (numberedItem) => {
     const { item } = numberedItem;
     return copyPrompt(
@@ -10307,6 +10912,99 @@ var ReviewShell = ({
     onRefreshReviewData: refreshReviewData2,
     onToast: showToast
   });
+  const renderSectionOutlineMeta = (entry) => {
+    const { metadata } = entry;
+    const rows = [];
+    const metaPaddingLeft = Math.max(0, entry.depth - 1) * 12 + 29;
+    const rect = getLiveSectionOutlineRect(entry);
+    if (isSectionOutlineBoxMetaVisible) {
+      rows.push(
+        /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ jsx17("b", { children: "box" }),
+          /* @__PURE__ */ jsxs15("code", { children: [
+            "top ",
+            rect.top,
+            " / left ",
+            rect.left,
+            " / width ",
+            rect.width,
+            " / height",
+            " ",
+            rect.height
+          ] })
+        ] }, "box")
+      );
+    }
+    if (metadata.textValue) {
+      rows.push(
+        /* @__PURE__ */ jsxs15(
+          "span",
+          {
+            className: "df-review-section-outline-meta-row is-text",
+            children: [
+              /* @__PURE__ */ jsx17("b", { children: "text" }),
+              /* @__PURE__ */ jsx17("code", { children: metadata.textValue })
+            ]
+          },
+          "text"
+        )
+      );
+    }
+    if (isSectionOutlineFontMetaVisible && metadata.fontLabel) {
+      rows.push(
+        /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ jsx17("b", { children: "font" }),
+          /* @__PURE__ */ jsx17("code", { children: metadata.fontLabel })
+        ] }, "font")
+      );
+    }
+    if (isSectionOutlineMediaMetaVisible && metadata.mediaItems?.length) {
+      metadata.mediaItems.forEach((mediaItem) => {
+        const mediaKey = `${mediaItem.variant}:${mediaItem.type}:${mediaItem.url}`;
+        const mediaLabel = mediaItem.variant === "media" ? mediaItem.type : mediaItem.variant;
+        rows.push(
+          /* @__PURE__ */ jsxs15(
+            "span",
+            {
+              className: "df-review-section-outline-meta-row is-media",
+              children: [
+                /* @__PURE__ */ jsx17("b", { children: mediaLabel }),
+                /* @__PURE__ */ jsx17(
+                  "a",
+                  {
+                    className: "df-review-section-outline-media-link",
+                    href: mediaItem.url,
+                    rel: "noopener noreferrer",
+                    target: "_blank",
+                    title: `${mediaLabel} ${mediaItem.type}`,
+                    children: /* @__PURE__ */ jsx17("code", { children: mediaItem.url })
+                  }
+                )
+              ]
+            },
+            mediaKey
+          )
+        );
+      });
+    }
+    if (isSectionOutlineClassMetaVisible && metadata.classNames?.length) {
+      rows.push(
+        /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-meta-row is-class", children: [
+          /* @__PURE__ */ jsx17("b", { children: "class" }),
+          /* @__PURE__ */ jsx17("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ jsx17("code", { children: className }, className)) })
+        ] }, "class")
+      );
+    }
+    if (rows.length === 0) return null;
+    return /* @__PURE__ */ jsx17(
+      "div",
+      {
+        className: "df-review-section-outline-meta",
+        style: { paddingLeft: `${metaPaddingLeft}px` },
+        children: rows
+      }
+    );
+  };
   const renderSectionOutlineEntry = (entry) => {
     const hasChildren = entry.children.length > 0;
     const isCollapsed = !isSectionOutlineFiltering && collapsedSectionOutlineIds.has(entry.id);
@@ -10318,8 +11016,7 @@ var ReviewShell = ({
           /* @__PURE__ */ jsxs15(
             "div",
             {
-              className: "df-review-section-outline-row",
-              style: { paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` },
+              className: "df-review-section-outline-entry-body",
               onMouseEnter: () => showSourceOutlineForElement(entry.element),
               onMouseLeave: clearSourceOutlineHover,
               onMouseOver: () => showSourceOutlineForElement(entry.element),
@@ -10332,78 +11029,88 @@ var ReviewShell = ({
               onPointerEnter: () => showSourceOutlineForElement(entry.element),
               onPointerLeave: clearSourceOutlineHover,
               children: [
-                hasChildren ? /* @__PURE__ */ jsx17(
-                  "button",
+                /* @__PURE__ */ jsxs15(
+                  "div",
                   {
-                    "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
-                    "aria-expanded": !isCollapsed,
-                    className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
-                    type: "button",
-                    onClick: () => toggleSectionOutlineEntry(entry.id),
-                    children: /* @__PURE__ */ jsx17(ChevronDown, { "aria-hidden": "true" })
-                  }
-                ) : /* @__PURE__ */ jsx17(
-                  "span",
-                  {
-                    "aria-hidden": "true",
-                    className: "df-review-section-outline-toggle is-placeholder"
+                    className: "df-review-section-outline-row",
+                    style: { paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` },
+                    children: [
+                      hasChildren ? /* @__PURE__ */ jsx17(
+                        "button",
+                        {
+                          "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
+                          "aria-expanded": !isCollapsed,
+                          className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
+                          type: "button",
+                          onClick: () => toggleSectionOutlineEntry(entry.id),
+                          children: /* @__PURE__ */ jsx17(ChevronDown, { "aria-hidden": "true" })
+                        }
+                      ) : /* @__PURE__ */ jsx17(
+                        "span",
+                        {
+                          "aria-hidden": "true",
+                          className: "df-review-section-outline-toggle is-placeholder"
+                        }
+                      ),
+                      /* @__PURE__ */ jsx17(
+                        "button",
+                        {
+                          className: "df-review-section-outline-name",
+                          type: "button",
+                          onClick: () => scrollToSection(entry),
+                          children: /* @__PURE__ */ jsx17("span", { children: entry.label })
+                        }
+                      ),
+                      /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-links", children: [
+                        /* @__PURE__ */ jsx17(
+                          "button",
+                          {
+                            "aria-label": `Open ${entry.label} data`,
+                            className: "df-review-section-outline-link",
+                            title: "Open data",
+                            type: "button",
+                            disabled: !entry.data?.file,
+                            onClick: () => openSectionData(entry),
+                            children: /* @__PURE__ */ jsx17(Database, { "aria-hidden": "true" })
+                          }
+                        ),
+                        /* @__PURE__ */ jsx17(
+                          "button",
+                          {
+                            "aria-label": `Open ${entry.label} source`,
+                            className: "df-review-section-outline-link",
+                            title: "Open source",
+                            type: "button",
+                            disabled: !entry.source?.file,
+                            onClick: () => openSectionSource(entry),
+                            children: /* @__PURE__ */ jsx17(CodeXml, { "aria-hidden": "true" })
+                          }
+                        ),
+                        /* @__PURE__ */ jsx17(
+                          "span",
+                          {
+                            "aria-hidden": "true",
+                            className: "df-review-section-outline-divider",
+                            children: "|"
+                          }
+                        ),
+                        /* @__PURE__ */ jsx17(
+                          "button",
+                          {
+                            "aria-label": `Start DOM QA for ${entry.label}`,
+                            className: "df-review-section-outline-link is-dom-select",
+                            title: "DOM select",
+                            type: "button",
+                            disabled: !canWriteDom,
+                            onClick: () => startSectionDomReview(entry),
+                            children: /* @__PURE__ */ jsx17(SquareMousePointer, { "aria-hidden": "true" })
+                          }
+                        )
+                      ] })
+                    ]
                   }
                 ),
-                /* @__PURE__ */ jsx17(
-                  "button",
-                  {
-                    className: "df-review-section-outline-name",
-                    type: "button",
-                    onClick: () => scrollToSection(entry),
-                    children: /* @__PURE__ */ jsx17("span", { children: entry.label })
-                  }
-                ),
-                /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-links", children: [
-                  /* @__PURE__ */ jsx17(
-                    "button",
-                    {
-                      "aria-label": `Open ${entry.label} data`,
-                      className: "df-review-section-outline-link",
-                      title: "Open data",
-                      type: "button",
-                      disabled: !entry.data?.file,
-                      onClick: () => openSectionData(entry),
-                      children: /* @__PURE__ */ jsx17(Database, { "aria-hidden": "true" })
-                    }
-                  ),
-                  /* @__PURE__ */ jsx17(
-                    "button",
-                    {
-                      "aria-label": `Open ${entry.label} source`,
-                      className: "df-review-section-outline-link",
-                      title: "Open source",
-                      type: "button",
-                      disabled: !entry.source?.file,
-                      onClick: () => openSectionSource(entry),
-                      children: /* @__PURE__ */ jsx17(CodeXml, { "aria-hidden": "true" })
-                    }
-                  ),
-                  /* @__PURE__ */ jsx17(
-                    "span",
-                    {
-                      "aria-hidden": "true",
-                      className: "df-review-section-outline-divider",
-                      children: "|"
-                    }
-                  ),
-                  /* @__PURE__ */ jsx17(
-                    "button",
-                    {
-                      "aria-label": `Start DOM QA for ${entry.label}`,
-                      className: "df-review-section-outline-link is-dom-select",
-                      title: "DOM select",
-                      type: "button",
-                      disabled: !canWriteDom,
-                      onClick: () => startSectionDomReview(entry),
-                      children: /* @__PURE__ */ jsx17(SquareMousePointer, { "aria-hidden": "true" })
-                    }
-                  )
-                ] })
+                renderSectionOutlineMeta(entry)
               ]
             }
           ),
@@ -10436,11 +11143,7 @@ var ReviewShell = ({
             onCopyCurrentUrl: () => void copyCurrentUrl(),
             onSizeChange: setSize,
             onToggleRuler: toggleRuler,
-            onToggleTargetOverlay: toggleTargetOverlay,
-            onOpenInitialPrompt: () => {
-              setIsInitialPromptOpen(true);
-            },
-            onOpenSettings: openFigmaSettings
+            onToggleTargetOverlay: toggleTargetOverlay
           }
         ),
         isSitemapOpen && /* @__PURE__ */ jsx17(
@@ -10518,16 +11221,42 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleSourceTreePanel,
               title: "Source Tree",
-              children: /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(Search, {}) })
+              children: /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(Workflow, {}) })
             }
           ),
-          currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsx17(
-            PresenceOverlay,
-            {
-              presenceSessionId,
-              users: currentPagePresenceUsers
-            }
-          )
+          /* @__PURE__ */ jsxs15("div", { className: "df-review-side-actions", children: [
+            /* @__PURE__ */ jsx17(
+              "button",
+              {
+                "aria-label": "Open initial prompt",
+                className: "df-review-side-toggle",
+                type: "button",
+                onClick: () => {
+                  setIsInitialPromptOpen(true);
+                },
+                title: "Help",
+                children: /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(CircleQuestionMark, {}) })
+              }
+            ),
+            /* @__PURE__ */ jsx17(
+              "button",
+              {
+                "aria-label": "Open settings",
+                className: "df-review-side-toggle",
+                type: "button",
+                onClick: openFigmaSettings,
+                title: "Settings",
+                children: /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(Settings, {}) })
+              }
+            ),
+            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsx17(
+              PresenceOverlay,
+              {
+                presenceSessionId,
+                users: currentPagePresenceUsers
+              }
+            )
+          ] })
         ] }),
         /* @__PURE__ */ jsx17(
           ReviewQaPanel,
@@ -10555,6 +11284,7 @@ var ReviewShell = ({
             onChangeItemStatus: changeItemStatus,
             onClearSelectedItem: clearSelectedReviewItem,
             onChangeReviewSource: changeReviewSource,
+            onCopyItemLabel: (numberedItem) => void copyItemLabel(numberedItem),
             onCopyItemLink: (numberedItem) => void copyItemLink(numberedItem),
             onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
             onEditItem: setEditingItem,
@@ -10574,9 +11304,61 @@ var ReviewShell = ({
             "aria-hidden": !isSourceTreePanelVisible,
             children: /* @__PURE__ */ jsxs15("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
               /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-head", children: [
-                /* @__PURE__ */ jsxs15("span", { children: [
-                  /* @__PURE__ */ jsx17("strong", { children: "Source Tree" }),
-                  /* @__PURE__ */ jsx17("small", { children: isSectionOutlineFiltering ? `${filteredSectionOutlineCount} / ${sectionOutlineTotalCount} results` : `${sectionOutline?.length ?? 0} roots` })
+                /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-summary", children: [
+                  /* @__PURE__ */ jsxs15("span", { children: [
+                    /* @__PURE__ */ jsx17("strong", { children: "Component" }),
+                    /* @__PURE__ */ jsx17("small", { children: isSectionOutlineFiltering ? `${filteredSectionOutlineCount} / ${sectionOutlineTotalCount} results` : `${sectionOutline?.length ?? 0} ${sectionOutline?.length === 1 ? "root" : "roots"}` })
+                  ] }),
+                  /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-meta-controls", children: [
+                    /* @__PURE__ */ jsx17(
+                      "button",
+                      {
+                        "aria-label": "Toggle source tree box metadata",
+                        "aria-pressed": isSectionOutlineBoxMetaVisible,
+                        className: `df-review-section-outline-meta-toggle${isSectionOutlineBoxMetaVisible ? " is-active" : ""}`,
+                        title: "top / left / width / height",
+                        type: "button",
+                        onClick: () => updateSectionOutlineMetaVisibility("box"),
+                        children: /* @__PURE__ */ jsx17(SquareDashed, { "aria-hidden": "true" })
+                      }
+                    ),
+                    /* @__PURE__ */ jsx17(
+                      "button",
+                      {
+                        "aria-label": "Toggle source tree font metadata",
+                        "aria-pressed": isSectionOutlineFontMetaVisible,
+                        className: `df-review-section-outline-meta-toggle${isSectionOutlineFontMetaVisible ? " is-active" : ""}`,
+                        title: "font size / weight",
+                        type: "button",
+                        onClick: () => updateSectionOutlineMetaVisibility("font"),
+                        children: /* @__PURE__ */ jsx17(Type, { "aria-hidden": "true" })
+                      }
+                    ),
+                    /* @__PURE__ */ jsx17(
+                      "button",
+                      {
+                        "aria-label": "Toggle source tree media metadata",
+                        "aria-pressed": isSectionOutlineMediaMetaVisible,
+                        className: `df-review-section-outline-meta-toggle${isSectionOutlineMediaMetaVisible ? " is-active" : ""}`,
+                        title: "media urls",
+                        type: "button",
+                        onClick: () => updateSectionOutlineMetaVisibility("media"),
+                        children: /* @__PURE__ */ jsx17(Image, { "aria-hidden": "true" })
+                      }
+                    ),
+                    /* @__PURE__ */ jsx17(
+                      "button",
+                      {
+                        "aria-label": "Toggle source tree class metadata",
+                        "aria-pressed": isSectionOutlineClassMetaVisible,
+                        className: `df-review-section-outline-meta-toggle${isSectionOutlineClassMetaVisible ? " is-active" : ""}`,
+                        title: "class names",
+                        type: "button",
+                        onClick: () => updateSectionOutlineMetaVisibility("className"),
+                        children: /* @__PURE__ */ jsx17(CodeXml, { "aria-hidden": "true" })
+                      }
+                    )
+                  ] })
                 ] }),
                 /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-filter", children: [
                   /* @__PURE__ */ jsx17(Search, { "aria-hidden": "true" }),
@@ -10590,7 +11372,7 @@ var ReviewShell = ({
                       autoComplete: "off",
                       enterKeyHint: "search",
                       spellCheck: false,
-                      onChange: (event) => setSectionOutlineFilter(event.currentTarget.value)
+                      onChange: (event) => updateSectionOutlineFilter(event.currentTarget.value)
                     }
                   ),
                   sectionOutlineFilter && /* @__PURE__ */ jsx17(
@@ -10600,7 +11382,7 @@ var ReviewShell = ({
                       className: "df-review-section-outline-filter-clear",
                       type: "button",
                       onMouseDown: (event) => event.preventDefault(),
-                      onClick: () => setSectionOutlineFilter(""),
+                      onClick: () => updateSectionOutlineFilter(""),
                       children: /* @__PURE__ */ jsx17(X, { "aria-hidden": "true" })
                     }
                   )
@@ -10919,7 +11701,6 @@ lucide-react/dist/esm/icons/circle-question-mark.mjs:
 lucide-react/dist/esm/icons/code-xml.mjs:
 lucide-react/dist/esm/icons/copy.mjs:
 lucide-react/dist/esm/icons/database.mjs:
-lucide-react/dist/esm/icons/ellipsis.mjs:
 lucide-react/dist/esm/icons/external-link.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
 lucide-react/dist/esm/icons/eye.mjs:
@@ -10940,11 +11721,13 @@ lucide-react/dist/esm/icons/scan.mjs:
 lucide-react/dist/esm/icons/search.mjs:
 lucide-react/dist/esm/icons/settings.mjs:
 lucide-react/dist/esm/icons/smartphone.mjs:
+lucide-react/dist/esm/icons/square-dashed.mjs:
 lucide-react/dist/esm/icons/square-mouse-pointer.mjs:
 lucide-react/dist/esm/icons/sticky-note.mjs:
 lucide-react/dist/esm/icons/sun.mjs:
+lucide-react/dist/esm/icons/type.mjs:
 lucide-react/dist/esm/icons/upload.mjs:
-lucide-react/dist/esm/icons/user-round.mjs:
+lucide-react/dist/esm/icons/workflow.mjs:
 lucide-react/dist/esm/icons/x.mjs:
 lucide-react/dist/esm/lucide-react.mjs:
   (**

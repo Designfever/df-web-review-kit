@@ -72,9 +72,7 @@ export const useReviewSettings = ({
       const nextToken = token.trim();
       const nextUserId = userId.trim();
       const nextTheme = normalizeReviewTheme(theme);
-      const shouldReload =
-        nextToken !== getStoredFigmaToken() ||
-        nextUserId !== getStoredReviewUserId();
+      const shouldReload = nextToken !== getStoredFigmaToken();
 
       writeStoredFigmaToken(nextToken);
       writeStoredReviewUserId(nextUserId);

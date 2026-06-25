@@ -54,9 +54,53 @@ export const QaPanelHeader = ({
 }: QaPanelHeaderProps) => {
   const statusFilterOptions = getStatusFilterOptions(statusOptions);
   const hasActiveFilter = qaFilter !== 'all' || qaStatusFilter !== 'all';
+  const displayLabel = getQaSourceDisplayLabel(label);
 
   return (
     <div className="df-review-list-header">
+      <div className="df-review-list-title">
+        <span className="df-review-list-meta">
+          <span>
+            {isAllQaVisible
+              ? `${displayLabel} QA · All pages`
+              : `${displayLabel} QA`}
+          </span>
+          <strong
+            title={`${activeRemainingItemCount} remaining of ${activeItemCount}`}
+          >
+            {!hasActiveFilter
+              ? `${activeRemainingItemCount}/${activeItemCount}`
+              : `${filteredItemCount}/${activeItemCount}`}
+          </strong>
+        </span>
+        <div className="df-review-filter-tabs" aria-label="QA filters">
+          {REVIEW_QA_FILTERS.map((filter) => {
+            const count = qaFilterCounts.get(filter.key) ?? 0;
+            const isActive = qaFilter === filter.key;
+
+            return (
+              <button
+                key={filter.key}
+                aria-label={`${filter.label} QA (${count})`}
+                aria-pressed={isActive}
+                className={`df-review-filter-tab${
+                  isActive ? ' is-active' : ''
+                }`}
+                type="button"
+                onClick={() => onQaFilterChange(filter.key)}
+              >
+                <span className="df-review-filter-icon">
+                  {filter.scope ? (
+                    <ReviewScopeIcon scope={filter.scope} />
+                  ) : (
+                    <ListFilterIcon aria-hidden="true" />
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <div className="df-review-list-toolbar">
         <div className="df-review-list-controls">
           {showSourceSelect && (
@@ -106,50 +150,13 @@ export const QaPanelHeader = ({
           ))}
         </select>
       </div>
-      <div className="df-review-list-title">
-        <span className="df-review-list-meta">
-          <span>
-            {isAllQaVisible ? `${label} QA · All pages` : `${label} QA`}
-          </span>
-          <strong
-            title={`${activeRemainingItemCount} remaining of ${activeItemCount}`}
-          >
-            {!hasActiveFilter
-              ? `${activeRemainingItemCount}/${activeItemCount}`
-              : `${filteredItemCount}/${activeItemCount}`}
-          </strong>
-        </span>
-        <div className="df-review-filter-tabs" aria-label="QA filters">
-          {REVIEW_QA_FILTERS.map((filter) => {
-            const count = qaFilterCounts.get(filter.key) ?? 0;
-            const isActive = qaFilter === filter.key;
-
-            return (
-              <button
-                key={filter.key}
-                aria-label={`${filter.label} QA (${count})`}
-                aria-pressed={isActive}
-                className={`df-review-filter-tab${
-                  isActive ? ' is-active' : ''
-                }`}
-                type="button"
-                onClick={() => onQaFilterChange(filter.key)}
-              >
-                <span className="df-review-filter-icon">
-                  {filter.scope ? (
-                    <ReviewScopeIcon scope={filter.scope} />
-                  ) : (
-                    <ListFilterIcon aria-hidden="true" />
-                  )}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 };
+
+function getQaSourceDisplayLabel(label: ReviewSource) {
+  return label === 'local' ? 'Local' : label;
+}
 
 function getStatusFilterOptions(
   statusOptions: readonly ReviewShellStatusOption[]

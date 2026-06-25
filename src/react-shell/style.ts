@@ -1573,16 +1573,19 @@ export function ensureReviewShellStyle() {
         width: clamp(154px, 26vw, 190px);
 	    }
 
-	    .df-review-overlays {
-	      display: none;
-	    }
+		  }
+
+    @container (max-width: 560px) {
+      .df-review-overlays {
+        display: none;
+      }
 
       .df-review-overlays-menu {
         display: block;
       }
-	  }
+    }
 
-	  .df-review-side-rail {
+		  .df-review-side-rail {
 	    grid-column: 3;
 	    grid-row: 1 / span 3;
 	    position: relative;

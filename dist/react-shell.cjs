@@ -1619,7 +1619,7 @@ function ensureReviewShellStyle() {
 
 		  }
 
-    @container (max-width: 560px) {
+    @container (max-width: 480px) {
       .df-review-overlays {
         display: none;
       }

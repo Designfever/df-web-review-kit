@@ -1642,11 +1642,11 @@ function ensureReviewShellStyle() {
 
   .df-review-side-toggle {
     position: relative;
-    flex: 0 0 58px;
+    flex: 0 0 48px;
     display: grid;
     place-items: center;
     width: 100%;
-    min-height: 58px;
+    min-height: 48px;
     border: 0;
 	    border-radius: 0;
 	    padding: 0;
@@ -1665,9 +1665,9 @@ function ensureReviewShellStyle() {
 
   .df-review-side-toggle.is-active::after {
     position: absolute;
-    top: 12px;
+    top: 9px;
     right: 0;
-    bottom: 12px;
+    bottom: 9px;
     width: 3px;
     border-radius: 3px 0 0 3px;
     background: var(--df-review-accent);
@@ -1724,7 +1724,7 @@ function ensureReviewShellStyle() {
     display: grid;
     place-items: center;
     width: 100%;
-    min-height: 58px;
+    min-height: 48px;
     border: 0;
     border-radius: 0;
     padding: 0;
@@ -1759,8 +1759,8 @@ function ensureReviewShellStyle() {
 
   .df-review-presence-badge {
     position: absolute;
-    top: 10px;
-    right: 7px;
+    top: 6px;
+    right: 6px;
     display: grid;
     place-items: center;
     min-width: 17px;

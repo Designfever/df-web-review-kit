@@ -1,6 +1,7 @@
 import type { MutableRefObject } from 'react';
 import {
   getFrameRouteTarget,
+  getTargetRouteKey,
   normalizeTarget,
 } from '../route';
 
@@ -29,7 +30,13 @@ export const bindReviewFrameNavigation = ({
 }: BindReviewFrameNavigationOptions) => {
   const syncRouteFromFrame = () => {
     const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
-    if (nextTarget !== targetRef.current && !pageTargets.has(nextTarget)) {
+    const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
+    const currentRouteKey = getTargetRouteKey(
+      targetRef.current,
+      reviewPathPrefix
+    );
+    if (nextRouteKey === currentRouteKey) return;
+    if (!pageTargets.has(nextRouteKey)) {
       return;
     }
 
@@ -53,8 +60,17 @@ export const bindReviewFrameNavigation = ({
     const url = new URL(href, targetWindow.location.href);
     if (url.origin !== targetWindow.location.origin) return;
 
-    const nextTarget = normalizeTarget(url.pathname, reviewPathPrefix);
-    if (nextTarget === targetRef.current) return;
+    const nextTarget = normalizeTarget(
+      `${url.pathname}${url.search}${url.hash}`,
+      reviewPathPrefix
+    );
+    const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
+    const currentRouteKey = getTargetRouteKey(
+      targetRef.current,
+      reviewPathPrefix
+    );
+    if (nextRouteKey === currentRouteKey) return;
+    if (!pageTargets.has(nextRouteKey)) return;
 
     event.preventDefault();
     onSyncShellTarget(nextTarget);

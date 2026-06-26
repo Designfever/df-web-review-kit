@@ -1190,18 +1190,32 @@ function setDocumentScrollInstantly(environment, position) {
   );
 }
 
+// src/core/typography.tokens.ts
+var reviewTypographyTokens = `
+    --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --df-review-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --df-review-font-size-3xs: 9px;
+    --df-review-font-size-2xs: 10px;
+    --df-review-font-size-xs: 11px;
+    --df-review-font-size-sm: 12px;
+    --df-review-font-size-md: 13px;
+    --df-review-font-size-lg: 14px;
+    --df-review-font-size-xl: 15px;
+    --df-review-font-size-2xl: 18px;
+    --df-review-font-weight-normal: 400;
+    --df-review-font-weight-emphasis: 500;
+    --df-review-line-height-tight: 1.25;
+    --df-review-line-height-base: 1.42;
+    --df-review-line-height-relaxed: 1.55;
+`;
+
 // src/core/overlay.style.ts
 function createStyleElement() {
   const style = document.createElement("style");
   style.textContent = `
     :host {
       color-scheme: dark;
-      --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --df-review-font-size-2xs: 10px;
-      --df-review-font-size-xs: 11px;
-      --df-review-font-size-sm: 12px;
-      --df-review-font-size-md: 13px;
-      --df-review-font-size-xl: 15px;
+      ${reviewTypographyTokens}
       --df-review-space-1: 4px;
       --df-review-space-1-5: 6px;
       --df-review-space-2: 8px;
@@ -1300,8 +1314,8 @@ function createStyleElement() {
     }
 
     .dfwr-title {
-      font-size: 15px;
-      font-weight: 700;
+      font-size: var(--df-review-font-size-xl);
+      font-weight: var(--df-review-font-weight-emphasis);
       line-height: 1.25;
     }
 
@@ -1349,7 +1363,7 @@ function createStyleElement() {
       padding: 0 12px;
       border-radius: var(--df-review-radius-sm);
       font-size: var(--df-review-font-size-sm);
-      font-weight: 650;
+      font-weight: var(--df-review-font-weight-emphasis);
     }
 
     .dfwr-button:hover,
@@ -1374,7 +1388,7 @@ function createStyleElement() {
       padding: 0 8px;
       border-radius: var(--df-review-radius-sm);
       font-size: var(--df-review-font-size-xs);
-      font-weight: 700;
+      font-weight: var(--df-review-font-weight-emphasis);
       line-height: 1;
       text-transform: uppercase;
     }
@@ -1529,7 +1543,7 @@ function createStyleElement() {
         0 8px 18px rgba(0, 0, 0, 0.28);
       color: #111820;
       font-size: var(--df-review-font-size-2xs);
-      font-weight: 900;
+      font-weight: var(--df-review-font-weight-emphasis);
       line-height: 1;
       pointer-events: none;
     }
@@ -1555,7 +1569,7 @@ function createStyleElement() {
       box-shadow: 0 0 0 4px rgba(var(--dfwr-scope-rgb), 0.18);
       color: var(--dfwr-scope);
       font-size: var(--df-review-font-size-2xs);
-      font-weight: 800;
+      font-weight: var(--df-review-font-weight-emphasis);
     }
 
     .dfwr-bound-marker.is-highlighted {
@@ -1918,7 +1932,7 @@ function createStyleElement() {
 
     @media (hover: none) and (pointer: coarse) {
       .dfwr-textarea {
-        font-size: 16px;
+        font-size: var(--df-review-font-size-xl);
       }
     }
 
@@ -1976,8 +1990,8 @@ function createStyleElement() {
       color: var(--df-review-color-text);
       cursor: pointer;
       font: inherit;
-      font-size: 14px;
-      font-weight: 800;
+      font-size: var(--df-review-font-size-lg);
+      font-weight: var(--df-review-font-weight-emphasis);
       line-height: 1;
     }
 
@@ -2030,7 +2044,7 @@ function createStyleElement() {
       margin-bottom: 10px;
       color: rgba(247, 247, 242, 0.74);
       font-size: var(--df-review-font-size-sm);
-      font-weight: 700;
+      font-weight: var(--df-review-font-weight-emphasis);
     }
 
     .dfwr-item {
@@ -2071,7 +2085,7 @@ function createStyleElement() {
       border-radius: var(--df-review-radius-pill);
       padding: 0 7px;
       font-size: var(--df-review-font-size-2xs);
-      font-weight: 800;
+      font-weight: var(--df-review-font-weight-emphasis);
       line-height: 1;
       letter-spacing: 0;
       text-transform: uppercase;
@@ -4262,6 +4276,7 @@ export {
   getReviewItemScopeLabel,
   getNumberedReviewItems,
   runWithAutoScrollBehavior,
+  reviewTypographyTokens,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-BDP7FS4Q.js.map
+//# sourceMappingURL=chunk-22HU3UBN.js.map

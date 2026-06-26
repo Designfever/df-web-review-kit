@@ -29,8 +29,10 @@ import {
 } from '../constants';
 import {
   DEFAULT_REVIEW_PATH_PREFIX,
+  getItemFrameTarget,
   getItemTarget,
   getShellUrlForItem,
+  getTargetRouteKey,
   normalizeTarget,
   parseReviewAddressInput,
   updateShellUrl,
@@ -575,6 +577,10 @@ export const ReviewShell = ({
   const applyTarget = async () => {
     const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
     const normalizedTarget = parsedInput.target;
+    const normalizedRoute = getTargetRouteKey(
+      normalizedTarget,
+      reviewPathPrefix
+    );
     const nextSource =
       parsedInput.source &&
       sourceEntries.some((entry) => entry.label === parsedInput.source)
@@ -611,7 +617,7 @@ export const ReviewShell = ({
     setIsAllQaVisible(false);
     setSource(nextSource);
     targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
+    setActiveRoute(normalizedRoute);
     setDraftTarget(normalizedTarget);
     setSize(nextSize);
     setTarget(normalizedTarget);
@@ -621,10 +627,14 @@ export const ReviewShell = ({
 
   const selectPage = (href: string) => {
     const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
+    const normalizedRoute = getTargetRouteKey(
+      normalizedTarget,
+      reviewPathPrefix
+    );
     clearSelectedItem();
     setIsAllQaVisible(false);
     targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
+    setActiveRoute(normalizedRoute);
     setDraftTarget(normalizedTarget);
     setTarget(normalizedTarget);
     updateShellUrl(normalizedTarget, sizeRef.current, source);
@@ -1492,7 +1502,7 @@ export const ReviewShell = ({
     const { item } = numberedItem;
     return copyPrompt(
       getShellUrlForItem(
-        getItemTarget(item, reviewPathPrefix),
+        getItemFrameTarget(item, reviewPathPrefix),
         getRestoredSize(item, viewportPresets),
         item.id,
         source

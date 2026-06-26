@@ -62,6 +62,20 @@ export type ReviewFigmaServerImageRenderOptions =
   Omit<ReviewFigmaImageRenderOptions, 'token'> &
     ReviewFigmaServerTokenOptions;
 
+type FigmaNodeResponse = {
+  err?: string | null;
+  nodes?: Record<
+    string,
+    | {
+        document?: {
+          name?: string | null;
+        } | null;
+      }
+    | null
+    | undefined
+  >;
+};
+
 export type ReviewFigmaImageAssetTransformInput = {
   data: Uint8Array;
   imageFormat: ReviewFigmaImageFormat;
@@ -211,6 +225,76 @@ export const renderReviewFigmaServerImage = (
       }),
   });
 };
+
+async function readReviewFigmaNodeName({
+  apiBaseUrl,
+  enabled,
+  env,
+  envKey,
+  fetchOption,
+  fileKey,
+  nodeId,
+  token,
+}: {
+  apiBaseUrl?: string;
+  enabled?: boolean;
+  env: ReviewFigmaTokenEnv;
+  envKey?: string;
+  fetchOption?: typeof fetch;
+  fileKey: string;
+  nodeId: string;
+  token?: string | null;
+}) {
+  const explicitToken = typeof token === 'string' ? token.trim() : token;
+  const figmaToken =
+    explicitToken ||
+    requireReviewFigmaServerToken({
+      env,
+      envKey,
+      enabled,
+    });
+  const fetchNode = fetchOption ?? globalThis.fetch;
+  if (!fetchNode) throw new Error('Figma node name lookup requires fetch.');
+
+  const response = await fetchNode(
+    createReviewFigmaNodeApiUrl({ apiBaseUrl, fileKey, nodeId }),
+    {
+      headers: {
+        'X-Figma-Token': figmaToken,
+      },
+    }
+  );
+  const body = (await response.json().catch(() => null)) as
+    | FigmaNodeResponse
+    | null;
+
+  if (!response.ok) {
+    throw new Error(
+      body?.err || `Figma node lookup failed with ${response.status}`
+    );
+  }
+
+  const nodes = body?.nodes;
+  const node = nodes?.[nodeId] ?? Object.values(nodes ?? {})[0];
+  return normalizeOptionalText(node?.document?.name);
+}
+
+function createReviewFigmaNodeApiUrl({
+  apiBaseUrl = 'https://api.figma.com',
+  fileKey,
+  nodeId,
+}: {
+  apiBaseUrl?: string;
+  fileKey: string;
+  nodeId: string;
+}) {
+  const url = new URL(
+    `/v1/files/${encodeURIComponent(fileKey)}/nodes`,
+    apiBaseUrl
+  );
+  url.searchParams.set('ids', nodeId);
+  return url.toString();
+}
 
 export const reviewFigmaImageStore = (
   options: ReviewFigmaImageStorePluginOptions = {}
@@ -461,6 +545,19 @@ async function createReviewFigmaImage({
   }
 
   const id = createReviewFigmaImageId();
+  const explicitLabel = normalizeOptionalText(input.label);
+  const nodeLabelPromise = explicitLabel
+    ? Promise.resolve(undefined)
+    : readReviewFigmaNodeName({
+        apiBaseUrl: options.apiBaseUrl,
+        enabled: options.enabled,
+        env,
+        envKey: options.envKey,
+        fetchOption: options.fetch,
+        fileKey: ref.fileKey,
+        nodeId: ref.nodeId,
+        token: options.token,
+      }).catch(() => undefined);
   const targetImageFormat =
     input.imageFormat ?? options.imageFormat ?? 'webp';
   const renderFormat = getStoreRenderFormat(
@@ -495,6 +592,7 @@ async function createReviewFigmaImage({
     typeof input.order === 'number' && Number.isFinite(input.order)
       ? input.order
       : getNextImageOrder(currentImages, input.target);
+  const nodeLabel = await nodeLabelPromise;
 
   return {
     id,
@@ -506,7 +604,7 @@ async function createReviewFigmaImage({
     imageUrl: cachedAsset?.imageUrl ?? rendered.imageUrl,
     imageFormat,
     mimeType: cachedAsset?.mimeType ?? getReviewFigmaImageMimeType(imageFormat),
-    label: normalizeOptionalText(input.label),
+    label: explicitLabel ?? nodeLabel,
     order,
     storageKey: cachedAsset?.storageKey,
     byteSize: cachedAsset?.byteSize,

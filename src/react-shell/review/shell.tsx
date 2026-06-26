@@ -6,9 +6,8 @@ import {
   useState,
 } from 'react';
 import {
-  Images as ImagesIcon,
   Bot as BotIcon,
-  Grid2x2Check as ComponentTreeIcon,
+  Images as ComponentTreeIcon,
   SquareCheckBig as QaListIcon,
   Settings as SettingsIcon,
 } from 'lucide-react';
@@ -134,6 +133,22 @@ const SOURCE_PANEL_MAX_WIDTH = 440;
 const SOURCE_PANEL_MIN_WIDTH = 240;
 const SOURCE_PANEL_MAX_HEIGHT = 260;
 const SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
+
+function FigmaMarkIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="df-review-figma-mark-icon"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 3.75H8.75a3.25 3.25 0 0 0 0 6.5H12v-6.5Z" />
+      <path d="M12 3.75h3.25a3.25 3.25 0 0 1 0 6.5H12v-6.5Z" />
+      <path d="M12 10.25H8.75a3.25 3.25 0 0 0 0 6.5H12v-6.5Z" />
+      <path d="M15.25 10.25a3.25 3.25 0 1 1 0 6.5 3.25 3.25 0 0 1 0-6.5Z" />
+      <path d="M12 16.75H8.75a3.25 3.25 0 1 0 3.25 3.25v-3.25Z" />
+    </svg>
+  );
+}
 
 export const ReviewShell = ({
   projectId,
@@ -1742,7 +1757,7 @@ export const ReviewShell = ({
             title="Figma Images"
           >
             <span aria-hidden="true">
-              <ImagesIcon />
+              <FigmaMarkIcon />
             </span>
           </button>
         )}

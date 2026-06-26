@@ -10,7 +10,7 @@ import {
   getReviewViewportScope,
   localAdapter,
   normalizeReviewItemStatus
-} from "./chunk-ZHMSAYDA.js";
+} from "./chunk-P2HQYB4T.js";
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
   DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,

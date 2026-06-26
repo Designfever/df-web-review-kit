@@ -1,3 +1,5 @@
+import { reviewTypographyTokens } from '../../core/typography.tokens';
+
 export const reviewShellBaseStyle = `
 	  * {
 	    box-sizing: border-box;
@@ -41,23 +43,7 @@ export const reviewShellBaseStyle = `
 	    color-scheme: dark;
 
 	    /* df-review-token layer. Keep these names internal to review-kit. */
-	    --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	    --df-review-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-	    --df-review-font-size-3xs: 9px;
-	    --df-review-font-size-2xs: 10px;
-	    --df-review-font-size-xs: 11px;
-	    --df-review-font-size-sm: 12px;
-	    --df-review-font-size-md: 13px;
-	    --df-review-font-size-lg: 14px;
-	    --df-review-font-size-xl: 15px;
-	    --df-review-font-size-2xl: 18px;
-	    --df-review-font-weight-medium: 400;
-	    --df-review-font-weight-bold: 500;
-	    --df-review-font-weight-strong: 500;
-	    --df-review-font-weight-heavy: 600;
-	    --df-review-line-height-tight: 1.25;
-	    --df-review-line-height-base: 1.42;
-	    --df-review-line-height-relaxed: 1.55;
+	    ${reviewTypographyTokens}
 	    --df-review-space-0: 0;
 	    --df-review-space-1: 4px;
 	    --df-review-space-1-5: 6px;
@@ -291,6 +277,10 @@ export const reviewShellBaseStyle = `
     min-width: 0;
   }
 
+  .df-review-address-actions button:not(.df-review-address-refresh) {
+    padding-inline: 7px;
+  }
+
   .df-review-address input {
 	    width: 100%;
 	    height: var(--df-review-control-height-md);
@@ -327,7 +317,7 @@ export const reviewShellBaseStyle = `
 	    box-shadow: var(--df-review-shadow-control);
 	    color: var(--df-review-text);
 	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	    transition: border-color 140ms ease, background 140ms ease, color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 	  }
 

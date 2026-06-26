@@ -42,6 +42,25 @@ module.exports = __toCommonJS(react_shell_exports);
 var import_react22 = __toESM(require("react"), 1);
 var import_client = require("react-dom/client");
 
+// src/core/typography.tokens.ts
+var reviewTypographyTokens = `
+    --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --df-review-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --df-review-font-size-3xs: 9px;
+    --df-review-font-size-2xs: 10px;
+    --df-review-font-size-xs: 11px;
+    --df-review-font-size-sm: 12px;
+    --df-review-font-size-md: 13px;
+    --df-review-font-size-lg: 14px;
+    --df-review-font-size-xl: 15px;
+    --df-review-font-size-2xl: 18px;
+    --df-review-font-weight-normal: 400;
+    --df-review-font-weight-emphasis: 500;
+    --df-review-line-height-tight: 1.25;
+    --df-review-line-height-base: 1.42;
+    --df-review-line-height-relaxed: 1.55;
+`;
+
 // src/react-shell/style/base.ts
 var reviewShellBaseStyle = `
 	  * {
@@ -86,23 +105,7 @@ var reviewShellBaseStyle = `
 	    color-scheme: dark;
 
 	    /* df-review-token layer. Keep these names internal to review-kit. */
-	    --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	    --df-review-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-	    --df-review-font-size-3xs: 9px;
-	    --df-review-font-size-2xs: 10px;
-	    --df-review-font-size-xs: 11px;
-	    --df-review-font-size-sm: 12px;
-	    --df-review-font-size-md: 13px;
-	    --df-review-font-size-lg: 14px;
-	    --df-review-font-size-xl: 15px;
-	    --df-review-font-size-2xl: 18px;
-	    --df-review-font-weight-medium: 400;
-	    --df-review-font-weight-bold: 500;
-	    --df-review-font-weight-strong: 500;
-	    --df-review-font-weight-heavy: 600;
-	    --df-review-line-height-tight: 1.25;
-	    --df-review-line-height-base: 1.42;
-	    --df-review-line-height-relaxed: 1.55;
+	    ${reviewTypographyTokens}
 	    --df-review-space-0: 0;
 	    --df-review-space-1: 4px;
 	    --df-review-space-1-5: 6px;
@@ -336,6 +339,10 @@ var reviewShellBaseStyle = `
     min-width: 0;
   }
 
+  .df-review-address-actions button:not(.df-review-address-refresh) {
+    padding-inline: 7px;
+  }
+
   .df-review-address input {
 	    width: 100%;
 	    height: var(--df-review-control-height-md);
@@ -372,7 +379,7 @@ var reviewShellBaseStyle = `
 	    box-shadow: var(--df-review-shadow-control);
 	    color: var(--df-review-text);
 	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	    transition: border-color 140ms ease, background 140ms ease, color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 	  }
 
@@ -499,13 +506,13 @@ var reviewShellSitemapStyle = `
 
   .df-review-sitemap-header strong {
     font-size: var(--df-review-font-size-lg);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
 	  .df-review-sitemap-header span {
 	    color: var(--df-review-muted);
 	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	  }
 
   .df-review-sitemap-header button {
@@ -519,7 +526,7 @@ var reviewShellSitemapStyle = `
 	    background: var(--df-review-control);
 	    color: var(--df-review-text);
 	    font-size: var(--df-review-font-size-md);
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	  }
 
 	  .df-review-sitemap-header button:hover {
@@ -547,7 +554,7 @@ var reviewShellSitemapStyle = `
     background: var(--df-review-control);
     box-shadow: var(--df-review-shadow-control);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
   .df-review-sitemap-list {
@@ -583,7 +590,7 @@ var reviewShellSitemapStyle = `
       0 1px 0 var(--df-review-line);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
@@ -681,7 +688,7 @@ var reviewShellSitemapStyle = `
     overflow-wrap: anywhere;
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-md);
-    font-weight: 400;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1.35;
   }
 
@@ -693,7 +700,7 @@ var reviewShellSitemapStyle = `
     flex: 0 0 auto;
     color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
-    font-weight: 400;
+    font-weight: var(--df-review-font-weight-normal);
     white-space: pre;
   }
 
@@ -708,14 +715,14 @@ var reviewShellSitemapStyle = `
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
     font-variant-numeric: tabular-nums;
-    font-weight: 400;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1;
     text-align: right;
   }
 
   .df-review-sitemap-cell.is-total {
     color: var(--df-review-accent);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-sitemap-cell.is-total strong {
@@ -748,7 +755,7 @@ var reviewShellSitemapStyle = `
     background: var(--df-review-chip-bg);
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1.1;
     white-space: nowrap;
   }
@@ -824,13 +831,13 @@ var reviewShellModalStyle = `
 		  .df-review-settings-header strong {
 		    color: var(--df-review-text);
 		    font-size: var(--df-review-font-size-lg);
-        font-weight: 600;
+        font-weight: var(--df-review-font-weight-emphasis);
 		  }
 
 		  .df-review-settings-header span {
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-header button {
@@ -840,7 +847,7 @@ var reviewShellModalStyle = `
 		    min-width: 34px;
 		    padding: 0;
 		    font-size: var(--df-review-font-size-md);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-body {
@@ -866,7 +873,7 @@ var reviewShellModalStyle = `
 		  .df-review-settings-label-row label {
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-theme-options {
@@ -890,7 +897,7 @@ var reviewShellModalStyle = `
 		    background: var(--df-review-control);
 		    box-shadow: var(--df-review-shadow-control);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
       .df-review-settings-theme-option svg {
@@ -1048,7 +1055,7 @@ var reviewShellModalStyle = `
 		    background: var(--df-review-chip-bg);
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		    line-height: 1.55;
 		  }
 
@@ -1064,7 +1071,7 @@ var reviewShellModalStyle = `
 		    margin: 0;
 		    color: var(--df-review-accent);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-actions {
@@ -1130,7 +1137,7 @@ var reviewShellModalStyle = `
     margin: 0;
     color: var(--df-review-danger);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-edit-actions {
@@ -1170,6 +1177,15 @@ var reviewShellModalStyle = `
 			    box-shadow: var(--df-review-shadow-modal);
 			  }
 
+			  .df-review-prompt-dialog-narrow {
+			    width: min(440px, calc(100vw - 36px));
+			  }
+
+			  .df-review-prompt-dialog-narrow .df-review-prompt-block textarea {
+			    height: min(58vh, 540px);
+			    max-height: none;
+			  }
+
   .df-review-copy-toast {
     position: fixed;
     right: 52px;
@@ -1183,7 +1199,7 @@ var reviewShellModalStyle = `
     box-shadow: var(--df-review-shadow-modal);
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1.25;
     pointer-events: none;
   }
@@ -1207,14 +1223,14 @@ var reviewShellModalStyle = `
 			  .df-review-prompt-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-lg);
-          font-weight: 600;
+          font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
 			  .df-review-prompt-header span {
 			    overflow: hidden;
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			    text-overflow: ellipsis;
 			    white-space: nowrap;
 			  }
@@ -1226,7 +1242,17 @@ var reviewShellModalStyle = `
 			    min-width: 34px;
 			    padding: 0;
 			    font-size: var(--df-review-font-size-md);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
+			  }
+
+			  .df-review-prompt-header button svg {
+			    width: 15px;
+			    height: 15px;
+			    fill: none;
+			    stroke: currentColor;
+			    stroke-linecap: round;
+			    stroke-linejoin: round;
+			    stroke-width: 2;
 			  }
 
 			  .df-review-prompt-body {
@@ -1260,13 +1286,13 @@ var reviewShellModalStyle = `
 			  .df-review-prompt-block-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
 			  .df-review-prompt-block-header span {
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			  }
 
 			  .df-review-prompt-block-header button {
@@ -1305,9 +1331,10 @@ var reviewShellModalStyle = `
 			    color: var(--df-review-text);
 			    font-family: var(--df-review-font-mono);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 400;
+			    font-weight: var(--df-review-font-weight-normal);
 			    line-height: 1.5;
-			    white-space: pre;
+			    white-space: pre-wrap;
+			    overflow-wrap: anywhere;
 			  }
 
 			  .df-review-prompt-block textarea:focus {
@@ -1324,51 +1351,103 @@ var reviewShellModalStyle = `
 			  .df-review-prompt-section-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-md);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
 			  .df-review-prompt-section-header span {
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			  }
 
-			  .df-review-prompt-about {
+			  .df-review-about-dialog {
+			    grid-template-rows: minmax(0, 1fr);
+			    width: min(600px, calc(100vw - 36px));
+			  }
+
+			  .df-review-about-close {
+			    position: absolute;
+			    top: 14px;
+			    right: 14px;
+			    z-index: 2;
 			    display: grid;
-			    gap: 10px;
-			    min-width: 0;
+			    place-items: center;
+			    width: 32px;
+			    height: 32px;
+			    border: 1px solid var(--df-review-line);
+			    border-radius: var(--df-review-radius-sm);
+			    background: var(--df-review-control);
+			    color: var(--df-review-text);
 			  }
 
-			  .df-review-prompt-about-grid {
-			    display: grid;
-			    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-			    gap: 10px;
-			    min-width: 0;
+			  .df-review-about-close svg {
+			    width: 15px;
+			    height: 15px;
+			    fill: none;
+			    stroke: currentColor;
+			    stroke-linecap: round;
+			    stroke-linejoin: round;
+			    stroke-width: 2;
 			  }
 
-			  .df-review-prompt-about-grid article {
+			  .df-review-about-body {
 			    display: grid;
 			    align-content: start;
-			    gap: 6px;
-			    border: 1px solid var(--df-review-line);
-			    border-radius: var(--df-review-radius-md);
-			    padding: 12px;
-			    background: var(--df-review-surface);
+			    gap: 22px;
+			    min-height: 0;
+			    overflow: auto;
+			    padding: 34px 32px;
 			  }
 
-			  .df-review-prompt-about-grid strong {
+			  .df-review-about-intro {
+			    display: grid;
+			    justify-items: start;
+			    gap: 8px;
+			  }
+
+			  .df-review-about-logo {
+			    display: grid;
+			    place-items: center;
+			    color: var(--df-review-text);
+			  }
+
+			  .df-review-about-logo svg {
+			    width: auto;
+			    height: 26px;
+			    fill: currentColor;
+			  }
+
+			  .df-review-about-intro strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-lg);
+			    font-weight: var(--df-review-font-weight-emphasis);
+			  }
+
+			  .df-review-about-intro span {
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: var(--df-review-font-weight-normal);
+			  }
+
+			  .df-review-about-item {
+			    display: grid;
+			    gap: 5px;
+			  }
+
+			  .df-review-about-item strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
-			  .df-review-prompt-about-grid p {
+			  .df-review-about-item p {
 			    margin: 0;
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 500;
-			    line-height: 1.55;
+			    font-weight: var(--df-review-font-weight-normal);
+			    line-height: 1.6;
 			  }
+
 
 `;
 
@@ -1431,7 +1510,7 @@ var reviewShellToolbarStyle = `
 		    align-items: center;
 		    color: var(--df-review-line);
 		    font-size: var(--df-review-font-size-2xl);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 	    line-height: 1;
 		    user-select: none;
 	  }
@@ -1444,7 +1523,7 @@ var reviewShellToolbarStyle = `
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-sm);
 		    font-variant-numeric: tabular-nums;
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	    line-height: 1;
 	  }
 
@@ -1466,7 +1545,7 @@ var reviewShellToolbarStyle = `
     background-size: 18px 18px;
     box-shadow: var(--df-review-shadow-control);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
 	  .df-review-presets button {
@@ -1499,7 +1578,7 @@ var reviewShellToolbarStyle = `
     background: var(--df-review-line-soft);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-2xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 16px;
     text-align: center;
   }
@@ -1525,7 +1604,7 @@ var reviewShellToolbarStyle = `
   .df-review-preset-copy strong {
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
 	  .df-review-overlay-button,
@@ -1773,13 +1852,20 @@ var reviewShellToolbarStyle = `
 	  }
 
 	  .df-review-side-toggle svg {
-	    width: 30px;
-	    height: 30px;
+	    width: 22px;
+	    height: 22px;
 	    fill: none;
 	    stroke: currentColor;
 	    stroke-linecap: round;
 	    stroke-width: 1.55;
 	  }
+
+  .df-review-side-toggle svg.df-review-brand-icon {
+    width: auto;
+    height: 16px;
+    stroke: none;
+    fill: currentColor;
+  }
 
   .df-review-side-actions {
     display: flex;
@@ -1787,6 +1873,12 @@ var reviewShellToolbarStyle = `
     align-items: stretch;
     width: 100%;
     margin-top: auto;
+  }
+
+  .df-review-side-divider {
+    height: 1px;
+    margin: 4px 12px;
+    background: var(--df-review-line);
   }
 
   .df-review-presence-overlay {
@@ -1827,8 +1919,8 @@ var reviewShellToolbarStyle = `
   }
 
   .df-review-presence-button svg {
-    width: 30px;
-    height: 30px;
+    width: 22px;
+    height: 22px;
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;
@@ -1850,7 +1942,7 @@ var reviewShellToolbarStyle = `
     color: #17202c;
     background: var(--df-review-accent);
     font-size: var(--df-review-font-size-3xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     pointer-events: none;
   }
@@ -1883,7 +1975,7 @@ var reviewShellToolbarStyle = `
     color: var(--df-review-text);
     background: var(--df-review-control);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1.1;
     white-space: nowrap;
   }
@@ -1898,8 +1990,12 @@ var reviewShellToolbarStyle = `
 
   .df-review-presence-chip.is-self {
     color: var(--df-review-accent);
-    border-color: var(--df-review-accent-soft);
-    background: var(--df-review-accent-soft);
+    border-color: var(--df-review-accent-hover);
+    background: linear-gradient(
+        var(--df-review-accent-soft),
+        var(--df-review-accent-soft)
+      ),
+      var(--df-review-control);
   }
 
 `;
@@ -1993,7 +2089,7 @@ var reviewShellQaPanelStyle = `
 			    background: var(--df-review-card);
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			  }
 
 			  .df-review-list-toolbar {
@@ -2034,7 +2130,7 @@ var reviewShellQaPanelStyle = `
 			    color: #fff;
 			    font-size: var(--df-review-font-size-xs);
 			    font-variant-numeric: tabular-nums;
-          font-weight: 500;
+          font-weight: var(--df-review-font-weight-normal);
 			  }
 
   .df-review-list-controls {
@@ -2054,7 +2150,7 @@ var reviewShellQaPanelStyle = `
     background: var(--df-review-control);
     box-shadow: var(--df-review-shadow-control);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-source-select {
@@ -2153,7 +2249,7 @@ var reviewShellQaPanelStyle = `
 			  .df-review-filter-count {
 			    color: currentColor;
 			    font-size: var(--df-review-font-size-3xs);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			    font-variant-numeric: tabular-nums;
 			    line-height: 1;
 			  }
@@ -2234,7 +2330,7 @@ var reviewShellQaPanelStyle = `
   .df-review-item-main strong {
     overflow-wrap: anywhere;
     font-size: var(--df-review-font-size-md);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1.35;
   }
 
@@ -2282,7 +2378,7 @@ var reviewShellQaPanelStyle = `
     border-radius: var(--df-review-radius-pill);
     padding: 0 7px;
     font-size: var(--df-review-font-size-2xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     text-transform: uppercase;
   }
@@ -2361,7 +2457,7 @@ var reviewShellQaPanelStyle = `
     border-radius: var(--df-review-radius-sm);
     padding: 0 11px;
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     text-transform: none;
   }
 
@@ -2374,7 +2470,7 @@ var reviewShellQaPanelStyle = `
     cursor: pointer;
     outline: 0;
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     text-transform: none;
   }
 
@@ -2599,7 +2695,7 @@ var reviewShellQaPanelStyle = `
 
 		  .df-review-item-submit-button span {
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		    line-height: 1;
 		    text-transform: none;
 		    white-space: nowrap;
@@ -3127,8 +3223,8 @@ var reviewShellStageStyle = `
     padding: 0;
     color: var(--df-review-source-popover-subtle);
     background: transparent;
-    font-size: 16px;
-    font-weight: 500;
+    font-size: var(--df-review-font-size-xl);
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1;
   }
 
@@ -3184,7 +3280,7 @@ var reviewShellStageStyle = `
 
   .df-review-source-candidate-main strong {
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1.2;
   }
 
@@ -3246,7 +3342,7 @@ var reviewShellStageStyle = `
     background: var(--df-review-card);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-section-outline-summary {
@@ -3269,7 +3365,7 @@ var reviewShellStageStyle = `
     overflow: hidden;
     color: var(--df-review-text);
     font-size: inherit;
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -3280,7 +3376,7 @@ var reviewShellStageStyle = `
     overflow: hidden;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -3380,7 +3476,7 @@ var reviewShellStageStyle = `
     color: var(--df-review-text);
     background: transparent;
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     outline: 0;
     -webkit-appearance: none;
     appearance: none;
@@ -3420,15 +3516,24 @@ var reviewShellStageStyle = `
   .df-review-section-outline-list {
     display: grid;
     align-content: start;
-    gap: 3px;
+    gap: var(--df-review-space-2);
     min-height: 0;
     overflow-y: auto;
-    padding: 8px 6px 10px 12px;
+    padding: var(--df-review-space-2) var(--df-review-space-2) var(--df-review-space-3);
     scrollbar-gutter: stable;
   }
 
   .df-review-section-outline-item {
     display: grid;
+    --df-review-section-outline-name-color: var(--df-review-text);
+  }
+
+  /* Each root renders as a card so the tree scans like the QA list. */
+  .df-review-section-outline-item.is-depth-1 {
+    padding: var(--df-review-space-1);
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-lg);
+    background: var(--df-review-card);
   }
 
   .df-review-section-outline-entry-body {
@@ -3443,11 +3548,6 @@ var reviewShellStageStyle = `
     background: var(--df-review-accent-soft);
   }
 
-  .df-review-section-outline-item.is-depth-1:not(:last-child) {
-    margin-bottom: 7px;
-    padding-bottom: 7px;
-    border-bottom: 1px solid var(--df-review-line-soft);
-  }
 
   .df-review-section-outline-row {
     display: grid;
@@ -3505,7 +3605,7 @@ var reviewShellStageStyle = `
     color: var(--df-review-text);
     background: transparent;
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     text-align: left;
     white-space: normal;
     cursor: pointer;
@@ -3519,11 +3619,15 @@ var reviewShellStageStyle = `
     white-space: nowrap;
   }
 
+  .df-review-section-outline-name span {
+    color: var(--df-review-section-outline-name-color);
+  }
+
   .df-review-section-outline-name small {
     color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-section-outline-name:hover {
@@ -3531,10 +3635,21 @@ var reviewShellStageStyle = `
   }
 
   .df-review-section-outline-meta {
+    position: relative;
     display: grid;
     gap: 3px;
     min-width: 0;
-    padding: 0 6px 7px;
+    padding: 8px 6px 7px;
+  }
+
+  .df-review-section-outline-meta::before {
+    position: absolute;
+    top: 0;
+    left: 29px;
+    right: 8px;
+    height: 1px;
+    background: var(--df-review-line-soft);
+    content: '';
   }
 
   .df-review-section-outline-meta-row {
@@ -3551,7 +3666,7 @@ var reviewShellStageStyle = `
 
   .df-review-section-outline-meta-row b {
     color: var(--df-review-subtle);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
   .df-review-section-outline-meta-row code {
@@ -3687,13 +3802,51 @@ var reviewShellStageStyle = `
 
   .df-review-section-outline-children {
     display: grid;
+    margin-left: 16px;
+    border-left: 1px solid var(--df-review-line-soft);
+  }
+
+  .df-review-section-outline-item.is-depth-1
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-item.is-depth-2 {
+    --df-review-section-outline-name-color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-item.is-depth-2
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-area);
+  }
+
+  .df-review-section-outline-item.is-depth-3 {
+    --df-review-section-outline-name-color: var(--df-review-area);
+  }
+
+  .df-review-section-outline-item.is-depth-3
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-note);
+  }
+
+  .df-review-section-outline-item.is-depth-4 {
+    --df-review-section-outline-name-color: var(--df-review-note);
+  }
+
+  .df-review-section-outline-item.is-depth-4
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-purple);
+  }
+
+  .df-review-section-outline-item.is-depth-5 {
+    --df-review-section-outline-name-color: var(--df-review-purple);
   }
 
   .df-review-section-outline-empty {
     padding: 14px 12px 16px;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
 `;
@@ -3794,13 +3947,13 @@ var reviewShellRulerStyle = `
   .df-review-ruler-frame-label strong {
     color: var(--df-review-color-ruler-label-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
   .df-review-ruler-frame-label span {
     color: var(--df-review-color-ruler-label-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     opacity: 0.78;
   }
 
@@ -3813,7 +3966,7 @@ var reviewShellRulerStyle = `
     background: var(--df-review-color-ruler-coord-bg);
     color: var(--df-review-color-ruler-coord-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     white-space: nowrap;
     pointer-events: none;
@@ -3891,7 +4044,7 @@ var reviewShellRulerStyle = `
     color: var(--df-review-color-ruler-popover-text);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-lg);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     white-space: nowrap;
     letter-spacing: -0.02em;
@@ -3957,7 +4110,7 @@ var reviewShellRulerStyle = `
       .df-review-edit-textarea textarea,
       .df-review-preset-select,
       .df-review-prompt-block textarea {
-        font-size: 16px;
+        font-size: var(--df-review-font-size-xl);
       }
     }
 `;
@@ -4191,21 +4344,18 @@ var __iconNode11 = [
 ];
 var Eye = createLucideIcon("eye", __iconNode11);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/file-text.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/grid-2x2-check.mjs
 var __iconNode12 = [
   [
     "path",
     {
-      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
-      key: "1oefj6"
+      d: "M12 3v17a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1H3",
+      key: "11za1p"
     }
   ],
-  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["path", { d: "M10 9H8", key: "b1mrlr" }],
-  ["path", { d: "M16 13H8", key: "t4e002" }],
-  ["path", { d: "M16 17H8", key: "z1uh3a" }]
+  ["path", { d: "m16 19 2 2 4-4", key: "1b14m6" }]
 ];
-var FileText = createLucideIcon("file-text", __iconNode12);
+var Grid2x2Check = createLucideIcon("grid-2x2-check", __iconNode12);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
 var __iconNode13 = [
@@ -4379,8 +4529,18 @@ var __iconNode30 = [
 ];
 var Smartphone = createLucideIcon("smartphone", __iconNode30);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-check-big.mjs
 var __iconNode31 = [
+  [
+    "path",
+    { d: "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344", key: "2acyp4" }
+  ],
+  ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
+];
+var SquareCheckBig = createLucideIcon("square-check-big", __iconNode31);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
+var __iconNode32 = [
   ["path", { d: "M5 3a2 2 0 0 0-2 2", key: "y57alp" }],
   ["path", { d: "M19 3a2 2 0 0 1 2 2", key: "18rm91" }],
   ["path", { d: "M21 19a2 2 0 0 1-2 2", key: "1j7049" }],
@@ -4394,10 +4554,10 @@ var __iconNode31 = [
   ["path", { d: "M3 14v1", key: "vnatye" }],
   ["path", { d: "M21 14v1", key: "169vum" }]
 ];
-var SquareDashed = createLucideIcon("square-dashed", __iconNode31);
+var SquareDashed = createLucideIcon("square-dashed", __iconNode32);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode32 = [
+var __iconNode33 = [
   [
     "path",
     {
@@ -4407,10 +4567,10 @@ var __iconNode32 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode32);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode33);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode33 = [
+var __iconNode34 = [
   [
     "path",
     {
@@ -4420,10 +4580,10 @@ var __iconNode33 = [
   ],
   ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
 ];
-var StickyNote = createLucideIcon("sticky-note", __iconNode33);
+var StickyNote = createLucideIcon("sticky-note", __iconNode34);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sun.mjs
-var __iconNode34 = [
+var __iconNode35 = [
   ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
   ["path", { d: "M12 2v2", key: "tus03m" }],
   ["path", { d: "M12 20v2", key: "1lh1kg" }],
@@ -4434,41 +4594,33 @@ var __iconNode34 = [
   ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
   ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
 ];
-var Sun = createLucideIcon("sun", __iconNode34);
+var Sun = createLucideIcon("sun", __iconNode35);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/trash-2.mjs
-var __iconNode35 = [
+var __iconNode36 = [
   ["path", { d: "M10 11v6", key: "nco0om" }],
   ["path", { d: "M14 11v6", key: "outv1u" }],
   ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
   ["path", { d: "M3 6h18", key: "d0wm0j" }],
   ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
 ];
-var Trash2 = createLucideIcon("trash-2", __iconNode35);
+var Trash2 = createLucideIcon("trash-2", __iconNode36);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/type.mjs
-var __iconNode36 = [
+var __iconNode37 = [
   ["path", { d: "M12 4v16", key: "1654pz" }],
   ["path", { d: "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2", key: "e0r10z" }],
   ["path", { d: "M9 20h6", key: "s66wpe" }]
 ];
-var Type = createLucideIcon("type", __iconNode36);
+var Type = createLucideIcon("type", __iconNode37);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode37 = [
+var __iconNode38 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode37);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/workflow.mjs
-var __iconNode38 = [
-  ["rect", { width: "8", height: "8", x: "3", y: "3", rx: "2", key: "by2w9f" }],
-  ["path", { d: "M7 11v4a2 2 0 0 0 2 2h4", key: "xkn7yn" }],
-  ["rect", { width: "8", height: "8", x: "13", y: "13", rx: "2", key: "1cgmvn" }]
-];
-var Workflow = createLucideIcon("workflow", __iconNode38);
+var Upload = createLucideIcon("upload", __iconNode38);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
 var __iconNode39 = [
@@ -4476,6 +4628,45 @@ var __iconNode39 = [
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
 var X = createLucideIcon("x", __iconNode39);
+
+// src/react-shell/review/df.logo.tsx
+var import_jsx_runtime = require("react/jsx-runtime");
+var DfLogoIcon = () => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+  "svg",
+  {
+    className: "df-review-brand-icon",
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: "0 0 54.062 38.381",
+    "aria-hidden": "true",
+    focusable: "false",
+    children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+        "rect",
+        {
+          width: "4.787",
+          height: "4.787",
+          transform: "translate(49.276)",
+          fill: "currentColor"
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+        "path",
+        {
+          d: "M25.337,12.329a15.036,15.036,0,1,0,0,21.866v4.186h4.787V0H25.337V12.329ZM15.033,33.5A10.236,10.236,0,1,1,25.27,23.265,10.249,10.249,0,0,1,15.033,33.5Z",
+          fill: "currentColor"
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+        "path",
+        {
+          d: "M72.092,0H67.3V38.314h4.792V23.939H86.5V19.152H72.092Z",
+          transform: "translate(-32.436)",
+          fill: "currentColor"
+        }
+      )
+    ]
+  }
+);
 
 // src/react-shell/env.ts
 var REVIEW_SOURCE_EDITORS = [
@@ -4557,10 +4748,15 @@ var normalizeReviewPathPrefix = (value) => {
 };
 var normalizeTarget = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
   const raw = value.trim() || "/";
-  const [path] = raw.split(/[?#]/);
+  const { hash, path, search } = splitTarget(raw);
   const normalized = path.startsWith("/") ? path : `/${path}`;
   const reviewPrefix = normalizeReviewPathPrefix(reviewPathPrefix);
-  return normalized === reviewPrefix || normalized.startsWith(`${reviewPrefix}/`) ? "/" : normalized;
+  const normalizedPath = normalized === reviewPrefix || normalized.startsWith(`${reviewPrefix}/`) ? "/" : normalized;
+  return `${normalizedPath}${search}${hash}`;
+};
+var getTargetRouteKey = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  const { path } = splitTarget(normalizeTarget(value, reviewPathPrefix));
+  return path || "/";
 };
 var parseReviewAddressInput = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
   const raw = value.trim();
@@ -4573,7 +4769,10 @@ var parseReviewAddressInput = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PRE
   const isReviewUrl = parsedUrl.pathname === reviewPrefix || parsedUrl.pathname.startsWith(`${reviewPrefix}/`);
   if (!isReviewUrl) {
     return {
-      target: normalizeTarget(parsedUrl.pathname, reviewPathPrefix)
+      target: normalizeTarget(
+        `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`,
+        reviewPathPrefix
+      )
     };
   }
   const source = parsedUrl.searchParams.get("source")?.trim();
@@ -4611,21 +4810,8 @@ var buildTargetSrc = (target) => {
   url.searchParams.set("__dfwr_target", "1");
   return `${url.pathname}${url.search}${url.hash}`;
 };
-var getHashRoutePath = (hash) => {
-  if (!hash.startsWith("#/")) return null;
-  const [path] = hash.slice(1).split(/[?#]/);
-  try {
-    return decodeURI(path || "/");
-  } catch {
-    return path || "/";
-  }
-};
 var getFrameRouteTarget = (targetWindow, reviewPathPrefix) => {
-  const hashPath = getHashRoutePath(targetWindow.location.hash);
-  return normalizeTarget(
-    hashPath ?? targetWindow.location.pathname,
-    reviewPathPrefix
-  );
+  return normalizeTarget(targetWindow.location.pathname, reviewPathPrefix);
 };
 var updateShellUrl = (target, size, source) => {
   const url = new URL(window.location.href);
@@ -4666,16 +4852,55 @@ var getInitialSource = (remoteSource) => {
   return new URLSearchParams(window.location.search).get("source") === remoteSource ? remoteSource : "local";
 };
 var getItemTarget = (item, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
-  if (item.routeKey) return normalizeTarget(item.routeKey, reviewPathPrefix);
+  if (item.routeKey) return getTargetRouteKey(item.routeKey, reviewPathPrefix);
   if (item.normalizedPath) {
-    return normalizeTarget(item.normalizedPath, reviewPathPrefix);
+    return getTargetRouteKey(item.normalizedPath, reviewPathPrefix);
   }
   try {
-    return normalizeTarget(new URL(item.pageUrl).pathname, reviewPathPrefix);
+    return getTargetRouteKey(new URL(item.pageUrl).pathname, reviewPathPrefix);
   } catch {
     return "/";
   }
 };
+var getItemFrameTarget = (item, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  const routeTarget = getItemTarget(item, reviewPathPrefix);
+  const originalTarget = getItemUrlTarget(item.originalUrl, reviewPathPrefix);
+  if (originalTarget && getTargetRouteKey(originalTarget, reviewPathPrefix) === routeTarget) {
+    return originalTarget;
+  }
+  const pageTarget = getItemUrlTarget(item.pageUrl, reviewPathPrefix);
+  if (pageTarget && getTargetRouteKey(pageTarget, reviewPathPrefix) === routeTarget) {
+    return pageTarget;
+  }
+  return routeTarget;
+};
+function splitTarget(value) {
+  const hashIndex = value.indexOf("#");
+  const beforeHash = hashIndex >= 0 ? value.slice(0, hashIndex) : value;
+  const hash = hashIndex >= 0 ? value.slice(hashIndex) : "";
+  const searchIndex = beforeHash.indexOf("?");
+  const path = searchIndex >= 0 ? beforeHash.slice(0, searchIndex) : beforeHash;
+  const search = searchIndex >= 0 ? beforeHash.slice(searchIndex) : "";
+  return {
+    hash,
+    path: path || "/",
+    search
+  };
+}
+function getItemUrlTarget(value, reviewPathPrefix) {
+  if (!value) return null;
+  if (typeof window === "undefined") return null;
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.origin !== window.location.origin) return null;
+    return normalizeTarget(
+      `${url.pathname}${url.search}${url.hash}`,
+      reviewPathPrefix
+    );
+  } catch {
+    return null;
+  }
+}
 
 // src/react-shell/viewport.ts
 var DEFAULT_REVIEW_VIEWPORT_PRESETS = [
@@ -4744,6 +4969,76 @@ var toReviewViewportPresets = (presets) => presets.map((preset) => ({
 var getIsFigmaOverlayAvailable = (preset) => {
   const kind = getViewportPresetKind(preset);
   return kind === "mobile" || kind === "wide";
+};
+
+// src/react-shell/prompt/modal.tsx
+var import_jsx_runtime2 = require("react/jsx-runtime");
+var ABOUT_SECTIONS = [
+  {
+    title: "What this is",
+    body: "df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool."
+  },
+  {
+    title: "How to setup",
+    body: "Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration."
+  },
+  {
+    title: "Figma token",
+    body: "Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration."
+  },
+  {
+    title: "User ID",
+    body: "Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route."
+  },
+  {
+    title: "Remote",
+    body: "Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or \uB2F4\uB2F9 \uAC1C\uBC1C\uC790 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser."
+  }
+];
+var PromptModal = ({ onClose }) => {
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+    "div",
+    {
+      "aria-label": "Review help",
+      "aria-modal": "true",
+      className: "df-review-prompt-modal",
+      role: "dialog",
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "button",
+          {
+            "aria-label": "Close help",
+            className: "df-review-prompt-backdrop",
+            type: "button",
+            onClick: onClose
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-prompt-dialog df-review-about-dialog", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+            "button",
+            {
+              "aria-label": "Close help",
+              className: "df-review-about-close",
+              type: "button",
+              onClick: onClose,
+              children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(X, { "aria-hidden": "true" })
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-about-body", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-about-intro", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "df-review-about-logo", "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(DfLogoIcon, {}) }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Review shell help" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "Program overview and setup notes" })
+            ] }),
+            ABOUT_SECTIONS.map((section) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-about-item", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: section.title }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: section.body })
+            ] }, section.title))
+          ] })
+        ] })
+      ]
+    }
+  );
 };
 
 // src/react-shell/prompt/prompt.ts
@@ -4848,115 +5143,82 @@ var getPromptLengthLabel = (value) => {
   return `${length} chars / attach as file`;
 };
 
-// src/react-shell/prompt/modal.tsx
-var import_jsx_runtime = require("react/jsx-runtime");
-var ABOUT_SECTIONS = [
-  {
-    title: "What this is",
-    body: "df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool."
-  },
-  {
-    title: "How to setup",
-    body: "Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration."
-  },
-  {
-    title: "Figma token",
-    body: "Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration."
-  },
-  {
-    title: "User ID",
-    body: "Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route."
-  },
-  {
-    title: "Remote",
-    body: "Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or \uB2F4\uB2F9 \uAC1C\uBC1C\uC790 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser."
-  }
-];
-var PromptModal = ({
+// src/react-shell/prompt/initial.modal.tsx
+var import_jsx_runtime3 = require("react/jsx-runtime");
+var InitialPromptModal = ({
   initialPromptText,
   copiedPromptKey,
   onClose,
   onCopyPrompt
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
     "div",
     {
-      "aria-label": "Review help",
+      "aria-label": "Initial prompt",
       "aria-modal": "true",
       className: "df-review-prompt-modal",
       role: "dialog",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
           "button",
           {
-            "aria-label": "Close help",
+            "aria-label": "Close initial prompt",
             className: "df-review-prompt-backdrop",
             type: "button",
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "df-review-prompt-dialog", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "df-review-prompt-header", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Review shell help" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "About / Initial prompt" })
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-prompt-dialog df-review-prompt-dialog-narrow", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-prompt-header", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { children: "Initial Prompt" }),
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: "AI handoff script for coding agents" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { "aria-label": "Close help", type: "button", onClick: onClose, children: "x" })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "df-review-prompt-body", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-              "section",
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+              "button",
               {
-                className: "df-review-prompt-about",
-                "aria-labelledby": "df-review-about-title",
-                children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "df-review-prompt-section-header", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { id: "df-review-about-title", children: "About" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Program overview and setup notes" })
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "df-review-prompt-about-grid", children: ABOUT_SECTIONS.map((section) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: section.title }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: section.body })
-                  ] }, section.title)) })
-                ]
-              }
-            ),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-              "section",
-              {
-                className: "df-review-prompt-block",
-                "aria-labelledby": "df-review-initial-prompt-title",
-                children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "df-review-prompt-block-header", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { id: "df-review-initial-prompt-title", children: "Initial Prompt" }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: getPromptLengthLabel(initialPromptText) })
-                    ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                      "button",
-                      {
-                        disabled: !initialPromptText,
-                        type: "button",
-                        onClick: () => onCopyPrompt(initialPromptText, "initial"),
-                        children: [
-                          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Copy, { "aria-hidden": "true" }),
-                          copiedPromptKey === "initial" ? "Copied" : "Copy"
-                        ]
-                      }
-                    )
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "textarea",
-                    {
-                      readOnly: true,
-                      "aria-label": "Initial Prompt content",
-                      value: initialPromptText || "Initial prompt is not configured."
-                    }
-                  )
-                ]
+                "aria-label": "Close initial prompt",
+                type: "button",
+                onClick: onClose,
+                children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(X, { "aria-hidden": "true" })
               }
             )
-          ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "df-review-prompt-body", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
+            "section",
+            {
+              className: "df-review-prompt-block",
+              "aria-labelledby": "df-review-initial-prompt-title",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-prompt-block-header", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { id: "df-review-initial-prompt-title", children: "QA handoff prompt" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: getPromptLengthLabel(initialPromptText) })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
+                    "button",
+                    {
+                      disabled: !initialPromptText,
+                      type: "button",
+                      onClick: () => onCopyPrompt(initialPromptText, "initial"),
+                      children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Copy, { "aria-hidden": "true" }),
+                        copiedPromptKey === "initial" ? "Copied" : "Copy"
+                      ]
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                  "textarea",
+                  {
+                    readOnly: true,
+                    "aria-label": "Initial Prompt content",
+                    value: initialPromptText || "Initial prompt is not configured."
+                  }
+                )
+              ]
+            }
+          ) })
         ] })
       ]
     }
@@ -5176,7 +5438,7 @@ var getSystemReviewTheme = () => {
 };
 
 // src/react-shell/review/settings.modal.tsx
-var import_jsx_runtime2 = require("react/jsx-runtime");
+var import_jsx_runtime4 = require("react/jsx-runtime");
 var getReviewThemeIcon = (theme) => {
   if (theme === "light") return Sun;
   if (theme === "system") return Monitor;
@@ -5198,7 +5460,7 @@ var ReviewSettingsModal = ({
   onToggleFigmaTokenGuide,
   onSave
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
     "div",
     {
       "aria-label": "Review settings",
@@ -5206,7 +5468,7 @@ var ReviewSettingsModal = ({
       className: "df-review-settings-modal",
       role: "dialog",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
           "button",
           {
             "aria-label": "Close settings",
@@ -5215,7 +5477,7 @@ var ReviewSettingsModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
           "form",
           {
             className: "df-review-settings-dialog",
@@ -5224,10 +5486,10 @@ var ReviewSettingsModal = ({
               onSave(figmaTokenDraft, reviewUserIdDraft, reviewThemeDraft);
             },
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-settings-header", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-settings-title", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Settings" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-header", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-title", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("strong", { children: "Settings" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { children: [
                     FIGMA_TOKEN_STORAGE_KEY,
                     " / ",
                     REVIEW_USER_ID_STORAGE_KEY,
@@ -5236,14 +5498,14 @@ var ReviewSettingsModal = ({
                     REVIEW_THEME_STORAGE_KEY
                   ] })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" }) })
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" }) })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-settings-body", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-settings-row", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "Theme" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "df-review-settings-theme-options", children: REVIEW_THEME_OPTIONS.map((option) => {
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-body", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-row", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "Theme" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "df-review-settings-theme-options", children: REVIEW_THEME_OPTIONS.map((option) => {
                     const ThemeIcon = getReviewThemeIcon(option.value);
-                    return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+                    return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
                       "button",
                       {
                         "aria-pressed": reviewThemeDraft === option.value,
@@ -5256,18 +5518,18 @@ var ReviewSettingsModal = ({
                           onClearStatus();
                         },
                         children: [
-                          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(ThemeIcon, { "aria-hidden": "true" }),
-                          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: option.label })
+                          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(ThemeIcon, { "aria-hidden": "true" }),
+                          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: option.label })
                         ]
                       },
                       option.value
                     );
                   }) })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-settings-label-row", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-label-row", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       "button",
                       {
                         "aria-controls": FIGMA_TOKEN_GUIDE_ID,
@@ -5276,12 +5538,12 @@ var ReviewSettingsModal = ({
                         className: `df-review-settings-help-button${isFigmaTokenGuideOpen ? " is-active" : ""}`,
                         type: "button",
                         onClick: onToggleFigmaTokenGuide,
-                        children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(CircleQuestionMark, { "aria-hidden": "true" })
+                        children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(CircleQuestionMark, { "aria-hidden": "true" })
                       }
                     )
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-settings-token-input", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-token-input", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       "input",
                       {
                         id: "df-review-figma-token",
@@ -5304,34 +5566,34 @@ var ReviewSettingsModal = ({
                         }
                       }
                     ),
-                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       "button",
                       {
                         "aria-label": isFigmaTokenVisible ? "Hide Figma token" : "Show Figma token",
                         className: "df-review-settings-token-toggle",
                         type: "button",
                         onClick: onToggleFigmaTokenVisible,
-                        children: isFigmaTokenVisible ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(EyeOff, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Eye, { "aria-hidden": "true" })
+                        children: isFigmaTokenVisible ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(EyeOff, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Eye, { "aria-hidden": "true" })
                       }
                     )
                   ] }),
-                  isFigmaTokenGuideOpen && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+                  isFigmaTokenGuideOpen && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                     "div",
                     {
                       className: "df-review-settings-guide",
                       id: FIGMA_TOKEN_GUIDE_ID,
-                      children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("ol", { children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("li", { children: "Figma file browser\uC5D0\uC11C account menu\uB97C \uC5F4\uACE0 Settings\uB85C \uC774\uB3D9" }),
-                        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("li", { children: "Security \uD0ED\uC758 Personal access tokens\uB85C \uC774\uB3D9" }),
-                        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("li", { children: "Generate new token\uC5D0\uC11C \uC774\uB984\uACFC scope\uB97C \uC815\uD55C \uB4A4 \uC0DD\uC131" }),
-                        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("li", { children: "\uC0DD\uC131\uB41C token\uC744 \uBCF5\uC0AC\uD574\uC11C \uC5EC\uAE30\uC5D0 \uBD99\uC5EC\uB123\uAE30" })
+                      children: /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("ol", { children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("li", { children: "Figma file browser\uC5D0\uC11C account menu\uB97C \uC5F4\uACE0 Settings\uB85C \uC774\uB3D9" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("li", { children: "Security \uD0ED\uC758 Personal access tokens\uB85C \uC774\uB3D9" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("li", { children: "Generate new token\uC5D0\uC11C \uC774\uB984\uACFC scope\uB97C \uC815\uD55C \uB4A4 \uC0DD\uC131" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("li", { children: "\uC0DD\uC131\uB41C token\uC744 \uBCF5\uC0AC\uD574\uC11C \uC5EC\uAE30\uC5D0 \uBD99\uC5EC\uB123\uAE30" })
                       ] })
                     }
                   )
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "User ID" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "User ID" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                     "input",
                     {
                       "aria-label": "Review user ID",
@@ -5346,9 +5608,9 @@ var ReviewSettingsModal = ({
                     }
                   ) })
                 ] }),
-                figmaSettingsStatus && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "df-review-settings-status", children: figmaSettingsStatus }),
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-settings-actions", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+                figmaSettingsStatus && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "df-review-settings-status", children: figmaSettingsStatus }),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-actions", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                     "button",
                     {
                       type: "button",
@@ -5356,9 +5618,9 @@ var ReviewSettingsModal = ({
                       children: "Clear"
                     }
                   ),
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", {}),
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { type: "button", onClick: onClose, children: "Cancel" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { type: "submit", children: "Save" })
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", {}),
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("button", { type: "button", onClick: onClose, children: "Cancel" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("button", { type: "submit", children: "Save" })
                 ] })
               ] })
             ]
@@ -5595,7 +5857,7 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
 };
 
 // src/react-shell/sitemap/modal.tsx
-var import_jsx_runtime3 = require("react/jsx-runtime");
+var import_jsx_runtime5 = require("react/jsx-runtime");
 var getNextSortDirection = (current, key) => {
   if (current.key !== key) return key === "page" ? "asc" : "desc";
   return current.direction === "desc" ? "asc" : "desc";
@@ -5662,7 +5924,7 @@ var SitemapModal = ({
       direction: getNextSortDirection(current, key)
     }));
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
     "div",
     {
       "aria-label": "Sitemap",
@@ -5670,7 +5932,7 @@ var SitemapModal = ({
       className: "df-review-sitemap-modal",
       role: "dialog",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
           "button",
           {
             "aria-label": "Close sitemap",
@@ -5679,11 +5941,11 @@ var SitemapModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-sitemap-dialog", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-sitemap-header", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { children: "Sitemap" }),
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-sitemap-dialog", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-sitemap-header", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: "Sitemap" }),
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { children: [
                 pages.length,
                 " pages \xB7 ",
                 allQaCount.remaining,
@@ -5695,10 +5957,10 @@ var SitemapModal = ({
                 " hold"
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-sitemap-list", style: gridStyle, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-sitemap-list", style: gridStyle, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
               "button",
               {
                 "aria-label": `Sort sitemap by ${header.title ?? header.label}`,
@@ -5711,7 +5973,7 @@ var SitemapModal = ({
                 type: "button",
                 onClick: () => setSortKey(header.key),
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                     "span",
                     {
                       "aria-hidden": "true",
@@ -5719,7 +5981,7 @@ var SitemapModal = ({
                       children: getSortIndicator(sort, header.key)
                     }
                   ),
-                  /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-sort-label", children: header.label })
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-sort-label", children: header.label })
                 ]
               },
               header.key
@@ -5730,7 +5992,7 @@ var SitemapModal = ({
                 row.isPage ? "is-page" : "is-folder",
                 row.isActive ? "is-active" : ""
               ].filter(Boolean).join(" ");
-              const rowContent = /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+              const rowContent = /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                 SitemapRowContent,
                 {
                   label: row.label,
@@ -5740,7 +6002,7 @@ var SitemapModal = ({
                 }
               );
               if (!row.isPage) {
-                return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                   "div",
                   {
                     "aria-label": `${row.href} group / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
@@ -5751,7 +6013,7 @@ var SitemapModal = ({
                   row.href
                 );
               }
-              return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+              return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                 "button",
                 {
                   "aria-label": `${row.href} / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
@@ -5763,14 +6025,14 @@ var SitemapModal = ({
                 row.href
               );
             }),
-            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
               "button",
               {
                 "aria-label": `All QA / ${allQaCount.remaining} remaining / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`,
                 className: `df-review-sitemap-row is-summary${isAllQaVisible ? " is-active" : ""}`,
                 type: "button",
                 onClick: onSelectAllQa,
-                children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                   SitemapRowContent,
                   {
                     label: "",
@@ -5792,15 +6054,15 @@ var SitemapRowContent = ({
   prefix,
   qaCount,
   users
-}) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(import_jsx_runtime3.Fragment, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { className: "df-review-sitemap-path", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-tree-prefix", children: prefix }),
-    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-label", children: label })
+}) => /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { className: "df-review-sitemap-path", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-tree-prefix", children: prefix }),
+    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-label", children: label })
   ] }),
-  /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-total", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { children: qaCount.remaining }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-review", children: qaCount.status.review }),
-  /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-hold", children: qaCount.status.hold }),
-  /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-total", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: qaCount.remaining }) }),
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-review", children: qaCount.status.review }),
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-hold", children: qaCount.status.hold }),
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
     "span",
     {
       className: "df-review-sitemap-user",
@@ -5907,7 +6169,7 @@ function normalizeFigmaNodeValue(value) {
 
 // src/react-shell/figma/images.panel.tsx
 var import_react5 = require("react");
-var import_jsx_runtime4 = require("react/jsx-runtime");
+var import_jsx_runtime6 = require("react/jsx-runtime");
 var FigmaImagesPanel = ({
   error,
   images,
@@ -5931,17 +6193,17 @@ var FigmaImagesPanel = ({
   const selectedImage = images.find((image) => image.id === selectedImageId);
   const canShowOverlay = Boolean(selectedImage);
   const statusText = error ? error : isMutating ? "Saving..." : isLoading ? "Loading..." : "";
-  return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("aside", { className: "df-review-figma-images-panel", "aria-hidden": !isListVisible, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-figma-images-header", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-figma-images-title", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("strong", { children: "Figma Images" }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("aside", { className: "df-review-figma-images-panel", "aria-hidden": !isListVisible, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-images-header", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-images-title", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { children: "Figma Images" }),
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { children: [
           target.viewport?.label ?? "Viewport",
           " / ",
           images.length
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
         "button",
         {
           "aria-label": "Refresh Figma images",
@@ -5949,11 +6211,11 @@ var FigmaImagesPanel = ({
           disabled: isLoading || isMutating,
           type: "button",
           onClick: () => void onRefreshImages(),
-          children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(RefreshCw, { "aria-hidden": "true" })
+          children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(RefreshCw, { "aria-hidden": "true" })
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
       "form",
       {
         className: "df-review-figma-image-form",
@@ -5966,7 +6228,7 @@ var FigmaImagesPanel = ({
           });
         },
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
             "input",
             {
               "aria-label": "Figma image label",
@@ -5977,8 +6239,8 @@ var FigmaImagesPanel = ({
               onChange: (event) => setLabelDraft(event.currentTarget.value)
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-figma-image-url-row", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-url-row", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
               "input",
               {
                 "aria-label": "Figma node link",
@@ -5990,21 +6252,21 @@ var FigmaImagesPanel = ({
                 onChange: (event) => setFigmaUrlDraft(event.currentTarget.value)
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
               "button",
               {
                 "aria-label": "Add Figma image",
                 disabled: isMutating || figmaUrlDraft.trim().length === 0,
                 type: "submit",
-                children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Plus, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Plus, { "aria-hidden": "true" })
               }
             )
           ] })
         ]
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-figma-image-overlay-controls", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-overlay-controls", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
         "button",
         {
           "aria-pressed": isOverlayVisible,
@@ -6013,17 +6275,17 @@ var FigmaImagesPanel = ({
           type: "button",
           onClick: onToggleOverlay,
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Image, { "aria-hidden": "true" }),
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "Overlay" })
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Image, { "aria-hidden": "true" }),
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: "Overlay" })
           ]
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("label", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { children: [
           Math.round(overlayOpacity * 100),
           "%"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
           "input",
           {
             "aria-label": "Figma overlay opacity",
@@ -6038,42 +6300,42 @@ var FigmaImagesPanel = ({
         )
       ] })
     ] }),
-    statusText && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+    statusText && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
       "p",
       {
         className: `df-review-figma-image-status${error ? " is-error" : ""}`,
         children: statusText
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-figma-image-list", children: [
-      images.length === 0 && !isLoading && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "df-review-empty", children: "No Figma images on this viewport." }),
-      images.map((image, index) => /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-list", children: [
+      images.length === 0 && !isLoading && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "df-review-empty", children: "No Figma images on this viewport." }),
+      images.map((image, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
         "article",
         {
           className: `df-review-figma-image-card${image.id === selectedImageId ? " is-active" : ""}`,
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
               "button",
               {
                 "aria-label": `Select ${getFigmaImageLabel(image, index)}`,
                 className: "df-review-figma-image-preview",
                 type: "button",
                 onClick: () => onSelectImage(image.id),
-                children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("img", { alt: "", draggable: false, src: image.imageUrl })
+                children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("img", { alt: "", draggable: false, src: image.imageUrl })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-figma-image-card-main", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("strong", { children: getFigmaImageLabel(image, index) }),
-              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: image.nodeId }),
-              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("small", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-card-main", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { children: getFigmaImageLabel(image, index) }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: image.nodeId }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("small", { children: [
                 image.imageFormat.toUpperCase(),
                 " /",
                 " ",
                 formatFigmaImageDate(image.updatedAt)
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-figma-image-card-actions", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-card-actions", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 "button",
                 {
                   "aria-label": "Move Figma image up",
@@ -6081,10 +6343,10 @@ var FigmaImagesPanel = ({
                   disabled: index === 0 || isMutating,
                   type: "button",
                   onClick: () => void onMoveImage(image.id, "up"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(ArrowUp, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ArrowUp, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 "button",
                 {
                   "aria-label": "Move Figma image down",
@@ -6092,10 +6354,10 @@ var FigmaImagesPanel = ({
                   disabled: index === images.length - 1 || isMutating,
                   type: "button",
                   onClick: () => void onMoveImage(image.id, "down"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(ArrowDown, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ArrowDown, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 "a",
                 {
                   "aria-label": "Open Figma node",
@@ -6103,10 +6365,10 @@ var FigmaImagesPanel = ({
                   href: image.figmaUrl,
                   rel: "noreferrer",
                   target: "_blank",
-                  children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(ExternalLink, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ExternalLink, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 "button",
                 {
                   "aria-label": "Delete Figma image",
@@ -6114,7 +6376,7 @@ var FigmaImagesPanel = ({
                   disabled: isMutating,
                   type: "button",
                   onClick: () => void onDeleteImage(image.id),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Trash2, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Trash2, { "aria-hidden": "true" })
                 }
               )
             ] })
@@ -6141,7 +6403,7 @@ function formatFigmaImageDate(value) {
 
 // src/react-shell/qa/item.edit.modal.tsx
 var import_react6 = require("react");
-var import_jsx_runtime5 = require("react/jsx-runtime");
+var import_jsx_runtime7 = require("react/jsx-runtime");
 var QaItemEditModal = ({
   item,
   onClose,
@@ -6172,7 +6434,7 @@ var QaItemEditModal = ({
       setIsSaving(false);
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
     "div",
     {
       "aria-modal": "true",
@@ -6180,7 +6442,7 @@ var QaItemEditModal = ({
       role: "dialog",
       "aria-labelledby": "df-review-edit-title",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
           "button",
           {
             "aria-label": "Close edit dialog",
@@ -6189,7 +6451,7 @@ var QaItemEditModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
           "form",
           {
             className: "df-review-edit-dialog",
@@ -6198,12 +6460,12 @@ var QaItemEditModal = ({
               void saveComment();
             },
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("header", { className: "df-review-settings-header", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-settings-title", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { id: "df-review-edit-title", children: "Edit QA comment" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: "Update the text shown on this QA item." })
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("header", { className: "df-review-settings-header", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "df-review-settings-title", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { id: "df-review-edit-title", children: "Edit QA comment" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "Update the text shown on this QA item." })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
                   "button",
                   {
                     "aria-label": "Close edit dialog",
@@ -6213,10 +6475,10 @@ var QaItemEditModal = ({
                   }
                 ) })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-settings-body df-review-edit-body", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: "Comment" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-settings-text-input df-review-edit-textarea", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "df-review-settings-body df-review-edit-body", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "Comment" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "df-review-settings-text-input df-review-edit-textarea", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
                     "textarea",
                     {
                       autoFocus: true,
@@ -6238,11 +6500,11 @@ var QaItemEditModal = ({
                     }
                   ) })
                 ] }),
-                error && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("p", { className: "df-review-edit-error", children: error }),
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("footer", { className: "df-review-settings-actions df-review-edit-actions", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", {}),
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("button", { disabled: isSaving, type: "button", onClick: onClose, children: "Cancel" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("button", { disabled: isSaving, type: "submit", children: isSaving ? "Saving\u2026" : "Save" })
+                error && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "df-review-edit-error", children: error }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("footer", { className: "df-review-settings-actions df-review-edit-actions", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", {}),
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("button", { disabled: isSaving, type: "button", onClick: onClose, children: "Cancel" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("button", { disabled: isSaving, type: "submit", children: isSaving ? "Saving\u2026" : "Save" })
                 ] })
               ] })
             ]
@@ -6254,7 +6516,7 @@ var QaItemEditModal = ({
 };
 
 // src/react-shell/qa/item.remote.actions.tsx
-var import_jsx_runtime6 = require("react/jsx-runtime");
+var import_jsx_runtime8 = require("react/jsx-runtime");
 var QaItemRemoteActions = ({
   isRemoteSource,
   isSubmitted,
@@ -6268,13 +6530,13 @@ var QaItemRemoteActions = ({
   const canOpenRemoteIssue = !isRemoteSource && Boolean(item.externalIssueUrl);
   const hasRemoteActions = canSubmitToRemote || canOpenRemoteIssue;
   if (!hasRemoteActions) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
     "div",
     {
       className: "df-review-item-remote-actions",
       onClick: (event) => event.stopPropagation(),
       children: [
-        canSubmitToRemote && remoteAdapterEntry && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
+        canSubmitToRemote && remoteAdapterEntry && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
           "button",
           {
             "aria-label": "Submit to remote",
@@ -6283,12 +6545,12 @@ var QaItemRemoteActions = ({
             type: "button",
             onClick: () => void onSubmitItem(numberedItem),
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Upload, { "aria-hidden": "true" }),
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: isSubmitted ? "Submitted" : isSubmitting ? "Submitting" : "Submit" })
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Upload, { "aria-hidden": "true" }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: isSubmitted ? "Submitted" : isSubmitting ? "Submitting" : "Submit" })
             ]
           }
         ),
-        canOpenRemoteIssue && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+        canOpenRemoteIssue && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
           "a",
           {
             "aria-label": "Open remote issue",
@@ -6296,7 +6558,7 @@ var QaItemRemoteActions = ({
             href: item.externalIssueUrl,
             rel: "noreferrer",
             target: "_blank",
-            children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ExternalLink, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(ExternalLink, { "aria-hidden": "true" })
           }
         )
       ]
@@ -6322,7 +6584,7 @@ function matchesReviewItemStatus(itemStatus, queryStatus) {
 }
 
 // src/react-shell/qa/item.status.actions.tsx
-var import_jsx_runtime7 = require("react/jsx-runtime");
+var import_jsx_runtime9 = require("react/jsx-runtime");
 var getStatusOption = (status, statusOptions) => {
   const normalizedStatus = normalizeReviewItemStatus(status);
   return statusOptions.find((statusOption) => statusOption.value === status) ?? statusOptions.find(
@@ -6340,12 +6602,12 @@ var QaItemStatusActions = ({
   const statusClassName = `is-status-${normalizeReviewItemStatus(
     currentStatusOption.value
   )}`;
-  return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
     "div",
     {
       className: "df-review-item-status-actions",
       onClick: (event) => event.stopPropagation(),
-      children: canUpdateStatus ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+      children: canUpdateStatus ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
         "select",
         {
           "aria-label": "QA status",
@@ -6355,9 +6617,9 @@ var QaItemStatusActions = ({
             item,
             event.currentTarget.value
           ),
-          children: statusOptions.map((statusOption) => /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
+          children: statusOptions.map((statusOption) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: `df-review-item-status-badge ${statusClassName}`, children: currentStatusOption.label })
+      ) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: `df-review-item-status-badge ${statusClassName}`, children: currentStatusOption.label })
     }
   );
 };
@@ -6501,25 +6763,25 @@ var isScrollableReviewAnchorElement = (element) => {
 };
 
 // src/react-shell/review/item.icons.tsx
-var import_jsx_runtime8 = require("react/jsx-runtime");
+var import_jsx_runtime10 = require("react/jsx-runtime");
 var ReviewScopeIcon = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Monitor, { "aria-hidden": "true" });
+  if (scope === "mobile") return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(Monitor, { "aria-hidden": "true" });
 };
 var getReviewItemMode = (item) => isAnchorRestorableReviewItem(item) ? "dom" : item.kind;
 var ReviewItemModeIcon = ({
   mode
 }) => {
-  if (mode === "area") return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Scan, { "aria-hidden": "true" });
-  if (mode === "dom") return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StickyNote, { "aria-hidden": "true" });
+  if (mode === "area") return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(Scan, { "aria-hidden": "true" });
+  if (mode === "dom") return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(StickyNote, { "aria-hidden": "true" });
 };
 
 // src/react-shell/qa/item.card.tsx
-var import_jsx_runtime9 = require("react/jsx-runtime");
+var import_jsx_runtime11 = require("react/jsx-runtime");
 var formatItemCardDate = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -6569,7 +6831,7 @@ var QaItemCard = ({
   const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
   const canEditItem = activeAdapterEntry.canUpdate && !isSubmitting;
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor].filter(Boolean).join(" | ");
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
     "article",
     {
       className: `df-review-item-card${isActive ? " is-active" : ""}${getItemPresetScope(item) !== currentPresetScope ? " is-dim" : ""}${isOverlayVisible ? "" : " is-overlay-hidden"}`,
@@ -6581,10 +6843,10 @@ var QaItemCard = ({
         onRestoreReviewItem(item);
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-item-header", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-item-main", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "df-review-item-badges", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "df-review-item-header", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "df-review-item-main", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "df-review-item-badges", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
                 "button",
                 {
                   "aria-label": isLabelCopied ? "Copied QA number" : "Copy QA number",
@@ -6598,42 +6860,42 @@ var QaItemCard = ({
                   children: numberedItem.displayLabel
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
                 "span",
                 {
                   className: `df-review-item-scope is-scope-${numberedItem.scope}`,
                   children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(ReviewScopeIcon, { scope: numberedItem.scope }),
+                    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(ReviewScopeIcon, { scope: numberedItem.scope }),
                     numberedItem.label
                   ]
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: `df-review-item-mode is-mode-${itemMode}`, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(ReviewItemModeIcon, { mode: itemMode }),
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: `df-review-item-mode is-mode-${itemMode}`, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(ReviewItemModeIcon, { mode: itemMode }),
                 itemMode
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("strong", { className: "df-review-item-comment", children: itemComment }),
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("small", { className: "df-review-item-meta", children: itemMeta }),
-            item.submitError && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("small", { className: "df-review-item-error", children: item.submitError })
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("strong", { className: "df-review-item-comment", children: itemComment }),
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("small", { className: "df-review-item-meta", children: itemMeta }),
+            item.submitError && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("small", { className: "df-review-item-error", children: item.submitError })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
             "div",
             {
               className: "df-review-item-header-actions",
               onClick: (event) => event.stopPropagation(),
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
                   "button",
                   {
                     "aria-label": isOverlayVisible ? "Hide QA overlay" : "Show QA overlay",
                     className: `df-review-item-visibility${isOverlayVisible ? " is-visible" : " is-hidden"}`,
                     type: "button",
                     onClick: () => onToggleItemOverlayVisibility(item.id),
-                    children: isOverlayVisible ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(EyeOff, { "aria-hidden": "true" })
+                    children: isOverlayVisible ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(EyeOff, { "aria-hidden": "true" })
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
                   "button",
                   {
                     "aria-label": isLinkCopied ? "Copied QA link" : "Copy QA link",
@@ -6641,10 +6903,10 @@ var QaItemCard = ({
                     title: isLinkCopied ? "Copied QA link" : "Copy QA link",
                     type: "button",
                     onClick: () => onCopyItemLink(numberedItem),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Link2, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(Link2, { "aria-hidden": "true" })
                   }
                 ),
-                canEditItem && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                canEditItem && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
                   "button",
                   {
                     "aria-label": "Edit QA comment",
@@ -6652,25 +6914,25 @@ var QaItemCard = ({
                     title: "Edit QA comment",
                     type: "button",
                     onClick: () => onEditItem(item),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Pencil, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(Pencil, { "aria-hidden": "true" })
                   }
                 ),
-                canRemoveItem && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                canRemoveItem && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
                   "button",
                   {
                     "aria-label": "Delete QA",
                     className: "df-review-item-delete",
                     type: "button",
                     onClick: () => void onRemoveItem(item),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(X, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(X, { "aria-hidden": "true" })
                   }
                 )
               ]
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-item-actions", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "df-review-item-actions", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
             QaItemStatusActions,
             {
               canUpdateStatus,
@@ -6679,12 +6941,12 @@ var QaItemCard = ({
               onChangeItemStatus
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
             "div",
             {
               className: "df-review-item-prompt-actions",
               onClick: (event) => event.stopPropagation(),
-              children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
                 "button",
                 {
                   "aria-label": isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
@@ -6692,12 +6954,12 @@ var QaItemCard = ({
                   title: isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
                   type: "button",
                   onClick: () => onCopyItemPrompt(numberedItem),
-                  children: isPromptCopied ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Copy, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Bot, { "aria-hidden": "true" })
+                  children: isPromptCopied ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(Copy, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(Bot, { "aria-hidden": "true" })
                 }
               )
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
             QaItemRemoteActions,
             {
               isRemoteSource,
@@ -6716,7 +6978,7 @@ var QaItemCard = ({
 };
 
 // src/react-shell/qa/panel.header.tsx
-var import_jsx_runtime10 = require("react/jsx-runtime");
+var import_jsx_runtime12 = require("react/jsx-runtime");
 var QaPanelHeader = ({
   activeItemCount,
   activeRemainingItemCount,
@@ -6739,11 +7001,11 @@ var QaPanelHeader = ({
   const statusFilterOptions = getStatusFilterOptions(statusOptions);
   const hasActiveFilter = qaFilter !== "all" || qaStatusFilter !== "all";
   const displayLabel = getQaSourceDisplayLabel(label);
-  return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-list-header", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-list-title", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "df-review-list-meta", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: isAllQaVisible ? `${displayLabel} QA \xB7 All pages` : `${displayLabel} QA` }),
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "df-review-list-header", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "df-review-list-title", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { className: "df-review-list-meta", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: isAllQaVisible ? `${displayLabel} QA \xB7 All pages` : `${displayLabel} QA` }),
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
           "strong",
           {
             title: `${activeRemainingItemCount} remaining of ${activeItemCount}`,
@@ -6751,10 +7013,10 @@ var QaPanelHeader = ({
           }
         )
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
         const count = qaFilterCounts.get(filter.key) ?? 0;
         const isActive = qaFilter === filter.key;
-        return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
           "button",
           {
             "aria-label": `${filter.label} QA (${count})`,
@@ -6762,36 +7024,36 @@ var QaPanelHeader = ({
             className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
             type: "button",
             onClick: () => onQaFilterChange(filter.key),
-            children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(ListFilter, { "aria-hidden": "true" }) })
+            children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(ListFilter, { "aria-hidden": "true" }) })
           },
           filter.key
         );
       }) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-list-toolbar", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-list-controls", children: [
-        showSourceSelect && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "df-review-list-toolbar", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "df-review-list-controls", children: [
+        showSourceSelect && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
           "select",
           {
             "aria-label": "QA source",
             className: "df-review-source-select",
             value: source,
             onChange: (event) => onChangeReviewSource(event.currentTarget.value),
-            children: sourceEntries.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("option", { value: entry.label, children: entry.label }, entry.label))
+            children: sourceEntries.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("option", { value: entry.label, children: entry.label }, entry.label))
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
           "button",
           {
             "aria-label": "Refresh QA",
             className: "df-review-source-refresh",
             type: "button",
             onClick: () => void onRefreshReviewData(),
-            children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(RefreshCw, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(RefreshCw, { "aria-hidden": "true" })
           }
         )
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
         "select",
         {
           "aria-label": "QA status filter",
@@ -6801,8 +7063,8 @@ var QaPanelHeader = ({
             event.currentTarget.value
           ),
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
-            statusFilterOptions.map((statusOption) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
+            statusFilterOptions.map((statusOption) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
           ]
         }
       )
@@ -6826,7 +7088,7 @@ function getStatusFilterOptions(statusOptions) {
 }
 
 // src/react-shell/qa/panel.tsx
-var import_jsx_runtime11 = require("react/jsx-runtime");
+var import_jsx_runtime13 = require("react/jsx-runtime");
 var ReviewQaPanel = ({
   activeAdapterEntry,
   activeItems,
@@ -6864,9 +7126,9 @@ var ReviewQaPanel = ({
   onToggleItemOverlayVisibility
 }) => {
   const emptyMessage = isAllQaVisible ? `No ${activeAdapterEntry.label} QA.` : isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page.";
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "df-review-panel-body", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("section", { className: "df-review-item-list", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "df-review-panel-body", children: /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("section", { className: "df-review-item-list", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
         QaPanelHeader,
         {
           activeItemCount: activeItems.length,
@@ -6888,7 +7150,7 @@ var ReviewQaPanel = ({
           onRefreshReviewData
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
         "div",
         {
           className: "df-review-list-scroll",
@@ -6898,11 +7160,11 @@ var ReviewQaPanel = ({
             }
           },
           children: [
-            activeItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "df-review-empty", children: emptyMessage }),
-            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "df-review-empty", children: "No QA in this filter." }),
+            activeItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("p", { className: "df-review-empty", children: emptyMessage }),
+            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("p", { className: "df-review-empty", children: "No QA in this filter." }),
             filteredNumberedActiveItems.map((numberedItem) => {
               const { item } = numberedItem;
-              return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+              return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
                 QaItemCard,
                 {
                   activeAdapterEntry,
@@ -6932,16 +7194,16 @@ var ReviewQaPanel = ({
         }
       )
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "df-review-qa-draft-host" })
+    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "df-review-qa-draft-host" })
   ] });
 };
 
 // src/react-shell/presence/overlay.tsx
 var import_react7 = require("react");
-var import_jsx_runtime12 = require("react/jsx-runtime");
+var import_jsx_runtime14 = require("react/jsx-runtime");
 var getPresenceName = (user) => user.displayName || user.userId;
-var PresenceUserIcon = () => /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
-  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+var PresenceUserIcon = () => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
+  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
     "circle",
     {
       cx: "15",
@@ -6952,8 +7214,8 @@ var PresenceUserIcon = () => /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("svg
       strokeWidth: "2.6"
     }
   ),
-  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
-  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
+  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
     "path",
     {
       d: "M7.8 22.1c.9-4.1 3.4-6.1 7.2-6.1s6.3 2 7.2 6.1c-1.7 1.5-4.1 2.4-7.2 2.4s-5.5-.9-7.2-2.4z",
@@ -6968,13 +7230,13 @@ var PresenceOverlay = ({
 }) => {
   const [isExpanded, setIsExpanded] = (0, import_react7.useState)(false);
   if (users.length === 0) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
     "div",
     {
       "aria-label": `Review presence, ${users.length} online`,
       className: `df-review-presence-overlay${isExpanded ? " is-expanded" : ""}`,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
           "button",
           {
             "aria-label": `Show online reviewers, ${users.length} online`,
@@ -6983,12 +7245,12 @@ var PresenceOverlay = ({
             type: "button",
             onClick: () => setIsExpanded((current) => !current),
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(PresenceUserIcon, {}),
-              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "df-review-presence-badge", children: users.length })
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(PresenceUserIcon, {}),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "df-review-presence-badge", children: users.length })
             ]
           }
         ),
-        isExpanded && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+        isExpanded && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
           "span",
           {
             className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
@@ -6997,7 +7259,7 @@ var PresenceOverlay = ({
               "--df-review-presence-color": user.color
             },
             title: getPresenceName(user),
-            children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: getPresenceName(user) })
+            children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: getPresenceName(user) })
           },
           user.sessionId
         )) })
@@ -7791,7 +8053,7 @@ var filterSectionOutlineEntries = (entries, terms) => {
 };
 
 // src/react-shell/review/section.outline.panel.tsx
-var import_jsx_runtime13 = require("react/jsx-runtime");
+var import_jsx_runtime15 = require("react/jsx-runtime");
 var SectionOutlinePanel = ({
   isPanelVisible,
   isFiltering,
@@ -7819,13 +8081,13 @@ var SectionOutlinePanel = ({
   const renderMeta = (entry) => {
     const { metadata } = entry;
     const rows = [];
-    const metaPaddingLeft = Math.max(0, entry.depth - 1) * 12 + 29;
+    const metaPaddingLeft = 29;
     const rect = getLiveSectionOutlineRect(entry);
     if (isBoxMetaVisible) {
       rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("b", { children: "box" }),
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("code", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("b", { children: "box" }),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("code", { children: [
             "top ",
             rect.top,
             " / left ",
@@ -7841,13 +8103,13 @@ var SectionOutlinePanel = ({
     }
     if (metadata.textValue) {
       rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
           "span",
           {
             className: "df-review-section-outline-meta-row is-text",
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("b", { children: "text" }),
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("code", { children: metadata.textValue })
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("b", { children: "text" }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("code", { children: metadata.textValue })
             ]
           },
           "text"
@@ -7856,9 +8118,9 @@ var SectionOutlinePanel = ({
     }
     if (isFontMetaVisible && metadata.fontLabel) {
       rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("b", { children: "font" }),
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("code", { children: metadata.fontLabel })
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("b", { children: "font" }),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("code", { children: metadata.fontLabel })
         ] }, "font")
       );
     }
@@ -7867,13 +8129,13 @@ var SectionOutlinePanel = ({
         const mediaKey = `${mediaItem.variant}:${mediaItem.type}:${mediaItem.url}`;
         const mediaLabel = mediaItem.variant === "media" ? mediaItem.type : mediaItem.variant;
         rows.push(
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
             "span",
             {
               className: "df-review-section-outline-meta-row is-media",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("b", { children: mediaLabel }),
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("b", { children: mediaLabel }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                   "a",
                   {
                     className: "df-review-section-outline-media-link",
@@ -7881,7 +8143,7 @@ var SectionOutlinePanel = ({
                     rel: "noopener noreferrer",
                     target: "_blank",
                     title: `${mediaLabel} ${mediaItem.type}`,
-                    children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("code", { children: mediaItem.url })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("code", { children: mediaItem.url })
                   }
                 )
               ]
@@ -7893,14 +8155,14 @@ var SectionOutlinePanel = ({
     }
     if (isClassMetaVisible && metadata.classNames?.length) {
       rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "df-review-section-outline-meta-row is-class", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("b", { children: "class" }),
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("code", { children: className }, className)) })
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "df-review-section-outline-meta-row is-class", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("b", { children: "class" }),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("code", { children: className }, className)) })
         ] }, "class")
       );
     }
     if (rows.length === 0) return null;
-    return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
       "div",
       {
         className: "df-review-section-outline-meta",
@@ -7912,12 +8174,14 @@ var SectionOutlinePanel = ({
   const renderEntry = (entry) => {
     const hasChildren = entry.children.length > 0;
     const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
-    return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+    const liveRect = getLiveSectionOutlineRect(entry);
+    const isZeroArea = liveRect.width <= 0 || liveRect.height <= 0;
+    return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
       "div",
       {
         className: `df-review-section-outline-item is-depth-${entry.depth}`,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
             "div",
             {
               className: "df-review-section-outline-entry-body",
@@ -7933,13 +8197,13 @@ var SectionOutlinePanel = ({
               onPointerEnter: () => onHoverElement(entry.element),
               onPointerLeave: onClearHover,
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
                   "div",
                   {
                     className: "df-review-section-outline-row",
-                    style: { paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` },
+                    style: { paddingLeft: "6px" },
                     children: [
-                      hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+                      hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                         "button",
                         {
                           "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
@@ -7947,16 +8211,16 @@ var SectionOutlinePanel = ({
                           className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
                           type: "button",
                           onClick: () => onToggleEntry(entry.id),
-                          children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(ChevronDown, { "aria-hidden": "true" })
+                          children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(ChevronDown, { "aria-hidden": "true" })
                         }
-                      ) : /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+                      ) : /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                         "span",
                         {
                           "aria-hidden": "true",
                           className: "df-review-section-outline-toggle is-placeholder"
                         }
                       ),
-                      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+                      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
                         "button",
                         {
                           className: "df-review-section-outline-name",
@@ -7964,13 +8228,13 @@ var SectionOutlinePanel = ({
                           type: "button",
                           onClick: () => onScrollToSection(entry),
                           children: [
-                            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: entry.label }),
-                            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("small", { children: entry.filePath })
+                            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: entry.label }),
+                            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("small", { children: entry.filePath })
                           ]
                         }
                       ),
-                      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "df-review-section-outline-links", children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+                      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "df-review-section-outline-links", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                           "button",
                           {
                             "aria-label": `Open ${entry.label} data`,
@@ -7979,10 +8243,10 @@ var SectionOutlinePanel = ({
                             type: "button",
                             disabled: !entry.data?.file,
                             onClick: () => onOpenData(entry),
-                            children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(Database, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Database, { "aria-hidden": "true" })
                           }
                         ),
-                        /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+                        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                           "button",
                           {
                             "aria-label": `Open ${entry.label} source`,
@@ -7991,10 +8255,10 @@ var SectionOutlinePanel = ({
                             type: "button",
                             disabled: !entry.source?.file,
                             onClick: () => onOpenSource(entry),
-                            children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(CodeXml, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(CodeXml, { "aria-hidden": "true" })
                           }
                         ),
-                        /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+                        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                           "span",
                           {
                             "aria-hidden": "true",
@@ -8002,16 +8266,16 @@ var SectionOutlinePanel = ({
                             children: "|"
                           }
                         ),
-                        /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+                        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                           "button",
                           {
                             "aria-label": `Start DOM QA for ${entry.label}`,
                             className: "df-review-section-outline-link is-dom-select",
-                            title: "DOM select",
+                            title: isZeroArea ? "No visible area" : "DOM select",
                             type: "button",
-                            disabled: !canWriteDom,
+                            disabled: !canWriteDom || isZeroArea,
                             onClick: () => onStartDomReview(entry),
-                            children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(SquareMousePointer, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(SquareMousePointer, { "aria-hidden": "true" })
                           }
                         )
                       ] })
@@ -8022,26 +8286,26 @@ var SectionOutlinePanel = ({
               ]
             }
           ),
-          hasChildren && !isCollapsed && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "df-review-section-outline-children", children: entry.children.map(renderEntry) })
+          hasChildren && !isCollapsed && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-section-outline-children", children: entry.children.map(renderEntry) })
         ]
       },
       entry.id
     );
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
     "aside",
     {
       className: "df-review-source-tree-panel",
       "aria-hidden": !isPanelVisible,
-      children: /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "df-review-section-outline-head", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "df-review-section-outline-summary", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("strong", { children: "Component" }),
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("small", { children: isFiltering ? `${filteredCount} / ${totalCount} results` : `${rootCount} ${rootCount === 1 ? "root" : "roots"}` })
+      children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-section-outline-head", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-section-outline-summary", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { children: "Component" }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("small", { children: isFiltering ? `${filteredCount} / ${totalCount} results` : `${rootCount} ${rootCount === 1 ? "root" : "roots"}` })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "df-review-section-outline-meta-controls", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-section-outline-meta-controls", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                 "button",
                 {
                   "aria-label": "Toggle source tree box metadata",
@@ -8050,10 +8314,10 @@ var SectionOutlinePanel = ({
                   title: "top / left / width / height",
                   type: "button",
                   onClick: () => onToggleMeta("box"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(SquareDashed, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(SquareDashed, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                 "button",
                 {
                   "aria-label": "Toggle source tree font metadata",
@@ -8062,10 +8326,10 @@ var SectionOutlinePanel = ({
                   title: "font size / weight",
                   type: "button",
                   onClick: () => onToggleMeta("font"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(Type, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Type, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                 "button",
                 {
                   "aria-label": "Toggle source tree media metadata",
@@ -8074,10 +8338,10 @@ var SectionOutlinePanel = ({
                   title: "media urls",
                   type: "button",
                   onClick: () => onToggleMeta("media"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(Image, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Image, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                 "button",
                 {
                   "aria-label": "Toggle source tree class metadata",
@@ -8086,14 +8350,14 @@ var SectionOutlinePanel = ({
                   title: "class names",
                   type: "button",
                   onClick: () => onToggleMeta("className"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(CodeXml, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(CodeXml, { "aria-hidden": "true" })
                 }
               )
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "df-review-section-outline-filter", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(Search, { "aria-hidden": "true" }),
-            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-section-outline-filter", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Search, { "aria-hidden": "true" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
               "input",
               {
                 "aria-label": "Filter source tree",
@@ -8106,7 +8370,7 @@ var SectionOutlinePanel = ({
                 onChange: (event) => onFilterChange(event.currentTarget.value)
               }
             ),
-            filter && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+            filter && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
               "button",
               {
                 "aria-label": "Clear source tree filter",
@@ -8114,19 +8378,19 @@ var SectionOutlinePanel = ({
                 type: "button",
                 onMouseDown: (event) => event.preventDefault(),
                 onClick: () => onFilterChange(""),
-                children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(X, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(X, { "aria-hidden": "true" })
               }
             )
           ] })
         ] }),
-        entries.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "df-review-section-outline-list", children: entries.map(renderEntry) }) : /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "df-review-section-outline-empty", children: isFiltering ? "No source matches" : "No sections found" })
+        entries.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-section-outline-list", children: entries.map(renderEntry) }) : /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-section-outline-empty", children: isFiltering ? "No source matches" : "No sections found" })
       ] })
     }
   );
 };
 
 // src/react-shell/review/source.inspector.overlay.tsx
-var import_jsx_runtime14 = require("react/jsx-runtime");
+var import_jsx_runtime16 = require("react/jsx-runtime");
 var SourceInspectorOverlay = ({
   state,
   interactionRef,
@@ -8134,8 +8398,8 @@ var SourceInspectorOverlay = ({
   onOpenCandidate
 }) => {
   if (!state) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(import_jsx_runtime14.Fragment, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(import_jsx_runtime16.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
       "div",
       {
         className: `df-review-source-outline${state.isPinned ? " is-pinned" : ""}`,
@@ -8147,7 +8411,7 @@ var SourceInspectorOverlay = ({
         }
       }
     ),
-    state.candidates.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+    state.candidates.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
       "div",
       {
         className: `df-review-source-popover${state.isPinned ? " is-pinned" : ""}`,
@@ -8168,7 +8432,7 @@ var SourceInspectorOverlay = ({
         },
         onClick: (event) => event.stopPropagation(),
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
             "button",
             {
               "aria-label": "Close source candidates",
@@ -8177,7 +8441,7 @@ var SourceInspectorOverlay = ({
               children: "\xD7"
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
             "button",
             {
               className: `df-review-source-candidate is-${candidate.kind}`,
@@ -8187,10 +8451,10 @@ var SourceInspectorOverlay = ({
                 event.stopPropagation();
                 onOpenCandidate(candidate);
               },
-              children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "df-review-source-candidate-main", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { children: candidate.label }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: candidate.filePath }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("small", { children: candidate.positionLabel || "-:-" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { className: "df-review-source-candidate-main", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("strong", { children: candidate.label }),
+                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { children: candidate.filePath }),
+                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("small", { children: candidate.positionLabel || "-:-" })
               ] })
             },
             candidate.id
@@ -8202,7 +8466,7 @@ var SourceInspectorOverlay = ({
 };
 
 // src/react-shell/review/mode.toolbar.tsx
-var import_jsx_runtime15 = require("react/jsx-runtime");
+var import_jsx_runtime17 = require("react/jsx-runtime");
 var ReviewModeToolbar = ({
   canWriteArea,
   canWriteDom,
@@ -8210,33 +8474,33 @@ var ReviewModeToolbar = ({
   onSetReviewMode
 }) => {
   if (!canWriteDom && !canWriteArea) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
-    canWriteDom && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
+    canWriteDom && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
       "button",
       {
         "aria-label": "Element",
         className: `df-review-mode-button is-element${mode === "element" ? " is-active" : ""}`,
         type: "button",
         onClick: () => onSetReviewMode("element"),
-        children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(SquareMousePointer, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SquareMousePointer, { "aria-hidden": "true" })
       }
     ),
-    canWriteDom && canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
-    canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+    canWriteDom && canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
+    canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
       "button",
       {
         "aria-label": "Area",
         className: `df-review-mode-button is-area${mode === "area" ? " is-active" : ""}`,
         type: "button",
         onClick: () => onSetReviewMode("area"),
-        children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Scan, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Scan, { "aria-hidden": "true" })
       }
     )
   ] });
 };
 
 // src/react-shell/ruler/gutters.tsx
-var import_jsx_runtime16 = require("react/jsx-runtime");
+var import_jsx_runtime18 = require("react/jsx-runtime");
 var RulerGutters = ({
   rulerHover,
   rulerScaleX,
@@ -8244,9 +8508,9 @@ var RulerGutters = ({
   rulerUnit,
   size
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(import_jsx_runtime16.Fragment, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
-    /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(import_jsx_runtime18.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
       "div",
       {
         className: "df-review-ruler-gutter is-x",
@@ -8254,15 +8518,15 @@ var RulerGutters = ({
           "--df-review-ruler-step-x": `${rulerScaleX * 20}px`
         },
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "df-review-ruler-frame-label", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("strong", { children: size.label }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-ruler-frame-label", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("strong", { children: size.label }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("span", { children: [
               size.designWidth,
               size.designHeight ? `x${size.designHeight}` : "",
               rulerUnit
             ] })
           ] }),
-          rulerHover && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+          rulerHover && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
             "div",
             {
               className: "df-review-ruler-coord is-x",
@@ -8273,14 +8537,14 @@ var RulerGutters = ({
         ]
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
       "div",
       {
         className: "df-review-ruler-gutter is-y",
         style: {
           "--df-review-ruler-step-y": `${rulerScaleY * 20}px`
         },
-        children: rulerHover && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+        children: rulerHover && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
           "div",
           {
             className: "df-review-ruler-coord is-y",
@@ -8294,7 +8558,7 @@ var RulerGutters = ({
 };
 
 // src/react-shell/ruler/overlay.tsx
-var import_jsx_runtime17 = require("react/jsx-runtime");
+var import_jsx_runtime19 = require("react/jsx-runtime");
 var RulerOverlay = ({
   iframeRef,
   isRulerDragging,
@@ -8304,7 +8568,7 @@ var RulerOverlay = ({
   rulerOverlayRef,
   size
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
     "div",
     {
       ref: rulerOverlayRef,
@@ -8318,8 +8582,8 @@ var RulerOverlay = ({
         );
       },
       children: [
-        rulerHover && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(import_jsx_runtime17.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        rulerHover && /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(import_jsx_runtime19.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
             "div",
             {
               className: "df-review-ruler-guide is-x",
@@ -8327,7 +8591,7 @@ var RulerOverlay = ({
               style: { top: `${rulerHover.y}px` }
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
             "div",
             {
               className: "df-review-ruler-guide is-y",
@@ -8336,8 +8600,8 @@ var RulerOverlay = ({
             }
           )
         ] }),
-        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(import_jsx_runtime17.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(import_jsx_runtime19.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
             "div",
             {
               className: "df-review-ruler-selection",
@@ -8350,7 +8614,7 @@ var RulerOverlay = ({
               }
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
             "div",
             {
               className: "df-review-ruler-label",
@@ -8374,7 +8638,7 @@ var RulerOverlay = ({
 };
 
 // src/react-shell/target/frame.tsx
-var import_jsx_runtime18 = require("react/jsx-runtime");
+var import_jsx_runtime20 = require("react/jsx-runtime");
 var ReviewTargetFrame = ({
   canWriteArea,
   canWriteDom,
@@ -8400,13 +8664,13 @@ var ReviewTargetFrame = ({
 }) => {
   const showRuler = isRulerVisible && isRulerAvailable;
   const targetHref = getTargetOpenHref(targetSrc);
-  return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("main", { className: "df-review-stage", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-frame", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "df-review-target-stack", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("main", { className: "df-review-stage", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: "df-review-frame", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: "df-review-target-stack", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
       "div",
       {
         className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
         children: [
-          showRuler && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+          showRuler && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
             RulerGutters,
             {
               rulerHover,
@@ -8416,7 +8680,7 @@ var ReviewTargetFrame = ({
               size
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
             "div",
             {
               className: "df-review-device",
@@ -8427,7 +8691,7 @@ var ReviewTargetFrame = ({
                 minHeight: `${size.height}px`
               },
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
                   "iframe",
                   {
                     ref: iframeRef,
@@ -8439,17 +8703,17 @@ var ReviewTargetFrame = ({
                   },
                   targetSrc
                 ),
-                figmaImageOverlay && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+                figmaImageOverlay && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
                   "div",
                   {
                     "aria-label": figmaImageOverlay.label,
                     className: "df-review-figma-image-stage-overlay",
                     role: "img",
                     style: { opacity: figmaImageOverlay.opacity },
-                    children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("img", { alt: "", draggable: false, src: figmaImageOverlay.imageUrl })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("img", { alt: "", draggable: false, src: figmaImageOverlay.imageUrl })
                   }
                 ),
-                showRuler && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+                showRuler && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
                   RulerOverlay,
                   {
                     iframeRef,
@@ -8464,8 +8728,8 @@ var ReviewTargetFrame = ({
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-frame-link-stack", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: "df-review-frame-link-stack", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
               "a",
               {
                 "aria-label": "Open target page",
@@ -8474,10 +8738,10 @@ var ReviewTargetFrame = ({
                 rel: "noreferrer",
                 target: "_blank",
                 title: "Open target page",
-                children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ExternalLink, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(ExternalLink, { "aria-hidden": "true" })
               }
             ),
-            figmaFrameUrl && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+            figmaFrameUrl && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
               "a",
               {
                 "aria-label": "Open Figma frame",
@@ -8486,14 +8750,14 @@ var ReviewTargetFrame = ({
                 rel: "noreferrer",
                 target: "_blank",
                 title: "Open Figma frame",
-                children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(FigmaIcon, {})
+                children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(FigmaIcon, {})
               }
             )
           ] })
         ]
       }
     ) }) }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
       ReviewModeToolbar,
       {
         canWriteArea,
@@ -8509,13 +8773,13 @@ function getTargetOpenHref(targetSrc) {
   url.searchParams.delete("__dfwr_target");
   return `${url.pathname}${url.search}${url.hash}`;
 }
-var FigmaIcon = () => /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+var FigmaIcon = () => /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
   "svg",
   {
     "aria-hidden": "true",
     viewBox: "0 0 24 24",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
+    children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
   }
 );
 
@@ -8611,18 +8875,18 @@ var getTargetOverlayState = (targetDocument) => ({
 });
 
 // src/react-shell/topbar.tsx
-var import_jsx_runtime19 = require("react/jsx-runtime");
+var import_jsx_runtime21 = require("react/jsx-runtime");
 var ReviewScopeIcon2 = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(Monitor, { "aria-hidden": "true" });
+  if (scope === "mobile") return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Monitor, { "aria-hidden": "true" });
 };
 var ViewportPresetIcon = ({
   preset
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
+  return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
 };
 var getPresetSelectValue = (preset) => `${preset.label}:${preset.width}x${preset.height}`;
 var ReviewTopbar = ({
@@ -8650,8 +8914,8 @@ var ReviewTopbar = ({
     );
     if (nextPreset) onSizeChange(nextPreset);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("header", { className: "df-review-topbar", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("header", { className: "df-review-topbar", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(
       "form",
       {
         className: "df-review-address",
@@ -8660,17 +8924,17 @@ var ReviewTopbar = ({
           onApplyTarget();
         },
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
             "button",
             {
               "aria-label": "Open sitemap",
               className: "df-review-sitemap-button",
               type: "button",
               onClick: onOpenSitemap,
-              children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(Map2, { "aria-hidden": "true" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Map2, { "aria-hidden": "true" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
             "input",
             {
               "aria-label": "Path",
@@ -8678,39 +8942,39 @@ var ReviewTopbar = ({
               onChange: (event) => onDraftTargetChange(event.target.value)
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "df-review-address-actions", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("div", { className: "df-review-address-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
               "button",
               {
                 "aria-label": "Refresh target",
                 className: "df-review-address-refresh",
                 title: "Refresh target",
                 type: "submit",
-                children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(RefreshCw, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(RefreshCw, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
+            /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
           ] })
         ]
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "df-review-tools", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "df-review-tool-controls", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
+    /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("div", { className: "df-review-tools", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("div", { className: "df-review-tool-controls", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(
           "button",
           {
             className: preset.label === size.label ? "is-active" : "",
             type: "button",
             onClick: () => onSizeChange(preset),
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(ViewportPresetIcon, { preset }),
-              /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("strong", { children: preset.label }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(ViewportPresetIcon, { preset }),
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("strong", { children: preset.label }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
             ]
           },
           preset.label
         )) }),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
           "select",
           {
             "aria-label": "Viewport preset",
@@ -8720,7 +8984,7 @@ var ReviewTopbar = ({
             children: viewportPresets.map((preset) => {
               const scope = getViewportPresetKind(preset);
               const count = presetScopeCounts.get(scope) ?? 0;
-              return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+              return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                 "option",
                 {
                   value: getPresetSelectValue(preset),
@@ -8731,35 +8995,35 @@ var ReviewTopbar = ({
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("span", { className: "df-review-active-size", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("span", { className: "df-review-active-size", children: [
           size.width,
           "x",
           size.height
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
-        isRulerAvailable && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
+        isRulerAvailable && /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
           "button",
           {
             "aria-label": "Toggle ruler",
             className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
             type: "button",
             onClick: onToggleRuler,
-            children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(Ruler, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Ruler, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
           "button",
           {
             "aria-label": "Toggle grid overlay",
             className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
             type: "button",
             onClick: () => onToggleTargetOverlay("grid"),
-            children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(LayoutGrid, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(LayoutGrid, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
           "button",
           {
             "aria-disabled": !isFigmaOverlayAvailable,
@@ -8768,7 +9032,7 @@ var ReviewTopbar = ({
             disabled: !isFigmaOverlayAvailable,
             type: "button",
             onClick: () => onToggleTargetOverlay("figma"),
-            children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(Image, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Image, { "aria-hidden": "true" })
           }
         )
       ] })
@@ -8911,12 +9175,13 @@ var useReviewItemRestore = ({
   }, [applyItemScroll, pendingRestoreRef]);
   const restoreReviewItem = (0, import_react8.useCallback)(
     (item) => {
-      const nextTarget = getItemTarget(item, reviewPathPrefix);
+      const nextRoute = getItemTarget(item, reviewPathPrefix);
+      const nextTarget = getItemFrameTarget(item, reviewPathPrefix);
       const nextSize = getRestoredSize(item, viewportPresets);
       pendingRestoreRef.current = item;
       selectedItemIdRef.current = item.id;
       onSelectedItemIdChange(item.id);
-      onActiveRouteChange(nextTarget);
+      onActiveRouteChange(nextRoute);
       onDraftTargetChange(nextTarget);
       onSizeChange(nextSize);
       updateShellUrlForItem(nextTarget, nextSize, item.id, source);
@@ -9949,12 +10214,7 @@ function createStyleElement() {
   style.textContent = `
     :host {
       color-scheme: dark;
-      --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --df-review-font-size-2xs: 10px;
-      --df-review-font-size-xs: 11px;
-      --df-review-font-size-sm: 12px;
-      --df-review-font-size-md: 13px;
-      --df-review-font-size-xl: 15px;
+      ${reviewTypographyTokens}
       --df-review-space-1: 4px;
       --df-review-space-1-5: 6px;
       --df-review-space-2: 8px;
@@ -10053,8 +10313,8 @@ function createStyleElement() {
     }
 
     .dfwr-title {
-      font-size: 15px;
-      font-weight: 700;
+      font-size: var(--df-review-font-size-xl);
+      font-weight: var(--df-review-font-weight-emphasis);
       line-height: 1.25;
     }
 
@@ -10102,7 +10362,7 @@ function createStyleElement() {
       padding: 0 12px;
       border-radius: var(--df-review-radius-sm);
       font-size: var(--df-review-font-size-sm);
-      font-weight: 650;
+      font-weight: var(--df-review-font-weight-emphasis);
     }
 
     .dfwr-button:hover,
@@ -10127,7 +10387,7 @@ function createStyleElement() {
       padding: 0 8px;
       border-radius: var(--df-review-radius-sm);
       font-size: var(--df-review-font-size-xs);
-      font-weight: 700;
+      font-weight: var(--df-review-font-weight-emphasis);
       line-height: 1;
       text-transform: uppercase;
     }
@@ -10282,7 +10542,7 @@ function createStyleElement() {
         0 8px 18px rgba(0, 0, 0, 0.28);
       color: #111820;
       font-size: var(--df-review-font-size-2xs);
-      font-weight: 900;
+      font-weight: var(--df-review-font-weight-emphasis);
       line-height: 1;
       pointer-events: none;
     }
@@ -10308,7 +10568,7 @@ function createStyleElement() {
       box-shadow: 0 0 0 4px rgba(var(--dfwr-scope-rgb), 0.18);
       color: var(--dfwr-scope);
       font-size: var(--df-review-font-size-2xs);
-      font-weight: 800;
+      font-weight: var(--df-review-font-weight-emphasis);
     }
 
     .dfwr-bound-marker.is-highlighted {
@@ -10671,7 +10931,7 @@ function createStyleElement() {
 
     @media (hover: none) and (pointer: coarse) {
       .dfwr-textarea {
-        font-size: 16px;
+        font-size: var(--df-review-font-size-xl);
       }
     }
 
@@ -10729,8 +10989,8 @@ function createStyleElement() {
       color: var(--df-review-color-text);
       cursor: pointer;
       font: inherit;
-      font-size: 14px;
-      font-weight: 800;
+      font-size: var(--df-review-font-size-lg);
+      font-weight: var(--df-review-font-weight-emphasis);
       line-height: 1;
     }
 
@@ -10783,7 +11043,7 @@ function createStyleElement() {
       margin-bottom: 10px;
       color: rgba(247, 247, 242, 0.74);
       font-size: var(--df-review-font-size-sm);
-      font-weight: 700;
+      font-weight: var(--df-review-font-weight-emphasis);
     }
 
     .dfwr-item {
@@ -10824,7 +11084,7 @@ function createStyleElement() {
       border-radius: var(--df-review-radius-pill);
       padding: 0 7px;
       font-size: var(--df-review-font-size-2xs);
-      font-weight: 800;
+      font-weight: var(--df-review-font-weight-emphasis);
       line-height: 1;
       letter-spacing: 0;
       text-transform: uppercase;
@@ -13017,7 +13277,13 @@ var bindReviewFrameNavigation = ({
 }) => {
   const syncRouteFromFrame = () => {
     const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
-    if (nextTarget !== targetRef.current && !pageTargets.has(nextTarget)) {
+    const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
+    const currentRouteKey = getTargetRouteKey(
+      targetRef.current,
+      reviewPathPrefix
+    );
+    if (nextRouteKey === currentRouteKey) return;
+    if (!pageTargets.has(nextRouteKey)) {
       return;
     }
     onSyncShellTarget(nextTarget);
@@ -13035,8 +13301,17 @@ var bindReviewFrameNavigation = ({
     if (!href || linkTarget && linkTarget !== "_self") return;
     const url = new URL(href, targetWindow.location.href);
     if (url.origin !== targetWindow.location.origin) return;
-    const nextTarget = normalizeTarget(url.pathname, reviewPathPrefix);
-    if (nextTarget === targetRef.current) return;
+    const nextTarget = normalizeTarget(
+      `${url.pathname}${url.search}${url.hash}`,
+      reviewPathPrefix
+    );
+    const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
+    const currentRouteKey = getTargetRouteKey(
+      targetRef.current,
+      reviewPathPrefix
+    );
+    if (nextRouteKey === currentRouteKey) return;
+    if (!pageTargets.has(nextRouteKey)) return;
     event.preventDefault();
     onSyncShellTarget(nextTarget);
   };
@@ -13366,12 +13641,16 @@ var useReviewTargetSync = ({
   const syncShellTarget = (0, import_react11.useCallback)(
     (nextTarget) => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
+      const nextRouteKey = getTargetRouteKey(
+        normalizedTarget,
+        reviewPathPrefix
+      );
       if (normalizedTarget !== targetRef.current) {
         onClearSelectedItem();
         targetRef.current = normalizedTarget;
         onTargetChange(normalizedTarget);
         onDraftTargetChange(normalizedTarget);
-        onActiveRouteChange(normalizedTarget);
+        onActiveRouteChange(nextRouteKey);
       }
       if (selectedItemIdRef.current) {
         updateShellUrlForItem(
@@ -13398,8 +13677,8 @@ var useReviewTargetSync = ({
   );
   (0, import_react11.useEffect)(() => {
     targetRef.current = target;
-    onActiveRouteChange(target);
-  }, [onActiveRouteChange, target, targetRef]);
+    onActiveRouteChange(getTargetRouteKey(target, reviewPathPrefix));
+  }, [onActiveRouteChange, reviewPathPrefix, target, targetRef]);
   (0, import_react11.useEffect)(() => {
     sizeRef.current = size;
     if (selectedItemIdRef.current) {
@@ -13755,7 +14034,7 @@ var createFallbackPresenceAdapter = (primaryAdapter, fallbackAdapter) => ({
 });
 
 // src/react-shell/hooks/use.review.presence.ts
-var getPresenceUserTarget = (user, reviewPathPrefix) => normalizeTarget(user.target || user.routeKey, reviewPathPrefix);
+var getPresenceUserTarget = (user, reviewPathPrefix) => getTargetRouteKey(user.target || user.routeKey, reviewPathPrefix);
 var dedupePresenceUsersByPageAndId = (users, reviewPathPrefix) => {
   const userByPageAndId = /* @__PURE__ */ new Map();
   users.forEach((user) => {
@@ -15021,7 +15300,7 @@ var useReviewShellState = ({
     () => getInitialTarget(reviewPathPrefix)
   );
   const [activeRoute, setActiveRoute] = (0, import_react20.useState)(
-    () => getInitialTarget(reviewPathPrefix)
+    () => getTargetRouteKey(getInitialTarget(reviewPathPrefix), reviewPathPrefix)
   );
   const [size, setSize] = (0, import_react20.useState)(
     () => getInitialSize(viewportPresets)
@@ -15337,7 +15616,7 @@ var removeReviewItem = async ({
 };
 
 // src/react-shell/review/shell.tsx
-var import_jsx_runtime20 = require("react/jsx-runtime");
+var import_jsx_runtime22 = require("react/jsx-runtime");
 var SOURCE_PANEL_MAX_WIDTH = 440;
 var SOURCE_PANEL_MIN_WIDTH = 240;
 var SOURCE_PANEL_MAX_HEIGHT = 260;
@@ -15426,6 +15705,7 @@ var ReviewShell = ({
   const isSectionOutlineClassMetaVisible = sectionOutlineMetaVisibility.className;
   const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = (0, import_react21.useState)(() => /* @__PURE__ */ new Set());
   const [isAllQaVisible, setIsAllQaVisible] = (0, import_react21.useState)(false);
+  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = (0, import_react21.useState)(false);
   const resolvedReviewSourceOptions = (0, import_react21.useMemo)(
     () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
     [sourceInspector, sourceRoot]
@@ -15780,6 +16060,10 @@ var ReviewShell = ({
   const applyTarget = async () => {
     const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
     const normalizedTarget = parsedInput.target;
+    const normalizedRoute = getTargetRouteKey(
+      normalizedTarget,
+      reviewPathPrefix
+    );
     const nextSource = parsedInput.source && sourceEntries.some((entry) => entry.label === parsedInput.source) ? parsedInput.source : source;
     const nextSize = parsedInput.width && parsedInput.height ? findViewportPreset(
       viewportPresets,
@@ -15801,7 +16085,7 @@ var ReviewShell = ({
     setIsAllQaVisible(false);
     setSource(nextSource);
     targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
+    setActiveRoute(normalizedRoute);
     setDraftTarget(normalizedTarget);
     setSize(nextSize);
     setTarget(normalizedTarget);
@@ -15810,10 +16094,14 @@ var ReviewShell = ({
   };
   const selectPage = (href) => {
     const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
+    const normalizedRoute = getTargetRouteKey(
+      normalizedTarget,
+      reviewPathPrefix
+    );
     clearSelectedItem();
     setIsAllQaVisible(false);
     targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
+    setActiveRoute(normalizedRoute);
     setDraftTarget(normalizedTarget);
     setTarget(normalizedTarget);
     updateShellUrl(normalizedTarget, sizeRef.current, source);
@@ -16156,6 +16444,11 @@ var ReviewShell = ({
     (entry) => {
       if (!canWriteDom) {
         showToast("DOM QA unavailable");
+        return;
+      }
+      const rect = entry.element.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        showToast("Component has no visible area here");
         return;
       }
       clearSourceInspector();
@@ -16549,7 +16842,7 @@ var ReviewShell = ({
     const { item } = numberedItem;
     return copyPrompt(
       getShellUrlForItem(
-        getItemTarget(item, reviewPathPrefix),
+        getItemFrameTarget(item, reviewPathPrefix),
         getRestoredSize(item, viewportPresets),
         item.id,
         source
@@ -16575,12 +16868,12 @@ var ReviewShell = ({
     label: selectedFigmaImage.label ?? selectedFigmaImage.nodeId,
     opacity: figmaImageOverlayOpacity
   } : null;
-  return /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)(
     "div",
     {
       className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           ReviewTopbar,
           {
             draftTarget,
@@ -16601,7 +16894,7 @@ var ReviewShell = ({
             onToggleTargetOverlay: toggleTargetOverlay
           }
         ),
-        isSitemapOpen && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        isSitemapOpen && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           SitemapModal,
           {
             pages,
@@ -16616,7 +16909,7 @@ var ReviewShell = ({
             onSelectPage: selectPage
           }
         ),
-        isFigmaSettingsOpen && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        isFigmaSettingsOpen && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           ReviewSettingsModal,
           {
             figmaTokenDraft,
@@ -16635,16 +16928,17 @@ var ReviewShell = ({
             onSave: saveReviewSettings
           }
         ),
-        isInitialPromptOpen && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
-          PromptModal,
+        isInitialPromptOpen && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(PromptModal, { onClose: closePromptModal }),
+        isInitialPromptScriptOpen && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+          InitialPromptModal,
           {
             initialPromptText,
             copiedPromptKey,
-            onClose: closePromptModal,
+            onClose: () => setIsInitialPromptScriptOpen(false),
             onCopyPrompt: (text, key) => void copyPrompt(text, key)
           }
         ),
-        editingItem && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        editingItem && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           QaItemEditModal,
           {
             item: editingItem,
@@ -16652,9 +16946,9 @@ var ReviewShell = ({
             onSave: saveItemComment
           }
         ),
-        toastMessage && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
-        /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: "df-review-side-rail", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        toastMessage && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: "df-review-side-rail", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
             "button",
             {
               "aria-label": isQaPanelVisible ? "Hide QA list" : "Show QA list",
@@ -16663,10 +16957,10 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleQaPanel,
               title: "QA",
-              children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(FileText, {}) })
+              children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(SquareCheckBig, {}) })
             }
           ),
-          isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+          isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
             "button",
             {
               "aria-controls": "df-review-section-outline",
@@ -16676,10 +16970,10 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleSourceTreePanel,
               title: "Source Tree",
-              children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Workflow, {}) })
+              children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Grid2x2Check, {}) })
             }
           ),
-          isFigmaImageManagementEnabled && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+          isFigmaImageManagementEnabled && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
             "button",
             {
               "aria-label": isFigmaImagesPanelVisible ? "Hide Figma images" : "Show Figma images",
@@ -16688,24 +16982,22 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleFigmaImagesPanel,
               title: "Figma Images",
-              children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Images, {}) })
+              children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Images, {}) })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: "df-review-side-actions", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: "df-review-side-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
               "button",
               {
                 "aria-label": "Open initial prompt",
                 className: "df-review-side-toggle",
                 type: "button",
-                onClick: () => {
-                  setIsInitialPromptOpen(true);
-                },
-                title: "Help",
-                children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(CircleQuestionMark, {}) })
+                onClick: () => setIsInitialPromptScriptOpen(true),
+                title: "Initial prompt",
+                children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Bot, {}) })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
               "button",
               {
                 "aria-label": "Open settings",
@@ -16713,19 +17005,33 @@ var ReviewShell = ({
                 type: "button",
                 onClick: openFigmaSettings,
                 title: "Settings",
-                children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Settings, {}) })
+                children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Settings, {}) })
               }
             ),
-            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
               PresenceOverlay,
               {
                 presenceSessionId,
                 users: currentPagePresenceUsers
               }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: "df-review-side-divider", "aria-hidden": "true" }),
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+              "button",
+              {
+                "aria-label": "Open about",
+                className: "df-review-side-toggle",
+                type: "button",
+                onClick: () => {
+                  setIsInitialPromptOpen(true);
+                },
+                title: "About",
+                children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(DfLogoIcon, {}) })
+              }
             )
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           ReviewQaPanel,
           {
             activeAdapterEntry,
@@ -16764,7 +17070,7 @@ var ReviewShell = ({
             onToggleItemOverlayVisibility: toggleItemOverlayVisibility
           }
         ),
-        isFigmaImageManagementEnabled && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        isFigmaImageManagementEnabled && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           FigmaImagesPanel,
           {
             error: figmaImageError,
@@ -16785,7 +17091,7 @@ var ReviewShell = ({
             onToggleOverlay: toggleFigmaImageOverlay
           }
         ),
-        isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           SectionOutlinePanel,
           {
             isPanelVisible: isSourceTreePanelVisible,
@@ -16812,7 +17118,7 @@ var ReviewShell = ({
             onClearHover: clearSourceOutlineHover
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           ReviewTargetFrame,
           {
             canWriteArea,
@@ -16838,7 +17144,7 @@ var ReviewShell = ({
             onSetReviewMode: setReviewMode
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           SourceInspectorOverlay,
           {
             state: sourceInspectorState,
@@ -17026,7 +17332,7 @@ var createSupabasePresenceAdapter = ({
 });
 
 // src/react-shell.tsx
-var import_jsx_runtime21 = require("react/jsx-runtime");
+var import_jsx_runtime23 = require("react/jsx-runtime");
 var mountReviewShell = (options) => {
   if (typeof document === "undefined" || !document.head) return;
   const { rootId = "root", ...shellProps } = options;
@@ -17037,7 +17343,7 @@ var mountReviewShell = (options) => {
   root.style.height = "100%";
   root.style.margin = "0";
   (0, import_client.createRoot)(root).render(
-    /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(import_react22.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(ReviewShell, { ...shellProps }) })
+    /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(import_react22.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(ReviewShell, { ...shellProps }) })
   );
 };
 // Annotate the CommonJS export names for ESM import in node:
@@ -17072,7 +17378,7 @@ lucide-react/dist/esm/icons/database.mjs:
 lucide-react/dist/esm/icons/external-link.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
 lucide-react/dist/esm/icons/eye.mjs:
-lucide-react/dist/esm/icons/file-text.mjs:
+lucide-react/dist/esm/icons/grid-2x2-check.mjs:
 lucide-react/dist/esm/icons/image.mjs:
 lucide-react/dist/esm/icons/images.mjs:
 lucide-react/dist/esm/icons/layout-grid.mjs:
@@ -17091,6 +17397,7 @@ lucide-react/dist/esm/icons/scan.mjs:
 lucide-react/dist/esm/icons/search.mjs:
 lucide-react/dist/esm/icons/settings.mjs:
 lucide-react/dist/esm/icons/smartphone.mjs:
+lucide-react/dist/esm/icons/square-check-big.mjs:
 lucide-react/dist/esm/icons/square-dashed.mjs:
 lucide-react/dist/esm/icons/square-mouse-pointer.mjs:
 lucide-react/dist/esm/icons/sticky-note.mjs:
@@ -17098,7 +17405,6 @@ lucide-react/dist/esm/icons/sun.mjs:
 lucide-react/dist/esm/icons/trash-2.mjs:
 lucide-react/dist/esm/icons/type.mjs:
 lucide-react/dist/esm/icons/upload.mjs:
-lucide-react/dist/esm/icons/workflow.mjs:
 lucide-react/dist/esm/icons/x.mjs:
 lucide-react/dist/esm/lucide-react.mjs:
   (**

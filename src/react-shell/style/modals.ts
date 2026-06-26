@@ -57,13 +57,13 @@ export const reviewShellModalStyle = `
 		  .df-review-settings-header strong {
 		    color: var(--df-review-text);
 		    font-size: var(--df-review-font-size-lg);
-        font-weight: 600;
+        font-weight: var(--df-review-font-weight-emphasis);
 		  }
 
 		  .df-review-settings-header span {
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-header button {
@@ -73,7 +73,7 @@ export const reviewShellModalStyle = `
 		    min-width: 34px;
 		    padding: 0;
 		    font-size: var(--df-review-font-size-md);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-body {
@@ -99,7 +99,7 @@ export const reviewShellModalStyle = `
 		  .df-review-settings-label-row label {
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-theme-options {
@@ -123,7 +123,7 @@ export const reviewShellModalStyle = `
 		    background: var(--df-review-control);
 		    box-shadow: var(--df-review-shadow-control);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
       .df-review-settings-theme-option svg {
@@ -281,7 +281,7 @@ export const reviewShellModalStyle = `
 		    background: var(--df-review-chip-bg);
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		    line-height: 1.55;
 		  }
 
@@ -297,7 +297,7 @@ export const reviewShellModalStyle = `
 		    margin: 0;
 		    color: var(--df-review-accent);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-actions {
@@ -363,7 +363,7 @@ export const reviewShellModalStyle = `
     margin: 0;
     color: var(--df-review-danger);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-edit-actions {
@@ -403,6 +403,15 @@ export const reviewShellModalStyle = `
 			    box-shadow: var(--df-review-shadow-modal);
 			  }
 
+			  .df-review-prompt-dialog-narrow {
+			    width: min(440px, calc(100vw - 36px));
+			  }
+
+			  .df-review-prompt-dialog-narrow .df-review-prompt-block textarea {
+			    height: min(58vh, 540px);
+			    max-height: none;
+			  }
+
   .df-review-copy-toast {
     position: fixed;
     right: 52px;
@@ -416,7 +425,7 @@ export const reviewShellModalStyle = `
     box-shadow: var(--df-review-shadow-modal);
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1.25;
     pointer-events: none;
   }
@@ -440,14 +449,14 @@ export const reviewShellModalStyle = `
 			  .df-review-prompt-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-lg);
-          font-weight: 600;
+          font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
 			  .df-review-prompt-header span {
 			    overflow: hidden;
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			    text-overflow: ellipsis;
 			    white-space: nowrap;
 			  }
@@ -459,7 +468,17 @@ export const reviewShellModalStyle = `
 			    min-width: 34px;
 			    padding: 0;
 			    font-size: var(--df-review-font-size-md);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
+			  }
+
+			  .df-review-prompt-header button svg {
+			    width: 15px;
+			    height: 15px;
+			    fill: none;
+			    stroke: currentColor;
+			    stroke-linecap: round;
+			    stroke-linejoin: round;
+			    stroke-width: 2;
 			  }
 
 			  .df-review-prompt-body {
@@ -493,13 +512,13 @@ export const reviewShellModalStyle = `
 			  .df-review-prompt-block-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
 			  .df-review-prompt-block-header span {
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			  }
 
 			  .df-review-prompt-block-header button {
@@ -538,9 +557,10 @@ export const reviewShellModalStyle = `
 			    color: var(--df-review-text);
 			    font-family: var(--df-review-font-mono);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 400;
+			    font-weight: var(--df-review-font-weight-normal);
 			    line-height: 1.5;
-			    white-space: pre;
+			    white-space: pre-wrap;
+			    overflow-wrap: anywhere;
 			  }
 
 			  .df-review-prompt-block textarea:focus {
@@ -557,50 +577,102 @@ export const reviewShellModalStyle = `
 			  .df-review-prompt-section-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-md);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
 			  .df-review-prompt-section-header span {
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			  }
 
-			  .df-review-prompt-about {
+			  .df-review-about-dialog {
+			    grid-template-rows: minmax(0, 1fr);
+			    width: min(600px, calc(100vw - 36px));
+			  }
+
+			  .df-review-about-close {
+			    position: absolute;
+			    top: 14px;
+			    right: 14px;
+			    z-index: 2;
 			    display: grid;
-			    gap: 10px;
-			    min-width: 0;
+			    place-items: center;
+			    width: 32px;
+			    height: 32px;
+			    border: 1px solid var(--df-review-line);
+			    border-radius: var(--df-review-radius-sm);
+			    background: var(--df-review-control);
+			    color: var(--df-review-text);
 			  }
 
-			  .df-review-prompt-about-grid {
-			    display: grid;
-			    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-			    gap: 10px;
-			    min-width: 0;
+			  .df-review-about-close svg {
+			    width: 15px;
+			    height: 15px;
+			    fill: none;
+			    stroke: currentColor;
+			    stroke-linecap: round;
+			    stroke-linejoin: round;
+			    stroke-width: 2;
 			  }
 
-			  .df-review-prompt-about-grid article {
+			  .df-review-about-body {
 			    display: grid;
 			    align-content: start;
-			    gap: 6px;
-			    border: 1px solid var(--df-review-line);
-			    border-radius: var(--df-review-radius-md);
-			    padding: 12px;
-			    background: var(--df-review-surface);
+			    gap: 22px;
+			    min-height: 0;
+			    overflow: auto;
+			    padding: 34px 32px;
 			  }
 
-			  .df-review-prompt-about-grid strong {
+			  .df-review-about-intro {
+			    display: grid;
+			    justify-items: start;
+			    gap: 8px;
+			  }
+
+			  .df-review-about-logo {
+			    display: grid;
+			    place-items: center;
+			    color: var(--df-review-text);
+			  }
+
+			  .df-review-about-logo svg {
+			    width: auto;
+			    height: 26px;
+			    fill: currentColor;
+			  }
+
+			  .df-review-about-intro strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-lg);
+			    font-weight: var(--df-review-font-weight-emphasis);
+			  }
+
+			  .df-review-about-intro span {
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: var(--df-review-font-weight-normal);
+			  }
+
+			  .df-review-about-item {
+			    display: grid;
+			    gap: 5px;
+			  }
+
+			  .df-review-about-item strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
-			  .df-review-prompt-about-grid p {
+			  .df-review-about-item p {
 			    margin: 0;
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 500;
-			    line-height: 1.55;
+			    font-weight: var(--df-review-font-weight-normal);
+			    line-height: 1.6;
 			  }
+
 
 `;

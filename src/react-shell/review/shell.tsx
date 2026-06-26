@@ -6,12 +6,13 @@ import {
   useState,
 } from 'react';
 import {
-  CircleHelp as CircleHelpIcon,
-  Workflow as ComponentTreeIcon,
-  FileText as FileTextIcon,
   Images as ImagesIcon,
+  Bot as BotIcon,
+  Grid2x2Check as ComponentTreeIcon,
+  SquareCheckBig as QaListIcon,
   Settings as SettingsIcon,
 } from 'lucide-react';
+import { DfLogoIcon } from './df.logo';
 import type {
   NumberedReviewItem,
   ReviewItem,
@@ -32,8 +33,10 @@ import {
 } from '../constants';
 import {
   DEFAULT_REVIEW_PATH_PREFIX,
+  getItemFrameTarget,
   getItemTarget,
   getShellUrlForItem,
+  getTargetRouteKey,
   normalizeTarget,
   parseReviewAddressInput,
   updateShellUrl,
@@ -44,6 +47,7 @@ import {
   getRestoredSize,
 } from '../viewport';
 import {
+  InitialPromptModal,
   PromptModal,
   ReviewSettingsModal,
   SitemapModal,
@@ -222,6 +226,8 @@ export const ReviewShell = ({
     Set<string>
   >(() => new Set());
   const [isAllQaVisible, setIsAllQaVisible] = useState(false);
+  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] =
+    useState(false);
   const resolvedReviewSourceOptions = useMemo(
     () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
     [sourceInspector, sourceRoot]
@@ -621,6 +627,10 @@ export const ReviewShell = ({
   const applyTarget = async () => {
     const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
     const normalizedTarget = parsedInput.target;
+    const normalizedRoute = getTargetRouteKey(
+      normalizedTarget,
+      reviewPathPrefix
+    );
     const nextSource =
       parsedInput.source &&
       sourceEntries.some((entry) => entry.label === parsedInput.source)
@@ -657,7 +667,7 @@ export const ReviewShell = ({
     setIsAllQaVisible(false);
     setSource(nextSource);
     targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
+    setActiveRoute(normalizedRoute);
     setDraftTarget(normalizedTarget);
     setSize(nextSize);
     setTarget(normalizedTarget);
@@ -667,10 +677,14 @@ export const ReviewShell = ({
 
   const selectPage = (href: string) => {
     const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
+    const normalizedRoute = getTargetRouteKey(
+      normalizedTarget,
+      reviewPathPrefix
+    );
     clearSelectedItem();
     setIsAllQaVisible(false);
     targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
+    setActiveRoute(normalizedRoute);
     setDraftTarget(normalizedTarget);
     setTarget(normalizedTarget);
     updateShellUrl(normalizedTarget, sizeRef.current, source);
@@ -1071,6 +1085,12 @@ export const ReviewShell = ({
     (entry: SectionOutlineEntry) => {
       if (!canWriteDom) {
         showToast('DOM QA unavailable');
+        return;
+      }
+
+      const rect = entry.element.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        showToast('Component has no visible area here');
         return;
       }
 
@@ -1549,7 +1569,7 @@ export const ReviewShell = ({
     const { item } = numberedItem;
     return copyPrompt(
       getShellUrlForItem(
-        getItemTarget(item, reviewPathPrefix),
+        getItemFrameTarget(item, reviewPathPrefix),
         getRestoredSize(item, viewportPresets),
         item.id,
         source
@@ -1645,11 +1665,13 @@ export const ReviewShell = ({
         />
       )}
 
-      {isInitialPromptOpen && (
-        <PromptModal
+      {isInitialPromptOpen && <PromptModal onClose={closePromptModal} />}
+
+      {isInitialPromptScriptOpen && (
+        <InitialPromptModal
           initialPromptText={initialPromptText}
           copiedPromptKey={copiedPromptKey}
-          onClose={closePromptModal}
+          onClose={() => setIsInitialPromptScriptOpen(false)}
           onCopyPrompt={(text, key) => void copyPrompt(text, key)}
         />
       )}
@@ -1680,7 +1702,7 @@ export const ReviewShell = ({
           title="QA"
         >
           <span aria-hidden="true">
-            <FileTextIcon />
+            <QaListIcon />
           </span>
         </button>
         {isSourceInspectorEnabled && (
@@ -1729,13 +1751,11 @@ export const ReviewShell = ({
             aria-label="Open initial prompt"
             className="df-review-side-toggle"
             type="button"
-            onClick={() => {
-              setIsInitialPromptOpen(true);
-            }}
-            title="Help"
+            onClick={() => setIsInitialPromptScriptOpen(true)}
+            title="Initial prompt"
           >
             <span aria-hidden="true">
-              <CircleHelpIcon />
+              <BotIcon />
             </span>
           </button>
           <button
@@ -1755,6 +1775,20 @@ export const ReviewShell = ({
               users={currentPagePresenceUsers}
             />
           )}
+          <span className="df-review-side-divider" aria-hidden="true" />
+          <button
+            aria-label="Open about"
+            className="df-review-side-toggle"
+            type="button"
+            onClick={() => {
+              setIsInitialPromptOpen(true);
+            }}
+            title="About"
+          >
+            <span aria-hidden="true">
+              <DfLogoIcon />
+            </span>
+          </button>
         </div>
       </div>
 

@@ -93,13 +93,13 @@ export const reviewShellRulerStyle = `
   .df-review-ruler-frame-label strong {
     color: var(--df-review-color-ruler-label-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
   .df-review-ruler-frame-label span {
     color: var(--df-review-color-ruler-label-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     opacity: 0.78;
   }
 
@@ -112,7 +112,7 @@ export const reviewShellRulerStyle = `
     background: var(--df-review-color-ruler-coord-bg);
     color: var(--df-review-color-ruler-coord-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     white-space: nowrap;
     pointer-events: none;
@@ -190,7 +190,7 @@ export const reviewShellRulerStyle = `
     color: var(--df-review-color-ruler-popover-text);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-lg);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     white-space: nowrap;
     letter-spacing: -0.02em;
@@ -256,7 +256,7 @@ export const reviewShellRulerStyle = `
       .df-review-edit-textarea textarea,
       .df-review-preset-select,
       .df-review-prompt-block textarea {
-        font-size: 16px;
+        font-size: var(--df-review-font-size-xl);
       }
     }
 `;

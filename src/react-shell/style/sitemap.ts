@@ -51,13 +51,13 @@ export const reviewShellSitemapStyle = `
 
   .df-review-sitemap-header strong {
     font-size: var(--df-review-font-size-lg);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
 	  .df-review-sitemap-header span {
 	    color: var(--df-review-muted);
 	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	  }
 
   .df-review-sitemap-header button {
@@ -71,7 +71,7 @@ export const reviewShellSitemapStyle = `
 	    background: var(--df-review-control);
 	    color: var(--df-review-text);
 	    font-size: var(--df-review-font-size-md);
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	  }
 
 	  .df-review-sitemap-header button:hover {
@@ -99,7 +99,7 @@ export const reviewShellSitemapStyle = `
     background: var(--df-review-control);
     box-shadow: var(--df-review-shadow-control);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
   .df-review-sitemap-list {
@@ -135,7 +135,7 @@ export const reviewShellSitemapStyle = `
       0 1px 0 var(--df-review-line);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
@@ -233,7 +233,7 @@ export const reviewShellSitemapStyle = `
     overflow-wrap: anywhere;
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-md);
-    font-weight: 400;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1.35;
   }
 
@@ -245,7 +245,7 @@ export const reviewShellSitemapStyle = `
     flex: 0 0 auto;
     color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
-    font-weight: 400;
+    font-weight: var(--df-review-font-weight-normal);
     white-space: pre;
   }
 
@@ -260,14 +260,14 @@ export const reviewShellSitemapStyle = `
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
     font-variant-numeric: tabular-nums;
-    font-weight: 400;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1;
     text-align: right;
   }
 
   .df-review-sitemap-cell.is-total {
     color: var(--df-review-accent);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-sitemap-cell.is-total strong {
@@ -300,7 +300,7 @@ export const reviewShellSitemapStyle = `
     background: var(--df-review-chip-bg);
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1.1;
     white-space: nowrap;
   }

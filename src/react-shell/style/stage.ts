@@ -198,8 +198,8 @@ export const reviewShellStageStyle = `
     padding: 0;
     color: var(--df-review-source-popover-subtle);
     background: transparent;
-    font-size: 16px;
-    font-weight: 500;
+    font-size: var(--df-review-font-size-xl);
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1;
   }
 
@@ -255,7 +255,7 @@ export const reviewShellStageStyle = `
 
   .df-review-source-candidate-main strong {
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1.2;
   }
 
@@ -317,7 +317,7 @@ export const reviewShellStageStyle = `
     background: var(--df-review-card);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-section-outline-summary {
@@ -340,7 +340,7 @@ export const reviewShellStageStyle = `
     overflow: hidden;
     color: var(--df-review-text);
     font-size: inherit;
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -351,7 +351,7 @@ export const reviewShellStageStyle = `
     overflow: hidden;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -451,7 +451,7 @@ export const reviewShellStageStyle = `
     color: var(--df-review-text);
     background: transparent;
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     outline: 0;
     -webkit-appearance: none;
     appearance: none;
@@ -491,15 +491,24 @@ export const reviewShellStageStyle = `
   .df-review-section-outline-list {
     display: grid;
     align-content: start;
-    gap: 3px;
+    gap: var(--df-review-space-2);
     min-height: 0;
     overflow-y: auto;
-    padding: 8px 6px 10px 12px;
+    padding: var(--df-review-space-2) var(--df-review-space-2) var(--df-review-space-3);
     scrollbar-gutter: stable;
   }
 
   .df-review-section-outline-item {
     display: grid;
+    --df-review-section-outline-name-color: var(--df-review-text);
+  }
+
+  /* Each root renders as a card so the tree scans like the QA list. */
+  .df-review-section-outline-item.is-depth-1 {
+    padding: var(--df-review-space-1);
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-lg);
+    background: var(--df-review-card);
   }
 
   .df-review-section-outline-entry-body {
@@ -514,11 +523,6 @@ export const reviewShellStageStyle = `
     background: var(--df-review-accent-soft);
   }
 
-  .df-review-section-outline-item.is-depth-1:not(:last-child) {
-    margin-bottom: 7px;
-    padding-bottom: 7px;
-    border-bottom: 1px solid var(--df-review-line-soft);
-  }
 
   .df-review-section-outline-row {
     display: grid;
@@ -576,7 +580,7 @@ export const reviewShellStageStyle = `
     color: var(--df-review-text);
     background: transparent;
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     text-align: left;
     white-space: normal;
     cursor: pointer;
@@ -590,11 +594,15 @@ export const reviewShellStageStyle = `
     white-space: nowrap;
   }
 
+  .df-review-section-outline-name span {
+    color: var(--df-review-section-outline-name-color);
+  }
+
   .df-review-section-outline-name small {
     color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-section-outline-name:hover {
@@ -602,10 +610,21 @@ export const reviewShellStageStyle = `
   }
 
   .df-review-section-outline-meta {
+    position: relative;
     display: grid;
     gap: 3px;
     min-width: 0;
-    padding: 0 6px 7px;
+    padding: 8px 6px 7px;
+  }
+
+  .df-review-section-outline-meta::before {
+    position: absolute;
+    top: 0;
+    left: 29px;
+    right: 8px;
+    height: 1px;
+    background: var(--df-review-line-soft);
+    content: '';
   }
 
   .df-review-section-outline-meta-row {
@@ -622,7 +641,7 @@ export const reviewShellStageStyle = `
 
   .df-review-section-outline-meta-row b {
     color: var(--df-review-subtle);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
   .df-review-section-outline-meta-row code {
@@ -758,13 +777,51 @@ export const reviewShellStageStyle = `
 
   .df-review-section-outline-children {
     display: grid;
+    margin-left: 16px;
+    border-left: 1px solid var(--df-review-line-soft);
+  }
+
+  .df-review-section-outline-item.is-depth-1
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-item.is-depth-2 {
+    --df-review-section-outline-name-color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-item.is-depth-2
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-area);
+  }
+
+  .df-review-section-outline-item.is-depth-3 {
+    --df-review-section-outline-name-color: var(--df-review-area);
+  }
+
+  .df-review-section-outline-item.is-depth-3
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-note);
+  }
+
+  .df-review-section-outline-item.is-depth-4 {
+    --df-review-section-outline-name-color: var(--df-review-note);
+  }
+
+  .df-review-section-outline-item.is-depth-4
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-purple);
+  }
+
+  .df-review-section-outline-item.is-depth-5 {
+    --df-review-section-outline-name-color: var(--df-review-purple);
   }
 
   .df-review-section-outline-empty {
     padding: 14px 12px 16px;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
 `;

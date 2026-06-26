@@ -11,7 +11,7 @@ import {
   getReviewPresenceDisplayName,
   getReviewPresenceSessionId,
 } from '../presence/presence';
-import { normalizeTarget } from '../route';
+import { getTargetRouteKey } from '../route';
 import type {
   ReviewPresenceAdapter,
   ReviewPresenceSession,
@@ -37,7 +37,7 @@ interface UseReviewPresenceOptions {
 const getPresenceUserTarget = (
   user: ReviewPresenceUser,
   reviewPathPrefix: string
-) => normalizeTarget(user.target || user.routeKey, reviewPathPrefix);
+) => getTargetRouteKey(user.target || user.routeKey, reviewPathPrefix);
 
 const dedupePresenceUsersByPageAndId = (
   users: ReviewPresenceUser[],

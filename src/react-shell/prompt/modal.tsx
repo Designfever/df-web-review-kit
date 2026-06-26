@@ -1,11 +1,8 @@
-import { Copy as CopyIcon } from 'lucide-react';
-import { getPromptLengthLabel } from './prompt';
+import { X as XIcon } from 'lucide-react';
+import { DfLogoIcon } from '../review/df.logo';
 
 interface PromptModalProps {
-  initialPromptText: string;
-  copiedPromptKey: string | null;
   onClose: () => void;
-  onCopyPrompt: (text: string, key: string) => void;
 }
 
 const ABOUT_SECTIONS = [
@@ -36,12 +33,7 @@ const ABOUT_SECTIONS = [
   },
 ];
 
-export const PromptModal = ({
-  initialPromptText,
-  copiedPromptKey,
-  onClose,
-  onCopyPrompt,
-}: PromptModalProps) => {
+export const PromptModal = ({ onClose }: PromptModalProps) => {
   return (
     <div
       aria-label="Review help"
@@ -55,60 +47,29 @@ export const PromptModal = ({
         type="button"
         onClick={onClose}
       />
-      <div className="df-review-prompt-dialog">
-        <div className="df-review-prompt-header">
-          <div>
+      <div className="df-review-prompt-dialog df-review-about-dialog">
+        <button
+          aria-label="Close help"
+          className="df-review-about-close"
+          type="button"
+          onClick={onClose}
+        >
+          <XIcon aria-hidden="true" />
+        </button>
+        <div className="df-review-about-body">
+          <div className="df-review-about-intro">
+            <span className="df-review-about-logo" aria-hidden="true">
+              <DfLogoIcon />
+            </span>
             <strong>Review shell help</strong>
-            <span>About / Initial prompt</span>
+            <span>Program overview and setup notes</span>
           </div>
-          <button aria-label="Close help" type="button" onClick={onClose}>
-            x
-          </button>
-        </div>
-        <div className="df-review-prompt-body">
-          <section
-            className="df-review-prompt-about"
-            aria-labelledby="df-review-about-title"
-          >
-            <div className="df-review-prompt-section-header">
-              <strong id="df-review-about-title">About</strong>
-              <span>Program overview and setup notes</span>
+          {ABOUT_SECTIONS.map((section) => (
+            <div className="df-review-about-item" key={section.title}>
+              <strong>{section.title}</strong>
+              <p>{section.body}</p>
             </div>
-            <div className="df-review-prompt-about-grid">
-              {ABOUT_SECTIONS.map((section) => (
-                <article key={section.title}>
-                  <strong>{section.title}</strong>
-                  <p>{section.body}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-          <section
-            className="df-review-prompt-block"
-            aria-labelledby="df-review-initial-prompt-title"
-          >
-            <div className="df-review-prompt-block-header">
-              <div>
-                <strong id="df-review-initial-prompt-title">
-                  Initial Prompt
-                </strong>
-                <span>{getPromptLengthLabel(initialPromptText)}</span>
-              </div>
-              <button
-                disabled={!initialPromptText}
-                type="button"
-                onClick={() => onCopyPrompt(initialPromptText, 'initial')}
-              >
-                <CopyIcon aria-hidden="true" />
-                {copiedPromptKey === 'initial' ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-            <textarea
-              readOnly
-              aria-label="Initial Prompt content"
-              value={initialPromptText || 'Initial prompt is not configured.'}
-            />
-          </section>
+          ))}
         </div>
       </div>
     </div>

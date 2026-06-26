@@ -15,6 +15,7 @@ import {
   setDocumentScrollInstantly,
 } from '../anchor.restore';
 import {
+  getItemFrameTarget,
   getItemTarget,
   updateShellUrlForItem,
 } from '../route';
@@ -207,13 +208,14 @@ export const useReviewItemRestore = ({
 
   const restoreReviewItem = useCallback(
     (item: ReviewItem) => {
-      const nextTarget = getItemTarget(item, reviewPathPrefix);
+      const nextRoute = getItemTarget(item, reviewPathPrefix);
+      const nextTarget = getItemFrameTarget(item, reviewPathPrefix);
       const nextSize = getRestoredSize(item, viewportPresets);
 
       pendingRestoreRef.current = item;
       selectedItemIdRef.current = item.id;
       onSelectedItemIdChange(item.id);
-      onActiveRouteChange(nextTarget);
+      onActiveRouteChange(nextRoute);
       onDraftTargetChange(nextTarget);
       onSizeChange(nextSize);
       updateShellUrlForItem(nextTarget, nextSize, item.id, source);

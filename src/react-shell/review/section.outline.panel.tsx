@@ -208,10 +208,12 @@ export const SectionOutlinePanel = ({
             )}
             <button
               className="df-review-section-outline-name"
+              title={entry.filePath}
               type="button"
               onClick={() => onScrollToSection(entry)}
             >
               <span>{entry.label}</span>
+              <small>{entry.filePath}</small>
             </button>
             <span className="df-review-section-outline-links">
               <button

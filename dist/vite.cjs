@@ -25,13 +25,38 @@ __export(vite_exports, {
 });
 module.exports = __toCommonJS(vite_exports);
 var VIRTUAL_JSX_DEV_RUNTIME_ID = "\0@designfever/web-review-kit/source-locator/jsx-dev-runtime";
+var REVIEW_SOURCE_ENV_DEFINE_KEYS = [
+  ["__DF_WRK_REVIEW_SOURCE_ROOT__", "VITE_REVIEW_SOURCE_ROOT"],
+  ["__DF_WRK_REVIEW_SOURCE_EDITOR__", "VITE_REVIEW_SOURCE_EDITOR"],
+  [
+    "__DF_WRK_REVIEW_SOURCE_URL_TEMPLATE__",
+    "VITE_REVIEW_SOURCE_URL_TEMPLATE"
+  ]
+];
+var createReviewSourceEnvReplacements = (env = {}) => {
+  return Object.fromEntries(
+    REVIEW_SOURCE_ENV_DEFINE_KEYS.map(([defineKey, envKey]) => [
+      defineKey,
+      JSON.stringify(env[envKey] ?? "")
+    ])
+  );
+};
+var injectReviewSourceEnv = (code, replacements) => {
+  let nextCode = code;
+  for (const [defineKey, value] of Object.entries(replacements)) {
+    nextCode = nextCode.split(`typeof ${defineKey}`).join(`typeof ${value}`).split(`: ${defineKey}`).join(`: ${value}`);
+  }
+  return nextCode === code ? null : nextCode;
+};
 var reviewSourceLocator = (options = {}) => {
   let runtimeOptions = createRuntimeOptions(options);
+  let sourceEnvReplacements = createReviewSourceEnvReplacements();
   return {
     name: "df-web-review-kit-source-locator",
     enforce: "pre",
     configResolved(config) {
       runtimeOptions = createRuntimeOptions(options, config);
+      sourceEnvReplacements = createReviewSourceEnvReplacements(config.env);
     },
     resolveId(id, importer) {
       if (!runtimeOptions.enabled) return null;
@@ -42,12 +67,17 @@ var reviewSourceLocator = (options = {}) => {
     load(id) {
       if (id !== VIRTUAL_JSX_DEV_RUNTIME_ID) return null;
       return createJsxDevRuntime(runtimeOptions);
+    },
+    transform(code) {
+      const injectedCode = injectReviewSourceEnv(code, sourceEnvReplacements);
+      return injectedCode ? { code: injectedCode, map: null } : null;
     }
   };
 };
 var reviewDataLocator = (options = {}) => {
   let root = normalizePath(options.root ?? "");
   let enabled = options.enabled ?? false;
+  let sourceEnvReplacements = createReviewSourceEnvReplacements();
   const include = (options.include ?? []).map(createRuntimeMatcher);
   const exclude = (options.exclude ?? ["node_modules", "dist"]).map(
     createRuntimeMatcher
@@ -62,26 +92,34 @@ var reviewDataLocator = (options = {}) => {
     configResolved(config) {
       root = normalizePath(options.root ?? config.root ?? "");
       enabled = options.enabled ?? config.command === "serve";
+      sourceEnvReplacements = createReviewSourceEnvReplacements(config.env);
     },
     transform(code, id) {
+      const envInjectedCode = injectReviewSourceEnv(
+        code,
+        sourceEnvReplacements
+      );
+      const inputCode = envInjectedCode ?? code;
       if (!enabled) return null;
       const file = normalizePath(id.split("?")[0]);
       const relativeFile = root && file.startsWith(root + "/") ? file.slice(root.length + 1) : file;
       if (include.length > 0 && !include.some((m) => matchesPath(m, file, relativeFile)))
-        return null;
-      if (exclude.some((m) => matchesPath(m, file, relativeFile))) return null;
+        return envInjectedCode ? { code: envInjectedCode, map: null } : null;
+      if (exclude.some((m) => matchesPath(m, file, relativeFile))) {
+        return envInjectedCode ? { code: envInjectedCode, map: null } : null;
+      }
       const sourceFile = (options.filePath ?? "relative") === "absolute" ? file : relativeFile;
       const regex = new RegExp(componentSource, "g");
       let changed = false;
-      const out = code.replace(
+      const out = inputCode.replace(
         regex,
         (_match, pre, comp, quote, name, offset) => {
-          const line = code.slice(0, offset + pre.length).split("\n").length;
+          const line = inputCode.slice(0, offset + pre.length).split("\n").length;
           changed = true;
           return `${pre}${JSON.stringify(fileKey)}: ${JSON.stringify(sourceFile)}, ${JSON.stringify(lineKey)}: ${line}, ${comp}${quote}${name}${quote}`;
         }
       );
-      return changed ? { code: out, map: null } : null;
+      return changed || envInjectedCode ? { code: out, map: null } : null;
     }
   };
 };

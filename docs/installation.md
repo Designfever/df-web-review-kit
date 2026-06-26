@@ -220,15 +220,23 @@ Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, 
 
 In the review shell, hold `Option` over the target iframe to show source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose which file to open. The side rail Source Tree panel lists section/source/data candidates and can scroll to a section or open its source/data file. It can also show live box metrics, text/font metadata, media URLs, and class tags for each node. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
 
+Source opening reads these optional host env values:
+
+```env
+VITE_REVIEW_SOURCE_ROOT=/absolute/path/to/project
+VITE_REVIEW_SOURCE_EDITOR=cursor
+VITE_REVIEW_SOURCE_URL_TEMPLATE=
+```
+
+`VITE_REVIEW_SOURCE_EDITOR` supports `vscode`, `cursor`, `webstorm`, and `custom`. In Vite/ESM hosts, env values override matching `sourceRoot`, `sourceInspector.editor`, and `sourceInspector.urlTemplate` init values; init values still work as a fallback for existing projects and CommonJS consumers.
+
 ```tsx
 mountReviewShell({
   projectId: REVIEW_PROJECT_ID,
   pages,
   adapters,
   reviewPathPrefix: REVIEW_PATH_PREFIX,
-  sourceRoot: import.meta.env.VITE_REVIEW_SOURCE_ROOT,
   sourceInspector: {
-    editor: 'vscode', // 'vscode' | 'cursor' | 'webstorm' | 'custom'
     maxDepth: 9,
     hoverOutline: true,
     includePlacer: false,

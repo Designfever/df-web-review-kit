@@ -476,10 +476,10 @@ export const reviewShellStageStyle = `
   .df-review-section-outline-list {
     display: grid;
     align-content: start;
-    gap: 2px;
+    gap: 3px;
     min-height: 0;
     overflow-y: auto;
-    padding: 8px 1px 8px 15px;
+    padding: 8px 6px 10px 12px;
     scrollbar-gutter: stable;
   }
 
@@ -489,10 +489,13 @@ export const reviewShellStageStyle = `
 
   .df-review-section-outline-entry-body {
     display: grid;
+    border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
+    transition: border-color 140ms ease, background 140ms ease;
   }
 
   .df-review-section-outline-entry-body:hover {
+    border-color: rgba(124, 199, 255, 0.2);
     background: var(--df-review-accent-soft);
   }
 
@@ -506,9 +509,10 @@ export const reviewShellStageStyle = `
     display: grid;
     grid-template-columns: 18px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
     border-radius: var(--df-review-radius-sm);
-    padding: 7px 6px;
+    min-height: 42px;
+    padding: 6px 7px 6px 6px;
   }
 
   .df-review-section-outline-toggle {
@@ -551,7 +555,7 @@ export const reviewShellStageStyle = `
     display: grid;
     gap: 2px;
     min-width: 0;
-    overflow: visible;
+    overflow: hidden;
     border: 0;
     padding: 0;
     color: var(--df-review-text);
@@ -565,16 +569,16 @@ export const reviewShellStageStyle = `
 
   .df-review-section-outline-name span,
   .df-review-section-outline-name small {
-    overflow: visible;
-    overflow-wrap: anywhere;
-    text-overflow: clip;
-    white-space: normal;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .df-review-section-outline-name small {
     color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
-    font-size: var(--df-review-font-size-xs);
+    font-size: var(--df-review-font-size-2xs);
     font-weight: 500;
   }
 
@@ -666,21 +670,28 @@ export const reviewShellStageStyle = `
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 2px;
+    gap: 1px;
   }
 
   .df-review-section-outline-divider {
+    display: block;
+    width: 1px;
+    height: 14px;
+    margin: 0 2px;
+    overflow: hidden;
+    background: var(--df-review-line-soft);
     color: var(--df-review-subtle);
     font-size: var(--df-review-font-size-xs);
     line-height: 1;
+    text-indent: -999px;
     user-select: none;
   }
 
   .df-review-section-outline-link {
     display: inline-grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
     padding: 0;
@@ -692,8 +703,8 @@ export const reviewShellStageStyle = `
   }
 
   .df-review-section-outline-link.is-dom-select {
-    width: 26px;
-    min-width: 26px;
+    width: 24px;
+    min-width: 24px;
     padding: 0;
   }
 

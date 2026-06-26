@@ -84,6 +84,9 @@ VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
 VITE_REVIEW_SUPABASE_ANON_KEY=
 VITE_REVIEW_SUPABASE_TABLE=review_items
 VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE=false
+VITE_REVIEW_SOURCE_ROOT=/absolute/path/to/project
+VITE_REVIEW_SOURCE_EDITOR=cursor
+VITE_REVIEW_SOURCE_URL_TEMPLATE=
 ```
 
 Browser env must use a Supabase `anon` key only. Do not put `service_role` or OpenClaw operator secrets in a host browser env or in this package.
@@ -133,14 +136,14 @@ export default defineConfig({
 
 When source hints are available, hold `Option` over the review target to inspect source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose a file to open. The side rail can also open a Source Tree panel with section/source/data links, live box metrics, text/font/media metadata, and class tags. DOM QA cards show a source action when the saved item has source hints. Source Tree filter/options, QA panel mode, and QA status filter are stored in browser localStorage. Keep these plugins disabled for production builds because they write source paths into the DOM.
 
+In Vite/ESM hosts, source opening reads `VITE_REVIEW_SOURCE_ROOT`, `VITE_REVIEW_SOURCE_EDITOR`, and `VITE_REVIEW_SOURCE_URL_TEMPLATE` from the host env. Env values override matching `sourceRoot`, `sourceInspector.editor`, and `sourceInspector.urlTemplate` init values; init values still work as a fallback for existing projects and CommonJS consumers.
+
 ```tsx
 mountReviewShell({
   projectId: REVIEW_PROJECT_ID,
   pages,
   adapters,
-  sourceRoot: import.meta.env.VITE_REVIEW_SOURCE_ROOT,
   sourceInspector: {
-    editor: 'cursor', // 'vscode' | 'cursor' | 'webstorm' | 'custom'
     maxDepth: 9,
     hoverOutline: true,
     includePlacer: false,

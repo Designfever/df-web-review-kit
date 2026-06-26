@@ -22,6 +22,7 @@ import type {
 import type {
   ReviewShellProps,
 } from '../types';
+import { resolveReviewSourceOptions } from '../env';
 import {
   DEFAULT_INITIAL_REVIEW_PROMPT,
 } from '../constants';
@@ -213,34 +214,40 @@ export const ReviewShell = ({
     Set<string>
   >(() => new Set());
   const [isAllQaVisible, setIsAllQaVisible] = useState(false);
+  const resolvedReviewSourceOptions = useMemo(
+    () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
+    [sourceInspector, sourceRoot]
+  );
+  const resolvedSourceInspector = resolvedReviewSourceOptions.sourceInspector;
+  const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
   const sourceOpenOptions = useMemo<SourceOpenOptions>(
     () => ({
-      ...sourceInspector,
-      sourceRoot,
+      ...resolvedSourceInspector,
+      sourceRoot: resolvedSourceRoot,
     }),
-    [sourceInspector, sourceRoot]
+    [resolvedSourceInspector, resolvedSourceRoot]
   );
   const sourceCandidateOptions = useMemo<GetSourceCandidatesOptions>(
     () => ({
-      ignore: sourceInspector?.ignore,
-      includePlacer: sourceInspector?.includePlacer,
+      ignore: resolvedSourceInspector?.ignore,
+      includePlacer: resolvedSourceInspector?.includePlacer,
     }),
-    [sourceInspector]
+    [resolvedSourceInspector]
   );
   const sectionOutlineOptions = useMemo<GetSectionOutlineOptions>(
     () => ({
-      includePlacer: sourceInspector?.includePlacer,
-      ignore: sourceInspector?.ignore,
-      maxDepth: sourceInspector?.maxDepth,
+      includePlacer: resolvedSourceInspector?.includePlacer,
+      ignore: resolvedSourceInspector?.ignore,
+      maxDepth: resolvedSourceInspector?.maxDepth,
     }),
-    [sourceInspector]
+    [resolvedSourceInspector]
   );
-  const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
+  const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
   const [sidePanel, setSidePanel] = useState<ReviewSidePanel>(() =>
     isSourceInspectorEnabled ? getStoredReviewSidePanel() : 'qa'
   );
   const isSourceTreeHoverOutlineEnabled =
-    sourceInspector?.hoverOutline !== false;
+    resolvedSourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === 'qa';
   const isSourceTreePanelVisible =
     isSourceInspectorEnabled && isListVisible && sidePanel === 'source';

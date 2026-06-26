@@ -3107,10 +3107,10 @@ var reviewShellStageStyle = `
   .df-review-section-outline-list {
     display: grid;
     align-content: start;
-    gap: 2px;
+    gap: 3px;
     min-height: 0;
     overflow-y: auto;
-    padding: 8px 1px 8px 15px;
+    padding: 8px 6px 10px 12px;
     scrollbar-gutter: stable;
   }
 
@@ -3120,10 +3120,13 @@ var reviewShellStageStyle = `
 
   .df-review-section-outline-entry-body {
     display: grid;
+    border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
+    transition: border-color 140ms ease, background 140ms ease;
   }
 
   .df-review-section-outline-entry-body:hover {
+    border-color: rgba(124, 199, 255, 0.2);
     background: var(--df-review-accent-soft);
   }
 
@@ -3137,9 +3140,10 @@ var reviewShellStageStyle = `
     display: grid;
     grid-template-columns: 18px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
     border-radius: var(--df-review-radius-sm);
-    padding: 7px 6px;
+    min-height: 42px;
+    padding: 6px 7px 6px 6px;
   }
 
   .df-review-section-outline-toggle {
@@ -3182,7 +3186,7 @@ var reviewShellStageStyle = `
     display: grid;
     gap: 2px;
     min-width: 0;
-    overflow: visible;
+    overflow: hidden;
     border: 0;
     padding: 0;
     color: var(--df-review-text);
@@ -3196,16 +3200,16 @@ var reviewShellStageStyle = `
 
   .df-review-section-outline-name span,
   .df-review-section-outline-name small {
-    overflow: visible;
-    overflow-wrap: anywhere;
-    text-overflow: clip;
-    white-space: normal;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .df-review-section-outline-name small {
     color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
-    font-size: var(--df-review-font-size-xs);
+    font-size: var(--df-review-font-size-2xs);
     font-weight: 500;
   }
 
@@ -3297,21 +3301,28 @@ var reviewShellStageStyle = `
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 2px;
+    gap: 1px;
   }
 
   .df-review-section-outline-divider {
+    display: block;
+    width: 1px;
+    height: 14px;
+    margin: 0 2px;
+    overflow: hidden;
+    background: var(--df-review-line-soft);
     color: var(--df-review-subtle);
     font-size: var(--df-review-font-size-xs);
     line-height: 1;
+    text-indent: -999px;
     user-select: none;
   }
 
   .df-review-section-outline-link {
     display: inline-grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
     padding: 0;
@@ -3323,8 +3334,8 @@ var reviewShellStageStyle = `
   }
 
   .df-review-section-outline-link.is-dom-select {
-    width: 26px;
-    min-width: 26px;
+    width: 24px;
+    min-width: 24px;
     padding: 0;
   }
 
@@ -4112,198 +4123,47 @@ var __iconNode34 = [
 ];
 var X = createLucideIcon("x", __iconNode34);
 
-// src/core/geometry.ts
-function rectanglesIntersect(a, b) {
-  return a.left < b.left + b.width && a.left + a.width > b.left && a.top < b.top + b.height && a.top + a.height > b.top;
-}
-function getPointSelection(point) {
+// src/react-shell/env.ts
+var REVIEW_SOURCE_EDITORS = [
+  "vscode",
+  "cursor",
+  "webstorm",
+  "custom"
+];
+var getInjectedSourceRoot = () => typeof __DF_WRK_REVIEW_SOURCE_ROOT__ === "undefined" ? void 0 : __DF_WRK_REVIEW_SOURCE_ROOT__;
+var getInjectedSourceEditor = () => typeof __DF_WRK_REVIEW_SOURCE_EDITOR__ === "undefined" ? void 0 : __DF_WRK_REVIEW_SOURCE_EDITOR__;
+var getInjectedSourceUrlTemplate = () => typeof __DF_WRK_REVIEW_SOURCE_URL_TEMPLATE__ === "undefined" ? void 0 : __DF_WRK_REVIEW_SOURCE_URL_TEMPLATE__;
+var getRuntimeEnv = () => ({
+  VITE_REVIEW_SOURCE_EDITOR: getInjectedSourceEditor(),
+  VITE_REVIEW_SOURCE_ROOT: getInjectedSourceRoot(),
+  VITE_REVIEW_SOURCE_URL_TEMPLATE: getInjectedSourceUrlTemplate()
+});
+var getEnvString = (env, key) => {
+  const value = env[key];
+  return typeof value === "string" && value.trim() ? value.trim() : void 0;
+};
+var getEnvSourceEditor = (env) => {
+  const value = getEnvString(env, "VITE_REVIEW_SOURCE_EDITOR");
+  return REVIEW_SOURCE_EDITORS.includes(value) ? value : void 0;
+};
+var resolveReviewSourceOptions = ({
+  sourceInspector,
+  sourceRoot
+}) => {
+  const env = getRuntimeEnv();
+  const envSourceRoot = getEnvString(env, "VITE_REVIEW_SOURCE_ROOT");
+  const envSourceEditor = getEnvSourceEditor(env);
+  const envUrlTemplate = getEnvString(env, "VITE_REVIEW_SOURCE_URL_TEMPLATE");
+  const resolvedSourceInspector = sourceInspector || envSourceEditor || envUrlTemplate ? {
+    ...sourceInspector,
+    ...envSourceEditor ? { editor: envSourceEditor } : {},
+    ...envUrlTemplate ? { urlTemplate: envUrlTemplate } : {}
+  } : sourceInspector;
   return {
-    left: point.x,
-    top: point.y,
-    width: 1,
-    height: 1
+    sourceInspector: resolvedSourceInspector,
+    sourceRoot: envSourceRoot ?? sourceRoot
   };
-}
-function toViewportSelection(selection) {
-  return {
-    left: selection.x,
-    top: selection.y,
-    width: selection.width,
-    height: selection.height
-  };
-}
-function toPublicSelection(selection) {
-  return {
-    x: Math.round(selection.left),
-    y: Math.round(selection.top),
-    width: Math.round(selection.width),
-    height: Math.round(selection.height)
-  };
-}
-function getSelectionCenter(selection) {
-  if ("left" in selection) {
-    return {
-      x: selection.left + selection.width / 2,
-      y: selection.top + selection.height / 2
-    };
-  }
-  return {
-    x: selection.x + selection.width / 2,
-    y: selection.y + selection.height / 2
-  };
-}
-function isRelativeSelection(value) {
-  if (!value || typeof value !== "object") return false;
-  const selection = value;
-  return typeof selection.x === "number" && typeof selection.y === "number" && typeof selection.width === "number" && typeof selection.height === "number";
-}
-function getViewportSize(environment) {
-  const targetWindow = environment?.window ?? window;
-  return {
-    width: targetWindow.innerWidth,
-    height: targetWindow.innerHeight
-  };
-}
-function isPointInViewport(point, environment) {
-  const viewport = getViewportSize(environment);
-  return point.x >= 0 && point.y >= 0 && point.x <= viewport.width && point.y <= viewport.height;
-}
-function isSelectionInViewport(selection, environment) {
-  const viewport = getViewportSize(environment);
-  return rectanglesIntersect(selection, {
-    left: 0,
-    top: 0,
-    width: viewport.width,
-    height: viewport.height
-  });
-}
-function clampPoint(point, environment) {
-  const viewport = getViewportSize(environment);
-  return {
-    x: clamp(point.x, 0, viewport.width),
-    y: clamp(point.y, 0, viewport.height)
-  };
-}
-function getPopoverPosition(point, environment, options) {
-  const bounds = getPopoverBounds(environment);
-  const margin = 12;
-  const width = Math.min(
-    options?.width ?? 320,
-    Math.max(240, bounds.width - margin * 2)
-  );
-  const estimatedHeight = options?.estimatedHeight ?? 178;
-  const offset = options?.offset ?? 12;
-  return {
-    left: clamp(
-      point.x + offset,
-      bounds.left + margin,
-      bounds.left + bounds.width - width - margin
-    ),
-    top: clamp(
-      point.y + offset,
-      bounds.top + margin,
-      bounds.top + bounds.height - estimatedHeight - margin
-    )
-  };
-}
-function getPopoverBounds(environment) {
-  if (!environment) {
-    return {
-      left: 0,
-      top: 0,
-      width: window.innerWidth,
-      height: window.innerHeight
-    };
-  }
-  return environment.overlayRect;
-}
-function toHostPoint(point, environment) {
-  if (!environment) return point;
-  return {
-    x: point.x + environment.viewportRect.left,
-    y: point.y + environment.viewportRect.top
-  };
-}
-function toHostSelection(selection, environment) {
-  return {
-    left: selection.left + environment.viewportRect.left,
-    top: selection.top + environment.viewportRect.top,
-    width: selection.width,
-    height: selection.height
-  };
-}
-function toTargetPoint(point, environment) {
-  if (!environment) return point;
-  return {
-    x: point.x - environment.viewportRect.left,
-    y: point.y - environment.viewportRect.top
-  };
-}
-function toTargetPointFromHostEvent(event, environment) {
-  return toTargetPoint(
-    {
-      x: event.clientX,
-      y: event.clientY
-    },
-    environment
-  );
-}
-function placeLayerOverTarget(layer, environment) {
-  layer.style.left = `${environment.viewportRect.left}px`;
-  layer.style.top = `${environment.viewportRect.top}px`;
-  layer.style.width = `${environment.viewportRect.width}px`;
-  layer.style.height = `${environment.viewportRect.height}px`;
-  layer.style.right = "auto";
-  layer.style.bottom = "auto";
-}
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), Math.max(min, max));
-}
-function roundRatio(value) {
-  return Math.round(value * 1e4) / 1e4;
-}
-function roundPoint(point) {
-  return {
-    x: Math.round(point.x),
-    y: Math.round(point.y)
-  };
-}
-
-// src/core/scroll.ts
-function waitForNextFrame(environment) {
-  return new Promise((resolve) => {
-    (environment?.window ?? window).requestAnimationFrame(() => resolve());
-  });
-}
-function runWithAutoScrollBehavior(targetDocument, callback) {
-  const elements = [
-    targetDocument.documentElement,
-    targetDocument.body
-  ].filter((element) => Boolean(element));
-  const previousValues = elements.map((element) => element.style.scrollBehavior);
-  elements.forEach((element) => {
-    element.style.scrollBehavior = "auto";
-  });
-  try {
-    callback();
-  } finally {
-    elements.forEach((element, index) => {
-      element.style.scrollBehavior = previousValues[index] ?? "";
-    });
-  }
-}
-function setDocumentScrollInstantly(environment, position) {
-  const scrollElement = environment.document.scrollingElement;
-  if (scrollElement) {
-    scrollElement.scrollLeft = Math.max(0, Math.round(position.x));
-    scrollElement.scrollTop = Math.max(0, Math.round(position.y));
-    return;
-  }
-  environment.window.scrollTo(
-    Math.max(0, Math.round(position.x)),
-    Math.max(0, Math.round(position.y))
-  );
-}
+};
 
 // src/react-shell/constants.ts
 var REVIEW_QA_FILTERS = [
@@ -5893,7 +5753,7 @@ var getReviewItemRestoreScrollPosition = (targetWindow, targetDocument, item, an
     top: item.scroll?.y ?? 0
   });
 };
-var setDocumentScrollInstantly2 = (targetWindow, targetDocument, position) => {
+var setDocumentScrollInstantly = (targetWindow, targetDocument, position) => {
   const scrollElement = targetDocument.scrollingElement;
   if (scrollElement) {
     scrollElement.scrollLeft = position.left;
@@ -6494,20 +6354,93 @@ var PresenceOverlay = ({
   );
 };
 
-// src/react-shell/source.open.ts
-var SECTION_OUTLINE_ROOT_SELECTOR = [
-  "[data-wrk-source-component]",
-  "header[data-wrk-source-file]",
-  "footer[data-wrk-source-file]",
-  '[role="banner"][data-wrk-source-file]',
-  '[role="contentinfo"][data-wrk-source-file]'
-].join(", ");
+// src/react-shell/source.hint.ts
 var matchesIgnore = (file, patterns) => {
   const normalized = file.replace(/\\/g, "/");
   return patterns.some(
     (pattern) => typeof pattern === "string" ? normalized.includes(pattern) : pattern.test(normalized)
   );
 };
+function getSourceAttribute(element, ...names) {
+  for (const name of names) {
+    const value = element.getAttribute(name)?.trim();
+    if (value) return value;
+  }
+  return void 0;
+}
+function getDataHintFromElement(element) {
+  const file = getSourceAttribute(element, "data-wrk-data-file");
+  if (!file) return void 0;
+  return {
+    component: void 0,
+    file,
+    line: getSourceAttribute(element, "data-wrk-data-line"),
+    column: void 0,
+    sectionId: void 0,
+    sectionIndex: void 0
+  };
+}
+function getSourceHintFromElement(element) {
+  const source = {
+    component: getSourceAttribute(
+      element,
+      "data-wrk-source-component",
+      "data-component"
+    ),
+    file: getSourceAttribute(element, "data-wrk-source-file", "data-file"),
+    line: getSourceAttribute(element, "data-wrk-source-line"),
+    column: getSourceAttribute(element, "data-wrk-source-column"),
+    sectionId: getSourceAttribute(element, "data-section-id"),
+    sectionIndex: getSourceAttribute(element, "data-section-index")
+  };
+  return Object.values(source).some(Boolean) ? source : void 0;
+}
+function getComponentNameFromSourceFile(file) {
+  const normalizedFile = file?.trim().replace(/\\/g, "/");
+  if (!normalizedFile) return void 0;
+  const pathParts = normalizedFile.split("/").filter(Boolean);
+  const fileName = pathParts[pathParts.length - 1];
+  if (!fileName) return void 0;
+  const stem = fileName.replace(/\.[^.]+$/, "");
+  const sourceName = stem.toLowerCase() === "index" ? pathParts[pathParts.length - 2]?.replace(/\.[^.]+$/, "") : stem;
+  return toPascalCase2(sourceName);
+}
+function toPascalCase2(value) {
+  const words = value?.split(/[._\-\s]+/).map((part) => part.trim()).filter(Boolean);
+  if (!words?.length) return void 0;
+  return words.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`).join("");
+}
+function getDisplaySourcePath(file) {
+  const normalizedFile = file?.trim().replace(/\\/g, "/");
+  if (!normalizedFile) return void 0;
+  const sourceRootMatch = normalizedFile.match(
+    /(?:^|\/)((?:dev\/)?src\/.+|app\/.+|pages?\/.+|components\/.+)$/
+  );
+  return sourceRootMatch?.[1] ?? normalizedFile;
+}
+function getSourceFileCompareKey(file) {
+  return file?.trim().replace(/\\/g, "/") ?? "";
+}
+function addSourceFileCompareKey(seen, key) {
+  if (!key || hasEquivalentSourceFileKey(seen, key)) return false;
+  seen.add(key);
+  return true;
+}
+function hasEquivalentSourceFileKey(seen, key) {
+  for (const seenKey of seen) {
+    if (isEquivalentSourceFileKey(seenKey, key)) return true;
+  }
+  return false;
+}
+function isEquivalentSourceFileKey(a, b) {
+  return a === b || a.endsWith(`/${b}`) || b.endsWith(`/${a}`);
+}
+function isCoreOutlineNode(label, file) {
+  const text = `${label} ${file ?? ""}`.toLowerCase();
+  return text.includes("core.section") || text.includes("core.content") || text.includes("core.column") || ["coresection", "corecontent", "corecolumn"].includes(label.toLowerCase());
+}
+
+// src/react-shell/source.open.ts
 var getSourceCandidates = (target, options) => {
   const startElement = getEventElement(target);
   if (!startElement) return [];
@@ -6534,6 +6467,144 @@ var getSourceCandidates = (target, options) => {
   );
   return visible.slice(0, 8);
 };
+var getSourceOpenUrl = (source, options) => {
+  const normalizedOptions = normalizeSourceOpenOptions(options);
+  const file = source?.file?.trim();
+  if (!file) return null;
+  const sourcePath = getSourcePath(file, normalizedOptions.sourceRoot);
+  if (!sourcePath) return null;
+  const hasPosition = !normalizedOptions.omitPosition;
+  const line = hasPosition ? getSourcePosition(source?.line) : null;
+  const column = hasPosition ? getSourcePosition(source?.column) : null;
+  const editor = normalizedOptions.editor ?? "vscode";
+  if (normalizedOptions.urlTemplate) {
+    return buildSourceUrlFromTemplate(normalizedOptions.urlTemplate, {
+      column,
+      file,
+      line,
+      sourcePath,
+      sourceRoot: normalizedOptions.sourceRoot
+    });
+  }
+  if (editor === "webstorm") {
+    const params = new URLSearchParams({ file: sourcePath });
+    if (line) params.set("line", String(line));
+    if (column) params.set("column", String(column));
+    return `webstorm://open?${params.toString()}`;
+  }
+  if (editor === "custom") return null;
+  const encodedPath = encodePathForFileScheme(sourcePath);
+  const scheme = editor === "cursor" ? "cursor" : "vscode";
+  if (!line) return `${scheme}://file/${encodedPath}`;
+  if (!column) return `${scheme}://file/${encodedPath}:${line}`;
+  return `${scheme}://file/${encodedPath}:${line}:${column}`;
+};
+var openSourceInEditor = (source, options) => {
+  const url = getSourceOpenUrl(source, options);
+  if (!url) return false;
+  window.open(url, "_blank", "noreferrer");
+  return true;
+};
+function createSourceCandidate(element, source, depth, kind) {
+  const confidence = getSourceConfidence(source, depth);
+  const fileName = source.file?.split(/[\\/]/).pop() ?? source.file ?? "source";
+  const component = source.component?.trim();
+  const fallbackComponent = getComponentNameFromSourceFile(source.file);
+  const tag = element.tagName.toLowerCase();
+  const line = getSourcePosition(source.line);
+  const column = getSourcePosition(source.column);
+  const position = line ? `:${line}${column ? `:${column}` : ""}` : "";
+  return {
+    id: `${kind}:${getSourceCandidateKey(source)}`,
+    depth,
+    element,
+    filePath: getDisplaySourcePath(source.file) ?? fileName,
+    label: component || fallbackComponent || tag,
+    detail: `${fileName}${position}`,
+    positionLabel: line ? `${line}:${column ?? 1}` : "",
+    confidence,
+    confidenceLabel: confidence >= 0.82 ? "high" : confidence >= 0.58 ? "medium" : "low",
+    kind,
+    usesPosition: confidence >= 0.72 && Boolean(line),
+    source
+  };
+}
+function getSourceCandidateKey(source) {
+  return [
+    source.file,
+    source.component,
+    source.line,
+    source.column,
+    source.sectionId,
+    source.sectionIndex
+  ].filter(Boolean).join("|");
+}
+function getSourceConfidence(source, depth) {
+  let score = source.file ? 0.54 : 0.12;
+  if (source.component) score += 0.12;
+  if (getSourcePosition(source.line)) score += 0.22;
+  if (getSourcePosition(source.column)) score += 0.08;
+  if (source.sectionId || source.sectionIndex) score += 0.04;
+  score -= Math.min(depth, 5) * 0.045;
+  return Math.max(0.1, Math.min(1, Number(score.toFixed(2))));
+}
+function normalizeSourceOpenOptions(options) {
+  return typeof options === "string" ? { sourceRoot: options } : options ?? {};
+}
+function buildSourceUrlFromTemplate(template, values) {
+  const replacements = {
+    column: values.column ? String(values.column) : "",
+    encodedPath: encodeURIComponent(values.sourcePath),
+    file: values.file,
+    line: values.line ? String(values.line) : "",
+    path: values.sourcePath,
+    sourceRoot: values.sourceRoot ?? "",
+    uriPath: encodePathForFileScheme(values.sourcePath)
+  };
+  return template.replace(
+    /\{([a-zA-Z]+)\}/g,
+    (_, key) => replacements[key] ?? ""
+  );
+}
+function getEventElement(target) {
+  if (!target || typeof target !== "object") return null;
+  const node = target;
+  if (node.nodeType === 1 && typeof node.closest === "function") {
+    return node;
+  }
+  if (node.parentElement && typeof node.parentElement.closest === "function") {
+    return node.parentElement;
+  }
+  return null;
+}
+function getSourcePath(file, sourceRoot) {
+  const normalizedFile = file.replace(/\\/g, "/");
+  if (normalizedFile.startsWith("/") || /^[a-zA-Z]:\//.test(normalizedFile)) {
+    return normalizedFile;
+  }
+  const normalizedRoot = sourceRoot?.trim().replace(/\\/g, "/").replace(/\/+$/, "");
+  if (!normalizedRoot) return null;
+  return `${normalizedRoot}/${normalizedFile.replace(/^\/+/, "")}`;
+}
+function getSourcePosition(value) {
+  const position = Number(value);
+  return Number.isInteger(position) && position > 0 ? position : null;
+}
+function encodePathForFileScheme(path) {
+  return encodeURI(path).replace(
+    /[#?]/g,
+    (match) => match === "#" ? "%23" : "%3F"
+  );
+}
+
+// src/react-shell/section.outline.ts
+var SECTION_OUTLINE_ROOT_SELECTOR = [
+  "[data-wrk-source-component]",
+  "header[data-wrk-source-file]",
+  "footer[data-wrk-source-file]",
+  '[role="banner"][data-wrk-source-file]',
+  '[role="contentinfo"][data-wrk-source-file]'
+].join(", ");
 var getSectionOutline = (root, options) => {
   const maxDepth = options?.maxDepth ?? 9;
   return getSectionOutlineRoots(root, options).map((element, index) => {
@@ -6732,23 +6803,6 @@ function getMediaElementUrl(img) {
 function getOutlineSourceKey(source) {
   return getSourceFileCompareKey(source.file);
 }
-function getSourceFileCompareKey(file) {
-  return file?.trim().replace(/\\/g, "/") ?? "";
-}
-function addSourceFileCompareKey(seen, key) {
-  if (!key || hasEquivalentSourceFileKey(seen, key)) return false;
-  seen.add(key);
-  return true;
-}
-function hasEquivalentSourceFileKey(seen, key) {
-  for (const seenKey of seen) {
-    if (isEquivalentSourceFileKey(seenKey, key)) return true;
-  }
-  return false;
-}
-function isEquivalentSourceFileKey(a, b) {
-  return a === b || a.endsWith(`/${b}`) || b.endsWith(`/${a}`);
-}
 function getOutlineLabel(element, source, fallback) {
   return source?.component?.trim() || getComponentNameFromSourceFile(source?.file) || element.id.trim() || fallback;
 }
@@ -6763,202 +6817,740 @@ function shouldStopOutlineBranch(label, file, options) {
 function isSkippedOutlineNode(label, file, options) {
   return shouldStopOutlineBranch(label, file, options) || isHiddenOutlineNode(label, file, options);
 }
-function isCoreOutlineNode(label, file) {
-  const text = `${label} ${file ?? ""}`.toLowerCase();
-  return text.includes("core.section") || text.includes("core.content") || text.includes("core.column") || ["coresection", "corecontent", "corecolumn"].includes(label.toLowerCase());
-}
 function isPlacerOutlineNode(label, file) {
   return `${label} ${file ?? ""}`.toLowerCase().includes("placer");
 }
-var getSourceOpenUrl = (source, options) => {
-  const normalizedOptions = normalizeSourceOpenOptions(options);
-  const file = source?.file?.trim();
-  if (!file) return null;
-  const sourcePath = getSourcePath(file, normalizedOptions.sourceRoot);
-  if (!sourcePath) return null;
-  const hasPosition = !normalizedOptions.omitPosition;
-  const line = hasPosition ? getSourcePosition(source?.line) : null;
-  const column = hasPosition ? getSourcePosition(source?.column) : null;
-  const editor = normalizedOptions.editor ?? "vscode";
-  if (normalizedOptions.urlTemplate) {
-    return buildSourceUrlFromTemplate(normalizedOptions.urlTemplate, {
-      column,
-      file,
-      line,
-      sourcePath,
-      sourceRoot: normalizedOptions.sourceRoot
+
+// src/core/geometry.ts
+function rectanglesIntersect(a, b) {
+  return a.left < b.left + b.width && a.left + a.width > b.left && a.top < b.top + b.height && a.top + a.height > b.top;
+}
+function getPointSelection(point) {
+  return {
+    left: point.x,
+    top: point.y,
+    width: 1,
+    height: 1
+  };
+}
+function toViewportSelection(selection) {
+  return {
+    left: selection.x,
+    top: selection.y,
+    width: selection.width,
+    height: selection.height
+  };
+}
+function toPublicSelection(selection) {
+  return {
+    x: Math.round(selection.left),
+    y: Math.round(selection.top),
+    width: Math.round(selection.width),
+    height: Math.round(selection.height)
+  };
+}
+function getSelectionCenter(selection) {
+  if ("left" in selection) {
+    return {
+      x: selection.left + selection.width / 2,
+      y: selection.top + selection.height / 2
+    };
+  }
+  return {
+    x: selection.x + selection.width / 2,
+    y: selection.y + selection.height / 2
+  };
+}
+function isRelativeSelection(value) {
+  if (!value || typeof value !== "object") return false;
+  const selection = value;
+  return typeof selection.x === "number" && typeof selection.y === "number" && typeof selection.width === "number" && typeof selection.height === "number";
+}
+function getViewportSize(environment) {
+  const targetWindow = environment?.window ?? window;
+  return {
+    width: targetWindow.innerWidth,
+    height: targetWindow.innerHeight
+  };
+}
+function isPointInViewport(point, environment) {
+  const viewport = getViewportSize(environment);
+  return point.x >= 0 && point.y >= 0 && point.x <= viewport.width && point.y <= viewport.height;
+}
+function isSelectionInViewport(selection, environment) {
+  const viewport = getViewportSize(environment);
+  return rectanglesIntersect(selection, {
+    left: 0,
+    top: 0,
+    width: viewport.width,
+    height: viewport.height
+  });
+}
+function clampPoint(point, environment) {
+  const viewport = getViewportSize(environment);
+  return {
+    x: clamp(point.x, 0, viewport.width),
+    y: clamp(point.y, 0, viewport.height)
+  };
+}
+function getPopoverPosition(point, environment, options) {
+  const bounds = getPopoverBounds(environment);
+  const margin = 12;
+  const width = Math.min(
+    options?.width ?? 320,
+    Math.max(240, bounds.width - margin * 2)
+  );
+  const estimatedHeight = options?.estimatedHeight ?? 178;
+  const offset = options?.offset ?? 12;
+  return {
+    left: clamp(
+      point.x + offset,
+      bounds.left + margin,
+      bounds.left + bounds.width - width - margin
+    ),
+    top: clamp(
+      point.y + offset,
+      bounds.top + margin,
+      bounds.top + bounds.height - estimatedHeight - margin
+    )
+  };
+}
+function getPopoverBounds(environment) {
+  if (!environment) {
+    return {
+      left: 0,
+      top: 0,
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+  }
+  return environment.overlayRect;
+}
+function toHostPoint(point, environment) {
+  if (!environment) return point;
+  return {
+    x: point.x + environment.viewportRect.left,
+    y: point.y + environment.viewportRect.top
+  };
+}
+function toHostSelection(selection, environment) {
+  return {
+    left: selection.left + environment.viewportRect.left,
+    top: selection.top + environment.viewportRect.top,
+    width: selection.width,
+    height: selection.height
+  };
+}
+function toTargetPoint(point, environment) {
+  if (!environment) return point;
+  return {
+    x: point.x - environment.viewportRect.left,
+    y: point.y - environment.viewportRect.top
+  };
+}
+function toTargetPointFromHostEvent(event, environment) {
+  return toTargetPoint(
+    {
+      x: event.clientX,
+      y: event.clientY
+    },
+    environment
+  );
+}
+function placeLayerOverTarget(layer, environment) {
+  layer.style.left = `${environment.viewportRect.left}px`;
+  layer.style.top = `${environment.viewportRect.top}px`;
+  layer.style.width = `${environment.viewportRect.width}px`;
+  layer.style.height = `${environment.viewportRect.height}px`;
+  layer.style.right = "auto";
+  layer.style.bottom = "auto";
+}
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+function roundRatio(value) {
+  return Math.round(value * 1e4) / 1e4;
+}
+function roundPoint(point) {
+  return {
+    x: Math.round(point.x),
+    y: Math.round(point.y)
+  };
+}
+
+// src/core/scroll.ts
+function waitForNextFrame(environment) {
+  return new Promise((resolve) => {
+    (environment?.window ?? window).requestAnimationFrame(() => resolve());
+  });
+}
+function runWithAutoScrollBehavior(targetDocument, callback) {
+  const elements = [
+    targetDocument.documentElement,
+    targetDocument.body
+  ].filter((element) => Boolean(element));
+  const previousValues = elements.map((element) => element.style.scrollBehavior);
+  elements.forEach((element) => {
+    element.style.scrollBehavior = "auto";
+  });
+  try {
+    callback();
+  } finally {
+    elements.forEach((element, index) => {
+      element.style.scrollBehavior = previousValues[index] ?? "";
     });
   }
-  if (editor === "webstorm") {
-    const params = new URLSearchParams({ file: sourcePath });
-    if (line) params.set("line", String(line));
-    if (column) params.set("column", String(column));
-    return `webstorm://open?${params.toString()}`;
+}
+function setDocumentScrollInstantly2(environment, position) {
+  const scrollElement = environment.document.scrollingElement;
+  if (scrollElement) {
+    scrollElement.scrollLeft = Math.max(0, Math.round(position.x));
+    scrollElement.scrollTop = Math.max(0, Math.round(position.y));
+    return;
   }
-  if (editor === "custom") return null;
-  const encodedPath = encodePathForFileScheme(sourcePath);
-  const scheme = editor === "cursor" ? "cursor" : "vscode";
-  if (!line) return `${scheme}://file/${encodedPath}`;
-  if (!column) return `${scheme}://file/${encodedPath}:${line}`;
-  return `${scheme}://file/${encodedPath}:${line}:${column}`;
-};
-var openSourceInEditor = (source, options) => {
-  const url = getSourceOpenUrl(source, options);
-  if (!url) return false;
-  window.open(url, "_blank", "noreferrer");
-  return true;
-};
-function getDataHintFromElement(element) {
-  const file = getSourceAttribute(element, "data-wrk-data-file");
-  if (!file) return void 0;
-  return {
-    component: void 0,
-    file,
-    line: getSourceAttribute(element, "data-wrk-data-line"),
-    column: void 0,
-    sectionId: void 0,
-    sectionIndex: void 0
-  };
-}
-function getSourceHintFromElement(element) {
-  const source = {
-    component: getSourceAttribute(
-      element,
-      "data-wrk-source-component",
-      "data-component"
-    ),
-    file: getSourceAttribute(element, "data-wrk-source-file", "data-file"),
-    line: getSourceAttribute(element, "data-wrk-source-line"),
-    column: getSourceAttribute(element, "data-wrk-source-column"),
-    sectionId: getSourceAttribute(element, "data-section-id"),
-    sectionIndex: getSourceAttribute(element, "data-section-index")
-  };
-  return Object.values(source).some(Boolean) ? source : void 0;
-}
-function createSourceCandidate(element, source, depth, kind) {
-  const confidence = getSourceConfidence(source, depth);
-  const fileName = source.file?.split(/[\\/]/).pop() ?? source.file ?? "source";
-  const component = source.component?.trim();
-  const fallbackComponent = getComponentNameFromSourceFile(source.file);
-  const tag = element.tagName.toLowerCase();
-  const line = getSourcePosition(source.line);
-  const column = getSourcePosition(source.column);
-  const position = line ? `:${line}${column ? `:${column}` : ""}` : "";
-  return {
-    id: `${kind}:${getSourceCandidateKey(source)}`,
-    depth,
-    element,
-    filePath: getDisplaySourcePath(source.file) ?? fileName,
-    label: component || fallbackComponent || tag,
-    detail: `${fileName}${position}`,
-    positionLabel: line ? `${line}:${column ?? 1}` : "",
-    confidence,
-    confidenceLabel: confidence >= 0.82 ? "high" : confidence >= 0.58 ? "medium" : "low",
-    kind,
-    usesPosition: confidence >= 0.72 && Boolean(line),
-    source
-  };
-}
-function getComponentNameFromSourceFile(file) {
-  const normalizedFile = file?.trim().replace(/\\/g, "/");
-  if (!normalizedFile) return void 0;
-  const pathParts = normalizedFile.split("/").filter(Boolean);
-  const fileName = pathParts[pathParts.length - 1];
-  if (!fileName) return void 0;
-  const stem = fileName.replace(/\.[^.]+$/, "");
-  const sourceName = stem.toLowerCase() === "index" ? pathParts[pathParts.length - 2]?.replace(/\.[^.]+$/, "") : stem;
-  return toPascalCase2(sourceName);
-}
-function toPascalCase2(value) {
-  const words = value?.split(/[._\-\s]+/).map((part) => part.trim()).filter(Boolean);
-  if (!words?.length) return void 0;
-  return words.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`).join("");
-}
-function getDisplaySourcePath(file) {
-  const normalizedFile = file?.trim().replace(/\\/g, "/");
-  if (!normalizedFile) return void 0;
-  const sourceRootMatch = normalizedFile.match(
-    /(?:^|\/)((?:dev\/)?src\/.+|app\/.+|pages?\/.+|components\/.+)$/
-  );
-  return sourceRootMatch?.[1] ?? normalizedFile;
-}
-function getSourceCandidateKey(source) {
-  return [
-    source.file,
-    source.component,
-    source.line,
-    source.column,
-    source.sectionId,
-    source.sectionIndex
-  ].filter(Boolean).join("|");
-}
-function getSourceConfidence(source, depth) {
-  let score = source.file ? 0.54 : 0.12;
-  if (source.component) score += 0.12;
-  if (getSourcePosition(source.line)) score += 0.22;
-  if (getSourcePosition(source.column)) score += 0.08;
-  if (source.sectionId || source.sectionIndex) score += 0.04;
-  score -= Math.min(depth, 5) * 0.045;
-  return Math.max(0.1, Math.min(1, Number(score.toFixed(2))));
-}
-function normalizeSourceOpenOptions(options) {
-  return typeof options === "string" ? { sourceRoot: options } : options ?? {};
-}
-function buildSourceUrlFromTemplate(template, values) {
-  const replacements = {
-    column: values.column ? String(values.column) : "",
-    encodedPath: encodeURIComponent(values.sourcePath),
-    file: values.file,
-    line: values.line ? String(values.line) : "",
-    path: values.sourcePath,
-    sourceRoot: values.sourceRoot ?? "",
-    uriPath: encodePathForFileScheme(values.sourcePath)
-  };
-  return template.replace(
-    /\{([a-zA-Z]+)\}/g,
-    (_, key) => replacements[key] ?? ""
-  );
-}
-function getSourceAttribute(element, ...names) {
-  for (const name of names) {
-    const value = element.getAttribute(name)?.trim();
-    if (value) return value;
-  }
-  return void 0;
-}
-function getEventElement(target) {
-  if (!target || typeof target !== "object") return null;
-  const node = target;
-  if (node.nodeType === 1 && typeof node.closest === "function") {
-    return node;
-  }
-  if (node.parentElement && typeof node.parentElement.closest === "function") {
-    return node.parentElement;
-  }
-  return null;
-}
-function getSourcePath(file, sourceRoot) {
-  const normalizedFile = file.replace(/\\/g, "/");
-  if (normalizedFile.startsWith("/") || /^[a-zA-Z]:\//.test(normalizedFile)) {
-    return normalizedFile;
-  }
-  const normalizedRoot = sourceRoot?.trim().replace(/\\/g, "/").replace(/\/+$/, "");
-  if (!normalizedRoot) return null;
-  return `${normalizedRoot}/${normalizedFile.replace(/^\/+/, "")}`;
-}
-function getSourcePosition(value) {
-  const position = Number(value);
-  return Number.isInteger(position) && position > 0 ? position : null;
-}
-function encodePathForFileScheme(path) {
-  return encodeURI(path).replace(
-    /[#?]/g,
-    (match) => match === "#" ? "%23" : "%3F"
+  environment.window.scrollTo(
+    Math.max(0, Math.round(position.x)),
+    Math.max(0, Math.round(position.y))
   );
 }
 
-// src/react-shell/review/mode.toolbar.tsx
+// src/react-shell/review/shell.helpers.ts
+var getReviewModeWriteMode = (mode) => {
+  if (mode === "element") return "dom";
+  if (mode === "note" || mode === "area") return mode;
+  return null;
+};
+var waitForFrame = (targetWindow) => new Promise((resolve) => {
+  (targetWindow ?? window).requestAnimationFrame(() => resolve());
+});
+var waitForMs = (ms) => new Promise((resolve) => {
+  window.setTimeout(resolve, ms);
+});
+var getScrollElement = (targetDocument) => targetDocument.scrollingElement;
+var scrollElementInTarget = (element, block) => {
+  const targetWindow = element.ownerDocument.defaultView;
+  if (!targetWindow) return;
+  const targetDocument = element.ownerDocument;
+  const scrollElement = getScrollElement(targetDocument);
+  const rect = element.getBoundingClientRect();
+  const currentLeft = scrollElement?.scrollLeft ?? targetWindow.scrollX;
+  const currentTop = scrollElement?.scrollTop ?? targetWindow.scrollY;
+  const clientWidth = scrollElement?.clientWidth ?? targetWindow.innerWidth;
+  const clientHeight = scrollElement?.clientHeight ?? targetWindow.innerHeight;
+  const scrollWidth = scrollElement?.scrollWidth ?? targetDocument.documentElement.scrollWidth;
+  const scrollHeight = scrollElement?.scrollHeight ?? targetDocument.documentElement.scrollHeight;
+  const nextLeft = clamp(
+    currentLeft + rect.left + rect.width / 2 - clientWidth / 2,
+    0,
+    Math.max(0, scrollWidth - clientWidth)
+  );
+  const nextTop = block === "center" ? clamp(
+    currentTop + rect.top + rect.height / 2 - clientHeight / 2,
+    0,
+    Math.max(0, scrollHeight - clientHeight)
+  ) : clamp(
+    currentTop + rect.top,
+    0,
+    Math.max(0, scrollHeight - clientHeight)
+  );
+  runWithAutoScrollBehavior(targetDocument, () => {
+    if (scrollElement) {
+      scrollElement.scrollLeft = Math.round(nextLeft);
+      scrollElement.scrollTop = Math.round(nextTop);
+      return;
+    }
+    targetWindow.scrollTo(Math.round(nextLeft), Math.round(nextTop));
+  });
+};
+var centerFrameScrollOnElement = (frameScroll, frame, element) => {
+  if (!frameScroll || !frame) return;
+  const frameScrollRect = frameScroll.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+  const elementHostCenterX = frameRect.left + elementRect.left + elementRect.width / 2;
+  const elementHostCenterY = frameRect.top + elementRect.top + elementRect.height / 2;
+  const visibleCenterX = frameScrollRect.left + frameScrollRect.width / 2;
+  const visibleCenterY = frameScrollRect.top + frameScrollRect.height / 2;
+  const nextLeft = clamp(
+    frameScroll.scrollLeft + elementHostCenterX - visibleCenterX,
+    0,
+    Math.max(0, frameScroll.scrollWidth - frameScroll.clientWidth)
+  );
+  const nextTop = clamp(
+    frameScroll.scrollTop + elementHostCenterY - visibleCenterY,
+    0,
+    Math.max(0, frameScroll.scrollHeight - frameScroll.clientHeight)
+  );
+  const previousScrollBehavior = frameScroll.style.scrollBehavior;
+  frameScroll.style.scrollBehavior = "auto";
+  frameScroll.scrollLeft = Math.round(nextLeft);
+  frameScroll.scrollTop = Math.round(nextTop);
+  frameScroll.style.scrollBehavior = previousScrollBehavior;
+};
+var getSectionOutlineFilterTerms = (value) => value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+var getSectionOutlineEntryCount = (entries) => entries.reduce(
+  (count, entry) => count + 1 + getSectionOutlineEntryCount(entry.children),
+  0
+);
+var getDefaultCollapsedSectionOutlineIds = (entries) => {
+  const collapsedIds = /* @__PURE__ */ new Set();
+  const visit = (entry) => {
+    if (entry.children.length > 0) {
+      collapsedIds.add(entry.id);
+    }
+    entry.children.forEach(visit);
+  };
+  entries.forEach(visit);
+  return collapsedIds;
+};
+var getLiveSectionOutlineRect = (entry) => {
+  if (!entry.element.isConnected) return entry.metadata.rect;
+  const rect = entry.element.getBoundingClientRect();
+  return {
+    top: Math.round(rect.top),
+    left: Math.round(rect.left),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height)
+  };
+};
+var matchesSectionOutlineFilter = (entry, terms) => {
+  if (terms.length === 0) return true;
+  const text = [
+    entry.label,
+    entry.filePath,
+    entry.source?.file,
+    entry.data?.file,
+    entry.metadata.textValue,
+    entry.metadata.fontLabel,
+    entry.metadata.mediaItems?.map((mediaItem) => `${mediaItem.variant} ${mediaItem.type} ${mediaItem.url}`).join(" "),
+    entry.metadata.classNames?.join(" ")
+  ].filter(Boolean).join(" ").toLowerCase();
+  return terms.every((term) => text.includes(term));
+};
+var filterSectionOutlineEntries = (entries, terms) => {
+  if (terms.length === 0) return entries;
+  return entries.flatMap((entry) => {
+    const children = filterSectionOutlineEntries(entry.children, terms);
+    if (!matchesSectionOutlineFilter(entry, terms) && children.length === 0) {
+      return [];
+    }
+    return [{ ...entry, children }];
+  });
+};
+
+// src/react-shell/review/section.outline.panel.tsx
 var import_jsx_runtime12 = require("react/jsx-runtime");
+var SectionOutlinePanel = ({
+  isPanelVisible,
+  isFiltering,
+  filteredCount,
+  totalCount,
+  rootCount,
+  filter,
+  entries,
+  collapsedIds,
+  canWriteDom,
+  isBoxMetaVisible,
+  isFontMetaVisible,
+  isMediaMetaVisible,
+  isClassMetaVisible,
+  onToggleMeta,
+  onFilterChange,
+  onToggleEntry,
+  onScrollToSection,
+  onOpenData,
+  onOpenSource,
+  onStartDomReview,
+  onHoverElement,
+  onClearHover
+}) => {
+  const renderMeta = (entry) => {
+    const { metadata } = entry;
+    const rows = [];
+    const metaPaddingLeft = Math.max(0, entry.depth - 1) * 12 + 29;
+    const rect = getLiveSectionOutlineRect(entry);
+    if (isBoxMetaVisible) {
+      rows.push(
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("b", { children: "box" }),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("code", { children: [
+            "top ",
+            rect.top,
+            " / left ",
+            rect.left,
+            " / width ",
+            rect.width,
+            " / height",
+            " ",
+            rect.height
+          ] })
+        ] }, "box")
+      );
+    }
+    if (metadata.textValue) {
+      rows.push(
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+          "span",
+          {
+            className: "df-review-section-outline-meta-row is-text",
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("b", { children: "text" }),
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("code", { children: metadata.textValue })
+            ]
+          },
+          "text"
+        )
+      );
+    }
+    if (isFontMetaVisible && metadata.fontLabel) {
+      rows.push(
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("b", { children: "font" }),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("code", { children: metadata.fontLabel })
+        ] }, "font")
+      );
+    }
+    if (isMediaMetaVisible && metadata.mediaItems?.length) {
+      metadata.mediaItems.forEach((mediaItem) => {
+        const mediaKey = `${mediaItem.variant}:${mediaItem.type}:${mediaItem.url}`;
+        const mediaLabel = mediaItem.variant === "media" ? mediaItem.type : mediaItem.variant;
+        rows.push(
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+            "span",
+            {
+              className: "df-review-section-outline-meta-row is-media",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("b", { children: mediaLabel }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                  "a",
+                  {
+                    className: "df-review-section-outline-media-link",
+                    href: mediaItem.url,
+                    rel: "noopener noreferrer",
+                    target: "_blank",
+                    title: `${mediaLabel} ${mediaItem.type}`,
+                    children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("code", { children: mediaItem.url })
+                  }
+                )
+              ]
+            },
+            mediaKey
+          )
+        );
+      });
+    }
+    if (isClassMetaVisible && metadata.classNames?.length) {
+      rows.push(
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { className: "df-review-section-outline-meta-row is-class", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("b", { children: "class" }),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("code", { children: className }, className)) })
+        ] }, "class")
+      );
+    }
+    if (rows.length === 0) return null;
+    return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+      "div",
+      {
+        className: "df-review-section-outline-meta",
+        style: { paddingLeft: `${metaPaddingLeft}px` },
+        children: rows
+      }
+    );
+  };
+  const renderEntry = (entry) => {
+    const hasChildren = entry.children.length > 0;
+    const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
+    return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+      "div",
+      {
+        className: `df-review-section-outline-item is-depth-${entry.depth}`,
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+            "div",
+            {
+              className: "df-review-section-outline-entry-body",
+              onMouseEnter: () => onHoverElement(entry.element),
+              onMouseLeave: onClearHover,
+              onMouseOver: () => onHoverElement(entry.element),
+              onMouseOut: (event) => {
+                if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) {
+                  return;
+                }
+                onClearHover();
+              },
+              onPointerEnter: () => onHoverElement(entry.element),
+              onPointerLeave: onClearHover,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+                  "div",
+                  {
+                    className: "df-review-section-outline-row",
+                    style: { paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` },
+                    children: [
+                      hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                        "button",
+                        {
+                          "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
+                          "aria-expanded": !isCollapsed,
+                          className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
+                          type: "button",
+                          onClick: () => onToggleEntry(entry.id),
+                          children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(ChevronDown, { "aria-hidden": "true" })
+                        }
+                      ) : /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                        "span",
+                        {
+                          "aria-hidden": "true",
+                          className: "df-review-section-outline-toggle is-placeholder"
+                        }
+                      ),
+                      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+                        "button",
+                        {
+                          className: "df-review-section-outline-name",
+                          title: entry.filePath,
+                          type: "button",
+                          onClick: () => onScrollToSection(entry),
+                          children: [
+                            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: entry.label }),
+                            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("small", { children: entry.filePath })
+                          ]
+                        }
+                      ),
+                      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { className: "df-review-section-outline-links", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                          "button",
+                          {
+                            "aria-label": `Open ${entry.label} data`,
+                            className: "df-review-section-outline-link",
+                            title: "Open data",
+                            type: "button",
+                            disabled: !entry.data?.file,
+                            onClick: () => onOpenData(entry),
+                            children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(Database, { "aria-hidden": "true" })
+                          }
+                        ),
+                        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                          "button",
+                          {
+                            "aria-label": `Open ${entry.label} source`,
+                            className: "df-review-section-outline-link",
+                            title: "Open source",
+                            type: "button",
+                            disabled: !entry.source?.file,
+                            onClick: () => onOpenSource(entry),
+                            children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(CodeXml, { "aria-hidden": "true" })
+                          }
+                        ),
+                        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                          "span",
+                          {
+                            "aria-hidden": "true",
+                            className: "df-review-section-outline-divider",
+                            children: "|"
+                          }
+                        ),
+                        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                          "button",
+                          {
+                            "aria-label": `Start DOM QA for ${entry.label}`,
+                            className: "df-review-section-outline-link is-dom-select",
+                            title: "DOM select",
+                            type: "button",
+                            disabled: !canWriteDom,
+                            onClick: () => onStartDomReview(entry),
+                            children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SquareMousePointer, { "aria-hidden": "true" })
+                          }
+                        )
+                      ] })
+                    ]
+                  }
+                ),
+                renderMeta(entry)
+              ]
+            }
+          ),
+          hasChildren && !isCollapsed && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "df-review-section-outline-children", children: entry.children.map(renderEntry) })
+        ]
+      },
+      entry.id
+    );
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+    "aside",
+    {
+      className: "df-review-source-tree-panel",
+      "aria-hidden": !isPanelVisible,
+      children: /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "df-review-section-outline-head", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "df-review-section-outline-summary", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("strong", { children: "Component" }),
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("small", { children: isFiltering ? `${filteredCount} / ${totalCount} results` : `${rootCount} ${rootCount === 1 ? "root" : "roots"}` })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "df-review-section-outline-meta-controls", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                "button",
+                {
+                  "aria-label": "Toggle source tree box metadata",
+                  "aria-pressed": isBoxMetaVisible,
+                  className: `df-review-section-outline-meta-toggle${isBoxMetaVisible ? " is-active" : ""}`,
+                  title: "top / left / width / height",
+                  type: "button",
+                  onClick: () => onToggleMeta("box"),
+                  children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SquareDashed, { "aria-hidden": "true" })
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                "button",
+                {
+                  "aria-label": "Toggle source tree font metadata",
+                  "aria-pressed": isFontMetaVisible,
+                  className: `df-review-section-outline-meta-toggle${isFontMetaVisible ? " is-active" : ""}`,
+                  title: "font size / weight",
+                  type: "button",
+                  onClick: () => onToggleMeta("font"),
+                  children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(Type, { "aria-hidden": "true" })
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                "button",
+                {
+                  "aria-label": "Toggle source tree media metadata",
+                  "aria-pressed": isMediaMetaVisible,
+                  className: `df-review-section-outline-meta-toggle${isMediaMetaVisible ? " is-active" : ""}`,
+                  title: "media urls",
+                  type: "button",
+                  onClick: () => onToggleMeta("media"),
+                  children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(Image, { "aria-hidden": "true" })
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                "button",
+                {
+                  "aria-label": "Toggle source tree class metadata",
+                  "aria-pressed": isClassMetaVisible,
+                  className: `df-review-section-outline-meta-toggle${isClassMetaVisible ? " is-active" : ""}`,
+                  title: "class names",
+                  type: "button",
+                  onClick: () => onToggleMeta("className"),
+                  children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(CodeXml, { "aria-hidden": "true" })
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "df-review-section-outline-filter", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(Search, { "aria-hidden": "true" }),
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+              "input",
+              {
+                "aria-label": "Filter source tree",
+                type: "text",
+                value: filter,
+                placeholder: "Filter",
+                autoComplete: "off",
+                enterKeyHint: "search",
+                spellCheck: false,
+                onChange: (event) => onFilterChange(event.currentTarget.value)
+              }
+            ),
+            filter && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+              "button",
+              {
+                "aria-label": "Clear source tree filter",
+                className: "df-review-section-outline-filter-clear",
+                type: "button",
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: () => onFilterChange(""),
+                children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(X, { "aria-hidden": "true" })
+              }
+            )
+          ] })
+        ] }),
+        entries.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "df-review-section-outline-list", children: entries.map(renderEntry) }) : /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "df-review-section-outline-empty", children: isFiltering ? "No source matches" : "No sections found" })
+      ] })
+    }
+  );
+};
+
+// src/react-shell/review/source.inspector.overlay.tsx
+var import_jsx_runtime13 = require("react/jsx-runtime");
+var SourceInspectorOverlay = ({
+  state,
+  interactionRef,
+  onClear,
+  onOpenCandidate
+}) => {
+  if (!state) return null;
+  return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(import_jsx_runtime13.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+      "div",
+      {
+        className: `df-review-source-outline${state.isPinned ? " is-pinned" : ""}`,
+        style: {
+          height: `${state.rect.height}px`,
+          left: `${state.rect.left}px`,
+          top: `${state.rect.top}px`,
+          width: `${state.rect.width}px`
+        }
+      }
+    ),
+    state.candidates.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+      "div",
+      {
+        className: `df-review-source-popover${state.isPinned ? " is-pinned" : ""}`,
+        style: {
+          left: state.panelRight === null ? `${state.panelLeft}px` : void 0,
+          maxWidth: `${state.panelMaxWidth}px`,
+          right: state.panelRight === null ? void 0 : `${state.panelRight}px`,
+          top: `${state.panelTop}px`
+        },
+        onPointerDown: () => {
+          interactionRef.current = true;
+        },
+        onPointerEnter: () => {
+          interactionRef.current = true;
+        },
+        onPointerLeave: () => {
+          interactionRef.current = false;
+        },
+        onClick: (event) => event.stopPropagation(),
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+            "button",
+            {
+              "aria-label": "Close source candidates",
+              type: "button",
+              onClick: onClear,
+              children: "\xD7"
+            }
+          ) }),
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+            "button",
+            {
+              className: `df-review-source-candidate is-${candidate.kind}`,
+              type: "button",
+              onClick: (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onOpenCandidate(candidate);
+              },
+              children: /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "df-review-source-candidate-main", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("strong", { children: candidate.label }),
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: candidate.filePath }),
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("small", { children: candidate.positionLabel || "-:-" })
+              ] })
+            },
+            candidate.id
+          )) })
+        ]
+      }
+    )
+  ] });
+};
+
+// src/react-shell/review/mode.toolbar.tsx
+var import_jsx_runtime14 = require("react/jsx-runtime");
 var ReviewModeToolbar = ({
   canWriteArea,
   canWriteDom,
@@ -6966,33 +7558,33 @@ var ReviewModeToolbar = ({
   onSetReviewMode
 }) => {
   if (!canWriteDom && !canWriteArea) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
-    canWriteDom && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
+    canWriteDom && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
       "button",
       {
         "aria-label": "Element",
         className: `df-review-mode-button is-element${mode === "element" ? " is-active" : ""}`,
         type: "button",
         onClick: () => onSetReviewMode("element"),
-        children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SquareMousePointer, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(SquareMousePointer, { "aria-hidden": "true" })
       }
     ),
-    canWriteDom && canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
-    canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+    canWriteDom && canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
+    canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
       "button",
       {
         "aria-label": "Area",
         className: `df-review-mode-button is-area${mode === "area" ? " is-active" : ""}`,
         type: "button",
         onClick: () => onSetReviewMode("area"),
-        children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(Scan, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(Scan, { "aria-hidden": "true" })
       }
     )
   ] });
 };
 
 // src/react-shell/ruler/gutters.tsx
-var import_jsx_runtime13 = require("react/jsx-runtime");
+var import_jsx_runtime15 = require("react/jsx-runtime");
 var RulerGutters = ({
   rulerHover,
   rulerScaleX,
@@ -7000,9 +7592,9 @@ var RulerGutters = ({
   rulerUnit,
   size
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(import_jsx_runtime13.Fragment, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
-    /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(import_jsx_runtime15.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
       "div",
       {
         className: "df-review-ruler-gutter is-x",
@@ -7010,15 +7602,15 @@ var RulerGutters = ({
           "--df-review-ruler-step-x": `${rulerScaleX * 20}px`
         },
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "df-review-ruler-frame-label", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("strong", { children: size.label }),
-            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-ruler-frame-label", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { children: size.label }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { children: [
               size.designWidth,
               size.designHeight ? `x${size.designHeight}` : "",
               rulerUnit
             ] })
           ] }),
-          rulerHover && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+          rulerHover && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
             "div",
             {
               className: "df-review-ruler-coord is-x",
@@ -7029,14 +7621,14 @@ var RulerGutters = ({
         ]
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
       "div",
       {
         className: "df-review-ruler-gutter is-y",
         style: {
           "--df-review-ruler-step-y": `${rulerScaleY * 20}px`
         },
-        children: rulerHover && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+        children: rulerHover && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
           "div",
           {
             className: "df-review-ruler-coord is-y",
@@ -7050,7 +7642,7 @@ var RulerGutters = ({
 };
 
 // src/react-shell/ruler/overlay.tsx
-var import_jsx_runtime14 = require("react/jsx-runtime");
+var import_jsx_runtime16 = require("react/jsx-runtime");
 var RulerOverlay = ({
   iframeRef,
   isRulerDragging,
@@ -7060,7 +7652,7 @@ var RulerOverlay = ({
   rulerOverlayRef,
   size
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
     "div",
     {
       ref: rulerOverlayRef,
@@ -7074,8 +7666,8 @@ var RulerOverlay = ({
         );
       },
       children: [
-        rulerHover && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(import_jsx_runtime14.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        rulerHover && /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(import_jsx_runtime16.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
             "div",
             {
               className: "df-review-ruler-guide is-x",
@@ -7083,7 +7675,7 @@ var RulerOverlay = ({
               style: { top: `${rulerHover.y}px` }
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
             "div",
             {
               className: "df-review-ruler-guide is-y",
@@ -7092,8 +7684,8 @@ var RulerOverlay = ({
             }
           )
         ] }),
-        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(import_jsx_runtime14.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(import_jsx_runtime16.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
             "div",
             {
               className: "df-review-ruler-selection",
@@ -7106,7 +7698,7 @@ var RulerOverlay = ({
               }
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
             "div",
             {
               className: "df-review-ruler-label",
@@ -7130,7 +7722,7 @@ var RulerOverlay = ({
 };
 
 // src/react-shell/target/frame.tsx
-var import_jsx_runtime15 = require("react/jsx-runtime");
+var import_jsx_runtime17 = require("react/jsx-runtime");
 var ReviewTargetFrame = ({
   canWriteArea,
   canWriteDom,
@@ -7155,13 +7747,13 @@ var ReviewTargetFrame = ({
 }) => {
   const showRuler = isRulerVisible && isRulerAvailable;
   const targetHref = getTargetOpenHref(targetSrc);
-  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("main", { className: "df-review-stage", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-frame", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-target-stack", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("main", { className: "df-review-stage", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-frame", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-target-stack", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
       "div",
       {
         className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
         children: [
-          showRuler && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+          showRuler && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
             RulerGutters,
             {
               rulerHover,
@@ -7171,7 +7763,7 @@ var ReviewTargetFrame = ({
               size
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
             "div",
             {
               className: "df-review-device",
@@ -7182,7 +7774,7 @@ var ReviewTargetFrame = ({
                 minHeight: `${size.height}px`
               },
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
                   "iframe",
                   {
                     ref: iframeRef,
@@ -7194,7 +7786,7 @@ var ReviewTargetFrame = ({
                   },
                   targetSrc
                 ),
-                showRuler && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+                showRuler && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
                   RulerOverlay,
                   {
                     iframeRef,
@@ -7209,8 +7801,8 @@ var ReviewTargetFrame = ({
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "df-review-frame-link-stack", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-frame-link-stack", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
               "a",
               {
                 "aria-label": "Open target page",
@@ -7219,10 +7811,10 @@ var ReviewTargetFrame = ({
                 rel: "noreferrer",
                 target: "_blank",
                 title: "Open target page",
-                children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(ExternalLink, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(ExternalLink, { "aria-hidden": "true" })
               }
             ),
-            figmaFrameUrl && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+            figmaFrameUrl && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
               "a",
               {
                 "aria-label": "Open Figma frame",
@@ -7231,14 +7823,14 @@ var ReviewTargetFrame = ({
                 rel: "noreferrer",
                 target: "_blank",
                 title: "Open Figma frame",
-                children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(FigmaIcon, {})
+                children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(FigmaIcon, {})
               }
             )
           ] })
         ]
       }
     ) }) }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
       ReviewModeToolbar,
       {
         canWriteArea,
@@ -7254,13 +7846,13 @@ function getTargetOpenHref(targetSrc) {
   url.searchParams.delete("__dfwr_target");
   return `${url.pathname}${url.search}${url.hash}`;
 }
-var FigmaIcon = () => /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+var FigmaIcon = () => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
   "svg",
   {
     "aria-hidden": "true",
     viewBox: "0 0 24 24",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
+    children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
   }
 );
 
@@ -7356,18 +7948,18 @@ var getTargetOverlayState = (targetDocument) => ({
 });
 
 // src/react-shell/topbar.tsx
-var import_jsx_runtime16 = require("react/jsx-runtime");
+var import_jsx_runtime18 = require("react/jsx-runtime");
 var ReviewScopeIcon2 = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Monitor, { "aria-hidden": "true" });
+  if (scope === "mobile") return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(Monitor, { "aria-hidden": "true" });
 };
 var ViewportPresetIcon = ({
   preset
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
+  return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
 };
 var getPresetSelectValue = (preset) => `${preset.label}:${preset.width}x${preset.height}`;
 var ReviewTopbar = ({
@@ -7395,8 +7987,8 @@ var ReviewTopbar = ({
     );
     if (nextPreset) onSizeChange(nextPreset);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("header", { className: "df-review-topbar", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("header", { className: "df-review-topbar", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
       "form",
       {
         className: "df-review-address",
@@ -7405,17 +7997,17 @@ var ReviewTopbar = ({
           onApplyTarget();
         },
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
             "button",
             {
               "aria-label": "Open sitemap",
               className: "df-review-sitemap-button",
               type: "button",
               onClick: onOpenSitemap,
-              children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Map2, { "aria-hidden": "true" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(Map2, { "aria-hidden": "true" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
             "input",
             {
               "aria-label": "Path",
@@ -7423,39 +8015,39 @@ var ReviewTopbar = ({
               onChange: (event) => onDraftTargetChange(event.target.value)
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "df-review-address-actions", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-address-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
               "button",
               {
                 "aria-label": "Refresh target",
                 className: "df-review-address-refresh",
                 title: "Refresh target",
                 type: "submit",
-                children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(RefreshCw, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(RefreshCw, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
           ] })
         ]
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "df-review-tools", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "df-review-tool-controls", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-tools", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-tool-controls", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
           "button",
           {
             className: preset.label === size.label ? "is-active" : "",
             type: "button",
             onClick: () => onSizeChange(preset),
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(ViewportPresetIcon, { preset }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("strong", { children: preset.label }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ViewportPresetIcon, { preset }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("strong", { children: preset.label }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
             ]
           },
           preset.label
         )) }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
           "select",
           {
             "aria-label": "Viewport preset",
@@ -7465,7 +8057,7 @@ var ReviewTopbar = ({
             children: viewportPresets.map((preset) => {
               const scope = getViewportPresetKind(preset);
               const count = presetScopeCounts.get(scope) ?? 0;
-              return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+              return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
                 "option",
                 {
                   value: getPresetSelectValue(preset),
@@ -7476,35 +8068,35 @@ var ReviewTopbar = ({
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { className: "df-review-active-size", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("span", { className: "df-review-active-size", children: [
           size.width,
           "x",
           size.height
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
-        isRulerAvailable && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
+        isRulerAvailable && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
           "button",
           {
             "aria-label": "Toggle ruler",
             className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
             type: "button",
             onClick: onToggleRuler,
-            children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Ruler, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(Ruler, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
           "button",
           {
             "aria-label": "Toggle grid overlay",
             className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
             type: "button",
             onClick: () => onToggleTargetOverlay("grid"),
-            children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(LayoutGrid, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(LayoutGrid, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
           "button",
           {
             "aria-disabled": !isFigmaOverlayAvailable,
@@ -7513,7 +8105,7 @@ var ReviewTopbar = ({
             disabled: !isFigmaOverlayAvailable,
             type: "button",
             onClick: () => onToggleTargetOverlay("figma"),
-            children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Image, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(Image, { "aria-hidden": "true" })
           }
         )
       ] })
@@ -7628,7 +8220,7 @@ var useReviewItemRestore = ({
       );
       if (!isCurrentRestore()) return false;
       runWithAutoScrollBehavior2(targetDocument, () => {
-        setDocumentScrollInstantly2(
+        setDocumentScrollInstantly(
           targetWindow,
           targetDocument,
           getReviewItemRestoreScrollPosition(
@@ -11710,7 +12302,7 @@ var WebReviewKitApp = class {
     const scroll = item.scroll;
     if (scroll) {
       runWithAutoScrollBehavior(environment.document, () => {
-        setDocumentScrollInstantly(environment, scroll);
+        setDocumentScrollInstantly2(environment, scroll);
       });
       await waitForNextFrame(environment);
     }
@@ -13882,133 +14474,11 @@ var removeReviewItem = async ({
 };
 
 // src/react-shell/review/shell.tsx
-var import_jsx_runtime17 = require("react/jsx-runtime");
-var getReviewModeWriteMode = (mode) => {
-  if (mode === "element") return "dom";
-  if (mode === "note" || mode === "area") return mode;
-  return null;
-};
+var import_jsx_runtime19 = require("react/jsx-runtime");
 var SOURCE_PANEL_MAX_WIDTH = 440;
 var SOURCE_PANEL_MIN_WIDTH = 240;
 var SOURCE_PANEL_MAX_HEIGHT = 260;
 var SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
-var waitForFrame = (targetWindow) => new Promise((resolve) => {
-  (targetWindow ?? window).requestAnimationFrame(() => resolve());
-});
-var waitForMs = (ms) => new Promise((resolve) => {
-  window.setTimeout(resolve, ms);
-});
-var getScrollElement = (targetDocument) => targetDocument.scrollingElement;
-var scrollElementInTarget = (element, block) => {
-  const targetWindow = element.ownerDocument.defaultView;
-  if (!targetWindow) return;
-  const targetDocument = element.ownerDocument;
-  const scrollElement = getScrollElement(targetDocument);
-  const rect = element.getBoundingClientRect();
-  const currentLeft = scrollElement?.scrollLeft ?? targetWindow.scrollX;
-  const currentTop = scrollElement?.scrollTop ?? targetWindow.scrollY;
-  const clientWidth = scrollElement?.clientWidth ?? targetWindow.innerWidth;
-  const clientHeight = scrollElement?.clientHeight ?? targetWindow.innerHeight;
-  const scrollWidth = scrollElement?.scrollWidth ?? targetDocument.documentElement.scrollWidth;
-  const scrollHeight = scrollElement?.scrollHeight ?? targetDocument.documentElement.scrollHeight;
-  const nextLeft = clamp(
-    currentLeft + rect.left + rect.width / 2 - clientWidth / 2,
-    0,
-    Math.max(0, scrollWidth - clientWidth)
-  );
-  const nextTop = block === "center" ? clamp(
-    currentTop + rect.top + rect.height / 2 - clientHeight / 2,
-    0,
-    Math.max(0, scrollHeight - clientHeight)
-  ) : clamp(
-    currentTop + rect.top,
-    0,
-    Math.max(0, scrollHeight - clientHeight)
-  );
-  runWithAutoScrollBehavior(targetDocument, () => {
-    if (scrollElement) {
-      scrollElement.scrollLeft = Math.round(nextLeft);
-      scrollElement.scrollTop = Math.round(nextTop);
-      return;
-    }
-    targetWindow.scrollTo(Math.round(nextLeft), Math.round(nextTop));
-  });
-};
-var centerFrameScrollOnElement = (frameScroll, frame, element) => {
-  if (!frameScroll || !frame) return;
-  const frameScrollRect = frameScroll.getBoundingClientRect();
-  const frameRect = frame.getBoundingClientRect();
-  const elementRect = element.getBoundingClientRect();
-  const elementHostCenterX = frameRect.left + elementRect.left + elementRect.width / 2;
-  const elementHostCenterY = frameRect.top + elementRect.top + elementRect.height / 2;
-  const visibleCenterX = frameScrollRect.left + frameScrollRect.width / 2;
-  const visibleCenterY = frameScrollRect.top + frameScrollRect.height / 2;
-  const nextLeft = clamp(
-    frameScroll.scrollLeft + elementHostCenterX - visibleCenterX,
-    0,
-    Math.max(0, frameScroll.scrollWidth - frameScroll.clientWidth)
-  );
-  const nextTop = clamp(
-    frameScroll.scrollTop + elementHostCenterY - visibleCenterY,
-    0,
-    Math.max(0, frameScroll.scrollHeight - frameScroll.clientHeight)
-  );
-  const previousScrollBehavior = frameScroll.style.scrollBehavior;
-  frameScroll.style.scrollBehavior = "auto";
-  frameScroll.scrollLeft = Math.round(nextLeft);
-  frameScroll.scrollTop = Math.round(nextTop);
-  frameScroll.style.scrollBehavior = previousScrollBehavior;
-};
-var getSectionOutlineFilterTerms = (value) => value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-var getSectionOutlineEntryCount = (entries) => entries.reduce(
-  (count, entry) => count + 1 + getSectionOutlineEntryCount(entry.children),
-  0
-);
-var getDefaultCollapsedSectionOutlineIds = (entries) => {
-  const collapsedIds = /* @__PURE__ */ new Set();
-  const visit = (entry) => {
-    if (entry.children.length > 0) {
-      collapsedIds.add(entry.id);
-    }
-    entry.children.forEach(visit);
-  };
-  entries.forEach(visit);
-  return collapsedIds;
-};
-var getLiveSectionOutlineRect = (entry) => {
-  if (!entry.element.isConnected) return entry.metadata.rect;
-  const rect = entry.element.getBoundingClientRect();
-  return {
-    top: Math.round(rect.top),
-    left: Math.round(rect.left),
-    width: Math.round(rect.width),
-    height: Math.round(rect.height)
-  };
-};
-var matchesSectionOutlineFilter = (entry, terms) => {
-  if (terms.length === 0) return true;
-  const text = [
-    entry.label,
-    entry.filePath,
-    entry.source?.file,
-    entry.data?.file,
-    entry.metadata.textValue,
-    entry.metadata.fontLabel,
-    entry.metadata.mediaItems?.map((mediaItem) => `${mediaItem.variant} ${mediaItem.type} ${mediaItem.url}`).join(" "),
-    entry.metadata.classNames?.join(" ")
-  ].filter(Boolean).join(" ").toLowerCase();
-  return terms.every((term) => text.includes(term));
-};
-var filterSectionOutlineEntries = (entries, terms) => {
-  if (terms.length === 0) return entries;
-  return entries.flatMap((entry) => {
-    const children = filterSectionOutlineEntries(entry.children, terms);
-    if (!matchesSectionOutlineFilter(entry, terms) && children.length === 0) {
-      return [];
-    }
-    return [{ ...entry, children }];
-  });
-};
 var ReviewShell = ({
   projectId,
   pages,
@@ -14092,33 +14562,39 @@ var ReviewShell = ({
   const isSectionOutlineClassMetaVisible = sectionOutlineMetaVisibility.className;
   const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = (0, import_react19.useState)(() => /* @__PURE__ */ new Set());
   const [isAllQaVisible, setIsAllQaVisible] = (0, import_react19.useState)(false);
+  const resolvedReviewSourceOptions = (0, import_react19.useMemo)(
+    () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
+    [sourceInspector, sourceRoot]
+  );
+  const resolvedSourceInspector = resolvedReviewSourceOptions.sourceInspector;
+  const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
   const sourceOpenOptions = (0, import_react19.useMemo)(
     () => ({
-      ...sourceInspector,
-      sourceRoot
+      ...resolvedSourceInspector,
+      sourceRoot: resolvedSourceRoot
     }),
-    [sourceInspector, sourceRoot]
+    [resolvedSourceInspector, resolvedSourceRoot]
   );
   const sourceCandidateOptions = (0, import_react19.useMemo)(
     () => ({
-      ignore: sourceInspector?.ignore,
-      includePlacer: sourceInspector?.includePlacer
+      ignore: resolvedSourceInspector?.ignore,
+      includePlacer: resolvedSourceInspector?.includePlacer
     }),
-    [sourceInspector]
+    [resolvedSourceInspector]
   );
   const sectionOutlineOptions = (0, import_react19.useMemo)(
     () => ({
-      includePlacer: sourceInspector?.includePlacer,
-      ignore: sourceInspector?.ignore,
-      maxDepth: sourceInspector?.maxDepth
+      includePlacer: resolvedSourceInspector?.includePlacer,
+      ignore: resolvedSourceInspector?.ignore,
+      maxDepth: resolvedSourceInspector?.maxDepth
     }),
-    [sourceInspector]
+    [resolvedSourceInspector]
   );
-  const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
+  const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
   const [sidePanel, setSidePanel] = (0, import_react19.useState)(
     () => isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa"
   );
-  const isSourceTreeHoverOutlineEnabled = sourceInspector?.hoverOutline !== false;
+  const isSourceTreeHoverOutlineEnabled = resolvedSourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === "qa";
   const isSourceTreePanelVisible = isSourceInspectorEnabled && isListVisible && sidePanel === "source";
   (0, import_react19.useEffect)(() => {
@@ -15181,220 +15657,12 @@ var ReviewShell = ({
     onRefreshReviewData: refreshReviewData2,
     onToast: showToast
   });
-  const renderSectionOutlineMeta = (entry) => {
-    const { metadata } = entry;
-    const rows = [];
-    const metaPaddingLeft = Math.max(0, entry.depth - 1) * 12 + 29;
-    const rect = getLiveSectionOutlineRect(entry);
-    if (isSectionOutlineBoxMetaVisible) {
-      rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: "box" }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("code", { children: [
-            "top ",
-            rect.top,
-            " / left ",
-            rect.left,
-            " / width ",
-            rect.width,
-            " / height",
-            " ",
-            rect.height
-          ] })
-        ] }, "box")
-      );
-    }
-    if (metadata.textValue) {
-      rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-          "span",
-          {
-            className: "df-review-section-outline-meta-row is-text",
-            children: [
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: "text" }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("code", { children: metadata.textValue })
-            ]
-          },
-          "text"
-        )
-      );
-    }
-    if (isSectionOutlineFontMetaVisible && metadata.fontLabel) {
-      rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: "font" }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("code", { children: metadata.fontLabel })
-        ] }, "font")
-      );
-    }
-    if (isSectionOutlineMediaMetaVisible && metadata.mediaItems?.length) {
-      metadata.mediaItems.forEach((mediaItem) => {
-        const mediaKey = `${mediaItem.variant}:${mediaItem.type}:${mediaItem.url}`;
-        const mediaLabel = mediaItem.variant === "media" ? mediaItem.type : mediaItem.variant;
-        rows.push(
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-            "span",
-            {
-              className: "df-review-section-outline-meta-row is-media",
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: mediaLabel }),
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                  "a",
-                  {
-                    className: "df-review-section-outline-media-link",
-                    href: mediaItem.url,
-                    rel: "noopener noreferrer",
-                    target: "_blank",
-                    title: `${mediaLabel} ${mediaItem.type}`,
-                    children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("code", { children: mediaItem.url })
-                  }
-                )
-              ]
-            },
-            mediaKey
-          )
-        );
-      });
-    }
-    if (isSectionOutlineClassMetaVisible && metadata.classNames?.length) {
-      rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-section-outline-meta-row is-class", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: "class" }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("code", { children: className }, className)) })
-        ] }, "class")
-      );
-    }
-    if (rows.length === 0) return null;
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-      "div",
-      {
-        className: "df-review-section-outline-meta",
-        style: { paddingLeft: `${metaPaddingLeft}px` },
-        children: rows
-      }
-    );
-  };
-  const renderSectionOutlineEntry = (entry) => {
-    const hasChildren = entry.children.length > 0;
-    const isCollapsed = !isSectionOutlineFiltering && collapsedSectionOutlineIds.has(entry.id);
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-      "div",
-      {
-        className: `df-review-section-outline-item is-depth-${entry.depth}`,
-        children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-            "div",
-            {
-              className: "df-review-section-outline-entry-body",
-              onMouseEnter: () => showSourceOutlineForElement(entry.element),
-              onMouseLeave: clearSourceOutlineHover,
-              onMouseOver: () => showSourceOutlineForElement(entry.element),
-              onMouseOut: (event) => {
-                if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) {
-                  return;
-                }
-                clearSourceOutlineHover();
-              },
-              onPointerEnter: () => showSourceOutlineForElement(entry.element),
-              onPointerLeave: clearSourceOutlineHover,
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-                  "div",
-                  {
-                    className: "df-review-section-outline-row",
-                    style: { paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` },
-                    children: [
-                      hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                        "button",
-                        {
-                          "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
-                          "aria-expanded": !isCollapsed,
-                          className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
-                          type: "button",
-                          onClick: () => toggleSectionOutlineEntry(entry.id),
-                          children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(ChevronDown, { "aria-hidden": "true" })
-                        }
-                      ) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                        "span",
-                        {
-                          "aria-hidden": "true",
-                          className: "df-review-section-outline-toggle is-placeholder"
-                        }
-                      ),
-                      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                        "button",
-                        {
-                          className: "df-review-section-outline-name",
-                          type: "button",
-                          onClick: () => scrollToSection(entry),
-                          children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: entry.label })
-                        }
-                      ),
-                      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-section-outline-links", children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                          "button",
-                          {
-                            "aria-label": `Open ${entry.label} data`,
-                            className: "df-review-section-outline-link",
-                            title: "Open data",
-                            type: "button",
-                            disabled: !entry.data?.file,
-                            onClick: () => openSectionData(entry),
-                            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Database, { "aria-hidden": "true" })
-                          }
-                        ),
-                        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                          "button",
-                          {
-                            "aria-label": `Open ${entry.label} source`,
-                            className: "df-review-section-outline-link",
-                            title: "Open source",
-                            type: "button",
-                            disabled: !entry.source?.file,
-                            onClick: () => openSectionSource(entry),
-                            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(CodeXml, { "aria-hidden": "true" })
-                          }
-                        ),
-                        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                          "span",
-                          {
-                            "aria-hidden": "true",
-                            className: "df-review-section-outline-divider",
-                            children: "|"
-                          }
-                        ),
-                        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                          "button",
-                          {
-                            "aria-label": `Start DOM QA for ${entry.label}`,
-                            className: "df-review-section-outline-link is-dom-select",
-                            title: "DOM select",
-                            type: "button",
-                            disabled: !canWriteDom,
-                            onClick: () => startSectionDomReview(entry),
-                            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SquareMousePointer, { "aria-hidden": "true" })
-                          }
-                        )
-                      ] })
-                    ]
-                  }
-                ),
-                renderSectionOutlineMeta(entry)
-              ]
-            }
-          ),
-          hasChildren && !isCollapsed && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-section-outline-children", children: entry.children.map(renderSectionOutlineEntry) })
-        ]
-      },
-      entry.id
-    );
-  };
-  return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
     "div",
     {
       className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
           ReviewTopbar,
           {
             draftTarget,
@@ -15415,7 +15683,7 @@ var ReviewShell = ({
             onToggleTargetOverlay: toggleTargetOverlay
           }
         ),
-        isSitemapOpen && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        isSitemapOpen && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
           SitemapModal,
           {
             pages,
@@ -15430,7 +15698,7 @@ var ReviewShell = ({
             onSelectPage: selectPage
           }
         ),
-        isFigmaSettingsOpen && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        isFigmaSettingsOpen && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
           ReviewSettingsModal,
           {
             figmaTokenDraft,
@@ -15449,7 +15717,7 @@ var ReviewShell = ({
             onSave: saveReviewSettings
           }
         ),
-        isInitialPromptOpen && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        isInitialPromptOpen && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
           PromptModal,
           {
             initialPromptText,
@@ -15458,7 +15726,7 @@ var ReviewShell = ({
             onCopyPrompt: (text, key) => void copyPrompt(text, key)
           }
         ),
-        editingItem && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        editingItem && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
           QaItemEditModal,
           {
             item: editingItem,
@@ -15466,9 +15734,9 @@ var ReviewShell = ({
             onSave: saveItemComment
           }
         ),
-        toastMessage && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-side-rail", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        toastMessage && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "df-review-side-rail", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
             "button",
             {
               "aria-label": isQaPanelVisible ? "Hide QA list" : "Show QA list",
@@ -15477,10 +15745,10 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleQaPanel,
               title: "QA",
-              children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(FileText, {}) })
+              children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(FileText, {}) })
             }
           ),
-          isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+          isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
             "button",
             {
               "aria-controls": "df-review-section-outline",
@@ -15490,11 +15758,11 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleSourceTreePanel,
               title: "Source Tree",
-              children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Workflow, {}) })
+              children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(Workflow, {}) })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-side-actions", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "df-review-side-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
               "button",
               {
                 "aria-label": "Open initial prompt",
@@ -15504,10 +15772,10 @@ var ReviewShell = ({
                   setIsInitialPromptOpen(true);
                 },
                 title: "Help",
-                children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(CircleQuestionMark, {}) })
+                children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(CircleQuestionMark, {}) })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
               "button",
               {
                 "aria-label": "Open settings",
@@ -15515,10 +15783,10 @@ var ReviewShell = ({
                 type: "button",
                 onClick: openFigmaSettings,
                 title: "Settings",
-                children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Settings, {}) })
+                children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(Settings, {}) })
               }
             ),
-            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
               PresenceOverlay,
               {
                 presenceSessionId,
@@ -15527,7 +15795,7 @@ var ReviewShell = ({
             )
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
           ReviewQaPanel,
           {
             activeAdapterEntry,
@@ -15566,102 +15834,34 @@ var ReviewShell = ({
             onToggleItemOverlayVisibility: toggleItemOverlayVisibility
           }
         ),
-        isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-          "aside",
+        isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+          SectionOutlinePanel,
           {
-            className: "df-review-source-tree-panel",
-            "aria-hidden": !isSourceTreePanelVisible,
-            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-section-outline-head", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-section-outline-summary", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { children: "Component" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("small", { children: isSectionOutlineFiltering ? `${filteredSectionOutlineCount} / ${sectionOutlineTotalCount} results` : `${sectionOutline?.length ?? 0} ${sectionOutline?.length === 1 ? "root" : "roots"}` })
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-section-outline-meta-controls", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                      "button",
-                      {
-                        "aria-label": "Toggle source tree box metadata",
-                        "aria-pressed": isSectionOutlineBoxMetaVisible,
-                        className: `df-review-section-outline-meta-toggle${isSectionOutlineBoxMetaVisible ? " is-active" : ""}`,
-                        title: "top / left / width / height",
-                        type: "button",
-                        onClick: () => updateSectionOutlineMetaVisibility("box"),
-                        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SquareDashed, { "aria-hidden": "true" })
-                      }
-                    ),
-                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                      "button",
-                      {
-                        "aria-label": "Toggle source tree font metadata",
-                        "aria-pressed": isSectionOutlineFontMetaVisible,
-                        className: `df-review-section-outline-meta-toggle${isSectionOutlineFontMetaVisible ? " is-active" : ""}`,
-                        title: "font size / weight",
-                        type: "button",
-                        onClick: () => updateSectionOutlineMetaVisibility("font"),
-                        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Type, { "aria-hidden": "true" })
-                      }
-                    ),
-                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                      "button",
-                      {
-                        "aria-label": "Toggle source tree media metadata",
-                        "aria-pressed": isSectionOutlineMediaMetaVisible,
-                        className: `df-review-section-outline-meta-toggle${isSectionOutlineMediaMetaVisible ? " is-active" : ""}`,
-                        title: "media urls",
-                        type: "button",
-                        onClick: () => updateSectionOutlineMetaVisibility("media"),
-                        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Image, { "aria-hidden": "true" })
-                      }
-                    ),
-                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                      "button",
-                      {
-                        "aria-label": "Toggle source tree class metadata",
-                        "aria-pressed": isSectionOutlineClassMetaVisible,
-                        className: `df-review-section-outline-meta-toggle${isSectionOutlineClassMetaVisible ? " is-active" : ""}`,
-                        title: "class names",
-                        type: "button",
-                        onClick: () => updateSectionOutlineMetaVisibility("className"),
-                        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(CodeXml, { "aria-hidden": "true" })
-                      }
-                    )
-                  ] })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-section-outline-filter", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Search, { "aria-hidden": "true" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                    "input",
-                    {
-                      "aria-label": "Filter source tree",
-                      type: "text",
-                      value: sectionOutlineFilter,
-                      placeholder: "Filter",
-                      autoComplete: "off",
-                      enterKeyHint: "search",
-                      spellCheck: false,
-                      onChange: (event) => updateSectionOutlineFilter(event.currentTarget.value)
-                    }
-                  ),
-                  sectionOutlineFilter && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                    "button",
-                    {
-                      "aria-label": "Clear source tree filter",
-                      className: "df-review-section-outline-filter-clear",
-                      type: "button",
-                      onMouseDown: (event) => event.preventDefault(),
-                      onClick: () => updateSectionOutlineFilter(""),
-                      children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(X, { "aria-hidden": "true" })
-                    }
-                  )
-                ] })
-              ] }),
-              filteredSectionOutline.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-section-outline-list", children: filteredSectionOutline.map(renderSectionOutlineEntry) }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-section-outline-empty", children: isSectionOutlineFiltering ? "No source matches" : "No sections found" })
-            ] })
+            isPanelVisible: isSourceTreePanelVisible,
+            isFiltering: isSectionOutlineFiltering,
+            filteredCount: filteredSectionOutlineCount,
+            totalCount: sectionOutlineTotalCount,
+            rootCount: sectionOutline?.length ?? 0,
+            filter: sectionOutlineFilter,
+            entries: filteredSectionOutline,
+            collapsedIds: collapsedSectionOutlineIds,
+            canWriteDom,
+            isBoxMetaVisible: isSectionOutlineBoxMetaVisible,
+            isFontMetaVisible: isSectionOutlineFontMetaVisible,
+            isMediaMetaVisible: isSectionOutlineMediaMetaVisible,
+            isClassMetaVisible: isSectionOutlineClassMetaVisible,
+            onToggleMeta: updateSectionOutlineMetaVisibility,
+            onFilterChange: updateSectionOutlineFilter,
+            onToggleEntry: toggleSectionOutlineEntry,
+            onScrollToSection: scrollToSection,
+            onOpenData: openSectionData,
+            onOpenSource: openSectionSource,
+            onStartDomReview: startSectionDomReview,
+            onHoverElement: showSourceOutlineForElement,
+            onClearHover: clearSourceOutlineHover
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
           ReviewTargetFrame,
           {
             canWriteArea,
@@ -15686,71 +15886,15 @@ var ReviewShell = ({
             onSetReviewMode: setReviewMode
           }
         ),
-        sourceInspectorState && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(import_jsx_runtime17.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-            "div",
-            {
-              className: `df-review-source-outline${sourceInspectorState.isPinned ? " is-pinned" : ""}`,
-              style: {
-                height: `${sourceInspectorState.rect.height}px`,
-                left: `${sourceInspectorState.rect.left}px`,
-                top: `${sourceInspectorState.rect.top}px`,
-                width: `${sourceInspectorState.rect.width}px`
-              }
-            }
-          ),
-          sourceInspectorState.candidates.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-            "div",
-            {
-              className: `df-review-source-popover${sourceInspectorState.isPinned ? " is-pinned" : ""}`,
-              style: {
-                left: sourceInspectorState.panelRight === null ? `${sourceInspectorState.panelLeft}px` : void 0,
-                maxWidth: `${sourceInspectorState.panelMaxWidth}px`,
-                right: sourceInspectorState.panelRight === null ? void 0 : `${sourceInspectorState.panelRight}px`,
-                top: `${sourceInspectorState.panelTop}px`
-              },
-              onPointerDown: () => {
-                sourceInspectorInteractionRef.current = true;
-              },
-              onPointerEnter: () => {
-                sourceInspectorInteractionRef.current = true;
-              },
-              onPointerLeave: () => {
-                sourceInspectorInteractionRef.current = false;
-              },
-              onClick: (event) => event.stopPropagation(),
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                  "button",
-                  {
-                    "aria-label": "Close source candidates",
-                    type: "button",
-                    onClick: clearSourceInspector,
-                    children: "\xD7"
-                  }
-                ) }),
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-source-candidate-list", children: sourceInspectorState.candidates.map((candidate) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                  "button",
-                  {
-                    className: `df-review-source-candidate is-${candidate.kind}`,
-                    type: "button",
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      openSourceCandidate(candidate);
-                    },
-                    children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-source-candidate-main", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { children: candidate.label }),
-                      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: candidate.filePath }),
-                      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("small", { children: candidate.positionLabel || "-:-" })
-                    ] })
-                  },
-                  candidate.id
-                )) })
-              ]
-            }
-          )
-        ] })
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+          SourceInspectorOverlay,
+          {
+            state: sourceInspectorState,
+            interactionRef: sourceInspectorInteractionRef,
+            onClear: clearSourceInspector,
+            onOpenCandidate: openSourceCandidate
+          }
+        )
       ]
     }
   );
@@ -15930,7 +16074,7 @@ var createSupabasePresenceAdapter = ({
 });
 
 // src/react-shell.tsx
-var import_jsx_runtime18 = require("react/jsx-runtime");
+var import_jsx_runtime20 = require("react/jsx-runtime");
 var mountReviewShell = (options) => {
   if (typeof document === "undefined" || !document.head) return;
   const { rootId = "root", ...shellProps } = options;
@@ -15941,7 +16085,7 @@ var mountReviewShell = (options) => {
   root.style.height = "100%";
   root.style.margin = "0";
   (0, import_client.createRoot)(root).render(
-    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(import_react20.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ReviewShell, { ...shellProps }) })
+    /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(import_react20.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(ReviewShell, { ...shellProps }) })
   );
 };
 // Annotate the CommonJS export names for ESM import in node:

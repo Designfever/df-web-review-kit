@@ -37,12 +37,16 @@ interface ReviewFigmaImageStorePluginOptions extends ReviewFigmaServerTokenOptio
     projectId?: string;
     endpoint?: string;
     dataFile?: string;
+    assetDir?: string;
+    assetEndpoint?: string;
+    cacheAssets?: boolean;
     imageFormat?: ReviewFigmaImageFormat;
     renderFormat?: ReviewFigmaRenderFormat;
     renderScale?: number;
     useAbsoluteBounds?: boolean;
     apiBaseUrl?: string;
     fetch?: typeof fetch;
+    transformAsset?: ReviewFigmaImageAssetTransformer;
 }
 interface ReviewFigmaServerTokenOptions {
     token?: string | null;
@@ -51,6 +55,18 @@ interface ReviewFigmaServerTokenOptions {
     enabled?: boolean;
 }
 type ReviewFigmaServerImageRenderOptions = Omit<ReviewFigmaImageRenderOptions, 'token'> & ReviewFigmaServerTokenOptions;
+type ReviewFigmaImageAssetTransformInput = {
+    data: Uint8Array;
+    imageFormat: ReviewFigmaImageFormat;
+    mimeType: string;
+    targetFormat: ReviewFigmaImageFormat;
+};
+type ReviewFigmaImageAssetTransformResult = {
+    data: Uint8Array | ArrayBuffer;
+    imageFormat: ReviewFigmaImageFormat;
+    mimeType?: string;
+};
+type ReviewFigmaImageAssetTransformer = (input: ReviewFigmaImageAssetTransformInput) => ReviewFigmaImageAssetTransformResult | null | undefined | Promise<ReviewFigmaImageAssetTransformResult | null | undefined>;
 
 interface ReviewSourceLocatorOptions {
     enabled?: boolean;
@@ -84,4 +100,4 @@ interface ReviewDataLocatorOptions {
  */
 declare const reviewDataLocator: (options?: ReviewDataLocatorOptions) => Plugin;
 
-export { type ReviewDataLocatorOptions, type ReviewFigmaImageRenderOptions, type ReviewFigmaImageStorePluginOptions, type ReviewFigmaRenderFormat, type ReviewFigmaRenderedImage, type ReviewFigmaServerImageRenderOptions, type ReviewFigmaServerTokenOptions, type ReviewSourceLocatorOptions, createReviewFigmaImageApiUrl, readReviewFigmaServerToken, renderReviewFigmaImage, renderReviewFigmaServerImage, requireReviewFigmaServerToken, reviewDataLocator, reviewFigmaImageStore, reviewSourceLocator };
+export { type ReviewDataLocatorOptions, type ReviewFigmaImageAssetTransformInput, type ReviewFigmaImageAssetTransformResult, type ReviewFigmaImageAssetTransformer, type ReviewFigmaImageRenderOptions, type ReviewFigmaImageStorePluginOptions, type ReviewFigmaRenderFormat, type ReviewFigmaRenderedImage, type ReviewFigmaServerImageRenderOptions, type ReviewFigmaServerTokenOptions, type ReviewSourceLocatorOptions, createReviewFigmaImageApiUrl, readReviewFigmaServerToken, renderReviewFigmaImage, renderReviewFigmaServerImage, requireReviewFigmaServerToken, reviewDataLocator, reviewFigmaImageStore, reviewSourceLocator };

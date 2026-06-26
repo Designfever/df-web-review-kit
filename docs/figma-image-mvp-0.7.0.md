@@ -16,8 +16,10 @@ current host-helper flow.
 - `FIGMA_TOKEN` is required only by the Figma image server/dev endpoint when it
   renders or adds an image. It must not become a package-wide or browser env
   requirement.
-- Rendered images should be stored as webp by default. Keep the original
-  `figmaUrl`, `fileKey`, and `nodeId` so the image can be regenerated later.
+- Rendered images should be downloaded into a local/dev asset cache. Prefer webp
+  when an image transformer is configured, but keep `png`/`jpg` fallback without
+  adding a package dependency. Always keep the original `figmaUrl`, `fileKey`,
+  and `nodeId` so the image can be regenerated later.
 - Removing keyboard shortcut helpers from host projects belongs after the MVP
   has stabilized.
 
@@ -142,9 +144,11 @@ type ReviewFigmaImageStore = {
 not know whether the returned `imageUrl` came from a local dev server,
 OpenClaw-hosted upload, or a future Cloudflare-backed uploader.
 
-Default output should be `image/webp` with a quality setting around 90-95 for
-review/reference overlays. Keep `png` available as an implementation option for
-future pixel-precise comparison cases.
+Default target output is `image/webp` with a quality setting around 90-95 for
+review/reference overlays, but the package should not force an image conversion
+dependency for the dev MVP. Without a configured transformer, the local cache
+stores the actual Figma render format (`png` or `jpg`) and records that real
+`mimeType`/`imageFormat` in metadata.
 
 ### Module Layout
 
@@ -245,8 +249,8 @@ Parser/render helpers already added for the implementation steps:
 - `renderReviewFigmaServerImage()` is exported from
   `@designfever/web-review-kit/vite` and calls Figma `/v1/images/:fileKey` with
   a server-side token.
-- The Figma API render URL is still a temporary source URL. The webp cache and
-  JSON metadata write belong to the local file adapter work.
+- The Figma API render URL is a temporary source URL. The local file adapter now
+  downloads it into the dev asset cache before writing JSON metadata.
 
 Local metadata store helpers already added for the implementation steps:
 
@@ -257,9 +261,13 @@ Local metadata store helpers already added for the implementation steps:
 - The default endpoint is `/__dfwr/figma-images`.
 - The dev fixture stores metadata at `.df-review/figma-images.json`; the
   `.df-review` folder is gitignored.
-- For now the local middleware stores the Figma API render URL as `imageUrl`.
-  It does not yet convert/cache the binary to webp; that can be added behind
-  the same `addImage()` path without changing the shell UI contract.
+- The local middleware downloads rendered image binaries into
+  `.df-review/figma-assets` by default and stores the served local asset URL as
+  `imageUrl`.
+- The asset endpoint defaults to `/__dfwr/figma-images/assets`.
+- `cacheAssets: false` keeps the old temporary render URL behavior for debugging.
+- `transformAsset` can convert the downloaded data before it is written, which
+  is where a future sharp/Cloudflare webp conversion step should plug in.
 
 Review page multi-image UI already added for the implementation steps:
 

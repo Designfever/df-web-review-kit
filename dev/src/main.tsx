@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
+  createReviewFigmaImageStoreClient,
   localAdapter,
   supabaseAdapter,
   type SupabaseReviewClient,
@@ -34,6 +35,7 @@ const REVIEW_PATH_PREFIX = '/review';
 const REVIEW_STORAGE_KEY = `${REVIEW_PROJECT_ID}:items`;
 const REVIEW_SUPABASE_TABLE =
   import.meta.env.VITE_REVIEW_SUPABASE_TABLE || 'review_items';
+const figmaImageStore = createReviewFigmaImageStoreClient();
 
 window.__figma = {
   desktopNodeId: 'p2DY6W7xu5WmDNtJK8v6zd->4:228',
@@ -125,6 +127,10 @@ function mountDevReviewShell() {
     adapters,
     presets,
     presence,
+    figmaImages: {
+      store: figmaImageStore,
+      imageFormat: 'webp',
+    },
     initialPrompt,
     reviewPathPrefix: REVIEW_PATH_PREFIX,
     ruler: { enabled: true, unit: 'px' },

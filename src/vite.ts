@@ -1,6 +1,84 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import path from 'node:path';
 import type { Plugin, ResolvedConfig } from 'vite';
+import {
+  type AddReviewFigmaImageInput,
+  type ReviewFigmaImage,
+  type ReviewFigmaImageFormat,
+  type ReviewFigmaImageTarget,
+  type UpdateReviewFigmaImageInput,
+} from './figma/image.types';
+import {
+  createReviewFigmaReleaseSnapshot,
+} from './figma/image.snapshot';
+import {
+  DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
+  getReviewFigmaImageMimeType,
+  getReviewFigmaImageTargetKey,
+  type ReorderReviewFigmaImagesInput,
+} from './figma/image.store';
+import { parseReviewFigmaNodeRef } from './figma/parse';
+import {
+  DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+  readReviewFigmaToken,
+  requireReviewFigmaToken,
+  type ReviewFigmaTokenEnv,
+} from './figma/token';
+import {
+  renderReviewFigmaImage,
+  type ReviewFigmaImageRenderOptions,
+  type ReviewFigmaRenderFormat,
+} from './figma/render';
 
 type SourceLocatorPattern = string | RegExp;
+
+export interface ReviewFigmaImageStorePluginOptions
+  extends ReviewFigmaServerTokenOptions {
+  enabled?: boolean;
+  projectId?: string;
+  endpoint?: string;
+  dataFile?: string;
+  imageFormat?: ReviewFigmaImageFormat;
+  renderFormat?: ReviewFigmaRenderFormat;
+  renderScale?: number;
+  useAbsoluteBounds?: boolean;
+  apiBaseUrl?: string;
+  fetch?: typeof fetch;
+}
+
+export interface ReviewFigmaServerTokenOptions {
+  token?: string | null;
+  env?: ReviewFigmaTokenEnv;
+  envKey?: string;
+  enabled?: boolean;
+}
+
+export type ReviewFigmaServerImageRenderOptions =
+  Omit<ReviewFigmaImageRenderOptions, 'token'> &
+    ReviewFigmaServerTokenOptions;
+
+export {
+  createReviewFigmaImageApiUrl,
+  renderReviewFigmaImage,
+} from './figma/render';
+export {
+  collectReviewFigmaReleaseSnapshot,
+  createReviewFigmaImagesSnapshot,
+  createReviewFigmaReleaseSnapshot,
+} from './figma/image.snapshot';
+export type {
+  ReviewFigmaImageRenderOptions,
+  ReviewFigmaRenderFormat,
+  ReviewFigmaRenderedImage,
+} from './figma/render';
+export type {
+  CollectReviewFigmaReleaseSnapshotOptions,
+  CreateReviewFigmaImagesSnapshotOptions,
+  CreateReviewFigmaReleaseSnapshotOptions,
+  ReviewFigmaImagesSnapshot,
+  ReviewFigmaReleaseSnapshot,
+} from './figma/image.snapshot';
 
 export interface ReviewSourceLocatorOptions {
   enabled?: boolean;
@@ -70,6 +148,665 @@ const injectReviewSourceEnv = (
 
   return nextCode === code ? null : nextCode;
 };
+
+export const readReviewFigmaServerToken = (
+  options: ReviewFigmaServerTokenOptions = {}
+) =>
+  readReviewFigmaToken({
+    token: options.token,
+    env: options.env ?? getServerEnv(),
+    envKey: options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+    enabled: options.enabled,
+  });
+
+export const requireReviewFigmaServerToken = (
+  options: ReviewFigmaServerTokenOptions = {}
+) =>
+  requireReviewFigmaToken({
+    token: options.token,
+    env: options.env ?? getServerEnv(),
+    envKey: options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+    enabled: options.enabled,
+  });
+
+export const renderReviewFigmaServerImage = (
+  options: ReviewFigmaServerImageRenderOptions
+) => {
+  const { token, env, envKey, enabled, ...renderOptions } = options;
+  const explicitToken = typeof token === 'string' ? token.trim() : token;
+
+  return renderReviewFigmaImage({
+    ...renderOptions,
+    token:
+      explicitToken ||
+      requireReviewFigmaServerToken({
+        env,
+        envKey,
+        enabled,
+      }),
+  });
+};
+
+export const reviewFigmaImageStore = (
+  options: ReviewFigmaImageStorePluginOptions = {}
+): Plugin => {
+  let root = '';
+  let dataFile = '';
+  const enabled = options.enabled ?? true;
+  const endpoint = normalizeEndpoint(
+    options.endpoint ?? DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT
+  );
+
+  return {
+    name: 'df-web-review-kit-figma-image-store',
+    apply: 'serve',
+    configResolved(config) {
+      root = config.root;
+      dataFile = path.resolve(
+        root,
+        options.dataFile ?? '.df-review/figma-images.json'
+      );
+    },
+    configureServer(server) {
+      if (!enabled) return;
+
+      server.middlewares.use(async (req, res, next) => {
+        const requestUrl = new URL(req.url ?? '/', 'http://localhost');
+        const pathname = requestUrl.pathname;
+        if (pathname !== endpoint && !pathname.startsWith(`${endpoint}/`)) {
+          next();
+          return;
+        }
+
+        try {
+          const response = await handleReviewFigmaImageStoreRequest({
+            dataFile,
+            endpoint,
+            options,
+            pathname,
+            requestUrl,
+            method: req.method ?? 'GET',
+            body: await readJsonRequestBody(req),
+          });
+
+          sendJson(res, response.status, response.body);
+        } catch (error) {
+          sendJson(res, 500, {
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Figma image store request failed.',
+          });
+        }
+      });
+    },
+  };
+};
+
+type ReviewFigmaImageStoreFile = {
+  version: 1;
+  images: ReviewFigmaImage[];
+};
+
+type ReviewFigmaImageStoreResponse = {
+  status: number;
+  body: unknown;
+};
+
+async function handleReviewFigmaImageStoreRequest({
+  dataFile,
+  endpoint,
+  method,
+  options,
+  pathname,
+  requestUrl,
+  body,
+}: {
+  dataFile: string;
+  endpoint: string;
+  method: string;
+  options: ReviewFigmaImageStorePluginOptions;
+  pathname: string;
+  requestUrl: URL;
+  body: unknown;
+}): Promise<ReviewFigmaImageStoreResponse> {
+  if (method === 'OPTIONS') return { status: 204, body: null };
+
+  if (
+    (method === 'GET' || method === 'POST') &&
+    pathname === `${endpoint}/snapshot`
+  ) {
+    const input = parseReleaseSnapshotInput(body, requestUrl, options.projectId);
+    if (!input) return jsonError(400, 'valid snapshot input is required.');
+    if (options.projectId && input.projectId !== options.projectId) {
+      return jsonError(403, 'snapshot project is not allowed.');
+    }
+    if (
+      input.targets.some(
+        (target) => !isAllowedProjectTarget(target, options.projectId)
+      )
+    ) {
+      return jsonError(403, 'snapshot target project is not allowed.');
+    }
+
+    const data = await readReviewFigmaImageStoreFile(dataFile);
+    return {
+      status: 200,
+      body: createReviewFigmaReleaseSnapshot({
+        images: data.images,
+        projectId: input.projectId,
+        releaseId: input.releaseId,
+        label: input.label,
+        targets: input.targets.length > 0 ? input.targets : undefined,
+      }),
+    };
+  }
+
+  if (method === 'GET' && pathname === endpoint) {
+    const target = parseTargetParam(requestUrl.searchParams.get('target'));
+    if (!target) return jsonError(400, 'target query is required.');
+    if (!isAllowedProjectTarget(target, options.projectId)) {
+      return { status: 200, body: [] };
+    }
+
+    const data = await readReviewFigmaImageStoreFile(dataFile);
+    return {
+      status: 200,
+      body: listImagesForTarget(data.images, target),
+    };
+  }
+
+  if (method === 'POST' && pathname === endpoint) {
+    const input = parseAddImageInput(body);
+    if (!input) return jsonError(400, 'valid add image input is required.');
+    if (!isAllowedProjectTarget(input.target, options.projectId)) {
+      return jsonError(403, 'target project is not allowed.');
+    }
+
+    const data = await readReviewFigmaImageStoreFile(dataFile);
+    const image = await createReviewFigmaImage(input, data.images, options);
+    data.images = [image, ...data.images];
+    await writeReviewFigmaImageStoreFile(dataFile, data);
+
+    return { status: 201, body: image };
+  }
+
+  if (method === 'PATCH' && pathname === `${endpoint}/reorder`) {
+    const input = parseReorderImagesInput(body);
+    if (!input) return jsonError(400, 'valid reorder input is required.');
+    if (!isAllowedProjectTarget(input.target, options.projectId)) {
+      return jsonError(403, 'target project is not allowed.');
+    }
+
+    const data = await readReviewFigmaImageStoreFile(dataFile);
+    const images = reorderReviewFigmaImages(data.images, input);
+    data.images = images.allImages;
+    await writeReviewFigmaImageStoreFile(dataFile, data);
+
+    return { status: 200, body: images.targetImages };
+  }
+
+  const id = getEndpointItemId(pathname, endpoint);
+  if (id && method === 'PATCH') {
+    const patch = parseUpdateImageInput(body);
+    if (!patch) return jsonError(400, 'valid update patch is required.');
+
+    const data = await readReviewFigmaImageStoreFile(dataFile);
+    const result = updateReviewFigmaImage(data.images, id, patch);
+    if (!result) return jsonError(404, `Figma image not found: ${id}`);
+    if (!isAllowedProjectTarget(result.image.target, options.projectId)) {
+      return jsonError(403, 'target project is not allowed.');
+    }
+
+    data.images = result.images;
+    await writeReviewFigmaImageStoreFile(dataFile, data);
+
+    return { status: 200, body: result.image };
+  }
+
+  if (id && method === 'DELETE') {
+    const data = await readReviewFigmaImageStoreFile(dataFile);
+    const image = data.images.find((item) => item.id === id);
+    if (!image) return jsonError(404, `Figma image not found: ${id}`);
+    if (!isAllowedProjectTarget(image.target, options.projectId)) {
+      return jsonError(403, 'target project is not allowed.');
+    }
+
+    data.images = data.images.filter((item) => item.id !== id);
+    await writeReviewFigmaImageStoreFile(dataFile, data);
+
+    return { status: 200, body: { ok: true } };
+  }
+
+  return jsonError(405, 'method not allowed.');
+}
+
+async function createReviewFigmaImage(
+  input: AddReviewFigmaImageInput,
+  currentImages: ReviewFigmaImage[],
+  options: ReviewFigmaImageStorePluginOptions
+): Promise<ReviewFigmaImage> {
+  const ref = parseReviewFigmaNodeRef(input.figmaUrl);
+  if (!ref) {
+    throw new Error('A Figma node copy link or fileKey->nodeId value is required.');
+  }
+
+  const renderFormat = getStoreRenderFormat(
+    options.renderFormat,
+    input.imageFormat ?? options.imageFormat
+  );
+  const rendered = await renderReviewFigmaServerImage({
+    figmaUrl: input.figmaUrl,
+    token: options.token,
+    env: options.env,
+    envKey: options.envKey,
+    enabled: options.enabled,
+    format: renderFormat,
+    scale: options.renderScale,
+    useAbsoluteBounds: options.useAbsoluteBounds,
+    apiBaseUrl: options.apiBaseUrl,
+    fetch: options.fetch,
+  });
+  const imageFormat = renderFormat === 'jpg' ? 'jpg' : 'png';
+  const now = new Date().toISOString();
+  const order =
+    typeof input.order === 'number' && Number.isFinite(input.order)
+      ? input.order
+      : getNextImageOrder(currentImages, input.target);
+
+  return {
+    id: createReviewFigmaImageId(),
+    projectId: input.target.projectId,
+    target: input.target,
+    figmaUrl: input.figmaUrl,
+    fileKey: rendered.fileKey,
+    nodeId: rendered.nodeId,
+    imageUrl: rendered.imageUrl,
+    imageFormat,
+    mimeType: getReviewFigmaImageMimeType(imageFormat),
+    label: normalizeOptionalText(input.label),
+    order,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function listImagesForTarget(
+  images: ReviewFigmaImage[],
+  target: ReviewFigmaImageTarget
+) {
+  const targetKey = getReviewFigmaImageTargetKey(target);
+  return images
+    .filter((image) => getReviewFigmaImageTargetKey(image.target) === targetKey)
+    .sort(compareReviewFigmaImages);
+}
+
+function reorderReviewFigmaImages(
+  images: ReviewFigmaImage[],
+  input: ReorderReviewFigmaImagesInput
+) {
+  const targetKey = getReviewFigmaImageTargetKey(input.target);
+  const orderById = new Map(input.imageIds.map((id, index) => [id, index]));
+  const targetImages = listImagesForTarget(images, input.target);
+  const nextTargetImages = targetImages
+    .map((image) => ({
+      ...image,
+      order: orderById.get(image.id) ?? input.imageIds.length + image.order,
+      updatedAt: orderById.has(image.id) ? new Date().toISOString() : image.updatedAt,
+    }))
+    .sort(compareReviewFigmaImages);
+  const nextTargetImageById = new Map(
+    nextTargetImages.map((image, index) => [
+      image.id,
+      { ...image, order: index },
+    ])
+  );
+  const allImages = images.map((image) =>
+    getReviewFigmaImageTargetKey(image.target) === targetKey
+      ? nextTargetImageById.get(image.id) ?? image
+      : image
+  );
+
+  return {
+    allImages,
+    targetImages: listImagesForTarget(allImages, input.target),
+  };
+}
+
+function updateReviewFigmaImage(
+  images: ReviewFigmaImage[],
+  id: string,
+  patch: UpdateReviewFigmaImageInput
+) {
+  const index = images.findIndex((image) => image.id === id);
+  if (index < 0) return null;
+
+  const nextImage: ReviewFigmaImage = {
+    ...images[index],
+    label:
+      patch.label === undefined
+        ? images[index].label
+        : normalizeOptionalText(patch.label),
+    order:
+      typeof patch.order === 'number' && Number.isFinite(patch.order)
+        ? patch.order
+        : images[index].order,
+    updatedAt: new Date().toISOString(),
+  };
+  const nextImages = [...images];
+  nextImages[index] = nextImage;
+
+  return {
+    image: nextImage,
+    images: nextImages,
+  };
+}
+
+async function readReviewFigmaImageStoreFile(
+  dataFile: string
+): Promise<ReviewFigmaImageStoreFile> {
+  try {
+    const raw = await readFile(dataFile, 'utf8');
+    const parsed = JSON.parse(raw) as Partial<ReviewFigmaImageStoreFile>;
+
+    return {
+      version: 1,
+      images: Array.isArray(parsed.images)
+        ? parsed.images.flatMap((image) =>
+            isReviewFigmaImage(image) ? [image] : []
+          )
+        : [],
+    };
+  } catch (error) {
+    if (isNodeError(error) && error.code === 'ENOENT') {
+      return { version: 1, images: [] };
+    }
+    throw error;
+  }
+}
+
+async function writeReviewFigmaImageStoreFile(
+  dataFile: string,
+  data: ReviewFigmaImageStoreFile
+) {
+  await mkdir(path.dirname(dataFile), { recursive: true });
+  await writeFile(
+    dataFile,
+    `${JSON.stringify({ version: 1, images: data.images }, null, 2)}\n`,
+    'utf8'
+  );
+}
+
+async function readJsonRequestBody(req: IncomingMessage) {
+  if (req.method === 'GET' || req.method === 'DELETE') return null;
+
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  }
+  const raw = Buffer.concat(chunks).toString('utf8').trim();
+  if (!raw) return null;
+
+  return JSON.parse(raw);
+}
+
+function sendJson(res: ServerResponse, status: number, body: unknown) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (status === 204) {
+    res.end();
+    return;
+  }
+  res.end(JSON.stringify(body ?? null));
+}
+
+function parseTargetParam(value: string | null) {
+  if (!value) return null;
+  try {
+    return parseReviewFigmaImageTarget(JSON.parse(value));
+  } catch {
+    return null;
+  }
+}
+
+function parseAddImageInput(value: unknown): AddReviewFigmaImageInput | null {
+  if (!value || typeof value !== 'object') return null;
+  const input = value as Partial<AddReviewFigmaImageInput>;
+  const target = parseReviewFigmaImageTarget(input.target);
+  if (!target || typeof input.figmaUrl !== 'string') return null;
+
+  return {
+    target,
+    figmaUrl: input.figmaUrl,
+    label: typeof input.label === 'string' ? input.label : undefined,
+    order: typeof input.order === 'number' ? input.order : undefined,
+    imageFormat: parseReviewFigmaImageFormat(input.imageFormat),
+  };
+}
+
+function parseUpdateImageInput(
+  value: unknown
+): UpdateReviewFigmaImageInput | null {
+  if (!value || typeof value !== 'object') return null;
+  const input = value as UpdateReviewFigmaImageInput;
+
+  return {
+    label: typeof input.label === 'string' ? input.label : undefined,
+    order: typeof input.order === 'number' ? input.order : undefined,
+  };
+}
+
+function parseReorderImagesInput(
+  value: unknown
+): ReorderReviewFigmaImagesInput | null {
+  if (!value || typeof value !== 'object') return null;
+  const input = value as ReorderReviewFigmaImagesInput;
+  const target = parseReviewFigmaImageTarget(input.target);
+  if (!target || !Array.isArray(input.imageIds)) return null;
+
+  return {
+    target,
+    imageIds: input.imageIds.filter((id) => typeof id === 'string'),
+  };
+}
+
+function parseReleaseSnapshotInput(
+  value: unknown,
+  requestUrl: URL,
+  fallbackProjectId: string | undefined
+): {
+  projectId: string;
+  releaseId?: string;
+  label?: string;
+  targets: ReviewFigmaImageTarget[];
+} | null {
+  const input = value && typeof value === 'object'
+    ? (value as Partial<{
+        projectId: unknown;
+        releaseId: unknown;
+        label: unknown;
+        targets: unknown;
+      }>)
+    : null;
+  const projectId = normalizeOptionalText(
+    typeof input?.projectId === 'string'
+      ? input.projectId
+      : requestUrl.searchParams.get('projectId') ?? fallbackProjectId
+  );
+  if (!projectId) return null;
+
+  return {
+    projectId,
+    releaseId: normalizeOptionalText(
+      typeof input?.releaseId === 'string'
+        ? input.releaseId
+        : requestUrl.searchParams.get('releaseId')
+    ),
+    label: normalizeOptionalText(
+      typeof input?.label === 'string'
+        ? input.label
+        : requestUrl.searchParams.get('label')
+    ),
+    targets: parseReleaseSnapshotTargets(input?.targets, requestUrl),
+  };
+}
+
+function parseReleaseSnapshotTargets(value: unknown, requestUrl: URL) {
+  const bodyTargets = Array.isArray(value)
+    ? value.flatMap((target) => {
+        const parsed = parseReviewFigmaImageTarget(target);
+        return parsed ? [parsed] : [];
+      })
+    : [];
+  const queryTargets = requestUrl.searchParams
+    .getAll('target')
+    .flatMap((target) => {
+      const parsed = parseTargetParam(target);
+      return parsed ? [parsed] : [];
+    });
+  const targetByKey = new Map(
+    [...bodyTargets, ...queryTargets].map((target) => [
+      getReviewFigmaImageTargetKey(target),
+      target,
+    ])
+  );
+
+  return Array.from(targetByKey.values());
+}
+
+function parseReviewFigmaImageTarget(
+  value: unknown
+): ReviewFigmaImageTarget | null {
+  if (!value || typeof value !== 'object') return null;
+  const target = value as ReviewFigmaImageTarget;
+  if (target.type === 'route') {
+    if (
+      typeof target.projectId !== 'string' ||
+      typeof target.pageUrl !== 'string'
+    ) {
+      return null;
+    }
+
+    return {
+      type: 'route',
+      projectId: target.projectId,
+      pageUrl: target.pageUrl,
+      viewport:
+        target.viewport && typeof target.viewport === 'object'
+          ? target.viewport
+          : undefined,
+      slot: typeof target.slot === 'string' ? target.slot : undefined,
+    };
+  }
+
+  if (target.type === 'figma-node') {
+    if (
+      typeof target.projectId !== 'string' ||
+      typeof target.fileKey !== 'string' ||
+      typeof target.nodeId !== 'string'
+    ) {
+      return null;
+    }
+
+    return {
+      type: 'figma-node',
+      projectId: target.projectId,
+      fileKey: target.fileKey,
+      nodeId: target.nodeId,
+    };
+  }
+
+  return null;
+}
+
+function parseReviewFigmaImageFormat(value: unknown) {
+  return value === 'webp' || value === 'png' || value === 'jpg'
+    ? value
+    : undefined;
+}
+
+function getStoreRenderFormat(
+  renderFormat: ReviewFigmaRenderFormat | undefined,
+  imageFormat: ReviewFigmaImageFormat | undefined
+): Extract<ReviewFigmaRenderFormat, 'png' | 'jpg'> {
+  if (renderFormat === 'jpg' || renderFormat === 'png') return renderFormat;
+  if (imageFormat === 'jpg') return 'jpg';
+  return 'png';
+}
+
+function getNextImageOrder(
+  images: ReviewFigmaImage[],
+  target: ReviewFigmaImageTarget
+) {
+  const targetImages = listImagesForTarget(images, target);
+  return targetImages.length
+    ? Math.max(...targetImages.map((image) => image.order)) + 1
+    : 0;
+}
+
+function compareReviewFigmaImages(
+  a: ReviewFigmaImage,
+  b: ReviewFigmaImage
+) {
+  return a.order - b.order || a.createdAt.localeCompare(b.createdAt);
+}
+
+function getEndpointItemId(pathname: string, endpoint: string) {
+  if (!pathname.startsWith(`${endpoint}/`)) return null;
+  const value = pathname.slice(endpoint.length + 1);
+  if (!value || value.includes('/')) return null;
+  return decodeURIComponent(value);
+}
+
+function normalizeEndpoint(endpoint: string) {
+  const normalized = endpoint.trim().replace(/\/+$/, '');
+  return normalized.startsWith('/') ? normalized : `/${normalized}`;
+}
+
+function normalizeOptionalText(value: string | null | undefined) {
+  if (typeof value !== 'string') return undefined;
+  return value.trim() || undefined;
+}
+
+function createReviewFigmaImageId() {
+  return `figma_${Date.now().toString(36)}_${Math.random()
+    .toString(36)
+    .slice(2, 10)}`;
+}
+
+function isAllowedProjectTarget(
+  target: ReviewFigmaImageTarget,
+  projectId: string | undefined
+) {
+  return !projectId || target.projectId === projectId;
+}
+
+function isReviewFigmaImage(value: unknown): value is ReviewFigmaImage {
+  if (!value || typeof value !== 'object') return false;
+  const image = value as ReviewFigmaImage;
+
+  return (
+    typeof image.id === 'string' &&
+    typeof image.projectId === 'string' &&
+    parseReviewFigmaImageTarget(image.target) !== null &&
+    typeof image.figmaUrl === 'string' &&
+    typeof image.fileKey === 'string' &&
+    typeof image.nodeId === 'string' &&
+    typeof image.imageUrl === 'string' &&
+    typeof image.order === 'number' &&
+    typeof image.createdAt === 'string' &&
+    typeof image.updatedAt === 'string'
+  );
+}
+
+function jsonError(status: number, error: string): ReviewFigmaImageStoreResponse {
+  return { status, body: { error } };
+}
+
+function isNodeError(error: unknown): error is { code?: string } {
+  if (!error || typeof error !== 'object') return false;
+  return 'code' in error;
+}
 
 export const reviewSourceLocator = (
   options: ReviewSourceLocatorOptions = {}
@@ -238,6 +975,16 @@ function createRuntimeMatcher(pattern: SourceLocatorPattern): RuntimeMatcher {
 
 function normalizePath(value: string) {
   return value.replace(/\\/g, '/').replace(/\/+$/, '');
+}
+
+function getServerEnv(): ReviewFigmaTokenEnv {
+  const runtime = globalThis as typeof globalThis & {
+    process?: {
+      env?: ReviewFigmaTokenEnv;
+    };
+  };
+
+  return runtime.process?.env ?? {};
 }
 
 function createJsxDevRuntime(options: RuntimeOptions) {

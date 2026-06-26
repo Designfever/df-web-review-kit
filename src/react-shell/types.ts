@@ -8,6 +8,10 @@ import type {
   ReviewSource,
   WebReviewKitAdapter,
 } from '../types';
+import type {
+  ReviewFigmaImageFormat,
+  ReviewFigmaImageStore,
+} from '../figma/image.types';
 
 export type ReviewShellViewportKind = Exclude<ReviewItemScope, 'dom'>;
 
@@ -160,6 +164,12 @@ export type ReviewPresenceAdapter = {
   ) => Promise<ReviewPresenceSession> | ReviewPresenceSession;
 };
 
+export type ReviewShellFigmaImagesOptions = {
+  enabled?: boolean;
+  store?: ReviewFigmaImageStore;
+  imageFormat?: ReviewFigmaImageFormat;
+};
+
 export interface CreateReviewPagesOptions {
   root?: string;
   exclude?: (href: string) => boolean;
@@ -177,6 +187,7 @@ export interface ReviewShellProps {
   sourceRoot?: string;
   sourceInspector?: ReviewSourceInspectorOptions;
   presence?: ReviewPresenceAdapter;
+  figmaImages?: ReviewShellFigmaImagesOptions;
 }
 
 export interface ReviewShellMountOptions extends ReviewShellProps {

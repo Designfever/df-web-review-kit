@@ -9,6 +9,7 @@ import {
   CircleHelp as CircleHelpIcon,
   Workflow as ComponentTreeIcon,
   FileText as FileTextIcon,
+  Images as ImagesIcon,
   Settings as SettingsIcon,
 } from 'lucide-react';
 import type {
@@ -23,6 +24,9 @@ import type {
   ReviewShellProps,
 } from '../types';
 import { resolveReviewSourceOptions } from '../env';
+import {
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+} from '../../figma/image.types';
 import {
   DEFAULT_INITIAL_REVIEW_PROMPT,
 } from '../constants';
@@ -47,9 +51,11 @@ import {
 import { buildReviewItemPrompt } from '../prompt/prompt';
 import {
   getFigmaFrameUrl,
+  getReviewFigmaImageStore,
   getTargetFigmaFrameConfig,
   type ReviewFigmaFrameConfig,
 } from '../figma';
+import { FigmaImagesPanel } from '../figma/images.panel';
 import { QaItemEditModal } from '../qa/item.edit.modal';
 import { ReviewQaPanel } from '../qa/panel';
 import { PresenceOverlay } from '../presence/overlay';
@@ -78,6 +84,7 @@ import { ReviewTopbar } from '../topbar';
 import { useReviewController } from '../hooks/use.review.controller';
 import { useReviewPresence } from '../hooks/use.review.presence';
 import { useReviewRuler } from '../hooks/use.review.ruler';
+import { useReviewFigmaImages } from '../hooks/use.review.figma.images';
 import { useReviewSettings } from '../hooks/use.review.settings';
 import { useReviewShellData } from '../hooks/use.review.shell.data';
 import { useReviewShellHotkeys } from '../hooks/use.review.shell.hotkeys';
@@ -135,7 +142,8 @@ export const ReviewShell = ({
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
   sourceRoot,
   sourceInspector,
-  presence
+  presence,
+  figmaImages,
 }: ReviewShellProps) => {
   const {
     activeAdapterEntry,
@@ -246,16 +254,32 @@ export const ReviewShell = ({
   const [sidePanel, setSidePanel] = useState<ReviewSidePanel>(() =>
     isSourceInspectorEnabled ? getStoredReviewSidePanel() : 'qa'
   );
+  const figmaImageStore = useMemo(
+    () => getReviewFigmaImageStore(figmaImages),
+    [figmaImages]
+  );
+  const isFigmaImageManagementEnabled = Boolean(figmaImageStore);
+  const figmaImageFormat =
+    figmaImages?.imageFormat ?? DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT;
   const isSourceTreeHoverOutlineEnabled =
     resolvedSourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === 'qa';
   const isSourceTreePanelVisible =
     isSourceInspectorEnabled && isListVisible && sidePanel === 'source';
+  const isFigmaImagesPanelVisible =
+    isFigmaImageManagementEnabled &&
+    isListVisible &&
+    sidePanel === 'figma-images';
 
   useEffect(() => {
     if (isSourceInspectorEnabled || sidePanel !== 'source') return;
     setSidePanel('qa');
   }, [isSourceInspectorEnabled, sidePanel]);
+
+  useEffect(() => {
+    if (isFigmaImageManagementEnabled || sidePanel !== 'figma-images') return;
+    setSidePanel('qa');
+  }, [isFigmaImageManagementEnabled, sidePanel]);
 
   useEffect(() => {
     writeStoredReviewSidePanel(sidePanel);
@@ -336,6 +360,30 @@ export const ReviewShell = ({
     target,
     viewportPresets,
   });
+  const {
+    addImage: addFigmaImage,
+    deleteImage: deleteFigmaImage,
+    error: figmaImageError,
+    images: figmaImageList,
+    isLoading: isFigmaImageLoading,
+    isMutating: isFigmaImageMutating,
+    isOverlayVisible: isFigmaImageOverlayVisible,
+    moveImage: moveFigmaImage,
+    overlayOpacity: figmaImageOverlayOpacity,
+    refreshImages: refreshFigmaImages,
+    selectedImage: selectedFigmaImage,
+    selectedImageId: selectedFigmaImageId,
+    setOverlayOpacity: setFigmaImageOverlayOpacity,
+    setSelectedImageId: setSelectedFigmaImageId,
+    target: figmaImageTarget,
+    toggleOverlayVisible: toggleFigmaImageOverlay,
+  } = useReviewFigmaImages({
+    imageFormat: figmaImageFormat,
+    pageUrl: activeRoute,
+    projectId,
+    store: figmaImageStore,
+    viewport: size,
+  });
   const [targetFigmaState, setTargetFigmaState] =
     useState<{ targetSrc: string; config: ReviewFigmaFrameConfig } | null>(null);
   const targetFigmaConfig =
@@ -345,7 +393,9 @@ export const ReviewShell = ({
     [targetFigmaConfig, size]
   );
   const isFigmaOverlayAvailable =
-    isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
+    !isFigmaImageManagementEnabled &&
+    isViewportFigmaOverlayAvailable &&
+    Boolean(targetFigmaConfig);
   const [editingItem, setEditingItem] = useState<ReviewItem | null>(null);
   const initialPromptText = initialPrompt.trim();
   const refreshItems = useCallback(
@@ -960,6 +1010,23 @@ export const ReviewShell = ({
     sidePanel,
   ]);
 
+  const toggleFigmaImagesPanel = useCallback(() => {
+    if (!isFigmaImageManagementEnabled) return;
+
+    if (sidePanel === 'figma-images' && isListVisible) {
+      setIsListVisible(false);
+      return;
+    }
+
+    setSidePanel('figma-images');
+    setIsListVisible(true);
+  }, [
+    isFigmaImageManagementEnabled,
+    isListVisible,
+    setIsListVisible,
+    sidePanel,
+  ]);
+
   const toggleSectionOutlineEntry = useCallback((entryId: string) => {
     setCollapsedSectionOutlineIds((current) => {
       const next = new Set(current);
@@ -1506,6 +1573,15 @@ export const ReviewShell = ({
       onToast: showToast,
     });
 
+  const figmaImageOverlay =
+    selectedFigmaImage && isFigmaImageOverlayVisible
+      ? {
+          imageUrl: selectedFigmaImage.imageUrl,
+          label: selectedFigmaImage.label ?? selectedFigmaImage.nodeId,
+          opacity: figmaImageOverlayOpacity,
+        }
+      : null;
+
   return (
     <div
       className={`df-review-shell is-theme-${effectiveReviewTheme}${
@@ -1628,6 +1704,26 @@ export const ReviewShell = ({
             </span>
           </button>
         )}
+        {isFigmaImageManagementEnabled && (
+          <button
+            aria-label={
+              isFigmaImagesPanelVisible
+                ? 'Hide Figma images'
+                : 'Show Figma images'
+            }
+            aria-pressed={isFigmaImagesPanelVisible}
+            className={`df-review-side-toggle${
+              isFigmaImagesPanelVisible ? ' is-active' : ''
+            }`}
+            type="button"
+            onClick={toggleFigmaImagesPanel}
+            title="Figma Images"
+          >
+            <span aria-hidden="true">
+              <ImagesIcon />
+            </span>
+          </button>
+        )}
         <div className="df-review-side-actions">
           <button
             aria-label="Open initial prompt"
@@ -1699,6 +1795,27 @@ export const ReviewShell = ({
         onToggleItemOverlayVisibility={toggleItemOverlayVisibility}
       />
 
+      {isFigmaImageManagementEnabled && (
+        <FigmaImagesPanel
+          error={figmaImageError}
+          images={figmaImageList}
+          isListVisible={isFigmaImagesPanelVisible}
+          isLoading={isFigmaImageLoading}
+          isMutating={isFigmaImageMutating}
+          isOverlayVisible={isFigmaImageOverlayVisible}
+          overlayOpacity={figmaImageOverlayOpacity}
+          selectedImageId={selectedFigmaImageId}
+          target={figmaImageTarget}
+          onAddImage={addFigmaImage}
+          onDeleteImage={deleteFigmaImage}
+          onMoveImage={moveFigmaImage}
+          onOverlayOpacityChange={setFigmaImageOverlayOpacity}
+          onRefreshImages={refreshFigmaImages}
+          onSelectImage={setSelectedFigmaImageId}
+          onToggleOverlay={toggleFigmaImageOverlay}
+        />
+      )}
+
       {isSourceInspectorEnabled && (
         <SectionOutlinePanel
           isPanelVisible={isSourceTreePanelVisible}
@@ -1729,6 +1846,7 @@ export const ReviewShell = ({
       <ReviewTargetFrame
         canWriteArea={canWriteArea}
         canWriteDom={canWriteDom}
+        figmaImageOverlay={figmaImageOverlay}
         figmaFrameUrl={figmaFrameUrl}
         frameScrollRef={frameScrollRef}
         iframeRef={iframeRef}

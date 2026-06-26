@@ -111,6 +111,9 @@ function normalizeStoredReviewItem(value) {
   };
 }
 
+// src/figma/image.types.ts
+var DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT = "webp";
+
 // src/core/review/scope.ts
 var DEFAULT_REVIEW_VIEWPORTS = [
   { label: "Mobile", width: 390, height: 720, scope: "mobile" },
@@ -4254,6 +4257,7 @@ export {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   normalizeReviewItemStatus,
   localAdapter,
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
   clamp,
   DEFAULT_REVIEW_VIEWPORTS,
   findReviewViewportPreset,
@@ -4264,4 +4268,4 @@ export {
   runWithAutoScrollBehavior,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-BDP7FS4Q.js.map
+//# sourceMappingURL=chunk-ZHMSAYDA.js.map

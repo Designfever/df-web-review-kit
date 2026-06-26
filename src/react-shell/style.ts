@@ -3,6 +3,7 @@ import { reviewShellSitemapStyle } from './style/sitemap';
 import { reviewShellModalStyle } from './style/modals';
 import { reviewShellToolbarStyle } from './style/toolbar';
 import { reviewShellQaPanelStyle } from './style/qa-panel';
+import { reviewShellFigmaImagesStyle } from './style/figma-images';
 import { reviewShellStageStyle } from './style/stage';
 import { reviewShellRulerStyle } from './style/ruler';
 
@@ -18,6 +19,7 @@ export function ensureReviewShellStyle() {
       reviewShellModalStyle,
       reviewShellToolbarStyle,
       reviewShellQaPanelStyle,
+      reviewShellFigmaImagesStyle,
       reviewShellStageStyle,
       reviewShellRulerStyle
     ].join('\n\n');

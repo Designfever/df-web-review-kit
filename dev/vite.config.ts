@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { reviewSourceLocator } from '../src/vite';
+import { reviewFigmaImageStore, reviewSourceLocator } from '../src/vite';
 
 export default defineConfig({
   root: 'dev',
@@ -9,6 +9,10 @@ export default defineConfig({
       enabled: true,
       filePath: 'absolute',
       include: ['src'],
+    }),
+    reviewFigmaImageStore({
+      projectId: 'df-web-review-kit',
+      dataFile: '../.df-review/figma-images.json',
     }),
   ],
   server: {

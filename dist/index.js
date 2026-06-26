@@ -1,4 +1,5 @@
 import {
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
   DEFAULT_REVIEW_VIEWPORTS,
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   createWebReviewKit,
@@ -9,7 +10,29 @@ import {
   getReviewViewportScope,
   localAdapter,
   normalizeReviewItemStatus
-} from "./chunk-BDP7FS4Q.js";
+} from "./chunk-ZHMSAYDA.js";
+import {
+  DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
+  DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+  REVIEW_FIGMA_TOKEN_MISSING_CODE,
+  ReviewFigmaTokenError,
+  collectReviewFigmaReleaseSnapshot,
+  createReviewFigmaImageStoreClient,
+  createReviewFigmaImagesSnapshot,
+  createReviewFigmaReleaseSnapshot,
+  getReviewFigmaImageMimeType,
+  getReviewFigmaImageTargetKey,
+  isReviewFigmaTokenError,
+  readReviewFigmaToken,
+  requireReviewFigmaToken
+} from "./chunk-JTDOE6QO.js";
+import {
+  FIGMA_NODE_REF_SEPARATOR,
+  createReviewFigmaFrameUrl,
+  createReviewFigmaNodeValue,
+  parseReviewFigmaNodeRef,
+  requireReviewFigmaNodeRef
+} from "./chunk-QKKNRSCX.js";
 
 // src/adapters/supabase.ts
 var DEFAULT_SUPABASE_REVIEW_TABLE = "review_items";
@@ -229,16 +252,35 @@ function createSupabaseReviewItemId() {
   return `review-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 export {
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+  DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
+  DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
   DEFAULT_REVIEW_VIEWPORTS,
+  FIGMA_NODE_REF_SEPARATOR,
+  REVIEW_FIGMA_TOKEN_MISSING_CODE,
   REVIEW_WORKFLOW_STATUS_OPTIONS,
+  ReviewFigmaTokenError,
+  collectReviewFigmaReleaseSnapshot,
+  createReviewFigmaFrameUrl,
+  createReviewFigmaImageStoreClient,
+  createReviewFigmaImagesSnapshot,
+  createReviewFigmaNodeValue,
+  createReviewFigmaReleaseSnapshot,
   createWebReviewKit,
   findReviewViewportPreset,
   getNumberedReviewItems,
+  getReviewFigmaImageMimeType,
+  getReviewFigmaImageTargetKey,
   getReviewItemScope,
   getReviewItemScopeLabel,
   getReviewViewportScope,
+  isReviewFigmaTokenError,
   localAdapter,
   normalizeReviewItemStatus,
+  parseReviewFigmaNodeRef,
+  readReviewFigmaToken,
+  requireReviewFigmaNodeRef,
+  requireReviewFigmaToken,
   supabaseAdapter
 };
 //# sourceMappingURL=index.js.map

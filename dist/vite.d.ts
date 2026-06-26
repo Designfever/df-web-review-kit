@@ -1,6 +1,57 @@
 import { Plugin } from 'vite';
+import { a as ReviewFigmaImageFormat } from './image.types-DZSqTbSX.js';
+import { d as ReviewFigmaNodeRef, f as ReviewFigmaTokenEnv } from './parse-Bw6C7Xlq.js';
+export { C as CollectReviewFigmaReleaseSnapshotOptions, a as CreateReviewFigmaImagesSnapshotOptions, b as CreateReviewFigmaReleaseSnapshotOptions, c as ReviewFigmaImagesSnapshot, e as ReviewFigmaReleaseSnapshot, i as collectReviewFigmaReleaseSnapshot, k as createReviewFigmaImagesSnapshot, m as createReviewFigmaReleaseSnapshot } from './parse-Bw6C7Xlq.js';
+
+type ReviewFigmaRenderFormat = 'png' | 'jpg' | 'svg' | 'pdf';
+type ReviewFigmaImageRenderOptions = {
+    figmaUrl: string | ReviewFigmaNodeRef;
+    token?: string | null;
+    format?: ReviewFigmaRenderFormat;
+    scale?: number;
+    useAbsoluteBounds?: boolean;
+    apiBaseUrl?: string;
+    fetch?: typeof fetch;
+    signal?: AbortSignal;
+};
+type ReviewFigmaRenderedImage = {
+    fileKey: string;
+    nodeId: string;
+    figmaUrl?: string;
+    imageUrl: string;
+    renderFormat: ReviewFigmaRenderFormat;
+};
+declare function renderReviewFigmaImage(options: ReviewFigmaImageRenderOptions): Promise<ReviewFigmaRenderedImage>;
+declare function createReviewFigmaImageApiUrl({ apiBaseUrl, fileKey, nodeId, format, scale, useAbsoluteBounds, }: {
+    apiBaseUrl?: string;
+    fileKey: string;
+    nodeId: string;
+    format?: ReviewFigmaRenderFormat;
+    scale?: number;
+    useAbsoluteBounds?: boolean;
+}): string;
 
 type SourceLocatorPattern = string | RegExp;
+interface ReviewFigmaImageStorePluginOptions extends ReviewFigmaServerTokenOptions {
+    enabled?: boolean;
+    projectId?: string;
+    endpoint?: string;
+    dataFile?: string;
+    imageFormat?: ReviewFigmaImageFormat;
+    renderFormat?: ReviewFigmaRenderFormat;
+    renderScale?: number;
+    useAbsoluteBounds?: boolean;
+    apiBaseUrl?: string;
+    fetch?: typeof fetch;
+}
+interface ReviewFigmaServerTokenOptions {
+    token?: string | null;
+    env?: ReviewFigmaTokenEnv;
+    envKey?: string;
+    enabled?: boolean;
+}
+type ReviewFigmaServerImageRenderOptions = Omit<ReviewFigmaImageRenderOptions, 'token'> & ReviewFigmaServerTokenOptions;
+
 interface ReviewSourceLocatorOptions {
     enabled?: boolean;
     root?: string;
@@ -11,6 +62,10 @@ interface ReviewSourceLocatorOptions {
     column?: boolean;
     attributePrefix?: string;
 }
+declare const readReviewFigmaServerToken: (options?: ReviewFigmaServerTokenOptions) => string | null;
+declare const requireReviewFigmaServerToken: (options?: ReviewFigmaServerTokenOptions) => string;
+declare const renderReviewFigmaServerImage: (options: ReviewFigmaServerImageRenderOptions) => Promise<ReviewFigmaRenderedImage>;
+declare const reviewFigmaImageStore: (options?: ReviewFigmaImageStorePluginOptions) => Plugin;
 declare const reviewSourceLocator: (options?: ReviewSourceLocatorOptions) => Plugin;
 interface ReviewDataLocatorOptions {
     enabled?: boolean;
@@ -29,4 +84,4 @@ interface ReviewDataLocatorOptions {
  */
 declare const reviewDataLocator: (options?: ReviewDataLocatorOptions) => Plugin;
 
-export { type ReviewDataLocatorOptions, type ReviewSourceLocatorOptions, reviewDataLocator, reviewSourceLocator };
+export { type ReviewDataLocatorOptions, type ReviewFigmaImageRenderOptions, type ReviewFigmaImageStorePluginOptions, type ReviewFigmaRenderFormat, type ReviewFigmaRenderedImage, type ReviewFigmaServerImageRenderOptions, type ReviewFigmaServerTokenOptions, type ReviewSourceLocatorOptions, createReviewFigmaImageApiUrl, readReviewFigmaServerToken, renderReviewFigmaImage, renderReviewFigmaServerImage, requireReviewFigmaServerToken, reviewDataLocator, reviewFigmaImageStore, reviewSourceLocator };

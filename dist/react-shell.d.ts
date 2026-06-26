@@ -1,4 +1,5 @@
 import { f as ReviewItemScope, r as ReviewSource, n as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, p as ReviewRulerConfig } from './types-DFHHVRBc.js';
+import { R as ReviewFigmaImageStore, a as ReviewFigmaImageFormat } from './image.types-DZSqTbSX.js';
 import * as react from 'react';
 
 type ReviewShellViewportKind = Exclude<ReviewItemScope, 'dom'>;
@@ -116,6 +117,11 @@ type ReviewPresenceAdapter = {
     label: string;
     connect: (context: ReviewPresenceContext) => Promise<ReviewPresenceSession> | ReviewPresenceSession;
 };
+type ReviewShellFigmaImagesOptions = {
+    enabled?: boolean;
+    store?: ReviewFigmaImageStore;
+    imageFormat?: ReviewFigmaImageFormat;
+};
 interface CreateReviewPagesOptions {
     root?: string;
     exclude?: (href: string) => boolean;
@@ -132,12 +138,13 @@ interface ReviewShellProps {
     sourceRoot?: string;
     sourceInspector?: ReviewSourceInspectorOptions;
     presence?: ReviewPresenceAdapter;
+    figmaImages?: ReviewShellFigmaImagesOptions;
 }
 interface ReviewShellMountOptions extends ReviewShellProps {
     rootId?: string;
 }
 
-declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, adjustmentLabel, reviewPathPrefix, sourceRoot, sourceInspector, presence }: ReviewShellProps) => react.JSX.Element;
+declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, adjustmentLabel, reviewPathPrefix, sourceRoot, sourceInspector, presence, figmaImages, }: ReviewShellProps) => react.JSX.Element;
 
 declare const createReviewPagesFromGlob: (entries: ReviewShellGlobEntries, options?: CreateReviewPagesOptions) => ReviewShellPage[];
 
@@ -184,4 +191,4 @@ declare const createSupabasePresenceAdapter: ({ client, channelPrefix, private: 
 
 declare const mountReviewShell: (options: ReviewShellMountOptions) => void;
 
-export { type CreateReviewPagesOptions, DEFAULT_REVIEW_VIEWPORT_PRESETS, type LocalPresenceAdapterOptions, type ReviewPresenceAdapter, type ReviewPresenceContext, type ReviewPresenceSession, type ReviewPresenceState, type ReviewPresenceStatus, type ReviewPresenceUser, ReviewShell, type ReviewShellAdapter, type ReviewShellAdapters, type ReviewShellGlobEntries, type ReviewShellMountOptions, type ReviewShellPage, type ReviewShellProps, type ReviewShellStatusOption, type ReviewShellViewportKind, type ReviewShellViewportPreset, type ReviewSourceEditor, type ReviewSourceInspectorOptions, type SupabasePresenceAdapterOptions, type SupabasePresenceClient, createFallbackPresenceAdapter, createLocalPresenceAdapter, createReviewPagesFromGlob, createSupabasePresenceAdapter, mountReviewShell };
+export { type CreateReviewPagesOptions, DEFAULT_REVIEW_VIEWPORT_PRESETS, type LocalPresenceAdapterOptions, type ReviewPresenceAdapter, type ReviewPresenceContext, type ReviewPresenceSession, type ReviewPresenceState, type ReviewPresenceStatus, type ReviewPresenceUser, ReviewShell, type ReviewShellAdapter, type ReviewShellAdapters, type ReviewShellFigmaImagesOptions, type ReviewShellGlobEntries, type ReviewShellMountOptions, type ReviewShellPage, type ReviewShellProps, type ReviewShellStatusOption, type ReviewShellViewportKind, type ReviewShellViewportPreset, type ReviewSourceEditor, type ReviewSourceInspectorOptions, type SupabasePresenceAdapterOptions, type SupabasePresenceClient, createFallbackPresenceAdapter, createLocalPresenceAdapter, createReviewPagesFromGlob, createSupabasePresenceAdapter, mountReviewShell };

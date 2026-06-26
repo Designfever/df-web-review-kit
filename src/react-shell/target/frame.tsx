@@ -10,9 +10,16 @@ import { ReviewModeToolbar } from '../review/mode.toolbar';
 import { RulerGutters } from '../ruler/gutters';
 import { RulerOverlay } from '../ruler/overlay';
 
+type ReviewTargetFigmaImageOverlay = {
+  imageUrl: string;
+  label?: string;
+  opacity: number;
+};
+
 interface ReviewTargetFrameProps {
   canWriteArea: boolean;
   canWriteDom: boolean;
+  figmaImageOverlay: ReviewTargetFigmaImageOverlay | null;
   frameScrollRef: RefObject<HTMLDivElement | null>;
   figmaFrameUrl: string | null;
   iframeRef: RefObject<HTMLIFrameElement | null>;
@@ -36,6 +43,7 @@ interface ReviewTargetFrameProps {
 export const ReviewTargetFrame = ({
   canWriteArea,
   canWriteDom,
+  figmaImageOverlay,
   frameScrollRef,
   figmaFrameUrl,
   iframeRef,
@@ -96,6 +104,16 @@ export const ReviewTargetFrame = ({
                     title="Review target"
                     onLoad={onLoadTarget}
                   />
+                  {figmaImageOverlay && (
+                    <div
+                      aria-label={figmaImageOverlay.label}
+                      className="df-review-figma-image-stage-overlay"
+                      role="img"
+                      style={{ opacity: figmaImageOverlay.opacity }}
+                    >
+                      <img alt="" draggable={false} src={figmaImageOverlay.imageUrl} />
+                    </div>
+                  )}
                   {showRuler && (
                     <RulerOverlay
                       iframeRef={iframeRef}

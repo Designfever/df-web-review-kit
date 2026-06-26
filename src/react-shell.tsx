@@ -17,6 +17,7 @@ export type {
   ReviewPresenceUser,
   ReviewSourceEditor,
   ReviewSourceInspectorOptions,
+  ReviewShellFigmaImagesOptions,
   ReviewShellGlobEntries,
   ReviewShellMountOptions,
   ReviewShellPage,

@@ -1,4 +1,8 @@
-import type { ReviewShellViewportPreset } from './types';
+import type {
+  ReviewShellFigmaImagesOptions,
+  ReviewShellViewportPreset,
+} from './types';
+import { createReviewFigmaFrameUrl } from '../figma/parse';
 import { getViewportPresetKind } from './viewport';
 
 export type ReviewFigmaFrameConfig = {
@@ -9,6 +13,19 @@ export type ReviewFigmaFrameConfig = {
 type ReviewFigmaWindow = Window & {
   __figma?: ReviewFigmaFrameConfig;
 };
+
+export function getReviewFigmaImageStore(
+  options: ReviewShellFigmaImagesOptions | null | undefined
+) {
+  if (!options || options.enabled === false) return null;
+  return options.store ?? null;
+}
+
+export function isReviewFigmaImageManagementEnabled(
+  options: ReviewShellFigmaImagesOptions | null | undefined
+) {
+  return Boolean(getReviewFigmaImageStore(options));
+}
 
 export function getTargetFigmaFrameConfig(
   targetWindow: Window | null | undefined
@@ -41,19 +58,9 @@ export function getFigmaFrameUrl(
   const value =
     kind === 'mobile' ? config.mobileNodeId : config.desktopNodeId;
 
-  return value ? createFigmaFrameUrl(value) : null;
+  return value ? createReviewFigmaFrameUrl(value) : null;
 }
 
 function normalizeFigmaNodeValue(value: unknown) {
   return typeof value === 'string' ? value.trim() || undefined : undefined;
-}
-
-function createFigmaFrameUrl(value: string) {
-  const [fileKey, nodeId] = value.split('->').map((part) => part.trim());
-  if (!fileKey || !nodeId) return null;
-
-  const urlNodeId = encodeURIComponent(nodeId.replace(/:/g, '-'));
-  return `https://www.figma.com/design/${encodeURIComponent(
-    fileKey
-  )}?node-id=${urlNodeId}`;
 }

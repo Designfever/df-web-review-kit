@@ -85,7 +85,7 @@ export const setDocumentScrollInstantly = (
   targetWindow.scrollTo(position.left, position.top);
 };
 
-export const getReviewItemExpectedDocumentRect = (item: ReviewItem) => {
+const getReviewItemExpectedDocumentRect = (item: ReviewItem) => {
   const scroll = item.scroll ?? { x: 0, y: 0 };
   const selection = item.selection?.viewport;
   if (
@@ -116,7 +116,7 @@ export const getReviewItemExpectedDocumentRect = (item: ReviewItem) => {
   return undefined;
 };
 
-export const getReviewAnchorMatchScore = (
+const getReviewAnchorMatchScore = (
   element: Element,
   expectedRect:
     | {
@@ -147,7 +147,7 @@ export const getReviewAnchorMatchScore = (
   return score;
 };
 
-export const getElementDocumentRect = (element: Element) => {
+const getElementDocumentRect = (element: Element) => {
   const rect = element.getBoundingClientRect();
   const view = element.ownerDocument.defaultView;
 
@@ -180,7 +180,7 @@ const clampDocumentScrollPosition = (
   };
 };
 
-export const getReviewTextFingerprintScore = (expected: string, element: Element) => {
+const getReviewTextFingerprintScore = (expected: string, element: Element) => {
   const actual = element.textContent?.replace(/\s+/g, ' ').trim();
   if (!actual) return 0.5;
   if (expected === actual) return 1;
@@ -194,14 +194,14 @@ export const getReviewTextFingerprintScore = (expected: string, element: Element
   return Math.min(Math.max(matches.length / expectedTokens.length, 0.25), 0.76);
 };
 
-export const getReviewFingerprintTokens = (value: string) =>
+const getReviewFingerprintTokens = (value: string) =>
   value
     .toLowerCase()
     .split(/[\s/|,.:;()[\]{}"'`~!?<>]+/)
     .map((token) => token.trim())
     .filter((token) => token.length > 1);
 
-export const isScrollableReviewAnchorElement = (element: Element) => {
+const isScrollableReviewAnchorElement = (element: Element) => {
   const id = element.id.trim().toLowerCase();
   if (
     element === element.ownerDocument.body ||

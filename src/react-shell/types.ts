@@ -67,7 +67,7 @@ export type ReviewShellUpdateStatusInput = {
   statusIndex: number;
 };
 
-export type ReviewShellSubmissionPatch = Partial<
+type ReviewShellSubmissionPatch = Partial<
   Pick<
     ReviewItem,
     | 'externalIssueId'
@@ -110,7 +110,7 @@ export type ReviewShellAdapters = ReviewShellAdapterMap | ReviewShellAdapter[];
 
 export type ReviewPresenceStatus = 'idle' | 'reviewing' | 'editing';
 
-export type ReviewPresenceViewport = {
+type ReviewPresenceViewport = {
   label: string;
   width: number;
   height: number;

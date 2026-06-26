@@ -154,7 +154,7 @@ export function getNumberedReviewItems(
 }
 
 /** Reads a persisted review number when present. */
-export function getReviewItemNumber(item: Pick<ReviewItem, 'reviewNumber'>) {
+function getReviewItemNumber(item: Pick<ReviewItem, 'reviewNumber'>) {
   return normalizeReviewNumber(item.reviewNumber);
 }
 

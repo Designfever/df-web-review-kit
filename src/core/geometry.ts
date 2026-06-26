@@ -32,7 +32,7 @@ export interface ReviewEnvironment {
 }
 
 /** Returns true when two viewport rectangles overlap. */
-export function rectanglesIntersect(
+function rectanglesIntersect(
   a: ViewportSelection,
   b: ViewportSelection
 ) {
@@ -192,26 +192,9 @@ export function getPopoverPosition(
   };
 }
 
-/** Places the area draft popover near the selected area edge. */
-export function getAreaPopoverPosition(
-  selection: ViewportSelection,
-  environment: ReviewEnvironment
-) {
-  return getPopoverPosition(
-    {
-      x: selection.left + selection.width,
-      y: selection.top,
-    },
-    environment,
-    {
-      width: 360,
-      estimatedHeight: 206,
-    }
-  );
-}
 
 /** Uses overlay bounds when embedded in a shell, otherwise the host viewport. */
-export function getPopoverBounds(environment?: ReviewEnvironment) {
+function getPopoverBounds(environment?: ReviewEnvironment) {
   if (!environment) {
     return {
       left: 0,

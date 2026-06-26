@@ -11,7 +11,7 @@ export type ReviewAddressInput = {
   width?: number;
 };
 
-export const normalizeReviewPathPrefix = (value: string) => {
+const normalizeReviewPathPrefix = (value: string) => {
   const raw = value.trim() || DEFAULT_REVIEW_PATH_PREFIX;
   const prefix = raw.startsWith('/') ? raw : `/${raw}`;
   return prefix.length > 1 && prefix.endsWith('/')
@@ -100,7 +100,7 @@ export const buildTargetSrc = (target: string) => {
   return `${url.pathname}${url.search}${url.hash}`;
 };
 
-export const getHashRoutePath = (hash: string) => {
+const getHashRoutePath = (hash: string) => {
   if (!hash.startsWith('#/')) return null;
 
   const [path] = hash.slice(1).split(/[?#]/);

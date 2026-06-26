@@ -4,29 +4,15 @@ import { getItemTarget } from '../route';
 export const getItemTitle = (item: ReviewItem) =>
   item.title || item.comment.split('\n')[0] || item.kind;
 
-export const formatItemMeta = (item: ReviewItem) => {
-  const parts = [
-    `${Math.round(item.viewport?.width ?? 0)}x${Math.round(item.viewport?.height ?? 0)}`
-  ];
-
-  if (item.scroll) {
-    parts.push(
-      `scroll ${Math.round(item.scroll.x)},${Math.round(item.scroll.y)}`
-    );
-  }
-
-  return parts.join(' / ');
-};
-
-export const formatPromptViewport = (item: ReviewItem) =>
+const formatPromptViewport = (item: ReviewItem) =>
   `${Math.round(item.viewport?.width ?? 0)}x${Math.round(
     item.viewport?.height ?? 0
   )}`;
 
-export const formatPromptPoint = (point: { x: number; y: number } | undefined) =>
+const formatPromptPoint = (point: { x: number; y: number } | undefined) =>
   point ? `x=${Math.round(point.x)}, y=${Math.round(point.y)}` : '(none)';
 
-export const formatPromptSelection = (
+const formatPromptSelection = (
   selection:
     | {
         x?: number;
@@ -47,7 +33,7 @@ export const formatPromptSelection = (
   )}, height=${Math.round(selection.height)}`;
 };
 
-export const decodePromptHtmlEntities = (value: string) =>
+const decodePromptHtmlEntities = (value: string) =>
   value.replace(
     /&(#\d+|#x[\da-f]+|lt|gt|quot|apos|amp);/gi,
     (match, entity: string) => {
@@ -69,7 +55,7 @@ export const decodePromptHtmlEntities = (value: string) =>
     }
   );
 
-export const getPromptAnchorCandidates = (item: ReviewItem) => {
+const getPromptAnchorCandidates = (item: ReviewItem) => {
   const anchor = item.anchor;
   if (!anchor) return [];
 
@@ -82,7 +68,7 @@ export const getPromptAnchorCandidates = (item: ReviewItem) => {
   });
 };
 
-export const formatPromptSourceHint = (item: ReviewItem) => {
+const formatPromptSourceHint = (item: ReviewItem) => {
   const source = item.anchor?.source;
   if (!source) return '(none)';
 
@@ -163,16 +149,4 @@ export const getPromptLengthLabel = (value: string) => {
   if (length <= 2000) return `${length} chars / Discord 2,000 OK`;
   if (length <= 4000) return `${length} chars / Nitro 4,000 OK`;
   return `${length} chars / attach as file`;
-};
-
-export const formatDate = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return date.toLocaleString(undefined, {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
 };

@@ -1,7 +1,7 @@
 import type { TargetOverlayState } from '../types';
 
-export const HIDE_SCROLLBAR_STYLE_ID = 'df-review-hide-scrollbar';
-export const FIGMA_POINTER_LOCK_STYLE_ID = 'df-review-figma-pointer-lock';
+const HIDE_SCROLLBAR_STYLE_ID = 'df-review-hide-scrollbar';
+const FIGMA_POINTER_LOCK_STYLE_ID = 'df-review-figma-pointer-lock';
 
 export const setTargetScrollbarHidden = (
   targetDocument: Document | null | undefined,

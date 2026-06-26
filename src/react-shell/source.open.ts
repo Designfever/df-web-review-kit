@@ -1,17 +1,6 @@
 import type { DomSourceHint } from '../types';
 import type { ReviewSourceInspectorOptions } from './types';
 
-const SOURCE_SELECTOR = [
-  '[data-wrk-source-file]',
-  '[data-wrk-source-component]',
-  '[data-wrk-source-line]',
-  '[data-wrk-source-column]',
-  '[data-file]',
-  '[data-component]',
-  '[data-section-index]',
-  '[data-section-id]',
-].join(', ');
-
 const SECTION_OUTLINE_ROOT_SELECTOR = [
   '[data-wrk-source-component]',
   'header[data-wrk-source-file]',
@@ -19,10 +8,6 @@ const SECTION_OUTLINE_ROOT_SELECTOR = [
   '[role="banner"][data-wrk-source-file]',
   '[role="contentinfo"][data-wrk-source-file]',
 ].join(', ');
-
-export const getSourceHintElement = (target: EventTarget | null) => {
-  return getEventElement(target)?.closest(SOURCE_SELECTOR) ?? null;
-};
 
 export type SourceOpenOptions = ReviewSourceInspectorOptions & {
   omitPosition?: boolean;
@@ -44,16 +29,7 @@ export type SourceCandidate = {
   source: DomSourceHint;
 };
 
-export const getElementSourceHint = (
-  target: EventTarget | null
-): DomSourceHint | undefined => {
-  const sourceElement = getSourceHintElement(target);
-  if (!sourceElement) return undefined;
-
-  return getSourceHintFromElement(sourceElement);
-};
-
-export type SourceIgnorePattern = string | RegExp;
+type SourceIgnorePattern = string | RegExp;
 
 export type GetSourceCandidatesOptions = {
   includePlacer?: boolean;
@@ -128,14 +104,14 @@ export type SectionOutlineEntry = {
   children: SectionOutlineEntry[];
 };
 
-export type SectionOutlineRect = {
+type SectionOutlineRect = {
   top: number;
   left: number;
   width: number;
   height: number;
 };
 
-export type SectionOutlineMetadata = {
+type SectionOutlineMetadata = {
   rect: SectionOutlineRect;
   textValue?: string;
   fontLabel?: string;
@@ -143,7 +119,7 @@ export type SectionOutlineMetadata = {
   classNames?: string[];
 };
 
-export type SectionOutlineMediaItem = {
+type SectionOutlineMediaItem = {
   type: 'image' | 'video';
   url: string;
   variant: 'desktop' | 'mobile' | 'media';

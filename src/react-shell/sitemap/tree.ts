@@ -36,7 +36,7 @@ type SitemapTreeNode = {
   children: Map<string, SitemapTreeNode>;
 };
 
-export type SitemapTreeRow = {
+type SitemapTreeRow = {
   href: string;
   label: string;
   prefix: string;

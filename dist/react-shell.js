@@ -5,19 +5,14 @@ import {
   getNumberedReviewItems,
   normalizeReviewItemStatus,
   runWithAutoScrollBehavior
-} from "./chunk-IN36JHEU.js";
+} from "./chunk-BDP7FS4Q.js";
 
 // src/react-shell.tsx
 import React2 from "react";
 import { createRoot } from "react-dom/client";
 
-// src/react-shell/style.ts
-var REVIEW_SHELL_STYLE_ID = "df-review-shell-style";
-function ensureReviewShellStyle() {
-  if (!document.getElementById(REVIEW_SHELL_STYLE_ID)) {
-    const style = document.createElement("style");
-    style.id = REVIEW_SHELL_STYLE_ID;
-    style.textContent = `
+// src/react-shell/style/base.ts
+var reviewShellBaseStyle = `
 	  * {
 	    box-sizing: border-box;
 	    scrollbar-color: var(--df-review-scrollbar-thumb, rgba(237, 243, 251, 0.2)) var(--df-review-scrollbar-track, rgba(237, 243, 251, 0.04));
@@ -417,6 +412,10 @@ function ensureReviewShellStyle() {
     stroke-width: 1.8;
   }
 
+`;
+
+// src/react-shell/style/sitemap.ts
+var reviewShellSitemapStyle = `
   .df-review-sitemap-modal {
     position: fixed;
     inset: 0;
@@ -732,6 +731,10 @@ function ensureReviewShellStyle() {
     color: var(--df-review-text);
   }
 
+`;
+
+// src/react-shell/style/modals.ts
+var reviewShellModalStyle = `
 		  .df-review-settings-modal {
 		    position: fixed;
 		    inset: 0;
@@ -1336,6 +1339,10 @@ function ensureReviewShellStyle() {
 			    line-height: 1.55;
 			  }
 
+`;
+
+// src/react-shell/style/toolbar.ts
+var reviewShellToolbarStyle = `
 				  .df-review-tools {
 			    display: flex;
 			    align-items: center;
@@ -1864,6 +1871,10 @@ function ensureReviewShellStyle() {
     background: var(--df-review-accent-soft);
   }
 
+`;
+
+// src/react-shell/style/qa-panel.ts
+var reviewShellQaPanelStyle = `
 	  .df-review-qa-panel {
 	    grid-column: 2;
 	    grid-row: 1 / span 3;
@@ -2584,6 +2595,10 @@ function ensureReviewShellStyle() {
     stroke-width: 2;
   }
 
+`;
+
+// src/react-shell/style/stage.ts
+var reviewShellStageStyle = `
 	  .df-review-stage {
 	    grid-column: 1;
 	    grid-row: 3;
@@ -3326,6 +3341,10 @@ function ensureReviewShellStyle() {
     font-weight: 500;
   }
 
+`;
+
+// src/react-shell/style/ruler.ts
+var reviewShellRulerStyle = `
   .df-review-device-frame {
     position: relative;
     box-sizing: border-box;
@@ -3586,7 +3605,23 @@ function ensureReviewShellStyle() {
         font-size: 16px;
       }
     }
-	    `;
+`;
+
+// src/react-shell/style.ts
+var REVIEW_SHELL_STYLE_ID = "df-review-shell-style";
+function ensureReviewShellStyle() {
+  if (!document.getElementById(REVIEW_SHELL_STYLE_ID)) {
+    const style = document.createElement("style");
+    style.id = REVIEW_SHELL_STYLE_ID;
+    style.textContent = [
+      reviewShellBaseStyle,
+      reviewShellSitemapStyle,
+      reviewShellModalStyle,
+      reviewShellToolbarStyle,
+      reviewShellQaPanelStyle,
+      reviewShellStageStyle,
+      reviewShellRulerStyle
+    ].join("\n\n");
     document.head.append(style);
   }
 }
@@ -6228,16 +6263,6 @@ var PresenceOverlay = ({
 };
 
 // src/react-shell/source.open.ts
-var SOURCE_SELECTOR = [
-  "[data-wrk-source-file]",
-  "[data-wrk-source-component]",
-  "[data-wrk-source-line]",
-  "[data-wrk-source-column]",
-  "[data-file]",
-  "[data-component]",
-  "[data-section-index]",
-  "[data-section-id]"
-].join(", ");
 var SECTION_OUTLINE_ROOT_SELECTOR = [
   "[data-wrk-source-component]",
   "header[data-wrk-source-file]",

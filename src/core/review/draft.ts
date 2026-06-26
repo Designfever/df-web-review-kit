@@ -8,12 +8,12 @@ import type {
 
 export type ReviewDraftPreviewElement = HTMLElement | SVGElement;
 
-export interface ReviewAdjustmentDraft extends ReviewPoint {
+interface ReviewAdjustmentDraft extends ReviewPoint {
   isActive?: boolean;
   scale?: number;
 }
 
-export interface ReviewDraftComposer {
+interface ReviewDraftComposer {
   /** Host viewport top-left position for the floating draft composer. */
   composerPosition?: ReviewPoint;
 }

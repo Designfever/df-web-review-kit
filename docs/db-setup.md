@@ -4,9 +4,11 @@ Supabase is an optional backend adapter. A host project may use it for canonical
 
 ## Environment
 
+Start from [.env.sample](../.env.sample), then fill Supabase values only in the host project that uses the Supabase adapter.
+
 ```env
-VITE_REVIEW_PROJECT_ID=df-web-review-kit
-VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
+VITE_REVIEW_PROJECT_ID=my-project
+VITE_REVIEW_SUPABASE_URL=
 VITE_REVIEW_SUPABASE_ANON_KEY=
 VITE_REVIEW_SUPABASE_TABLE=review_items
 VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE=false

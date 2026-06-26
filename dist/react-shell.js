@@ -4,20 +4,16 @@ import {
   createWebReviewKit,
   getNumberedReviewItems,
   normalizeReviewItemStatus,
+  reviewTypographyTokens,
   runWithAutoScrollBehavior
-} from "./chunk-IN36JHEU.js";
+} from "./chunk-22HU3UBN.js";
 
 // src/react-shell.tsx
-import React2 from "react";
+import React from "react";
 import { createRoot } from "react-dom/client";
 
-// src/react-shell/style.ts
-var REVIEW_SHELL_STYLE_ID = "df-review-shell-style";
-function ensureReviewShellStyle() {
-  if (!document.getElementById(REVIEW_SHELL_STYLE_ID)) {
-    const style = document.createElement("style");
-    style.id = REVIEW_SHELL_STYLE_ID;
-    style.textContent = `
+// src/react-shell/style/base.ts
+var reviewShellBaseStyle = `
 	  * {
 	    box-sizing: border-box;
 	    scrollbar-color: var(--df-review-scrollbar-thumb, rgba(237, 243, 251, 0.2)) var(--df-review-scrollbar-track, rgba(237, 243, 251, 0.04));
@@ -60,23 +56,7 @@ function ensureReviewShellStyle() {
 	    color-scheme: dark;
 
 	    /* df-review-token layer. Keep these names internal to review-kit. */
-	    --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	    --df-review-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-	    --df-review-font-size-3xs: 9px;
-	    --df-review-font-size-2xs: 10px;
-	    --df-review-font-size-xs: 11px;
-	    --df-review-font-size-sm: 12px;
-	    --df-review-font-size-md: 13px;
-	    --df-review-font-size-lg: 14px;
-	    --df-review-font-size-xl: 15px;
-	    --df-review-font-size-2xl: 18px;
-	    --df-review-font-weight-medium: 400;
-	    --df-review-font-weight-bold: 500;
-	    --df-review-font-weight-strong: 500;
-	    --df-review-font-weight-heavy: 600;
-	    --df-review-line-height-tight: 1.25;
-	    --df-review-line-height-base: 1.42;
-	    --df-review-line-height-relaxed: 1.55;
+	    ${reviewTypographyTokens}
 	    --df-review-space-0: 0;
 	    --df-review-space-1: 4px;
 	    --df-review-space-1-5: 6px;
@@ -310,6 +290,10 @@ function ensureReviewShellStyle() {
     min-width: 0;
   }
 
+  .df-review-address-actions button:not(.df-review-address-refresh) {
+    padding-inline: 7px;
+  }
+
   .df-review-address input {
 	    width: 100%;
 	    height: var(--df-review-control-height-md);
@@ -346,7 +330,7 @@ function ensureReviewShellStyle() {
 	    box-shadow: var(--df-review-shadow-control);
 	    color: var(--df-review-text);
 	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	    transition: border-color 140ms ease, background 140ms ease, color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 	  }
 
@@ -417,6 +401,10 @@ function ensureReviewShellStyle() {
     stroke-width: 1.8;
   }
 
+`;
+
+// src/react-shell/style/sitemap.ts
+var reviewShellSitemapStyle = `
   .df-review-sitemap-modal {
     position: fixed;
     inset: 0;
@@ -469,13 +457,13 @@ function ensureReviewShellStyle() {
 
   .df-review-sitemap-header strong {
     font-size: var(--df-review-font-size-lg);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
 	  .df-review-sitemap-header span {
 	    color: var(--df-review-muted);
 	    font-size: var(--df-review-font-size-sm);
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	  }
 
   .df-review-sitemap-header button {
@@ -489,7 +477,7 @@ function ensureReviewShellStyle() {
 	    background: var(--df-review-control);
 	    color: var(--df-review-text);
 	    font-size: var(--df-review-font-size-md);
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	  }
 
 	  .df-review-sitemap-header button:hover {
@@ -517,7 +505,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-control);
     box-shadow: var(--df-review-shadow-control);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
   .df-review-sitemap-list {
@@ -553,7 +541,7 @@ function ensureReviewShellStyle() {
       0 1px 0 var(--df-review-line);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
@@ -651,7 +639,7 @@ function ensureReviewShellStyle() {
     overflow-wrap: anywhere;
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-md);
-    font-weight: 400;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1.35;
   }
 
@@ -663,7 +651,7 @@ function ensureReviewShellStyle() {
     flex: 0 0 auto;
     color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
-    font-weight: 400;
+    font-weight: var(--df-review-font-weight-normal);
     white-space: pre;
   }
 
@@ -678,14 +666,14 @@ function ensureReviewShellStyle() {
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
     font-variant-numeric: tabular-nums;
-    font-weight: 400;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1;
     text-align: right;
   }
 
   .df-review-sitemap-cell.is-total {
     color: var(--df-review-accent);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-sitemap-cell.is-total strong {
@@ -718,7 +706,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-chip-bg);
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1.1;
     white-space: nowrap;
   }
@@ -732,6 +720,10 @@ function ensureReviewShellStyle() {
     color: var(--df-review-text);
   }
 
+`;
+
+// src/react-shell/style/modals.ts
+var reviewShellModalStyle = `
 		  .df-review-settings-modal {
 		    position: fixed;
 		    inset: 0;
@@ -790,13 +782,13 @@ function ensureReviewShellStyle() {
 		  .df-review-settings-header strong {
 		    color: var(--df-review-text);
 		    font-size: var(--df-review-font-size-lg);
-        font-weight: 600;
+        font-weight: var(--df-review-font-weight-emphasis);
 		  }
 
 		  .df-review-settings-header span {
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-header button {
@@ -806,7 +798,7 @@ function ensureReviewShellStyle() {
 		    min-width: 34px;
 		    padding: 0;
 		    font-size: var(--df-review-font-size-md);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-body {
@@ -832,7 +824,7 @@ function ensureReviewShellStyle() {
 		  .df-review-settings-label-row label {
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-theme-options {
@@ -856,7 +848,7 @@ function ensureReviewShellStyle() {
 		    background: var(--df-review-control);
 		    box-shadow: var(--df-review-shadow-control);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
       .df-review-settings-theme-option svg {
@@ -1014,7 +1006,7 @@ function ensureReviewShellStyle() {
 		    background: var(--df-review-chip-bg);
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		    line-height: 1.55;
 		  }
 
@@ -1030,7 +1022,7 @@ function ensureReviewShellStyle() {
 		    margin: 0;
 		    color: var(--df-review-accent);
 		    font-size: var(--df-review-font-size-sm);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		  }
 
 		  .df-review-settings-actions {
@@ -1096,7 +1088,7 @@ function ensureReviewShellStyle() {
     margin: 0;
     color: var(--df-review-danger);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-edit-actions {
@@ -1136,6 +1128,15 @@ function ensureReviewShellStyle() {
 			    box-shadow: var(--df-review-shadow-modal);
 			  }
 
+			  .df-review-prompt-dialog-narrow {
+			    width: min(440px, calc(100vw - 36px));
+			  }
+
+			  .df-review-prompt-dialog-narrow .df-review-prompt-block textarea {
+			    height: min(58vh, 540px);
+			    max-height: none;
+			  }
+
   .df-review-copy-toast {
     position: fixed;
     right: 52px;
@@ -1149,7 +1150,7 @@ function ensureReviewShellStyle() {
     box-shadow: var(--df-review-shadow-modal);
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1.25;
     pointer-events: none;
   }
@@ -1173,14 +1174,14 @@ function ensureReviewShellStyle() {
 			  .df-review-prompt-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-lg);
-          font-weight: 600;
+          font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
 			  .df-review-prompt-header span {
 			    overflow: hidden;
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			    text-overflow: ellipsis;
 			    white-space: nowrap;
 			  }
@@ -1192,7 +1193,17 @@ function ensureReviewShellStyle() {
 			    min-width: 34px;
 			    padding: 0;
 			    font-size: var(--df-review-font-size-md);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
+			  }
+
+			  .df-review-prompt-header button svg {
+			    width: 15px;
+			    height: 15px;
+			    fill: none;
+			    stroke: currentColor;
+			    stroke-linecap: round;
+			    stroke-linejoin: round;
+			    stroke-width: 2;
 			  }
 
 			  .df-review-prompt-body {
@@ -1226,13 +1237,13 @@ function ensureReviewShellStyle() {
 			  .df-review-prompt-block-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
 			  .df-review-prompt-block-header span {
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			  }
 
 			  .df-review-prompt-block-header button {
@@ -1271,9 +1282,10 @@ function ensureReviewShellStyle() {
 			    color: var(--df-review-text);
 			    font-family: var(--df-review-font-mono);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 400;
+			    font-weight: var(--df-review-font-weight-normal);
 			    line-height: 1.5;
-			    white-space: pre;
+			    white-space: pre-wrap;
+			    overflow-wrap: anywhere;
 			  }
 
 			  .df-review-prompt-block textarea:focus {
@@ -1290,52 +1302,108 @@ function ensureReviewShellStyle() {
 			  .df-review-prompt-section-header strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-md);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
 			  .df-review-prompt-section-header span {
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-xs);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			  }
 
-			  .df-review-prompt-about {
+			  .df-review-about-dialog {
+			    grid-template-rows: minmax(0, 1fr);
+			    width: min(600px, calc(100vw - 36px));
+			  }
+
+			  .df-review-about-close {
+			    position: absolute;
+			    top: 14px;
+			    right: 14px;
+			    z-index: 2;
 			    display: grid;
-			    gap: 10px;
-			    min-width: 0;
+			    place-items: center;
+			    width: 32px;
+			    height: 32px;
+			    border: 1px solid var(--df-review-line);
+			    border-radius: var(--df-review-radius-sm);
+			    background: var(--df-review-control);
+			    color: var(--df-review-text);
 			  }
 
-			  .df-review-prompt-about-grid {
-			    display: grid;
-			    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-			    gap: 10px;
-			    min-width: 0;
+			  .df-review-about-close svg {
+			    width: 15px;
+			    height: 15px;
+			    fill: none;
+			    stroke: currentColor;
+			    stroke-linecap: round;
+			    stroke-linejoin: round;
+			    stroke-width: 2;
 			  }
 
-			  .df-review-prompt-about-grid article {
+			  .df-review-about-body {
 			    display: grid;
 			    align-content: start;
-			    gap: 6px;
-			    border: 1px solid var(--df-review-line);
-			    border-radius: var(--df-review-radius-md);
-			    padding: 12px;
-			    background: var(--df-review-surface);
+			    gap: 22px;
+			    min-height: 0;
+			    overflow: auto;
+			    padding: 34px 32px;
 			  }
 
-			  .df-review-prompt-about-grid strong {
+			  .df-review-about-intro {
+			    display: grid;
+			    justify-items: start;
+			    gap: 8px;
+			  }
+
+			  .df-review-about-logo {
+			    display: grid;
+			    place-items: center;
+			    color: var(--df-review-text);
+			  }
+
+			  .df-review-about-logo svg {
+			    width: auto;
+			    height: 26px;
+			    fill: currentColor;
+			  }
+
+			  .df-review-about-intro strong {
+			    color: var(--df-review-text);
+			    font-size: var(--df-review-font-size-lg);
+			    font-weight: var(--df-review-font-weight-emphasis);
+			  }
+
+			  .df-review-about-intro span {
+			    color: var(--df-review-muted);
+			    font-size: var(--df-review-font-size-sm);
+			    font-weight: var(--df-review-font-weight-normal);
+			  }
+
+			  .df-review-about-item {
+			    display: grid;
+			    gap: 5px;
+			  }
+
+			  .df-review-about-item strong {
 			    color: var(--df-review-text);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			  }
 
-			  .df-review-prompt-about-grid p {
+			  .df-review-about-item p {
 			    margin: 0;
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 500;
-			    line-height: 1.55;
+			    font-weight: var(--df-review-font-weight-normal);
+			    line-height: 1.6;
 			  }
 
+
+`;
+
+// src/react-shell/style/toolbar.ts
+var reviewShellToolbarStyle = `
 				  .df-review-tools {
 			    display: flex;
 			    align-items: center;
@@ -1393,7 +1461,7 @@ function ensureReviewShellStyle() {
 		    align-items: center;
 		    color: var(--df-review-line);
 		    font-size: var(--df-review-font-size-2xl);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 	    line-height: 1;
 		    user-select: none;
 	  }
@@ -1406,7 +1474,7 @@ function ensureReviewShellStyle() {
 		    color: var(--df-review-muted);
 		    font-size: var(--df-review-font-size-sm);
 		    font-variant-numeric: tabular-nums;
-	    font-weight: 500;
+	    font-weight: var(--df-review-font-weight-normal);
 	    line-height: 1;
 	  }
 
@@ -1428,7 +1496,7 @@ function ensureReviewShellStyle() {
     background-size: 18px 18px;
     box-shadow: var(--df-review-shadow-control);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
 	  .df-review-presets button {
@@ -1461,7 +1529,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-line-soft);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-2xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 16px;
     text-align: center;
   }
@@ -1487,7 +1555,7 @@ function ensureReviewShellStyle() {
   .df-review-preset-copy strong {
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
 	  .df-review-overlay-button,
@@ -1735,13 +1803,20 @@ function ensureReviewShellStyle() {
 	  }
 
 	  .df-review-side-toggle svg {
-	    width: 30px;
-	    height: 30px;
+	    width: 22px;
+	    height: 22px;
 	    fill: none;
 	    stroke: currentColor;
 	    stroke-linecap: round;
 	    stroke-width: 1.55;
 	  }
+
+  .df-review-side-toggle svg.df-review-brand-icon {
+    width: auto;
+    height: 16px;
+    stroke: none;
+    fill: currentColor;
+  }
 
   .df-review-side-actions {
     display: flex;
@@ -1749,6 +1824,12 @@ function ensureReviewShellStyle() {
     align-items: stretch;
     width: 100%;
     margin-top: auto;
+  }
+
+  .df-review-side-divider {
+    height: 1px;
+    margin: 4px 12px;
+    background: var(--df-review-line);
   }
 
   .df-review-presence-overlay {
@@ -1789,8 +1870,8 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-presence-button svg {
-    width: 30px;
-    height: 30px;
+    width: 22px;
+    height: 22px;
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;
@@ -1812,7 +1893,7 @@ function ensureReviewShellStyle() {
     color: #17202c;
     background: var(--df-review-accent);
     font-size: var(--df-review-font-size-3xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     pointer-events: none;
   }
@@ -1845,7 +1926,7 @@ function ensureReviewShellStyle() {
     color: var(--df-review-text);
     background: var(--df-review-control);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1.1;
     white-space: nowrap;
   }
@@ -1860,10 +1941,18 @@ function ensureReviewShellStyle() {
 
   .df-review-presence-chip.is-self {
     color: var(--df-review-accent);
-    border-color: var(--df-review-accent-soft);
-    background: var(--df-review-accent-soft);
+    border-color: var(--df-review-accent-hover);
+    background: linear-gradient(
+        var(--df-review-accent-soft),
+        var(--df-review-accent-soft)
+      ),
+      var(--df-review-control);
   }
 
+`;
+
+// src/react-shell/style/qa-panel.ts
+var reviewShellQaPanelStyle = `
 	  .df-review-qa-panel {
 	    grid-column: 2;
 	    grid-row: 1 / span 3;
@@ -1951,7 +2040,7 @@ function ensureReviewShellStyle() {
 			    background: var(--df-review-card);
 			    color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-sm);
-			    font-weight: 500;
+			    font-weight: var(--df-review-font-weight-normal);
 			  }
 
 			  .df-review-list-toolbar {
@@ -1992,7 +2081,7 @@ function ensureReviewShellStyle() {
 			    color: #fff;
 			    font-size: var(--df-review-font-size-xs);
 			    font-variant-numeric: tabular-nums;
-          font-weight: 500;
+          font-weight: var(--df-review-font-weight-normal);
 			  }
 
   .df-review-list-controls {
@@ -2012,7 +2101,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-control);
     box-shadow: var(--df-review-shadow-control);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-source-select {
@@ -2111,7 +2200,7 @@ function ensureReviewShellStyle() {
 			  .df-review-filter-count {
 			    color: currentColor;
 			    font-size: var(--df-review-font-size-3xs);
-			    font-weight: 600;
+			    font-weight: var(--df-review-font-weight-emphasis);
 			    font-variant-numeric: tabular-nums;
 			    line-height: 1;
 			  }
@@ -2192,7 +2281,7 @@ function ensureReviewShellStyle() {
   .df-review-item-main strong {
     overflow-wrap: anywhere;
     font-size: var(--df-review-font-size-md);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1.35;
   }
 
@@ -2240,7 +2329,7 @@ function ensureReviewShellStyle() {
     border-radius: var(--df-review-radius-pill);
     padding: 0 7px;
     font-size: var(--df-review-font-size-2xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     text-transform: uppercase;
   }
@@ -2319,7 +2408,7 @@ function ensureReviewShellStyle() {
     border-radius: var(--df-review-radius-sm);
     padding: 0 11px;
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     text-transform: none;
   }
 
@@ -2332,7 +2421,7 @@ function ensureReviewShellStyle() {
     cursor: pointer;
     outline: 0;
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     text-transform: none;
   }
 
@@ -2557,7 +2646,7 @@ function ensureReviewShellStyle() {
 
 		  .df-review-item-submit-button span {
 		    font-size: var(--df-review-font-size-xs);
-		    font-weight: 500;
+		    font-weight: var(--df-review-font-weight-normal);
 		    line-height: 1;
 		    text-transform: none;
 		    white-space: nowrap;
@@ -2584,6 +2673,10 @@ function ensureReviewShellStyle() {
     stroke-width: 2;
   }
 
+`;
+
+// src/react-shell/style/stage.ts
+var reviewShellStageStyle = `
 	  .df-review-stage {
 	    grid-column: 1;
 	    grid-row: 3;
@@ -2768,8 +2861,8 @@ function ensureReviewShellStyle() {
     padding: 0;
     color: var(--df-review-source-popover-subtle);
     background: transparent;
-    font-size: 16px;
-    font-weight: 500;
+    font-size: var(--df-review-font-size-xl);
+    font-weight: var(--df-review-font-weight-normal);
     line-height: 1;
   }
 
@@ -2825,7 +2918,7 @@ function ensureReviewShellStyle() {
 
   .df-review-source-candidate-main strong {
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1.2;
   }
 
@@ -2887,7 +2980,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-card);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-section-outline-summary {
@@ -2910,7 +3003,7 @@ function ensureReviewShellStyle() {
     overflow: hidden;
     color: var(--df-review-text);
     font-size: inherit;
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2921,7 +3014,7 @@ function ensureReviewShellStyle() {
     overflow: hidden;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -3021,7 +3114,7 @@ function ensureReviewShellStyle() {
     color: var(--df-review-text);
     background: transparent;
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     outline: 0;
     -webkit-appearance: none;
     appearance: none;
@@ -3061,39 +3154,47 @@ function ensureReviewShellStyle() {
   .df-review-section-outline-list {
     display: grid;
     align-content: start;
-    gap: 2px;
+    gap: var(--df-review-space-2);
     min-height: 0;
     overflow-y: auto;
-    padding: 8px 1px 8px 15px;
+    padding: var(--df-review-space-2) var(--df-review-space-2) var(--df-review-space-3);
     scrollbar-gutter: stable;
   }
 
   .df-review-section-outline-item {
     display: grid;
+    --df-review-section-outline-name-color: var(--df-review-text);
+  }
+
+  /* Each root renders as a card so the tree scans like the QA list. */
+  .df-review-section-outline-item.is-depth-1 {
+    padding: var(--df-review-space-1);
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-lg);
+    background: var(--df-review-card);
   }
 
   .df-review-section-outline-entry-body {
     display: grid;
+    border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
+    transition: border-color 140ms ease, background 140ms ease;
   }
 
   .df-review-section-outline-entry-body:hover {
+    border-color: rgba(124, 199, 255, 0.2);
     background: var(--df-review-accent-soft);
   }
 
-  .df-review-section-outline-item.is-depth-1:not(:last-child) {
-    margin-bottom: 7px;
-    padding-bottom: 7px;
-    border-bottom: 1px solid var(--df-review-line-soft);
-  }
 
   .df-review-section-outline-row {
     display: grid;
     grid-template-columns: 18px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
     border-radius: var(--df-review-radius-sm);
-    padding: 7px 6px;
+    min-height: 42px;
+    padding: 6px 7px 6px 6px;
   }
 
   .df-review-section-outline-toggle {
@@ -3136,13 +3237,13 @@ function ensureReviewShellStyle() {
     display: grid;
     gap: 2px;
     min-width: 0;
-    overflow: visible;
+    overflow: hidden;
     border: 0;
     padding: 0;
     color: var(--df-review-text);
     background: transparent;
     font-size: var(--df-review-font-size-sm);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
     text-align: left;
     white-space: normal;
     cursor: pointer;
@@ -3150,17 +3251,21 @@ function ensureReviewShellStyle() {
 
   .df-review-section-outline-name span,
   .df-review-section-outline-name small {
-    overflow: visible;
-    overflow-wrap: anywhere;
-    text-overflow: clip;
-    white-space: normal;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .df-review-section-outline-name span {
+    color: var(--df-review-section-outline-name-color);
   }
 
   .df-review-section-outline-name small {
     color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
-    font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-size: var(--df-review-font-size-2xs);
+    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-section-outline-name:hover {
@@ -3168,10 +3273,21 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-section-outline-meta {
+    position: relative;
     display: grid;
     gap: 3px;
     min-width: 0;
-    padding: 0 6px 7px;
+    padding: 8px 6px 7px;
+  }
+
+  .df-review-section-outline-meta::before {
+    position: absolute;
+    top: 0;
+    left: 29px;
+    right: 8px;
+    height: 1px;
+    background: var(--df-review-line-soft);
+    content: '';
   }
 
   .df-review-section-outline-meta-row {
@@ -3188,7 +3304,7 @@ function ensureReviewShellStyle() {
 
   .df-review-section-outline-meta-row b {
     color: var(--df-review-subtle);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
   .df-review-section-outline-meta-row code {
@@ -3251,21 +3367,28 @@ function ensureReviewShellStyle() {
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 2px;
+    gap: 1px;
   }
 
   .df-review-section-outline-divider {
+    display: block;
+    width: 1px;
+    height: 14px;
+    margin: 0 2px;
+    overflow: hidden;
+    background: var(--df-review-line-soft);
     color: var(--df-review-subtle);
     font-size: var(--df-review-font-size-xs);
     line-height: 1;
+    text-indent: -999px;
     user-select: none;
   }
 
   .df-review-section-outline-link {
     display: inline-grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
     padding: 0;
@@ -3277,8 +3400,8 @@ function ensureReviewShellStyle() {
   }
 
   .df-review-section-outline-link.is-dom-select {
-    width: 26px;
-    min-width: 26px;
+    width: 24px;
+    min-width: 24px;
     padding: 0;
   }
 
@@ -3317,15 +3440,57 @@ function ensureReviewShellStyle() {
 
   .df-review-section-outline-children {
     display: grid;
+    margin-left: 16px;
+    border-left: 1px solid var(--df-review-line-soft);
+  }
+
+  .df-review-section-outline-item.is-depth-1
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-item.is-depth-2 {
+    --df-review-section-outline-name-color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-item.is-depth-2
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-area);
+  }
+
+  .df-review-section-outline-item.is-depth-3 {
+    --df-review-section-outline-name-color: var(--df-review-area);
+  }
+
+  .df-review-section-outline-item.is-depth-3
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-note);
+  }
+
+  .df-review-section-outline-item.is-depth-4 {
+    --df-review-section-outline-name-color: var(--df-review-note);
+  }
+
+  .df-review-section-outline-item.is-depth-4
+    > .df-review-section-outline-children {
+    border-left-color: var(--df-review-purple);
+  }
+
+  .df-review-section-outline-item.is-depth-5 {
+    --df-review-section-outline-name-color: var(--df-review-purple);
   }
 
   .df-review-section-outline-empty {
     padding: 14px 12px 16px;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 500;
+    font-weight: var(--df-review-font-weight-normal);
   }
 
+`;
+
+// src/react-shell/style/ruler.ts
+var reviewShellRulerStyle = `
   .df-review-device-frame {
     position: relative;
     box-sizing: border-box;
@@ -3420,13 +3585,13 @@ function ensureReviewShellStyle() {
   .df-review-ruler-frame-label strong {
     color: var(--df-review-color-ruler-label-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
   .df-review-ruler-frame-label span {
     color: var(--df-review-color-ruler-label-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     opacity: 0.78;
   }
 
@@ -3439,7 +3604,7 @@ function ensureReviewShellStyle() {
     background: var(--df-review-color-ruler-coord-bg);
     color: var(--df-review-color-ruler-coord-text);
     font-size: var(--df-review-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     white-space: nowrap;
     pointer-events: none;
@@ -3517,7 +3682,7 @@ function ensureReviewShellStyle() {
     color: var(--df-review-color-ruler-popover-text);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-lg);
-    font-weight: 600;
+    font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
     white-space: nowrap;
     letter-spacing: -0.02em;
@@ -3583,10 +3748,26 @@ function ensureReviewShellStyle() {
       .df-review-edit-textarea textarea,
       .df-review-preset-select,
       .df-review-prompt-block textarea {
-        font-size: 16px;
+        font-size: var(--df-review-font-size-xl);
       }
     }
-	    `;
+`;
+
+// src/react-shell/style.ts
+var REVIEW_SHELL_STYLE_ID = "df-review-shell-style";
+function ensureReviewShellStyle() {
+  if (!document.getElementById(REVIEW_SHELL_STYLE_ID)) {
+    const style = document.createElement("style");
+    style.id = REVIEW_SHELL_STYLE_ID;
+    style.textContent = [
+      reviewShellBaseStyle,
+      reviewShellSitemapStyle,
+      reviewShellModalStyle,
+      reviewShellToolbarStyle,
+      reviewShellQaPanelStyle,
+      reviewShellStageStyle,
+      reviewShellRulerStyle
+    ].join("\n\n");
     document.head.append(style);
   }
 }
@@ -3792,21 +3973,18 @@ var __iconNode9 = [
 ];
 var Eye = createLucideIcon("eye", __iconNode9);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/file-text.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/grid-2x2-check.mjs
 var __iconNode10 = [
   [
     "path",
     {
-      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
-      key: "1oefj6"
+      d: "M12 3v17a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1H3",
+      key: "11za1p"
     }
   ],
-  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["path", { d: "M10 9H8", key: "b1mrlr" }],
-  ["path", { d: "M16 13H8", key: "t4e002" }],
-  ["path", { d: "M16 17H8", key: "z1uh3a" }]
+  ["path", { d: "m16 19 2 2 4-4", key: "1b14m6" }]
 ];
-var FileText = createLucideIcon("file-text", __iconNode10);
+var Grid2x2Check = createLucideIcon("grid-2x2-check", __iconNode10);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
 var __iconNode11 = [
@@ -3964,8 +4142,18 @@ var __iconNode26 = [
 ];
 var Smartphone = createLucideIcon("smartphone", __iconNode26);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-check-big.mjs
 var __iconNode27 = [
+  [
+    "path",
+    { d: "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344", key: "2acyp4" }
+  ],
+  ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
+];
+var SquareCheckBig = createLucideIcon("square-check-big", __iconNode27);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
+var __iconNode28 = [
   ["path", { d: "M5 3a2 2 0 0 0-2 2", key: "y57alp" }],
   ["path", { d: "M19 3a2 2 0 0 1 2 2", key: "18rm91" }],
   ["path", { d: "M21 19a2 2 0 0 1-2 2", key: "1j7049" }],
@@ -3979,10 +4167,10 @@ var __iconNode27 = [
   ["path", { d: "M3 14v1", key: "vnatye" }],
   ["path", { d: "M21 14v1", key: "169vum" }]
 ];
-var SquareDashed = createLucideIcon("square-dashed", __iconNode27);
+var SquareDashed = createLucideIcon("square-dashed", __iconNode28);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode28 = [
+var __iconNode29 = [
   [
     "path",
     {
@@ -3992,10 +4180,10 @@ var __iconNode28 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode28);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode29);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode29 = [
+var __iconNode30 = [
   [
     "path",
     {
@@ -4005,10 +4193,10 @@ var __iconNode29 = [
   ],
   ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
 ];
-var StickyNote = createLucideIcon("sticky-note", __iconNode29);
+var StickyNote = createLucideIcon("sticky-note", __iconNode30);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sun.mjs
-var __iconNode30 = [
+var __iconNode31 = [
   ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
   ["path", { d: "M12 2v2", key: "tus03m" }],
   ["path", { d: "M12 20v2", key: "1lh1kg" }],
@@ -4019,31 +4207,23 @@ var __iconNode30 = [
   ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
   ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
 ];
-var Sun = createLucideIcon("sun", __iconNode30);
+var Sun = createLucideIcon("sun", __iconNode31);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/type.mjs
-var __iconNode31 = [
+var __iconNode32 = [
   ["path", { d: "M12 4v16", key: "1654pz" }],
   ["path", { d: "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2", key: "e0r10z" }],
   ["path", { d: "M9 20h6", key: "s66wpe" }]
 ];
-var Type = createLucideIcon("type", __iconNode31);
+var Type = createLucideIcon("type", __iconNode32);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode32 = [
+var __iconNode33 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode32);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/workflow.mjs
-var __iconNode33 = [
-  ["rect", { width: "8", height: "8", x: "3", y: "3", rx: "2", key: "by2w9f" }],
-  ["path", { d: "M7 11v4a2 2 0 0 0 2 2h4", key: "xkn7yn" }],
-  ["rect", { width: "8", height: "8", x: "13", y: "13", rx: "2", key: "1cgmvn" }]
-];
-var Workflow = createLucideIcon("workflow", __iconNode33);
+var Upload = createLucideIcon("upload", __iconNode33);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
 var __iconNode34 = [
@@ -4051,6 +4231,87 @@ var __iconNode34 = [
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
 var X = createLucideIcon("x", __iconNode34);
+
+// src/react-shell/review/df.logo.tsx
+import { jsx, jsxs } from "react/jsx-runtime";
+var DfLogoIcon = () => /* @__PURE__ */ jsxs(
+  "svg",
+  {
+    className: "df-review-brand-icon",
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: "0 0 54.062 38.381",
+    "aria-hidden": "true",
+    focusable: "false",
+    children: [
+      /* @__PURE__ */ jsx(
+        "rect",
+        {
+          width: "4.787",
+          height: "4.787",
+          transform: "translate(49.276)",
+          fill: "currentColor"
+        }
+      ),
+      /* @__PURE__ */ jsx(
+        "path",
+        {
+          d: "M25.337,12.329a15.036,15.036,0,1,0,0,21.866v4.186h4.787V0H25.337V12.329ZM15.033,33.5A10.236,10.236,0,1,1,25.27,23.265,10.249,10.249,0,0,1,15.033,33.5Z",
+          fill: "currentColor"
+        }
+      ),
+      /* @__PURE__ */ jsx(
+        "path",
+        {
+          d: "M72.092,0H67.3V38.314h4.792V23.939H86.5V19.152H72.092Z",
+          transform: "translate(-32.436)",
+          fill: "currentColor"
+        }
+      )
+    ]
+  }
+);
+
+// src/react-shell/env.ts
+var REVIEW_SOURCE_EDITORS = [
+  "vscode",
+  "cursor",
+  "webstorm",
+  "custom"
+];
+var getInjectedSourceRoot = () => typeof __DF_WRK_REVIEW_SOURCE_ROOT__ === "undefined" ? void 0 : __DF_WRK_REVIEW_SOURCE_ROOT__;
+var getInjectedSourceEditor = () => typeof __DF_WRK_REVIEW_SOURCE_EDITOR__ === "undefined" ? void 0 : __DF_WRK_REVIEW_SOURCE_EDITOR__;
+var getInjectedSourceUrlTemplate = () => typeof __DF_WRK_REVIEW_SOURCE_URL_TEMPLATE__ === "undefined" ? void 0 : __DF_WRK_REVIEW_SOURCE_URL_TEMPLATE__;
+var getRuntimeEnv = () => ({
+  VITE_REVIEW_SOURCE_EDITOR: getInjectedSourceEditor(),
+  VITE_REVIEW_SOURCE_ROOT: getInjectedSourceRoot(),
+  VITE_REVIEW_SOURCE_URL_TEMPLATE: getInjectedSourceUrlTemplate()
+});
+var getEnvString = (env, key) => {
+  const value = env[key];
+  return typeof value === "string" && value.trim() ? value.trim() : void 0;
+};
+var getEnvSourceEditor = (env) => {
+  const value = getEnvString(env, "VITE_REVIEW_SOURCE_EDITOR");
+  return REVIEW_SOURCE_EDITORS.includes(value) ? value : void 0;
+};
+var resolveReviewSourceOptions = ({
+  sourceInspector,
+  sourceRoot
+}) => {
+  const env = getRuntimeEnv();
+  const envSourceRoot = getEnvString(env, "VITE_REVIEW_SOURCE_ROOT");
+  const envSourceEditor = getEnvSourceEditor(env);
+  const envUrlTemplate = getEnvString(env, "VITE_REVIEW_SOURCE_URL_TEMPLATE");
+  const resolvedSourceInspector = sourceInspector || envSourceEditor || envUrlTemplate ? {
+    ...sourceInspector,
+    ...envSourceEditor ? { editor: envSourceEditor } : {},
+    ...envUrlTemplate ? { urlTemplate: envUrlTemplate } : {}
+  } : sourceInspector;
+  return {
+    sourceInspector: resolvedSourceInspector,
+    sourceRoot: envSourceRoot ?? sourceRoot
+  };
+};
 
 // src/react-shell/constants.ts
 var REVIEW_QA_FILTERS = [
@@ -4087,10 +4348,15 @@ var normalizeReviewPathPrefix = (value) => {
 };
 var normalizeTarget = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
   const raw = value.trim() || "/";
-  const [path] = raw.split(/[?#]/);
+  const { hash, path, search } = splitTarget(raw);
   const normalized = path.startsWith("/") ? path : `/${path}`;
   const reviewPrefix = normalizeReviewPathPrefix(reviewPathPrefix);
-  return normalized === reviewPrefix || normalized.startsWith(`${reviewPrefix}/`) ? "/" : normalized;
+  const normalizedPath = normalized === reviewPrefix || normalized.startsWith(`${reviewPrefix}/`) ? "/" : normalized;
+  return `${normalizedPath}${search}${hash}`;
+};
+var getTargetRouteKey = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  const { path } = splitTarget(normalizeTarget(value, reviewPathPrefix));
+  return path || "/";
 };
 var parseReviewAddressInput = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
   const raw = value.trim();
@@ -4103,7 +4369,10 @@ var parseReviewAddressInput = (value, reviewPathPrefix = DEFAULT_REVIEW_PATH_PRE
   const isReviewUrl = parsedUrl.pathname === reviewPrefix || parsedUrl.pathname.startsWith(`${reviewPrefix}/`);
   if (!isReviewUrl) {
     return {
-      target: normalizeTarget(parsedUrl.pathname, reviewPathPrefix)
+      target: normalizeTarget(
+        `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`,
+        reviewPathPrefix
+      )
     };
   }
   const source = parsedUrl.searchParams.get("source")?.trim();
@@ -4141,21 +4410,8 @@ var buildTargetSrc = (target) => {
   url.searchParams.set("__dfwr_target", "1");
   return `${url.pathname}${url.search}${url.hash}`;
 };
-var getHashRoutePath = (hash) => {
-  if (!hash.startsWith("#/")) return null;
-  const [path] = hash.slice(1).split(/[?#]/);
-  try {
-    return decodeURI(path || "/");
-  } catch {
-    return path || "/";
-  }
-};
 var getFrameRouteTarget = (targetWindow, reviewPathPrefix) => {
-  const hashPath = getHashRoutePath(targetWindow.location.hash);
-  return normalizeTarget(
-    hashPath ?? targetWindow.location.pathname,
-    reviewPathPrefix
-  );
+  return normalizeTarget(targetWindow.location.pathname, reviewPathPrefix);
 };
 var updateShellUrl = (target, size, source) => {
   const url = new URL(window.location.href);
@@ -4196,16 +4452,55 @@ var getInitialSource = (remoteSource) => {
   return new URLSearchParams(window.location.search).get("source") === remoteSource ? remoteSource : "local";
 };
 var getItemTarget = (item, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
-  if (item.routeKey) return normalizeTarget(item.routeKey, reviewPathPrefix);
+  if (item.routeKey) return getTargetRouteKey(item.routeKey, reviewPathPrefix);
   if (item.normalizedPath) {
-    return normalizeTarget(item.normalizedPath, reviewPathPrefix);
+    return getTargetRouteKey(item.normalizedPath, reviewPathPrefix);
   }
   try {
-    return normalizeTarget(new URL(item.pageUrl).pathname, reviewPathPrefix);
+    return getTargetRouteKey(new URL(item.pageUrl).pathname, reviewPathPrefix);
   } catch {
     return "/";
   }
 };
+var getItemFrameTarget = (item, reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX) => {
+  const routeTarget = getItemTarget(item, reviewPathPrefix);
+  const originalTarget = getItemUrlTarget(item.originalUrl, reviewPathPrefix);
+  if (originalTarget && getTargetRouteKey(originalTarget, reviewPathPrefix) === routeTarget) {
+    return originalTarget;
+  }
+  const pageTarget = getItemUrlTarget(item.pageUrl, reviewPathPrefix);
+  if (pageTarget && getTargetRouteKey(pageTarget, reviewPathPrefix) === routeTarget) {
+    return pageTarget;
+  }
+  return routeTarget;
+};
+function splitTarget(value) {
+  const hashIndex = value.indexOf("#");
+  const beforeHash = hashIndex >= 0 ? value.slice(0, hashIndex) : value;
+  const hash = hashIndex >= 0 ? value.slice(hashIndex) : "";
+  const searchIndex = beforeHash.indexOf("?");
+  const path = searchIndex >= 0 ? beforeHash.slice(0, searchIndex) : beforeHash;
+  const search = searchIndex >= 0 ? beforeHash.slice(searchIndex) : "";
+  return {
+    hash,
+    path: path || "/",
+    search
+  };
+}
+function getItemUrlTarget(value, reviewPathPrefix) {
+  if (!value) return null;
+  if (typeof window === "undefined") return null;
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.origin !== window.location.origin) return null;
+    return normalizeTarget(
+      `${url.pathname}${url.search}${url.hash}`,
+      reviewPathPrefix
+    );
+  } catch {
+    return null;
+  }
+}
 
 // src/react-shell/viewport.ts
 var DEFAULT_REVIEW_VIEWPORT_PRESETS = [
@@ -4274,6 +4569,76 @@ var toReviewViewportPresets = (presets) => presets.map((preset) => ({
 var getIsFigmaOverlayAvailable = (preset) => {
   const kind = getViewportPresetKind(preset);
   return kind === "mobile" || kind === "wide";
+};
+
+// src/react-shell/prompt/modal.tsx
+import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
+var ABOUT_SECTIONS = [
+  {
+    title: "What this is",
+    body: "df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool."
+  },
+  {
+    title: "How to setup",
+    body: "Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration."
+  },
+  {
+    title: "Figma token",
+    body: "Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration."
+  },
+  {
+    title: "User ID",
+    body: "Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route."
+  },
+  {
+    title: "Remote",
+    body: "Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or \uB2F4\uB2F9 \uAC1C\uBC1C\uC790 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser."
+  }
+];
+var PromptModal = ({ onClose }) => {
+  return /* @__PURE__ */ jsxs2(
+    "div",
+    {
+      "aria-label": "Review help",
+      "aria-modal": "true",
+      className: "df-review-prompt-modal",
+      role: "dialog",
+      children: [
+        /* @__PURE__ */ jsx2(
+          "button",
+          {
+            "aria-label": "Close help",
+            className: "df-review-prompt-backdrop",
+            type: "button",
+            onClick: onClose
+          }
+        ),
+        /* @__PURE__ */ jsxs2("div", { className: "df-review-prompt-dialog df-review-about-dialog", children: [
+          /* @__PURE__ */ jsx2(
+            "button",
+            {
+              "aria-label": "Close help",
+              className: "df-review-about-close",
+              type: "button",
+              onClick: onClose,
+              children: /* @__PURE__ */ jsx2(X, { "aria-hidden": "true" })
+            }
+          ),
+          /* @__PURE__ */ jsxs2("div", { className: "df-review-about-body", children: [
+            /* @__PURE__ */ jsxs2("div", { className: "df-review-about-intro", children: [
+              /* @__PURE__ */ jsx2("span", { className: "df-review-about-logo", "aria-hidden": "true", children: /* @__PURE__ */ jsx2(DfLogoIcon, {}) }),
+              /* @__PURE__ */ jsx2("strong", { children: "Review shell help" }),
+              /* @__PURE__ */ jsx2("span", { children: "Program overview and setup notes" })
+            ] }),
+            ABOUT_SECTIONS.map((section) => /* @__PURE__ */ jsxs2("div", { className: "df-review-about-item", children: [
+              /* @__PURE__ */ jsx2("strong", { children: section.title }),
+              /* @__PURE__ */ jsx2("p", { children: section.body })
+            ] }, section.title))
+          ] })
+        ] })
+      ]
+    }
+  );
 };
 
 // src/react-shell/prompt/prompt.ts
@@ -4378,115 +4743,82 @@ var getPromptLengthLabel = (value) => {
   return `${length} chars / attach as file`;
 };
 
-// src/react-shell/prompt/modal.tsx
-import { jsx, jsxs } from "react/jsx-runtime";
-var ABOUT_SECTIONS = [
-  {
-    title: "What this is",
-    body: "df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool."
-  },
-  {
-    title: "How to setup",
-    body: "Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration."
-  },
-  {
-    title: "Figma token",
-    body: "Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration."
-  },
-  {
-    title: "User ID",
-    body: "Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route."
-  },
-  {
-    title: "Remote",
-    body: "Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or \uB2F4\uB2F9 \uAC1C\uBC1C\uC790 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser."
-  }
-];
-var PromptModal = ({
+// src/react-shell/prompt/initial.modal.tsx
+import { jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
+var InitialPromptModal = ({
   initialPromptText,
   copiedPromptKey,
   onClose,
   onCopyPrompt
 }) => {
-  return /* @__PURE__ */ jsxs(
+  return /* @__PURE__ */ jsxs3(
     "div",
     {
-      "aria-label": "Review help",
+      "aria-label": "Initial prompt",
       "aria-modal": "true",
       className: "df-review-prompt-modal",
       role: "dialog",
       children: [
-        /* @__PURE__ */ jsx(
+        /* @__PURE__ */ jsx3(
           "button",
           {
-            "aria-label": "Close help",
+            "aria-label": "Close initial prompt",
             className: "df-review-prompt-backdrop",
             type: "button",
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-dialog", children: [
-          /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-header", children: [
-            /* @__PURE__ */ jsxs("div", { children: [
-              /* @__PURE__ */ jsx("strong", { children: "Review shell help" }),
-              /* @__PURE__ */ jsx("span", { children: "About / Initial prompt" })
+        /* @__PURE__ */ jsxs3("div", { className: "df-review-prompt-dialog df-review-prompt-dialog-narrow", children: [
+          /* @__PURE__ */ jsxs3("div", { className: "df-review-prompt-header", children: [
+            /* @__PURE__ */ jsxs3("div", { children: [
+              /* @__PURE__ */ jsx3("strong", { children: "Initial Prompt" }),
+              /* @__PURE__ */ jsx3("span", { children: "AI handoff script for coding agents" })
             ] }),
-            /* @__PURE__ */ jsx("button", { "aria-label": "Close help", type: "button", onClick: onClose, children: "x" })
-          ] }),
-          /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-body", children: [
-            /* @__PURE__ */ jsxs(
-              "section",
+            /* @__PURE__ */ jsx3(
+              "button",
               {
-                className: "df-review-prompt-about",
-                "aria-labelledby": "df-review-about-title",
-                children: [
-                  /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-section-header", children: [
-                    /* @__PURE__ */ jsx("strong", { id: "df-review-about-title", children: "About" }),
-                    /* @__PURE__ */ jsx("span", { children: "Program overview and setup notes" })
-                  ] }),
-                  /* @__PURE__ */ jsx("div", { className: "df-review-prompt-about-grid", children: ABOUT_SECTIONS.map((section) => /* @__PURE__ */ jsxs("article", { children: [
-                    /* @__PURE__ */ jsx("strong", { children: section.title }),
-                    /* @__PURE__ */ jsx("p", { children: section.body })
-                  ] }, section.title)) })
-                ]
-              }
-            ),
-            /* @__PURE__ */ jsxs(
-              "section",
-              {
-                className: "df-review-prompt-block",
-                "aria-labelledby": "df-review-initial-prompt-title",
-                children: [
-                  /* @__PURE__ */ jsxs("div", { className: "df-review-prompt-block-header", children: [
-                    /* @__PURE__ */ jsxs("div", { children: [
-                      /* @__PURE__ */ jsx("strong", { id: "df-review-initial-prompt-title", children: "Initial Prompt" }),
-                      /* @__PURE__ */ jsx("span", { children: getPromptLengthLabel(initialPromptText) })
-                    ] }),
-                    /* @__PURE__ */ jsxs(
-                      "button",
-                      {
-                        disabled: !initialPromptText,
-                        type: "button",
-                        onClick: () => onCopyPrompt(initialPromptText, "initial"),
-                        children: [
-                          /* @__PURE__ */ jsx(Copy, { "aria-hidden": "true" }),
-                          copiedPromptKey === "initial" ? "Copied" : "Copy"
-                        ]
-                      }
-                    )
-                  ] }),
-                  /* @__PURE__ */ jsx(
-                    "textarea",
-                    {
-                      readOnly: true,
-                      "aria-label": "Initial Prompt content",
-                      value: initialPromptText || "Initial prompt is not configured."
-                    }
-                  )
-                ]
+                "aria-label": "Close initial prompt",
+                type: "button",
+                onClick: onClose,
+                children: /* @__PURE__ */ jsx3(X, { "aria-hidden": "true" })
               }
             )
-          ] })
+          ] }),
+          /* @__PURE__ */ jsx3("div", { className: "df-review-prompt-body", children: /* @__PURE__ */ jsxs3(
+            "section",
+            {
+              className: "df-review-prompt-block",
+              "aria-labelledby": "df-review-initial-prompt-title",
+              children: [
+                /* @__PURE__ */ jsxs3("div", { className: "df-review-prompt-block-header", children: [
+                  /* @__PURE__ */ jsxs3("div", { children: [
+                    /* @__PURE__ */ jsx3("strong", { id: "df-review-initial-prompt-title", children: "QA handoff prompt" }),
+                    /* @__PURE__ */ jsx3("span", { children: getPromptLengthLabel(initialPromptText) })
+                  ] }),
+                  /* @__PURE__ */ jsxs3(
+                    "button",
+                    {
+                      disabled: !initialPromptText,
+                      type: "button",
+                      onClick: () => onCopyPrompt(initialPromptText, "initial"),
+                      children: [
+                        /* @__PURE__ */ jsx3(Copy, { "aria-hidden": "true" }),
+                        copiedPromptKey === "initial" ? "Copied" : "Copy"
+                      ]
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsx3(
+                  "textarea",
+                  {
+                    readOnly: true,
+                    "aria-label": "Initial Prompt content",
+                    value: initialPromptText || "Initial prompt is not configured."
+                  }
+                )
+              ]
+            }
+          ) })
         ] })
       ]
     }
@@ -4703,7 +5035,7 @@ var getSystemReviewTheme = () => {
 };
 
 // src/react-shell/review/settings.modal.tsx
-import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
+import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
 var getReviewThemeIcon = (theme) => {
   if (theme === "light") return Sun;
   if (theme === "system") return Monitor;
@@ -4725,7 +5057,7 @@ var ReviewSettingsModal = ({
   onToggleFigmaTokenGuide,
   onSave
 }) => {
-  return /* @__PURE__ */ jsxs2(
+  return /* @__PURE__ */ jsxs4(
     "div",
     {
       "aria-label": "Review settings",
@@ -4733,7 +5065,7 @@ var ReviewSettingsModal = ({
       className: "df-review-settings-modal",
       role: "dialog",
       children: [
-        /* @__PURE__ */ jsx2(
+        /* @__PURE__ */ jsx4(
           "button",
           {
             "aria-label": "Close settings",
@@ -4742,7 +5074,7 @@ var ReviewSettingsModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ jsxs2(
+        /* @__PURE__ */ jsxs4(
           "form",
           {
             className: "df-review-settings-dialog",
@@ -4751,10 +5083,10 @@ var ReviewSettingsModal = ({
               onSave(figmaTokenDraft, reviewUserIdDraft, reviewThemeDraft);
             },
             children: [
-              /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-header", children: [
-                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-title", children: [
-                  /* @__PURE__ */ jsx2("strong", { children: "Settings" }),
-                  /* @__PURE__ */ jsxs2("span", { children: [
+              /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-header", children: [
+                /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-title", children: [
+                  /* @__PURE__ */ jsx4("strong", { children: "Settings" }),
+                  /* @__PURE__ */ jsxs4("span", { children: [
                     FIGMA_TOKEN_STORAGE_KEY,
                     " / ",
                     REVIEW_USER_ID_STORAGE_KEY,
@@ -4763,14 +5095,14 @@ var ReviewSettingsModal = ({
                     REVIEW_THEME_STORAGE_KEY
                   ] })
                 ] }),
-                /* @__PURE__ */ jsx2("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ jsx2("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" }) })
+                /* @__PURE__ */ jsx4("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ jsx4("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" }) })
               ] }),
-              /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-body", children: [
-                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-row", children: [
-                  /* @__PURE__ */ jsx2("span", { children: "Theme" }),
-                  /* @__PURE__ */ jsx2("div", { className: "df-review-settings-theme-options", children: REVIEW_THEME_OPTIONS.map((option) => {
+              /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-body", children: [
+                /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-row", children: [
+                  /* @__PURE__ */ jsx4("span", { children: "Theme" }),
+                  /* @__PURE__ */ jsx4("div", { className: "df-review-settings-theme-options", children: REVIEW_THEME_OPTIONS.map((option) => {
                     const ThemeIcon = getReviewThemeIcon(option.value);
-                    return /* @__PURE__ */ jsxs2(
+                    return /* @__PURE__ */ jsxs4(
                       "button",
                       {
                         "aria-pressed": reviewThemeDraft === option.value,
@@ -4783,18 +5115,18 @@ var ReviewSettingsModal = ({
                           onClearStatus();
                         },
                         children: [
-                          /* @__PURE__ */ jsx2(ThemeIcon, { "aria-hidden": "true" }),
-                          /* @__PURE__ */ jsx2("span", { children: option.label })
+                          /* @__PURE__ */ jsx4(ThemeIcon, { "aria-hidden": "true" }),
+                          /* @__PURE__ */ jsx4("span", { children: option.label })
                         ]
                       },
                       option.value
                     );
                   }) })
                 ] }),
-                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-label-row", children: [
-                    /* @__PURE__ */ jsx2("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
-                    /* @__PURE__ */ jsx2(
+                /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-label-row", children: [
+                    /* @__PURE__ */ jsx4("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
+                    /* @__PURE__ */ jsx4(
                       "button",
                       {
                         "aria-controls": FIGMA_TOKEN_GUIDE_ID,
@@ -4803,12 +5135,12 @@ var ReviewSettingsModal = ({
                         className: `df-review-settings-help-button${isFigmaTokenGuideOpen ? " is-active" : ""}`,
                         type: "button",
                         onClick: onToggleFigmaTokenGuide,
-                        children: /* @__PURE__ */ jsx2(CircleQuestionMark, { "aria-hidden": "true" })
+                        children: /* @__PURE__ */ jsx4(CircleQuestionMark, { "aria-hidden": "true" })
                       }
                     )
                   ] }),
-                  /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-token-input", children: [
-                    /* @__PURE__ */ jsx2(
+                  /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-token-input", children: [
+                    /* @__PURE__ */ jsx4(
                       "input",
                       {
                         id: "df-review-figma-token",
@@ -4831,34 +5163,34 @@ var ReviewSettingsModal = ({
                         }
                       }
                     ),
-                    /* @__PURE__ */ jsx2(
+                    /* @__PURE__ */ jsx4(
                       "button",
                       {
                         "aria-label": isFigmaTokenVisible ? "Hide Figma token" : "Show Figma token",
                         className: "df-review-settings-token-toggle",
                         type: "button",
                         onClick: onToggleFigmaTokenVisible,
-                        children: isFigmaTokenVisible ? /* @__PURE__ */ jsx2(EyeOff, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx2(Eye, { "aria-hidden": "true" })
+                        children: isFigmaTokenVisible ? /* @__PURE__ */ jsx4(EyeOff, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx4(Eye, { "aria-hidden": "true" })
                       }
                     )
                   ] }),
-                  isFigmaTokenGuideOpen && /* @__PURE__ */ jsx2(
+                  isFigmaTokenGuideOpen && /* @__PURE__ */ jsx4(
                     "div",
                     {
                       className: "df-review-settings-guide",
                       id: FIGMA_TOKEN_GUIDE_ID,
-                      children: /* @__PURE__ */ jsxs2("ol", { children: [
-                        /* @__PURE__ */ jsx2("li", { children: "Figma file browser\uC5D0\uC11C account menu\uB97C \uC5F4\uACE0 Settings\uB85C \uC774\uB3D9" }),
-                        /* @__PURE__ */ jsx2("li", { children: "Security \uD0ED\uC758 Personal access tokens\uB85C \uC774\uB3D9" }),
-                        /* @__PURE__ */ jsx2("li", { children: "Generate new token\uC5D0\uC11C \uC774\uB984\uACFC scope\uB97C \uC815\uD55C \uB4A4 \uC0DD\uC131" }),
-                        /* @__PURE__ */ jsx2("li", { children: "\uC0DD\uC131\uB41C token\uC744 \uBCF5\uC0AC\uD574\uC11C \uC5EC\uAE30\uC5D0 \uBD99\uC5EC\uB123\uAE30" })
+                      children: /* @__PURE__ */ jsxs4("ol", { children: [
+                        /* @__PURE__ */ jsx4("li", { children: "Figma file browser\uC5D0\uC11C account menu\uB97C \uC5F4\uACE0 Settings\uB85C \uC774\uB3D9" }),
+                        /* @__PURE__ */ jsx4("li", { children: "Security \uD0ED\uC758 Personal access tokens\uB85C \uC774\uB3D9" }),
+                        /* @__PURE__ */ jsx4("li", { children: "Generate new token\uC5D0\uC11C \uC774\uB984\uACFC scope\uB97C \uC815\uD55C \uB4A4 \uC0DD\uC131" }),
+                        /* @__PURE__ */ jsx4("li", { children: "\uC0DD\uC131\uB41C token\uC744 \uBCF5\uC0AC\uD574\uC11C \uC5EC\uAE30\uC5D0 \uBD99\uC5EC\uB123\uAE30" })
                       ] })
                     }
                   )
                 ] }),
-                /* @__PURE__ */ jsxs2("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ jsx2("span", { children: "User ID" }),
-                  /* @__PURE__ */ jsx2("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ jsx2(
+                /* @__PURE__ */ jsxs4("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ jsx4("span", { children: "User ID" }),
+                  /* @__PURE__ */ jsx4("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ jsx4(
                     "input",
                     {
                       "aria-label": "Review user ID",
@@ -4873,9 +5205,9 @@ var ReviewSettingsModal = ({
                     }
                   ) })
                 ] }),
-                figmaSettingsStatus && /* @__PURE__ */ jsx2("p", { className: "df-review-settings-status", children: figmaSettingsStatus }),
-                /* @__PURE__ */ jsxs2("div", { className: "df-review-settings-actions", children: [
-                  /* @__PURE__ */ jsx2(
+                figmaSettingsStatus && /* @__PURE__ */ jsx4("p", { className: "df-review-settings-status", children: figmaSettingsStatus }),
+                /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-actions", children: [
+                  /* @__PURE__ */ jsx4(
                     "button",
                     {
                       type: "button",
@@ -4883,9 +5215,9 @@ var ReviewSettingsModal = ({
                       children: "Clear"
                     }
                   ),
-                  /* @__PURE__ */ jsx2("span", {}),
-                  /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, children: "Cancel" }),
-                  /* @__PURE__ */ jsx2("button", { type: "submit", children: "Save" })
+                  /* @__PURE__ */ jsx4("span", {}),
+                  /* @__PURE__ */ jsx4("button", { type: "button", onClick: onClose, children: "Cancel" }),
+                  /* @__PURE__ */ jsx4("button", { type: "submit", children: "Save" })
                 ] })
               ] })
             ]
@@ -5125,7 +5457,7 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
 };
 
 // src/react-shell/sitemap/modal.tsx
-import { Fragment, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
+import { Fragment, jsx as jsx5, jsxs as jsxs5 } from "react/jsx-runtime";
 var getNextSortDirection = (current, key) => {
   if (current.key !== key) return key === "page" ? "asc" : "desc";
   return current.direction === "desc" ? "asc" : "desc";
@@ -5192,7 +5524,7 @@ var SitemapModal = ({
       direction: getNextSortDirection(current, key)
     }));
   };
-  return /* @__PURE__ */ jsxs3(
+  return /* @__PURE__ */ jsxs5(
     "div",
     {
       "aria-label": "Sitemap",
@@ -5200,7 +5532,7 @@ var SitemapModal = ({
       className: "df-review-sitemap-modal",
       role: "dialog",
       children: [
-        /* @__PURE__ */ jsx3(
+        /* @__PURE__ */ jsx5(
           "button",
           {
             "aria-label": "Close sitemap",
@@ -5209,11 +5541,11 @@ var SitemapModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-dialog", children: [
-          /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-header", children: [
-            /* @__PURE__ */ jsxs3("div", { children: [
-              /* @__PURE__ */ jsx3("strong", { children: "Sitemap" }),
-              /* @__PURE__ */ jsxs3("span", { children: [
+        /* @__PURE__ */ jsxs5("div", { className: "df-review-sitemap-dialog", children: [
+          /* @__PURE__ */ jsxs5("div", { className: "df-review-sitemap-header", children: [
+            /* @__PURE__ */ jsxs5("div", { children: [
+              /* @__PURE__ */ jsx5("strong", { children: "Sitemap" }),
+              /* @__PURE__ */ jsxs5("span", { children: [
                 pages.length,
                 " pages \xB7 ",
                 allQaCount.remaining,
@@ -5225,10 +5557,10 @@ var SitemapModal = ({
                 " hold"
               ] })
             ] }),
-            /* @__PURE__ */ jsx3("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
+            /* @__PURE__ */ jsx5("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
           ] }),
-          /* @__PURE__ */ jsxs3("div", { className: "df-review-sitemap-list", style: gridStyle, children: [
-            /* @__PURE__ */ jsx3("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ jsxs3(
+          /* @__PURE__ */ jsxs5("div", { className: "df-review-sitemap-list", style: gridStyle, children: [
+            /* @__PURE__ */ jsx5("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ jsxs5(
               "button",
               {
                 "aria-label": `Sort sitemap by ${header.title ?? header.label}`,
@@ -5241,7 +5573,7 @@ var SitemapModal = ({
                 type: "button",
                 onClick: () => setSortKey(header.key),
                 children: [
-                  /* @__PURE__ */ jsx3(
+                  /* @__PURE__ */ jsx5(
                     "span",
                     {
                       "aria-hidden": "true",
@@ -5249,7 +5581,7 @@ var SitemapModal = ({
                       children: getSortIndicator(sort, header.key)
                     }
                   ),
-                  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-sort-label", children: header.label })
+                  /* @__PURE__ */ jsx5("span", { className: "df-review-sitemap-sort-label", children: header.label })
                 ]
               },
               header.key
@@ -5260,7 +5592,7 @@ var SitemapModal = ({
                 row.isPage ? "is-page" : "is-folder",
                 row.isActive ? "is-active" : ""
               ].filter(Boolean).join(" ");
-              const rowContent = /* @__PURE__ */ jsx3(
+              const rowContent = /* @__PURE__ */ jsx5(
                 SitemapRowContent,
                 {
                   label: row.label,
@@ -5270,7 +5602,7 @@ var SitemapModal = ({
                 }
               );
               if (!row.isPage) {
-                return /* @__PURE__ */ jsx3(
+                return /* @__PURE__ */ jsx5(
                   "div",
                   {
                     "aria-label": `${row.href} group / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
@@ -5281,7 +5613,7 @@ var SitemapModal = ({
                   row.href
                 );
               }
-              return /* @__PURE__ */ jsx3(
+              return /* @__PURE__ */ jsx5(
                 "button",
                 {
                   "aria-label": `${row.href} / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
@@ -5293,14 +5625,14 @@ var SitemapModal = ({
                 row.href
               );
             }),
-            /* @__PURE__ */ jsx3(
+            /* @__PURE__ */ jsx5(
               "button",
               {
                 "aria-label": `All QA / ${allQaCount.remaining} remaining / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`,
                 className: `df-review-sitemap-row is-summary${isAllQaVisible ? " is-active" : ""}`,
                 type: "button",
                 onClick: onSelectAllQa,
-                children: /* @__PURE__ */ jsx3(
+                children: /* @__PURE__ */ jsx5(
                   SitemapRowContent,
                   {
                     label: "",
@@ -5322,15 +5654,15 @@ var SitemapRowContent = ({
   prefix,
   qaCount,
   users
-}) => /* @__PURE__ */ jsxs3(Fragment, { children: [
-  /* @__PURE__ */ jsxs3("span", { className: "df-review-sitemap-path", children: [
-    /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-tree-prefix", children: prefix }),
-    /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-label", children: label })
+}) => /* @__PURE__ */ jsxs5(Fragment, { children: [
+  /* @__PURE__ */ jsxs5("span", { className: "df-review-sitemap-path", children: [
+    /* @__PURE__ */ jsx5("span", { className: "df-review-sitemap-tree-prefix", children: prefix }),
+    /* @__PURE__ */ jsx5("span", { className: "df-review-sitemap-label", children: label })
   ] }),
-  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-total", children: /* @__PURE__ */ jsx3("strong", { children: qaCount.remaining }) }),
-  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-review", children: qaCount.status.review }),
-  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-hold", children: qaCount.status.hold }),
-  /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ jsx3("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ jsx3(
+  /* @__PURE__ */ jsx5("span", { className: "df-review-sitemap-cell is-total", children: /* @__PURE__ */ jsx5("strong", { children: qaCount.remaining }) }),
+  /* @__PURE__ */ jsx5("span", { className: "df-review-sitemap-cell is-review", children: qaCount.status.review }),
+  /* @__PURE__ */ jsx5("span", { className: "df-review-sitemap-cell is-hold", children: qaCount.status.hold }),
+  /* @__PURE__ */ jsx5("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ jsx5("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ jsx5(
     "span",
     {
       className: "df-review-sitemap-user",
@@ -5379,7 +5711,7 @@ function createFigmaFrameUrl(value) {
 
 // src/react-shell/qa/item.edit.modal.tsx
 import { useEffect, useState as useState2 } from "react";
-import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
+import { jsx as jsx6, jsxs as jsxs6 } from "react/jsx-runtime";
 var QaItemEditModal = ({
   item,
   onClose,
@@ -5410,7 +5742,7 @@ var QaItemEditModal = ({
       setIsSaving(false);
     }
   };
-  return /* @__PURE__ */ jsxs4(
+  return /* @__PURE__ */ jsxs6(
     "div",
     {
       "aria-modal": "true",
@@ -5418,7 +5750,7 @@ var QaItemEditModal = ({
       role: "dialog",
       "aria-labelledby": "df-review-edit-title",
       children: [
-        /* @__PURE__ */ jsx4(
+        /* @__PURE__ */ jsx6(
           "button",
           {
             "aria-label": "Close edit dialog",
@@ -5427,7 +5759,7 @@ var QaItemEditModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ jsxs4(
+        /* @__PURE__ */ jsxs6(
           "form",
           {
             className: "df-review-edit-dialog",
@@ -5436,12 +5768,12 @@ var QaItemEditModal = ({
               void saveComment();
             },
             children: [
-              /* @__PURE__ */ jsxs4("header", { className: "df-review-settings-header", children: [
-                /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-title", children: [
-                  /* @__PURE__ */ jsx4("strong", { id: "df-review-edit-title", children: "Edit QA comment" }),
-                  /* @__PURE__ */ jsx4("span", { children: "Update the text shown on this QA item." })
+              /* @__PURE__ */ jsxs6("header", { className: "df-review-settings-header", children: [
+                /* @__PURE__ */ jsxs6("div", { className: "df-review-settings-title", children: [
+                  /* @__PURE__ */ jsx6("strong", { id: "df-review-edit-title", children: "Edit QA comment" }),
+                  /* @__PURE__ */ jsx6("span", { children: "Update the text shown on this QA item." })
                 ] }),
-                /* @__PURE__ */ jsx4("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ jsx4(
+                /* @__PURE__ */ jsx6("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ jsx6(
                   "button",
                   {
                     "aria-label": "Close edit dialog",
@@ -5451,10 +5783,10 @@ var QaItemEditModal = ({
                   }
                 ) })
               ] }),
-              /* @__PURE__ */ jsxs4("div", { className: "df-review-settings-body df-review-edit-body", children: [
-                /* @__PURE__ */ jsxs4("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ jsx4("span", { children: "Comment" }),
-                  /* @__PURE__ */ jsx4("div", { className: "df-review-settings-text-input df-review-edit-textarea", children: /* @__PURE__ */ jsx4(
+              /* @__PURE__ */ jsxs6("div", { className: "df-review-settings-body df-review-edit-body", children: [
+                /* @__PURE__ */ jsxs6("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ jsx6("span", { children: "Comment" }),
+                  /* @__PURE__ */ jsx6("div", { className: "df-review-settings-text-input df-review-edit-textarea", children: /* @__PURE__ */ jsx6(
                     "textarea",
                     {
                       autoFocus: true,
@@ -5476,11 +5808,11 @@ var QaItemEditModal = ({
                     }
                   ) })
                 ] }),
-                error && /* @__PURE__ */ jsx4("p", { className: "df-review-edit-error", children: error }),
-                /* @__PURE__ */ jsxs4("footer", { className: "df-review-settings-actions df-review-edit-actions", children: [
-                  /* @__PURE__ */ jsx4("span", {}),
-                  /* @__PURE__ */ jsx4("button", { disabled: isSaving, type: "button", onClick: onClose, children: "Cancel" }),
-                  /* @__PURE__ */ jsx4("button", { disabled: isSaving, type: "submit", children: isSaving ? "Saving\u2026" : "Save" })
+                error && /* @__PURE__ */ jsx6("p", { className: "df-review-edit-error", children: error }),
+                /* @__PURE__ */ jsxs6("footer", { className: "df-review-settings-actions df-review-edit-actions", children: [
+                  /* @__PURE__ */ jsx6("span", {}),
+                  /* @__PURE__ */ jsx6("button", { disabled: isSaving, type: "button", onClick: onClose, children: "Cancel" }),
+                  /* @__PURE__ */ jsx6("button", { disabled: isSaving, type: "submit", children: isSaving ? "Saving\u2026" : "Save" })
                 ] })
               ] })
             ]
@@ -5492,7 +5824,7 @@ var QaItemEditModal = ({
 };
 
 // src/react-shell/qa/item.remote.actions.tsx
-import { jsx as jsx5, jsxs as jsxs5 } from "react/jsx-runtime";
+import { jsx as jsx7, jsxs as jsxs7 } from "react/jsx-runtime";
 var QaItemRemoteActions = ({
   isRemoteSource,
   isSubmitted,
@@ -5506,13 +5838,13 @@ var QaItemRemoteActions = ({
   const canOpenRemoteIssue = !isRemoteSource && Boolean(item.externalIssueUrl);
   const hasRemoteActions = canSubmitToRemote || canOpenRemoteIssue;
   if (!hasRemoteActions) return null;
-  return /* @__PURE__ */ jsxs5(
+  return /* @__PURE__ */ jsxs7(
     "div",
     {
       className: "df-review-item-remote-actions",
       onClick: (event) => event.stopPropagation(),
       children: [
-        canSubmitToRemote && remoteAdapterEntry && /* @__PURE__ */ jsxs5(
+        canSubmitToRemote && remoteAdapterEntry && /* @__PURE__ */ jsxs7(
           "button",
           {
             "aria-label": "Submit to remote",
@@ -5521,12 +5853,12 @@ var QaItemRemoteActions = ({
             type: "button",
             onClick: () => void onSubmitItem(numberedItem),
             children: [
-              /* @__PURE__ */ jsx5(Upload, { "aria-hidden": "true" }),
-              /* @__PURE__ */ jsx5("span", { children: isSubmitted ? "Submitted" : isSubmitting ? "Submitting" : "Submit" })
+              /* @__PURE__ */ jsx7(Upload, { "aria-hidden": "true" }),
+              /* @__PURE__ */ jsx7("span", { children: isSubmitted ? "Submitted" : isSubmitting ? "Submitting" : "Submit" })
             ]
           }
         ),
-        canOpenRemoteIssue && /* @__PURE__ */ jsx5(
+        canOpenRemoteIssue && /* @__PURE__ */ jsx7(
           "a",
           {
             "aria-label": "Open remote issue",
@@ -5534,7 +5866,7 @@ var QaItemRemoteActions = ({
             href: item.externalIssueUrl,
             rel: "noreferrer",
             target: "_blank",
-            children: /* @__PURE__ */ jsx5(ExternalLink, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ jsx7(ExternalLink, { "aria-hidden": "true" })
           }
         )
       ]
@@ -5543,7 +5875,7 @@ var QaItemRemoteActions = ({
 };
 
 // src/react-shell/qa/item.status.actions.tsx
-import { jsx as jsx6 } from "react/jsx-runtime";
+import { jsx as jsx8 } from "react/jsx-runtime";
 var getStatusOption = (status, statusOptions) => {
   const normalizedStatus = normalizeReviewItemStatus(status);
   return statusOptions.find((statusOption) => statusOption.value === status) ?? statusOptions.find(
@@ -5561,12 +5893,12 @@ var QaItemStatusActions = ({
   const statusClassName = `is-status-${normalizeReviewItemStatus(
     currentStatusOption.value
   )}`;
-  return /* @__PURE__ */ jsx6(
+  return /* @__PURE__ */ jsx8(
     "div",
     {
       className: "df-review-item-status-actions",
       onClick: (event) => event.stopPropagation(),
-      children: canUpdateStatus ? /* @__PURE__ */ jsx6(
+      children: canUpdateStatus ? /* @__PURE__ */ jsx8(
         "select",
         {
           "aria-label": "QA status",
@@ -5576,9 +5908,9 @@ var QaItemStatusActions = ({
             item,
             event.currentTarget.value
           ),
-          children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx6("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
+          children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx8("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
         }
-      ) : /* @__PURE__ */ jsx6("span", { className: `df-review-item-status-badge ${statusClassName}`, children: currentStatusOption.label })
+      ) : /* @__PURE__ */ jsx8("span", { className: `df-review-item-status-badge ${statusClassName}`, children: currentStatusOption.label })
     }
   );
 };
@@ -5722,25 +6054,25 @@ var isScrollableReviewAnchorElement = (element) => {
 };
 
 // src/react-shell/review/item.icons.tsx
-import { jsx as jsx7 } from "react/jsx-runtime";
+import { jsx as jsx9 } from "react/jsx-runtime";
 var ReviewScopeIcon = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ jsx7(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ jsx7(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ jsx7(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ jsx7(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx7(Monitor, { "aria-hidden": "true" });
+  if (scope === "mobile") return /* @__PURE__ */ jsx9(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ jsx9(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ jsx9(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ jsx9(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx9(Monitor, { "aria-hidden": "true" });
 };
 var getReviewItemMode = (item) => isAnchorRestorableReviewItem(item) ? "dom" : item.kind;
 var ReviewItemModeIcon = ({
   mode
 }) => {
-  if (mode === "area") return /* @__PURE__ */ jsx7(Scan, { "aria-hidden": "true" });
-  if (mode === "dom") return /* @__PURE__ */ jsx7(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx7(StickyNote, { "aria-hidden": "true" });
+  if (mode === "area") return /* @__PURE__ */ jsx9(Scan, { "aria-hidden": "true" });
+  if (mode === "dom") return /* @__PURE__ */ jsx9(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx9(StickyNote, { "aria-hidden": "true" });
 };
 
 // src/react-shell/qa/item.card.tsx
-import { jsx as jsx8, jsxs as jsxs6 } from "react/jsx-runtime";
+import { jsx as jsx10, jsxs as jsxs8 } from "react/jsx-runtime";
 var formatItemCardDate = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -5790,7 +6122,7 @@ var QaItemCard = ({
   const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
   const canEditItem = activeAdapterEntry.canUpdate && !isSubmitting;
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor].filter(Boolean).join(" | ");
-  return /* @__PURE__ */ jsxs6(
+  return /* @__PURE__ */ jsxs8(
     "article",
     {
       className: `df-review-item-card${isActive ? " is-active" : ""}${getItemPresetScope(item) !== currentPresetScope ? " is-dim" : ""}${isOverlayVisible ? "" : " is-overlay-hidden"}`,
@@ -5802,10 +6134,10 @@ var QaItemCard = ({
         onRestoreReviewItem(item);
       },
       children: [
-        /* @__PURE__ */ jsxs6("div", { className: "df-review-item-header", children: [
-          /* @__PURE__ */ jsxs6("div", { className: "df-review-item-main", children: [
-            /* @__PURE__ */ jsxs6("span", { className: "df-review-item-badges", children: [
-              /* @__PURE__ */ jsx8(
+        /* @__PURE__ */ jsxs8("div", { className: "df-review-item-header", children: [
+          /* @__PURE__ */ jsxs8("div", { className: "df-review-item-main", children: [
+            /* @__PURE__ */ jsxs8("span", { className: "df-review-item-badges", children: [
+              /* @__PURE__ */ jsx10(
                 "button",
                 {
                   "aria-label": isLabelCopied ? "Copied QA number" : "Copy QA number",
@@ -5819,42 +6151,42 @@ var QaItemCard = ({
                   children: numberedItem.displayLabel
                 }
               ),
-              /* @__PURE__ */ jsxs6(
+              /* @__PURE__ */ jsxs8(
                 "span",
                 {
                   className: `df-review-item-scope is-scope-${numberedItem.scope}`,
                   children: [
-                    /* @__PURE__ */ jsx8(ReviewScopeIcon, { scope: numberedItem.scope }),
+                    /* @__PURE__ */ jsx10(ReviewScopeIcon, { scope: numberedItem.scope }),
                     numberedItem.label
                   ]
                 }
               ),
-              /* @__PURE__ */ jsxs6("span", { className: `df-review-item-mode is-mode-${itemMode}`, children: [
-                /* @__PURE__ */ jsx8(ReviewItemModeIcon, { mode: itemMode }),
+              /* @__PURE__ */ jsxs8("span", { className: `df-review-item-mode is-mode-${itemMode}`, children: [
+                /* @__PURE__ */ jsx10(ReviewItemModeIcon, { mode: itemMode }),
                 itemMode
               ] })
             ] }),
-            /* @__PURE__ */ jsx8("strong", { className: "df-review-item-comment", children: itemComment }),
-            /* @__PURE__ */ jsx8("small", { className: "df-review-item-meta", children: itemMeta }),
-            item.submitError && /* @__PURE__ */ jsx8("small", { className: "df-review-item-error", children: item.submitError })
+            /* @__PURE__ */ jsx10("strong", { className: "df-review-item-comment", children: itemComment }),
+            /* @__PURE__ */ jsx10("small", { className: "df-review-item-meta", children: itemMeta }),
+            item.submitError && /* @__PURE__ */ jsx10("small", { className: "df-review-item-error", children: item.submitError })
           ] }),
-          /* @__PURE__ */ jsxs6(
+          /* @__PURE__ */ jsxs8(
             "div",
             {
               className: "df-review-item-header-actions",
               onClick: (event) => event.stopPropagation(),
               children: [
-                /* @__PURE__ */ jsx8(
+                /* @__PURE__ */ jsx10(
                   "button",
                   {
                     "aria-label": isOverlayVisible ? "Hide QA overlay" : "Show QA overlay",
                     className: `df-review-item-visibility${isOverlayVisible ? " is-visible" : " is-hidden"}`,
                     type: "button",
                     onClick: () => onToggleItemOverlayVisibility(item.id),
-                    children: isOverlayVisible ? /* @__PURE__ */ jsx8(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx8(EyeOff, { "aria-hidden": "true" })
+                    children: isOverlayVisible ? /* @__PURE__ */ jsx10(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx10(EyeOff, { "aria-hidden": "true" })
                   }
                 ),
-                /* @__PURE__ */ jsx8(
+                /* @__PURE__ */ jsx10(
                   "button",
                   {
                     "aria-label": isLinkCopied ? "Copied QA link" : "Copy QA link",
@@ -5862,10 +6194,10 @@ var QaItemCard = ({
                     title: isLinkCopied ? "Copied QA link" : "Copy QA link",
                     type: "button",
                     onClick: () => onCopyItemLink(numberedItem),
-                    children: /* @__PURE__ */ jsx8(Link2, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ jsx10(Link2, { "aria-hidden": "true" })
                   }
                 ),
-                canEditItem && /* @__PURE__ */ jsx8(
+                canEditItem && /* @__PURE__ */ jsx10(
                   "button",
                   {
                     "aria-label": "Edit QA comment",
@@ -5873,25 +6205,25 @@ var QaItemCard = ({
                     title: "Edit QA comment",
                     type: "button",
                     onClick: () => onEditItem(item),
-                    children: /* @__PURE__ */ jsx8(Pencil, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ jsx10(Pencil, { "aria-hidden": "true" })
                   }
                 ),
-                canRemoveItem && /* @__PURE__ */ jsx8(
+                canRemoveItem && /* @__PURE__ */ jsx10(
                   "button",
                   {
                     "aria-label": "Delete QA",
                     className: "df-review-item-delete",
                     type: "button",
                     onClick: () => void onRemoveItem(item),
-                    children: /* @__PURE__ */ jsx8(X, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ jsx10(X, { "aria-hidden": "true" })
                   }
                 )
               ]
             }
           )
         ] }),
-        /* @__PURE__ */ jsxs6("div", { className: "df-review-item-actions", children: [
-          /* @__PURE__ */ jsx8(
+        /* @__PURE__ */ jsxs8("div", { className: "df-review-item-actions", children: [
+          /* @__PURE__ */ jsx10(
             QaItemStatusActions,
             {
               canUpdateStatus,
@@ -5900,12 +6232,12 @@ var QaItemCard = ({
               onChangeItemStatus
             }
           ),
-          /* @__PURE__ */ jsx8(
+          /* @__PURE__ */ jsx10(
             "div",
             {
               className: "df-review-item-prompt-actions",
               onClick: (event) => event.stopPropagation(),
-              children: /* @__PURE__ */ jsx8(
+              children: /* @__PURE__ */ jsx10(
                 "button",
                 {
                   "aria-label": isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
@@ -5913,12 +6245,12 @@ var QaItemCard = ({
                   title: isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
                   type: "button",
                   onClick: () => onCopyItemPrompt(numberedItem),
-                  children: isPromptCopied ? /* @__PURE__ */ jsx8(Copy, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx8(Bot, { "aria-hidden": "true" })
+                  children: isPromptCopied ? /* @__PURE__ */ jsx10(Copy, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx10(Bot, { "aria-hidden": "true" })
                 }
               )
             }
           ),
-          /* @__PURE__ */ jsx8(
+          /* @__PURE__ */ jsx10(
             QaItemRemoteActions,
             {
               isRemoteSource,
@@ -5937,7 +6269,7 @@ var QaItemCard = ({
 };
 
 // src/react-shell/qa/panel.header.tsx
-import { jsx as jsx9, jsxs as jsxs7 } from "react/jsx-runtime";
+import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
 var QaPanelHeader = ({
   activeItemCount,
   activeRemainingItemCount,
@@ -5960,11 +6292,11 @@ var QaPanelHeader = ({
   const statusFilterOptions = getStatusFilterOptions(statusOptions);
   const hasActiveFilter = qaFilter !== "all" || qaStatusFilter !== "all";
   const displayLabel = getQaSourceDisplayLabel(label);
-  return /* @__PURE__ */ jsxs7("div", { className: "df-review-list-header", children: [
-    /* @__PURE__ */ jsxs7("div", { className: "df-review-list-title", children: [
-      /* @__PURE__ */ jsxs7("span", { className: "df-review-list-meta", children: [
-        /* @__PURE__ */ jsx9("span", { children: isAllQaVisible ? `${displayLabel} QA \xB7 All pages` : `${displayLabel} QA` }),
-        /* @__PURE__ */ jsx9(
+  return /* @__PURE__ */ jsxs9("div", { className: "df-review-list-header", children: [
+    /* @__PURE__ */ jsxs9("div", { className: "df-review-list-title", children: [
+      /* @__PURE__ */ jsxs9("span", { className: "df-review-list-meta", children: [
+        /* @__PURE__ */ jsx11("span", { children: isAllQaVisible ? `${displayLabel} QA \xB7 All pages` : `${displayLabel} QA` }),
+        /* @__PURE__ */ jsx11(
           "strong",
           {
             title: `${activeRemainingItemCount} remaining of ${activeItemCount}`,
@@ -5972,10 +6304,10 @@ var QaPanelHeader = ({
           }
         )
       ] }),
-      /* @__PURE__ */ jsx9("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
+      /* @__PURE__ */ jsx11("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
         const count = qaFilterCounts.get(filter.key) ?? 0;
         const isActive = qaFilter === filter.key;
-        return /* @__PURE__ */ jsx9(
+        return /* @__PURE__ */ jsx11(
           "button",
           {
             "aria-label": `${filter.label} QA (${count})`,
@@ -5983,36 +6315,36 @@ var QaPanelHeader = ({
             className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
             type: "button",
             onClick: () => onQaFilterChange(filter.key),
-            children: /* @__PURE__ */ jsx9("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ jsx9(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ jsx9(ListFilter, { "aria-hidden": "true" }) })
+            children: /* @__PURE__ */ jsx11("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ jsx11(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ jsx11(ListFilter, { "aria-hidden": "true" }) })
           },
           filter.key
         );
       }) })
     ] }),
-    /* @__PURE__ */ jsxs7("div", { className: "df-review-list-toolbar", children: [
-      /* @__PURE__ */ jsxs7("div", { className: "df-review-list-controls", children: [
-        showSourceSelect && /* @__PURE__ */ jsx9(
+    /* @__PURE__ */ jsxs9("div", { className: "df-review-list-toolbar", children: [
+      /* @__PURE__ */ jsxs9("div", { className: "df-review-list-controls", children: [
+        showSourceSelect && /* @__PURE__ */ jsx11(
           "select",
           {
             "aria-label": "QA source",
             className: "df-review-source-select",
             value: source,
             onChange: (event) => onChangeReviewSource(event.currentTarget.value),
-            children: sourceEntries.map((entry) => /* @__PURE__ */ jsx9("option", { value: entry.label, children: entry.label }, entry.label))
+            children: sourceEntries.map((entry) => /* @__PURE__ */ jsx11("option", { value: entry.label, children: entry.label }, entry.label))
           }
         ),
-        /* @__PURE__ */ jsx9(
+        /* @__PURE__ */ jsx11(
           "button",
           {
             "aria-label": "Refresh QA",
             className: "df-review-source-refresh",
             type: "button",
             onClick: () => void onRefreshReviewData(),
-            children: /* @__PURE__ */ jsx9(RefreshCw, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ jsx11(RefreshCw, { "aria-hidden": "true" })
           }
         )
       ] }),
-      /* @__PURE__ */ jsxs7(
+      /* @__PURE__ */ jsxs9(
         "select",
         {
           "aria-label": "QA status filter",
@@ -6022,8 +6354,8 @@ var QaPanelHeader = ({
             event.currentTarget.value
           ),
           children: [
-            /* @__PURE__ */ jsx9("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
-            statusFilterOptions.map((statusOption) => /* @__PURE__ */ jsx9("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
+            /* @__PURE__ */ jsx11("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
+            statusFilterOptions.map((statusOption) => /* @__PURE__ */ jsx11("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
           ]
         }
       )
@@ -6047,7 +6379,7 @@ function getStatusFilterOptions(statusOptions) {
 }
 
 // src/react-shell/qa/panel.tsx
-import { jsx as jsx10, jsxs as jsxs8 } from "react/jsx-runtime";
+import { jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
 var ReviewQaPanel = ({
   activeAdapterEntry,
   activeItems,
@@ -6085,9 +6417,9 @@ var ReviewQaPanel = ({
   onToggleItemOverlayVisibility
 }) => {
   const emptyMessage = isAllQaVisible ? `No ${activeAdapterEntry.label} QA.` : isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page.";
-  return /* @__PURE__ */ jsxs8("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: [
-    /* @__PURE__ */ jsx10("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs8("section", { className: "df-review-item-list", children: [
-      /* @__PURE__ */ jsx10(
+  return /* @__PURE__ */ jsxs10("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: [
+    /* @__PURE__ */ jsx12("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs10("section", { className: "df-review-item-list", children: [
+      /* @__PURE__ */ jsx12(
         QaPanelHeader,
         {
           activeItemCount: activeItems.length,
@@ -6109,7 +6441,7 @@ var ReviewQaPanel = ({
           onRefreshReviewData
         }
       ),
-      /* @__PURE__ */ jsxs8(
+      /* @__PURE__ */ jsxs10(
         "div",
         {
           className: "df-review-list-scroll",
@@ -6119,11 +6451,11 @@ var ReviewQaPanel = ({
             }
           },
           children: [
-            activeItems.length === 0 && /* @__PURE__ */ jsx10("p", { className: "df-review-empty", children: emptyMessage }),
-            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx10("p", { className: "df-review-empty", children: "No QA in this filter." }),
+            activeItems.length === 0 && /* @__PURE__ */ jsx12("p", { className: "df-review-empty", children: emptyMessage }),
+            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx12("p", { className: "df-review-empty", children: "No QA in this filter." }),
             filteredNumberedActiveItems.map((numberedItem) => {
               const { item } = numberedItem;
-              return /* @__PURE__ */ jsx10(
+              return /* @__PURE__ */ jsx12(
                 QaItemCard,
                 {
                   activeAdapterEntry,
@@ -6153,16 +6485,16 @@ var ReviewQaPanel = ({
         }
       )
     ] }) }),
-    /* @__PURE__ */ jsx10("div", { className: "df-review-qa-draft-host" })
+    /* @__PURE__ */ jsx12("div", { className: "df-review-qa-draft-host" })
   ] });
 };
 
 // src/react-shell/presence/overlay.tsx
 import { useState as useState3 } from "react";
-import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
+import { jsx as jsx13, jsxs as jsxs11 } from "react/jsx-runtime";
 var getPresenceName = (user) => user.displayName || user.userId;
-var PresenceUserIcon = () => /* @__PURE__ */ jsxs9("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
-  /* @__PURE__ */ jsx11(
+var PresenceUserIcon = () => /* @__PURE__ */ jsxs11("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
+  /* @__PURE__ */ jsx13(
     "circle",
     {
       cx: "15",
@@ -6173,8 +6505,8 @@ var PresenceUserIcon = () => /* @__PURE__ */ jsxs9("svg", { "aria-hidden": "true
       strokeWidth: "2.6"
     }
   ),
-  /* @__PURE__ */ jsx11("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
-  /* @__PURE__ */ jsx11(
+  /* @__PURE__ */ jsx13("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
+  /* @__PURE__ */ jsx13(
     "path",
     {
       d: "M7.8 22.1c.9-4.1 3.4-6.1 7.2-6.1s6.3 2 7.2 6.1c-1.7 1.5-4.1 2.4-7.2 2.4s-5.5-.9-7.2-2.4z",
@@ -6189,13 +6521,13 @@ var PresenceOverlay = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState3(false);
   if (users.length === 0) return null;
-  return /* @__PURE__ */ jsxs9(
+  return /* @__PURE__ */ jsxs11(
     "div",
     {
       "aria-label": `Review presence, ${users.length} online`,
       className: `df-review-presence-overlay${isExpanded ? " is-expanded" : ""}`,
       children: [
-        /* @__PURE__ */ jsxs9(
+        /* @__PURE__ */ jsxs11(
           "button",
           {
             "aria-label": `Show online reviewers, ${users.length} online`,
@@ -6204,12 +6536,12 @@ var PresenceOverlay = ({
             type: "button",
             onClick: () => setIsExpanded((current) => !current),
             children: [
-              /* @__PURE__ */ jsx11(PresenceUserIcon, {}),
-              /* @__PURE__ */ jsx11("span", { className: "df-review-presence-badge", children: users.length })
+              /* @__PURE__ */ jsx13(PresenceUserIcon, {}),
+              /* @__PURE__ */ jsx13("span", { className: "df-review-presence-badge", children: users.length })
             ]
           }
         ),
-        isExpanded && /* @__PURE__ */ jsx11("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ jsx11(
+        isExpanded && /* @__PURE__ */ jsx13("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ jsx13(
           "span",
           {
             className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
@@ -6218,7 +6550,7 @@ var PresenceOverlay = ({
               "--df-review-presence-color": user.color
             },
             title: getPresenceName(user),
-            children: /* @__PURE__ */ jsx11("span", { children: getPresenceName(user) })
+            children: /* @__PURE__ */ jsx13("span", { children: getPresenceName(user) })
           },
           user.sessionId
         )) })
@@ -6227,30 +6559,93 @@ var PresenceOverlay = ({
   );
 };
 
-// src/react-shell/source.open.ts
-var SOURCE_SELECTOR = [
-  "[data-wrk-source-file]",
-  "[data-wrk-source-component]",
-  "[data-wrk-source-line]",
-  "[data-wrk-source-column]",
-  "[data-file]",
-  "[data-component]",
-  "[data-section-index]",
-  "[data-section-id]"
-].join(", ");
-var SECTION_OUTLINE_ROOT_SELECTOR = [
-  "[data-wrk-source-component]",
-  "header[data-wrk-source-file]",
-  "footer[data-wrk-source-file]",
-  '[role="banner"][data-wrk-source-file]',
-  '[role="contentinfo"][data-wrk-source-file]'
-].join(", ");
+// src/react-shell/source.hint.ts
 var matchesIgnore = (file, patterns) => {
   const normalized = file.replace(/\\/g, "/");
   return patterns.some(
     (pattern) => typeof pattern === "string" ? normalized.includes(pattern) : pattern.test(normalized)
   );
 };
+function getSourceAttribute(element, ...names) {
+  for (const name of names) {
+    const value = element.getAttribute(name)?.trim();
+    if (value) return value;
+  }
+  return void 0;
+}
+function getDataHintFromElement(element) {
+  const file = getSourceAttribute(element, "data-wrk-data-file");
+  if (!file) return void 0;
+  return {
+    component: void 0,
+    file,
+    line: getSourceAttribute(element, "data-wrk-data-line"),
+    column: void 0,
+    sectionId: void 0,
+    sectionIndex: void 0
+  };
+}
+function getSourceHintFromElement(element) {
+  const source = {
+    component: getSourceAttribute(
+      element,
+      "data-wrk-source-component",
+      "data-component"
+    ),
+    file: getSourceAttribute(element, "data-wrk-source-file", "data-file"),
+    line: getSourceAttribute(element, "data-wrk-source-line"),
+    column: getSourceAttribute(element, "data-wrk-source-column"),
+    sectionId: getSourceAttribute(element, "data-section-id"),
+    sectionIndex: getSourceAttribute(element, "data-section-index")
+  };
+  return Object.values(source).some(Boolean) ? source : void 0;
+}
+function getComponentNameFromSourceFile(file) {
+  const normalizedFile = file?.trim().replace(/\\/g, "/");
+  if (!normalizedFile) return void 0;
+  const pathParts = normalizedFile.split("/").filter(Boolean);
+  const fileName = pathParts[pathParts.length - 1];
+  if (!fileName) return void 0;
+  const stem = fileName.replace(/\.[^.]+$/, "");
+  const sourceName = stem.toLowerCase() === "index" ? pathParts[pathParts.length - 2]?.replace(/\.[^.]+$/, "") : stem;
+  return toPascalCase2(sourceName);
+}
+function toPascalCase2(value) {
+  const words = value?.split(/[._\-\s]+/).map((part) => part.trim()).filter(Boolean);
+  if (!words?.length) return void 0;
+  return words.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`).join("");
+}
+function getDisplaySourcePath(file) {
+  const normalizedFile = file?.trim().replace(/\\/g, "/");
+  if (!normalizedFile) return void 0;
+  const sourceRootMatch = normalizedFile.match(
+    /(?:^|\/)((?:dev\/)?src\/.+|app\/.+|pages?\/.+|components\/.+)$/
+  );
+  return sourceRootMatch?.[1] ?? normalizedFile;
+}
+function getSourceFileCompareKey(file) {
+  return file?.trim().replace(/\\/g, "/") ?? "";
+}
+function addSourceFileCompareKey(seen, key) {
+  if (!key || hasEquivalentSourceFileKey(seen, key)) return false;
+  seen.add(key);
+  return true;
+}
+function hasEquivalentSourceFileKey(seen, key) {
+  for (const seenKey of seen) {
+    if (isEquivalentSourceFileKey(seenKey, key)) return true;
+  }
+  return false;
+}
+function isEquivalentSourceFileKey(a, b) {
+  return a === b || a.endsWith(`/${b}`) || b.endsWith(`/${a}`);
+}
+function isCoreOutlineNode(label, file) {
+  const text = `${label} ${file ?? ""}`.toLowerCase();
+  return text.includes("core.section") || text.includes("core.content") || text.includes("core.column") || ["coresection", "corecontent", "corecolumn"].includes(label.toLowerCase());
+}
+
+// src/react-shell/source.open.ts
 var getSourceCandidates = (target, options) => {
   const startElement = getEventElement(target);
   if (!startElement) return [];
@@ -6277,6 +6672,144 @@ var getSourceCandidates = (target, options) => {
   );
   return visible.slice(0, 8);
 };
+var getSourceOpenUrl = (source, options) => {
+  const normalizedOptions = normalizeSourceOpenOptions(options);
+  const file = source?.file?.trim();
+  if (!file) return null;
+  const sourcePath = getSourcePath(file, normalizedOptions.sourceRoot);
+  if (!sourcePath) return null;
+  const hasPosition = !normalizedOptions.omitPosition;
+  const line = hasPosition ? getSourcePosition(source?.line) : null;
+  const column = hasPosition ? getSourcePosition(source?.column) : null;
+  const editor = normalizedOptions.editor ?? "vscode";
+  if (normalizedOptions.urlTemplate) {
+    return buildSourceUrlFromTemplate(normalizedOptions.urlTemplate, {
+      column,
+      file,
+      line,
+      sourcePath,
+      sourceRoot: normalizedOptions.sourceRoot
+    });
+  }
+  if (editor === "webstorm") {
+    const params = new URLSearchParams({ file: sourcePath });
+    if (line) params.set("line", String(line));
+    if (column) params.set("column", String(column));
+    return `webstorm://open?${params.toString()}`;
+  }
+  if (editor === "custom") return null;
+  const encodedPath = encodePathForFileScheme(sourcePath);
+  const scheme = editor === "cursor" ? "cursor" : "vscode";
+  if (!line) return `${scheme}://file/${encodedPath}`;
+  if (!column) return `${scheme}://file/${encodedPath}:${line}`;
+  return `${scheme}://file/${encodedPath}:${line}:${column}`;
+};
+var openSourceInEditor = (source, options) => {
+  const url = getSourceOpenUrl(source, options);
+  if (!url) return false;
+  window.open(url, "_blank", "noreferrer");
+  return true;
+};
+function createSourceCandidate(element, source, depth, kind) {
+  const confidence = getSourceConfidence(source, depth);
+  const fileName = source.file?.split(/[\\/]/).pop() ?? source.file ?? "source";
+  const component = source.component?.trim();
+  const fallbackComponent = getComponentNameFromSourceFile(source.file);
+  const tag = element.tagName.toLowerCase();
+  const line = getSourcePosition(source.line);
+  const column = getSourcePosition(source.column);
+  const position = line ? `:${line}${column ? `:${column}` : ""}` : "";
+  return {
+    id: `${kind}:${getSourceCandidateKey(source)}`,
+    depth,
+    element,
+    filePath: getDisplaySourcePath(source.file) ?? fileName,
+    label: component || fallbackComponent || tag,
+    detail: `${fileName}${position}`,
+    positionLabel: line ? `${line}:${column ?? 1}` : "",
+    confidence,
+    confidenceLabel: confidence >= 0.82 ? "high" : confidence >= 0.58 ? "medium" : "low",
+    kind,
+    usesPosition: confidence >= 0.72 && Boolean(line),
+    source
+  };
+}
+function getSourceCandidateKey(source) {
+  return [
+    source.file,
+    source.component,
+    source.line,
+    source.column,
+    source.sectionId,
+    source.sectionIndex
+  ].filter(Boolean).join("|");
+}
+function getSourceConfidence(source, depth) {
+  let score = source.file ? 0.54 : 0.12;
+  if (source.component) score += 0.12;
+  if (getSourcePosition(source.line)) score += 0.22;
+  if (getSourcePosition(source.column)) score += 0.08;
+  if (source.sectionId || source.sectionIndex) score += 0.04;
+  score -= Math.min(depth, 5) * 0.045;
+  return Math.max(0.1, Math.min(1, Number(score.toFixed(2))));
+}
+function normalizeSourceOpenOptions(options) {
+  return typeof options === "string" ? { sourceRoot: options } : options ?? {};
+}
+function buildSourceUrlFromTemplate(template, values) {
+  const replacements = {
+    column: values.column ? String(values.column) : "",
+    encodedPath: encodeURIComponent(values.sourcePath),
+    file: values.file,
+    line: values.line ? String(values.line) : "",
+    path: values.sourcePath,
+    sourceRoot: values.sourceRoot ?? "",
+    uriPath: encodePathForFileScheme(values.sourcePath)
+  };
+  return template.replace(
+    /\{([a-zA-Z]+)\}/g,
+    (_, key) => replacements[key] ?? ""
+  );
+}
+function getEventElement(target) {
+  if (!target || typeof target !== "object") return null;
+  const node = target;
+  if (node.nodeType === 1 && typeof node.closest === "function") {
+    return node;
+  }
+  if (node.parentElement && typeof node.parentElement.closest === "function") {
+    return node.parentElement;
+  }
+  return null;
+}
+function getSourcePath(file, sourceRoot) {
+  const normalizedFile = file.replace(/\\/g, "/");
+  if (normalizedFile.startsWith("/") || /^[a-zA-Z]:\//.test(normalizedFile)) {
+    return normalizedFile;
+  }
+  const normalizedRoot = sourceRoot?.trim().replace(/\\/g, "/").replace(/\/+$/, "");
+  if (!normalizedRoot) return null;
+  return `${normalizedRoot}/${normalizedFile.replace(/^\/+/, "")}`;
+}
+function getSourcePosition(value) {
+  const position = Number(value);
+  return Number.isInteger(position) && position > 0 ? position : null;
+}
+function encodePathForFileScheme(path) {
+  return encodeURI(path).replace(
+    /[#?]/g,
+    (match) => match === "#" ? "%23" : "%3F"
+  );
+}
+
+// src/react-shell/section.outline.ts
+var SECTION_OUTLINE_ROOT_SELECTOR = [
+  "[data-wrk-source-component]",
+  "header[data-wrk-source-file]",
+  "footer[data-wrk-source-file]",
+  '[role="banner"][data-wrk-source-file]',
+  '[role="contentinfo"][data-wrk-source-file]'
+].join(", ");
 var getSectionOutline = (root, options) => {
   const maxDepth = options?.maxDepth ?? 9;
   return getSectionOutlineRoots(root, options).map((element, index) => {
@@ -6475,23 +7008,6 @@ function getMediaElementUrl(img) {
 function getOutlineSourceKey(source) {
   return getSourceFileCompareKey(source.file);
 }
-function getSourceFileCompareKey(file) {
-  return file?.trim().replace(/\\/g, "/") ?? "";
-}
-function addSourceFileCompareKey(seen, key) {
-  if (!key || hasEquivalentSourceFileKey(seen, key)) return false;
-  seen.add(key);
-  return true;
-}
-function hasEquivalentSourceFileKey(seen, key) {
-  for (const seenKey of seen) {
-    if (isEquivalentSourceFileKey(seenKey, key)) return true;
-  }
-  return false;
-}
-function isEquivalentSourceFileKey(a, b) {
-  return a === b || a.endsWith(`/${b}`) || b.endsWith(`/${a}`);
-}
 function getOutlineLabel(element, source, fallback) {
   return source?.component?.trim() || getComponentNameFromSourceFile(source?.file) || element.id.trim() || fallback;
 }
@@ -6506,202 +7022,549 @@ function shouldStopOutlineBranch(label, file, options) {
 function isSkippedOutlineNode(label, file, options) {
   return shouldStopOutlineBranch(label, file, options) || isHiddenOutlineNode(label, file, options);
 }
-function isCoreOutlineNode(label, file) {
-  const text = `${label} ${file ?? ""}`.toLowerCase();
-  return text.includes("core.section") || text.includes("core.content") || text.includes("core.column") || ["coresection", "corecontent", "corecolumn"].includes(label.toLowerCase());
-}
 function isPlacerOutlineNode(label, file) {
   return `${label} ${file ?? ""}`.toLowerCase().includes("placer");
 }
-var getSourceOpenUrl = (source, options) => {
-  const normalizedOptions = normalizeSourceOpenOptions(options);
-  const file = source?.file?.trim();
-  if (!file) return null;
-  const sourcePath = getSourcePath(file, normalizedOptions.sourceRoot);
-  if (!sourcePath) return null;
-  const hasPosition = !normalizedOptions.omitPosition;
-  const line = hasPosition ? getSourcePosition(source?.line) : null;
-  const column = hasPosition ? getSourcePosition(source?.column) : null;
-  const editor = normalizedOptions.editor ?? "vscode";
-  if (normalizedOptions.urlTemplate) {
-    return buildSourceUrlFromTemplate(normalizedOptions.urlTemplate, {
-      column,
-      file,
-      line,
-      sourcePath,
-      sourceRoot: normalizedOptions.sourceRoot
-    });
-  }
-  if (editor === "webstorm") {
-    const params = new URLSearchParams({ file: sourcePath });
-    if (line) params.set("line", String(line));
-    if (column) params.set("column", String(column));
-    return `webstorm://open?${params.toString()}`;
-  }
-  if (editor === "custom") return null;
-  const encodedPath = encodePathForFileScheme(sourcePath);
-  const scheme = editor === "cursor" ? "cursor" : "vscode";
-  if (!line) return `${scheme}://file/${encodedPath}`;
-  if (!column) return `${scheme}://file/${encodedPath}:${line}`;
-  return `${scheme}://file/${encodedPath}:${line}:${column}`;
-};
-var openSourceInEditor = (source, options) => {
-  const url = getSourceOpenUrl(source, options);
-  if (!url) return false;
-  window.open(url, "_blank", "noreferrer");
-  return true;
-};
-function getDataHintFromElement(element) {
-  const file = getSourceAttribute(element, "data-wrk-data-file");
-  if (!file) return void 0;
-  return {
-    component: void 0,
-    file,
-    line: getSourceAttribute(element, "data-wrk-data-line"),
-    column: void 0,
-    sectionId: void 0,
-    sectionIndex: void 0
-  };
-}
-function getSourceHintFromElement(element) {
-  const source = {
-    component: getSourceAttribute(
-      element,
-      "data-wrk-source-component",
-      "data-component"
-    ),
-    file: getSourceAttribute(element, "data-wrk-source-file", "data-file"),
-    line: getSourceAttribute(element, "data-wrk-source-line"),
-    column: getSourceAttribute(element, "data-wrk-source-column"),
-    sectionId: getSourceAttribute(element, "data-section-id"),
-    sectionIndex: getSourceAttribute(element, "data-section-index")
-  };
-  return Object.values(source).some(Boolean) ? source : void 0;
-}
-function createSourceCandidate(element, source, depth, kind) {
-  const confidence = getSourceConfidence(source, depth);
-  const fileName = source.file?.split(/[\\/]/).pop() ?? source.file ?? "source";
-  const component = source.component?.trim();
-  const fallbackComponent = getComponentNameFromSourceFile(source.file);
-  const tag = element.tagName.toLowerCase();
-  const line = getSourcePosition(source.line);
-  const column = getSourcePosition(source.column);
-  const position = line ? `:${line}${column ? `:${column}` : ""}` : "";
-  return {
-    id: `${kind}:${getSourceCandidateKey(source)}`,
-    depth,
-    element,
-    filePath: getDisplaySourcePath(source.file) ?? fileName,
-    label: component || fallbackComponent || tag,
-    detail: `${fileName}${position}`,
-    positionLabel: line ? `${line}:${column ?? 1}` : "",
-    confidence,
-    confidenceLabel: confidence >= 0.82 ? "high" : confidence >= 0.58 ? "medium" : "low",
-    kind,
-    usesPosition: confidence >= 0.72 && Boolean(line),
-    source
-  };
-}
-function getComponentNameFromSourceFile(file) {
-  const normalizedFile = file?.trim().replace(/\\/g, "/");
-  if (!normalizedFile) return void 0;
-  const pathParts = normalizedFile.split("/").filter(Boolean);
-  const fileName = pathParts[pathParts.length - 1];
-  if (!fileName) return void 0;
-  const stem = fileName.replace(/\.[^.]+$/, "");
-  const sourceName = stem.toLowerCase() === "index" ? pathParts[pathParts.length - 2]?.replace(/\.[^.]+$/, "") : stem;
-  return toPascalCase2(sourceName);
-}
-function toPascalCase2(value) {
-  const words = value?.split(/[._\-\s]+/).map((part) => part.trim()).filter(Boolean);
-  if (!words?.length) return void 0;
-  return words.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`).join("");
-}
-function getDisplaySourcePath(file) {
-  const normalizedFile = file?.trim().replace(/\\/g, "/");
-  if (!normalizedFile) return void 0;
-  const sourceRootMatch = normalizedFile.match(
-    /(?:^|\/)((?:dev\/)?src\/.+|app\/.+|pages?\/.+|components\/.+)$/
-  );
-  return sourceRootMatch?.[1] ?? normalizedFile;
-}
-function getSourceCandidateKey(source) {
-  return [
-    source.file,
-    source.component,
-    source.line,
-    source.column,
-    source.sectionId,
-    source.sectionIndex
-  ].filter(Boolean).join("|");
-}
-function getSourceConfidence(source, depth) {
-  let score = source.file ? 0.54 : 0.12;
-  if (source.component) score += 0.12;
-  if (getSourcePosition(source.line)) score += 0.22;
-  if (getSourcePosition(source.column)) score += 0.08;
-  if (source.sectionId || source.sectionIndex) score += 0.04;
-  score -= Math.min(depth, 5) * 0.045;
-  return Math.max(0.1, Math.min(1, Number(score.toFixed(2))));
-}
-function normalizeSourceOpenOptions(options) {
-  return typeof options === "string" ? { sourceRoot: options } : options ?? {};
-}
-function buildSourceUrlFromTemplate(template, values) {
-  const replacements = {
-    column: values.column ? String(values.column) : "",
-    encodedPath: encodeURIComponent(values.sourcePath),
-    file: values.file,
-    line: values.line ? String(values.line) : "",
-    path: values.sourcePath,
-    sourceRoot: values.sourceRoot ?? "",
-    uriPath: encodePathForFileScheme(values.sourcePath)
-  };
-  return template.replace(
-    /\{([a-zA-Z]+)\}/g,
-    (_, key) => replacements[key] ?? ""
-  );
-}
-function getSourceAttribute(element, ...names) {
-  for (const name of names) {
-    const value = element.getAttribute(name)?.trim();
-    if (value) return value;
-  }
-  return void 0;
-}
-function getEventElement(target) {
-  if (!target || typeof target !== "object") return null;
-  const node = target;
-  if (node.nodeType === 1 && typeof node.closest === "function") {
-    return node;
-  }
-  if (node.parentElement && typeof node.parentElement.closest === "function") {
-    return node.parentElement;
-  }
+
+// src/react-shell/review/shell.helpers.ts
+var getReviewModeWriteMode = (mode) => {
+  if (mode === "element") return "dom";
+  if (mode === "note" || mode === "area") return mode;
   return null;
-}
-function getSourcePath(file, sourceRoot) {
-  const normalizedFile = file.replace(/\\/g, "/");
-  if (normalizedFile.startsWith("/") || /^[a-zA-Z]:\//.test(normalizedFile)) {
-    return normalizedFile;
-  }
-  const normalizedRoot = sourceRoot?.trim().replace(/\\/g, "/").replace(/\/+$/, "");
-  if (!normalizedRoot) return null;
-  return `${normalizedRoot}/${normalizedFile.replace(/^\/+/, "")}`;
-}
-function getSourcePosition(value) {
-  const position = Number(value);
-  return Number.isInteger(position) && position > 0 ? position : null;
-}
-function encodePathForFileScheme(path) {
-  return encodeURI(path).replace(
-    /[#?]/g,
-    (match) => match === "#" ? "%23" : "%3F"
+};
+var waitForFrame = (targetWindow) => new Promise((resolve) => {
+  (targetWindow ?? window).requestAnimationFrame(() => resolve());
+});
+var waitForMs = (ms) => new Promise((resolve) => {
+  window.setTimeout(resolve, ms);
+});
+var getScrollElement = (targetDocument) => targetDocument.scrollingElement;
+var scrollElementInTarget = (element, block) => {
+  const targetWindow = element.ownerDocument.defaultView;
+  if (!targetWindow) return;
+  const targetDocument = element.ownerDocument;
+  const scrollElement = getScrollElement(targetDocument);
+  const rect = element.getBoundingClientRect();
+  const currentLeft = scrollElement?.scrollLeft ?? targetWindow.scrollX;
+  const currentTop = scrollElement?.scrollTop ?? targetWindow.scrollY;
+  const clientWidth = scrollElement?.clientWidth ?? targetWindow.innerWidth;
+  const clientHeight = scrollElement?.clientHeight ?? targetWindow.innerHeight;
+  const scrollWidth = scrollElement?.scrollWidth ?? targetDocument.documentElement.scrollWidth;
+  const scrollHeight = scrollElement?.scrollHeight ?? targetDocument.documentElement.scrollHeight;
+  const nextLeft = clamp(
+    currentLeft + rect.left + rect.width / 2 - clientWidth / 2,
+    0,
+    Math.max(0, scrollWidth - clientWidth)
   );
-}
+  const nextTop = block === "center" ? clamp(
+    currentTop + rect.top + rect.height / 2 - clientHeight / 2,
+    0,
+    Math.max(0, scrollHeight - clientHeight)
+  ) : clamp(
+    currentTop + rect.top,
+    0,
+    Math.max(0, scrollHeight - clientHeight)
+  );
+  runWithAutoScrollBehavior(targetDocument, () => {
+    if (scrollElement) {
+      scrollElement.scrollLeft = Math.round(nextLeft);
+      scrollElement.scrollTop = Math.round(nextTop);
+      return;
+    }
+    targetWindow.scrollTo(Math.round(nextLeft), Math.round(nextTop));
+  });
+};
+var centerFrameScrollOnElement = (frameScroll, frame, element) => {
+  if (!frameScroll || !frame) return;
+  const frameScrollRect = frameScroll.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+  const elementHostCenterX = frameRect.left + elementRect.left + elementRect.width / 2;
+  const elementHostCenterY = frameRect.top + elementRect.top + elementRect.height / 2;
+  const visibleCenterX = frameScrollRect.left + frameScrollRect.width / 2;
+  const visibleCenterY = frameScrollRect.top + frameScrollRect.height / 2;
+  const nextLeft = clamp(
+    frameScroll.scrollLeft + elementHostCenterX - visibleCenterX,
+    0,
+    Math.max(0, frameScroll.scrollWidth - frameScroll.clientWidth)
+  );
+  const nextTop = clamp(
+    frameScroll.scrollTop + elementHostCenterY - visibleCenterY,
+    0,
+    Math.max(0, frameScroll.scrollHeight - frameScroll.clientHeight)
+  );
+  const previousScrollBehavior = frameScroll.style.scrollBehavior;
+  frameScroll.style.scrollBehavior = "auto";
+  frameScroll.scrollLeft = Math.round(nextLeft);
+  frameScroll.scrollTop = Math.round(nextTop);
+  frameScroll.style.scrollBehavior = previousScrollBehavior;
+};
+var getSectionOutlineFilterTerms = (value) => value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+var getSectionOutlineEntryCount = (entries) => entries.reduce(
+  (count, entry) => count + 1 + getSectionOutlineEntryCount(entry.children),
+  0
+);
+var getDefaultCollapsedSectionOutlineIds = (entries) => {
+  const collapsedIds = /* @__PURE__ */ new Set();
+  const visit = (entry) => {
+    if (entry.children.length > 0) {
+      collapsedIds.add(entry.id);
+    }
+    entry.children.forEach(visit);
+  };
+  entries.forEach(visit);
+  return collapsedIds;
+};
+var getLiveSectionOutlineRect = (entry) => {
+  if (!entry.element.isConnected) return entry.metadata.rect;
+  const rect = entry.element.getBoundingClientRect();
+  return {
+    top: Math.round(rect.top),
+    left: Math.round(rect.left),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height)
+  };
+};
+var matchesSectionOutlineFilter = (entry, terms) => {
+  if (terms.length === 0) return true;
+  const text = [
+    entry.label,
+    entry.filePath,
+    entry.source?.file,
+    entry.data?.file,
+    entry.metadata.textValue,
+    entry.metadata.fontLabel,
+    entry.metadata.mediaItems?.map((mediaItem) => `${mediaItem.variant} ${mediaItem.type} ${mediaItem.url}`).join(" "),
+    entry.metadata.classNames?.join(" ")
+  ].filter(Boolean).join(" ").toLowerCase();
+  return terms.every((term) => text.includes(term));
+};
+var filterSectionOutlineEntries = (entries, terms) => {
+  if (terms.length === 0) return entries;
+  return entries.flatMap((entry) => {
+    const children = filterSectionOutlineEntries(entry.children, terms);
+    if (!matchesSectionOutlineFilter(entry, terms) && children.length === 0) {
+      return [];
+    }
+    return [{ ...entry, children }];
+  });
+};
+
+// src/react-shell/review/section.outline.panel.tsx
+import { jsx as jsx14, jsxs as jsxs12 } from "react/jsx-runtime";
+var SectionOutlinePanel = ({
+  isPanelVisible,
+  isFiltering,
+  filteredCount,
+  totalCount,
+  rootCount,
+  filter,
+  entries,
+  collapsedIds,
+  canWriteDom,
+  isBoxMetaVisible,
+  isFontMetaVisible,
+  isMediaMetaVisible,
+  isClassMetaVisible,
+  onToggleMeta,
+  onFilterChange,
+  onToggleEntry,
+  onScrollToSection,
+  onOpenData,
+  onOpenSource,
+  onStartDomReview,
+  onHoverElement,
+  onClearHover
+}) => {
+  const renderMeta = (entry) => {
+    const { metadata } = entry;
+    const rows = [];
+    const metaPaddingLeft = 29;
+    const rect = getLiveSectionOutlineRect(entry);
+    if (isBoxMetaVisible) {
+      rows.push(
+        /* @__PURE__ */ jsxs12("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ jsx14("b", { children: "box" }),
+          /* @__PURE__ */ jsxs12("code", { children: [
+            "top ",
+            rect.top,
+            " / left ",
+            rect.left,
+            " / width ",
+            rect.width,
+            " / height",
+            " ",
+            rect.height
+          ] })
+        ] }, "box")
+      );
+    }
+    if (metadata.textValue) {
+      rows.push(
+        /* @__PURE__ */ jsxs12(
+          "span",
+          {
+            className: "df-review-section-outline-meta-row is-text",
+            children: [
+              /* @__PURE__ */ jsx14("b", { children: "text" }),
+              /* @__PURE__ */ jsx14("code", { children: metadata.textValue })
+            ]
+          },
+          "text"
+        )
+      );
+    }
+    if (isFontMetaVisible && metadata.fontLabel) {
+      rows.push(
+        /* @__PURE__ */ jsxs12("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ jsx14("b", { children: "font" }),
+          /* @__PURE__ */ jsx14("code", { children: metadata.fontLabel })
+        ] }, "font")
+      );
+    }
+    if (isMediaMetaVisible && metadata.mediaItems?.length) {
+      metadata.mediaItems.forEach((mediaItem) => {
+        const mediaKey = `${mediaItem.variant}:${mediaItem.type}:${mediaItem.url}`;
+        const mediaLabel = mediaItem.variant === "media" ? mediaItem.type : mediaItem.variant;
+        rows.push(
+          /* @__PURE__ */ jsxs12(
+            "span",
+            {
+              className: "df-review-section-outline-meta-row is-media",
+              children: [
+                /* @__PURE__ */ jsx14("b", { children: mediaLabel }),
+                /* @__PURE__ */ jsx14(
+                  "a",
+                  {
+                    className: "df-review-section-outline-media-link",
+                    href: mediaItem.url,
+                    rel: "noopener noreferrer",
+                    target: "_blank",
+                    title: `${mediaLabel} ${mediaItem.type}`,
+                    children: /* @__PURE__ */ jsx14("code", { children: mediaItem.url })
+                  }
+                )
+              ]
+            },
+            mediaKey
+          )
+        );
+      });
+    }
+    if (isClassMetaVisible && metadata.classNames?.length) {
+      rows.push(
+        /* @__PURE__ */ jsxs12("span", { className: "df-review-section-outline-meta-row is-class", children: [
+          /* @__PURE__ */ jsx14("b", { children: "class" }),
+          /* @__PURE__ */ jsx14("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ jsx14("code", { children: className }, className)) })
+        ] }, "class")
+      );
+    }
+    if (rows.length === 0) return null;
+    return /* @__PURE__ */ jsx14(
+      "div",
+      {
+        className: "df-review-section-outline-meta",
+        style: { paddingLeft: `${metaPaddingLeft}px` },
+        children: rows
+      }
+    );
+  };
+  const renderEntry = (entry) => {
+    const hasChildren = entry.children.length > 0;
+    const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
+    const liveRect = getLiveSectionOutlineRect(entry);
+    const isZeroArea = liveRect.width <= 0 || liveRect.height <= 0;
+    return /* @__PURE__ */ jsxs12(
+      "div",
+      {
+        className: `df-review-section-outline-item is-depth-${entry.depth}`,
+        children: [
+          /* @__PURE__ */ jsxs12(
+            "div",
+            {
+              className: "df-review-section-outline-entry-body",
+              onMouseEnter: () => onHoverElement(entry.element),
+              onMouseLeave: onClearHover,
+              onMouseOver: () => onHoverElement(entry.element),
+              onMouseOut: (event) => {
+                if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) {
+                  return;
+                }
+                onClearHover();
+              },
+              onPointerEnter: () => onHoverElement(entry.element),
+              onPointerLeave: onClearHover,
+              children: [
+                /* @__PURE__ */ jsxs12(
+                  "div",
+                  {
+                    className: "df-review-section-outline-row",
+                    style: { paddingLeft: "6px" },
+                    children: [
+                      hasChildren ? /* @__PURE__ */ jsx14(
+                        "button",
+                        {
+                          "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
+                          "aria-expanded": !isCollapsed,
+                          className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
+                          type: "button",
+                          onClick: () => onToggleEntry(entry.id),
+                          children: /* @__PURE__ */ jsx14(ChevronDown, { "aria-hidden": "true" })
+                        }
+                      ) : /* @__PURE__ */ jsx14(
+                        "span",
+                        {
+                          "aria-hidden": "true",
+                          className: "df-review-section-outline-toggle is-placeholder"
+                        }
+                      ),
+                      /* @__PURE__ */ jsxs12(
+                        "button",
+                        {
+                          className: "df-review-section-outline-name",
+                          title: entry.filePath,
+                          type: "button",
+                          onClick: () => onScrollToSection(entry),
+                          children: [
+                            /* @__PURE__ */ jsx14("span", { children: entry.label }),
+                            /* @__PURE__ */ jsx14("small", { children: entry.filePath })
+                          ]
+                        }
+                      ),
+                      /* @__PURE__ */ jsxs12("span", { className: "df-review-section-outline-links", children: [
+                        /* @__PURE__ */ jsx14(
+                          "button",
+                          {
+                            "aria-label": `Open ${entry.label} data`,
+                            className: "df-review-section-outline-link",
+                            title: "Open data",
+                            type: "button",
+                            disabled: !entry.data?.file,
+                            onClick: () => onOpenData(entry),
+                            children: /* @__PURE__ */ jsx14(Database, { "aria-hidden": "true" })
+                          }
+                        ),
+                        /* @__PURE__ */ jsx14(
+                          "button",
+                          {
+                            "aria-label": `Open ${entry.label} source`,
+                            className: "df-review-section-outline-link",
+                            title: "Open source",
+                            type: "button",
+                            disabled: !entry.source?.file,
+                            onClick: () => onOpenSource(entry),
+                            children: /* @__PURE__ */ jsx14(CodeXml, { "aria-hidden": "true" })
+                          }
+                        ),
+                        /* @__PURE__ */ jsx14(
+                          "span",
+                          {
+                            "aria-hidden": "true",
+                            className: "df-review-section-outline-divider",
+                            children: "|"
+                          }
+                        ),
+                        /* @__PURE__ */ jsx14(
+                          "button",
+                          {
+                            "aria-label": `Start DOM QA for ${entry.label}`,
+                            className: "df-review-section-outline-link is-dom-select",
+                            title: isZeroArea ? "No visible area" : "DOM select",
+                            type: "button",
+                            disabled: !canWriteDom || isZeroArea,
+                            onClick: () => onStartDomReview(entry),
+                            children: /* @__PURE__ */ jsx14(SquareMousePointer, { "aria-hidden": "true" })
+                          }
+                        )
+                      ] })
+                    ]
+                  }
+                ),
+                renderMeta(entry)
+              ]
+            }
+          ),
+          hasChildren && !isCollapsed && /* @__PURE__ */ jsx14("div", { className: "df-review-section-outline-children", children: entry.children.map(renderEntry) })
+        ]
+      },
+      entry.id
+    );
+  };
+  return /* @__PURE__ */ jsx14(
+    "aside",
+    {
+      className: "df-review-source-tree-panel",
+      "aria-hidden": !isPanelVisible,
+      children: /* @__PURE__ */ jsxs12("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
+        /* @__PURE__ */ jsxs12("div", { className: "df-review-section-outline-head", children: [
+          /* @__PURE__ */ jsxs12("div", { className: "df-review-section-outline-summary", children: [
+            /* @__PURE__ */ jsxs12("span", { children: [
+              /* @__PURE__ */ jsx14("strong", { children: "Component" }),
+              /* @__PURE__ */ jsx14("small", { children: isFiltering ? `${filteredCount} / ${totalCount} results` : `${rootCount} ${rootCount === 1 ? "root" : "roots"}` })
+            ] }),
+            /* @__PURE__ */ jsxs12("div", { className: "df-review-section-outline-meta-controls", children: [
+              /* @__PURE__ */ jsx14(
+                "button",
+                {
+                  "aria-label": "Toggle source tree box metadata",
+                  "aria-pressed": isBoxMetaVisible,
+                  className: `df-review-section-outline-meta-toggle${isBoxMetaVisible ? " is-active" : ""}`,
+                  title: "top / left / width / height",
+                  type: "button",
+                  onClick: () => onToggleMeta("box"),
+                  children: /* @__PURE__ */ jsx14(SquareDashed, { "aria-hidden": "true" })
+                }
+              ),
+              /* @__PURE__ */ jsx14(
+                "button",
+                {
+                  "aria-label": "Toggle source tree font metadata",
+                  "aria-pressed": isFontMetaVisible,
+                  className: `df-review-section-outline-meta-toggle${isFontMetaVisible ? " is-active" : ""}`,
+                  title: "font size / weight",
+                  type: "button",
+                  onClick: () => onToggleMeta("font"),
+                  children: /* @__PURE__ */ jsx14(Type, { "aria-hidden": "true" })
+                }
+              ),
+              /* @__PURE__ */ jsx14(
+                "button",
+                {
+                  "aria-label": "Toggle source tree media metadata",
+                  "aria-pressed": isMediaMetaVisible,
+                  className: `df-review-section-outline-meta-toggle${isMediaMetaVisible ? " is-active" : ""}`,
+                  title: "media urls",
+                  type: "button",
+                  onClick: () => onToggleMeta("media"),
+                  children: /* @__PURE__ */ jsx14(Image, { "aria-hidden": "true" })
+                }
+              ),
+              /* @__PURE__ */ jsx14(
+                "button",
+                {
+                  "aria-label": "Toggle source tree class metadata",
+                  "aria-pressed": isClassMetaVisible,
+                  className: `df-review-section-outline-meta-toggle${isClassMetaVisible ? " is-active" : ""}`,
+                  title: "class names",
+                  type: "button",
+                  onClick: () => onToggleMeta("className"),
+                  children: /* @__PURE__ */ jsx14(CodeXml, { "aria-hidden": "true" })
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxs12("div", { className: "df-review-section-outline-filter", children: [
+            /* @__PURE__ */ jsx14(Search, { "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx14(
+              "input",
+              {
+                "aria-label": "Filter source tree",
+                type: "text",
+                value: filter,
+                placeholder: "Filter",
+                autoComplete: "off",
+                enterKeyHint: "search",
+                spellCheck: false,
+                onChange: (event) => onFilterChange(event.currentTarget.value)
+              }
+            ),
+            filter && /* @__PURE__ */ jsx14(
+              "button",
+              {
+                "aria-label": "Clear source tree filter",
+                className: "df-review-section-outline-filter-clear",
+                type: "button",
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: () => onFilterChange(""),
+                children: /* @__PURE__ */ jsx14(X, { "aria-hidden": "true" })
+              }
+            )
+          ] })
+        ] }),
+        entries.length > 0 ? /* @__PURE__ */ jsx14("div", { className: "df-review-section-outline-list", children: entries.map(renderEntry) }) : /* @__PURE__ */ jsx14("div", { className: "df-review-section-outline-empty", children: isFiltering ? "No source matches" : "No sections found" })
+      ] })
+    }
+  );
+};
+
+// src/react-shell/review/source.inspector.overlay.tsx
+import { Fragment as Fragment2, jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
+var SourceInspectorOverlay = ({
+  state,
+  interactionRef,
+  onClear,
+  onOpenCandidate
+}) => {
+  if (!state) return null;
+  return /* @__PURE__ */ jsxs13(Fragment2, { children: [
+    /* @__PURE__ */ jsx15(
+      "div",
+      {
+        className: `df-review-source-outline${state.isPinned ? " is-pinned" : ""}`,
+        style: {
+          height: `${state.rect.height}px`,
+          left: `${state.rect.left}px`,
+          top: `${state.rect.top}px`,
+          width: `${state.rect.width}px`
+        }
+      }
+    ),
+    state.candidates.length > 0 && /* @__PURE__ */ jsxs13(
+      "div",
+      {
+        className: `df-review-source-popover${state.isPinned ? " is-pinned" : ""}`,
+        style: {
+          left: state.panelRight === null ? `${state.panelLeft}px` : void 0,
+          maxWidth: `${state.panelMaxWidth}px`,
+          right: state.panelRight === null ? void 0 : `${state.panelRight}px`,
+          top: `${state.panelTop}px`
+        },
+        onPointerDown: () => {
+          interactionRef.current = true;
+        },
+        onPointerEnter: () => {
+          interactionRef.current = true;
+        },
+        onPointerLeave: () => {
+          interactionRef.current = false;
+        },
+        onClick: (event) => event.stopPropagation(),
+        children: [
+          /* @__PURE__ */ jsx15("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ jsx15(
+            "button",
+            {
+              "aria-label": "Close source candidates",
+              type: "button",
+              onClick: onClear,
+              children: "\xD7"
+            }
+          ) }),
+          /* @__PURE__ */ jsx15("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ jsx15(
+            "button",
+            {
+              className: `df-review-source-candidate is-${candidate.kind}`,
+              type: "button",
+              onClick: (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onOpenCandidate(candidate);
+              },
+              children: /* @__PURE__ */ jsxs13("span", { className: "df-review-source-candidate-main", children: [
+                /* @__PURE__ */ jsx15("strong", { children: candidate.label }),
+                /* @__PURE__ */ jsx15("span", { children: candidate.filePath }),
+                /* @__PURE__ */ jsx15("small", { children: candidate.positionLabel || "-:-" })
+              ] })
+            },
+            candidate.id
+          )) })
+        ]
+      }
+    )
+  ] });
+};
 
 // src/react-shell/review/mode.toolbar.tsx
-import { jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
+import { jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
 var ReviewModeToolbar = ({
   canWriteArea,
   canWriteDom,
@@ -6709,33 +7572,33 @@ var ReviewModeToolbar = ({
   onSetReviewMode
 }) => {
   if (!canWriteDom && !canWriteArea) return null;
-  return /* @__PURE__ */ jsxs10("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
-    canWriteDom && /* @__PURE__ */ jsx12(
+  return /* @__PURE__ */ jsxs14("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
+    canWriteDom && /* @__PURE__ */ jsx16(
       "button",
       {
         "aria-label": "Element",
         className: `df-review-mode-button is-element${mode === "element" ? " is-active" : ""}`,
         type: "button",
         onClick: () => onSetReviewMode("element"),
-        children: /* @__PURE__ */ jsx12(SquareMousePointer, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ jsx16(SquareMousePointer, { "aria-hidden": "true" })
       }
     ),
-    canWriteDom && canWriteArea && /* @__PURE__ */ jsx12("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
-    canWriteArea && /* @__PURE__ */ jsx12(
+    canWriteDom && canWriteArea && /* @__PURE__ */ jsx16("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
+    canWriteArea && /* @__PURE__ */ jsx16(
       "button",
       {
         "aria-label": "Area",
         className: `df-review-mode-button is-area${mode === "area" ? " is-active" : ""}`,
         type: "button",
         onClick: () => onSetReviewMode("area"),
-        children: /* @__PURE__ */ jsx12(Scan, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ jsx16(Scan, { "aria-hidden": "true" })
       }
     )
   ] });
 };
 
 // src/react-shell/ruler/gutters.tsx
-import { Fragment as Fragment2, jsx as jsx13, jsxs as jsxs11 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx17, jsxs as jsxs15 } from "react/jsx-runtime";
 var RulerGutters = ({
   rulerHover,
   rulerScaleX,
@@ -6743,9 +7606,9 @@ var RulerGutters = ({
   rulerUnit,
   size
 }) => {
-  return /* @__PURE__ */ jsxs11(Fragment2, { children: [
-    /* @__PURE__ */ jsx13("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
-    /* @__PURE__ */ jsxs11(
+  return /* @__PURE__ */ jsxs15(Fragment3, { children: [
+    /* @__PURE__ */ jsx17("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsxs15(
       "div",
       {
         className: "df-review-ruler-gutter is-x",
@@ -6753,15 +7616,15 @@ var RulerGutters = ({
           "--df-review-ruler-step-x": `${rulerScaleX * 20}px`
         },
         children: [
-          /* @__PURE__ */ jsxs11("div", { className: "df-review-ruler-frame-label", children: [
-            /* @__PURE__ */ jsx13("strong", { children: size.label }),
-            /* @__PURE__ */ jsxs11("span", { children: [
+          /* @__PURE__ */ jsxs15("div", { className: "df-review-ruler-frame-label", children: [
+            /* @__PURE__ */ jsx17("strong", { children: size.label }),
+            /* @__PURE__ */ jsxs15("span", { children: [
               size.designWidth,
               size.designHeight ? `x${size.designHeight}` : "",
               rulerUnit
             ] })
           ] }),
-          rulerHover && /* @__PURE__ */ jsx13(
+          rulerHover && /* @__PURE__ */ jsx17(
             "div",
             {
               className: "df-review-ruler-coord is-x",
@@ -6772,14 +7635,14 @@ var RulerGutters = ({
         ]
       }
     ),
-    /* @__PURE__ */ jsx13(
+    /* @__PURE__ */ jsx17(
       "div",
       {
         className: "df-review-ruler-gutter is-y",
         style: {
           "--df-review-ruler-step-y": `${rulerScaleY * 20}px`
         },
-        children: rulerHover && /* @__PURE__ */ jsx13(
+        children: rulerHover && /* @__PURE__ */ jsx17(
           "div",
           {
             className: "df-review-ruler-coord is-y",
@@ -6793,7 +7656,7 @@ var RulerGutters = ({
 };
 
 // src/react-shell/ruler/overlay.tsx
-import { Fragment as Fragment3, jsx as jsx14, jsxs as jsxs12 } from "react/jsx-runtime";
+import { Fragment as Fragment4, jsx as jsx18, jsxs as jsxs16 } from "react/jsx-runtime";
 var RulerOverlay = ({
   iframeRef,
   isRulerDragging,
@@ -6803,7 +7666,7 @@ var RulerOverlay = ({
   rulerOverlayRef,
   size
 }) => {
-  return /* @__PURE__ */ jsxs12(
+  return /* @__PURE__ */ jsxs16(
     "div",
     {
       ref: rulerOverlayRef,
@@ -6817,8 +7680,8 @@ var RulerOverlay = ({
         );
       },
       children: [
-        rulerHover && /* @__PURE__ */ jsxs12(Fragment3, { children: [
-          /* @__PURE__ */ jsx14(
+        rulerHover && /* @__PURE__ */ jsxs16(Fragment4, { children: [
+          /* @__PURE__ */ jsx18(
             "div",
             {
               className: "df-review-ruler-guide is-x",
@@ -6826,7 +7689,7 @@ var RulerOverlay = ({
               style: { top: `${rulerHover.y}px` }
             }
           ),
-          /* @__PURE__ */ jsx14(
+          /* @__PURE__ */ jsx18(
             "div",
             {
               className: "df-review-ruler-guide is-y",
@@ -6835,8 +7698,8 @@ var RulerOverlay = ({
             }
           )
         ] }),
-        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs12(Fragment3, { children: [
-          /* @__PURE__ */ jsx14(
+        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs16(Fragment4, { children: [
+          /* @__PURE__ */ jsx18(
             "div",
             {
               className: "df-review-ruler-selection",
@@ -6849,7 +7712,7 @@ var RulerOverlay = ({
               }
             }
           ),
-          /* @__PURE__ */ jsx14(
+          /* @__PURE__ */ jsx18(
             "div",
             {
               className: "df-review-ruler-label",
@@ -6873,7 +7736,7 @@ var RulerOverlay = ({
 };
 
 // src/react-shell/target/frame.tsx
-import { jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
+import { jsx as jsx19, jsxs as jsxs17 } from "react/jsx-runtime";
 var ReviewTargetFrame = ({
   canWriteArea,
   canWriteDom,
@@ -6898,13 +7761,13 @@ var ReviewTargetFrame = ({
 }) => {
   const showRuler = isRulerVisible && isRulerAvailable;
   const targetHref = getTargetOpenHref(targetSrc);
-  return /* @__PURE__ */ jsx15("main", { className: "df-review-stage", children: /* @__PURE__ */ jsxs13("div", { className: "df-review-frame", children: [
-    /* @__PURE__ */ jsx15("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ jsx15("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ jsx15("div", { className: "df-review-target-stack", children: /* @__PURE__ */ jsxs13(
+  return /* @__PURE__ */ jsx19("main", { className: "df-review-stage", children: /* @__PURE__ */ jsxs17("div", { className: "df-review-frame", children: [
+    /* @__PURE__ */ jsx19("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ jsx19("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ jsx19("div", { className: "df-review-target-stack", children: /* @__PURE__ */ jsxs17(
       "div",
       {
         className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
         children: [
-          showRuler && /* @__PURE__ */ jsx15(
+          showRuler && /* @__PURE__ */ jsx19(
             RulerGutters,
             {
               rulerHover,
@@ -6914,7 +7777,7 @@ var ReviewTargetFrame = ({
               size
             }
           ),
-          /* @__PURE__ */ jsxs13(
+          /* @__PURE__ */ jsxs17(
             "div",
             {
               className: "df-review-device",
@@ -6925,7 +7788,7 @@ var ReviewTargetFrame = ({
                 minHeight: `${size.height}px`
               },
               children: [
-                /* @__PURE__ */ jsx15(
+                /* @__PURE__ */ jsx19(
                   "iframe",
                   {
                     ref: iframeRef,
@@ -6937,7 +7800,7 @@ var ReviewTargetFrame = ({
                   },
                   targetSrc
                 ),
-                showRuler && /* @__PURE__ */ jsx15(
+                showRuler && /* @__PURE__ */ jsx19(
                   RulerOverlay,
                   {
                     iframeRef,
@@ -6952,8 +7815,8 @@ var ReviewTargetFrame = ({
               ]
             }
           ),
-          /* @__PURE__ */ jsxs13("div", { className: "df-review-frame-link-stack", children: [
-            /* @__PURE__ */ jsx15(
+          /* @__PURE__ */ jsxs17("div", { className: "df-review-frame-link-stack", children: [
+            /* @__PURE__ */ jsx19(
               "a",
               {
                 "aria-label": "Open target page",
@@ -6962,10 +7825,10 @@ var ReviewTargetFrame = ({
                 rel: "noreferrer",
                 target: "_blank",
                 title: "Open target page",
-                children: /* @__PURE__ */ jsx15(ExternalLink, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ jsx19(ExternalLink, { "aria-hidden": "true" })
               }
             ),
-            figmaFrameUrl && /* @__PURE__ */ jsx15(
+            figmaFrameUrl && /* @__PURE__ */ jsx19(
               "a",
               {
                 "aria-label": "Open Figma frame",
@@ -6974,14 +7837,14 @@ var ReviewTargetFrame = ({
                 rel: "noreferrer",
                 target: "_blank",
                 title: "Open Figma frame",
-                children: /* @__PURE__ */ jsx15(FigmaIcon, {})
+                children: /* @__PURE__ */ jsx19(FigmaIcon, {})
               }
             )
           ] })
         ]
       }
     ) }) }) }),
-    /* @__PURE__ */ jsx15("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ jsx15(
+    /* @__PURE__ */ jsx19("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ jsx19(
       ReviewModeToolbar,
       {
         canWriteArea,
@@ -6997,13 +7860,13 @@ function getTargetOpenHref(targetSrc) {
   url.searchParams.delete("__dfwr_target");
   return `${url.pathname}${url.search}${url.hash}`;
 }
-var FigmaIcon = () => /* @__PURE__ */ jsx15(
+var FigmaIcon = () => /* @__PURE__ */ jsx19(
   "svg",
   {
     "aria-hidden": "true",
     viewBox: "0 0 24 24",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ jsx15("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
+    children: /* @__PURE__ */ jsx19("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
   }
 );
 
@@ -7099,18 +7962,18 @@ var getTargetOverlayState = (targetDocument) => ({
 });
 
 // src/react-shell/topbar.tsx
-import { jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
+import { jsx as jsx20, jsxs as jsxs18 } from "react/jsx-runtime";
 var ReviewScopeIcon2 = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ jsx16(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ jsx16(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ jsx16(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ jsx16(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx16(Monitor, { "aria-hidden": "true" });
+  if (scope === "mobile") return /* @__PURE__ */ jsx20(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ jsx20(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ jsx20(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ jsx20(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx20(Monitor, { "aria-hidden": "true" });
 };
 var ViewportPresetIcon = ({
   preset
 }) => {
-  return /* @__PURE__ */ jsx16(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
+  return /* @__PURE__ */ jsx20(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
 };
 var getPresetSelectValue = (preset) => `${preset.label}:${preset.width}x${preset.height}`;
 var ReviewTopbar = ({
@@ -7138,8 +8001,8 @@ var ReviewTopbar = ({
     );
     if (nextPreset) onSizeChange(nextPreset);
   };
-  return /* @__PURE__ */ jsxs14("header", { className: "df-review-topbar", children: [
-    /* @__PURE__ */ jsxs14(
+  return /* @__PURE__ */ jsxs18("header", { className: "df-review-topbar", children: [
+    /* @__PURE__ */ jsxs18(
       "form",
       {
         className: "df-review-address",
@@ -7148,17 +8011,17 @@ var ReviewTopbar = ({
           onApplyTarget();
         },
         children: [
-          /* @__PURE__ */ jsx16(
+          /* @__PURE__ */ jsx20(
             "button",
             {
               "aria-label": "Open sitemap",
               className: "df-review-sitemap-button",
               type: "button",
               onClick: onOpenSitemap,
-              children: /* @__PURE__ */ jsx16(Map2, { "aria-hidden": "true" })
+              children: /* @__PURE__ */ jsx20(Map2, { "aria-hidden": "true" })
             }
           ),
-          /* @__PURE__ */ jsx16(
+          /* @__PURE__ */ jsx20(
             "input",
             {
               "aria-label": "Path",
@@ -7166,39 +8029,39 @@ var ReviewTopbar = ({
               onChange: (event) => onDraftTargetChange(event.target.value)
             }
           ),
-          /* @__PURE__ */ jsxs14("div", { className: "df-review-address-actions", children: [
-            /* @__PURE__ */ jsx16(
+          /* @__PURE__ */ jsxs18("div", { className: "df-review-address-actions", children: [
+            /* @__PURE__ */ jsx20(
               "button",
               {
                 "aria-label": "Refresh target",
                 className: "df-review-address-refresh",
                 title: "Refresh target",
                 type: "submit",
-                children: /* @__PURE__ */ jsx16(RefreshCw, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ jsx20(RefreshCw, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ jsx16("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
+            /* @__PURE__ */ jsx20("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
           ] })
         ]
       }
     ),
-    /* @__PURE__ */ jsxs14("div", { className: "df-review-tools", children: [
-      /* @__PURE__ */ jsxs14("div", { className: "df-review-tool-controls", children: [
-        /* @__PURE__ */ jsx16("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ jsxs14(
+    /* @__PURE__ */ jsxs18("div", { className: "df-review-tools", children: [
+      /* @__PURE__ */ jsxs18("div", { className: "df-review-tool-controls", children: [
+        /* @__PURE__ */ jsx20("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ jsxs18(
           "button",
           {
             className: preset.label === size.label ? "is-active" : "",
             type: "button",
             onClick: () => onSizeChange(preset),
             children: [
-              /* @__PURE__ */ jsx16(ViewportPresetIcon, { preset }),
-              /* @__PURE__ */ jsx16("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ jsx16("strong", { children: preset.label }) }),
-              /* @__PURE__ */ jsx16("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
+              /* @__PURE__ */ jsx20(ViewportPresetIcon, { preset }),
+              /* @__PURE__ */ jsx20("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ jsx20("strong", { children: preset.label }) }),
+              /* @__PURE__ */ jsx20("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
             ]
           },
           preset.label
         )) }),
-        /* @__PURE__ */ jsx16(
+        /* @__PURE__ */ jsx20(
           "select",
           {
             "aria-label": "Viewport preset",
@@ -7208,7 +8071,7 @@ var ReviewTopbar = ({
             children: viewportPresets.map((preset) => {
               const scope = getViewportPresetKind(preset);
               const count = presetScopeCounts.get(scope) ?? 0;
-              return /* @__PURE__ */ jsx16(
+              return /* @__PURE__ */ jsx20(
                 "option",
                 {
                   value: getPresetSelectValue(preset),
@@ -7219,35 +8082,35 @@ var ReviewTopbar = ({
             })
           }
         ),
-        /* @__PURE__ */ jsx16("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ jsxs14("span", { className: "df-review-active-size", children: [
+        /* @__PURE__ */ jsx20("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+        /* @__PURE__ */ jsxs18("span", { className: "df-review-active-size", children: [
           size.width,
           "x",
           size.height
         ] })
       ] }),
-      /* @__PURE__ */ jsxs14("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
-        isRulerAvailable && /* @__PURE__ */ jsx16(
+      /* @__PURE__ */ jsxs18("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
+        isRulerAvailable && /* @__PURE__ */ jsx20(
           "button",
           {
             "aria-label": "Toggle ruler",
             className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
             type: "button",
             onClick: onToggleRuler,
-            children: /* @__PURE__ */ jsx16(Ruler, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ jsx20(Ruler, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ jsx16(
+        /* @__PURE__ */ jsx20(
           "button",
           {
             "aria-label": "Toggle grid overlay",
             className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
             type: "button",
             onClick: () => onToggleTargetOverlay("grid"),
-            children: /* @__PURE__ */ jsx16(LayoutGrid, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ jsx20(LayoutGrid, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ jsx16(
+        /* @__PURE__ */ jsx20(
           "button",
           {
             "aria-disabled": !isFigmaOverlayAvailable,
@@ -7256,7 +8119,7 @@ var ReviewTopbar = ({
             disabled: !isFigmaOverlayAvailable,
             type: "button",
             onClick: () => onToggleTargetOverlay("figma"),
-            children: /* @__PURE__ */ jsx16(Image, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ jsx20(Image, { "aria-hidden": "true" })
           }
         )
       ] })
@@ -7403,12 +8266,13 @@ var useReviewItemRestore = ({
   }, [applyItemScroll, pendingRestoreRef]);
   const restoreReviewItem = useCallback(
     (item) => {
-      const nextTarget = getItemTarget(item, reviewPathPrefix);
+      const nextRoute = getItemTarget(item, reviewPathPrefix);
+      const nextTarget = getItemFrameTarget(item, reviewPathPrefix);
       const nextSize = getRestoredSize(item, viewportPresets);
       pendingRestoreRef.current = item;
       selectedItemIdRef.current = item.id;
       onSelectedItemIdChange(item.id);
-      onActiveRouteChange(nextTarget);
+      onActiveRouteChange(nextRoute);
       onDraftTargetChange(nextTarget);
       onSizeChange(nextSize);
       updateShellUrlForItem(nextTarget, nextSize, item.id, source);
@@ -7470,7 +8334,13 @@ var bindReviewFrameNavigation = ({
 }) => {
   const syncRouteFromFrame = () => {
     const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
-    if (nextTarget !== targetRef.current && !pageTargets.has(nextTarget)) {
+    const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
+    const currentRouteKey = getTargetRouteKey(
+      targetRef.current,
+      reviewPathPrefix
+    );
+    if (nextRouteKey === currentRouteKey) return;
+    if (!pageTargets.has(nextRouteKey)) {
       return;
     }
     onSyncShellTarget(nextTarget);
@@ -7488,8 +8358,17 @@ var bindReviewFrameNavigation = ({
     if (!href || linkTarget && linkTarget !== "_self") return;
     const url = new URL(href, targetWindow.location.href);
     if (url.origin !== targetWindow.location.origin) return;
-    const nextTarget = normalizeTarget(url.pathname, reviewPathPrefix);
-    if (nextTarget === targetRef.current) return;
+    const nextTarget = normalizeTarget(
+      `${url.pathname}${url.search}${url.hash}`,
+      reviewPathPrefix
+    );
+    const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
+    const currentRouteKey = getTargetRouteKey(
+      targetRef.current,
+      reviewPathPrefix
+    );
+    if (nextRouteKey === currentRouteKey) return;
+    if (!pageTargets.has(nextRouteKey)) return;
     event.preventDefault();
     onSyncShellTarget(nextTarget);
   };
@@ -7822,12 +8701,16 @@ var useReviewTargetSync = ({
   const syncShellTarget = useCallback4(
     (nextTarget) => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
+      const nextRouteKey = getTargetRouteKey(
+        normalizedTarget,
+        reviewPathPrefix
+      );
       if (normalizedTarget !== targetRef.current) {
         onClearSelectedItem();
         targetRef.current = normalizedTarget;
         onTargetChange(normalizedTarget);
         onDraftTargetChange(normalizedTarget);
-        onActiveRouteChange(normalizedTarget);
+        onActiveRouteChange(nextRouteKey);
       }
       if (selectedItemIdRef.current) {
         updateShellUrlForItem(
@@ -7854,8 +8737,8 @@ var useReviewTargetSync = ({
   );
   useEffect4(() => {
     targetRef.current = target;
-    onActiveRouteChange(target);
-  }, [onActiveRouteChange, target, targetRef]);
+    onActiveRouteChange(getTargetRouteKey(target, reviewPathPrefix));
+  }, [onActiveRouteChange, reviewPathPrefix, target, targetRef]);
   useEffect4(() => {
     sizeRef.current = size;
     if (selectedItemIdRef.current) {
@@ -8217,7 +9100,7 @@ var createFallbackPresenceAdapter = (primaryAdapter, fallbackAdapter) => ({
 });
 
 // src/react-shell/hooks/use.review.presence.ts
-var getPresenceUserTarget = (user, reviewPathPrefix) => normalizeTarget(user.target || user.routeKey, reviewPathPrefix);
+var getPresenceUserTarget = (user, reviewPathPrefix) => getTargetRouteKey(user.target || user.routeKey, reviewPathPrefix);
 var dedupePresenceUsersByPageAndId = (users, reviewPathPrefix) => {
   const userByPageAndId = /* @__PURE__ */ new Map();
   users.forEach((user) => {
@@ -9297,7 +10180,7 @@ var useReviewShellState = ({
     () => getInitialTarget(reviewPathPrefix)
   );
   const [activeRoute, setActiveRoute] = useState9(
-    () => getInitialTarget(reviewPathPrefix)
+    () => getTargetRouteKey(getInitialTarget(reviewPathPrefix), reviewPathPrefix)
   );
   const [size, setSize] = useState9(
     () => getInitialSize(viewportPresets)
@@ -9613,133 +10496,11 @@ var removeReviewItem = async ({
 };
 
 // src/react-shell/review/shell.tsx
-import { Fragment as Fragment4, jsx as jsx17, jsxs as jsxs15 } from "react/jsx-runtime";
-var getReviewModeWriteMode = (mode) => {
-  if (mode === "element") return "dom";
-  if (mode === "note" || mode === "area") return mode;
-  return null;
-};
+import { jsx as jsx21, jsxs as jsxs19 } from "react/jsx-runtime";
 var SOURCE_PANEL_MAX_WIDTH = 440;
 var SOURCE_PANEL_MIN_WIDTH = 240;
 var SOURCE_PANEL_MAX_HEIGHT = 260;
 var SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
-var waitForFrame = (targetWindow) => new Promise((resolve) => {
-  (targetWindow ?? window).requestAnimationFrame(() => resolve());
-});
-var waitForMs = (ms) => new Promise((resolve) => {
-  window.setTimeout(resolve, ms);
-});
-var getScrollElement = (targetDocument) => targetDocument.scrollingElement;
-var scrollElementInTarget = (element, block) => {
-  const targetWindow = element.ownerDocument.defaultView;
-  if (!targetWindow) return;
-  const targetDocument = element.ownerDocument;
-  const scrollElement = getScrollElement(targetDocument);
-  const rect = element.getBoundingClientRect();
-  const currentLeft = scrollElement?.scrollLeft ?? targetWindow.scrollX;
-  const currentTop = scrollElement?.scrollTop ?? targetWindow.scrollY;
-  const clientWidth = scrollElement?.clientWidth ?? targetWindow.innerWidth;
-  const clientHeight = scrollElement?.clientHeight ?? targetWindow.innerHeight;
-  const scrollWidth = scrollElement?.scrollWidth ?? targetDocument.documentElement.scrollWidth;
-  const scrollHeight = scrollElement?.scrollHeight ?? targetDocument.documentElement.scrollHeight;
-  const nextLeft = clamp(
-    currentLeft + rect.left + rect.width / 2 - clientWidth / 2,
-    0,
-    Math.max(0, scrollWidth - clientWidth)
-  );
-  const nextTop = block === "center" ? clamp(
-    currentTop + rect.top + rect.height / 2 - clientHeight / 2,
-    0,
-    Math.max(0, scrollHeight - clientHeight)
-  ) : clamp(
-    currentTop + rect.top,
-    0,
-    Math.max(0, scrollHeight - clientHeight)
-  );
-  runWithAutoScrollBehavior(targetDocument, () => {
-    if (scrollElement) {
-      scrollElement.scrollLeft = Math.round(nextLeft);
-      scrollElement.scrollTop = Math.round(nextTop);
-      return;
-    }
-    targetWindow.scrollTo(Math.round(nextLeft), Math.round(nextTop));
-  });
-};
-var centerFrameScrollOnElement = (frameScroll, frame, element) => {
-  if (!frameScroll || !frame) return;
-  const frameScrollRect = frameScroll.getBoundingClientRect();
-  const frameRect = frame.getBoundingClientRect();
-  const elementRect = element.getBoundingClientRect();
-  const elementHostCenterX = frameRect.left + elementRect.left + elementRect.width / 2;
-  const elementHostCenterY = frameRect.top + elementRect.top + elementRect.height / 2;
-  const visibleCenterX = frameScrollRect.left + frameScrollRect.width / 2;
-  const visibleCenterY = frameScrollRect.top + frameScrollRect.height / 2;
-  const nextLeft = clamp(
-    frameScroll.scrollLeft + elementHostCenterX - visibleCenterX,
-    0,
-    Math.max(0, frameScroll.scrollWidth - frameScroll.clientWidth)
-  );
-  const nextTop = clamp(
-    frameScroll.scrollTop + elementHostCenterY - visibleCenterY,
-    0,
-    Math.max(0, frameScroll.scrollHeight - frameScroll.clientHeight)
-  );
-  const previousScrollBehavior = frameScroll.style.scrollBehavior;
-  frameScroll.style.scrollBehavior = "auto";
-  frameScroll.scrollLeft = Math.round(nextLeft);
-  frameScroll.scrollTop = Math.round(nextTop);
-  frameScroll.style.scrollBehavior = previousScrollBehavior;
-};
-var getSectionOutlineFilterTerms = (value) => value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-var getSectionOutlineEntryCount = (entries) => entries.reduce(
-  (count, entry) => count + 1 + getSectionOutlineEntryCount(entry.children),
-  0
-);
-var getDefaultCollapsedSectionOutlineIds = (entries) => {
-  const collapsedIds = /* @__PURE__ */ new Set();
-  const visit = (entry) => {
-    if (entry.children.length > 0) {
-      collapsedIds.add(entry.id);
-    }
-    entry.children.forEach(visit);
-  };
-  entries.forEach(visit);
-  return collapsedIds;
-};
-var getLiveSectionOutlineRect = (entry) => {
-  if (!entry.element.isConnected) return entry.metadata.rect;
-  const rect = entry.element.getBoundingClientRect();
-  return {
-    top: Math.round(rect.top),
-    left: Math.round(rect.left),
-    width: Math.round(rect.width),
-    height: Math.round(rect.height)
-  };
-};
-var matchesSectionOutlineFilter = (entry, terms) => {
-  if (terms.length === 0) return true;
-  const text = [
-    entry.label,
-    entry.filePath,
-    entry.source?.file,
-    entry.data?.file,
-    entry.metadata.textValue,
-    entry.metadata.fontLabel,
-    entry.metadata.mediaItems?.map((mediaItem) => `${mediaItem.variant} ${mediaItem.type} ${mediaItem.url}`).join(" "),
-    entry.metadata.classNames?.join(" ")
-  ].filter(Boolean).join(" ").toLowerCase();
-  return terms.every((term) => text.includes(term));
-};
-var filterSectionOutlineEntries = (entries, terms) => {
-  if (terms.length === 0) return entries;
-  return entries.flatMap((entry) => {
-    const children = filterSectionOutlineEntries(entry.children, terms);
-    if (!matchesSectionOutlineFilter(entry, terms) && children.length === 0) {
-      return [];
-    }
-    return [{ ...entry, children }];
-  });
-};
 var ReviewShell = ({
   projectId,
   pages,
@@ -9823,33 +10584,40 @@ var ReviewShell = ({
   const isSectionOutlineClassMetaVisible = sectionOutlineMetaVisibility.className;
   const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = useState10(() => /* @__PURE__ */ new Set());
   const [isAllQaVisible, setIsAllQaVisible] = useState10(false);
+  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = useState10(false);
+  const resolvedReviewSourceOptions = useMemo7(
+    () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
+    [sourceInspector, sourceRoot]
+  );
+  const resolvedSourceInspector = resolvedReviewSourceOptions.sourceInspector;
+  const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
   const sourceOpenOptions = useMemo7(
     () => ({
-      ...sourceInspector,
-      sourceRoot
+      ...resolvedSourceInspector,
+      sourceRoot: resolvedSourceRoot
     }),
-    [sourceInspector, sourceRoot]
+    [resolvedSourceInspector, resolvedSourceRoot]
   );
   const sourceCandidateOptions = useMemo7(
     () => ({
-      ignore: sourceInspector?.ignore,
-      includePlacer: sourceInspector?.includePlacer
+      ignore: resolvedSourceInspector?.ignore,
+      includePlacer: resolvedSourceInspector?.includePlacer
     }),
-    [sourceInspector]
+    [resolvedSourceInspector]
   );
   const sectionOutlineOptions = useMemo7(
     () => ({
-      includePlacer: sourceInspector?.includePlacer,
-      ignore: sourceInspector?.ignore,
-      maxDepth: sourceInspector?.maxDepth
+      includePlacer: resolvedSourceInspector?.includePlacer,
+      ignore: resolvedSourceInspector?.ignore,
+      maxDepth: resolvedSourceInspector?.maxDepth
     }),
-    [sourceInspector]
+    [resolvedSourceInspector]
   );
-  const isSourceInspectorEnabled = sourceInspector?.enabled !== false;
+  const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
   const [sidePanel, setSidePanel] = useState10(
     () => isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa"
   );
-  const isSourceTreeHoverOutlineEnabled = sourceInspector?.hoverOutline !== false;
+  const isSourceTreeHoverOutlineEnabled = resolvedSourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === "qa";
   const isSourceTreePanelVisible = isSourceInspectorEnabled && isListVisible && sidePanel === "source";
   useEffect10(() => {
@@ -10136,6 +10904,10 @@ var ReviewShell = ({
   const applyTarget = async () => {
     const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
     const normalizedTarget = parsedInput.target;
+    const normalizedRoute = getTargetRouteKey(
+      normalizedTarget,
+      reviewPathPrefix
+    );
     const nextSource = parsedInput.source && sourceEntries.some((entry) => entry.label === parsedInput.source) ? parsedInput.source : source;
     const nextSize = parsedInput.width && parsedInput.height ? findViewportPreset(
       viewportPresets,
@@ -10157,7 +10929,7 @@ var ReviewShell = ({
     setIsAllQaVisible(false);
     setSource(nextSource);
     targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
+    setActiveRoute(normalizedRoute);
     setDraftTarget(normalizedTarget);
     setSize(nextSize);
     setTarget(normalizedTarget);
@@ -10166,10 +10938,14 @@ var ReviewShell = ({
   };
   const selectPage = (href) => {
     const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
+    const normalizedRoute = getTargetRouteKey(
+      normalizedTarget,
+      reviewPathPrefix
+    );
     clearSelectedItem();
     setIsAllQaVisible(false);
     targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedTarget);
+    setActiveRoute(normalizedRoute);
     setDraftTarget(normalizedTarget);
     setTarget(normalizedTarget);
     updateShellUrl(normalizedTarget, sizeRef.current, source);
@@ -10498,6 +11274,11 @@ var ReviewShell = ({
     (entry) => {
       if (!canWriteDom) {
         showToast("DOM QA unavailable");
+        return;
+      }
+      const rect = entry.element.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        showToast("Component has no visible area here");
         return;
       }
       clearSourceInspector();
@@ -10891,7 +11672,7 @@ var ReviewShell = ({
     const { item } = numberedItem;
     return copyPrompt(
       getShellUrlForItem(
-        getItemTarget(item, reviewPathPrefix),
+        getItemFrameTarget(item, reviewPathPrefix),
         getRestoredSize(item, viewportPresets),
         item.id,
         source
@@ -10912,220 +11693,12 @@ var ReviewShell = ({
     onRefreshReviewData: refreshReviewData2,
     onToast: showToast
   });
-  const renderSectionOutlineMeta = (entry) => {
-    const { metadata } = entry;
-    const rows = [];
-    const metaPaddingLeft = Math.max(0, entry.depth - 1) * 12 + 29;
-    const rect = getLiveSectionOutlineRect(entry);
-    if (isSectionOutlineBoxMetaVisible) {
-      rows.push(
-        /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ jsx17("b", { children: "box" }),
-          /* @__PURE__ */ jsxs15("code", { children: [
-            "top ",
-            rect.top,
-            " / left ",
-            rect.left,
-            " / width ",
-            rect.width,
-            " / height",
-            " ",
-            rect.height
-          ] })
-        ] }, "box")
-      );
-    }
-    if (metadata.textValue) {
-      rows.push(
-        /* @__PURE__ */ jsxs15(
-          "span",
-          {
-            className: "df-review-section-outline-meta-row is-text",
-            children: [
-              /* @__PURE__ */ jsx17("b", { children: "text" }),
-              /* @__PURE__ */ jsx17("code", { children: metadata.textValue })
-            ]
-          },
-          "text"
-        )
-      );
-    }
-    if (isSectionOutlineFontMetaVisible && metadata.fontLabel) {
-      rows.push(
-        /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ jsx17("b", { children: "font" }),
-          /* @__PURE__ */ jsx17("code", { children: metadata.fontLabel })
-        ] }, "font")
-      );
-    }
-    if (isSectionOutlineMediaMetaVisible && metadata.mediaItems?.length) {
-      metadata.mediaItems.forEach((mediaItem) => {
-        const mediaKey = `${mediaItem.variant}:${mediaItem.type}:${mediaItem.url}`;
-        const mediaLabel = mediaItem.variant === "media" ? mediaItem.type : mediaItem.variant;
-        rows.push(
-          /* @__PURE__ */ jsxs15(
-            "span",
-            {
-              className: "df-review-section-outline-meta-row is-media",
-              children: [
-                /* @__PURE__ */ jsx17("b", { children: mediaLabel }),
-                /* @__PURE__ */ jsx17(
-                  "a",
-                  {
-                    className: "df-review-section-outline-media-link",
-                    href: mediaItem.url,
-                    rel: "noopener noreferrer",
-                    target: "_blank",
-                    title: `${mediaLabel} ${mediaItem.type}`,
-                    children: /* @__PURE__ */ jsx17("code", { children: mediaItem.url })
-                  }
-                )
-              ]
-            },
-            mediaKey
-          )
-        );
-      });
-    }
-    if (isSectionOutlineClassMetaVisible && metadata.classNames?.length) {
-      rows.push(
-        /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-meta-row is-class", children: [
-          /* @__PURE__ */ jsx17("b", { children: "class" }),
-          /* @__PURE__ */ jsx17("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ jsx17("code", { children: className }, className)) })
-        ] }, "class")
-      );
-    }
-    if (rows.length === 0) return null;
-    return /* @__PURE__ */ jsx17(
-      "div",
-      {
-        className: "df-review-section-outline-meta",
-        style: { paddingLeft: `${metaPaddingLeft}px` },
-        children: rows
-      }
-    );
-  };
-  const renderSectionOutlineEntry = (entry) => {
-    const hasChildren = entry.children.length > 0;
-    const isCollapsed = !isSectionOutlineFiltering && collapsedSectionOutlineIds.has(entry.id);
-    return /* @__PURE__ */ jsxs15(
-      "div",
-      {
-        className: `df-review-section-outline-item is-depth-${entry.depth}`,
-        children: [
-          /* @__PURE__ */ jsxs15(
-            "div",
-            {
-              className: "df-review-section-outline-entry-body",
-              onMouseEnter: () => showSourceOutlineForElement(entry.element),
-              onMouseLeave: clearSourceOutlineHover,
-              onMouseOver: () => showSourceOutlineForElement(entry.element),
-              onMouseOut: (event) => {
-                if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) {
-                  return;
-                }
-                clearSourceOutlineHover();
-              },
-              onPointerEnter: () => showSourceOutlineForElement(entry.element),
-              onPointerLeave: clearSourceOutlineHover,
-              children: [
-                /* @__PURE__ */ jsxs15(
-                  "div",
-                  {
-                    className: "df-review-section-outline-row",
-                    style: { paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` },
-                    children: [
-                      hasChildren ? /* @__PURE__ */ jsx17(
-                        "button",
-                        {
-                          "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
-                          "aria-expanded": !isCollapsed,
-                          className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
-                          type: "button",
-                          onClick: () => toggleSectionOutlineEntry(entry.id),
-                          children: /* @__PURE__ */ jsx17(ChevronDown, { "aria-hidden": "true" })
-                        }
-                      ) : /* @__PURE__ */ jsx17(
-                        "span",
-                        {
-                          "aria-hidden": "true",
-                          className: "df-review-section-outline-toggle is-placeholder"
-                        }
-                      ),
-                      /* @__PURE__ */ jsx17(
-                        "button",
-                        {
-                          className: "df-review-section-outline-name",
-                          type: "button",
-                          onClick: () => scrollToSection(entry),
-                          children: /* @__PURE__ */ jsx17("span", { children: entry.label })
-                        }
-                      ),
-                      /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-links", children: [
-                        /* @__PURE__ */ jsx17(
-                          "button",
-                          {
-                            "aria-label": `Open ${entry.label} data`,
-                            className: "df-review-section-outline-link",
-                            title: "Open data",
-                            type: "button",
-                            disabled: !entry.data?.file,
-                            onClick: () => openSectionData(entry),
-                            children: /* @__PURE__ */ jsx17(Database, { "aria-hidden": "true" })
-                          }
-                        ),
-                        /* @__PURE__ */ jsx17(
-                          "button",
-                          {
-                            "aria-label": `Open ${entry.label} source`,
-                            className: "df-review-section-outline-link",
-                            title: "Open source",
-                            type: "button",
-                            disabled: !entry.source?.file,
-                            onClick: () => openSectionSource(entry),
-                            children: /* @__PURE__ */ jsx17(CodeXml, { "aria-hidden": "true" })
-                          }
-                        ),
-                        /* @__PURE__ */ jsx17(
-                          "span",
-                          {
-                            "aria-hidden": "true",
-                            className: "df-review-section-outline-divider",
-                            children: "|"
-                          }
-                        ),
-                        /* @__PURE__ */ jsx17(
-                          "button",
-                          {
-                            "aria-label": `Start DOM QA for ${entry.label}`,
-                            className: "df-review-section-outline-link is-dom-select",
-                            title: "DOM select",
-                            type: "button",
-                            disabled: !canWriteDom,
-                            onClick: () => startSectionDomReview(entry),
-                            children: /* @__PURE__ */ jsx17(SquareMousePointer, { "aria-hidden": "true" })
-                          }
-                        )
-                      ] })
-                    ]
-                  }
-                ),
-                renderSectionOutlineMeta(entry)
-              ]
-            }
-          ),
-          hasChildren && !isCollapsed && /* @__PURE__ */ jsx17("div", { className: "df-review-section-outline-children", children: entry.children.map(renderSectionOutlineEntry) })
-        ]
-      },
-      entry.id
-    );
-  };
-  return /* @__PURE__ */ jsxs15(
+  return /* @__PURE__ */ jsxs19(
     "div",
     {
       className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
       children: [
-        /* @__PURE__ */ jsx17(
+        /* @__PURE__ */ jsx21(
           ReviewTopbar,
           {
             draftTarget,
@@ -11146,7 +11719,7 @@ var ReviewShell = ({
             onToggleTargetOverlay: toggleTargetOverlay
           }
         ),
-        isSitemapOpen && /* @__PURE__ */ jsx17(
+        isSitemapOpen && /* @__PURE__ */ jsx21(
           SitemapModal,
           {
             pages,
@@ -11161,7 +11734,7 @@ var ReviewShell = ({
             onSelectPage: selectPage
           }
         ),
-        isFigmaSettingsOpen && /* @__PURE__ */ jsx17(
+        isFigmaSettingsOpen && /* @__PURE__ */ jsx21(
           ReviewSettingsModal,
           {
             figmaTokenDraft,
@@ -11180,16 +11753,17 @@ var ReviewShell = ({
             onSave: saveReviewSettings
           }
         ),
-        isInitialPromptOpen && /* @__PURE__ */ jsx17(
-          PromptModal,
+        isInitialPromptOpen && /* @__PURE__ */ jsx21(PromptModal, { onClose: closePromptModal }),
+        isInitialPromptScriptOpen && /* @__PURE__ */ jsx21(
+          InitialPromptModal,
           {
             initialPromptText,
             copiedPromptKey,
-            onClose: closePromptModal,
+            onClose: () => setIsInitialPromptScriptOpen(false),
             onCopyPrompt: (text, key) => void copyPrompt(text, key)
           }
         ),
-        editingItem && /* @__PURE__ */ jsx17(
+        editingItem && /* @__PURE__ */ jsx21(
           QaItemEditModal,
           {
             item: editingItem,
@@ -11197,9 +11771,9 @@ var ReviewShell = ({
             onSave: saveItemComment
           }
         ),
-        toastMessage && /* @__PURE__ */ jsx17("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
-        /* @__PURE__ */ jsxs15("div", { className: "df-review-side-rail", children: [
-          /* @__PURE__ */ jsx17(
+        toastMessage && /* @__PURE__ */ jsx21("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
+        /* @__PURE__ */ jsxs19("div", { className: "df-review-side-rail", children: [
+          /* @__PURE__ */ jsx21(
             "button",
             {
               "aria-label": isQaPanelVisible ? "Hide QA list" : "Show QA list",
@@ -11208,10 +11782,10 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleQaPanel,
               title: "QA",
-              children: /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(FileText, {}) })
+              children: /* @__PURE__ */ jsx21("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx21(SquareCheckBig, {}) })
             }
           ),
-          isSourceInspectorEnabled && /* @__PURE__ */ jsx17(
+          isSourceInspectorEnabled && /* @__PURE__ */ jsx21(
             "button",
             {
               "aria-controls": "df-review-section-outline",
@@ -11221,24 +11795,22 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleSourceTreePanel,
               title: "Source Tree",
-              children: /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(Workflow, {}) })
+              children: /* @__PURE__ */ jsx21("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx21(Grid2x2Check, {}) })
             }
           ),
-          /* @__PURE__ */ jsxs15("div", { className: "df-review-side-actions", children: [
-            /* @__PURE__ */ jsx17(
+          /* @__PURE__ */ jsxs19("div", { className: "df-review-side-actions", children: [
+            /* @__PURE__ */ jsx21(
               "button",
               {
                 "aria-label": "Open initial prompt",
                 className: "df-review-side-toggle",
                 type: "button",
-                onClick: () => {
-                  setIsInitialPromptOpen(true);
-                },
-                title: "Help",
-                children: /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(CircleQuestionMark, {}) })
+                onClick: () => setIsInitialPromptScriptOpen(true),
+                title: "Initial prompt",
+                children: /* @__PURE__ */ jsx21("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx21(Bot, {}) })
               }
             ),
-            /* @__PURE__ */ jsx17(
+            /* @__PURE__ */ jsx21(
               "button",
               {
                 "aria-label": "Open settings",
@@ -11246,19 +11818,33 @@ var ReviewShell = ({
                 type: "button",
                 onClick: openFigmaSettings,
                 title: "Settings",
-                children: /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx17(Settings, {}) })
+                children: /* @__PURE__ */ jsx21("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx21(Settings, {}) })
               }
             ),
-            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsx17(
+            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsx21(
               PresenceOverlay,
               {
                 presenceSessionId,
                 users: currentPagePresenceUsers
               }
+            ),
+            /* @__PURE__ */ jsx21("span", { className: "df-review-side-divider", "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx21(
+              "button",
+              {
+                "aria-label": "Open about",
+                className: "df-review-side-toggle",
+                type: "button",
+                onClick: () => {
+                  setIsInitialPromptOpen(true);
+                },
+                title: "About",
+                children: /* @__PURE__ */ jsx21("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx21(DfLogoIcon, {}) })
+              }
             )
           ] })
         ] }),
-        /* @__PURE__ */ jsx17(
+        /* @__PURE__ */ jsx21(
           ReviewQaPanel,
           {
             activeAdapterEntry,
@@ -11297,102 +11883,34 @@ var ReviewShell = ({
             onToggleItemOverlayVisibility: toggleItemOverlayVisibility
           }
         ),
-        isSourceInspectorEnabled && /* @__PURE__ */ jsx17(
-          "aside",
+        isSourceInspectorEnabled && /* @__PURE__ */ jsx21(
+          SectionOutlinePanel,
           {
-            className: "df-review-source-tree-panel",
-            "aria-hidden": !isSourceTreePanelVisible,
-            children: /* @__PURE__ */ jsxs15("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
-              /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-head", children: [
-                /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-summary", children: [
-                  /* @__PURE__ */ jsxs15("span", { children: [
-                    /* @__PURE__ */ jsx17("strong", { children: "Component" }),
-                    /* @__PURE__ */ jsx17("small", { children: isSectionOutlineFiltering ? `${filteredSectionOutlineCount} / ${sectionOutlineTotalCount} results` : `${sectionOutline?.length ?? 0} ${sectionOutline?.length === 1 ? "root" : "roots"}` })
-                  ] }),
-                  /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-meta-controls", children: [
-                    /* @__PURE__ */ jsx17(
-                      "button",
-                      {
-                        "aria-label": "Toggle source tree box metadata",
-                        "aria-pressed": isSectionOutlineBoxMetaVisible,
-                        className: `df-review-section-outline-meta-toggle${isSectionOutlineBoxMetaVisible ? " is-active" : ""}`,
-                        title: "top / left / width / height",
-                        type: "button",
-                        onClick: () => updateSectionOutlineMetaVisibility("box"),
-                        children: /* @__PURE__ */ jsx17(SquareDashed, { "aria-hidden": "true" })
-                      }
-                    ),
-                    /* @__PURE__ */ jsx17(
-                      "button",
-                      {
-                        "aria-label": "Toggle source tree font metadata",
-                        "aria-pressed": isSectionOutlineFontMetaVisible,
-                        className: `df-review-section-outline-meta-toggle${isSectionOutlineFontMetaVisible ? " is-active" : ""}`,
-                        title: "font size / weight",
-                        type: "button",
-                        onClick: () => updateSectionOutlineMetaVisibility("font"),
-                        children: /* @__PURE__ */ jsx17(Type, { "aria-hidden": "true" })
-                      }
-                    ),
-                    /* @__PURE__ */ jsx17(
-                      "button",
-                      {
-                        "aria-label": "Toggle source tree media metadata",
-                        "aria-pressed": isSectionOutlineMediaMetaVisible,
-                        className: `df-review-section-outline-meta-toggle${isSectionOutlineMediaMetaVisible ? " is-active" : ""}`,
-                        title: "media urls",
-                        type: "button",
-                        onClick: () => updateSectionOutlineMetaVisibility("media"),
-                        children: /* @__PURE__ */ jsx17(Image, { "aria-hidden": "true" })
-                      }
-                    ),
-                    /* @__PURE__ */ jsx17(
-                      "button",
-                      {
-                        "aria-label": "Toggle source tree class metadata",
-                        "aria-pressed": isSectionOutlineClassMetaVisible,
-                        className: `df-review-section-outline-meta-toggle${isSectionOutlineClassMetaVisible ? " is-active" : ""}`,
-                        title: "class names",
-                        type: "button",
-                        onClick: () => updateSectionOutlineMetaVisibility("className"),
-                        children: /* @__PURE__ */ jsx17(CodeXml, { "aria-hidden": "true" })
-                      }
-                    )
-                  ] })
-                ] }),
-                /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-filter", children: [
-                  /* @__PURE__ */ jsx17(Search, { "aria-hidden": "true" }),
-                  /* @__PURE__ */ jsx17(
-                    "input",
-                    {
-                      "aria-label": "Filter source tree",
-                      type: "text",
-                      value: sectionOutlineFilter,
-                      placeholder: "Filter",
-                      autoComplete: "off",
-                      enterKeyHint: "search",
-                      spellCheck: false,
-                      onChange: (event) => updateSectionOutlineFilter(event.currentTarget.value)
-                    }
-                  ),
-                  sectionOutlineFilter && /* @__PURE__ */ jsx17(
-                    "button",
-                    {
-                      "aria-label": "Clear source tree filter",
-                      className: "df-review-section-outline-filter-clear",
-                      type: "button",
-                      onMouseDown: (event) => event.preventDefault(),
-                      onClick: () => updateSectionOutlineFilter(""),
-                      children: /* @__PURE__ */ jsx17(X, { "aria-hidden": "true" })
-                    }
-                  )
-                ] })
-              ] }),
-              filteredSectionOutline.length > 0 ? /* @__PURE__ */ jsx17("div", { className: "df-review-section-outline-list", children: filteredSectionOutline.map(renderSectionOutlineEntry) }) : /* @__PURE__ */ jsx17("div", { className: "df-review-section-outline-empty", children: isSectionOutlineFiltering ? "No source matches" : "No sections found" })
-            ] })
+            isPanelVisible: isSourceTreePanelVisible,
+            isFiltering: isSectionOutlineFiltering,
+            filteredCount: filteredSectionOutlineCount,
+            totalCount: sectionOutlineTotalCount,
+            rootCount: sectionOutline?.length ?? 0,
+            filter: sectionOutlineFilter,
+            entries: filteredSectionOutline,
+            collapsedIds: collapsedSectionOutlineIds,
+            canWriteDom,
+            isBoxMetaVisible: isSectionOutlineBoxMetaVisible,
+            isFontMetaVisible: isSectionOutlineFontMetaVisible,
+            isMediaMetaVisible: isSectionOutlineMediaMetaVisible,
+            isClassMetaVisible: isSectionOutlineClassMetaVisible,
+            onToggleMeta: updateSectionOutlineMetaVisibility,
+            onFilterChange: updateSectionOutlineFilter,
+            onToggleEntry: toggleSectionOutlineEntry,
+            onScrollToSection: scrollToSection,
+            onOpenData: openSectionData,
+            onOpenSource: openSectionSource,
+            onStartDomReview: startSectionDomReview,
+            onHoverElement: showSourceOutlineForElement,
+            onClearHover: clearSourceOutlineHover
           }
         ),
-        /* @__PURE__ */ jsx17(
+        /* @__PURE__ */ jsx21(
           ReviewTargetFrame,
           {
             canWriteArea,
@@ -11417,71 +11935,15 @@ var ReviewShell = ({
             onSetReviewMode: setReviewMode
           }
         ),
-        sourceInspectorState && /* @__PURE__ */ jsxs15(Fragment4, { children: [
-          /* @__PURE__ */ jsx17(
-            "div",
-            {
-              className: `df-review-source-outline${sourceInspectorState.isPinned ? " is-pinned" : ""}`,
-              style: {
-                height: `${sourceInspectorState.rect.height}px`,
-                left: `${sourceInspectorState.rect.left}px`,
-                top: `${sourceInspectorState.rect.top}px`,
-                width: `${sourceInspectorState.rect.width}px`
-              }
-            }
-          ),
-          sourceInspectorState.candidates.length > 0 && /* @__PURE__ */ jsxs15(
-            "div",
-            {
-              className: `df-review-source-popover${sourceInspectorState.isPinned ? " is-pinned" : ""}`,
-              style: {
-                left: sourceInspectorState.panelRight === null ? `${sourceInspectorState.panelLeft}px` : void 0,
-                maxWidth: `${sourceInspectorState.panelMaxWidth}px`,
-                right: sourceInspectorState.panelRight === null ? void 0 : `${sourceInspectorState.panelRight}px`,
-                top: `${sourceInspectorState.panelTop}px`
-              },
-              onPointerDown: () => {
-                sourceInspectorInteractionRef.current = true;
-              },
-              onPointerEnter: () => {
-                sourceInspectorInteractionRef.current = true;
-              },
-              onPointerLeave: () => {
-                sourceInspectorInteractionRef.current = false;
-              },
-              onClick: (event) => event.stopPropagation(),
-              children: [
-                /* @__PURE__ */ jsx17("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ jsx17(
-                  "button",
-                  {
-                    "aria-label": "Close source candidates",
-                    type: "button",
-                    onClick: clearSourceInspector,
-                    children: "\xD7"
-                  }
-                ) }),
-                /* @__PURE__ */ jsx17("div", { className: "df-review-source-candidate-list", children: sourceInspectorState.candidates.map((candidate) => /* @__PURE__ */ jsx17(
-                  "button",
-                  {
-                    className: `df-review-source-candidate is-${candidate.kind}`,
-                    type: "button",
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      openSourceCandidate(candidate);
-                    },
-                    children: /* @__PURE__ */ jsxs15("span", { className: "df-review-source-candidate-main", children: [
-                      /* @__PURE__ */ jsx17("strong", { children: candidate.label }),
-                      /* @__PURE__ */ jsx17("span", { children: candidate.filePath }),
-                      /* @__PURE__ */ jsx17("small", { children: candidate.positionLabel || "-:-" })
-                    ] })
-                  },
-                  candidate.id
-                )) })
-              ]
-            }
-          )
-        ] })
+        /* @__PURE__ */ jsx21(
+          SourceInspectorOverlay,
+          {
+            state: sourceInspectorState,
+            interactionRef: sourceInspectorInteractionRef,
+            onClear: clearSourceInspector,
+            onOpenCandidate: openSourceCandidate
+          }
+        )
       ]
     }
   );
@@ -11661,7 +12123,7 @@ var createSupabasePresenceAdapter = ({
 });
 
 // src/react-shell.tsx
-import { jsx as jsx18 } from "react/jsx-runtime";
+import { jsx as jsx22 } from "react/jsx-runtime";
 var mountReviewShell = (options) => {
   if (typeof document === "undefined" || !document.head) return;
   const { rootId = "root", ...shellProps } = options;
@@ -11672,7 +12134,7 @@ var mountReviewShell = (options) => {
   root.style.height = "100%";
   root.style.margin = "0";
   createRoot(root).render(
-    /* @__PURE__ */ jsx18(React2.StrictMode, { children: /* @__PURE__ */ jsx18(ReviewShell, { ...shellProps }) })
+    /* @__PURE__ */ jsx22(React.StrictMode, { children: /* @__PURE__ */ jsx22(ReviewShell, { ...shellProps }) })
   );
 };
 export {
@@ -11704,7 +12166,7 @@ lucide-react/dist/esm/icons/database.mjs:
 lucide-react/dist/esm/icons/external-link.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
 lucide-react/dist/esm/icons/eye.mjs:
-lucide-react/dist/esm/icons/file-text.mjs:
+lucide-react/dist/esm/icons/grid-2x2-check.mjs:
 lucide-react/dist/esm/icons/image.mjs:
 lucide-react/dist/esm/icons/layout-grid.mjs:
 lucide-react/dist/esm/icons/link-2.mjs:
@@ -11721,13 +12183,13 @@ lucide-react/dist/esm/icons/scan.mjs:
 lucide-react/dist/esm/icons/search.mjs:
 lucide-react/dist/esm/icons/settings.mjs:
 lucide-react/dist/esm/icons/smartphone.mjs:
+lucide-react/dist/esm/icons/square-check-big.mjs:
 lucide-react/dist/esm/icons/square-dashed.mjs:
 lucide-react/dist/esm/icons/square-mouse-pointer.mjs:
 lucide-react/dist/esm/icons/sticky-note.mjs:
 lucide-react/dist/esm/icons/sun.mjs:
 lucide-react/dist/esm/icons/type.mjs:
 lucide-react/dist/esm/icons/upload.mjs:
-lucide-react/dist/esm/icons/workflow.mjs:
 lucide-react/dist/esm/icons/x.mjs:
 lucide-react/dist/esm/lucide-react.mjs:
   (**

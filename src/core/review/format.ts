@@ -6,23 +6,8 @@ import type {
   ViewportSize,
 } from '../../types';
 import { getAnchorCandidates } from '../dom.anchor';
-import type { AreaDraft, NoteDraft } from './draft';
+import type { NoteDraft } from './draft';
 import { getItemMarker, getItemSelection } from './item';
-
-/** Formats area draft metadata for compact debug display in the overlay UI. */
-export function formatAreaDraftMeta(draft: AreaDraft) {
-  const parts = [`viewport ${formatSize(draft.viewport)}`];
-
-  if (draft.selection) {
-    parts.push(`rect ${formatSelection(draft.selection.viewport)}`);
-  }
-
-  if (draft.marker) {
-    parts.push(`point ${formatPoint(draft.marker.viewport)}`);
-  }
-
-  return parts.join(' / ');
-}
 
 /** Formats note draft metadata for compact debug display in the overlay UI. */
 export function formatNoteDraftMeta(draft: NoteDraft) {

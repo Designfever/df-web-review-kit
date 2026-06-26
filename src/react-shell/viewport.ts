@@ -8,10 +8,10 @@ export const DEFAULT_REVIEW_VIEWPORT_PRESETS: ReviewShellViewportPreset[] = [
   { label: 'Wide', width: 1980, height: 1080, kind: 'wide' }
 ];
 
-export const getFallbackPreset = (presets: ReviewShellViewportPreset[]) =>
+const getFallbackPreset = (presets: ReviewShellViewportPreset[]) =>
   presets[0] ?? DEFAULT_REVIEW_VIEWPORT_PRESETS[0];
 
-export const getViewportPresetDistance = (
+const getViewportPresetDistance = (
   preset: ReviewShellViewportPreset,
   width: number,
   height: number

@@ -6,6 +6,7 @@ import {
 } from 'react';
 import type { ReviewSource } from '../../types';
 import {
+  getTargetRouteKey,
   normalizeTarget,
   updateShellUrl,
   updateShellUrlForItem,
@@ -48,13 +49,17 @@ export const useReviewTargetSync = ({
   const syncShellTarget = useCallback(
     (nextTarget: string) => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
+      const nextRouteKey = getTargetRouteKey(
+        normalizedTarget,
+        reviewPathPrefix
+      );
 
       if (normalizedTarget !== targetRef.current) {
         onClearSelectedItem();
         targetRef.current = normalizedTarget;
         onTargetChange(normalizedTarget);
         onDraftTargetChange(normalizedTarget);
-        onActiveRouteChange(normalizedTarget);
+        onActiveRouteChange(nextRouteKey);
       }
 
       if (selectedItemIdRef.current) {
@@ -83,8 +88,8 @@ export const useReviewTargetSync = ({
 
   useEffect(() => {
     targetRef.current = target;
-    onActiveRouteChange(target);
-  }, [onActiveRouteChange, target, targetRef]);
+    onActiveRouteChange(getTargetRouteKey(target, reviewPathPrefix));
+  }, [onActiveRouteChange, reviewPathPrefix, target, targetRef]);
 
   useEffect(() => {
     sizeRef.current = size;

@@ -40,11 +40,11 @@ export const normalizeReviewTheme = (value: string | null): ReviewShellTheme =>
     ? value
     : DEFAULT_REVIEW_THEME;
 
-export const normalizeStoredReviewSidePanel = (
+const normalizeStoredReviewSidePanel = (
   value: string | null
 ): StoredReviewSidePanel => (value === 'source' ? 'source' : 'qa');
 
-export const normalizeStoredReviewQaStatusFilter = (
+const normalizeStoredReviewQaStatusFilter = (
   value: string | null
 ): ReviewQaStatusFilter =>
   value && REVIEW_QA_STATUS_FILTER_VALUES.has(value)

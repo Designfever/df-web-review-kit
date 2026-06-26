@@ -11,7 +11,7 @@ export type ReviewAddressInput = {
   width?: number;
 };
 
-export const normalizeReviewPathPrefix = (value: string) => {
+const normalizeReviewPathPrefix = (value: string) => {
   const raw = value.trim() || DEFAULT_REVIEW_PATH_PREFIX;
   const prefix = raw.startsWith('/') ? raw : `/${raw}`;
   return prefix.length > 1 && prefix.endsWith('/')
@@ -24,14 +24,24 @@ export const normalizeTarget = (
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
 ) => {
   const raw = value.trim() || '/';
-  const [path] = raw.split(/[?#]/);
+  const { hash, path, search } = splitTarget(raw);
   const normalized = path.startsWith('/') ? path : `/${path}`;
   const reviewPrefix = normalizeReviewPathPrefix(reviewPathPrefix);
 
-  return normalized === reviewPrefix ||
+  const normalizedPath = normalized === reviewPrefix ||
     normalized.startsWith(`${reviewPrefix}/`)
     ? '/'
     : normalized;
+
+  return `${normalizedPath}${search}${hash}`;
+};
+
+export const getTargetRouteKey = (
+  value: string,
+  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
+) => {
+  const { path } = splitTarget(normalizeTarget(value, reviewPathPrefix));
+  return path || '/';
 };
 
 export const parseReviewAddressInput = (
@@ -53,7 +63,10 @@ export const parseReviewAddressInput = (
 
   if (!isReviewUrl) {
     return {
-      target: normalizeTarget(parsedUrl.pathname, reviewPathPrefix),
+      target: normalizeTarget(
+        `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`,
+        reviewPathPrefix
+      ),
     };
   }
 
@@ -100,26 +113,11 @@ export const buildTargetSrc = (target: string) => {
   return `${url.pathname}${url.search}${url.hash}`;
 };
 
-export const getHashRoutePath = (hash: string) => {
-  if (!hash.startsWith('#/')) return null;
-
-  const [path] = hash.slice(1).split(/[?#]/);
-  try {
-    return decodeURI(path || '/');
-  } catch {
-    return path || '/';
-  }
-};
-
 export const getFrameRouteTarget = (
   targetWindow: Window,
   reviewPathPrefix: string
 ) => {
-  const hashPath = getHashRoutePath(targetWindow.location.hash);
-  return normalizeTarget(
-    hashPath ?? targetWindow.location.pathname,
-    reviewPathPrefix
-  );
+  return normalizeTarget(targetWindow.location.pathname, reviewPathPrefix);
 };
 
 export const updateShellUrl = (
@@ -188,14 +186,74 @@ export const getItemTarget = (
   item: ReviewItem,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
 ) => {
-  if (item.routeKey) return normalizeTarget(item.routeKey, reviewPathPrefix);
+  if (item.routeKey) return getTargetRouteKey(item.routeKey, reviewPathPrefix);
   if (item.normalizedPath) {
-    return normalizeTarget(item.normalizedPath, reviewPathPrefix);
+    return getTargetRouteKey(item.normalizedPath, reviewPathPrefix);
   }
 
   try {
-    return normalizeTarget(new URL(item.pageUrl).pathname, reviewPathPrefix);
+    return getTargetRouteKey(new URL(item.pageUrl).pathname, reviewPathPrefix);
   } catch {
     return '/';
   }
 };
+
+export const getItemFrameTarget = (
+  item: ReviewItem,
+  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
+) => {
+  const routeTarget = getItemTarget(item, reviewPathPrefix);
+  const originalTarget = getItemUrlTarget(item.originalUrl, reviewPathPrefix);
+  if (
+    originalTarget &&
+    getTargetRouteKey(originalTarget, reviewPathPrefix) === routeTarget
+  ) {
+    return originalTarget;
+  }
+
+  const pageTarget = getItemUrlTarget(item.pageUrl, reviewPathPrefix);
+  if (
+    pageTarget &&
+    getTargetRouteKey(pageTarget, reviewPathPrefix) === routeTarget
+  ) {
+    return pageTarget;
+  }
+
+  return routeTarget;
+};
+
+function splitTarget(value: string) {
+  const hashIndex = value.indexOf('#');
+  const beforeHash = hashIndex >= 0 ? value.slice(0, hashIndex) : value;
+  const hash = hashIndex >= 0 ? value.slice(hashIndex) : '';
+  const searchIndex = beforeHash.indexOf('?');
+  const path = searchIndex >= 0
+    ? beforeHash.slice(0, searchIndex)
+    : beforeHash;
+  const search = searchIndex >= 0 ? beforeHash.slice(searchIndex) : '';
+
+  return {
+    hash,
+    path: path || '/',
+    search,
+  };
+}
+
+function getItemUrlTarget(
+  value: string | undefined,
+  reviewPathPrefix: string
+) {
+  if (!value) return null;
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.origin !== window.location.origin) return null;
+    return normalizeTarget(
+      `${url.pathname}${url.search}${url.hash}`,
+      reviewPathPrefix
+    );
+  } catch {
+    return null;
+  }
+}

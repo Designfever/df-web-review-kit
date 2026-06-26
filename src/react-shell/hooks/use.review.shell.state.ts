@@ -11,6 +11,7 @@ import type {
 } from '../../types';
 import { normalizeReviewShellAdapters } from '../adapters';
 import {
+  getTargetRouteKey,
   getInitialItemId,
   getInitialSource,
   getInitialTarget,
@@ -85,7 +86,7 @@ export const useReviewShellState = ({
     getInitialTarget(reviewPathPrefix)
   );
   const [activeRoute, setActiveRoute] = useState(() =>
-    getInitialTarget(reviewPathPrefix)
+    getTargetRouteKey(getInitialTarget(reviewPathPrefix), reviewPathPrefix)
   );
   const [size, setSize] = useState<ReviewShellViewportPreset>(() =>
     getInitialSize(viewportPresets)

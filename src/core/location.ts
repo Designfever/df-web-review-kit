@@ -23,10 +23,6 @@ export function getRouteKey(environment?: ReviewEnvironment) {
   return normalizeRoutePath(location.pathname);
 }
 
-/** Alias for route key until route and path concepts diverge. */
-export function getNormalizedPath(environment?: ReviewEnvironment) {
-  return getRouteKey(environment);
-}
 
 function getPublicSearch(location: Location) {
   const params = new URLSearchParams(location.search);

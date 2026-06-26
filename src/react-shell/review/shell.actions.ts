@@ -140,7 +140,7 @@ const writeClipboardText = async (value: string) => {
   }
 };
 
-export const listReviewItems = async ({
+const listReviewItems = async ({
   activeRoute,
   adapter,
   isRemoteSource,
@@ -153,7 +153,7 @@ export const listReviewItems = async ({
     routeKey: isRemoteSource ? activeRoute : undefined,
   });
 
-export const listSitemapReviewItems = async ({
+const listSitemapReviewItems = async ({
   localAdapterEntry,
   projectId,
   remoteAdapterEntry,

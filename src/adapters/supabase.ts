@@ -1,7 +1,6 @@
 import { normalizeReviewItemStatus } from '../status';
 import type {
   ReviewItem,
-  ReviewItemQuery,
   ReviewItemStatus,
   ReviewSource,
   SupabaseReviewAdapterOptions,
@@ -304,12 +303,6 @@ function buildSupabaseReviewUrl(
 function toAbsoluteReviewUrl(path: string) {
   if (typeof window === 'undefined') return path;
   return new URL(path, window.location.origin).toString();
-}
-
-function normalizeReviewNumber(value: unknown) {
-  if (typeof value !== 'number') return undefined;
-  if (!Number.isInteger(value) || value < 1) return undefined;
-  return value;
 }
 
 function createSupabaseReviewItemId() {

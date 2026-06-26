@@ -21,6 +21,7 @@ This package does not own internal operator tools, private admin keys, or produc
 ## Docs
 
 - [Installation](docs/installation.md): install the package and mount `/review`.
+- [.env.sample](.env.sample): copyable host project env template for local, Supabase, and source opening.
 - [Custom adapter sample](docs/adaptor.sample.ts): starting point for host-owned remote adapters.
 - [DB setup](docs/db-setup.md): optional Supabase `review_items` setup, RLS, presence notes, and validation.
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, and extension boundaries.
@@ -46,7 +47,7 @@ import {
   localAdapter,
 } from '@designfever/web-review-kit';
 
-const projectId = 'my-project';
+const projectId = import.meta.env.VITE_REVIEW_PROJECT_ID || 'my-project';
 const local = localAdapter({
   storageKey: `${projectId}-review-items`,
 });
@@ -72,24 +73,36 @@ mountReviewShell({
 });
 ```
 
-See [Installation](docs/installation.md) for route files, Supabase adapter wiring, viewport presets, and verification commands.
+See [Installation](docs/installation.md) for route files, `.env.sample`, Supabase adapter wiring, viewport presets, and verification commands.
 
-## Optional Supabase Env
+## Environment
 
-Only host projects that choose the Supabase adapter need these values.
+Copy [.env.sample](.env.sample) into the host project as `.env.local`, then fill only the values that project needs.
+
+Local-only review needs only `VITE_REVIEW_PROJECT_ID`.
 
 ```env
-VITE_REVIEW_PROJECT_ID=df-web-review-kit
-VITE_REVIEW_SUPABASE_URL=https://your-project.supabase.co
+VITE_REVIEW_PROJECT_ID=my-project
+```
+
+Only host projects that choose the Supabase adapter need Supabase values.
+
+```env
+VITE_REVIEW_SUPABASE_URL=
 VITE_REVIEW_SUPABASE_ANON_KEY=
 VITE_REVIEW_SUPABASE_TABLE=review_items
 VITE_REVIEW_SUPABASE_PRESENCE_PRIVATE=false
+```
+
+Source opening / Source Tree can also be configured from env.
+
+```env
 VITE_REVIEW_SOURCE_ROOT=/absolute/path/to/project
 VITE_REVIEW_SOURCE_EDITOR=cursor
 VITE_REVIEW_SOURCE_URL_TEMPLATE=
 ```
 
-Browser env must use a Supabase `anon` key only. Do not put `service_role` or OpenClaw operator secrets in a host browser env or in this package.
+Browser env must use a Supabase `anon` key only. Do not put `service_role`, OpenClaw operator secrets, or private admin keys in a host browser env or in this package.
 
 ## Public Imports
 
@@ -136,7 +149,7 @@ export default defineConfig({
 
 When source hints are available, hold `Option` over the review target to inspect source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose a file to open. The side rail can also open a Source Tree panel with section/source/data links, live box metrics, text/font/media metadata, and class tags. DOM QA cards show a source action when the saved item has source hints. Source Tree filter/options, QA panel mode, and QA status filter are stored in browser localStorage. Keep these plugins disabled for production builds because they write source paths into the DOM.
 
-In Vite/ESM hosts, source opening reads `VITE_REVIEW_SOURCE_ROOT`, `VITE_REVIEW_SOURCE_EDITOR`, and `VITE_REVIEW_SOURCE_URL_TEMPLATE` from the host env. Env values override matching `sourceRoot`, `sourceInspector.editor`, and `sourceInspector.urlTemplate` init values; init values still work as a fallback for existing projects and CommonJS consumers.
+In Vite/ESM hosts, source opening reads `VITE_REVIEW_SOURCE_ROOT`, `VITE_REVIEW_SOURCE_EDITOR`, and `VITE_REVIEW_SOURCE_URL_TEMPLATE` from the host env. Env values override matching `sourceRoot`, `sourceInspector.editor`, and `sourceInspector.urlTemplate` init values; init values still work as a fallback for existing projects and CommonJS consumers. Use `VITE_REVIEW_SOURCE_URL_TEMPLATE` only with `VITE_REVIEW_SOURCE_EDITOR=custom`; the template supports `{path}`, `{encodedPath}`, `{line}`, and `{column}`.
 
 ```tsx
 mountReviewShell({

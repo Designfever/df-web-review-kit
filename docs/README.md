@@ -5,16 +5,18 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 ## Read This Order
 
 1. [Installation](installation.md)
-2. [Custom adapter sample](adaptor.sample.ts)
-3. [DB setup](db-setup.md)
-4. [Architecture and runtime logic](architecture.md)
-5. [Figma overlay](figma-overlay.md)
-6. [Grid overlay](grid-overlay.md)
-7. [Release notes 0.6.0](release-notes-0.6.0.md)
+2. [Host env sample](../.env.sample)
+3. [Custom adapter sample](adaptor.sample.ts)
+4. [DB setup](db-setup.md)
+5. [Architecture and runtime logic](architecture.md)
+6. [Figma overlay](figma-overlay.md)
+7. [Grid overlay](grid-overlay.md)
+8. [Release notes 0.6.0](release-notes-0.6.0.md)
 
 ## Document Roles
 
 - `installation.md`: install the npm package, create the `/review` route, wire adapters, and run checks.
+- `../.env.sample`: copyable host project env template for local, Supabase, and source opening.
 - `adaptor.sample.ts`: copyable starting point for host-owned remote adapters.
 - `db-setup.md`: optional Supabase review item table/RPC/RLS/presence setup.
 - `architecture.md`: core/runtime, React shell, coordinate, anchor, and feature boundary notes.

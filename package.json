@@ -41,7 +41,8 @@
   "files": [
     "dist",
     "docs",
-    "README.md"
+    "README.md",
+    ".env.sample"
   ],
   "scripts": {
     "build": "tsup src/index.ts src/react-shell.tsx src/vite.ts --format esm,cjs --dts --sourcemap --clean --external react --external react-dom --external react/jsx-runtime",

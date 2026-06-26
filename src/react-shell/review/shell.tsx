@@ -6,11 +6,12 @@ import {
   useState,
 } from 'react';
 import {
-  CircleHelp as CircleHelpIcon,
-  Workflow as ComponentTreeIcon,
-  FileText as FileTextIcon,
+  Bot as BotIcon,
+  Grid2x2Check as ComponentTreeIcon,
+  SquareCheckBig as QaListIcon,
   Settings as SettingsIcon,
 } from 'lucide-react';
+import { DfLogoIcon } from './df.logo';
 import type {
   NumberedReviewItem,
   ReviewItem,
@@ -40,6 +41,7 @@ import {
   getRestoredSize,
 } from '../viewport';
 import {
+  InitialPromptModal,
   PromptModal,
   ReviewSettingsModal,
   SitemapModal,
@@ -214,6 +216,8 @@ export const ReviewShell = ({
     Set<string>
   >(() => new Set());
   const [isAllQaVisible, setIsAllQaVisible] = useState(false);
+  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] =
+    useState(false);
   const resolvedReviewSourceOptions = useMemo(
     () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
     [sourceInspector, sourceRoot]
@@ -1007,6 +1011,12 @@ export const ReviewShell = ({
         return;
       }
 
+      const rect = entry.element.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        showToast('Component has no visible area here');
+        return;
+      }
+
       clearSourceInspector();
       setSidePanel('qa');
       setIsListVisible(true);
@@ -1569,11 +1579,13 @@ export const ReviewShell = ({
         />
       )}
 
-      {isInitialPromptOpen && (
-        <PromptModal
+      {isInitialPromptOpen && <PromptModal onClose={closePromptModal} />}
+
+      {isInitialPromptScriptOpen && (
+        <InitialPromptModal
           initialPromptText={initialPromptText}
           copiedPromptKey={copiedPromptKey}
-          onClose={closePromptModal}
+          onClose={() => setIsInitialPromptScriptOpen(false)}
           onCopyPrompt={(text, key) => void copyPrompt(text, key)}
         />
       )}
@@ -1604,7 +1616,7 @@ export const ReviewShell = ({
           title="QA"
         >
           <span aria-hidden="true">
-            <FileTextIcon />
+            <QaListIcon />
           </span>
         </button>
         {isSourceInspectorEnabled && (
@@ -1633,13 +1645,11 @@ export const ReviewShell = ({
             aria-label="Open initial prompt"
             className="df-review-side-toggle"
             type="button"
-            onClick={() => {
-              setIsInitialPromptOpen(true);
-            }}
-            title="Help"
+            onClick={() => setIsInitialPromptScriptOpen(true)}
+            title="Initial prompt"
           >
             <span aria-hidden="true">
-              <CircleHelpIcon />
+              <BotIcon />
             </span>
           </button>
           <button
@@ -1659,6 +1669,20 @@ export const ReviewShell = ({
               users={currentPagePresenceUsers}
             />
           )}
+          <span className="df-review-side-divider" aria-hidden="true" />
+          <button
+            aria-label="Open about"
+            className="df-review-side-toggle"
+            type="button"
+            onClick={() => {
+              setIsInitialPromptOpen(true);
+            }}
+            title="About"
+          >
+            <span aria-hidden="true">
+              <DfLogoIcon />
+            </span>
+          </button>
         </div>
       </div>
 

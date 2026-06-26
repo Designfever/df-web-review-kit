@@ -273,7 +273,7 @@ export const reviewShellBaseStyle = `
   .df-review-address-actions {
     display: flex;
     align-items: stretch;
-    gap: 5px;
+    gap: 4px;
     min-width: 0;
   }
 

@@ -335,7 +335,7 @@ var reviewShellBaseStyle = `
   .df-review-address-actions {
     display: flex;
     align-items: stretch;
-    gap: 5px;
+    gap: 4px;
     min-width: 0;
   }
 
@@ -3212,6 +3212,7 @@ var reviewShellStageStyle = `
 
   .df-review-section-outline-item {
     display: grid;
+    --df-review-section-outline-name-color: var(--df-review-text);
   }
 
   /* Each root renders as a card so the tree scans like the QA list. */
@@ -3303,6 +3304,10 @@ var reviewShellStageStyle = `
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .df-review-section-outline-name span {
+    color: var(--df-review-section-outline-name-color);
   }
 
   .df-review-section-outline-name small {
@@ -3493,9 +3498,17 @@ var reviewShellStageStyle = `
     border-left-color: var(--df-review-accent);
   }
 
+  .df-review-section-outline-item.is-depth-2 {
+    --df-review-section-outline-name-color: var(--df-review-accent);
+  }
+
   .df-review-section-outline-item.is-depth-2
     > .df-review-section-outline-children {
     border-left-color: var(--df-review-area);
+  }
+
+  .df-review-section-outline-item.is-depth-3 {
+    --df-review-section-outline-name-color: var(--df-review-area);
   }
 
   .df-review-section-outline-item.is-depth-3
@@ -3503,9 +3516,17 @@ var reviewShellStageStyle = `
     border-left-color: var(--df-review-note);
   }
 
+  .df-review-section-outline-item.is-depth-4 {
+    --df-review-section-outline-name-color: var(--df-review-note);
+  }
+
   .df-review-section-outline-item.is-depth-4
     > .df-review-section-outline-children {
     border-left-color: var(--df-review-purple);
+  }
+
+  .df-review-section-outline-item.is-depth-5 {
+    --df-review-section-outline-name-color: var(--df-review-purple);
   }
 
   .df-review-section-outline-empty {

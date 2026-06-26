@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
-import type { Plugin, ResolvedConfig } from 'vite';
+import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import {
   type AddReviewFigmaImageInput,
   type ReviewFigmaImage,
@@ -192,6 +192,7 @@ export const reviewFigmaImageStore = (
 ): Plugin => {
   let root = '';
   let dataFile = '';
+  let env: ReviewFigmaTokenEnv = {};
   const enabled = options.enabled ?? true;
   const endpoint = normalizeEndpoint(
     options.endpoint ?? DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT
@@ -206,6 +207,11 @@ export const reviewFigmaImageStore = (
         root,
         options.dataFile ?? '.df-review/figma-images.json'
       );
+      env = {
+        ...loadEnv(config.mode, config.envDir, ''),
+        ...getServerEnv(),
+        ...(options.env ?? {}),
+      };
     },
     configureServer(server) {
       if (!enabled) return;
@@ -223,6 +229,7 @@ export const reviewFigmaImageStore = (
             dataFile,
             endpoint,
             options,
+            env,
             pathname,
             requestUrl,
             method: req.method ?? 'GET',
@@ -261,11 +268,13 @@ async function handleReviewFigmaImageStoreRequest({
   pathname,
   requestUrl,
   body,
+  env,
 }: {
   dataFile: string;
   endpoint: string;
   method: string;
   options: ReviewFigmaImageStorePluginOptions;
+  env: ReviewFigmaTokenEnv;
   pathname: string;
   requestUrl: URL;
   body: unknown;
@@ -324,7 +333,7 @@ async function handleReviewFigmaImageStoreRequest({
     }
 
     const data = await readReviewFigmaImageStoreFile(dataFile);
-    const image = await createReviewFigmaImage(input, data.images, options);
+    const image = await createReviewFigmaImage(input, data.images, options, env);
     data.images = [image, ...data.images];
     await writeReviewFigmaImageStoreFile(dataFile, data);
 
@@ -384,7 +393,8 @@ async function handleReviewFigmaImageStoreRequest({
 async function createReviewFigmaImage(
   input: AddReviewFigmaImageInput,
   currentImages: ReviewFigmaImage[],
-  options: ReviewFigmaImageStorePluginOptions
+  options: ReviewFigmaImageStorePluginOptions,
+  env: ReviewFigmaTokenEnv
 ): Promise<ReviewFigmaImage> {
   const ref = parseReviewFigmaNodeRef(input.figmaUrl);
   if (!ref) {
@@ -398,7 +408,7 @@ async function createReviewFigmaImage(
   const rendered = await renderReviewFigmaServerImage({
     figmaUrl: input.figmaUrl,
     token: options.token,
-    env: options.env,
+    env,
     envKey: options.envKey,
     enabled: options.enabled,
     format: renderFormat,

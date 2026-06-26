@@ -17,6 +17,7 @@ import {
 // src/vite.ts
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import { loadEnv } from "vite";
 
 // src/figma/render.ts
 var DEFAULT_FIGMA_API_BASE_URL = "https://api.figma.com";
@@ -130,6 +131,7 @@ var renderReviewFigmaServerImage = (options) => {
 var reviewFigmaImageStore = (options = {}) => {
   let root = "";
   let dataFile = "";
+  let env = {};
   const enabled = options.enabled ?? true;
   const endpoint = normalizeEndpoint(
     options.endpoint ?? DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT
@@ -143,6 +145,11 @@ var reviewFigmaImageStore = (options = {}) => {
         root,
         options.dataFile ?? ".df-review/figma-images.json"
       );
+      env = {
+        ...loadEnv(config.mode, config.envDir, ""),
+        ...getServerEnv(),
+        ...options.env ?? {}
+      };
     },
     configureServer(server) {
       if (!enabled) return;
@@ -158,6 +165,7 @@ var reviewFigmaImageStore = (options = {}) => {
             dataFile,
             endpoint,
             options,
+            env,
             pathname,
             requestUrl,
             method: req.method ?? "GET",
@@ -180,7 +188,8 @@ async function handleReviewFigmaImageStoreRequest({
   options,
   pathname,
   requestUrl,
-  body
+  body,
+  env
 }) {
   if (method === "OPTIONS") return { status: 204, body: null };
   if ((method === "GET" || method === "POST") && pathname === `${endpoint}/snapshot`) {
@@ -225,7 +234,7 @@ async function handleReviewFigmaImageStoreRequest({
       return jsonError(403, "target project is not allowed.");
     }
     const data = await readReviewFigmaImageStoreFile(dataFile);
-    const image = await createReviewFigmaImage(input, data.images, options);
+    const image = await createReviewFigmaImage(input, data.images, options, env);
     data.images = [image, ...data.images];
     await writeReviewFigmaImageStoreFile(dataFile, data);
     return { status: 201, body: image };
@@ -269,7 +278,7 @@ async function handleReviewFigmaImageStoreRequest({
   }
   return jsonError(405, "method not allowed.");
 }
-async function createReviewFigmaImage(input, currentImages, options) {
+async function createReviewFigmaImage(input, currentImages, options, env) {
   const ref = parseReviewFigmaNodeRef(input.figmaUrl);
   if (!ref) {
     throw new Error("A Figma node copy link or fileKey->nodeId value is required.");
@@ -281,7 +290,7 @@ async function createReviewFigmaImage(input, currentImages, options) {
   const rendered = await renderReviewFigmaServerImage({
     figmaUrl: input.figmaUrl,
     token: options.token,
-    env: options.env,
+    env,
     envKey: options.envKey,
     enabled: options.enabled,
     format: renderFormat,

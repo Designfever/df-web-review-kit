@@ -68,7 +68,7 @@ export const SectionOutlinePanel = ({
   const renderMeta = (entry: SectionOutlineEntry) => {
     const { metadata } = entry;
     const rows: React.ReactNode[] = [];
-    const metaPaddingLeft = Math.max(0, entry.depth - 1) * 12 + 29;
+    const metaPaddingLeft = 29;
     const rect = getLiveSectionOutlineRect(entry);
 
     if (isBoxMetaVisible) {
@@ -157,6 +157,8 @@ export const SectionOutlinePanel = ({
   const renderEntry = (entry: SectionOutlineEntry): React.ReactNode => {
     const hasChildren = entry.children.length > 0;
     const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
+    const liveRect = getLiveSectionOutlineRect(entry);
+    const isZeroArea = liveRect.width <= 0 || liveRect.height <= 0;
 
     return (
       <div
@@ -182,7 +184,7 @@ export const SectionOutlinePanel = ({
         >
           <div
             className="df-review-section-outline-row"
-            style={{ paddingLeft: `${Math.max(0, entry.depth - 1) * 12 + 6}px` }}
+            style={{ paddingLeft: '6px' }}
           >
             {hasChildren ? (
               <button
@@ -245,9 +247,9 @@ export const SectionOutlinePanel = ({
               <button
                 aria-label={`Start DOM QA for ${entry.label}`}
                 className="df-review-section-outline-link is-dom-select"
-                title="DOM select"
+                title={isZeroArea ? 'No visible area' : 'DOM select'}
                 type="button"
-                disabled={!canWriteDom}
+                disabled={!canWriteDom || isZeroArea}
                 onClick={() => onStartDomReview(entry)}
               >
                 <SquareMousePointerIcon aria-hidden="true" />

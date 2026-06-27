@@ -388,8 +388,11 @@ export const ReviewShell = ({
     images: figmaImageList,
     isLoading: isFigmaImageLoading,
     isMutating: isFigmaImageMutating,
+    isOverlayLocked: isFigmaImageOverlayLocked,
     isOverlayVisible: isFigmaImageOverlayVisible,
     moveImage: moveFigmaImage,
+    overlayMode: figmaImageOverlayMode,
+    overlayOffsetY: figmaImageOverlayOffsetY,
     overlayOpacity: figmaImageOverlayOpacity,
     refreshImages: refreshFigmaImages,
     selectedImage: selectedFigmaImage,
@@ -1612,7 +1615,10 @@ export const ReviewShell = ({
     selectedFigmaImage && isFigmaImageOverlayVisible
       ? {
           imageUrl: selectedFigmaImage.imageUrl,
+          isLocked: isFigmaImageOverlayLocked,
           label: selectedFigmaImage.label ?? selectedFigmaImage.nodeId,
+          mode: figmaImageOverlayMode,
+          offsetY: figmaImageOverlayOffsetY,
           opacity: figmaImageOverlayOpacity,
         }
       : null;

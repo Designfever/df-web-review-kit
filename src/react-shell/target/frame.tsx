@@ -12,7 +12,10 @@ import { RulerOverlay } from '../ruler/overlay';
 
 type ReviewTargetFigmaImageOverlay = {
   imageUrl: string;
+  isLocked?: boolean;
   label?: string;
+  mode?: 'normal' | 'invert';
+  offsetY?: number;
   opacity: number;
 };
 
@@ -109,7 +112,19 @@ export const ReviewTargetFrame = ({
                       aria-label={figmaImageOverlay.label}
                       className="df-review-figma-image-stage-overlay"
                       role="img"
-                      style={{ opacity: figmaImageOverlay.opacity }}
+                      style={{
+                        filter:
+                          figmaImageOverlay.mode === 'invert'
+                            ? 'invert(1)'
+                            : undefined,
+                        opacity: figmaImageOverlay.opacity,
+                        pointerEvents: figmaImageOverlay.isLocked
+                          ? 'none'
+                          : undefined,
+                        transform: figmaImageOverlay.offsetY
+                          ? `translate3d(0, ${figmaImageOverlay.offsetY}px, 0)`
+                          : undefined,
+                      }}
                     >
                       <img alt="" draggable={false} src={figmaImageOverlay.imageUrl} />
                     </div>

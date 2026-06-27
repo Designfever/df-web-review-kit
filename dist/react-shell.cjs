@@ -39,7 +39,7 @@ __export(react_shell_exports, {
   mountReviewShell: () => mountReviewShell
 });
 module.exports = __toCommonJS(react_shell_exports);
-var import_react22 = __toESM(require("react"), 1);
+var import_react23 = __toESM(require("react"), 1);
 var import_client = require("react-dom/client");
 
 // src/core/typography.tokens.ts
@@ -4136,7 +4136,7 @@ function ensureReviewShellStyle() {
 }
 
 // src/react-shell/review/shell.tsx
-var import_react21 = require("react");
+var import_react22 = require("react");
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
 var import_react3 = require("react");
@@ -8696,7 +8696,12 @@ var ReviewTargetFrame = ({
                     "aria-label": figmaImageOverlay.label,
                     className: "df-review-figma-image-stage-overlay",
                     role: "img",
-                    style: { opacity: figmaImageOverlay.opacity },
+                    style: {
+                      filter: figmaImageOverlay.mode === "invert" ? "invert(1)" : void 0,
+                      opacity: figmaImageOverlay.opacity,
+                      pointerEvents: figmaImageOverlay.isLocked ? "none" : void 0,
+                      transform: figmaImageOverlay.offsetY ? `translate3d(0, ${figmaImageOverlay.offsetY}px, 0)` : void 0
+                    },
                     children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("img", { alt: "", draggable: false, src: figmaImageOverlay.imageUrl })
                   }
                 ),
@@ -14466,50 +14471,53 @@ var useReviewRuler = ({
 };
 
 // src/react-shell/hooks/use.review.figma.images.ts
+var import_react17 = require("react");
+
+// src/react-shell/figma/image.controller.ts
 var import_react16 = require("react");
 var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY = 0.48;
-var useReviewFigmaImages = ({
-  imageFormat = DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX = "df-review-figma-image-overlay-state:";
+var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION = 1;
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE = "normal";
+var createReviewFigmaRouteTarget = ({
   pageUrl,
   projectId,
-  store,
   viewport
+}) => ({
+  type: "route",
+  projectId,
+  pageUrl,
+  viewport: {
+    label: viewport.label,
+    width: viewport.width,
+    height: viewport.height,
+    scope: getViewportPresetKind(viewport)
+  }
+});
+var useReviewFigmaImageStoreController = ({
+  imageFormat = DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+  store,
+  target
 }) => {
-  const requestIdRef = (0, import_react16.useRef)(0);
-  const target = (0, import_react16.useMemo)(
-    () => ({
-      type: "route",
-      projectId,
-      pageUrl,
-      viewport: {
-        label: viewport.label,
-        width: viewport.width,
-        height: viewport.height,
-        scope: getViewportPresetKind(viewport)
-      }
-    }),
-    [pageUrl, projectId, viewport.height, viewport.label, viewport.width, viewport.kind]
+  const targetKey = (0, import_react16.useMemo)(
+    () => createReviewFigmaImageTargetKey(target),
+    [target]
   );
-  const [images, setImages] = (0, import_react16.useState)([]);
-  const [isLoading, setIsLoading] = (0, import_react16.useState)(false);
+  const requestIdRef = (0, import_react16.useRef)(0);
+  const [imageList, setImageList] = (0, import_react16.useState)(() => ({
+    images: [],
+    targetKey
+  }));
+  const [isLoading, setIsLoading] = (0, import_react16.useState)(Boolean(store));
   const [isMutating, setIsMutating] = (0, import_react16.useState)(false);
   const [error, setError] = (0, import_react16.useState)("");
-  const [selectedImageId, setSelectedImageId] = (0, import_react16.useState)(null);
-  const [isOverlayVisible, setIsOverlayVisible] = (0, import_react16.useState)(false);
-  const [overlayOpacity, setOverlayOpacity] = (0, import_react16.useState)(
-    DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
-  );
-  const selectedImage = (0, import_react16.useMemo)(
-    () => images.find((image) => image.id === selectedImageId) ?? null,
-    [images, selectedImageId]
-  );
+  const images = imageList.targetKey === targetKey ? imageList.images : [];
   const refreshImages = (0, import_react16.useCallback)(async () => {
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
     if (!store) {
-      setImages([]);
-      setSelectedImageId(null);
-      setIsOverlayVisible(false);
+      setImageList({ images: [], targetKey });
+      setIsLoading(false);
       setError("");
       return [];
     }
@@ -14517,11 +14525,7 @@ var useReviewFigmaImages = ({
     try {
       const nextImages = sortReviewFigmaImages(await store.listImages(target));
       if (requestId !== requestIdRef.current) return nextImages;
-      setImages(nextImages);
-      setSelectedImageId(
-        (currentId) => currentId && nextImages.some((image) => image.id === currentId) ? currentId : nextImages[0]?.id ?? null
-      );
-      setIsOverlayVisible((current) => current && nextImages.length > 0);
+      setImageList({ images: nextImages, targetKey });
       setError("");
       return nextImages;
     } catch (refreshError) {
@@ -14532,10 +14536,8 @@ var useReviewFigmaImages = ({
     } finally {
       if (requestId === requestIdRef.current) setIsLoading(false);
     }
-  }, [store, target]);
+  }, [store, target, targetKey]);
   (0, import_react16.useEffect)(() => {
-    setSelectedImageId(null);
-    setIsOverlayVisible(false);
     void refreshImages();
   }, [refreshImages]);
   const addImage = (0, import_react16.useCallback)(
@@ -14550,14 +14552,13 @@ var useReviewFigmaImages = ({
           imageFormat,
           label: label?.trim() || void 0
         });
-        setImages(
-          (currentImages) => sortReviewFigmaImages([
-            ...currentImages.filter((currentImage) => currentImage.id !== image.id),
+        setImageList((currentList) => ({
+          images: sortReviewFigmaImages([
+            ...(currentList.targetKey === targetKey ? currentList.images : []).filter((currentImage) => currentImage.id !== image.id),
             image
-          ])
-        );
-        setSelectedImageId(image.id);
-        setIsOverlayVisible(true);
+          ]),
+          targetKey
+        }));
         setError("");
         return image;
       } catch (addError) {
@@ -14567,37 +14568,37 @@ var useReviewFigmaImages = ({
         setIsMutating(false);
       }
     },
-    [imageFormat, store, target]
+    [imageFormat, store, target, targetKey]
   );
   const deleteImage = (0, import_react16.useCallback)(
     async (id) => {
       if (!store) return;
-      const previousImages = images;
-      const nextImages = images.filter((image) => image.id !== id);
-      setImages(nextImages);
-      setSelectedImageId(
-        (currentId) => currentId === id ? nextImages[0]?.id ?? null : currentId
-      );
-      if (nextImages.length === 0) setIsOverlayVisible(false);
+      const previousImageList = imageList;
+      setImageList({
+        images: images.filter((image) => image.id !== id),
+        targetKey
+      });
       setIsMutating(true);
       try {
         await store.deleteImage(id);
         setError("");
       } catch (deleteError) {
-        setImages(previousImages);
+        setImageList(previousImageList);
         setError(getReviewFigmaImageErrorMessage(deleteError));
       } finally {
         setIsMutating(false);
       }
     },
-    [images, store]
+    [imageList, images, store, targetKey]
   );
   const moveImage = (0, import_react16.useCallback)(
     async (id, direction) => {
       if (!store) return;
       const currentIndex = images.findIndex((image2) => image2.id === id);
       const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= images.length) return;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= images.length) {
+        return;
+      }
       const previousImages = images;
       const reorderedImages = [...images];
       const [image] = reorderedImages.splice(currentIndex, 1);
@@ -14606,48 +14607,181 @@ var useReviewFigmaImages = ({
         ...nextImage,
         order
       }));
-      setImages(optimisticImages);
+      setImageList({ images: optimisticImages, targetKey });
       setIsMutating(true);
       try {
         const savedImages = await store.reorderImages({
           target,
           imageIds: reorderedImages.map((nextImage) => nextImage.id)
         });
-        setImages(sortReviewFigmaImages(savedImages));
+        setImageList({ images: sortReviewFigmaImages(savedImages), targetKey });
         setError("");
       } catch (moveError) {
-        setImages(previousImages);
+        setImageList({ images: previousImages, targetKey });
         setError(getReviewFigmaImageErrorMessage(moveError));
       } finally {
         setIsMutating(false);
       }
     },
-    [images, store, target]
+    [images, store, target, targetKey]
   );
-  const toggleOverlayVisible = (0, import_react16.useCallback)(() => {
-    if (!selectedImage && images[0]) {
-      setSelectedImageId(images[0].id);
-      setIsOverlayVisible(true);
-      return;
-    }
-    setIsOverlayVisible((current) => !current);
-  }, [images, selectedImage]);
   return {
     addImage,
     deleteImage,
     error,
     images,
-    isLoading,
+    isLoading: isLoading || imageList.targetKey !== targetKey,
     isMutating,
-    isOverlayVisible,
     moveImage,
-    overlayOpacity,
-    refreshImages,
+    refreshImages
+  };
+};
+var useReviewFigmaImageOverlayController = ({
+  images,
+  isLoading,
+  target
+}) => {
+  const storageKey = (0, import_react16.useMemo)(
+    () => createReviewFigmaImageOverlayStorageKey(target),
+    [target]
+  );
+  const [stateContainer, setStateContainer] = (0, import_react16.useState)(() => ({
+    state: readStoredReviewFigmaImageOverlayState(storageKey),
+    storageKey
+  }));
+  const state = stateContainer.storageKey === storageKey ? stateContainer.state : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  const updateState = (0, import_react16.useCallback)(
+    (updater) => {
+      setStateContainer((currentContainer) => {
+        const currentState = currentContainer.storageKey === storageKey ? currentContainer.state : readStoredReviewFigmaImageOverlayState(storageKey);
+        return {
+          state: updater(currentState),
+          storageKey
+        };
+      });
+    },
+    [storageKey]
+  );
+  (0, import_react16.useEffect)(() => {
+    setStateContainer({
+      state: readStoredReviewFigmaImageOverlayState(storageKey),
+      storageKey
+    });
+  }, [storageKey]);
+  (0, import_react16.useEffect)(() => {
+    if (isLoading) return;
+    updateState((currentState) => {
+      const selectedImageId = currentState.selectedImageId && images.some((image) => image.id === currentState.selectedImageId) ? currentState.selectedImageId : images[0]?.id ?? null;
+      const isVisible = currentState.isVisible && images.length > 0;
+      if (selectedImageId === currentState.selectedImageId && isVisible === currentState.isVisible) {
+        return currentState;
+      }
+      return {
+        ...currentState,
+        selectedImageId,
+        isVisible
+      };
+    });
+  }, [images, isLoading, updateState]);
+  (0, import_react16.useEffect)(() => {
+    if (stateContainer.storageKey !== storageKey) return;
+    writeStoredReviewFigmaImageOverlayState(storageKey, stateContainer.state);
+  }, [stateContainer, storageKey]);
+  const selectedImage = (0, import_react16.useMemo)(
+    () => images.find((image) => image.id === state.selectedImageId) ?? null,
+    [images, state.selectedImageId]
+  );
+  const setSelectedImageId = (0, import_react16.useCallback)((selectedImageId) => {
+    updateState((currentState) => ({
+      ...currentState,
+      selectedImageId,
+      isVisible: selectedImageId ? currentState.isVisible : false
+    }));
+  }, [updateState]);
+  const showImage = (0, import_react16.useCallback)((selectedImageId) => {
+    updateState((currentState) => ({
+      ...currentState,
+      selectedImageId,
+      isVisible: true
+    }));
+  }, [updateState]);
+  const toggleOverlayVisible = (0, import_react16.useCallback)(() => {
+    updateState((currentState) => {
+      if (!currentState.selectedImageId && images[0]) {
+        return {
+          ...currentState,
+          selectedImageId: images[0].id,
+          isVisible: true
+        };
+      }
+      return {
+        ...currentState,
+        isVisible: !currentState.isVisible
+      };
+    });
+  }, [images, updateState]);
+  const setOverlayOpacity = (0, import_react16.useCallback)((opacity) => {
+    updateState((currentState) => ({
+      ...currentState,
+      opacity: clampReviewFigmaImageOverlayOpacity(opacity)
+    }));
+  }, [updateState]);
+  const setOverlayLocked = (0, import_react16.useCallback)((isLocked) => {
+    updateState((currentState) => ({
+      ...currentState,
+      isLocked
+    }));
+  }, [updateState]);
+  const toggleOverlayLocked = (0, import_react16.useCallback)(() => {
+    updateState((currentState) => ({
+      ...currentState,
+      isLocked: !currentState.isLocked
+    }));
+  }, [updateState]);
+  const setOverlayMode = (0, import_react16.useCallback)((mode) => {
+    updateState((currentState) => ({
+      ...currentState,
+      mode: normalizeReviewFigmaImageOverlayMode(mode)
+    }));
+  }, [updateState]);
+  const toggleOverlayMode = (0, import_react16.useCallback)(() => {
+    updateState((currentState) => ({
+      ...currentState,
+      mode: currentState.mode === "invert" ? "normal" : "invert"
+    }));
+  }, [updateState]);
+  const setOverlayOffsetY = (0, import_react16.useCallback)((offsetY) => {
+    updateState((currentState) => ({
+      ...currentState,
+      offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY)
+    }));
+  }, [updateState]);
+  const resetOverlay = (0, import_react16.useCallback)(() => {
+    updateState((currentState) => ({
+      ...DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE,
+      selectedImageId: currentState.selectedImageId,
+      isVisible: currentState.isVisible
+    }));
+  }, [updateState]);
+  return {
+    isOverlayVisible: state.isVisible,
+    overlayMode: state.mode,
+    overlayOffsetY: state.offsetY,
+    overlayOpacity: state.opacity,
+    isOverlayLocked: state.isLocked,
+    resetOverlay,
     selectedImage,
-    selectedImageId,
-    setOverlayOpacity: (nextOpacity) => setOverlayOpacity(clampReviewFigmaImageOverlayOpacity(nextOpacity)),
+    selectedImageId: state.selectedImageId,
+    setOverlayLocked,
+    setOverlayMode,
+    setOverlayOffsetY,
+    setOverlayOpacity,
     setSelectedImageId,
+    showImage,
+    state,
     target,
+    toggleOverlayLocked,
+    toggleOverlayMode,
     toggleOverlayVisible
   };
 };
@@ -14657,42 +14791,219 @@ function sortReviewFigmaImages(images) {
     return a.createdAt.localeCompare(b.createdAt);
   });
 }
+function createReviewFigmaImageOverlayStorageKey(target) {
+  return `${REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX}${createReviewFigmaImageTargetKey(target)}`;
+}
+function createReviewFigmaImageTargetKey(target) {
+  return [
+    target.projectId,
+    target.pageUrl,
+    target.viewport?.scope ?? "",
+    target.viewport?.label ?? "",
+    target.viewport?.width ?? "",
+    target.viewport?.height ?? "",
+    target.slot ?? ""
+  ].join("|");
+}
+function readStoredReviewFigmaImageOverlayState(storageKey) {
+  if (typeof window === "undefined") {
+    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  }
+  try {
+    const value = window.localStorage.getItem(storageKey);
+    if (!value) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+    return normalizeReviewFigmaImageOverlayState(JSON.parse(value));
+  } catch {
+    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  }
+}
+function writeStoredReviewFigmaImageOverlayState(storageKey, state) {
+  if (typeof window === "undefined") return;
+  try {
+    if (isDefaultReviewFigmaImageOverlayState(state)) {
+      window.localStorage.removeItem(storageKey);
+      return;
+    }
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        version: REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION,
+        ...state
+      })
+    );
+  } catch {
+    return;
+  }
+}
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE = {
+  selectedImageId: null,
+  isVisible: false,
+  opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
+  isLocked: false,
+  mode: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE,
+  offsetY: 0
+};
+function normalizeReviewFigmaImageOverlayState(value) {
+  if (!value || typeof value !== "object") {
+    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  }
+  const state = value;
+  return {
+    selectedImageId: typeof state.selectedImageId === "string" ? state.selectedImageId : null,
+    isVisible: state.isVisible === true,
+    opacity: clampReviewFigmaImageOverlayOpacity(
+      typeof state.opacity === "number" ? state.opacity : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
+    ),
+    isLocked: state.isLocked === true,
+    mode: normalizeReviewFigmaImageOverlayMode(state.mode),
+    offsetY: normalizeReviewFigmaImageOverlayOffsetY(state.offsetY)
+  };
+}
+function normalizeReviewFigmaImageOverlayMode(value) {
+  return value === "invert" ? "invert" : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE;
+}
+function normalizeReviewFigmaImageOverlayOffsetY(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+  return Math.round(value);
+}
 function clampReviewFigmaImageOverlayOpacity(value) {
   if (!Number.isFinite(value)) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY;
   return Math.min(1, Math.max(0.08, value));
+}
+function isDefaultReviewFigmaImageOverlayState(state) {
+  return state.selectedImageId === null && state.isVisible === false && state.opacity === DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY && state.isLocked === false && state.mode === DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE && state.offsetY === 0;
 }
 function getReviewFigmaImageErrorMessage(error) {
   return error instanceof Error ? error.message : "Figma image request failed.";
 }
 
+// src/react-shell/hooks/use.review.figma.images.ts
+var useReviewFigmaImages = ({
+  imageFormat = DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+  pageUrl,
+  projectId,
+  store,
+  viewport
+}) => {
+  const target = (0, import_react17.useMemo)(
+    () => createReviewFigmaRouteTarget({
+      pageUrl,
+      projectId,
+      viewport
+    }),
+    [
+      pageUrl,
+      projectId,
+      viewport.height,
+      viewport.label,
+      viewport.width,
+      viewport.kind
+    ]
+  );
+  const {
+    addImage: addStoreImage,
+    deleteImage,
+    error,
+    images,
+    isLoading,
+    isMutating,
+    moveImage,
+    refreshImages
+  } = useReviewFigmaImageStoreController({
+    imageFormat,
+    store,
+    target
+  });
+  const {
+    isOverlayLocked,
+    isOverlayVisible,
+    overlayMode,
+    overlayOffsetY,
+    overlayOpacity,
+    resetOverlay,
+    selectedImage,
+    selectedImageId,
+    setOverlayLocked,
+    setOverlayMode,
+    setOverlayOffsetY,
+    setOverlayOpacity,
+    setSelectedImageId,
+    showImage,
+    state: overlayState,
+    toggleOverlayLocked,
+    toggleOverlayMode,
+    toggleOverlayVisible
+  } = useReviewFigmaImageOverlayController({
+    images,
+    isLoading,
+    target
+  });
+  const addImage = (0, import_react17.useCallback)(
+    async (figmaUrl, label) => {
+      const image = await addStoreImage(figmaUrl, label);
+      if (image) showImage(image.id);
+      return image;
+    },
+    [addStoreImage, showImage]
+  );
+  return {
+    addImage,
+    deleteImage,
+    error,
+    images,
+    isLoading,
+    isMutating,
+    isOverlayLocked,
+    isOverlayVisible,
+    moveImage,
+    overlayMode,
+    overlayOffsetY,
+    overlayOpacity,
+    overlayState,
+    refreshImages,
+    resetOverlay,
+    selectedImage,
+    selectedImageId,
+    setOverlayLocked,
+    setOverlayMode,
+    setOverlayOffsetY,
+    setOverlayOpacity,
+    setSelectedImageId,
+    target,
+    toggleOverlayLocked,
+    toggleOverlayMode,
+    toggleOverlayVisible
+  };
+};
+
 // src/react-shell/hooks/use.review.settings.ts
-var import_react17 = require("react");
+var import_react18 = require("react");
 var useReviewSettings = ({
   onCancelReviewMode,
   onCloseInitialPrompt,
   onCloseSitemap,
   onReloadTargetFrame
 }) => {
-  const [figmaTokenDraft, setFigmaTokenDraft] = (0, import_react17.useState)(getStoredFigmaToken);
-  const [reviewUserId, setReviewUserId] = (0, import_react17.useState)(getStoredReviewUserId);
-  const [reviewUserIdDraft, setReviewUserIdDraft] = (0, import_react17.useState)(
+  const [figmaTokenDraft, setFigmaTokenDraft] = (0, import_react18.useState)(getStoredFigmaToken);
+  const [reviewUserId, setReviewUserId] = (0, import_react18.useState)(getStoredReviewUserId);
+  const [reviewUserIdDraft, setReviewUserIdDraft] = (0, import_react18.useState)(
     getStoredReviewUserId
   );
-  const [reviewTheme, setReviewTheme] = (0, import_react17.useState)(getStoredReviewTheme);
-  const [reviewThemeDraft, setReviewThemeDraft] = (0, import_react17.useState)(getStoredReviewTheme);
-  const [systemReviewTheme, setSystemReviewTheme] = (0, import_react17.useState)(getSystemReviewTheme);
-  const [figmaSettingsStatus, setFigmaSettingsStatus] = (0, import_react17.useState)("");
-  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = (0, import_react17.useState)(false);
-  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = (0, import_react17.useState)(false);
-  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = (0, import_react17.useState)(false);
+  const [reviewTheme, setReviewTheme] = (0, import_react18.useState)(getStoredReviewTheme);
+  const [reviewThemeDraft, setReviewThemeDraft] = (0, import_react18.useState)(getStoredReviewTheme);
+  const [systemReviewTheme, setSystemReviewTheme] = (0, import_react18.useState)(getSystemReviewTheme);
+  const [figmaSettingsStatus, setFigmaSettingsStatus] = (0, import_react18.useState)("");
+  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = (0, import_react18.useState)(false);
+  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = (0, import_react18.useState)(false);
+  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = (0, import_react18.useState)(false);
   const effectiveReviewTheme = reviewTheme === "system" ? systemReviewTheme : reviewTheme;
-  const closeFigmaSettings = (0, import_react17.useCallback)(() => {
+  const closeFigmaSettings = (0, import_react18.useCallback)(() => {
     setIsFigmaSettingsOpen(false);
     setFigmaSettingsStatus("");
     setIsFigmaTokenVisible(false);
     setIsFigmaTokenGuideOpen(false);
   }, []);
-  const openFigmaSettings = (0, import_react17.useCallback)(() => {
+  const openFigmaSettings = (0, import_react18.useCallback)(() => {
     onCancelReviewMode();
     onCloseSitemap();
     onCloseInitialPrompt();
@@ -14709,7 +15020,7 @@ var useReviewSettings = ({
     onCloseSitemap,
     reviewTheme
   ]);
-  const saveReviewSettings = (0, import_react17.useCallback)(
+  const saveReviewSettings = (0, import_react18.useCallback)(
     (token, userId, theme) => {
       const nextToken = token.trim();
       const nextUserId = userId.trim();
@@ -14733,7 +15044,7 @@ var useReviewSettings = ({
     },
     [closeFigmaSettings, onReloadTargetFrame]
   );
-  (0, import_react17.useEffect)(() => {
+  (0, import_react18.useEffect)(() => {
     if (typeof window === "undefined" || !window.matchMedia) return void 0;
     const query = window.matchMedia("(prefers-color-scheme: light)");
     const syncSystemTheme = () => {
@@ -14747,7 +15058,7 @@ var useReviewSettings = ({
     query.addListener(syncSystemTheme);
     return () => query.removeListener(syncSystemTheme);
   }, []);
-  (0, import_react17.useEffect)(() => {
+  (0, import_react18.useEffect)(() => {
     document.body.classList.toggle(
       "df-review-theme-light",
       effectiveReviewTheme === "light"
@@ -14786,7 +15097,7 @@ var useReviewSettings = ({
 };
 
 // src/react-shell/hooks/use.review.shell.data.ts
-var import_react18 = require("react");
+var import_react19 = require("react");
 var SITEMAP_STATUS_DONE = "done";
 var useReviewShellData = ({
   activeRoute,
@@ -14800,28 +15111,28 @@ var useReviewShellData = ({
   target,
   viewportPresets
 }) => {
-  const [items, setItems] = (0, import_react18.useState)([]);
-  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = (0, import_react18.useState)(
+  const [items, setItems] = (0, import_react19.useState)([]);
+  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = (0, import_react19.useState)(
     () => /* @__PURE__ */ new Set()
   );
-  const [qaFilter, setQaFilter] = (0, import_react18.useState)("all");
-  const [qaStatusFilter, setQaStatusFilterState] = (0, import_react18.useState)(getStoredReviewQaStatusFilter);
-  const [sitemapItems, setSitemapItems] = (0, import_react18.useState)(() => ({
+  const [qaFilter, setQaFilter] = (0, import_react19.useState)("all");
+  const [qaStatusFilter, setQaStatusFilterState] = (0, import_react19.useState)(getStoredReviewQaStatusFilter);
+  const [sitemapItems, setSitemapItems] = (0, import_react19.useState)(() => ({
     local: [],
     remote: []
   }));
-  const targetSrc = (0, import_react18.useMemo)(() => buildTargetSrc(target), [target]);
-  const pageTargets = (0, import_react18.useMemo)(
+  const targetSrc = (0, import_react19.useMemo)(() => buildTargetSrc(target), [target]);
+  const pageTargets = (0, import_react19.useMemo)(
     () => new Set(
       pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
     ),
     [pages, reviewPathPrefix]
   );
-  const sitemapSourceItems = (0, import_react18.useMemo)(
+  const sitemapSourceItems = (0, import_react19.useMemo)(
     () => isRemoteSource ? sitemapItems.remote : sitemapItems.local,
     [isRemoteSource, sitemapItems]
   );
-  const activeItems = (0, import_react18.useMemo)(
+  const activeItems = (0, import_react19.useMemo)(
     () => {
       const sourceItems = isAllQaVisible ? sitemapSourceItems : items.filter(
         (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
@@ -14832,29 +15143,29 @@ var useReviewShellData = ({
     },
     [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
   );
-  const numberedActiveItems = (0, import_react18.useMemo)(
+  const numberedActiveItems = (0, import_react19.useMemo)(
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
     [activeItems, reviewViewportPresets]
   );
-  const scopeFilteredNumberedActiveItems = (0, import_react18.useMemo)(
+  const scopeFilteredNumberedActiveItems = (0, import_react19.useMemo)(
     () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
       (numberedItem) => numberedItem.scope === qaFilter
     ),
     [numberedActiveItems, qaFilter]
   );
-  const statusFilteredNumberedActiveItems = (0, import_react18.useMemo)(
+  const statusFilteredNumberedActiveItems = (0, import_react19.useMemo)(
     () => qaStatusFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
       (numberedItem) => normalizeReviewItemStatus(numberedItem.item.status) === qaStatusFilter
     ),
     [numberedActiveItems, qaStatusFilter]
   );
-  const filteredNumberedActiveItems = (0, import_react18.useMemo)(
+  const filteredNumberedActiveItems = (0, import_react19.useMemo)(
     () => qaStatusFilter === "all" ? scopeFilteredNumberedActiveItems : scopeFilteredNumberedActiveItems.filter(
       (numberedItem) => normalizeReviewItemStatus(numberedItem.item.status) === qaStatusFilter
     ),
     [qaStatusFilter, scopeFilteredNumberedActiveItems]
   );
-  const hiddenOverlayItemIdList = (0, import_react18.useMemo)(
+  const hiddenOverlayItemIdList = (0, import_react19.useMemo)(
     () => {
       const nextHiddenItemIds = new Set(hiddenOverlayItemIds);
       if (qaStatusFilter !== "all") {
@@ -14868,7 +15179,7 @@ var useReviewShellData = ({
     },
     [activeItems, hiddenOverlayItemIds, qaStatusFilter]
   );
-  const qaFilterCounts = (0, import_react18.useMemo)(() => {
+  const qaFilterCounts = (0, import_react19.useMemo)(() => {
     const counts = /* @__PURE__ */ new Map();
     counts.set("all", statusFilteredNumberedActiveItems.length);
     statusFilteredNumberedActiveItems.forEach((numberedItem) => {
@@ -14876,7 +15187,7 @@ var useReviewShellData = ({
     });
     return counts;
   }, [statusFilteredNumberedActiveItems]);
-  const qaStatusFilterCounts = (0, import_react18.useMemo)(() => {
+  const qaStatusFilterCounts = (0, import_react19.useMemo)(() => {
     const counts = /* @__PURE__ */ new Map();
     counts.set("all", scopeFilteredNumberedActiveItems.length);
     scopeFilteredNumberedActiveItems.forEach((numberedItem) => {
@@ -14885,7 +15196,7 @@ var useReviewShellData = ({
     });
     return counts;
   }, [scopeFilteredNumberedActiveItems]);
-  const getItemPreset = (0, import_react18.useCallback)(
+  const getItemPreset = (0, import_react19.useCallback)(
     (item) => findViewportPreset(
       viewportPresets,
       item.viewport?.width ?? 0,
@@ -14893,11 +15204,11 @@ var useReviewShellData = ({
     ),
     [viewportPresets]
   );
-  const getItemPresetScope = (0, import_react18.useCallback)(
+  const getItemPresetScope = (0, import_react19.useCallback)(
     (item) => getViewportPresetKind(getItemPreset(item)),
     [getItemPreset]
   );
-  const getItemPresetColumn = (0, import_react18.useCallback)(
+  const getItemPresetColumn = (0, import_react19.useCallback)(
     (item) => {
       const preset = getItemPreset(item);
       const presetIndex = Math.max(0, viewportPresets.indexOf(preset));
@@ -14905,17 +15216,17 @@ var useReviewShellData = ({
     },
     [getItemPreset, viewportPresets]
   );
-  const getItemCountScope = (0, import_react18.useCallback)(
+  const getItemCountScope = (0, import_react19.useCallback)(
     (item) => item.scope === "dom" ? "dom" : getItemPresetScope(item),
     [getItemPresetScope]
   );
-  const activeRemainingItemCount = (0, import_react18.useMemo)(
+  const activeRemainingItemCount = (0, import_react19.useMemo)(
     () => activeItems.filter(
       (item) => normalizeReviewItemStatus(item.status) !== SITEMAP_STATUS_DONE
     ).length,
     [activeItems]
   );
-  const presetScopeCounts = (0, import_react18.useMemo)(() => {
+  const presetScopeCounts = (0, import_react19.useMemo)(() => {
     const counts = /* @__PURE__ */ new Map();
     activeItems.forEach((item) => {
       const scope = getItemPresetScope(item);
@@ -14924,11 +15235,11 @@ var useReviewShellData = ({
     return counts;
   }, [activeItems, getItemPresetScope]);
   const currentPresetScope = getViewportPresetKind(size);
-  const setQaStatusFilter = (0, import_react18.useCallback)((filter) => {
+  const setQaStatusFilter = (0, import_react19.useCallback)((filter) => {
     setQaStatusFilterState(filter);
     writeStoredReviewQaStatusFilter(filter);
   }, []);
-  const pageQaCounts = (0, import_react18.useMemo)(() => {
+  const pageQaCounts = (0, import_react19.useMemo)(() => {
     const counts = /* @__PURE__ */ new Map();
     const addItems = (sourceKey, sourceItems) => {
       sourceItems.forEach((item) => {
@@ -14970,14 +15281,14 @@ var useReviewShellData = ({
     addItems("remote", sitemapItems.remote);
     return counts;
   }, [getItemCountScope, getItemPresetColumn, reviewPathPrefix, sitemapItems]);
-  const allQaCount = (0, import_react18.useMemo)(
+  const allQaCount = (0, import_react19.useMemo)(
     () => Array.from(pageQaCounts.values()).reduce(
       addSitemapQaCounts,
       createEmptySitemapQaCount()
     ),
     [pageQaCounts]
   );
-  const selectedNumberedItem = (0, import_react18.useMemo)(
+  const selectedNumberedItem = (0, import_react19.useMemo)(
     () => selectedItemId ? numberedActiveItems.find(
       (numberedItem) => numberedItem.item.id === selectedItemId
     ) : void 0,
@@ -15010,7 +15321,7 @@ var useReviewShellData = ({
 };
 
 // src/react-shell/hooks/use.review.shell.hotkeys.ts
-var import_react19 = require("react");
+var import_react20 = require("react");
 var useReviewShellHotkeys = ({
   isFigmaSettingsOpen,
   isInitialPromptOpen,
@@ -15027,7 +15338,7 @@ var useReviewShellHotkeys = ({
   onToggleRuler,
   onToggleTargetOverlay
 }) => {
-  (0, import_react19.useEffect)(() => {
+  (0, import_react20.useEffect)(() => {
     if (mode === "idle" && !isRulerVisible && !isInitialPromptOpen && !isSitemapOpen && !isFigmaSettingsOpen) {
       return;
     }
@@ -15071,7 +15382,7 @@ var useReviewShellHotkeys = ({
     onCloseRuler,
     onCloseSitemap
   ]);
-  (0, import_react19.useEffect)(() => {
+  (0, import_react20.useEffect)(() => {
     const handleHotkey = (event) => {
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
         return;
@@ -15103,7 +15414,7 @@ var useReviewShellHotkeys = ({
 };
 
 // src/react-shell/hooks/use.review.shell.state.ts
-var import_react20 = require("react");
+var import_react21 = require("react");
 
 // src/react-shell/adapters.ts
 var ALL_REVIEW_WRITE_MODES = ["dom", "note", "area"];
@@ -15247,11 +15558,11 @@ var useReviewShellState = ({
   reviewPathPrefix
 }) => {
   const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const reviewViewportPresets = (0, import_react20.useMemo)(
+  const reviewViewportPresets = (0, import_react21.useMemo)(
     () => toReviewViewportPresets(viewportPresets),
     [viewportPresets]
   );
-  const normalizedAdapters = (0, import_react20.useMemo)(
+  const normalizedAdapters = (0, import_react21.useMemo)(
     () => normalizeReviewShellAdapters(adapters),
     [adapters]
   );
@@ -15259,7 +15570,7 @@ var useReviewShellState = ({
   const remoteAdapterEntry = normalizedAdapters.remote;
   const sourceEntries = normalizedAdapters.sources;
   const defaultSource = sourceEntries[0]?.label ?? "local";
-  const [source, setSource] = (0, import_react20.useState)(() => {
+  const [source, setSource] = (0, import_react21.useState)(() => {
     const initialSource = getInitialSource(remoteAdapterEntry?.label);
     return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
   });
@@ -15272,42 +15583,42 @@ var useReviewShellState = ({
   const canWriteArea = activeAdapterEntry.writeModes.includes("area");
   const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
   const adapter = activeAdapterEntry.adapter;
-  const iframeRef = (0, import_react20.useRef)(null);
-  const frameScrollRef = (0, import_react20.useRef)(null);
-  const controllerRef = (0, import_react20.useRef)(null);
-  const cleanupTargetRef = (0, import_react20.useRef)(null);
-  const pendingRestoreRef = (0, import_react20.useRef)(null);
-  const pendingInitialItemIdRef = (0, import_react20.useRef)(getInitialItemId());
-  const selectedItemIdRef = (0, import_react20.useRef)(getInitialItemId());
-  const hiddenOverlayItemIdListRef = (0, import_react20.useRef)([]);
-  const [target, setTarget] = (0, import_react20.useState)(
+  const iframeRef = (0, import_react21.useRef)(null);
+  const frameScrollRef = (0, import_react21.useRef)(null);
+  const controllerRef = (0, import_react21.useRef)(null);
+  const cleanupTargetRef = (0, import_react21.useRef)(null);
+  const pendingRestoreRef = (0, import_react21.useRef)(null);
+  const pendingInitialItemIdRef = (0, import_react21.useRef)(getInitialItemId());
+  const selectedItemIdRef = (0, import_react21.useRef)(getInitialItemId());
+  const hiddenOverlayItemIdListRef = (0, import_react21.useRef)([]);
+  const [target, setTarget] = (0, import_react21.useState)(
     () => getInitialTarget(reviewPathPrefix)
   );
-  const [draftTarget, setDraftTarget] = (0, import_react20.useState)(
+  const [draftTarget, setDraftTarget] = (0, import_react21.useState)(
     () => getInitialTarget(reviewPathPrefix)
   );
-  const [activeRoute, setActiveRoute] = (0, import_react20.useState)(
+  const [activeRoute, setActiveRoute] = (0, import_react21.useState)(
     () => getTargetRouteKey(getInitialTarget(reviewPathPrefix), reviewPathPrefix)
   );
-  const [size, setSize] = (0, import_react20.useState)(
+  const [size, setSize] = (0, import_react21.useState)(
     () => getInitialSize(viewportPresets)
   );
-  const [mode, setMode] = (0, import_react20.useState)("idle");
-  const [targetOverlayState, setTargetOverlayState] = (0, import_react20.useState)({
+  const [mode, setMode] = (0, import_react21.useState)("idle");
+  const [targetOverlayState, setTargetOverlayState] = (0, import_react21.useState)({
     grid: false,
     figma: false
   });
-  const [selectedItemId, setSelectedItemId] = (0, import_react20.useState)(getInitialItemId());
-  const [isListVisible, setIsListVisible] = (0, import_react20.useState)(
+  const [selectedItemId, setSelectedItemId] = (0, import_react21.useState)(getInitialItemId());
+  const [isListVisible, setIsListVisible] = (0, import_react21.useState)(
     getStoredReviewSidePanelVisible
   );
-  const [isSitemapOpen, setIsSitemapOpen] = (0, import_react20.useState)(false);
-  const [isInitialPromptOpen, setIsInitialPromptOpen] = (0, import_react20.useState)(false);
-  const [copyLabel, setCopyLabel] = (0, import_react20.useState)("Copy URL");
-  const [toastMessage, setToastMessage] = (0, import_react20.useState)("");
-  const [copiedPromptKey, setCopiedPromptKey] = (0, import_react20.useState)(null);
-  const targetRef = (0, import_react20.useRef)(target);
-  const sizeRef = (0, import_react20.useRef)(size);
+  const [isSitemapOpen, setIsSitemapOpen] = (0, import_react21.useState)(false);
+  const [isInitialPromptOpen, setIsInitialPromptOpen] = (0, import_react21.useState)(false);
+  const [copyLabel, setCopyLabel] = (0, import_react21.useState)("Copy URL");
+  const [toastMessage, setToastMessage] = (0, import_react21.useState)("");
+  const [copiedPromptKey, setCopiedPromptKey] = (0, import_react21.useState)(null);
+  const targetRef = (0, import_react21.useRef)(target);
+  const sizeRef = (0, import_react21.useRef)(size);
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
   return {
     activeAdapterEntry,
@@ -15695,42 +16006,42 @@ var ReviewShell = ({
     presets,
     reviewPathPrefix
   });
-  const sourceShortcutCleanupRef = (0, import_react21.useRef)(null);
-  const sourceInspectorInteractionRef = (0, import_react21.useRef)(false);
-  const [sourceInspectorState, setSourceInspectorState] = (0, import_react21.useState)(null);
-  const [sectionOutline, setSectionOutline] = (0, import_react21.useState)(null);
-  const [sectionOutlineFilter, setSectionOutlineFilter] = (0, import_react21.useState)(
+  const sourceShortcutCleanupRef = (0, import_react22.useRef)(null);
+  const sourceInspectorInteractionRef = (0, import_react22.useRef)(false);
+  const [sourceInspectorState, setSourceInspectorState] = (0, import_react22.useState)(null);
+  const [sectionOutline, setSectionOutline] = (0, import_react22.useState)(null);
+  const [sectionOutlineFilter, setSectionOutlineFilter] = (0, import_react22.useState)(
     () => getStoredSourceTreeFilter()
   );
-  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] = (0, import_react21.useState)(() => getStoredSourceTreeMetaVisibility());
+  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] = (0, import_react22.useState)(() => getStoredSourceTreeMetaVisibility());
   const isSectionOutlineBoxMetaVisible = sectionOutlineMetaVisibility.box;
   const isSectionOutlineFontMetaVisible = sectionOutlineMetaVisibility.font;
   const isSectionOutlineMediaMetaVisible = sectionOutlineMetaVisibility.media;
   const isSectionOutlineClassMetaVisible = sectionOutlineMetaVisibility.className;
-  const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = (0, import_react21.useState)(() => /* @__PURE__ */ new Set());
-  const [isAllQaVisible, setIsAllQaVisible] = (0, import_react21.useState)(false);
-  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = (0, import_react21.useState)(false);
-  const resolvedReviewSourceOptions = (0, import_react21.useMemo)(
+  const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = (0, import_react22.useState)(() => /* @__PURE__ */ new Set());
+  const [isAllQaVisible, setIsAllQaVisible] = (0, import_react22.useState)(false);
+  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = (0, import_react22.useState)(false);
+  const resolvedReviewSourceOptions = (0, import_react22.useMemo)(
     () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
     [sourceInspector, sourceRoot]
   );
   const resolvedSourceInspector = resolvedReviewSourceOptions.sourceInspector;
   const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
-  const sourceOpenOptions = (0, import_react21.useMemo)(
+  const sourceOpenOptions = (0, import_react22.useMemo)(
     () => ({
       ...resolvedSourceInspector,
       sourceRoot: resolvedSourceRoot
     }),
     [resolvedSourceInspector, resolvedSourceRoot]
   );
-  const sourceCandidateOptions = (0, import_react21.useMemo)(
+  const sourceCandidateOptions = (0, import_react22.useMemo)(
     () => ({
       ignore: resolvedSourceInspector?.ignore,
       includePlacer: resolvedSourceInspector?.includePlacer
     }),
     [resolvedSourceInspector]
   );
-  const sectionOutlineOptions = (0, import_react21.useMemo)(
+  const sectionOutlineOptions = (0, import_react22.useMemo)(
     () => ({
       includePlacer: resolvedSourceInspector?.includePlacer,
       ignore: resolvedSourceInspector?.ignore,
@@ -15739,10 +16050,10 @@ var ReviewShell = ({
     [resolvedSourceInspector]
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
-  const [sidePanel, setSidePanel] = (0, import_react21.useState)(
+  const [sidePanel, setSidePanel] = (0, import_react22.useState)(
     () => isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa"
   );
-  const figmaImageStore = (0, import_react21.useMemo)(
+  const figmaImageStore = (0, import_react22.useMemo)(
     () => getReviewFigmaImageStore(figmaImages),
     [figmaImages]
   );
@@ -15752,25 +16063,25 @@ var ReviewShell = ({
   const isQaPanelVisible = isListVisible && sidePanel === "qa";
   const isSourceTreePanelVisible = isSourceInspectorEnabled && isListVisible && sidePanel === "source";
   const isFigmaImagesPanelVisible = isFigmaImageManagementEnabled && isListVisible && sidePanel === "figma-images";
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     if (isSourceInspectorEnabled || sidePanel !== "source") return;
     setSidePanel("qa");
   }, [isSourceInspectorEnabled, sidePanel]);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     if (isFigmaImageManagementEnabled || sidePanel !== "figma-images") return;
     setSidePanel("qa");
   }, [isFigmaImageManagementEnabled, sidePanel]);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     writeStoredReviewSidePanel(sidePanel);
   }, [sidePanel]);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     writeStoredReviewSidePanelVisible(isListVisible);
   }, [isListVisible]);
-  const updateSectionOutlineFilter = (0, import_react21.useCallback)((nextFilter) => {
+  const updateSectionOutlineFilter = (0, import_react22.useCallback)((nextFilter) => {
     setSectionOutlineFilter(nextFilter);
     writeStoredSourceTreeFilter(nextFilter);
   }, []);
-  const updateSectionOutlineMetaVisibility = (0, import_react21.useCallback)(
+  const updateSectionOutlineMetaVisibility = (0, import_react22.useCallback)(
     (key) => {
       setSectionOutlineMetaVisibility((current) => {
         const next = { ...current, [key]: !current[key] };
@@ -15780,19 +16091,19 @@ var ReviewShell = ({
     },
     []
   );
-  const sectionOutlineFilterTerms = (0, import_react21.useMemo)(
+  const sectionOutlineFilterTerms = (0, import_react22.useMemo)(
     () => getSectionOutlineFilterTerms(sectionOutlineFilter),
     [sectionOutlineFilter]
   );
-  const filteredSectionOutline = (0, import_react21.useMemo)(
+  const filteredSectionOutline = (0, import_react22.useMemo)(
     () => sectionOutline ? filterSectionOutlineEntries(sectionOutline, sectionOutlineFilterTerms) : [],
     [sectionOutline, sectionOutlineFilterTerms]
   );
-  const sectionOutlineTotalCount = (0, import_react21.useMemo)(
+  const sectionOutlineTotalCount = (0, import_react22.useMemo)(
     () => getSectionOutlineEntryCount(sectionOutline ?? []),
     [sectionOutline]
   );
-  const filteredSectionOutlineCount = (0, import_react21.useMemo)(
+  const filteredSectionOutlineCount = (0, import_react22.useMemo)(
     () => getSectionOutlineEntryCount(filteredSectionOutline),
     [filteredSectionOutline]
   );
@@ -15839,8 +16150,11 @@ var ReviewShell = ({
     images: figmaImageList,
     isLoading: isFigmaImageLoading,
     isMutating: isFigmaImageMutating,
+    isOverlayLocked: isFigmaImageOverlayLocked,
     isOverlayVisible: isFigmaImageOverlayVisible,
     moveImage: moveFigmaImage,
+    overlayMode: figmaImageOverlayMode,
+    overlayOffsetY: figmaImageOverlayOffsetY,
     overlayOpacity: figmaImageOverlayOpacity,
     refreshImages: refreshFigmaImages,
     selectedImage: selectedFigmaImage,
@@ -15856,16 +16170,16 @@ var ReviewShell = ({
     store: figmaImageStore,
     viewport: size
   });
-  const [targetFigmaState, setTargetFigmaState] = (0, import_react21.useState)(null);
+  const [targetFigmaState, setTargetFigmaState] = (0, import_react22.useState)(null);
   const targetFigmaConfig = targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
-  const figmaFrameUrl = (0, import_react21.useMemo)(
+  const figmaFrameUrl = (0, import_react22.useMemo)(
     () => getFigmaFrameUrl(targetFigmaConfig, size),
     [targetFigmaConfig, size]
   );
   const isFigmaOverlayAvailable = !isFigmaImageManagementEnabled && isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
-  const [editingItem, setEditingItem] = (0, import_react21.useState)(null);
+  const [editingItem, setEditingItem] = (0, import_react22.useState)(null);
   const initialPromptText = initialPrompt.trim();
-  const refreshItems = (0, import_react21.useCallback)(
+  const refreshItems = (0, import_react22.useCallback)(
     () => refreshReviewItems({
       activeRoute,
       adapter,
@@ -15876,7 +16190,7 @@ var ReviewShell = ({
     }),
     [activeAdapterEntry.pageId, activeRoute, adapter, isRemoteSource, projectId]
   );
-  const refreshSitemapItems = (0, import_react21.useCallback)(
+  const refreshSitemapItems = (0, import_react22.useCallback)(
     () => refreshSitemapReviewItems({
       localAdapterEntry,
       projectId,
@@ -15885,20 +16199,20 @@ var ReviewShell = ({
     }),
     [localAdapterEntry, projectId, remoteAdapterEntry]
   );
-  const cancelReviewMode = (0, import_react21.useCallback)(() => {
+  const cancelReviewMode = (0, import_react22.useCallback)(() => {
     const controller = controllerRef.current;
     if (!controller || controller.getMode() === "idle") return false;
     controller.setMode("idle");
     setMode(controller.getMode());
     return true;
   }, []);
-  const closePromptModal = (0, import_react21.useCallback)(() => {
+  const closePromptModal = (0, import_react22.useCallback)(() => {
     setIsInitialPromptOpen(false);
   }, []);
-  const closeSitemap = (0, import_react21.useCallback)(() => {
+  const closeSitemap = (0, import_react22.useCallback)(() => {
     setIsSitemapOpen(false);
   }, []);
-  const reloadTargetFrame = (0, import_react21.useCallback)(() => {
+  const reloadTargetFrame = (0, import_react22.useCallback)(() => {
     try {
       iframeRef.current?.contentWindow?.location.reload();
     } catch {
@@ -15945,7 +16259,7 @@ var ReviewShell = ({
     size,
     source
   });
-  const closeRulerPanels = (0, import_react21.useCallback)(() => {
+  const closeRulerPanels = (0, import_react22.useCallback)(() => {
     closeSitemap();
     closeFigmaSettings();
   }, [closeFigmaSettings, closeSitemap]);
@@ -16015,14 +16329,14 @@ var ReviewShell = ({
     onTargetChange: setTarget,
     onTargetOverlayStateChange: setTargetOverlayState
   });
-  const refreshReviewData2 = (0, import_react21.useCallback)(() => {
+  const refreshReviewData2 = (0, import_react22.useCallback)(() => {
     return refreshReviewData({
       onRefreshItems: refreshItems,
       onRefreshSitemapItems: refreshSitemapItems,
       onReloadReviewKit: reloadReviewKit
     });
   }, [refreshItems, refreshSitemapItems, reloadReviewKit]);
-  const toggleItemOverlayVisibility = (0, import_react21.useCallback)((itemId) => {
+  const toggleItemOverlayVisibility = (0, import_react22.useCallback)((itemId) => {
     setHiddenOverlayItemIds((currentHiddenOverlayItemIds) => {
       const nextHiddenItemIds = new Set(currentHiddenOverlayItemIds);
       if (nextHiddenItemIds.has(itemId)) {
@@ -16033,17 +16347,17 @@ var ReviewShell = ({
       return nextHiddenItemIds;
     });
   }, []);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     void refreshItems();
   }, [refreshItems]);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     void refreshSitemapItems();
   }, [refreshSitemapItems]);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     if (!isSitemapOpen) return;
     void refreshSitemapItems();
   }, [isSitemapOpen, refreshSitemapItems]);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     const frameScroll = frameScrollRef.current;
     if (!frameScroll) return void 0;
     const centerFrameScroll = () => {
@@ -16144,7 +16458,7 @@ var ReviewShell = ({
   const copyCurrentUrl = () => copyCurrentReviewUrl({
     onCopyLabelChange: setCopyLabel
   });
-  const showToast = (0, import_react21.useCallback)(
+  const showToast = (0, import_react22.useCallback)(
     (message) => {
       setToastMessage(message);
       window.setTimeout(() => {
@@ -16153,29 +16467,29 @@ var ReviewShell = ({
     },
     [setToastMessage]
   );
-  const refreshTargetFigmaConfig = (0, import_react21.useCallback)(() => {
+  const refreshTargetFigmaConfig = (0, import_react22.useCallback)(() => {
     const config = getTargetFigmaFrameConfig(
       iframeRef.current?.contentWindow
     );
     setTargetFigmaState(config ? { targetSrc, config } : null);
   }, [iframeRef, targetSrc]);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     const targetDocument = iframeRef.current?.contentDocument;
     setTargetFigmaOverlayLocked(targetDocument, mode === "element");
     return () => {
       setTargetFigmaOverlayLocked(targetDocument, false);
     };
   }, [iframeRef, mode, targetSrc]);
-  const clearSourceInspector = (0, import_react21.useCallback)(() => {
+  const clearSourceInspector = (0, import_react22.useCallback)(() => {
     sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     clearSourceInspector();
     setCollapsedSectionOutlineIds(/* @__PURE__ */ new Set());
     setSectionOutline(null);
   }, [clearSourceInspector, targetSrc]);
-  const getSourceInspectorRect = (0, import_react21.useCallback)(
+  const getSourceInspectorRect = (0, import_react22.useCallback)(
     (element) => {
       const frame = iframeRef.current;
       if (!frame) return null;
@@ -16200,7 +16514,7 @@ var ReviewShell = ({
     },
     [iframeRef]
   );
-  const getSourceInspectorPanelPosition = (0, import_react21.useCallback)(
+  const getSourceInspectorPanelPosition = (0, import_react22.useCallback)(
     (rect) => {
       const margin = 12;
       const gap = 10;
@@ -16226,7 +16540,7 @@ var ReviewShell = ({
     },
     []
   );
-  const showSourceInspectorForTarget = (0, import_react21.useCallback)(
+  const showSourceInspectorForTarget = (0, import_react22.useCallback)(
     (target2, isPinned = false) => {
       const candidates = getSourceCandidates(target2, sourceCandidateOptions).map(
         (candidate) => ({
@@ -16262,7 +16576,7 @@ var ReviewShell = ({
       sourceOpenOptions
     ]
   );
-  const showSourceOutlineForTarget = (0, import_react21.useCallback)(
+  const showSourceOutlineForTarget = (0, import_react22.useCallback)(
     (target2) => {
       const firstCandidate = getSourceCandidates(
         target2,
@@ -16286,7 +16600,7 @@ var ReviewShell = ({
     },
     [getSourceInspectorRect, sourceCandidateOptions]
   );
-  const showSourceOutlineForElement = (0, import_react21.useCallback)(
+  const showSourceOutlineForElement = (0, import_react22.useCallback)(
     (element) => {
       if (!isSourceTreeHoverOutlineEnabled) return;
       const rect = getSourceInspectorRect(element);
@@ -16310,10 +16624,10 @@ var ReviewShell = ({
     },
     [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
   );
-  const clearSourceOutlineHover = (0, import_react21.useCallback)(() => {
+  const clearSourceOutlineHover = (0, import_react22.useCallback)(() => {
     setSourceInspectorState((current) => current?.isPinned ? current : null);
   }, []);
-  const openSourceCandidate = (0, import_react21.useCallback)(
+  const openSourceCandidate = (0, import_react22.useCallback)(
     (candidate) => {
       const didOpen = openSourceInEditor(candidate.source, {
         ...sourceOpenOptions,
@@ -16324,7 +16638,7 @@ var ReviewShell = ({
     },
     [clearSourceInspector, showToast, sourceOpenOptions]
   );
-  const getCurrentSectionOutline = (0, import_react21.useCallback)(
+  const getCurrentSectionOutline = (0, import_react22.useCallback)(
     () => {
       let frameDocument = null;
       try {
@@ -16339,7 +16653,7 @@ var ReviewShell = ({
     },
     [iframeRef, sectionOutlineOptions]
   );
-  const setSectionOutlineWithDefaultCollapse = (0, import_react21.useCallback)(
+  const setSectionOutlineWithDefaultCollapse = (0, import_react22.useCallback)(
     (nextSectionOutline) => {
       setSectionOutline(nextSectionOutline);
       setCollapsedSectionOutlineIds(
@@ -16348,7 +16662,7 @@ var ReviewShell = ({
     },
     []
   );
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     if (sidePanel !== "source" || !isListVisible) return void 0;
     const refreshSectionOutline = () => {
       const nextSectionOutline = getCurrentSectionOutline();
@@ -16370,11 +16684,11 @@ var ReviewShell = ({
     sidePanel,
     targetSrc
   ]);
-  const toggleQaPanel = (0, import_react21.useCallback)(() => {
+  const toggleQaPanel = (0, import_react22.useCallback)(() => {
     setSidePanel("qa");
     setIsListVisible((current) => sidePanel === "qa" ? !current : true);
   }, [setIsListVisible, sidePanel]);
-  const toggleSourceTreePanel = (0, import_react21.useCallback)(() => {
+  const toggleSourceTreePanel = (0, import_react22.useCallback)(() => {
     if (!isSourceInspectorEnabled) return;
     if (sidePanel === "source" && isListVisible) {
       setIsListVisible(false);
@@ -16394,7 +16708,7 @@ var ReviewShell = ({
     setIsListVisible,
     sidePanel
   ]);
-  const toggleFigmaImagesPanel = (0, import_react21.useCallback)(() => {
+  const toggleFigmaImagesPanel = (0, import_react22.useCallback)(() => {
     if (!isFigmaImageManagementEnabled) return;
     if (sidePanel === "figma-images" && isListVisible) {
       setIsListVisible(false);
@@ -16408,7 +16722,7 @@ var ReviewShell = ({
     setIsListVisible,
     sidePanel
   ]);
-  const toggleSectionOutlineEntry = (0, import_react21.useCallback)((entryId) => {
+  const toggleSectionOutlineEntry = (0, import_react22.useCallback)((entryId) => {
     setCollapsedSectionOutlineIds((current) => {
       const next = new Set(current);
       if (next.has(entryId)) {
@@ -16419,7 +16733,7 @@ var ReviewShell = ({
       return next;
     });
   }, []);
-  const scrollToSection = (0, import_react21.useCallback)((entry) => {
+  const scrollToSection = (0, import_react22.useCallback)((entry) => {
     scrollElementInTarget(entry.element, "start");
     centerFrameScrollOnElement(
       frameScrollRef.current,
@@ -16427,7 +16741,7 @@ var ReviewShell = ({
       entry.element
     );
   }, [frameScrollRef, iframeRef]);
-  const openSectionSource = (0, import_react21.useCallback)(
+  const openSectionSource = (0, import_react22.useCallback)(
     (entry) => {
       const didOpen = openSourceInEditor(entry.source, {
         ...sourceOpenOptions,
@@ -16437,14 +16751,14 @@ var ReviewShell = ({
     },
     [showToast, sourceOpenOptions]
   );
-  const openSectionData = (0, import_react21.useCallback)(
+  const openSectionData = (0, import_react22.useCallback)(
     (entry) => {
       const didOpen = openSourceInEditor(entry.data, sourceOpenOptions);
       showToast(didOpen ? "Data opened" : "Data hint not found");
     },
     [showToast, sourceOpenOptions]
   );
-  const startSectionDomReview = (0, import_react21.useCallback)(
+  const startSectionDomReview = (0, import_react22.useCallback)(
     (entry) => {
       if (!canWriteDom) {
         showToast("DOM QA unavailable");
@@ -16499,11 +16813,11 @@ var ReviewShell = ({
       showToast
     ]
   );
-  const cleanupSourceOpenShortcut = (0, import_react21.useCallback)(() => {
+  const cleanupSourceOpenShortcut = (0, import_react22.useCallback)(() => {
     sourceShortcutCleanupRef.current?.();
     sourceShortcutCleanupRef.current = null;
   }, []);
-  const bindSourceOpenShortcut = (0, import_react21.useCallback)(() => {
+  const bindSourceOpenShortcut = (0, import_react22.useCallback)(() => {
     cleanupSourceOpenShortcut();
     let frameDocument = null;
     try {
@@ -16755,10 +17069,10 @@ var ReviewShell = ({
     showSourceOutlineForTarget,
     showSourceInspectorForTarget
   ]);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     return cleanupSourceOpenShortcut;
   }, [cleanupSourceOpenShortcut]);
-  const loadTargetFrame = (0, import_react21.useCallback)(() => {
+  const loadTargetFrame = (0, import_react22.useCallback)(() => {
     initReviewKit();
     refreshTargetFigmaConfig();
     setTargetFigmaOverlayLocked(
@@ -16783,11 +17097,11 @@ var ReviewShell = ({
     setSectionOutlineWithDefaultCollapse,
     sidePanel
   ]);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
     return () => window.cancelAnimationFrame(frame);
   }, [bindSourceOpenShortcut, targetSrc]);
-  const clearSelectedReviewItem = (0, import_react21.useCallback)(() => {
+  const clearSelectedReviewItem = (0, import_react22.useCallback)(() => {
     clearSelectedItem();
     updateShellUrl(targetRef.current, sizeRef.current, source);
   }, [clearSelectedItem, sizeRef, source, targetRef]);
@@ -16869,7 +17183,10 @@ var ReviewShell = ({
   });
   const figmaImageOverlay = selectedFigmaImage && isFigmaImageOverlayVisible ? {
     imageUrl: selectedFigmaImage.imageUrl,
+    isLocked: isFigmaImageOverlayLocked,
     label: selectedFigmaImage.label ?? selectedFigmaImage.nodeId,
+    mode: figmaImageOverlayMode,
+    offsetY: figmaImageOverlayOffsetY,
     opacity: figmaImageOverlayOpacity
   } : null;
   return /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)(
@@ -17347,7 +17664,7 @@ var mountReviewShell = (options) => {
   root.style.height = "100%";
   root.style.margin = "0";
   (0, import_client.createRoot)(root).render(
-    /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(import_react22.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(ReviewShell, { ...shellProps }) })
+    /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(import_react23.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(ReviewShell, { ...shellProps }) })
   );
 };
 // Annotate the CommonJS export names for ESM import in node:

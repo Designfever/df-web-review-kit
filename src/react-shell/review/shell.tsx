@@ -395,6 +395,7 @@ export const ReviewShell = ({
     overlayOffsetY: figmaImageOverlayOffsetY,
     overlayOpacity: figmaImageOverlayOpacity,
     refreshImages: refreshFigmaImages,
+    reorderImages: reorderFigmaImages,
     selectedImage: selectedFigmaImage,
     selectedImageId: selectedFigmaImageId,
     setOverlayOpacity: setFigmaImageOverlayOpacity,
@@ -1867,6 +1868,7 @@ export const ReviewShell = ({
           onMoveImage={moveFigmaImage}
           onOverlayOpacityChange={setFigmaImageOverlayOpacity}
           onRefreshImages={refreshFigmaImages}
+          onReorderImages={reorderFigmaImages}
           onSelectImage={setSelectedFigmaImageId}
           onToggleOverlay={toggleFigmaImageOverlay}
           onUpdateImage={updateFigmaImage}

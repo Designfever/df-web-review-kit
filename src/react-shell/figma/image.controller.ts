@@ -229,24 +229,27 @@ export const useReviewFigmaImageStoreController = ({
     [imageList, images, store, targetKey]
   );
 
-  const moveImage = useCallback(
-    async (id: string, direction: 'up' | 'down') => {
+  const reorderImages = useCallback(
+    async (imageIds: string[]) => {
       if (!store) return;
 
-      const currentIndex = images.findIndex((image) => image.id === id);
-      const nextIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= images.length) {
-        return;
-      }
+      const currentImageIds = images.map((image) => image.id);
+      const nextImageIdSet = new Set(imageIds);
+      const hasSameIds =
+        imageIds.length === currentImageIds.length &&
+        nextImageIdSet.size === currentImageIds.length &&
+        currentImageIds.every((imageId) => nextImageIdSet.has(imageId));
+      const hasSameOrder =
+        hasSameIds &&
+        imageIds.every((imageId, index) => imageId === currentImageIds[index]);
+      if (!hasSameIds || hasSameOrder) return;
 
       const previousImages = images;
-      const reorderedImages = [...images];
-      const [image] = reorderedImages.splice(currentIndex, 1);
-      reorderedImages.splice(nextIndex, 0, image);
-      const optimisticImages = reorderedImages.map((nextImage, order) => ({
-        ...nextImage,
-        order,
-      }));
+      const imageById = new Map(images.map((image) => [image.id, image]));
+      const optimisticImages = imageIds.flatMap((imageId, order) => {
+        const image = imageById.get(imageId);
+        return image ? [{ ...image, order }] : [];
+      });
 
       setImageList({ images: optimisticImages, targetKey });
       setIsMutating(true);
@@ -254,18 +257,34 @@ export const useReviewFigmaImageStoreController = ({
       try {
         const savedImages = await store.reorderImages({
           target,
-          imageIds: reorderedImages.map((nextImage) => nextImage.id),
+          imageIds,
         });
         setImageList({ images: sortReviewFigmaImages(savedImages), targetKey });
         setError('');
-      } catch (moveError) {
+      } catch (reorderError) {
         setImageList({ images: previousImages, targetKey });
-        setError(getReviewFigmaImageErrorMessage(moveError));
+        setError(getReviewFigmaImageErrorMessage(reorderError));
       } finally {
         setIsMutating(false);
       }
     },
     [images, store, target, targetKey]
+  );
+
+  const moveImage = useCallback(
+    async (id: string, direction: 'up' | 'down') => {
+      const currentIndex = images.findIndex((image) => image.id === id);
+      const nextIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= images.length) {
+        return;
+      }
+
+      const reorderedImages = [...images];
+      const [image] = reorderedImages.splice(currentIndex, 1);
+      reorderedImages.splice(nextIndex, 0, image);
+      await reorderImages(reorderedImages.map((nextImage) => nextImage.id));
+    },
+    [images, reorderImages]
   );
 
   return {
@@ -277,6 +296,7 @@ export const useReviewFigmaImageStoreController = ({
     isMutating,
     moveImage,
     refreshImages,
+    reorderImages,
     updateImage,
   };
 };

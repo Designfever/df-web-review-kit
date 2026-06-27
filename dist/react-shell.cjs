@@ -2898,6 +2898,18 @@ var reviewShellFigmaImagesStyle = `
     background: var(--df-review-danger-soft);
   }
 
+  .df-review-figma-image-icon-button.is-order-fallback {
+    opacity: 0.58;
+  }
+
+  .df-review-figma-image-icon-button.is-order-fallback:hover {
+    opacity: 1;
+  }
+
+  .df-review-figma-image-icon-button.is-order-fallback:disabled {
+    opacity: 0.32;
+  }
+
   .df-review-figma-image-overlay-controls {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -2981,7 +2993,7 @@ var reviewShellFigmaImagesStyle = `
 
   .df-review-figma-image-card {
     display: grid;
-    grid-template-columns: 86px minmax(0, 1fr) auto;
+    grid-template-columns: var(--df-review-control-height-md) 86px minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--df-review-space-2);
     min-width: 0;
@@ -2996,13 +3008,59 @@ var reviewShellFigmaImagesStyle = `
     border-color: var(--df-review-line);
   }
 
+  .df-review-figma-image-card.is-dragging {
+    opacity: 0.58;
+  }
+
+  .df-review-figma-image-card.is-drop-target {
+    border-color: var(--df-review-accent);
+    box-shadow: 0 0 0 3px rgba(124, 199, 255, 0.14);
+  }
+
   .df-review-figma-image-card.is-active {
     border-color: var(--df-review-accent);
     box-shadow: inset 0 0 0 1px var(--df-review-accent-hover), 0 0 0 3px rgba(124, 199, 255, 0.12);
   }
 
   .df-review-figma-image-card.is-editing {
-    grid-template-columns: 86px minmax(0, 1fr);
+    grid-template-columns: var(--df-review-control-height-md) 86px minmax(0, 1fr);
+  }
+
+  .df-review-figma-image-drag-handle {
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    height: 58px;
+    min-height: 58px;
+    border: 1px solid transparent;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-subtle);
+    background: transparent;
+    cursor: grab;
+  }
+
+  .df-review-figma-image-drag-handle:hover,
+  .df-review-figma-image-drag-handle:focus-visible {
+    border-color: var(--df-review-line);
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    outline: none;
+  }
+
+  .df-review-figma-image-drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .df-review-figma-image-drag-handle:disabled {
+    cursor: default;
+    opacity: 0.32;
+  }
+
+  .df-review-figma-image-drag-handle svg {
+    width: 16px;
+    height: 16px;
   }
 
   .df-review-figma-image-preview {
@@ -4437,50 +4495,61 @@ var __iconNode13 = [
 ];
 var FileText = createLucideIcon("file-text", __iconNode13);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/grip-vertical.mjs
 var __iconNode14 = [
+  ["circle", { cx: "9", cy: "12", r: "1", key: "1vctgf" }],
+  ["circle", { cx: "9", cy: "5", r: "1", key: "hp0tcf" }],
+  ["circle", { cx: "9", cy: "19", r: "1", key: "fkjjf6" }],
+  ["circle", { cx: "15", cy: "12", r: "1", key: "1tmaij" }],
+  ["circle", { cx: "15", cy: "5", r: "1", key: "19l28e" }],
+  ["circle", { cx: "15", cy: "19", r: "1", key: "f4zoj3" }]
+];
+var GripVertical = createLucideIcon("grip-vertical", __iconNode14);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
+var __iconNode15 = [
   ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
   ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
   ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
 ];
-var Image = createLucideIcon("image", __iconNode14);
+var Image = createLucideIcon("image", __iconNode15);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/images.mjs
-var __iconNode15 = [
+var __iconNode16 = [
   ["path", { d: "m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16", key: "9kzy35" }],
   ["path", { d: "M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2", key: "1t0f0t" }],
   ["circle", { cx: "13", cy: "7", r: "1", fill: "currentColor", key: "1obus6" }],
   ["rect", { x: "8", y: "2", width: "14", height: "14", rx: "2", key: "1gvhby" }]
 ];
-var Images = createLucideIcon("images", __iconNode15);
+var Images = createLucideIcon("images", __iconNode16);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
-var __iconNode16 = [
+var __iconNode17 = [
   ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
   ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
   ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
   ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
 ];
-var LayoutGrid = createLucideIcon("layout-grid", __iconNode16);
+var LayoutGrid = createLucideIcon("layout-grid", __iconNode17);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/link-2.mjs
-var __iconNode17 = [
+var __iconNode18 = [
   ["path", { d: "M9 17H7A5 5 0 0 1 7 7h2", key: "8i5ue5" }],
   ["path", { d: "M15 7h2a5 5 0 1 1 0 10h-2", key: "1b9ql8" }],
   ["line", { x1: "8", x2: "16", y1: "12", y2: "12", key: "1jonct" }]
 ];
-var Link2 = createLucideIcon("link-2", __iconNode17);
+var Link2 = createLucideIcon("link-2", __iconNode18);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
-var __iconNode18 = [
+var __iconNode19 = [
   ["path", { d: "M2 5h20", key: "1fs1ex" }],
   ["path", { d: "M6 12h12", key: "8npq4p" }],
   ["path", { d: "M9 19h6", key: "456am0" }]
 ];
-var ListFilter = createLucideIcon("list-filter", __iconNode18);
+var ListFilter = createLucideIcon("list-filter", __iconNode19);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
-var __iconNode19 = [
+var __iconNode20 = [
   [
     "path",
     {
@@ -4491,27 +4560,27 @@ var __iconNode19 = [
   ["path", { d: "M15 5.764v15", key: "1pn4in" }],
   ["path", { d: "M9 3.236v15", key: "1uimfh" }]
 ];
-var Map2 = createLucideIcon("map", __iconNode19);
+var Map2 = createLucideIcon("map", __iconNode20);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
-var __iconNode20 = [
+var __iconNode21 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "m21 3-7 7", key: "1l2asr" }],
   ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
   ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
 ];
-var Maximize2 = createLucideIcon("maximize-2", __iconNode20);
+var Maximize2 = createLucideIcon("maximize-2", __iconNode21);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
-var __iconNode21 = [
+var __iconNode22 = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
   ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
 ];
-var Monitor = createLucideIcon("monitor", __iconNode21);
+var Monitor = createLucideIcon("monitor", __iconNode22);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/moon.mjs
-var __iconNode22 = [
+var __iconNode23 = [
   [
     "path",
     {
@@ -4520,10 +4589,10 @@ var __iconNode22 = [
     }
   ]
 ];
-var Moon = createLucideIcon("moon", __iconNode22);
+var Moon = createLucideIcon("moon", __iconNode23);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/pencil.mjs
-var __iconNode23 = [
+var __iconNode24 = [
   [
     "path",
     {
@@ -4533,32 +4602,32 @@ var __iconNode23 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-var Pencil = createLucideIcon("pencil", __iconNode23);
+var Pencil = createLucideIcon("pencil", __iconNode24);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/plus.mjs
-var __iconNode24 = [
+var __iconNode25 = [
   ["path", { d: "M5 12h14", key: "1ays0h" }],
   ["path", { d: "M12 5v14", key: "s699le" }]
 ];
-var Plus = createLucideIcon("plus", __iconNode24);
+var Plus = createLucideIcon("plus", __iconNode25);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
-var __iconNode25 = [
+var __iconNode26 = [
   ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
 ];
-var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode25);
+var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode26);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
-var __iconNode26 = [
+var __iconNode27 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode26);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode27);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
-var __iconNode27 = [
+var __iconNode28 = [
   [
     "path",
     {
@@ -4571,26 +4640,26 @@ var __iconNode27 = [
   ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
   ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
 ];
-var Ruler = createLucideIcon("ruler", __iconNode27);
+var Ruler = createLucideIcon("ruler", __iconNode28);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
-var __iconNode28 = [
+var __iconNode29 = [
   ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
   ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
   ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
   ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
 ];
-var Scan = createLucideIcon("scan", __iconNode28);
+var Scan = createLucideIcon("scan", __iconNode29);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/search.mjs
-var __iconNode29 = [
+var __iconNode30 = [
   ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-var Search = createLucideIcon("search", __iconNode29);
+var Search = createLucideIcon("search", __iconNode30);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
-var __iconNode30 = [
+var __iconNode31 = [
   [
     "path",
     {
@@ -4600,27 +4669,27 @@ var __iconNode30 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Settings = createLucideIcon("settings", __iconNode30);
+var Settings = createLucideIcon("settings", __iconNode31);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
-var __iconNode31 = [
+var __iconNode32 = [
   ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
   ["path", { d: "M12 18h.01", key: "mhygvu" }]
 ];
-var Smartphone = createLucideIcon("smartphone", __iconNode31);
+var Smartphone = createLucideIcon("smartphone", __iconNode32);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-check-big.mjs
-var __iconNode32 = [
+var __iconNode33 = [
   [
     "path",
     { d: "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344", key: "2acyp4" }
   ],
   ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
 ];
-var SquareCheckBig = createLucideIcon("square-check-big", __iconNode32);
+var SquareCheckBig = createLucideIcon("square-check-big", __iconNode33);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
-var __iconNode33 = [
+var __iconNode34 = [
   ["path", { d: "M5 3a2 2 0 0 0-2 2", key: "y57alp" }],
   ["path", { d: "M19 3a2 2 0 0 1 2 2", key: "18rm91" }],
   ["path", { d: "M21 19a2 2 0 0 1-2 2", key: "1j7049" }],
@@ -4634,10 +4703,10 @@ var __iconNode33 = [
   ["path", { d: "M3 14v1", key: "vnatye" }],
   ["path", { d: "M21 14v1", key: "169vum" }]
 ];
-var SquareDashed = createLucideIcon("square-dashed", __iconNode33);
+var SquareDashed = createLucideIcon("square-dashed", __iconNode34);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode34 = [
+var __iconNode35 = [
   [
     "path",
     {
@@ -4647,10 +4716,10 @@ var __iconNode34 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode34);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode35);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode35 = [
+var __iconNode36 = [
   [
     "path",
     {
@@ -4660,10 +4729,10 @@ var __iconNode35 = [
   ],
   ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
 ];
-var StickyNote = createLucideIcon("sticky-note", __iconNode35);
+var StickyNote = createLucideIcon("sticky-note", __iconNode36);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sun.mjs
-var __iconNode36 = [
+var __iconNode37 = [
   ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
   ["path", { d: "M12 2v2", key: "tus03m" }],
   ["path", { d: "M12 20v2", key: "1lh1kg" }],
@@ -4674,40 +4743,40 @@ var __iconNode36 = [
   ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
   ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
 ];
-var Sun = createLucideIcon("sun", __iconNode36);
+var Sun = createLucideIcon("sun", __iconNode37);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/trash-2.mjs
-var __iconNode37 = [
+var __iconNode38 = [
   ["path", { d: "M10 11v6", key: "nco0om" }],
   ["path", { d: "M14 11v6", key: "outv1u" }],
   ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
   ["path", { d: "M3 6h18", key: "d0wm0j" }],
   ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
 ];
-var Trash2 = createLucideIcon("trash-2", __iconNode37);
+var Trash2 = createLucideIcon("trash-2", __iconNode38);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/type.mjs
-var __iconNode38 = [
+var __iconNode39 = [
   ["path", { d: "M12 4v16", key: "1654pz" }],
   ["path", { d: "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2", key: "e0r10z" }],
   ["path", { d: "M9 20h6", key: "s66wpe" }]
 ];
-var Type = createLucideIcon("type", __iconNode38);
+var Type = createLucideIcon("type", __iconNode39);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode39 = [
+var __iconNode40 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode39);
+var Upload = createLucideIcon("upload", __iconNode40);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode40 = [
+var __iconNode41 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode40);
+var X = createLucideIcon("x", __iconNode41);
 
 // src/react-shell/review/df.logo.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
@@ -6265,6 +6334,7 @@ var FigmaImagesPanel = ({
   onMoveImage,
   onOverlayOpacityChange,
   onRefreshImages,
+  onReorderImages,
   onSelectImage,
   onToggleOverlay,
   onUpdateImage
@@ -6273,6 +6343,8 @@ var FigmaImagesPanel = ({
   const [labelDraft, setLabelDraft] = (0, import_react5.useState)("");
   const [editingImageId, setEditingImageId] = (0, import_react5.useState)(null);
   const [editingLabelDraft, setEditingLabelDraft] = (0, import_react5.useState)("");
+  const [draggingImageId, setDraggingImageId] = (0, import_react5.useState)(null);
+  const [dragOverImageId, setDragOverImageId] = (0, import_react5.useState)(null);
   const selectedImage = images.find((image) => image.id === selectedImageId);
   const canShowOverlay = Boolean(selectedImage);
   const statusText = error ? error : isMutating ? "Saving..." : isLoading ? "Loading..." : "";
@@ -6404,157 +6476,227 @@ var FigmaImagesPanel = ({
     ),
     /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-list", children: [
       images.length === 0 && !isLoading && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "df-review-empty", children: "No Figma images on this viewport." }),
-      images.map((image, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
-        "article",
-        {
-          className: `df-review-figma-image-card${image.id === selectedImageId ? " is-active" : ""}${editingImageId === image.id ? " is-editing" : ""}`,
-          children: [
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-              "button",
-              {
-                "aria-label": `Select ${getFigmaImageLabel(image, index)}`,
-                className: "df-review-figma-image-preview",
-                type: "button",
-                onClick: () => onSelectImage(image.id),
-                children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("img", { alt: "", draggable: false, src: image.imageUrl })
+      images.map((image, index) => {
+        const imageLabel = getFigmaImageLabel(image, index);
+        const isDragging = draggingImageId === image.id;
+        const isDropTarget = dragOverImageId === image.id && draggingImageId !== image.id;
+        return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
+          "article",
+          {
+            className: `df-review-figma-image-card${image.id === selectedImageId ? " is-active" : ""}${editingImageId === image.id ? " is-editing" : ""}${isDragging ? " is-dragging" : ""}${isDropTarget ? " is-drop-target" : ""}`,
+            onDragLeave: () => {
+              setDragOverImageId(
+                (currentImageId) => currentImageId === image.id ? null : currentImageId
+              );
+            },
+            onDragOver: (event) => {
+              if (!draggingImageId || draggingImageId === image.id) return;
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "move";
+              setDragOverImageId(image.id);
+            },
+            onDrop: (event) => {
+              event.preventDefault();
+              const draggedImageId = draggingImageId || event.dataTransfer.getData("text/plain");
+              if (!draggedImageId || draggedImageId === image.id) {
+                setDraggingImageId(null);
+                setDragOverImageId(null);
+                return;
               }
-            ),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-card-main", children: [
-              editingImageId === image.id ? /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
-                "form",
+              const nextImageIds = getReorderedFigmaImageIds(
+                images,
+                draggedImageId,
+                image.id
+              );
+              setDraggingImageId(null);
+              setDragOverImageId(null);
+              void onReorderImages(nextImageIds);
+            },
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                "button",
                 {
-                  className: "df-review-figma-image-edit-form",
-                  onSubmit: (event) => {
-                    event.preventDefault();
-                    void onUpdateImage(image.id, {
-                      label: editingLabelDraft
-                    }).then((updatedImage) => {
-                      if (!updatedImage) return;
-                      setEditingImageId(null);
-                      setEditingLabelDraft("");
-                    });
+                  "aria-label": `Drag ${imageLabel}`,
+                  className: "df-review-figma-image-drag-handle",
+                  disabled: images.length < 2 || isMutating,
+                  draggable: images.length > 1 && !isMutating,
+                  title: "Drag to reorder",
+                  type: "button",
+                  onDragEnd: () => {
+                    setDraggingImageId(null);
+                    setDragOverImageId(null);
                   },
-                  children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-                      "input",
-                      {
-                        "aria-label": "Selected Figma image label",
-                        autoComplete: "off",
-                        autoFocus: true,
-                        placeholder: "Label",
-                        spellCheck: false,
-                        value: editingLabelDraft,
-                        onChange: (event) => setEditingLabelDraft(event.currentTarget.value)
-                      }
-                    ),
-                    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-                      "button",
-                      {
-                        "aria-label": "Save Figma image label",
-                        className: "df-review-figma-image-icon-button",
-                        disabled: isMutating,
-                        title: "Save",
-                        type: "submit",
-                        children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Check, { "aria-hidden": "true" })
-                      }
-                    ),
-                    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-                      "button",
-                      {
-                        "aria-label": "Cancel Figma image label edit",
-                        className: "df-review-figma-image-icon-button",
-                        disabled: isMutating,
-                        title: "Cancel",
-                        type: "button",
-                        onClick: () => {
-                          setEditingImageId(null);
-                          setEditingLabelDraft("");
-                        },
-                        children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(X, { "aria-hidden": "true" })
-                      }
-                    )
-                  ]
+                  onDragStart: (event) => {
+                    if (isMutating) {
+                      event.preventDefault();
+                      return;
+                    }
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("text/plain", image.id);
+                    setDraggingImageId(image.id);
+                  },
+                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(GripVertical, { "aria-hidden": "true" })
                 }
-              ) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { children: getFigmaImageLabel(image, index) }),
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: image.nodeId }),
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("small", { children: [
-                image.imageFormat.toUpperCase(),
-                " /",
-                " ",
-                formatFigmaImageDate(image.updatedAt)
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                "button",
+                {
+                  "aria-label": `Select ${imageLabel}`,
+                  className: "df-review-figma-image-preview",
+                  type: "button",
+                  onClick: () => onSelectImage(image.id),
+                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("img", { alt: "", draggable: false, src: image.imageUrl })
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-card-main", children: [
+                editingImageId === image.id ? /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
+                  "form",
+                  {
+                    className: "df-review-figma-image-edit-form",
+                    onSubmit: (event) => {
+                      event.preventDefault();
+                      void onUpdateImage(image.id, {
+                        label: editingLabelDraft
+                      }).then((updatedImage) => {
+                        if (!updatedImage) return;
+                        setEditingImageId(null);
+                        setEditingLabelDraft("");
+                      });
+                    },
+                    children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                        "input",
+                        {
+                          "aria-label": "Selected Figma image label",
+                          autoComplete: "off",
+                          autoFocus: true,
+                          placeholder: "Label",
+                          spellCheck: false,
+                          value: editingLabelDraft,
+                          onChange: (event) => setEditingLabelDraft(event.currentTarget.value)
+                        }
+                      ),
+                      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                        "button",
+                        {
+                          "aria-label": "Save Figma image label",
+                          className: "df-review-figma-image-icon-button",
+                          disabled: isMutating,
+                          title: "Save",
+                          type: "submit",
+                          children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Check, { "aria-hidden": "true" })
+                        }
+                      ),
+                      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                        "button",
+                        {
+                          "aria-label": "Cancel Figma image label edit",
+                          className: "df-review-figma-image-icon-button",
+                          disabled: isMutating,
+                          title: "Cancel",
+                          type: "button",
+                          onClick: () => {
+                            setEditingImageId(null);
+                            setEditingLabelDraft("");
+                          },
+                          children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(X, { "aria-hidden": "true" })
+                        }
+                      )
+                    ]
+                  }
+                ) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { children: imageLabel }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: image.nodeId }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("small", { children: [
+                  image.imageFormat.toUpperCase(),
+                  " /",
+                  " ",
+                  formatFigmaImageDate(image.updatedAt)
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-card-actions", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                  "button",
+                  {
+                    "aria-label": `Edit ${imageLabel} label`,
+                    className: "df-review-figma-image-icon-button",
+                    disabled: isMutating,
+                    title: "Edit label",
+                    type: "button",
+                    onClick: () => {
+                      onSelectImage(image.id);
+                      setEditingImageId(image.id);
+                      setEditingLabelDraft(image.label ?? "");
+                    },
+                    children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Pencil, { "aria-hidden": "true" })
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                  "a",
+                  {
+                    "aria-label": "Open Figma node",
+                    className: "df-review-figma-image-icon-button",
+                    href: image.figmaUrl,
+                    rel: "noreferrer",
+                    target: "_blank",
+                    children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ExternalLink, { "aria-hidden": "true" })
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                  "button",
+                  {
+                    "aria-label": "Delete Figma image",
+                    className: "df-review-figma-image-icon-button is-danger",
+                    disabled: isMutating,
+                    type: "button",
+                    onClick: () => void onDeleteImage(image.id),
+                    children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Trash2, { "aria-hidden": "true" })
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                  "button",
+                  {
+                    "aria-label": "Move Figma image up",
+                    className: "df-review-figma-image-icon-button is-order-fallback",
+                    disabled: index === 0 || isMutating,
+                    title: "Move up",
+                    type: "button",
+                    onClick: () => void onMoveImage(image.id, "up"),
+                    children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ArrowUp, { "aria-hidden": "true" })
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                  "button",
+                  {
+                    "aria-label": "Move Figma image down",
+                    className: "df-review-figma-image-icon-button is-order-fallback",
+                    disabled: index === images.length - 1 || isMutating,
+                    title: "Move down",
+                    type: "button",
+                    onClick: () => void onMoveImage(image.id, "down"),
+                    children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ArrowDown, { "aria-hidden": "true" })
+                  }
+                )
               ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-card-actions", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-                "button",
-                {
-                  "aria-label": `Edit ${getFigmaImageLabel(image, index)} label`,
-                  className: "df-review-figma-image-icon-button",
-                  disabled: isMutating,
-                  title: "Edit label",
-                  type: "button",
-                  onClick: () => {
-                    onSelectImage(image.id);
-                    setEditingImageId(image.id);
-                    setEditingLabelDraft(image.label ?? "");
-                  },
-                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Pencil, { "aria-hidden": "true" })
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-                "button",
-                {
-                  "aria-label": "Move Figma image up",
-                  className: "df-review-figma-image-icon-button",
-                  disabled: index === 0 || isMutating,
-                  type: "button",
-                  onClick: () => void onMoveImage(image.id, "up"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ArrowUp, { "aria-hidden": "true" })
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-                "button",
-                {
-                  "aria-label": "Move Figma image down",
-                  className: "df-review-figma-image-icon-button",
-                  disabled: index === images.length - 1 || isMutating,
-                  type: "button",
-                  onClick: () => void onMoveImage(image.id, "down"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ArrowDown, { "aria-hidden": "true" })
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-                "a",
-                {
-                  "aria-label": "Open Figma node",
-                  className: "df-review-figma-image-icon-button",
-                  href: image.figmaUrl,
-                  rel: "noreferrer",
-                  target: "_blank",
-                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ExternalLink, { "aria-hidden": "true" })
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-                "button",
-                {
-                  "aria-label": "Delete Figma image",
-                  className: "df-review-figma-image-icon-button is-danger",
-                  disabled: isMutating,
-                  type: "button",
-                  onClick: () => void onDeleteImage(image.id),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Trash2, { "aria-hidden": "true" })
-                }
-              )
-            ] })
-          ]
-        },
-        image.id
-      ))
+            ]
+          },
+          image.id
+        );
+      })
     ] })
   ] });
 };
 function getFigmaImageLabel(image, index) {
   return image.label?.trim() || `Image ${index + 1}`;
+}
+function getReorderedFigmaImageIds(images, draggedImageId, dropTargetImageId) {
+  const currentImageIds = images.map((image) => image.id);
+  const draggedIndex = currentImageIds.indexOf(draggedImageId);
+  const dropTargetIndex = currentImageIds.indexOf(dropTargetImageId);
+  if (draggedIndex < 0 || dropTargetIndex < 0) return currentImageIds;
+  const nextImageIds = [...currentImageIds];
+  const [imageId] = nextImageIds.splice(draggedIndex, 1);
+  nextImageIds.splice(dropTargetIndex, 0, imageId);
+  return nextImageIds;
 }
 function getFigmaTargetViewportLabel(target) {
   const label = target.viewport?.label?.trim() || target.viewport?.scope;
@@ -14801,39 +14943,51 @@ var useReviewFigmaImageStoreController = ({
     },
     [imageList, images, store, targetKey]
   );
-  const moveImage = (0, import_react16.useCallback)(
-    async (id, direction) => {
+  const reorderImages = (0, import_react16.useCallback)(
+    async (imageIds) => {
       if (!store) return;
-      const currentIndex = images.findIndex((image2) => image2.id === id);
-      const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= images.length) {
-        return;
-      }
+      const currentImageIds = images.map((image) => image.id);
+      const nextImageIdSet = new Set(imageIds);
+      const hasSameIds = imageIds.length === currentImageIds.length && nextImageIdSet.size === currentImageIds.length && currentImageIds.every((imageId) => nextImageIdSet.has(imageId));
+      const hasSameOrder = hasSameIds && imageIds.every((imageId, index) => imageId === currentImageIds[index]);
+      if (!hasSameIds || hasSameOrder) return;
       const previousImages = images;
-      const reorderedImages = [...images];
-      const [image] = reorderedImages.splice(currentIndex, 1);
-      reorderedImages.splice(nextIndex, 0, image);
-      const optimisticImages = reorderedImages.map((nextImage, order) => ({
-        ...nextImage,
-        order
-      }));
+      const imageById = new Map(images.map((image) => [image.id, image]));
+      const optimisticImages = imageIds.flatMap((imageId, order) => {
+        const image = imageById.get(imageId);
+        return image ? [{ ...image, order }] : [];
+      });
       setImageList({ images: optimisticImages, targetKey });
       setIsMutating(true);
       try {
         const savedImages = await store.reorderImages({
           target,
-          imageIds: reorderedImages.map((nextImage) => nextImage.id)
+          imageIds
         });
         setImageList({ images: sortReviewFigmaImages(savedImages), targetKey });
         setError("");
-      } catch (moveError) {
+      } catch (reorderError) {
         setImageList({ images: previousImages, targetKey });
-        setError(getReviewFigmaImageErrorMessage(moveError));
+        setError(getReviewFigmaImageErrorMessage(reorderError));
       } finally {
         setIsMutating(false);
       }
     },
     [images, store, target, targetKey]
+  );
+  const moveImage = (0, import_react16.useCallback)(
+    async (id, direction) => {
+      const currentIndex = images.findIndex((image2) => image2.id === id);
+      const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= images.length) {
+        return;
+      }
+      const reorderedImages = [...images];
+      const [image] = reorderedImages.splice(currentIndex, 1);
+      reorderedImages.splice(nextIndex, 0, image);
+      await reorderImages(reorderedImages.map((nextImage) => nextImage.id));
+    },
+    [images, reorderImages]
   );
   return {
     addImage,
@@ -14844,6 +14998,7 @@ var useReviewFigmaImageStoreController = ({
     isMutating,
     moveImage,
     refreshImages,
+    reorderImages,
     updateImage
   };
 };
@@ -15240,6 +15395,7 @@ var useReviewFigmaImages = ({
     isMutating,
     moveImage,
     refreshImages,
+    reorderImages,
     updateImage
   } = useReviewFigmaImageStoreController({
     imageFormat,
@@ -15294,6 +15450,7 @@ var useReviewFigmaImages = ({
     overlayState,
     refreshImages,
     resetOverlay,
+    reorderImages,
     selectedImage,
     selectedImageId,
     setOverlayLocked,
@@ -16490,6 +16647,7 @@ var ReviewShell = ({
     overlayOffsetY: figmaImageOverlayOffsetY,
     overlayOpacity: figmaImageOverlayOpacity,
     refreshImages: refreshFigmaImages,
+    reorderImages: reorderFigmaImages,
     selectedImage: selectedFigmaImage,
     selectedImageId: selectedFigmaImageId,
     setOverlayOpacity: setFigmaImageOverlayOpacity,
@@ -17742,6 +17900,7 @@ var ReviewShell = ({
             onMoveImage: moveFigmaImage,
             onOverlayOpacityChange: setFigmaImageOverlayOpacity,
             onRefreshImages: refreshFigmaImages,
+            onReorderImages: reorderFigmaImages,
             onSelectImage: setSelectedFigmaImageId,
             onToggleOverlay: toggleFigmaImageOverlay,
             onUpdateImage: updateFigmaImage
@@ -18036,6 +18195,7 @@ lucide-react/dist/esm/icons/external-link.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
 lucide-react/dist/esm/icons/eye.mjs:
 lucide-react/dist/esm/icons/file-text.mjs:
+lucide-react/dist/esm/icons/grip-vertical.mjs:
 lucide-react/dist/esm/icons/image.mjs:
 lucide-react/dist/esm/icons/images.mjs:
 lucide-react/dist/esm/icons/layout-grid.mjs:

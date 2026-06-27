@@ -171,6 +171,18 @@ export const reviewShellFigmaImagesStyle = `
     background: var(--df-review-danger-soft);
   }
 
+  .df-review-figma-image-icon-button.is-order-fallback {
+    opacity: 0.58;
+  }
+
+  .df-review-figma-image-icon-button.is-order-fallback:hover {
+    opacity: 1;
+  }
+
+  .df-review-figma-image-icon-button.is-order-fallback:disabled {
+    opacity: 0.32;
+  }
+
   .df-review-figma-image-overlay-controls {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -254,7 +266,7 @@ export const reviewShellFigmaImagesStyle = `
 
   .df-review-figma-image-card {
     display: grid;
-    grid-template-columns: 86px minmax(0, 1fr) auto;
+    grid-template-columns: var(--df-review-control-height-md) 86px minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--df-review-space-2);
     min-width: 0;
@@ -269,13 +281,59 @@ export const reviewShellFigmaImagesStyle = `
     border-color: var(--df-review-line);
   }
 
+  .df-review-figma-image-card.is-dragging {
+    opacity: 0.58;
+  }
+
+  .df-review-figma-image-card.is-drop-target {
+    border-color: var(--df-review-accent);
+    box-shadow: 0 0 0 3px rgba(124, 199, 255, 0.14);
+  }
+
   .df-review-figma-image-card.is-active {
     border-color: var(--df-review-accent);
     box-shadow: inset 0 0 0 1px var(--df-review-accent-hover), 0 0 0 3px rgba(124, 199, 255, 0.12);
   }
 
   .df-review-figma-image-card.is-editing {
-    grid-template-columns: 86px minmax(0, 1fr);
+    grid-template-columns: var(--df-review-control-height-md) 86px minmax(0, 1fr);
+  }
+
+  .df-review-figma-image-drag-handle {
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    height: 58px;
+    min-height: 58px;
+    border: 1px solid transparent;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-subtle);
+    background: transparent;
+    cursor: grab;
+  }
+
+  .df-review-figma-image-drag-handle:hover,
+  .df-review-figma-image-drag-handle:focus-visible {
+    border-color: var(--df-review-line);
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    outline: none;
+  }
+
+  .df-review-figma-image-drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .df-review-figma-image-drag-handle:disabled {
+    cursor: default;
+    opacity: 0.32;
+  }
+
+  .df-review-figma-image-drag-handle svg {
+    width: 16px;
+    height: 16px;
   }
 
   .df-review-figma-image-preview {

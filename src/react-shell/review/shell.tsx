@@ -401,6 +401,7 @@ export const ReviewShell = ({
     setSelectedImageId: setSelectedFigmaImageId,
     target: figmaImageTarget,
     toggleOverlayVisible: toggleFigmaImageOverlay,
+    updateImage: updateFigmaImage,
   } = useReviewFigmaImages({
     imageFormat: figmaImageFormat,
     pageUrl: activeRoute,
@@ -1868,6 +1869,7 @@ export const ReviewShell = ({
           onRefreshImages={refreshFigmaImages}
           onSelectImage={setSelectedFigmaImageId}
           onToggleOverlay={toggleFigmaImageOverlay}
+          onUpdateImage={updateFigmaImage}
         />
       )}
 

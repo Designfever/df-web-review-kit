@@ -5,7 +5,7 @@ export const reviewShellFigmaImagesStyle = `
     position: relative;
     z-index: 600;
     display: grid;
-    grid-template-rows: auto auto auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
     min-width: 0;
     min-height: 0;
     overflow: hidden;
@@ -82,6 +82,44 @@ export const reviewShellFigmaImagesStyle = `
     border-color: var(--df-review-accent);
     outline: 2px solid var(--df-review-focus-ring);
     outline-offset: 1px;
+  }
+
+  .df-review-figma-image-target-summary {
+    display: grid;
+    gap: var(--df-review-space-1);
+    padding: var(--df-review-space-2) var(--df-review-frame-gutter-x);
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background: color-mix(in srgb, var(--df-review-card) 68%, transparent);
+  }
+
+  .df-review-figma-image-target-summary div {
+    display: grid;
+    grid-template-columns: 16px 58px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--df-review-space-1-5);
+    min-width: 0;
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-xs);
+    line-height: 1.25;
+  }
+
+  .df-review-figma-image-target-summary svg {
+    width: 14px;
+    height: 14px;
+    color: var(--df-review-subtle);
+  }
+
+  .df-review-figma-image-target-summary span {
+    color: var(--df-review-subtle);
+  }
+
+  .df-review-figma-image-target-summary strong {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--df-review-text);
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .df-review-figma-image-url-row {
@@ -236,6 +274,10 @@ export const reviewShellFigmaImagesStyle = `
     box-shadow: inset 0 0 0 1px var(--df-review-accent-hover), 0 0 0 3px rgba(124, 199, 255, 0.12);
   }
 
+  .df-review-figma-image-card.is-editing {
+    grid-template-columns: 86px minmax(0, 1fr);
+  }
+
   .df-review-figma-image-preview {
     display: block;
     width: 86px;
@@ -258,6 +300,33 @@ export const reviewShellFigmaImagesStyle = `
     display: grid;
     gap: 3px;
     min-width: 0;
+  }
+
+  .df-review-figma-image-edit-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--df-review-control-height-md) var(--df-review-control-height-md);
+    align-items: center;
+    gap: var(--df-review-space-1);
+    min-width: 0;
+  }
+
+  .df-review-figma-image-edit-form input {
+    width: 100%;
+    height: var(--df-review-control-height-md);
+    min-width: 0;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 9px;
+    color: var(--df-review-text);
+    background: var(--df-review-bg);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-sm);
+  }
+
+  .df-review-figma-image-edit-form input:focus {
+    border-color: var(--df-review-accent);
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 1px;
   }
 
   .df-review-figma-image-card-main strong,
@@ -290,7 +359,11 @@ export const reviewShellFigmaImagesStyle = `
 
   .df-review-figma-image-card-actions {
     display: grid;
-    grid-template-columns: repeat(2, var(--df-review-control-height-md));
+    grid-template-columns: repeat(3, var(--df-review-control-height-md));
     gap: var(--df-review-space-1);
+  }
+
+  .df-review-figma-image-card.is-editing .df-review-figma-image-card-actions {
+    display: none;
   }
 `;

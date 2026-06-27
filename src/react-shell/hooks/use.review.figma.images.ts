@@ -54,6 +54,7 @@ export const useReviewFigmaImages = ({
     isMutating,
     moveImage,
     refreshImages,
+    updateImage,
   } = useReviewFigmaImageStoreController({
     imageFormat,
     store,
@@ -120,5 +121,6 @@ export const useReviewFigmaImages = ({
     toggleOverlayLocked,
     toggleOverlayMode,
     toggleOverlayVisible,
+    updateImage,
   };
 };

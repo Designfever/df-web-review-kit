@@ -194,6 +194,36 @@ export const useReviewFigmaImageStoreController = ({
     [imageList, images, store, targetKey]
   );
 
+  const updateImage = useCallback(
+    async (id: string, patch: { label?: string }) => {
+      if (!store) return null;
+
+      const previousImageList = imageList;
+      setIsMutating(true);
+
+      try {
+        const image = await store.updateImage(id, patch);
+        setImageList((currentList) => ({
+          images: sortReviewFigmaImages([
+            ...(currentList.targetKey === targetKey ? currentList.images : images)
+              .filter((currentImage) => currentImage.id !== image.id),
+            image,
+          ]),
+          targetKey,
+        }));
+        setError('');
+        return image;
+      } catch (updateError) {
+        setImageList(previousImageList);
+        setError(getReviewFigmaImageErrorMessage(updateError));
+        return null;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [imageList, images, store, targetKey]
+  );
+
   const moveImage = useCallback(
     async (id: string, direction: 'up' | 'down') => {
       if (!store) return;
@@ -242,6 +272,7 @@ export const useReviewFigmaImageStoreController = ({
     isMutating,
     moveImage,
     refreshImages,
+    updateImage,
   };
 };
 

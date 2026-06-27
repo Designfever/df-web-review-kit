@@ -2,11 +2,16 @@ import { useState } from 'react';
 import {
   ArrowDown as ArrowDownIcon,
   ArrowUp as ArrowUpIcon,
+  Check as CheckIcon,
+  FileText as PageIcon,
   ExternalLink as ExternalLinkIcon,
   Image as ImageIcon,
+  Monitor as ViewportIcon,
+  Pencil as PencilIcon,
   Plus as PlusIcon,
   RefreshCw as RefreshCwIcon,
   Trash2 as TrashIcon,
+  X as XIcon,
 } from 'lucide-react';
 import type { ReviewFigmaImage } from '../../figma/image.types';
 import type { ReviewFigmaRouteTarget } from '../../figma/image.types';
@@ -31,6 +36,10 @@ interface FigmaImagesPanelProps {
   onRefreshImages: () => Promise<ReviewFigmaImage[]>;
   onSelectImage: (id: string) => void;
   onToggleOverlay: () => void;
+  onUpdateImage: (
+    id: string,
+    patch: { label?: string }
+  ) => Promise<ReviewFigmaImage | null>;
 }
 
 export const FigmaImagesPanel = ({
@@ -50,9 +59,12 @@ export const FigmaImagesPanel = ({
   onRefreshImages,
   onSelectImage,
   onToggleOverlay,
+  onUpdateImage,
 }: FigmaImagesPanelProps) => {
   const [figmaUrlDraft, setFigmaUrlDraft] = useState('');
   const [labelDraft, setLabelDraft] = useState('');
+  const [editingImageId, setEditingImageId] = useState<string | null>(null);
+  const [editingLabelDraft, setEditingLabelDraft] = useState('');
   const selectedImage = images.find((image) => image.id === selectedImageId);
   const canShowOverlay = Boolean(selectedImage);
   const statusText = error
@@ -122,6 +134,19 @@ export const FigmaImagesPanel = ({
         </div>
       </form>
 
+      <div className="df-review-figma-image-target-summary">
+        <div>
+          <PageIcon aria-hidden="true" />
+          <span>Page</span>
+          <strong>{target.pageUrl}</strong>
+        </div>
+        <div>
+          <ViewportIcon aria-hidden="true" />
+          <span>Viewport</span>
+          <strong>{getFigmaTargetViewportLabel(target)}</strong>
+        </div>
+      </div>
+
       <div className="df-review-figma-image-overlay-controls">
         <button
           aria-pressed={isOverlayVisible}
@@ -168,7 +193,7 @@ export const FigmaImagesPanel = ({
           <article
             className={`df-review-figma-image-card${
               image.id === selectedImageId ? ' is-active' : ''
-            }`}
+            }${editingImageId === image.id ? ' is-editing' : ''}`}
             key={image.id}
           >
             <button
@@ -180,7 +205,57 @@ export const FigmaImagesPanel = ({
               <img alt="" draggable={false} src={image.imageUrl} />
             </button>
             <div className="df-review-figma-image-card-main">
-              <strong>{getFigmaImageLabel(image, index)}</strong>
+              {editingImageId === image.id ? (
+                <form
+                  className="df-review-figma-image-edit-form"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void onUpdateImage(image.id, {
+                      label: editingLabelDraft,
+                    }).then((updatedImage) => {
+                      if (!updatedImage) return;
+                      setEditingImageId(null);
+                      setEditingLabelDraft('');
+                    });
+                  }}
+                >
+                  <input
+                    aria-label="Selected Figma image label"
+                    autoComplete="off"
+                    autoFocus
+                    placeholder="Label"
+                    spellCheck={false}
+                    value={editingLabelDraft}
+                    onChange={(event) =>
+                      setEditingLabelDraft(event.currentTarget.value)
+                    }
+                  />
+                  <button
+                    aria-label="Save Figma image label"
+                    className="df-review-figma-image-icon-button"
+                    disabled={isMutating}
+                    title="Save"
+                    type="submit"
+                  >
+                    <CheckIcon aria-hidden="true" />
+                  </button>
+                  <button
+                    aria-label="Cancel Figma image label edit"
+                    className="df-review-figma-image-icon-button"
+                    disabled={isMutating}
+                    title="Cancel"
+                    type="button"
+                    onClick={() => {
+                      setEditingImageId(null);
+                      setEditingLabelDraft('');
+                    }}
+                  >
+                    <XIcon aria-hidden="true" />
+                  </button>
+                </form>
+              ) : (
+                <strong>{getFigmaImageLabel(image, index)}</strong>
+              )}
               <span>{image.nodeId}</span>
               <small>
                 {image.imageFormat.toUpperCase()} /{' '}
@@ -188,6 +263,20 @@ export const FigmaImagesPanel = ({
               </small>
             </div>
             <div className="df-review-figma-image-card-actions">
+              <button
+                aria-label={`Edit ${getFigmaImageLabel(image, index)} label`}
+                className="df-review-figma-image-icon-button"
+                disabled={isMutating}
+                title="Edit label"
+                type="button"
+                onClick={() => {
+                  onSelectImage(image.id);
+                  setEditingImageId(image.id);
+                  setEditingLabelDraft(image.label ?? '');
+                }}
+              >
+                <PencilIcon aria-hidden="true" />
+              </button>
               <button
                 aria-label="Move Figma image up"
                 className="df-review-figma-image-icon-button"
@@ -234,6 +323,17 @@ export const FigmaImagesPanel = ({
 
 function getFigmaImageLabel(image: ReviewFigmaImage, index: number) {
   return image.label?.trim() || `Image ${index + 1}`;
+}
+
+function getFigmaTargetViewportLabel(target: ReviewFigmaRouteTarget) {
+  const label = target.viewport?.label?.trim() || target.viewport?.scope;
+  const size =
+    typeof target.viewport?.width === 'number' &&
+    typeof target.viewport?.height === 'number'
+      ? `${target.viewport.width}x${target.viewport.height}`
+      : '';
+
+  return [label, size].filter(Boolean).join(' / ') || 'Viewport';
 }
 
 function formatFigmaImageDate(value: string) {

@@ -5,7 +5,7 @@ export const reviewShellFigmaImagesStyle = `
     position: relative;
     z-index: 600;
     display: grid;
-    grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto minmax(0, 1fr);
     min-width: 0;
     min-height: 0;
     overflow: hidden;
@@ -171,6 +171,13 @@ export const reviewShellFigmaImagesStyle = `
     background: var(--df-review-danger-soft);
   }
 
+  .df-review-figma-image-icon-button.is-active {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
+  }
+
   .df-review-figma-image-icon-button.is-order-fallback {
     opacity: 0.58;
   }
@@ -242,6 +249,7 @@ export const reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-status {
+    grid-row: 4;
     margin: 0;
     padding: var(--df-review-space-2) var(--df-review-frame-gutter-x);
     border-bottom: 1px solid var(--df-review-line-soft);
@@ -256,6 +264,7 @@ export const reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-list {
+    grid-row: 5;
     display: grid;
     align-content: start;
     gap: var(--df-review-space-2);
@@ -266,7 +275,10 @@ export const reviewShellFigmaImagesStyle = `
 
   .df-review-figma-image-card {
     display: grid;
-    grid-template-columns: var(--df-review-control-height-md) 86px minmax(0, 1fr) auto;
+    grid-template-columns: var(--df-review-control-height-md) var(--df-review-control-height-md) 64px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "drag eye preview main actions"
+      "drag eye controls controls controls";
     align-items: center;
     gap: var(--df-review-space-2);
     min-width: 0;
@@ -296,16 +308,18 @@ export const reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-card.is-editing {
-    grid-template-columns: var(--df-review-control-height-md) 86px minmax(0, 1fr);
+    grid-template-columns: var(--df-review-control-height-md) var(--df-review-control-height-md) 64px minmax(0, 1fr);
+    grid-template-areas: "drag eye preview main";
   }
 
   .df-review-figma-image-drag-handle {
+    grid-area: drag;
     display: inline-grid;
     place-items: center;
     width: var(--df-review-control-height-md);
     min-width: var(--df-review-control-height-md);
-    height: 58px;
-    min-height: 58px;
+    height: 100%;
+    min-height: 72px;
     border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
     padding: 0;
@@ -336,10 +350,49 @@ export const reviewShellFigmaImagesStyle = `
     height: 16px;
   }
 
+  .df-review-figma-image-layer-toggle {
+    grid-area: eye;
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-muted);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+  }
+
+  .df-review-figma-image-layer-toggle.is-visible {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
+  }
+
+  .df-review-figma-image-layer-toggle.is-hidden {
+    color: var(--df-review-subtle);
+  }
+
+  .df-review-figma-image-layer-toggle:hover {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+  }
+
+  .df-review-figma-image-layer-toggle svg {
+    width: 15px;
+    height: 15px;
+  }
+
   .df-review-figma-image-preview {
+    grid-area: preview;
     display: block;
-    width: 86px;
-    height: 58px;
+    width: 64px;
+    height: 46px;
     overflow: hidden;
     border: 1px solid var(--df-review-line);
     border-radius: var(--df-review-radius-sm);
@@ -355,6 +408,7 @@ export const reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-card-main {
+    grid-area: main;
     display: grid;
     gap: 3px;
     min-width: 0;
@@ -416,12 +470,82 @@ export const reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-card-actions {
+    grid-area: actions;
     display: grid;
     grid-template-columns: repeat(3, var(--df-review-control-height-md));
     gap: var(--df-review-space-1);
   }
 
+  .df-review-figma-image-layer-controls {
+    grid-area: controls;
+    display: grid;
+    grid-template-columns: minmax(78px, 1fr) var(--df-review-control-height-md) var(--df-review-control-height-md) minmax(54px, 64px);
+    align-items: center;
+    gap: var(--df-review-space-1);
+    min-width: 0;
+  }
+
+  .df-review-figma-image-opacity-control {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--df-review-space-1);
+    min-width: 0;
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-2xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .df-review-figma-image-opacity-control input[type="range"] {
+    width: 100%;
+    min-width: 0;
+    accent-color: var(--df-review-accent);
+  }
+
+  .df-review-figma-image-offset-control {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    height: var(--df-review-control-height-md);
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 5px;
+    color: var(--df-review-muted);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+  }
+
+  .df-review-figma-image-offset-control svg {
+    width: 14px;
+    height: 14px;
+    color: var(--df-review-subtle);
+  }
+
+  .df-review-figma-image-offset-control input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    color: var(--df-review-text);
+    background: transparent;
+    font-size: var(--df-review-font-size-xs);
+    font-variant-numeric: tabular-nums;
+    outline: none;
+  }
+
+  .df-review-figma-image-offset-control:focus-within {
+    border-color: var(--df-review-accent);
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 1px;
+  }
+
   .df-review-figma-image-card.is-editing .df-review-figma-image-card-actions {
+    display: none;
+  }
+
+  .df-review-figma-image-card.is-editing .df-review-figma-image-layer-controls {
     display: none;
   }
 `;

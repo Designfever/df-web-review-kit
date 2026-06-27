@@ -3,28 +3,38 @@ import {
   ArrowDown as ArrowDownIcon,
   ArrowUp as ArrowUpIcon,
   Check as CheckIcon,
+  Contrast as InvertIcon,
+  Eye as EyeIcon,
+  EyeOff as EyeOffIcon,
   FileText as PageIcon,
   ExternalLink as ExternalLinkIcon,
   GripVertical as DragHandleIcon,
-  Image as ImageIcon,
+  Lock as LockIcon,
   Monitor as ViewportIcon,
+  MoveVertical as OffsetYIcon,
   Pencil as PencilIcon,
   Plus as PlusIcon,
   RefreshCw as RefreshCwIcon,
   Trash2 as TrashIcon,
+  Unlock as UnlockIcon,
   X as XIcon,
 } from 'lucide-react';
 import type { ReviewFigmaImage } from '../../figma/image.types';
 import type { ReviewFigmaRouteTarget } from '../../figma/image.types';
+import type {
+  ReviewFigmaImageOverlayItemState,
+} from './image.controller';
+import {
+  DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
+} from './image.controller';
 
 interface FigmaImagesPanelProps {
   error: string;
   images: ReviewFigmaImage[];
+  imageOverlayStates: Record<string, ReviewFigmaImageOverlayItemState>;
   isListVisible: boolean;
   isLoading: boolean;
   isMutating: boolean;
-  isOverlayVisible: boolean;
-  overlayOpacity: number;
   selectedImageId: string | null;
   target: ReviewFigmaRouteTarget;
   onAddImage: (
@@ -33,11 +43,14 @@ interface FigmaImagesPanelProps {
   ) => Promise<ReviewFigmaImage | null>;
   onDeleteImage: (id: string) => Promise<void>;
   onMoveImage: (id: string, direction: 'up' | 'down') => Promise<void>;
-  onOverlayOpacityChange: (opacity: number) => void;
   onRefreshImages: () => Promise<ReviewFigmaImage[]>;
   onReorderImages: (imageIds: string[]) => Promise<void>;
   onSelectImage: (id: string) => void;
-  onToggleOverlay: () => void;
+  onSetImageOverlayOffsetY: (id: string, offsetY: number) => void;
+  onSetImageOverlayOpacity: (id: string, opacity: number) => void;
+  onToggleImageOverlayLocked: (id: string) => void;
+  onToggleImageOverlayMode: (id: string) => void;
+  onToggleImageOverlayVisible: (id: string) => void;
   onUpdateImage: (
     id: string,
     patch: { label?: string }
@@ -47,21 +60,23 @@ interface FigmaImagesPanelProps {
 export const FigmaImagesPanel = ({
   error,
   images,
+  imageOverlayStates,
   isListVisible,
   isLoading,
   isMutating,
-  isOverlayVisible,
-  overlayOpacity,
   selectedImageId,
   target,
   onAddImage,
   onDeleteImage,
   onMoveImage,
-  onOverlayOpacityChange,
   onRefreshImages,
   onReorderImages,
   onSelectImage,
-  onToggleOverlay,
+  onSetImageOverlayOffsetY,
+  onSetImageOverlayOpacity,
+  onToggleImageOverlayLocked,
+  onToggleImageOverlayMode,
+  onToggleImageOverlayVisible,
   onUpdateImage,
 }: FigmaImagesPanelProps) => {
   const [figmaUrlDraft, setFigmaUrlDraft] = useState('');
@@ -70,8 +85,9 @@ export const FigmaImagesPanel = ({
   const [editingLabelDraft, setEditingLabelDraft] = useState('');
   const [draggingImageId, setDraggingImageId] = useState<string | null>(null);
   const [dragOverImageId, setDragOverImageId] = useState<string | null>(null);
-  const selectedImage = images.find((image) => image.id === selectedImageId);
-  const canShowOverlay = Boolean(selectedImage);
+  const [offsetYDraftByImageId, setOffsetYDraftByImageId] = useState<
+    Record<string, string>
+  >({});
   const statusText = error
     ? error
     : isMutating
@@ -152,34 +168,6 @@ export const FigmaImagesPanel = ({
         </div>
       </div>
 
-      <div className="df-review-figma-image-overlay-controls">
-        <button
-          aria-pressed={isOverlayVisible}
-          className={isOverlayVisible ? 'is-active' : undefined}
-          disabled={!canShowOverlay}
-          type="button"
-          onClick={onToggleOverlay}
-        >
-          <ImageIcon aria-hidden="true" />
-          <span>Overlay</span>
-        </button>
-        <label>
-          <span>{Math.round(overlayOpacity * 100)}%</span>
-          <input
-            aria-label="Figma overlay opacity"
-            disabled={!canShowOverlay}
-            max="1"
-            min="0.08"
-            step="0.04"
-            type="range"
-            value={overlayOpacity}
-            onChange={(event) =>
-              onOverlayOpacityChange(Number(event.currentTarget.value))
-            }
-          />
-        </label>
-      </div>
-
       {statusText && (
         <p
           className={`df-review-figma-image-status${
@@ -196,6 +184,10 @@ export const FigmaImagesPanel = ({
         )}
         {images.map((image, index) => {
           const imageLabel = getFigmaImageLabel(image, index);
+          const overlayState =
+            imageOverlayStates[image.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE;
+          const offsetYDraft =
+            offsetYDraftByImageId[image.id] ?? String(overlayState.offsetY);
           const isDragging = draggingImageId === image.id;
           const isDropTarget =
             dragOverImageId === image.id && draggingImageId !== image.id;
@@ -262,6 +254,25 @@ export const FigmaImagesPanel = ({
                 }}
               >
                 <DragHandleIcon aria-hidden="true" />
+              </button>
+              <button
+                aria-label={
+                  overlayState.isVisible
+                    ? `Hide ${imageLabel} overlay`
+                    : `Show ${imageLabel} overlay`
+                }
+                className={`df-review-figma-image-layer-toggle${
+                  overlayState.isVisible ? ' is-visible' : ' is-hidden'
+                }`}
+                title={overlayState.isVisible ? 'Hide overlay' : 'Show overlay'}
+                type="button"
+                onClick={() => onToggleImageOverlayVisible(image.id)}
+              >
+                {overlayState.isVisible ? (
+                  <EyeIcon aria-hidden="true" />
+                ) : (
+                  <EyeOffIcon aria-hidden="true" />
+                )}
               </button>
               <button
                 aria-label={`Select ${imageLabel}`}
@@ -383,12 +394,103 @@ export const FigmaImagesPanel = ({
                   <ArrowDownIcon aria-hidden="true" />
                 </button>
               </div>
+              <div className="df-review-figma-image-layer-controls">
+                <label className="df-review-figma-image-opacity-control">
+                  <span>{Math.round(overlayState.opacity * 100)}%</span>
+                  <input
+                    aria-label={`${imageLabel} overlay opacity`}
+                    max="1"
+                    min="0.08"
+                    step="0.04"
+                    type="range"
+                    value={overlayState.opacity}
+                    onChange={(event) =>
+                      onSetImageOverlayOpacity(
+                        image.id,
+                        Number(event.currentTarget.value)
+                      )
+                    }
+                  />
+                </label>
+                <button
+                  aria-label={
+                    overlayState.mode === 'invert'
+                      ? `Disable ${imageLabel} invert`
+                      : `Enable ${imageLabel} invert`
+                  }
+                  aria-pressed={overlayState.mode === 'invert'}
+                  className={`df-review-figma-image-icon-button${
+                    overlayState.mode === 'invert' ? ' is-active' : ''
+                  }`}
+                  title="Invert"
+                  type="button"
+                  onClick={() => onToggleImageOverlayMode(image.id)}
+                >
+                  <InvertIcon aria-hidden="true" />
+                </button>
+                <button
+                  aria-label={
+                    overlayState.isLocked
+                      ? `Unlock ${imageLabel} overlay`
+                      : `Lock ${imageLabel} overlay`
+                  }
+                  aria-pressed={overlayState.isLocked}
+                  className={`df-review-figma-image-icon-button${
+                    overlayState.isLocked ? ' is-active' : ''
+                  }`}
+                  title={overlayState.isLocked ? 'Unlock' : 'Lock'}
+                  type="button"
+                  onClick={() => onToggleImageOverlayLocked(image.id)}
+                >
+                  {overlayState.isLocked ? (
+                    <LockIcon aria-hidden="true" />
+                  ) : (
+                    <UnlockIcon aria-hidden="true" />
+                  )}
+                </button>
+                <label className="df-review-figma-image-offset-control">
+                  <OffsetYIcon aria-hidden="true" />
+                  <input
+                    aria-label={`${imageLabel} overlay Y offset`}
+                    inputMode="numeric"
+                    step="1"
+                    type="number"
+                    value={offsetYDraft}
+                    onBlur={() => {
+                      setOffsetYDraftByImageId((currentDrafts) => {
+                        const nextDrafts = { ...currentDrafts };
+                        delete nextDrafts[image.id];
+                        return nextDrafts;
+                      });
+                    }}
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
+                      const offsetY = Number(value);
+                      setOffsetYDraftByImageId((currentDrafts) => ({
+                        ...currentDrafts,
+                        [image.id]: value,
+                      }));
+                      if (value.trim() !== '' && Number.isFinite(offsetY)) {
+                        onSetImageOverlayOffsetY(image.id, offsetY);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
             </article>
           );
         })}
       </div>
     </aside>
   );
+};
+
+const DEFAULT_FIGMA_IMAGE_LAYER_STATE: ReviewFigmaImageOverlayItemState = {
+  isLocked: false,
+  isVisible: false,
+  mode: 'normal',
+  offsetY: 0,
+  opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
 };
 
 function getFigmaImageLabel(image: ReviewFigmaImage, index: number) {

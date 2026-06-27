@@ -11,18 +11,20 @@ import { RulerGutters } from '../ruler/gutters';
 import { RulerOverlay } from '../ruler/overlay';
 
 type ReviewTargetFigmaImageOverlay = {
+  id: string;
   imageUrl: string;
   isLocked?: boolean;
   label?: string;
   mode?: 'normal' | 'invert';
   offsetY?: number;
   opacity: number;
+  zIndex: number;
 };
 
 interface ReviewTargetFrameProps {
   canWriteArea: boolean;
   canWriteDom: boolean;
-  figmaImageOverlay: ReviewTargetFigmaImageOverlay | null;
+  figmaImageOverlays: ReviewTargetFigmaImageOverlay[];
   frameScrollRef: RefObject<HTMLDivElement | null>;
   figmaFrameUrl: string | null;
   iframeRef: RefObject<HTMLIFrameElement | null>;
@@ -46,7 +48,7 @@ interface ReviewTargetFrameProps {
 export const ReviewTargetFrame = ({
   canWriteArea,
   canWriteDom,
-  figmaImageOverlay,
+  figmaImageOverlays,
   frameScrollRef,
   figmaFrameUrl,
   iframeRef,
@@ -107,10 +109,11 @@ export const ReviewTargetFrame = ({
                     title="Review target"
                     onLoad={onLoadTarget}
                   />
-                  {figmaImageOverlay && (
+                  {figmaImageOverlays.map((figmaImageOverlay) => (
                     <div
                       aria-label={figmaImageOverlay.label}
                       className="df-review-figma-image-stage-overlay"
+                      key={figmaImageOverlay.id}
                       role="img"
                       style={{
                         filter:
@@ -124,11 +127,12 @@ export const ReviewTargetFrame = ({
                         transform: figmaImageOverlay.offsetY
                           ? `translate3d(0, ${figmaImageOverlay.offsetY}px, 0)`
                           : undefined,
+                        zIndex: figmaImageOverlay.zIndex,
                       }}
                     >
                       <img alt="" draggable={false} src={figmaImageOverlay.imageUrl} />
                     </div>
-                  )}
+                  ))}
                   {showRuler && (
                     <RulerOverlay
                       iframeRef={iframeRef}

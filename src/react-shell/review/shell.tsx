@@ -385,23 +385,21 @@ export const ReviewShell = ({
     addImage: addFigmaImage,
     deleteImage: deleteFigmaImage,
     error: figmaImageError,
+    imageOverlayStates: figmaImageOverlayStates,
     images: figmaImageList,
     isLoading: isFigmaImageLoading,
     isMutating: isFigmaImageMutating,
-    isOverlayLocked: isFigmaImageOverlayLocked,
-    isOverlayVisible: isFigmaImageOverlayVisible,
     moveImage: moveFigmaImage,
-    overlayMode: figmaImageOverlayMode,
-    overlayOffsetY: figmaImageOverlayOffsetY,
-    overlayOpacity: figmaImageOverlayOpacity,
     refreshImages: refreshFigmaImages,
     reorderImages: reorderFigmaImages,
-    selectedImage: selectedFigmaImage,
     selectedImageId: selectedFigmaImageId,
-    setOverlayOpacity: setFigmaImageOverlayOpacity,
+    setImageOverlayOffsetY: setFigmaImageOverlayOffsetY,
+    setImageOverlayOpacity: setFigmaImageOverlayOpacity,
     setSelectedImageId: setSelectedFigmaImageId,
     target: figmaImageTarget,
-    toggleOverlayVisible: toggleFigmaImageOverlay,
+    toggleImageOverlayLocked: toggleFigmaImageOverlayLocked,
+    toggleImageOverlayMode: toggleFigmaImageOverlayMode,
+    toggleImageOverlayVisible: toggleFigmaImageOverlayVisible,
     updateImage: updateFigmaImage,
   } = useReviewFigmaImages({
     imageFormat: figmaImageFormat,
@@ -1613,17 +1611,23 @@ export const ReviewShell = ({
       onToast: showToast,
     });
 
-  const figmaImageOverlay =
-    selectedFigmaImage && isFigmaImageOverlayVisible
-      ? {
-          imageUrl: selectedFigmaImage.imageUrl,
-          isLocked: isFigmaImageOverlayLocked,
-          label: selectedFigmaImage.label ?? selectedFigmaImage.nodeId,
-          mode: figmaImageOverlayMode,
-          offsetY: figmaImageOverlayOffsetY,
-          opacity: figmaImageOverlayOpacity,
-        }
-      : null;
+  const figmaImageOverlays = figmaImageList.flatMap((image, index) => {
+    const overlayState = figmaImageOverlayStates[image.id];
+    if (!overlayState?.isVisible) return [];
+
+    return [
+      {
+        id: image.id,
+        imageUrl: image.imageUrl,
+        isLocked: overlayState.isLocked,
+        label: image.label ?? image.nodeId,
+        mode: overlayState.mode,
+        offsetY: overlayState.offsetY,
+        opacity: overlayState.opacity,
+        zIndex: figmaImageList.length - index,
+      },
+    ];
+  });
 
   return (
     <div
@@ -1855,22 +1859,24 @@ export const ReviewShell = ({
       {isFigmaImageManagementEnabled && (
         <FigmaImagesPanel
           error={figmaImageError}
+          imageOverlayStates={figmaImageOverlayStates}
           images={figmaImageList}
           isListVisible={isFigmaImagesPanelVisible}
           isLoading={isFigmaImageLoading}
           isMutating={isFigmaImageMutating}
-          isOverlayVisible={isFigmaImageOverlayVisible}
-          overlayOpacity={figmaImageOverlayOpacity}
           selectedImageId={selectedFigmaImageId}
           target={figmaImageTarget}
           onAddImage={addFigmaImage}
           onDeleteImage={deleteFigmaImage}
           onMoveImage={moveFigmaImage}
-          onOverlayOpacityChange={setFigmaImageOverlayOpacity}
           onRefreshImages={refreshFigmaImages}
           onReorderImages={reorderFigmaImages}
           onSelectImage={setSelectedFigmaImageId}
-          onToggleOverlay={toggleFigmaImageOverlay}
+          onSetImageOverlayOffsetY={setFigmaImageOverlayOffsetY}
+          onSetImageOverlayOpacity={setFigmaImageOverlayOpacity}
+          onToggleImageOverlayLocked={toggleFigmaImageOverlayLocked}
+          onToggleImageOverlayMode={toggleFigmaImageOverlayMode}
+          onToggleImageOverlayVisible={toggleFigmaImageOverlayVisible}
           onUpdateImage={updateFigmaImage}
         />
       )}
@@ -1905,7 +1911,7 @@ export const ReviewShell = ({
       <ReviewTargetFrame
         canWriteArea={canWriteArea}
         canWriteDom={canWriteDom}
-        figmaImageOverlay={figmaImageOverlay}
+        figmaImageOverlays={figmaImageOverlays}
         figmaFrameUrl={figmaFrameUrl}
         frameScrollRef={frameScrollRef}
         iframeRef={iframeRef}

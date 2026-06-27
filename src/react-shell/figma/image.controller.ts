@@ -391,6 +391,16 @@ export const useReviewFigmaImageOverlayController = ({
     state,
     state.selectedImageId
   );
+  const imageOverlayStates = useMemo(
+    () =>
+      Object.fromEntries(
+        images.map((image) => [
+          image.id,
+          getReviewFigmaImageOverlayItemState(state, image.id),
+        ])
+      ),
+    [images, state]
+  );
 
   const setSelectedImageId = useCallback((selectedImageId: string | null) => {
     updateState((currentState) => ({
@@ -398,6 +408,26 @@ export const useReviewFigmaImageOverlayController = ({
       selectedImageId,
     }));
   }, [updateState]);
+
+  const updateImageOverlayState = useCallback(
+    (
+      imageId: string,
+      updater: (
+        itemState: ReviewFigmaImageOverlayItemState
+      ) => ReviewFigmaImageOverlayItemState
+    ) => {
+      updateState((currentState) => ({
+        ...currentState,
+        selectedImageId: imageId,
+        imageStates: updateReviewFigmaImageOverlayItemState(
+          currentState.imageStates,
+          imageId,
+          updater
+        ),
+      }));
+    },
+    [updateState]
+  );
 
   const showImage = useCallback((selectedImageId: string) => {
     updateState((currentState) => ({
@@ -413,6 +443,56 @@ export const useReviewFigmaImageOverlayController = ({
       ),
     }));
   }, [updateState]);
+
+  const toggleImageOverlayVisible = useCallback(
+    (imageId: string) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        isVisible: !itemState.isVisible,
+      }));
+    },
+    [updateImageOverlayState]
+  );
+
+  const setImageOverlayOpacity = useCallback(
+    (imageId: string, opacity: number) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        opacity: clampReviewFigmaImageOverlayOpacity(opacity),
+      }));
+    },
+    [updateImageOverlayState]
+  );
+
+  const toggleImageOverlayLocked = useCallback(
+    (imageId: string) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        isLocked: !itemState.isLocked,
+      }));
+    },
+    [updateImageOverlayState]
+  );
+
+  const toggleImageOverlayMode = useCallback(
+    (imageId: string) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        mode: itemState.mode === 'invert' ? 'normal' : 'invert',
+      }));
+    },
+    [updateImageOverlayState]
+  );
+
+  const setImageOverlayOffsetY = useCallback(
+    (imageId: string, offsetY: number) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY),
+      }));
+    },
+    [updateImageOverlayState]
+  );
 
   const toggleOverlayVisible = useCallback(() => {
     updateState((currentState) => {
@@ -539,6 +619,7 @@ export const useReviewFigmaImageOverlayController = ({
   }, [updateState]);
 
   return {
+    imageOverlayStates,
     isOverlayVisible: selectedImageOverlayState.isVisible,
     overlayMode: selectedImageOverlayState.mode,
     overlayOffsetY: selectedImageOverlayState.offsetY,
@@ -555,6 +636,11 @@ export const useReviewFigmaImageOverlayController = ({
     showImage,
     state,
     target,
+    toggleImageOverlayLocked,
+    toggleImageOverlayMode,
+    toggleImageOverlayVisible,
+    setImageOverlayOffsetY,
+    setImageOverlayOpacity,
     toggleOverlayLocked,
     toggleOverlayMode,
     toggleOverlayVisible,

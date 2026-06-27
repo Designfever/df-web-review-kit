@@ -2732,7 +2732,7 @@ var reviewShellFigmaImagesStyle = `
     position: relative;
     z-index: 600;
     display: grid;
-    grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto minmax(0, 1fr);
     min-width: 0;
     min-height: 0;
     overflow: hidden;
@@ -2898,6 +2898,13 @@ var reviewShellFigmaImagesStyle = `
     background: var(--df-review-danger-soft);
   }
 
+  .df-review-figma-image-icon-button.is-active {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
+  }
+
   .df-review-figma-image-icon-button.is-order-fallback {
     opacity: 0.58;
   }
@@ -2969,6 +2976,7 @@ var reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-status {
+    grid-row: 4;
     margin: 0;
     padding: var(--df-review-space-2) var(--df-review-frame-gutter-x);
     border-bottom: 1px solid var(--df-review-line-soft);
@@ -2983,6 +2991,7 @@ var reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-list {
+    grid-row: 5;
     display: grid;
     align-content: start;
     gap: var(--df-review-space-2);
@@ -2993,7 +3002,10 @@ var reviewShellFigmaImagesStyle = `
 
   .df-review-figma-image-card {
     display: grid;
-    grid-template-columns: var(--df-review-control-height-md) 86px minmax(0, 1fr) auto;
+    grid-template-columns: var(--df-review-control-height-md) var(--df-review-control-height-md) 64px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "drag eye preview main actions"
+      "drag eye controls controls controls";
     align-items: center;
     gap: var(--df-review-space-2);
     min-width: 0;
@@ -3023,16 +3035,18 @@ var reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-card.is-editing {
-    grid-template-columns: var(--df-review-control-height-md) 86px minmax(0, 1fr);
+    grid-template-columns: var(--df-review-control-height-md) var(--df-review-control-height-md) 64px minmax(0, 1fr);
+    grid-template-areas: "drag eye preview main";
   }
 
   .df-review-figma-image-drag-handle {
+    grid-area: drag;
     display: inline-grid;
     place-items: center;
     width: var(--df-review-control-height-md);
     min-width: var(--df-review-control-height-md);
-    height: 58px;
-    min-height: 58px;
+    height: 100%;
+    min-height: 72px;
     border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
     padding: 0;
@@ -3063,10 +3077,49 @@ var reviewShellFigmaImagesStyle = `
     height: 16px;
   }
 
+  .df-review-figma-image-layer-toggle {
+    grid-area: eye;
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-muted);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+  }
+
+  .df-review-figma-image-layer-toggle.is-visible {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
+  }
+
+  .df-review-figma-image-layer-toggle.is-hidden {
+    color: var(--df-review-subtle);
+  }
+
+  .df-review-figma-image-layer-toggle:hover {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+  }
+
+  .df-review-figma-image-layer-toggle svg {
+    width: 15px;
+    height: 15px;
+  }
+
   .df-review-figma-image-preview {
+    grid-area: preview;
     display: block;
-    width: 86px;
-    height: 58px;
+    width: 64px;
+    height: 46px;
     overflow: hidden;
     border: 1px solid var(--df-review-line);
     border-radius: var(--df-review-radius-sm);
@@ -3082,6 +3135,7 @@ var reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-card-main {
+    grid-area: main;
     display: grid;
     gap: 3px;
     min-width: 0;
@@ -3143,12 +3197,82 @@ var reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-card-actions {
+    grid-area: actions;
     display: grid;
     grid-template-columns: repeat(3, var(--df-review-control-height-md));
     gap: var(--df-review-space-1);
   }
 
+  .df-review-figma-image-layer-controls {
+    grid-area: controls;
+    display: grid;
+    grid-template-columns: minmax(78px, 1fr) var(--df-review-control-height-md) var(--df-review-control-height-md) minmax(54px, 64px);
+    align-items: center;
+    gap: var(--df-review-space-1);
+    min-width: 0;
+  }
+
+  .df-review-figma-image-opacity-control {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--df-review-space-1);
+    min-width: 0;
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-2xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .df-review-figma-image-opacity-control input[type="range"] {
+    width: 100%;
+    min-width: 0;
+    accent-color: var(--df-review-accent);
+  }
+
+  .df-review-figma-image-offset-control {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    height: var(--df-review-control-height-md);
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 5px;
+    color: var(--df-review-muted);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+  }
+
+  .df-review-figma-image-offset-control svg {
+    width: 14px;
+    height: 14px;
+    color: var(--df-review-subtle);
+  }
+
+  .df-review-figma-image-offset-control input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    color: var(--df-review-text);
+    background: transparent;
+    font-size: var(--df-review-font-size-xs);
+    font-variant-numeric: tabular-nums;
+    outline: none;
+  }
+
+  .df-review-figma-image-offset-control:focus-within {
+    border-color: var(--df-review-accent);
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 1px;
+  }
+
   .df-review-figma-image-card.is-editing .df-review-figma-image-card-actions {
+    display: none;
+  }
+
+  .df-review-figma-image-card.is-editing .df-review-figma-image-layer-controls {
     display: none;
   }
 `;
@@ -4422,31 +4546,38 @@ var __iconNode7 = [
 ];
 var CodeXml = createLucideIcon("code-xml", __iconNode7);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/copy.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/contrast.mjs
 var __iconNode8 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M12 18a6 6 0 0 0 0-12v12z", key: "j4l70d" }]
+];
+var Contrast = createLucideIcon("contrast", __iconNode8);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/copy.mjs
+var __iconNode9 = [
   ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
   ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
 ];
-var Copy = createLucideIcon("copy", __iconNode8);
+var Copy = createLucideIcon("copy", __iconNode9);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/database.mjs
-var __iconNode9 = [
+var __iconNode10 = [
   ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
   ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
   ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-var Database = createLucideIcon("database", __iconNode9);
+var Database = createLucideIcon("database", __iconNode10);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/external-link.mjs
-var __iconNode10 = [
+var __iconNode11 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "M10 14 21 3", key: "gplh6r" }],
   ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
 ];
-var ExternalLink = createLucideIcon("external-link", __iconNode10);
+var ExternalLink = createLucideIcon("external-link", __iconNode11);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye-off.mjs
-var __iconNode11 = [
+var __iconNode12 = [
   [
     "path",
     {
@@ -4464,10 +4595,10 @@ var __iconNode11 = [
   ],
   ["path", { d: "m2 2 20 20", key: "1ooewy" }]
 ];
-var EyeOff = createLucideIcon("eye-off", __iconNode11);
+var EyeOff = createLucideIcon("eye-off", __iconNode12);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye.mjs
-var __iconNode12 = [
+var __iconNode13 = [
   [
     "path",
     {
@@ -4477,10 +4608,10 @@ var __iconNode12 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Eye = createLucideIcon("eye", __iconNode12);
+var Eye = createLucideIcon("eye", __iconNode13);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/file-text.mjs
-var __iconNode13 = [
+var __iconNode14 = [
   [
     "path",
     {
@@ -4493,10 +4624,10 @@ var __iconNode13 = [
   ["path", { d: "M16 13H8", key: "t4e002" }],
   ["path", { d: "M16 17H8", key: "z1uh3a" }]
 ];
-var FileText = createLucideIcon("file-text", __iconNode13);
+var FileText = createLucideIcon("file-text", __iconNode14);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/grip-vertical.mjs
-var __iconNode14 = [
+var __iconNode15 = [
   ["circle", { cx: "9", cy: "12", r: "1", key: "1vctgf" }],
   ["circle", { cx: "9", cy: "5", r: "1", key: "hp0tcf" }],
   ["circle", { cx: "9", cy: "19", r: "1", key: "fkjjf6" }],
@@ -4504,52 +4635,66 @@ var __iconNode14 = [
   ["circle", { cx: "15", cy: "5", r: "1", key: "19l28e" }],
   ["circle", { cx: "15", cy: "19", r: "1", key: "f4zoj3" }]
 ];
-var GripVertical = createLucideIcon("grip-vertical", __iconNode14);
+var GripVertical = createLucideIcon("grip-vertical", __iconNode15);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
-var __iconNode15 = [
+var __iconNode16 = [
   ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
   ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
   ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
 ];
-var Image = createLucideIcon("image", __iconNode15);
+var Image = createLucideIcon("image", __iconNode16);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/images.mjs
-var __iconNode16 = [
+var __iconNode17 = [
   ["path", { d: "m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16", key: "9kzy35" }],
   ["path", { d: "M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2", key: "1t0f0t" }],
   ["circle", { cx: "13", cy: "7", r: "1", fill: "currentColor", key: "1obus6" }],
   ["rect", { x: "8", y: "2", width: "14", height: "14", rx: "2", key: "1gvhby" }]
 ];
-var Images = createLucideIcon("images", __iconNode16);
+var Images = createLucideIcon("images", __iconNode17);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
-var __iconNode17 = [
+var __iconNode18 = [
   ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
   ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
   ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
   ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
 ];
-var LayoutGrid = createLucideIcon("layout-grid", __iconNode17);
+var LayoutGrid = createLucideIcon("layout-grid", __iconNode18);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/link-2.mjs
-var __iconNode18 = [
+var __iconNode19 = [
   ["path", { d: "M9 17H7A5 5 0 0 1 7 7h2", key: "8i5ue5" }],
   ["path", { d: "M15 7h2a5 5 0 1 1 0 10h-2", key: "1b9ql8" }],
   ["line", { x1: "8", x2: "16", y1: "12", y2: "12", key: "1jonct" }]
 ];
-var Link2 = createLucideIcon("link-2", __iconNode18);
+var Link2 = createLucideIcon("link-2", __iconNode19);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
-var __iconNode19 = [
+var __iconNode20 = [
   ["path", { d: "M2 5h20", key: "1fs1ex" }],
   ["path", { d: "M6 12h12", key: "8npq4p" }],
   ["path", { d: "M9 19h6", key: "456am0" }]
 ];
-var ListFilter = createLucideIcon("list-filter", __iconNode19);
+var ListFilter = createLucideIcon("list-filter", __iconNode20);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/lock-open.mjs
+var __iconNode21 = [
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 9.9-1", key: "1mm8w8" }]
+];
+var LockOpen = createLucideIcon("lock-open", __iconNode21);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/lock.mjs
+var __iconNode22 = [
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
+];
+var Lock = createLucideIcon("lock", __iconNode22);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
-var __iconNode20 = [
+var __iconNode23 = [
   [
     "path",
     {
@@ -4560,27 +4705,27 @@ var __iconNode20 = [
   ["path", { d: "M15 5.764v15", key: "1pn4in" }],
   ["path", { d: "M9 3.236v15", key: "1uimfh" }]
 ];
-var Map2 = createLucideIcon("map", __iconNode20);
+var Map2 = createLucideIcon("map", __iconNode23);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
-var __iconNode21 = [
+var __iconNode24 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "m21 3-7 7", key: "1l2asr" }],
   ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
   ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
 ];
-var Maximize2 = createLucideIcon("maximize-2", __iconNode21);
+var Maximize2 = createLucideIcon("maximize-2", __iconNode24);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
-var __iconNode22 = [
+var __iconNode25 = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
   ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
 ];
-var Monitor = createLucideIcon("monitor", __iconNode22);
+var Monitor = createLucideIcon("monitor", __iconNode25);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/moon.mjs
-var __iconNode23 = [
+var __iconNode26 = [
   [
     "path",
     {
@@ -4589,10 +4734,18 @@ var __iconNode23 = [
     }
   ]
 ];
-var Moon = createLucideIcon("moon", __iconNode23);
+var Moon = createLucideIcon("moon", __iconNode26);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/move-vertical.mjs
+var __iconNode27 = [
+  ["path", { d: "M12 2v20", key: "t6zp3m" }],
+  ["path", { d: "m8 18 4 4 4-4", key: "bh5tu3" }],
+  ["path", { d: "m8 6 4-4 4 4", key: "ybng9g" }]
+];
+var MoveVertical = createLucideIcon("move-vertical", __iconNode27);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/pencil.mjs
-var __iconNode24 = [
+var __iconNode28 = [
   [
     "path",
     {
@@ -4602,32 +4755,32 @@ var __iconNode24 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-var Pencil = createLucideIcon("pencil", __iconNode24);
+var Pencil = createLucideIcon("pencil", __iconNode28);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/plus.mjs
-var __iconNode25 = [
+var __iconNode29 = [
   ["path", { d: "M5 12h14", key: "1ays0h" }],
   ["path", { d: "M12 5v14", key: "s699le" }]
 ];
-var Plus = createLucideIcon("plus", __iconNode25);
+var Plus = createLucideIcon("plus", __iconNode29);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
-var __iconNode26 = [
+var __iconNode30 = [
   ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
 ];
-var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode26);
+var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode30);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
-var __iconNode27 = [
+var __iconNode31 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode27);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode31);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
-var __iconNode28 = [
+var __iconNode32 = [
   [
     "path",
     {
@@ -4640,26 +4793,26 @@ var __iconNode28 = [
   ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
   ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
 ];
-var Ruler = createLucideIcon("ruler", __iconNode28);
+var Ruler = createLucideIcon("ruler", __iconNode32);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
-var __iconNode29 = [
+var __iconNode33 = [
   ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
   ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
   ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
   ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
 ];
-var Scan = createLucideIcon("scan", __iconNode29);
+var Scan = createLucideIcon("scan", __iconNode33);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/search.mjs
-var __iconNode30 = [
+var __iconNode34 = [
   ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-var Search = createLucideIcon("search", __iconNode30);
+var Search = createLucideIcon("search", __iconNode34);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
-var __iconNode31 = [
+var __iconNode35 = [
   [
     "path",
     {
@@ -4669,27 +4822,27 @@ var __iconNode31 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Settings = createLucideIcon("settings", __iconNode31);
+var Settings = createLucideIcon("settings", __iconNode35);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
-var __iconNode32 = [
+var __iconNode36 = [
   ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
   ["path", { d: "M12 18h.01", key: "mhygvu" }]
 ];
-var Smartphone = createLucideIcon("smartphone", __iconNode32);
+var Smartphone = createLucideIcon("smartphone", __iconNode36);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-check-big.mjs
-var __iconNode33 = [
+var __iconNode37 = [
   [
     "path",
     { d: "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344", key: "2acyp4" }
   ],
   ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
 ];
-var SquareCheckBig = createLucideIcon("square-check-big", __iconNode33);
+var SquareCheckBig = createLucideIcon("square-check-big", __iconNode37);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
-var __iconNode34 = [
+var __iconNode38 = [
   ["path", { d: "M5 3a2 2 0 0 0-2 2", key: "y57alp" }],
   ["path", { d: "M19 3a2 2 0 0 1 2 2", key: "18rm91" }],
   ["path", { d: "M21 19a2 2 0 0 1-2 2", key: "1j7049" }],
@@ -4703,10 +4856,10 @@ var __iconNode34 = [
   ["path", { d: "M3 14v1", key: "vnatye" }],
   ["path", { d: "M21 14v1", key: "169vum" }]
 ];
-var SquareDashed = createLucideIcon("square-dashed", __iconNode34);
+var SquareDashed = createLucideIcon("square-dashed", __iconNode38);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode35 = [
+var __iconNode39 = [
   [
     "path",
     {
@@ -4716,10 +4869,10 @@ var __iconNode35 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode35);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode39);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode36 = [
+var __iconNode40 = [
   [
     "path",
     {
@@ -4729,10 +4882,10 @@ var __iconNode36 = [
   ],
   ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
 ];
-var StickyNote = createLucideIcon("sticky-note", __iconNode36);
+var StickyNote = createLucideIcon("sticky-note", __iconNode40);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sun.mjs
-var __iconNode37 = [
+var __iconNode41 = [
   ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
   ["path", { d: "M12 2v2", key: "tus03m" }],
   ["path", { d: "M12 20v2", key: "1lh1kg" }],
@@ -4743,40 +4896,40 @@ var __iconNode37 = [
   ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
   ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
 ];
-var Sun = createLucideIcon("sun", __iconNode37);
+var Sun = createLucideIcon("sun", __iconNode41);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/trash-2.mjs
-var __iconNode38 = [
+var __iconNode42 = [
   ["path", { d: "M10 11v6", key: "nco0om" }],
   ["path", { d: "M14 11v6", key: "outv1u" }],
   ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
   ["path", { d: "M3 6h18", key: "d0wm0j" }],
   ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
 ];
-var Trash2 = createLucideIcon("trash-2", __iconNode38);
+var Trash2 = createLucideIcon("trash-2", __iconNode42);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/type.mjs
-var __iconNode39 = [
+var __iconNode43 = [
   ["path", { d: "M12 4v16", key: "1654pz" }],
   ["path", { d: "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2", key: "e0r10z" }],
   ["path", { d: "M9 20h6", key: "s66wpe" }]
 ];
-var Type = createLucideIcon("type", __iconNode39);
+var Type = createLucideIcon("type", __iconNode43);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode40 = [
+var __iconNode44 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode40);
+var Upload = createLucideIcon("upload", __iconNode44);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode41 = [
+var __iconNode45 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode41);
+var X = createLucideIcon("x", __iconNode45);
 
 // src/react-shell/review/df.logo.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
@@ -6317,36 +6470,677 @@ function normalizeFigmaNodeValue(value) {
 }
 
 // src/react-shell/figma/images.panel.tsx
+var import_react6 = require("react");
+
+// src/react-shell/figma/image.controller.ts
 var import_react5 = require("react");
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY = 0.48;
+var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX = "df-review-figma-image-overlay-state:";
+var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION = 2;
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE = "normal";
+var createReviewFigmaRouteTarget = ({
+  pageUrl,
+  projectId,
+  viewport
+}) => ({
+  type: "route",
+  projectId,
+  pageUrl,
+  viewport: {
+    label: viewport.label,
+    width: viewport.width,
+    height: viewport.height,
+    scope: getViewportPresetKind(viewport)
+  }
+});
+var useReviewFigmaImageStoreController = ({
+  imageFormat = DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+  store,
+  target
+}) => {
+  const targetKey = (0, import_react5.useMemo)(
+    () => createReviewFigmaImageTargetKey(target),
+    [target]
+  );
+  const requestIdRef = (0, import_react5.useRef)(0);
+  const [imageList, setImageList] = (0, import_react5.useState)(() => ({
+    images: [],
+    targetKey
+  }));
+  const [isLoading, setIsLoading] = (0, import_react5.useState)(Boolean(store));
+  const [isMutating, setIsMutating] = (0, import_react5.useState)(false);
+  const [error, setError] = (0, import_react5.useState)("");
+  const images = imageList.targetKey === targetKey ? imageList.images : [];
+  const refreshImages = (0, import_react5.useCallback)(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    if (!store) {
+      setImageList({ images: [], targetKey });
+      setIsLoading(false);
+      setError("");
+      return [];
+    }
+    setIsLoading(true);
+    try {
+      const nextImages = sortReviewFigmaImages(await store.listImages(target));
+      if (requestId !== requestIdRef.current) return nextImages;
+      setImageList({ images: nextImages, targetKey });
+      setError("");
+      return nextImages;
+    } catch (refreshError) {
+      if (requestId === requestIdRef.current) {
+        setError(getReviewFigmaImageErrorMessage(refreshError));
+      }
+      return [];
+    } finally {
+      if (requestId === requestIdRef.current) setIsLoading(false);
+    }
+  }, [store, target, targetKey]);
+  (0, import_react5.useEffect)(() => {
+    void refreshImages();
+  }, [refreshImages]);
+  const addImage = (0, import_react5.useCallback)(
+    async (figmaUrl, label) => {
+      const trimmedUrl = figmaUrl.trim();
+      if (!store || !trimmedUrl) return null;
+      setIsMutating(true);
+      try {
+        const image = await store.addImage({
+          target,
+          figmaUrl: trimmedUrl,
+          imageFormat,
+          label: label?.trim() || void 0
+        });
+        setImageList((currentList) => ({
+          images: sortReviewFigmaImages([
+            ...(currentList.targetKey === targetKey ? currentList.images : []).filter((currentImage) => currentImage.id !== image.id),
+            image
+          ]),
+          targetKey
+        }));
+        setError("");
+        return image;
+      } catch (addError) {
+        setError(getReviewFigmaImageErrorMessage(addError));
+        return null;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [imageFormat, store, target, targetKey]
+  );
+  const deleteImage = (0, import_react5.useCallback)(
+    async (id) => {
+      if (!store) return;
+      const previousImageList = imageList;
+      setImageList({
+        images: images.filter((image) => image.id !== id),
+        targetKey
+      });
+      setIsMutating(true);
+      try {
+        await store.deleteImage(id);
+        setError("");
+      } catch (deleteError) {
+        setImageList(previousImageList);
+        setError(getReviewFigmaImageErrorMessage(deleteError));
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [imageList, images, store, targetKey]
+  );
+  const updateImage = (0, import_react5.useCallback)(
+    async (id, patch) => {
+      if (!store) return null;
+      const previousImageList = imageList;
+      setIsMutating(true);
+      try {
+        const image = await store.updateImage(id, patch);
+        setImageList((currentList) => ({
+          images: sortReviewFigmaImages([
+            ...(currentList.targetKey === targetKey ? currentList.images : images).filter((currentImage) => currentImage.id !== image.id),
+            image
+          ]),
+          targetKey
+        }));
+        setError("");
+        return image;
+      } catch (updateError) {
+        setImageList(previousImageList);
+        setError(getReviewFigmaImageErrorMessage(updateError));
+        return null;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [imageList, images, store, targetKey]
+  );
+  const reorderImages = (0, import_react5.useCallback)(
+    async (imageIds) => {
+      if (!store) return;
+      const currentImageIds = images.map((image) => image.id);
+      const nextImageIdSet = new Set(imageIds);
+      const hasSameIds = imageIds.length === currentImageIds.length && nextImageIdSet.size === currentImageIds.length && currentImageIds.every((imageId) => nextImageIdSet.has(imageId));
+      const hasSameOrder = hasSameIds && imageIds.every((imageId, index) => imageId === currentImageIds[index]);
+      if (!hasSameIds || hasSameOrder) return;
+      const previousImages = images;
+      const imageById = new Map(images.map((image) => [image.id, image]));
+      const optimisticImages = imageIds.flatMap((imageId, order) => {
+        const image = imageById.get(imageId);
+        return image ? [{ ...image, order }] : [];
+      });
+      setImageList({ images: optimisticImages, targetKey });
+      setIsMutating(true);
+      try {
+        const savedImages = await store.reorderImages({
+          target,
+          imageIds
+        });
+        setImageList({ images: sortReviewFigmaImages(savedImages), targetKey });
+        setError("");
+      } catch (reorderError) {
+        setImageList({ images: previousImages, targetKey });
+        setError(getReviewFigmaImageErrorMessage(reorderError));
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [images, store, target, targetKey]
+  );
+  const moveImage = (0, import_react5.useCallback)(
+    async (id, direction) => {
+      const currentIndex = images.findIndex((image2) => image2.id === id);
+      const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= images.length) {
+        return;
+      }
+      const reorderedImages = [...images];
+      const [image] = reorderedImages.splice(currentIndex, 1);
+      reorderedImages.splice(nextIndex, 0, image);
+      await reorderImages(reorderedImages.map((nextImage) => nextImage.id));
+    },
+    [images, reorderImages]
+  );
+  return {
+    addImage,
+    deleteImage,
+    error,
+    images,
+    isLoading: isLoading || imageList.targetKey !== targetKey,
+    isMutating,
+    moveImage,
+    refreshImages,
+    reorderImages,
+    updateImage
+  };
+};
+var useReviewFigmaImageOverlayController = ({
+  images,
+  isLoading,
+  target
+}) => {
+  const storageKey = (0, import_react5.useMemo)(
+    () => createReviewFigmaImageOverlayStorageKey(target),
+    [target]
+  );
+  const [stateContainer, setStateContainer] = (0, import_react5.useState)(() => ({
+    state: readStoredReviewFigmaImageOverlayState(storageKey),
+    storageKey
+  }));
+  const state = stateContainer.storageKey === storageKey ? stateContainer.state : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  const updateState = (0, import_react5.useCallback)(
+    (updater) => {
+      setStateContainer((currentContainer) => {
+        const currentState = currentContainer.storageKey === storageKey ? currentContainer.state : readStoredReviewFigmaImageOverlayState(storageKey);
+        return {
+          state: updater(currentState),
+          storageKey
+        };
+      });
+    },
+    [storageKey]
+  );
+  (0, import_react5.useEffect)(() => {
+    setStateContainer({
+      state: readStoredReviewFigmaImageOverlayState(storageKey),
+      storageKey
+    });
+  }, [storageKey]);
+  (0, import_react5.useEffect)(() => {
+    if (isLoading) return;
+    updateState((currentState) => {
+      const nextImageIds = new Set(images.map((image) => image.id));
+      const selectedImageId = currentState.selectedImageId && nextImageIds.has(currentState.selectedImageId) ? currentState.selectedImageId : images[0]?.id ?? null;
+      const imageStates = Object.fromEntries(
+        Object.entries(currentState.imageStates).filter(
+          ([imageId]) => nextImageIds.has(imageId)
+        )
+      );
+      if (selectedImageId === currentState.selectedImageId && imageStates === currentState.imageStates) {
+        return currentState;
+      }
+      return {
+        ...currentState,
+        selectedImageId,
+        imageStates
+      };
+    });
+  }, [images, isLoading, updateState]);
+  (0, import_react5.useEffect)(() => {
+    if (stateContainer.storageKey !== storageKey) return;
+    writeStoredReviewFigmaImageOverlayState(storageKey, stateContainer.state);
+  }, [stateContainer, storageKey]);
+  const selectedImage = (0, import_react5.useMemo)(
+    () => images.find((image) => image.id === state.selectedImageId) ?? null,
+    [images, state.selectedImageId]
+  );
+  const selectedImageOverlayState = getReviewFigmaImageOverlayItemState(
+    state,
+    state.selectedImageId
+  );
+  const imageOverlayStates = (0, import_react5.useMemo)(
+    () => Object.fromEntries(
+      images.map((image) => [
+        image.id,
+        getReviewFigmaImageOverlayItemState(state, image.id)
+      ])
+    ),
+    [images, state]
+  );
+  const setSelectedImageId = (0, import_react5.useCallback)((selectedImageId) => {
+    updateState((currentState) => ({
+      ...currentState,
+      selectedImageId
+    }));
+  }, [updateState]);
+  const updateImageOverlayState = (0, import_react5.useCallback)(
+    (imageId, updater) => {
+      updateState((currentState) => ({
+        ...currentState,
+        selectedImageId: imageId,
+        imageStates: updateReviewFigmaImageOverlayItemState(
+          currentState.imageStates,
+          imageId,
+          updater
+        )
+      }));
+    },
+    [updateState]
+  );
+  const showImage = (0, import_react5.useCallback)((selectedImageId) => {
+    updateState((currentState) => ({
+      ...currentState,
+      selectedImageId,
+      imageStates: updateReviewFigmaImageOverlayItemState(
+        currentState.imageStates,
+        selectedImageId,
+        (itemState) => ({
+          ...itemState,
+          isVisible: true
+        })
+      )
+    }));
+  }, [updateState]);
+  const toggleImageOverlayVisible = (0, import_react5.useCallback)(
+    (imageId) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        isVisible: !itemState.isVisible
+      }));
+    },
+    [updateImageOverlayState]
+  );
+  const setImageOverlayOpacity = (0, import_react5.useCallback)(
+    (imageId, opacity) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        opacity: clampReviewFigmaImageOverlayOpacity(opacity)
+      }));
+    },
+    [updateImageOverlayState]
+  );
+  const toggleImageOverlayLocked = (0, import_react5.useCallback)(
+    (imageId) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        isLocked: !itemState.isLocked
+      }));
+    },
+    [updateImageOverlayState]
+  );
+  const toggleImageOverlayMode = (0, import_react5.useCallback)(
+    (imageId) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        mode: itemState.mode === "invert" ? "normal" : "invert"
+      }));
+    },
+    [updateImageOverlayState]
+  );
+  const setImageOverlayOffsetY = (0, import_react5.useCallback)(
+    (imageId, offsetY) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY)
+      }));
+    },
+    [updateImageOverlayState]
+  );
+  const toggleOverlayVisible = (0, import_react5.useCallback)(() => {
+    updateState((currentState) => {
+      if (!currentState.selectedImageId && images[0]) {
+        return {
+          ...currentState,
+          selectedImageId: images[0].id,
+          imageStates: updateReviewFigmaImageOverlayItemState(
+            currentState.imageStates,
+            images[0].id,
+            (itemState) => ({
+              ...itemState,
+              isVisible: true
+            })
+          )
+        };
+      }
+      if (!currentState.selectedImageId) return currentState;
+      return {
+        ...currentState,
+        imageStates: updateReviewFigmaImageOverlayItemState(
+          currentState.imageStates,
+          currentState.selectedImageId,
+          (itemState) => ({
+            ...itemState,
+            isVisible: !itemState.isVisible
+          })
+        )
+      };
+    });
+  }, [images, updateState]);
+  const setOverlayOpacity = (0, import_react5.useCallback)((opacity) => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          opacity: clampReviewFigmaImageOverlayOpacity(opacity)
+        })
+      )
+    }));
+  }, [updateState]);
+  const setOverlayLocked = (0, import_react5.useCallback)((isLocked) => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          isLocked
+        })
+      )
+    }));
+  }, [updateState]);
+  const toggleOverlayLocked = (0, import_react5.useCallback)(() => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          isLocked: !itemState.isLocked
+        })
+      )
+    }));
+  }, [updateState]);
+  const setOverlayMode = (0, import_react5.useCallback)((mode) => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          mode: normalizeReviewFigmaImageOverlayMode(mode)
+        })
+      )
+    }));
+  }, [updateState]);
+  const toggleOverlayMode = (0, import_react5.useCallback)(() => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          mode: itemState.mode === "invert" ? "normal" : "invert"
+        })
+      )
+    }));
+  }, [updateState]);
+  const setOverlayOffsetY = (0, import_react5.useCallback)((offsetY) => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY)
+        })
+      )
+    }));
+  }, [updateState]);
+  const resetOverlay = (0, import_react5.useCallback)(() => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: currentState.selectedImageId ? updateReviewFigmaImageOverlayItemState(
+        currentState.imageStates,
+        currentState.selectedImageId,
+        () => DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
+      ) : currentState.imageStates
+    }));
+  }, [updateState]);
+  return {
+    imageOverlayStates,
+    isOverlayVisible: selectedImageOverlayState.isVisible,
+    overlayMode: selectedImageOverlayState.mode,
+    overlayOffsetY: selectedImageOverlayState.offsetY,
+    overlayOpacity: selectedImageOverlayState.opacity,
+    isOverlayLocked: selectedImageOverlayState.isLocked,
+    resetOverlay,
+    selectedImage,
+    selectedImageId: state.selectedImageId,
+    setOverlayLocked,
+    setOverlayMode,
+    setOverlayOffsetY,
+    setOverlayOpacity,
+    setSelectedImageId,
+    showImage,
+    state,
+    target,
+    toggleImageOverlayLocked,
+    toggleImageOverlayMode,
+    toggleImageOverlayVisible,
+    setImageOverlayOffsetY,
+    setImageOverlayOpacity,
+    toggleOverlayLocked,
+    toggleOverlayMode,
+    toggleOverlayVisible
+  };
+};
+function sortReviewFigmaImages(images) {
+  return [...images].sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order;
+    return a.createdAt.localeCompare(b.createdAt);
+  });
+}
+function createReviewFigmaImageOverlayStorageKey(target) {
+  return `${REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX}${createReviewFigmaImageTargetKey(target)}`;
+}
+function createReviewFigmaImageTargetKey(target) {
+  return [
+    target.projectId,
+    target.pageUrl,
+    target.viewport?.scope ?? "",
+    target.viewport?.label ?? "",
+    target.viewport?.width ?? "",
+    target.viewport?.height ?? "",
+    target.slot ?? ""
+  ].join("|");
+}
+function readStoredReviewFigmaImageOverlayState(storageKey) {
+  if (typeof window === "undefined") {
+    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  }
+  try {
+    const value = window.localStorage.getItem(storageKey);
+    if (!value) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+    return normalizeReviewFigmaImageOverlayState(JSON.parse(value));
+  } catch {
+    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  }
+}
+function writeStoredReviewFigmaImageOverlayState(storageKey, state) {
+  if (typeof window === "undefined") return;
+  try {
+    if (isDefaultReviewFigmaImageOverlayState(state)) {
+      window.localStorage.removeItem(storageKey);
+      return;
+    }
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        version: REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION,
+        ...state
+      })
+    );
+  } catch {
+    return;
+  }
+}
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE = {
+  selectedImageId: null,
+  imageStates: {}
+};
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE = {
+  isVisible: false,
+  opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
+  isLocked: false,
+  mode: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE,
+  offsetY: 0
+};
+function normalizeReviewFigmaImageOverlayState(value) {
+  if (!value || typeof value !== "object") {
+    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  }
+  const state = value;
+  const selectedImageId = typeof state.selectedImageId === "string" ? state.selectedImageId : null;
+  const imageStates = normalizeReviewFigmaImageOverlayItemStateRecord(
+    state.imageStates
+  );
+  if (Object.keys(imageStates).length === 0 && selectedImageId) {
+    imageStates[selectedImageId] = normalizeReviewFigmaImageOverlayItemState(
+      state
+    );
+  }
+  return {
+    selectedImageId,
+    imageStates
+  };
+}
+function normalizeReviewFigmaImageOverlayItemStateRecord(value) {
+  if (!value || typeof value !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([imageId, itemState]) => {
+      if (!imageId || typeof itemState !== "object") return [];
+      return [
+        [
+          imageId,
+          normalizeReviewFigmaImageOverlayItemState(
+            itemState
+          )
+        ]
+      ];
+    })
+  );
+}
+function normalizeReviewFigmaImageOverlayItemState(value) {
+  return {
+    isVisible: value.isVisible === true,
+    opacity: clampReviewFigmaImageOverlayOpacity(
+      typeof value.opacity === "number" ? value.opacity : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
+    ),
+    isLocked: value.isLocked === true,
+    mode: normalizeReviewFigmaImageOverlayMode(value.mode),
+    offsetY: normalizeReviewFigmaImageOverlayOffsetY(value.offsetY)
+  };
+}
+function normalizeReviewFigmaImageOverlayMode(value) {
+  return value === "invert" ? "invert" : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE;
+}
+function normalizeReviewFigmaImageOverlayOffsetY(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+  return Math.round(value);
+}
+function clampReviewFigmaImageOverlayOpacity(value) {
+  if (!Number.isFinite(value)) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY;
+  return Math.min(1, Math.max(0.08, value));
+}
+function isDefaultReviewFigmaImageOverlayState(state) {
+  return state.selectedImageId === null && Object.keys(state.imageStates).length === 0;
+}
+function getReviewFigmaImageOverlayItemState(state, imageId) {
+  return imageId ? state.imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE;
+}
+function updateSelectedReviewFigmaImageOverlayItemState(state, updater) {
+  return state.selectedImageId ? updateReviewFigmaImageOverlayItemState(
+    state.imageStates,
+    state.selectedImageId,
+    updater
+  ) : state.imageStates;
+}
+function updateReviewFigmaImageOverlayItemState(imageStates, imageId, updater) {
+  return {
+    ...imageStates,
+    [imageId]: updater(
+      imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
+    )
+  };
+}
+function getReviewFigmaImageErrorMessage(error) {
+  return error instanceof Error ? error.message : "Figma image request failed.";
+}
+
+// src/react-shell/figma/images.panel.tsx
 var import_jsx_runtime6 = require("react/jsx-runtime");
 var FigmaImagesPanel = ({
   error,
   images,
+  imageOverlayStates,
   isListVisible,
   isLoading,
   isMutating,
-  isOverlayVisible,
-  overlayOpacity,
   selectedImageId,
   target,
   onAddImage,
   onDeleteImage,
   onMoveImage,
-  onOverlayOpacityChange,
   onRefreshImages,
   onReorderImages,
   onSelectImage,
-  onToggleOverlay,
+  onSetImageOverlayOffsetY,
+  onSetImageOverlayOpacity,
+  onToggleImageOverlayLocked,
+  onToggleImageOverlayMode,
+  onToggleImageOverlayVisible,
   onUpdateImage
 }) => {
-  const [figmaUrlDraft, setFigmaUrlDraft] = (0, import_react5.useState)("");
-  const [labelDraft, setLabelDraft] = (0, import_react5.useState)("");
-  const [editingImageId, setEditingImageId] = (0, import_react5.useState)(null);
-  const [editingLabelDraft, setEditingLabelDraft] = (0, import_react5.useState)("");
-  const [draggingImageId, setDraggingImageId] = (0, import_react5.useState)(null);
-  const [dragOverImageId, setDragOverImageId] = (0, import_react5.useState)(null);
-  const selectedImage = images.find((image) => image.id === selectedImageId);
-  const canShowOverlay = Boolean(selectedImage);
+  const [figmaUrlDraft, setFigmaUrlDraft] = (0, import_react6.useState)("");
+  const [labelDraft, setLabelDraft] = (0, import_react6.useState)("");
+  const [editingImageId, setEditingImageId] = (0, import_react6.useState)(null);
+  const [editingLabelDraft, setEditingLabelDraft] = (0, import_react6.useState)("");
+  const [draggingImageId, setDraggingImageId] = (0, import_react6.useState)(null);
+  const [dragOverImageId, setDragOverImageId] = (0, import_react6.useState)(null);
+  const [offsetYDraftByImageId, setOffsetYDraftByImageId] = (0, import_react6.useState)({});
   const statusText = error ? error : isMutating ? "Saving..." : isLoading ? "Loading..." : "";
   return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("aside", { className: "df-review-figma-images-panel", "aria-hidden": !isListVisible, children: [
     /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-images-header", children: [
@@ -6432,41 +7226,6 @@ var FigmaImagesPanel = ({
         /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { children: getFigmaTargetViewportLabel(target) })
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-overlay-controls", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
-        "button",
-        {
-          "aria-pressed": isOverlayVisible,
-          className: isOverlayVisible ? "is-active" : void 0,
-          disabled: !canShowOverlay,
-          type: "button",
-          onClick: onToggleOverlay,
-          children: [
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Image, { "aria-hidden": "true" }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: "Overlay" })
-          ]
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("label", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { children: [
-          Math.round(overlayOpacity * 100),
-          "%"
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-          "input",
-          {
-            "aria-label": "Figma overlay opacity",
-            disabled: !canShowOverlay,
-            max: "1",
-            min: "0.08",
-            step: "0.04",
-            type: "range",
-            value: overlayOpacity,
-            onChange: (event) => onOverlayOpacityChange(Number(event.currentTarget.value))
-          }
-        )
-      ] })
-    ] }),
     statusText && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
       "p",
       {
@@ -6478,6 +7237,8 @@ var FigmaImagesPanel = ({
       images.length === 0 && !isLoading && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "df-review-empty", children: "No Figma images on this viewport." }),
       images.map((image, index) => {
         const imageLabel = getFigmaImageLabel(image, index);
+        const overlayState = imageOverlayStates[image.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE;
+        const offsetYDraft = offsetYDraftByImageId[image.id] ?? String(overlayState.offsetY);
         const isDragging = draggingImageId === image.id;
         const isDropTarget = dragOverImageId === image.id && draggingImageId !== image.id;
         return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
@@ -6536,6 +7297,17 @@ var FigmaImagesPanel = ({
                     setDraggingImageId(image.id);
                   },
                   children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(GripVertical, { "aria-hidden": "true" })
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                "button",
+                {
+                  "aria-label": overlayState.isVisible ? `Hide ${imageLabel} overlay` : `Show ${imageLabel} overlay`,
+                  className: `df-review-figma-image-layer-toggle${overlayState.isVisible ? " is-visible" : " is-hidden"}`,
+                  title: overlayState.isVisible ? "Hide overlay" : "Show overlay",
+                  type: "button",
+                  onClick: () => onToggleImageOverlayVisible(image.id),
+                  children: overlayState.isVisible ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(EyeOff, { "aria-hidden": "true" })
                 }
               ),
               /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
@@ -6676,6 +7448,84 @@ var FigmaImagesPanel = ({
                     children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ArrowDown, { "aria-hidden": "true" })
                   }
                 )
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-figma-image-layer-controls", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("label", { className: "df-review-figma-image-opacity-control", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { children: [
+                    Math.round(overlayState.opacity * 100),
+                    "%"
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                    "input",
+                    {
+                      "aria-label": `${imageLabel} overlay opacity`,
+                      max: "1",
+                      min: "0.08",
+                      step: "0.04",
+                      type: "range",
+                      value: overlayState.opacity,
+                      onChange: (event) => onSetImageOverlayOpacity(
+                        image.id,
+                        Number(event.currentTarget.value)
+                      )
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                  "button",
+                  {
+                    "aria-label": overlayState.mode === "invert" ? `Disable ${imageLabel} invert` : `Enable ${imageLabel} invert`,
+                    "aria-pressed": overlayState.mode === "invert",
+                    className: `df-review-figma-image-icon-button${overlayState.mode === "invert" ? " is-active" : ""}`,
+                    title: "Invert",
+                    type: "button",
+                    onClick: () => onToggleImageOverlayMode(image.id),
+                    children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Contrast, { "aria-hidden": "true" })
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                  "button",
+                  {
+                    "aria-label": overlayState.isLocked ? `Unlock ${imageLabel} overlay` : `Lock ${imageLabel} overlay`,
+                    "aria-pressed": overlayState.isLocked,
+                    className: `df-review-figma-image-icon-button${overlayState.isLocked ? " is-active" : ""}`,
+                    title: overlayState.isLocked ? "Unlock" : "Lock",
+                    type: "button",
+                    onClick: () => onToggleImageOverlayLocked(image.id),
+                    children: overlayState.isLocked ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Lock, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(LockOpen, { "aria-hidden": "true" })
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("label", { className: "df-review-figma-image-offset-control", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(MoveVertical, { "aria-hidden": "true" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                    "input",
+                    {
+                      "aria-label": `${imageLabel} overlay Y offset`,
+                      inputMode: "numeric",
+                      step: "1",
+                      type: "number",
+                      value: offsetYDraft,
+                      onBlur: () => {
+                        setOffsetYDraftByImageId((currentDrafts) => {
+                          const nextDrafts = { ...currentDrafts };
+                          delete nextDrafts[image.id];
+                          return nextDrafts;
+                        });
+                      },
+                      onChange: (event) => {
+                        const value = event.currentTarget.value;
+                        const offsetY = Number(value);
+                        setOffsetYDraftByImageId((currentDrafts) => ({
+                          ...currentDrafts,
+                          [image.id]: value
+                        }));
+                        if (value.trim() !== "" && Number.isFinite(offsetY)) {
+                          onSetImageOverlayOffsetY(image.id, offsetY);
+                        }
+                      }
+                    }
+                  )
+                ] })
               ] })
             ]
           },
@@ -6684,6 +7534,13 @@ var FigmaImagesPanel = ({
       })
     ] })
   ] });
+};
+var DEFAULT_FIGMA_IMAGE_LAYER_STATE = {
+  isLocked: false,
+  isVisible: false,
+  mode: "normal",
+  offsetY: 0,
+  opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
 };
 function getFigmaImageLabel(image, index) {
   return image.label?.trim() || `Image ${index + 1}`;
@@ -6715,17 +7572,17 @@ function formatFigmaImageDate(value) {
 }
 
 // src/react-shell/qa/item.edit.modal.tsx
-var import_react6 = require("react");
+var import_react7 = require("react");
 var import_jsx_runtime7 = require("react/jsx-runtime");
 var QaItemEditModal = ({
   item,
   onClose,
   onSave
 }) => {
-  const [commentDraft, setCommentDraft] = (0, import_react6.useState)(item.comment);
-  const [error, setError] = (0, import_react6.useState)("");
-  const [isSaving, setIsSaving] = (0, import_react6.useState)(false);
-  (0, import_react6.useEffect)(() => {
+  const [commentDraft, setCommentDraft] = (0, import_react7.useState)(item.comment);
+  const [error, setError] = (0, import_react7.useState)("");
+  const [isSaving, setIsSaving] = (0, import_react7.useState)(false);
+  (0, import_react7.useEffect)(() => {
     setCommentDraft(item.comment);
     setError("");
     setIsSaving(false);
@@ -7512,7 +8369,7 @@ var ReviewQaPanel = ({
 };
 
 // src/react-shell/presence/overlay.tsx
-var import_react7 = require("react");
+var import_react8 = require("react");
 var import_jsx_runtime14 = require("react/jsx-runtime");
 var getPresenceName = (user) => user.displayName || user.userId;
 var PresenceUserIcon = () => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
@@ -7541,7 +8398,7 @@ var PresenceOverlay = ({
   presenceSessionId,
   users
 }) => {
-  const [isExpanded, setIsExpanded] = (0, import_react7.useState)(false);
+  const [isExpanded, setIsExpanded] = (0, import_react8.useState)(false);
   if (users.length === 0) return null;
   return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
     "div",
@@ -8955,7 +9812,7 @@ var import_jsx_runtime20 = require("react/jsx-runtime");
 var ReviewTargetFrame = ({
   canWriteArea,
   canWriteDom,
-  figmaImageOverlay,
+  figmaImageOverlays,
   frameScrollRef,
   figmaFrameUrl,
   iframeRef,
@@ -9016,7 +9873,7 @@ var ReviewTargetFrame = ({
                   },
                   targetSrc
                 ),
-                figmaImageOverlay && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+                figmaImageOverlays.map((figmaImageOverlay) => /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
                   "div",
                   {
                     "aria-label": figmaImageOverlay.label,
@@ -9026,11 +9883,13 @@ var ReviewTargetFrame = ({
                       filter: figmaImageOverlay.mode === "invert" ? "invert(1)" : void 0,
                       opacity: figmaImageOverlay.opacity,
                       pointerEvents: figmaImageOverlay.isLocked ? "none" : void 0,
-                      transform: figmaImageOverlay.offsetY ? `translate3d(0, ${figmaImageOverlay.offsetY}px, 0)` : void 0
+                      transform: figmaImageOverlay.offsetY ? `translate3d(0, ${figmaImageOverlay.offsetY}px, 0)` : void 0,
+                      zIndex: figmaImageOverlay.zIndex
                     },
                     children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("img", { alt: "", draggable: false, src: figmaImageOverlay.imageUrl })
-                  }
-                ),
+                  },
+                  figmaImageOverlay.id
+                )),
                 showRuler && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
                   RulerOverlay,
                   {
@@ -9359,10 +10218,10 @@ var ReviewTopbar = ({
 };
 
 // src/react-shell/hooks/use.review.controller.ts
-var import_react12 = require("react");
+var import_react13 = require("react");
 
 // src/react-shell/hooks/use.review.item.restore.ts
-var import_react8 = require("react");
+var import_react9 = require("react");
 function runWithAutoScrollBehavior2(targetDocument, callback) {
   const elements = [
     targetDocument?.documentElement,
@@ -9439,7 +10298,7 @@ var useReviewItemRestore = ({
   onSyncTargetViewport,
   onTargetChange
 }) => {
-  const clearSelectedItem = (0, import_react8.useCallback)(() => {
+  const clearSelectedItem = (0, import_react9.useCallback)(() => {
     pendingRestoreRef.current = null;
     selectedItemIdRef.current = null;
     onSelectedItemIdChange(null);
@@ -9450,7 +10309,7 @@ var useReviewItemRestore = ({
     pendingRestoreRef,
     selectedItemIdRef
   ]);
-  const applyItemScroll = (0, import_react8.useCallback)(
+  const applyItemScroll = (0, import_react9.useCallback)(
     async (item) => {
       if (selectedItemIdRef.current !== item.id) return false;
       const targetWindow = iframeRef.current?.contentWindow;
@@ -9482,7 +10341,7 @@ var useReviewItemRestore = ({
     },
     [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
   );
-  const applyPendingRestore = (0, import_react8.useCallback)(() => {
+  const applyPendingRestore = (0, import_react9.useCallback)(() => {
     const item = pendingRestoreRef.current;
     if (!item) return;
     void applyItemScroll(item).then((didApply) => {
@@ -9491,7 +10350,7 @@ var useReviewItemRestore = ({
       }
     });
   }, [applyItemScroll, pendingRestoreRef]);
-  const restoreReviewItem = (0, import_react8.useCallback)(
+  const restoreReviewItem = (0, import_react9.useCallback)(
     (item) => {
       const nextRoute = getItemTarget(item, reviewPathPrefix);
       const nextTarget = getItemFrameTarget(item, reviewPathPrefix);
@@ -9524,7 +10383,7 @@ var useReviewItemRestore = ({
       viewportPresets
     ]
   );
-  const restoreInitialItem = (0, import_react8.useCallback)(async () => {
+  const restoreInitialItem = (0, import_react9.useCallback)(async () => {
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
     pendingInitialItemIdRef.current = null;
@@ -9542,7 +10401,7 @@ var useReviewItemRestore = ({
 };
 
 // src/react-shell/hooks/use.review.kit.lifecycle.ts
-var import_react9 = require("react");
+var import_react10 = require("react");
 
 // src/route.ts
 function getItemRouteKey(item) {
@@ -13737,13 +14596,13 @@ var useReviewKitLifecycle = ({
   onSyncShellTarget,
   onSyncTargetViewport
 }) => {
-  const destroyReviewKit = (0, import_react9.useCallback)(() => {
+  const destroyReviewKit = (0, import_react10.useCallback)(() => {
     cleanupTargetRef.current?.();
     cleanupTargetRef.current = null;
     controllerRef.current?.destroy();
     controllerRef.current = null;
   }, [cleanupTargetRef, controllerRef]);
-  const initReviewKit = (0, import_react9.useCallback)(() => {
+  const initReviewKit = (0, import_react10.useCallback)(() => {
     destroyReviewKit();
     const iframe = iframeRef.current;
     const targetWindow = iframe?.contentWindow;
@@ -13830,23 +14689,23 @@ var useReviewKitLifecycle = ({
     sizeRef,
     targetRef
   ]);
-  const reloadReviewKit = (0, import_react9.useCallback)(async () => {
+  const reloadReviewKit = (0, import_react10.useCallback)(async () => {
     await controllerRef.current?.reload();
   }, [controllerRef]);
-  const setControllerReviewMode = (0, import_react9.useCallback)(
+  const setControllerReviewMode = (0, import_react10.useCallback)(
     (nextMode) => {
       controllerRef.current?.setMode(nextMode);
       onModeChange(controllerRef.current?.getMode() ?? "idle");
     },
     [controllerRef, onModeChange]
   );
-  (0, import_react9.useEffect)(() => destroyReviewKit, [destroyReviewKit]);
-  (0, import_react9.useEffect)(() => {
+  (0, import_react10.useEffect)(() => destroyReviewKit, [destroyReviewKit]);
+  (0, import_react10.useEffect)(() => {
     const frameDocument = iframeRef.current?.contentDocument;
     if (!frameDocument || frameDocument.readyState !== "complete") return;
     initReviewKit();
   }, [iframeRef, initReviewKit]);
-  (0, import_react9.useEffect)(() => {
+  (0, import_react10.useEffect)(() => {
     hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
     controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
   }, [controllerRef, hiddenOverlayItemIdList, hiddenOverlayItemIdListRef]);
@@ -13859,7 +14718,7 @@ var useReviewKitLifecycle = ({
 };
 
 // src/react-shell/hooks/use.review.target.overlay.ts
-var import_react10 = require("react");
+var import_react11 = require("react");
 var TARGET_OVERLAY_REFRESH_DELAYS = [80, 240, 600];
 var useReviewTargetOverlay = ({
   iframeRef,
@@ -13867,26 +14726,26 @@ var useReviewTargetOverlay = ({
   targetOverlayState,
   onTargetOverlayStateChange
 }) => {
-  const refreshTimersRef = (0, import_react10.useRef)([]);
-  const clearRefreshTimers = (0, import_react10.useCallback)(() => {
+  const refreshTimersRef = (0, import_react11.useRef)([]);
+  const clearRefreshTimers = (0, import_react11.useCallback)(() => {
     refreshTimersRef.current.forEach((timer) => window.clearTimeout(timer));
     refreshTimersRef.current = [];
   }, []);
-  const updateTargetOverlayState = (0, import_react10.useCallback)(() => {
+  const updateTargetOverlayState = (0, import_react11.useCallback)(() => {
     const state = getTargetOverlayState(
       iframeRef.current?.contentDocument ?? void 0
     );
     onTargetOverlayStateChange(state);
     return state;
   }, [iframeRef, onTargetOverlayStateChange]);
-  const refreshTargetOverlayState = (0, import_react10.useCallback)(() => {
+  const refreshTargetOverlayState = (0, import_react11.useCallback)(() => {
     clearRefreshTimers();
     updateTargetOverlayState();
     refreshTimersRef.current = TARGET_OVERLAY_REFRESH_DELAYS.map(
       (delay) => window.setTimeout(updateTargetOverlayState, delay)
     );
   }, [clearRefreshTimers, updateTargetOverlayState]);
-  const dispatchTargetOverlayHotkey = (0, import_react10.useCallback)(
+  const dispatchTargetOverlayHotkey = (0, import_react11.useCallback)(
     (overlay) => {
       const targetWindow = iframeRef.current?.contentWindow;
       if (!targetWindow) return false;
@@ -13905,7 +14764,7 @@ var useReviewTargetOverlay = ({
     },
     [iframeRef, refreshTargetOverlayState]
   );
-  const toggleTargetOverlay = (0, import_react10.useCallback)(
+  const toggleTargetOverlay = (0, import_react11.useCallback)(
     (overlay) => {
       if (overlay === "figma" && !isFigmaOverlayAvailable) {
         refreshTargetOverlayState();
@@ -13919,7 +14778,7 @@ var useReviewTargetOverlay = ({
       refreshTargetOverlayState
     ]
   );
-  const closeTargetOverlay = (0, import_react10.useCallback)(
+  const closeTargetOverlay = (0, import_react11.useCallback)(
     (overlay) => {
       const currentState = updateTargetOverlayState();
       if (!currentState[overlay]) return false;
@@ -13927,11 +14786,11 @@ var useReviewTargetOverlay = ({
     },
     [dispatchTargetOverlayHotkey, updateTargetOverlayState]
   );
-  (0, import_react10.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
     closeTargetOverlay("figma");
   }, [closeTargetOverlay, isFigmaOverlayAvailable, targetOverlayState.figma]);
-  (0, import_react10.useEffect)(() => clearRefreshTimers, [clearRefreshTimers]);
+  (0, import_react11.useEffect)(() => clearRefreshTimers, [clearRefreshTimers]);
   return {
     closeTargetOverlay,
     refreshTargetOverlayState,
@@ -13940,7 +14799,7 @@ var useReviewTargetOverlay = ({
 };
 
 // src/react-shell/hooks/use.review.target.sync.ts
-var import_react11 = require("react");
+var import_react12 = require("react");
 var useReviewTargetSync = ({
   iframeRef,
   reviewPathPrefix,
@@ -13956,7 +14815,7 @@ var useReviewTargetSync = ({
   onSyncTargetViewport,
   onTargetChange
 }) => {
-  const syncShellTarget = (0, import_react11.useCallback)(
+  const syncShellTarget = (0, import_react12.useCallback)(
     (nextTarget) => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
       const nextRouteKey = getTargetRouteKey(
@@ -13993,11 +14852,11 @@ var useReviewTargetSync = ({
       targetRef
     ]
   );
-  (0, import_react11.useEffect)(() => {
+  (0, import_react12.useEffect)(() => {
     targetRef.current = target;
     onActiveRouteChange(getTargetRouteKey(target, reviewPathPrefix));
   }, [onActiveRouteChange, reviewPathPrefix, target, targetRef]);
-  (0, import_react11.useEffect)(() => {
+  (0, import_react12.useEffect)(() => {
     sizeRef.current = size;
     if (selectedItemIdRef.current) {
       updateShellUrlForItem(
@@ -14066,7 +14925,7 @@ var useReviewController = ({
   onTargetOverlayStateChange,
   onCloseRuler
 }) => {
-  const syncTargetViewport = (0, import_react12.useCallback)(() => {
+  const syncTargetViewport = (0, import_react13.useCallback)(() => {
     window.dispatchEvent(new Event("resize"));
   }, []);
   const {
@@ -14163,7 +15022,7 @@ var useReviewController = ({
 };
 
 // src/react-shell/hooks/use.review.presence.ts
-var import_react13 = require("react");
+var import_react14 = require("react");
 
 // src/react-shell/presence/presence.ts
 var REVIEW_PRESENCE_SESSION_KEY = "df-review-presence-session-id";
@@ -14378,10 +15237,10 @@ var useReviewPresence = ({
   size,
   source
 }) => {
-  const presenceSessionRef = (0, import_react13.useRef)(null);
-  const [presenceUsers, setPresenceUsers] = (0, import_react13.useState)([]);
-  const [presenceSessionVersion, setPresenceSessionVersion] = (0, import_react13.useState)(0);
-  const presenceSessionId = (0, import_react13.useMemo)(getReviewPresenceSessionId, []);
+  const presenceSessionRef = (0, import_react14.useRef)(null);
+  const [presenceUsers, setPresenceUsers] = (0, import_react14.useState)([]);
+  const [presenceSessionVersion, setPresenceSessionVersion] = (0, import_react14.useState)(0);
+  const presenceSessionId = (0, import_react14.useMemo)(getReviewPresenceSessionId, []);
   const normalizedReviewUserId = reviewUserId.trim();
   const presenceDisplayName = getReviewPresenceDisplayName(
     normalizedReviewUserId
@@ -14389,7 +15248,7 @@ var useReviewPresence = ({
   const presenceColor = getReviewPresenceColor(
     normalizedReviewUserId || presenceSessionId
   );
-  const presenceViewport = (0, import_react13.useMemo)(
+  const presenceViewport = (0, import_react14.useMemo)(
     () => ({
       label: size.label,
       width: size.width,
@@ -14399,7 +15258,7 @@ var useReviewPresence = ({
     [size]
   );
   const presenceStatus = mode === "idle" ? "reviewing" : "editing";
-  const visiblePresenceUsers = (0, import_react13.useMemo)(
+  const visiblePresenceUsers = (0, import_react14.useMemo)(
     () => {
       const projectPresenceUsers = presenceUsers.filter(
         (user) => user.projectId === projectId && user.userId.trim()
@@ -14411,14 +15270,14 @@ var useReviewPresence = ({
     },
     [presenceUsers, projectId, reviewPathPrefix]
   );
-  const currentPagePresenceUsers = (0, import_react13.useMemo)(
+  const currentPagePresenceUsers = (0, import_react14.useMemo)(
     () => visiblePresenceUsers.filter((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
       return userTarget === activeRoute;
     }),
     [activeRoute, reviewPathPrefix, visiblePresenceUsers]
   );
-  const pagePresenceUsers = (0, import_react13.useMemo)(() => {
+  const pagePresenceUsers = (0, import_react14.useMemo)(() => {
     const usersByTarget = /* @__PURE__ */ new Map();
     visiblePresenceUsers.forEach((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
@@ -14428,7 +15287,7 @@ var useReviewPresence = ({
     });
     return usersByTarget;
   }, [reviewPathPrefix, visiblePresenceUsers]);
-  const getCurrentPresenceState = (0, import_react13.useCallback)(
+  const getCurrentPresenceState = (0, import_react14.useCallback)(
     () => ({
       projectId,
       sessionId: presenceSessionId,
@@ -14459,9 +15318,9 @@ var useReviewPresence = ({
       source
     ]
   );
-  const getCurrentPresenceStateRef = (0, import_react13.useRef)(getCurrentPresenceState);
+  const getCurrentPresenceStateRef = (0, import_react14.useRef)(getCurrentPresenceState);
   getCurrentPresenceStateRef.current = getCurrentPresenceState;
-  (0, import_react13.useEffect)(() => {
+  (0, import_react14.useEffect)(() => {
     if (!presence || !normalizedReviewUserId) {
       const session = presenceSessionRef.current;
       presenceSessionRef.current = null;
@@ -14511,7 +15370,7 @@ var useReviewPresence = ({
     presenceSessionId,
     projectId
   ]);
-  (0, import_react13.useEffect)(() => {
+  (0, import_react14.useEffect)(() => {
     const session = presenceSessionRef.current;
     if (!session || !normalizedReviewUserId) return;
     void session.update(getCurrentPresenceState());
@@ -14528,10 +15387,10 @@ var useReviewPresence = ({
 };
 
 // src/react-shell/hooks/use.review.ruler.ts
-var import_react15 = require("react");
+var import_react16 = require("react");
 
 // src/react-shell/hooks/use.review.ruler.drag.ts
-var import_react14 = require("react");
+var import_react15 = require("react");
 
 // src/react-shell/ruler/ruler.ts
 var getRulerPointFromRect = (clientX, clientY, rect) => {
@@ -14560,19 +15419,19 @@ var useReviewRulerDrag = ({
   size,
   targetSrc
 }) => {
-  const rulerOverlayRef = (0, import_react14.useRef)(null);
-  const rulerDragRectRef = (0, import_react14.useRef)(null);
-  const isRulerDraggingRef = (0, import_react14.useRef)(false);
-  const sizeRef = (0, import_react14.useRef)(size);
-  const [rulerStart, setRulerStart] = (0, import_react14.useState)(null);
-  const [rulerPoint, setRulerPoint] = (0, import_react14.useState)(null);
-  const [rulerHover, setRulerHover] = (0, import_react14.useState)(null);
-  const [isRulerDragging, setIsRulerDragging] = (0, import_react14.useState)(false);
-  const rulerMeasure = (0, import_react14.useMemo)(
+  const rulerOverlayRef = (0, import_react15.useRef)(null);
+  const rulerDragRectRef = (0, import_react15.useRef)(null);
+  const isRulerDraggingRef = (0, import_react15.useRef)(false);
+  const sizeRef = (0, import_react15.useRef)(size);
+  const [rulerStart, setRulerStart] = (0, import_react15.useState)(null);
+  const [rulerPoint, setRulerPoint] = (0, import_react15.useState)(null);
+  const [rulerHover, setRulerHover] = (0, import_react15.useState)(null);
+  const [isRulerDragging, setIsRulerDragging] = (0, import_react15.useState)(false);
+  const rulerMeasure = (0, import_react15.useMemo)(
     () => getRulerMeasure(rulerStart, rulerPoint),
     [rulerPoint, rulerStart]
   );
-  const clearRulerMeasure = (0, import_react14.useCallback)(() => {
+  const clearRulerMeasure = (0, import_react15.useCallback)(() => {
     rulerDragRectRef.current = null;
     isRulerDraggingRef.current = false;
     setRulerStart(null);
@@ -14580,7 +15439,7 @@ var useReviewRulerDrag = ({
     setRulerHover(null);
     setIsRulerDragging(false);
   }, []);
-  const finishRulerDrag = (0, import_react14.useCallback)((point) => {
+  const finishRulerDrag = (0, import_react15.useCallback)((point) => {
     if (point) {
       setRulerPoint(point);
     }
@@ -14588,7 +15447,7 @@ var useReviewRulerDrag = ({
     isRulerDraggingRef.current = false;
     setIsRulerDragging(false);
   }, []);
-  const startRulerDrag = (0, import_react14.useCallback)(
+  const startRulerDrag = (0, import_react15.useCallback)(
     (clientX, clientY, rect) => {
       const point = getRulerPointFromRect(clientX, clientY, rect);
       rulerDragRectRef.current = rect;
@@ -14599,10 +15458,10 @@ var useReviewRulerDrag = ({
     },
     []
   );
-  (0, import_react14.useEffect)(() => {
+  (0, import_react15.useEffect)(() => {
     sizeRef.current = size;
   }, [size]);
-  (0, import_react14.useEffect)(() => {
+  (0, import_react15.useEffect)(() => {
     if (!isRulerVisible || !isRulerAvailable) return void 0;
     const getRulerEventClientPoint = (event) => {
       const frame2 = iframeRef.current;
@@ -14716,7 +15575,7 @@ var useReviewRulerDrag = ({
     isRulerVisible,
     startRulerDrag
   ]);
-  (0, import_react14.useEffect)(() => {
+  (0, import_react15.useEffect)(() => {
     clearRulerMeasure();
   }, [clearRulerMeasure, size.height, size.width, targetSrc]);
   return {
@@ -14737,7 +15596,7 @@ var useReviewRuler = ({
   onCancelReviewMode,
   onCloseTransientPanels
 }) => {
-  const [isRulerVisible, setIsRulerVisible] = (0, import_react15.useState)(false);
+  const [isRulerVisible, setIsRulerVisible] = (0, import_react16.useState)(false);
   const isRulerAvailable = ruler?.enabled !== false && typeof size.designWidth === "number" && size.designWidth > 0;
   const rulerUnit = ruler?.unit ?? "px";
   const rulerScaleX = isRulerAvailable && size.designWidth ? size.width / size.designWidth : 1;
@@ -14758,13 +15617,13 @@ var useReviewRuler = ({
   const rulerMeasureLabel = rulerMeasure ? `${Math.round(rulerMeasure.width / rulerScaleX)} \xD7 ${Math.round(
     rulerMeasure.height / rulerScaleY
   )} ${rulerUnit}` : "";
-  const closeRuler = (0, import_react15.useCallback)(() => {
+  const closeRuler = (0, import_react16.useCallback)(() => {
     if (!isRulerVisible) return false;
     setIsRulerVisible(false);
     clearRulerMeasure();
     return true;
   }, [clearRulerMeasure, isRulerVisible]);
-  const toggleRuler = (0, import_react15.useCallback)(() => {
+  const toggleRuler = (0, import_react16.useCallback)(() => {
     if (!isRulerAvailable) return;
     onCancelReviewMode();
     onCloseTransientPanels();
@@ -14776,7 +15635,7 @@ var useReviewRuler = ({
     onCancelReviewMode,
     onCloseTransientPanels
   ]);
-  (0, import_react15.useEffect)(() => {
+  (0, import_react16.useEffect)(() => {
     if (!isRulerVisible || isRulerAvailable) return;
     closeRuler();
   }, [closeRuler, isRulerAvailable, isRulerVisible]);
@@ -14798,572 +15657,6 @@ var useReviewRuler = ({
 
 // src/react-shell/hooks/use.review.figma.images.ts
 var import_react17 = require("react");
-
-// src/react-shell/figma/image.controller.ts
-var import_react16 = require("react");
-var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY = 0.48;
-var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX = "df-review-figma-image-overlay-state:";
-var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION = 2;
-var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE = "normal";
-var createReviewFigmaRouteTarget = ({
-  pageUrl,
-  projectId,
-  viewport
-}) => ({
-  type: "route",
-  projectId,
-  pageUrl,
-  viewport: {
-    label: viewport.label,
-    width: viewport.width,
-    height: viewport.height,
-    scope: getViewportPresetKind(viewport)
-  }
-});
-var useReviewFigmaImageStoreController = ({
-  imageFormat = DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
-  store,
-  target
-}) => {
-  const targetKey = (0, import_react16.useMemo)(
-    () => createReviewFigmaImageTargetKey(target),
-    [target]
-  );
-  const requestIdRef = (0, import_react16.useRef)(0);
-  const [imageList, setImageList] = (0, import_react16.useState)(() => ({
-    images: [],
-    targetKey
-  }));
-  const [isLoading, setIsLoading] = (0, import_react16.useState)(Boolean(store));
-  const [isMutating, setIsMutating] = (0, import_react16.useState)(false);
-  const [error, setError] = (0, import_react16.useState)("");
-  const images = imageList.targetKey === targetKey ? imageList.images : [];
-  const refreshImages = (0, import_react16.useCallback)(async () => {
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    if (!store) {
-      setImageList({ images: [], targetKey });
-      setIsLoading(false);
-      setError("");
-      return [];
-    }
-    setIsLoading(true);
-    try {
-      const nextImages = sortReviewFigmaImages(await store.listImages(target));
-      if (requestId !== requestIdRef.current) return nextImages;
-      setImageList({ images: nextImages, targetKey });
-      setError("");
-      return nextImages;
-    } catch (refreshError) {
-      if (requestId === requestIdRef.current) {
-        setError(getReviewFigmaImageErrorMessage(refreshError));
-      }
-      return [];
-    } finally {
-      if (requestId === requestIdRef.current) setIsLoading(false);
-    }
-  }, [store, target, targetKey]);
-  (0, import_react16.useEffect)(() => {
-    void refreshImages();
-  }, [refreshImages]);
-  const addImage = (0, import_react16.useCallback)(
-    async (figmaUrl, label) => {
-      const trimmedUrl = figmaUrl.trim();
-      if (!store || !trimmedUrl) return null;
-      setIsMutating(true);
-      try {
-        const image = await store.addImage({
-          target,
-          figmaUrl: trimmedUrl,
-          imageFormat,
-          label: label?.trim() || void 0
-        });
-        setImageList((currentList) => ({
-          images: sortReviewFigmaImages([
-            ...(currentList.targetKey === targetKey ? currentList.images : []).filter((currentImage) => currentImage.id !== image.id),
-            image
-          ]),
-          targetKey
-        }));
-        setError("");
-        return image;
-      } catch (addError) {
-        setError(getReviewFigmaImageErrorMessage(addError));
-        return null;
-      } finally {
-        setIsMutating(false);
-      }
-    },
-    [imageFormat, store, target, targetKey]
-  );
-  const deleteImage = (0, import_react16.useCallback)(
-    async (id) => {
-      if (!store) return;
-      const previousImageList = imageList;
-      setImageList({
-        images: images.filter((image) => image.id !== id),
-        targetKey
-      });
-      setIsMutating(true);
-      try {
-        await store.deleteImage(id);
-        setError("");
-      } catch (deleteError) {
-        setImageList(previousImageList);
-        setError(getReviewFigmaImageErrorMessage(deleteError));
-      } finally {
-        setIsMutating(false);
-      }
-    },
-    [imageList, images, store, targetKey]
-  );
-  const updateImage = (0, import_react16.useCallback)(
-    async (id, patch) => {
-      if (!store) return null;
-      const previousImageList = imageList;
-      setIsMutating(true);
-      try {
-        const image = await store.updateImage(id, patch);
-        setImageList((currentList) => ({
-          images: sortReviewFigmaImages([
-            ...(currentList.targetKey === targetKey ? currentList.images : images).filter((currentImage) => currentImage.id !== image.id),
-            image
-          ]),
-          targetKey
-        }));
-        setError("");
-        return image;
-      } catch (updateError) {
-        setImageList(previousImageList);
-        setError(getReviewFigmaImageErrorMessage(updateError));
-        return null;
-      } finally {
-        setIsMutating(false);
-      }
-    },
-    [imageList, images, store, targetKey]
-  );
-  const reorderImages = (0, import_react16.useCallback)(
-    async (imageIds) => {
-      if (!store) return;
-      const currentImageIds = images.map((image) => image.id);
-      const nextImageIdSet = new Set(imageIds);
-      const hasSameIds = imageIds.length === currentImageIds.length && nextImageIdSet.size === currentImageIds.length && currentImageIds.every((imageId) => nextImageIdSet.has(imageId));
-      const hasSameOrder = hasSameIds && imageIds.every((imageId, index) => imageId === currentImageIds[index]);
-      if (!hasSameIds || hasSameOrder) return;
-      const previousImages = images;
-      const imageById = new Map(images.map((image) => [image.id, image]));
-      const optimisticImages = imageIds.flatMap((imageId, order) => {
-        const image = imageById.get(imageId);
-        return image ? [{ ...image, order }] : [];
-      });
-      setImageList({ images: optimisticImages, targetKey });
-      setIsMutating(true);
-      try {
-        const savedImages = await store.reorderImages({
-          target,
-          imageIds
-        });
-        setImageList({ images: sortReviewFigmaImages(savedImages), targetKey });
-        setError("");
-      } catch (reorderError) {
-        setImageList({ images: previousImages, targetKey });
-        setError(getReviewFigmaImageErrorMessage(reorderError));
-      } finally {
-        setIsMutating(false);
-      }
-    },
-    [images, store, target, targetKey]
-  );
-  const moveImage = (0, import_react16.useCallback)(
-    async (id, direction) => {
-      const currentIndex = images.findIndex((image2) => image2.id === id);
-      const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= images.length) {
-        return;
-      }
-      const reorderedImages = [...images];
-      const [image] = reorderedImages.splice(currentIndex, 1);
-      reorderedImages.splice(nextIndex, 0, image);
-      await reorderImages(reorderedImages.map((nextImage) => nextImage.id));
-    },
-    [images, reorderImages]
-  );
-  return {
-    addImage,
-    deleteImage,
-    error,
-    images,
-    isLoading: isLoading || imageList.targetKey !== targetKey,
-    isMutating,
-    moveImage,
-    refreshImages,
-    reorderImages,
-    updateImage
-  };
-};
-var useReviewFigmaImageOverlayController = ({
-  images,
-  isLoading,
-  target
-}) => {
-  const storageKey = (0, import_react16.useMemo)(
-    () => createReviewFigmaImageOverlayStorageKey(target),
-    [target]
-  );
-  const [stateContainer, setStateContainer] = (0, import_react16.useState)(() => ({
-    state: readStoredReviewFigmaImageOverlayState(storageKey),
-    storageKey
-  }));
-  const state = stateContainer.storageKey === storageKey ? stateContainer.state : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
-  const updateState = (0, import_react16.useCallback)(
-    (updater) => {
-      setStateContainer((currentContainer) => {
-        const currentState = currentContainer.storageKey === storageKey ? currentContainer.state : readStoredReviewFigmaImageOverlayState(storageKey);
-        return {
-          state: updater(currentState),
-          storageKey
-        };
-      });
-    },
-    [storageKey]
-  );
-  (0, import_react16.useEffect)(() => {
-    setStateContainer({
-      state: readStoredReviewFigmaImageOverlayState(storageKey),
-      storageKey
-    });
-  }, [storageKey]);
-  (0, import_react16.useEffect)(() => {
-    if (isLoading) return;
-    updateState((currentState) => {
-      const nextImageIds = new Set(images.map((image) => image.id));
-      const selectedImageId = currentState.selectedImageId && nextImageIds.has(currentState.selectedImageId) ? currentState.selectedImageId : images[0]?.id ?? null;
-      const imageStates = Object.fromEntries(
-        Object.entries(currentState.imageStates).filter(
-          ([imageId]) => nextImageIds.has(imageId)
-        )
-      );
-      if (selectedImageId === currentState.selectedImageId && imageStates === currentState.imageStates) {
-        return currentState;
-      }
-      return {
-        ...currentState,
-        selectedImageId,
-        imageStates
-      };
-    });
-  }, [images, isLoading, updateState]);
-  (0, import_react16.useEffect)(() => {
-    if (stateContainer.storageKey !== storageKey) return;
-    writeStoredReviewFigmaImageOverlayState(storageKey, stateContainer.state);
-  }, [stateContainer, storageKey]);
-  const selectedImage = (0, import_react16.useMemo)(
-    () => images.find((image) => image.id === state.selectedImageId) ?? null,
-    [images, state.selectedImageId]
-  );
-  const selectedImageOverlayState = getReviewFigmaImageOverlayItemState(
-    state,
-    state.selectedImageId
-  );
-  const setSelectedImageId = (0, import_react16.useCallback)((selectedImageId) => {
-    updateState((currentState) => ({
-      ...currentState,
-      selectedImageId
-    }));
-  }, [updateState]);
-  const showImage = (0, import_react16.useCallback)((selectedImageId) => {
-    updateState((currentState) => ({
-      ...currentState,
-      selectedImageId,
-      imageStates: updateReviewFigmaImageOverlayItemState(
-        currentState.imageStates,
-        selectedImageId,
-        (itemState) => ({
-          ...itemState,
-          isVisible: true
-        })
-      )
-    }));
-  }, [updateState]);
-  const toggleOverlayVisible = (0, import_react16.useCallback)(() => {
-    updateState((currentState) => {
-      if (!currentState.selectedImageId && images[0]) {
-        return {
-          ...currentState,
-          selectedImageId: images[0].id,
-          imageStates: updateReviewFigmaImageOverlayItemState(
-            currentState.imageStates,
-            images[0].id,
-            (itemState) => ({
-              ...itemState,
-              isVisible: true
-            })
-          )
-        };
-      }
-      if (!currentState.selectedImageId) return currentState;
-      return {
-        ...currentState,
-        imageStates: updateReviewFigmaImageOverlayItemState(
-          currentState.imageStates,
-          currentState.selectedImageId,
-          (itemState) => ({
-            ...itemState,
-            isVisible: !itemState.isVisible
-          })
-        )
-      };
-    });
-  }, [images, updateState]);
-  const setOverlayOpacity = (0, import_react16.useCallback)((opacity) => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          opacity: clampReviewFigmaImageOverlayOpacity(opacity)
-        })
-      )
-    }));
-  }, [updateState]);
-  const setOverlayLocked = (0, import_react16.useCallback)((isLocked) => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          isLocked
-        })
-      )
-    }));
-  }, [updateState]);
-  const toggleOverlayLocked = (0, import_react16.useCallback)(() => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          isLocked: !itemState.isLocked
-        })
-      )
-    }));
-  }, [updateState]);
-  const setOverlayMode = (0, import_react16.useCallback)((mode) => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          mode: normalizeReviewFigmaImageOverlayMode(mode)
-        })
-      )
-    }));
-  }, [updateState]);
-  const toggleOverlayMode = (0, import_react16.useCallback)(() => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          mode: itemState.mode === "invert" ? "normal" : "invert"
-        })
-      )
-    }));
-  }, [updateState]);
-  const setOverlayOffsetY = (0, import_react16.useCallback)((offsetY) => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY)
-        })
-      )
-    }));
-  }, [updateState]);
-  const resetOverlay = (0, import_react16.useCallback)(() => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: currentState.selectedImageId ? updateReviewFigmaImageOverlayItemState(
-        currentState.imageStates,
-        currentState.selectedImageId,
-        () => DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
-      ) : currentState.imageStates
-    }));
-  }, [updateState]);
-  return {
-    isOverlayVisible: selectedImageOverlayState.isVisible,
-    overlayMode: selectedImageOverlayState.mode,
-    overlayOffsetY: selectedImageOverlayState.offsetY,
-    overlayOpacity: selectedImageOverlayState.opacity,
-    isOverlayLocked: selectedImageOverlayState.isLocked,
-    resetOverlay,
-    selectedImage,
-    selectedImageId: state.selectedImageId,
-    setOverlayLocked,
-    setOverlayMode,
-    setOverlayOffsetY,
-    setOverlayOpacity,
-    setSelectedImageId,
-    showImage,
-    state,
-    target,
-    toggleOverlayLocked,
-    toggleOverlayMode,
-    toggleOverlayVisible
-  };
-};
-function sortReviewFigmaImages(images) {
-  return [...images].sort((a, b) => {
-    if (a.order !== b.order) return a.order - b.order;
-    return a.createdAt.localeCompare(b.createdAt);
-  });
-}
-function createReviewFigmaImageOverlayStorageKey(target) {
-  return `${REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX}${createReviewFigmaImageTargetKey(target)}`;
-}
-function createReviewFigmaImageTargetKey(target) {
-  return [
-    target.projectId,
-    target.pageUrl,
-    target.viewport?.scope ?? "",
-    target.viewport?.label ?? "",
-    target.viewport?.width ?? "",
-    target.viewport?.height ?? "",
-    target.slot ?? ""
-  ].join("|");
-}
-function readStoredReviewFigmaImageOverlayState(storageKey) {
-  if (typeof window === "undefined") {
-    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
-  }
-  try {
-    const value = window.localStorage.getItem(storageKey);
-    if (!value) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
-    return normalizeReviewFigmaImageOverlayState(JSON.parse(value));
-  } catch {
-    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
-  }
-}
-function writeStoredReviewFigmaImageOverlayState(storageKey, state) {
-  if (typeof window === "undefined") return;
-  try {
-    if (isDefaultReviewFigmaImageOverlayState(state)) {
-      window.localStorage.removeItem(storageKey);
-      return;
-    }
-    window.localStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        version: REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION,
-        ...state
-      })
-    );
-  } catch {
-    return;
-  }
-}
-var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE = {
-  selectedImageId: null,
-  imageStates: {}
-};
-var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE = {
-  isVisible: false,
-  opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
-  isLocked: false,
-  mode: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE,
-  offsetY: 0
-};
-function normalizeReviewFigmaImageOverlayState(value) {
-  if (!value || typeof value !== "object") {
-    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
-  }
-  const state = value;
-  const selectedImageId = typeof state.selectedImageId === "string" ? state.selectedImageId : null;
-  const imageStates = normalizeReviewFigmaImageOverlayItemStateRecord(
-    state.imageStates
-  );
-  if (Object.keys(imageStates).length === 0 && selectedImageId) {
-    imageStates[selectedImageId] = normalizeReviewFigmaImageOverlayItemState(
-      state
-    );
-  }
-  return {
-    selectedImageId,
-    imageStates
-  };
-}
-function normalizeReviewFigmaImageOverlayItemStateRecord(value) {
-  if (!value || typeof value !== "object") return {};
-  return Object.fromEntries(
-    Object.entries(value).flatMap(([imageId, itemState]) => {
-      if (!imageId || typeof itemState !== "object") return [];
-      return [
-        [
-          imageId,
-          normalizeReviewFigmaImageOverlayItemState(
-            itemState
-          )
-        ]
-      ];
-    })
-  );
-}
-function normalizeReviewFigmaImageOverlayItemState(value) {
-  return {
-    isVisible: value.isVisible === true,
-    opacity: clampReviewFigmaImageOverlayOpacity(
-      typeof value.opacity === "number" ? value.opacity : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
-    ),
-    isLocked: value.isLocked === true,
-    mode: normalizeReviewFigmaImageOverlayMode(value.mode),
-    offsetY: normalizeReviewFigmaImageOverlayOffsetY(value.offsetY)
-  };
-}
-function normalizeReviewFigmaImageOverlayMode(value) {
-  return value === "invert" ? "invert" : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE;
-}
-function normalizeReviewFigmaImageOverlayOffsetY(value) {
-  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
-  return Math.round(value);
-}
-function clampReviewFigmaImageOverlayOpacity(value) {
-  if (!Number.isFinite(value)) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY;
-  return Math.min(1, Math.max(0.08, value));
-}
-function isDefaultReviewFigmaImageOverlayState(state) {
-  return state.selectedImageId === null && Object.keys(state.imageStates).length === 0;
-}
-function getReviewFigmaImageOverlayItemState(state, imageId) {
-  return imageId ? state.imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE;
-}
-function updateSelectedReviewFigmaImageOverlayItemState(state, updater) {
-  return state.selectedImageId ? updateReviewFigmaImageOverlayItemState(
-    state.imageStates,
-    state.selectedImageId,
-    updater
-  ) : state.imageStates;
-}
-function updateReviewFigmaImageOverlayItemState(imageStates, imageId, updater) {
-  return {
-    ...imageStates,
-    [imageId]: updater(
-      imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
-    )
-  };
-}
-function getReviewFigmaImageErrorMessage(error) {
-  return error instanceof Error ? error.message : "Figma image request failed.";
-}
-
-// src/react-shell/hooks/use.review.figma.images.ts
 var useReviewFigmaImages = ({
   imageFormat = DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
   pageUrl,
@@ -15403,6 +15696,7 @@ var useReviewFigmaImages = ({
     target
   });
   const {
+    imageOverlayStates,
     isOverlayLocked,
     isOverlayVisible,
     overlayMode,
@@ -15417,7 +15711,12 @@ var useReviewFigmaImages = ({
     setOverlayOpacity,
     setSelectedImageId,
     showImage,
+    setImageOverlayOffsetY,
+    setImageOverlayOpacity,
     state: overlayState,
+    toggleImageOverlayLocked,
+    toggleImageOverlayMode,
+    toggleImageOverlayVisible,
     toggleOverlayLocked,
     toggleOverlayMode,
     toggleOverlayVisible
@@ -15439,6 +15738,7 @@ var useReviewFigmaImages = ({
     deleteImage,
     error,
     images,
+    imageOverlayStates,
     isLoading,
     isMutating,
     isOverlayLocked,
@@ -15458,7 +15758,12 @@ var useReviewFigmaImages = ({
     setOverlayOffsetY,
     setOverlayOpacity,
     setSelectedImageId,
+    setImageOverlayOffsetY,
+    setImageOverlayOpacity,
     target,
+    toggleImageOverlayLocked,
+    toggleImageOverlayMode,
+    toggleImageOverlayVisible,
     toggleOverlayLocked,
     toggleOverlayMode,
     toggleOverlayVisible,
@@ -16637,23 +16942,21 @@ var ReviewShell = ({
     addImage: addFigmaImage,
     deleteImage: deleteFigmaImage,
     error: figmaImageError,
+    imageOverlayStates: figmaImageOverlayStates,
     images: figmaImageList,
     isLoading: isFigmaImageLoading,
     isMutating: isFigmaImageMutating,
-    isOverlayLocked: isFigmaImageOverlayLocked,
-    isOverlayVisible: isFigmaImageOverlayVisible,
     moveImage: moveFigmaImage,
-    overlayMode: figmaImageOverlayMode,
-    overlayOffsetY: figmaImageOverlayOffsetY,
-    overlayOpacity: figmaImageOverlayOpacity,
     refreshImages: refreshFigmaImages,
     reorderImages: reorderFigmaImages,
-    selectedImage: selectedFigmaImage,
     selectedImageId: selectedFigmaImageId,
-    setOverlayOpacity: setFigmaImageOverlayOpacity,
+    setImageOverlayOffsetY: setFigmaImageOverlayOffsetY,
+    setImageOverlayOpacity: setFigmaImageOverlayOpacity,
     setSelectedImageId: setSelectedFigmaImageId,
     target: figmaImageTarget,
-    toggleOverlayVisible: toggleFigmaImageOverlay,
+    toggleImageOverlayLocked: toggleFigmaImageOverlayLocked,
+    toggleImageOverlayMode: toggleFigmaImageOverlayMode,
+    toggleImageOverlayVisible: toggleFigmaImageOverlayVisible,
     updateImage: updateFigmaImage
   } = useReviewFigmaImages({
     imageFormat: figmaImageFormat,
@@ -17673,14 +17976,22 @@ var ReviewShell = ({
     onRefreshReviewData: refreshReviewData2,
     onToast: showToast
   });
-  const figmaImageOverlay = selectedFigmaImage && isFigmaImageOverlayVisible ? {
-    imageUrl: selectedFigmaImage.imageUrl,
-    isLocked: isFigmaImageOverlayLocked,
-    label: selectedFigmaImage.label ?? selectedFigmaImage.nodeId,
-    mode: figmaImageOverlayMode,
-    offsetY: figmaImageOverlayOffsetY,
-    opacity: figmaImageOverlayOpacity
-  } : null;
+  const figmaImageOverlays = figmaImageList.flatMap((image, index) => {
+    const overlayState = figmaImageOverlayStates[image.id];
+    if (!overlayState?.isVisible) return [];
+    return [
+      {
+        id: image.id,
+        imageUrl: image.imageUrl,
+        isLocked: overlayState.isLocked,
+        label: image.label ?? image.nodeId,
+        mode: overlayState.mode,
+        offsetY: overlayState.offsetY,
+        opacity: overlayState.opacity,
+        zIndex: figmaImageList.length - index
+      }
+    ];
+  });
   return /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)(
     "div",
     {
@@ -17887,22 +18198,24 @@ var ReviewShell = ({
           FigmaImagesPanel,
           {
             error: figmaImageError,
+            imageOverlayStates: figmaImageOverlayStates,
             images: figmaImageList,
             isListVisible: isFigmaImagesPanelVisible,
             isLoading: isFigmaImageLoading,
             isMutating: isFigmaImageMutating,
-            isOverlayVisible: isFigmaImageOverlayVisible,
-            overlayOpacity: figmaImageOverlayOpacity,
             selectedImageId: selectedFigmaImageId,
             target: figmaImageTarget,
             onAddImage: addFigmaImage,
             onDeleteImage: deleteFigmaImage,
             onMoveImage: moveFigmaImage,
-            onOverlayOpacityChange: setFigmaImageOverlayOpacity,
             onRefreshImages: refreshFigmaImages,
             onReorderImages: reorderFigmaImages,
             onSelectImage: setSelectedFigmaImageId,
-            onToggleOverlay: toggleFigmaImageOverlay,
+            onSetImageOverlayOffsetY: setFigmaImageOverlayOffsetY,
+            onSetImageOverlayOpacity: setFigmaImageOverlayOpacity,
+            onToggleImageOverlayLocked: toggleFigmaImageOverlayLocked,
+            onToggleImageOverlayMode: toggleFigmaImageOverlayMode,
+            onToggleImageOverlayVisible: toggleFigmaImageOverlayVisible,
             onUpdateImage: updateFigmaImage
           }
         ),
@@ -17938,7 +18251,7 @@ var ReviewShell = ({
           {
             canWriteArea,
             canWriteDom,
-            figmaImageOverlay,
+            figmaImageOverlays,
             figmaFrameUrl,
             frameScrollRef,
             iframeRef,
@@ -18189,6 +18502,7 @@ lucide-react/dist/esm/icons/check.mjs:
 lucide-react/dist/esm/icons/chevron-down.mjs:
 lucide-react/dist/esm/icons/circle-question-mark.mjs:
 lucide-react/dist/esm/icons/code-xml.mjs:
+lucide-react/dist/esm/icons/contrast.mjs:
 lucide-react/dist/esm/icons/copy.mjs:
 lucide-react/dist/esm/icons/database.mjs:
 lucide-react/dist/esm/icons/external-link.mjs:
@@ -18201,10 +18515,13 @@ lucide-react/dist/esm/icons/images.mjs:
 lucide-react/dist/esm/icons/layout-grid.mjs:
 lucide-react/dist/esm/icons/link-2.mjs:
 lucide-react/dist/esm/icons/list-filter.mjs:
+lucide-react/dist/esm/icons/lock-open.mjs:
+lucide-react/dist/esm/icons/lock.mjs:
 lucide-react/dist/esm/icons/map.mjs:
 lucide-react/dist/esm/icons/maximize-2.mjs:
 lucide-react/dist/esm/icons/monitor.mjs:
 lucide-react/dist/esm/icons/moon.mjs:
+lucide-react/dist/esm/icons/move-vertical.mjs:
 lucide-react/dist/esm/icons/pencil.mjs:
 lucide-react/dist/esm/icons/plus.mjs:
 lucide-react/dist/esm/icons/rectangle-horizontal.mjs:

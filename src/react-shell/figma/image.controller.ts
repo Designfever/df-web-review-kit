@@ -20,13 +20,12 @@ import { getViewportPresetKind } from '../viewport';
 export const DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY = 0.48;
 const REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX =
   'df-review-figma-image-overlay-state:';
-const REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION = 1;
+const REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION = 2;
 const DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE = 'normal';
 
 export type ReviewFigmaImageOverlayMode = 'normal' | 'invert';
 
-export type ReviewFigmaImageOverlayState = {
-  selectedImageId: string | null;
+export type ReviewFigmaImageOverlayItemState = {
   isVisible: boolean;
   opacity: number;
   isLocked: boolean;
@@ -34,10 +33,16 @@ export type ReviewFigmaImageOverlayState = {
   offsetY: number;
 };
 
-interface StoredReviewFigmaImageOverlayState
-  extends Partial<ReviewFigmaImageOverlayState> {
+export type ReviewFigmaImageOverlayState = {
+  selectedImageId: string | null;
+  imageStates: Record<string, ReviewFigmaImageOverlayItemState>;
+};
+
+type StoredReviewFigmaImageOverlayState = Partial<
+  ReviewFigmaImageOverlayState & ReviewFigmaImageOverlayItemState
+> & {
   version?: number;
-}
+};
 
 interface CreateReviewFigmaRouteTargetOptions {
   pageUrl: string;
@@ -326,16 +331,21 @@ export const useReviewFigmaImageOverlayController = ({
     if (isLoading) return;
 
     updateState((currentState) => {
+      const nextImageIds = new Set(images.map((image) => image.id));
       const selectedImageId =
         currentState.selectedImageId &&
-        images.some((image) => image.id === currentState.selectedImageId)
+        nextImageIds.has(currentState.selectedImageId)
           ? currentState.selectedImageId
           : images[0]?.id ?? null;
-      const isVisible = currentState.isVisible && images.length > 0;
+      const imageStates = Object.fromEntries(
+        Object.entries(currentState.imageStates).filter(([imageId]) =>
+          nextImageIds.has(imageId)
+        )
+      );
 
       if (
         selectedImageId === currentState.selectedImageId &&
-        isVisible === currentState.isVisible
+        imageStates === currentState.imageStates
       ) {
         return currentState;
       }
@@ -343,7 +353,7 @@ export const useReviewFigmaImageOverlayController = ({
       return {
         ...currentState,
         selectedImageId,
-        isVisible,
+        imageStates,
       };
     });
   }, [images, isLoading, updateState]);
@@ -357,12 +367,15 @@ export const useReviewFigmaImageOverlayController = ({
     () => images.find((image) => image.id === state.selectedImageId) ?? null,
     [images, state.selectedImageId]
   );
+  const selectedImageOverlayState = getReviewFigmaImageOverlayItemState(
+    state,
+    state.selectedImageId
+  );
 
   const setSelectedImageId = useCallback((selectedImageId: string | null) => {
     updateState((currentState) => ({
       ...currentState,
       selectedImageId,
-      isVisible: selectedImageId ? currentState.isVisible : false,
     }));
   }, [updateState]);
 
@@ -370,7 +383,14 @@ export const useReviewFigmaImageOverlayController = ({
     updateState((currentState) => ({
       ...currentState,
       selectedImageId,
-      isVisible: true,
+      imageStates: updateReviewFigmaImageOverlayItemState(
+        currentState.imageStates,
+        selectedImageId,
+        (itemState) => ({
+          ...itemState,
+          isVisible: true,
+        })
+      ),
     }));
   }, [updateState]);
 
@@ -380,13 +400,29 @@ export const useReviewFigmaImageOverlayController = ({
         return {
           ...currentState,
           selectedImageId: images[0].id,
-          isVisible: true,
+          imageStates: updateReviewFigmaImageOverlayItemState(
+            currentState.imageStates,
+            images[0].id,
+            (itemState) => ({
+              ...itemState,
+              isVisible: true,
+            })
+          ),
         };
       }
 
+      if (!currentState.selectedImageId) return currentState;
+
       return {
         ...currentState,
-        isVisible: !currentState.isVisible,
+        imageStates: updateReviewFigmaImageOverlayItemState(
+          currentState.imageStates,
+          currentState.selectedImageId,
+          (itemState) => ({
+            ...itemState,
+            isVisible: !itemState.isVisible,
+          })
+        ),
       };
     });
   }, [images, updateState]);
@@ -394,59 +430,100 @@ export const useReviewFigmaImageOverlayController = ({
   const setOverlayOpacity = useCallback((opacity: number) => {
     updateState((currentState) => ({
       ...currentState,
-      opacity: clampReviewFigmaImageOverlayOpacity(opacity),
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          opacity: clampReviewFigmaImageOverlayOpacity(opacity),
+        })
+      ),
     }));
   }, [updateState]);
 
   const setOverlayLocked = useCallback((isLocked: boolean) => {
     updateState((currentState) => ({
       ...currentState,
-      isLocked,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          isLocked,
+        })
+      ),
     }));
   }, [updateState]);
 
   const toggleOverlayLocked = useCallback(() => {
     updateState((currentState) => ({
       ...currentState,
-      isLocked: !currentState.isLocked,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          isLocked: !itemState.isLocked,
+        })
+      ),
     }));
   }, [updateState]);
 
   const setOverlayMode = useCallback((mode: ReviewFigmaImageOverlayMode) => {
     updateState((currentState) => ({
       ...currentState,
-      mode: normalizeReviewFigmaImageOverlayMode(mode),
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          mode: normalizeReviewFigmaImageOverlayMode(mode),
+        })
+      ),
     }));
   }, [updateState]);
 
   const toggleOverlayMode = useCallback(() => {
     updateState((currentState) => ({
       ...currentState,
-      mode: currentState.mode === 'invert' ? 'normal' : 'invert',
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          mode: itemState.mode === 'invert' ? 'normal' : 'invert',
+        })
+      ),
     }));
   }, [updateState]);
 
   const setOverlayOffsetY = useCallback((offsetY: number) => {
     updateState((currentState) => ({
       ...currentState,
-      offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY),
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY),
+        })
+      ),
     }));
   }, [updateState]);
 
   const resetOverlay = useCallback(() => {
     updateState((currentState) => ({
-      ...DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE,
-      selectedImageId: currentState.selectedImageId,
-      isVisible: currentState.isVisible,
+      ...currentState,
+      imageStates: currentState.selectedImageId
+        ? updateReviewFigmaImageOverlayItemState(
+            currentState.imageStates,
+            currentState.selectedImageId,
+            () => DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
+          )
+        : currentState.imageStates,
     }));
   }, [updateState]);
 
   return {
-    isOverlayVisible: state.isVisible,
-    overlayMode: state.mode,
-    overlayOffsetY: state.offsetY,
-    overlayOpacity: state.opacity,
-    isOverlayLocked: state.isLocked,
+    isOverlayVisible: selectedImageOverlayState.isVisible,
+    overlayMode: selectedImageOverlayState.mode,
+    overlayOffsetY: selectedImageOverlayState.offsetY,
+    overlayOpacity: selectedImageOverlayState.opacity,
+    isOverlayLocked: selectedImageOverlayState.isLocked,
     resetOverlay,
     selectedImage,
     selectedImageId: state.selectedImageId,
@@ -530,6 +607,10 @@ function writeStoredReviewFigmaImageOverlayState(
 
 const DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE: ReviewFigmaImageOverlayState = {
   selectedImageId: null,
+  imageStates: {},
+};
+
+const DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE: ReviewFigmaImageOverlayItemState = {
   isVisible: false,
   opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
   isLocked: false,
@@ -545,19 +626,54 @@ function normalizeReviewFigmaImageOverlayState(
   }
 
   const state = value as StoredReviewFigmaImageOverlayState;
+  const selectedImageId =
+    typeof state.selectedImageId === 'string' ? state.selectedImageId : null;
+  const imageStates = normalizeReviewFigmaImageOverlayItemStateRecord(
+    state.imageStates
+  );
+  if (Object.keys(imageStates).length === 0 && selectedImageId) {
+    imageStates[selectedImageId] = normalizeReviewFigmaImageOverlayItemState(
+      state
+    );
+  }
 
   return {
-    selectedImageId:
-      typeof state.selectedImageId === 'string' ? state.selectedImageId : null,
-    isVisible: state.isVisible === true,
+    selectedImageId,
+    imageStates,
+  };
+}
+
+function normalizeReviewFigmaImageOverlayItemStateRecord(value: unknown) {
+  if (!value || typeof value !== 'object') return {};
+
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([imageId, itemState]) => {
+      if (!imageId || typeof itemState !== 'object') return [];
+      return [
+        [
+          imageId,
+          normalizeReviewFigmaImageOverlayItemState(
+            itemState as Partial<ReviewFigmaImageOverlayItemState>
+          ),
+        ],
+      ];
+    })
+  );
+}
+
+function normalizeReviewFigmaImageOverlayItemState(
+  value: Partial<ReviewFigmaImageOverlayItemState>
+): ReviewFigmaImageOverlayItemState {
+  return {
+    isVisible: value.isVisible === true,
     opacity: clampReviewFigmaImageOverlayOpacity(
-      typeof state.opacity === 'number'
-        ? state.opacity
+      typeof value.opacity === 'number'
+        ? value.opacity
         : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
     ),
-    isLocked: state.isLocked === true,
-    mode: normalizeReviewFigmaImageOverlayMode(state.mode),
-    offsetY: normalizeReviewFigmaImageOverlayOffsetY(state.offsetY),
+    isLocked: value.isLocked === true,
+    mode: normalizeReviewFigmaImageOverlayMode(value.mode),
+    offsetY: normalizeReviewFigmaImageOverlayOffsetY(value.offsetY),
   };
 }
 
@@ -582,12 +698,48 @@ function isDefaultReviewFigmaImageOverlayState(
 ) {
   return (
     state.selectedImageId === null &&
-    state.isVisible === false &&
-    state.opacity === DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY &&
-    state.isLocked === false &&
-    state.mode === DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE &&
-    state.offsetY === 0
+    Object.keys(state.imageStates).length === 0
   );
+}
+
+function getReviewFigmaImageOverlayItemState(
+  state: ReviewFigmaImageOverlayState,
+  imageId: string | null
+) {
+  return imageId
+    ? (state.imageStates[imageId] ??
+        DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE)
+    : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE;
+}
+
+function updateSelectedReviewFigmaImageOverlayItemState(
+  state: ReviewFigmaImageOverlayState,
+  updater: (
+    itemState: ReviewFigmaImageOverlayItemState
+  ) => ReviewFigmaImageOverlayItemState
+) {
+  return state.selectedImageId
+    ? updateReviewFigmaImageOverlayItemState(
+        state.imageStates,
+        state.selectedImageId,
+        updater
+      )
+    : state.imageStates;
+}
+
+function updateReviewFigmaImageOverlayItemState(
+  imageStates: Record<string, ReviewFigmaImageOverlayItemState>,
+  imageId: string,
+  updater: (
+    itemState: ReviewFigmaImageOverlayItemState
+  ) => ReviewFigmaImageOverlayItemState
+) {
+  return {
+    ...imageStates,
+    [imageId]: updater(
+      imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
+    ),
+  };
 }
 
 function getReviewFigmaImageErrorMessage(error: unknown) {

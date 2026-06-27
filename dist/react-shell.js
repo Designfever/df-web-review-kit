@@ -10345,7 +10345,7 @@ import {
 } from "react";
 var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY = 0.48;
 var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX = "df-review-figma-image-overlay-state:";
-var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION = 1;
+var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION = 2;
 var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE = "normal";
 var createReviewFigmaRouteTarget = ({
   pageUrl,
@@ -10566,15 +10566,20 @@ var useReviewFigmaImageOverlayController = ({
   useEffect8(() => {
     if (isLoading) return;
     updateState((currentState) => {
-      const selectedImageId = currentState.selectedImageId && images.some((image) => image.id === currentState.selectedImageId) ? currentState.selectedImageId : images[0]?.id ?? null;
-      const isVisible = currentState.isVisible && images.length > 0;
-      if (selectedImageId === currentState.selectedImageId && isVisible === currentState.isVisible) {
+      const nextImageIds = new Set(images.map((image) => image.id));
+      const selectedImageId = currentState.selectedImageId && nextImageIds.has(currentState.selectedImageId) ? currentState.selectedImageId : images[0]?.id ?? null;
+      const imageStates = Object.fromEntries(
+        Object.entries(currentState.imageStates).filter(
+          ([imageId]) => nextImageIds.has(imageId)
+        )
+      );
+      if (selectedImageId === currentState.selectedImageId && imageStates === currentState.imageStates) {
         return currentState;
       }
       return {
         ...currentState,
         selectedImageId,
-        isVisible
+        imageStates
       };
     });
   }, [images, isLoading, updateState]);
@@ -10586,18 +10591,28 @@ var useReviewFigmaImageOverlayController = ({
     () => images.find((image) => image.id === state.selectedImageId) ?? null,
     [images, state.selectedImageId]
   );
+  const selectedImageOverlayState = getReviewFigmaImageOverlayItemState(
+    state,
+    state.selectedImageId
+  );
   const setSelectedImageId = useCallback9((selectedImageId) => {
     updateState((currentState) => ({
       ...currentState,
-      selectedImageId,
-      isVisible: selectedImageId ? currentState.isVisible : false
+      selectedImageId
     }));
   }, [updateState]);
   const showImage = useCallback9((selectedImageId) => {
     updateState((currentState) => ({
       ...currentState,
       selectedImageId,
-      isVisible: true
+      imageStates: updateReviewFigmaImageOverlayItemState(
+        currentState.imageStates,
+        selectedImageId,
+        (itemState) => ({
+          ...itemState,
+          isVisible: true
+        })
+      )
     }));
   }, [updateState]);
   const toggleOverlayVisible = useCallback9(() => {
@@ -10606,64 +10621,118 @@ var useReviewFigmaImageOverlayController = ({
         return {
           ...currentState,
           selectedImageId: images[0].id,
-          isVisible: true
+          imageStates: updateReviewFigmaImageOverlayItemState(
+            currentState.imageStates,
+            images[0].id,
+            (itemState) => ({
+              ...itemState,
+              isVisible: true
+            })
+          )
         };
       }
+      if (!currentState.selectedImageId) return currentState;
       return {
         ...currentState,
-        isVisible: !currentState.isVisible
+        imageStates: updateReviewFigmaImageOverlayItemState(
+          currentState.imageStates,
+          currentState.selectedImageId,
+          (itemState) => ({
+            ...itemState,
+            isVisible: !itemState.isVisible
+          })
+        )
       };
     });
   }, [images, updateState]);
   const setOverlayOpacity = useCallback9((opacity) => {
     updateState((currentState) => ({
       ...currentState,
-      opacity: clampReviewFigmaImageOverlayOpacity(opacity)
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          opacity: clampReviewFigmaImageOverlayOpacity(opacity)
+        })
+      )
     }));
   }, [updateState]);
   const setOverlayLocked = useCallback9((isLocked) => {
     updateState((currentState) => ({
       ...currentState,
-      isLocked
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          isLocked
+        })
+      )
     }));
   }, [updateState]);
   const toggleOverlayLocked = useCallback9(() => {
     updateState((currentState) => ({
       ...currentState,
-      isLocked: !currentState.isLocked
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          isLocked: !itemState.isLocked
+        })
+      )
     }));
   }, [updateState]);
   const setOverlayMode = useCallback9((mode) => {
     updateState((currentState) => ({
       ...currentState,
-      mode: normalizeReviewFigmaImageOverlayMode(mode)
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          mode: normalizeReviewFigmaImageOverlayMode(mode)
+        })
+      )
     }));
   }, [updateState]);
   const toggleOverlayMode = useCallback9(() => {
     updateState((currentState) => ({
       ...currentState,
-      mode: currentState.mode === "invert" ? "normal" : "invert"
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          mode: itemState.mode === "invert" ? "normal" : "invert"
+        })
+      )
     }));
   }, [updateState]);
   const setOverlayOffsetY = useCallback9((offsetY) => {
     updateState((currentState) => ({
       ...currentState,
-      offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY)
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY)
+        })
+      )
     }));
   }, [updateState]);
   const resetOverlay = useCallback9(() => {
     updateState((currentState) => ({
-      ...DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE,
-      selectedImageId: currentState.selectedImageId,
-      isVisible: currentState.isVisible
+      ...currentState,
+      imageStates: currentState.selectedImageId ? updateReviewFigmaImageOverlayItemState(
+        currentState.imageStates,
+        currentState.selectedImageId,
+        () => DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
+      ) : currentState.imageStates
     }));
   }, [updateState]);
   return {
-    isOverlayVisible: state.isVisible,
-    overlayMode: state.mode,
-    overlayOffsetY: state.offsetY,
-    overlayOpacity: state.opacity,
-    isOverlayLocked: state.isLocked,
+    isOverlayVisible: selectedImageOverlayState.isVisible,
+    overlayMode: selectedImageOverlayState.mode,
+    overlayOffsetY: selectedImageOverlayState.offsetY,
+    overlayOpacity: selectedImageOverlayState.opacity,
+    isOverlayLocked: selectedImageOverlayState.isLocked,
     resetOverlay,
     selectedImage,
     selectedImageId: state.selectedImageId,
@@ -10732,6 +10801,9 @@ function writeStoredReviewFigmaImageOverlayState(storageKey, state) {
 }
 var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE = {
   selectedImageId: null,
+  imageStates: {}
+};
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE = {
   isVisible: false,
   opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
   isLocked: false,
@@ -10743,15 +10815,45 @@ function normalizeReviewFigmaImageOverlayState(value) {
     return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
   }
   const state = value;
+  const selectedImageId = typeof state.selectedImageId === "string" ? state.selectedImageId : null;
+  const imageStates = normalizeReviewFigmaImageOverlayItemStateRecord(
+    state.imageStates
+  );
+  if (Object.keys(imageStates).length === 0 && selectedImageId) {
+    imageStates[selectedImageId] = normalizeReviewFigmaImageOverlayItemState(
+      state
+    );
+  }
   return {
-    selectedImageId: typeof state.selectedImageId === "string" ? state.selectedImageId : null,
-    isVisible: state.isVisible === true,
+    selectedImageId,
+    imageStates
+  };
+}
+function normalizeReviewFigmaImageOverlayItemStateRecord(value) {
+  if (!value || typeof value !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([imageId, itemState]) => {
+      if (!imageId || typeof itemState !== "object") return [];
+      return [
+        [
+          imageId,
+          normalizeReviewFigmaImageOverlayItemState(
+            itemState
+          )
+        ]
+      ];
+    })
+  );
+}
+function normalizeReviewFigmaImageOverlayItemState(value) {
+  return {
+    isVisible: value.isVisible === true,
     opacity: clampReviewFigmaImageOverlayOpacity(
-      typeof state.opacity === "number" ? state.opacity : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
+      typeof value.opacity === "number" ? value.opacity : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
     ),
-    isLocked: state.isLocked === true,
-    mode: normalizeReviewFigmaImageOverlayMode(state.mode),
-    offsetY: normalizeReviewFigmaImageOverlayOffsetY(state.offsetY)
+    isLocked: value.isLocked === true,
+    mode: normalizeReviewFigmaImageOverlayMode(value.mode),
+    offsetY: normalizeReviewFigmaImageOverlayOffsetY(value.offsetY)
   };
 }
 function normalizeReviewFigmaImageOverlayMode(value) {
@@ -10766,7 +10868,25 @@ function clampReviewFigmaImageOverlayOpacity(value) {
   return Math.min(1, Math.max(0.08, value));
 }
 function isDefaultReviewFigmaImageOverlayState(state) {
-  return state.selectedImageId === null && state.isVisible === false && state.opacity === DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY && state.isLocked === false && state.mode === DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE && state.offsetY === 0;
+  return state.selectedImageId === null && Object.keys(state.imageStates).length === 0;
+}
+function getReviewFigmaImageOverlayItemState(state, imageId) {
+  return imageId ? state.imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE;
+}
+function updateSelectedReviewFigmaImageOverlayItemState(state, updater) {
+  return state.selectedImageId ? updateReviewFigmaImageOverlayItemState(
+    state.imageStates,
+    state.selectedImageId,
+    updater
+  ) : state.imageStates;
+}
+function updateReviewFigmaImageOverlayItemState(imageStates, imageId, updater) {
+  return {
+    ...imageStates,
+    [imageId]: updater(
+      imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
+    )
+  };
 }
 function getReviewFigmaImageErrorMessage(error) {
   return error instanceof Error ? error.message : "Figma image request failed.";

@@ -154,6 +154,7 @@ export const useReviewFigmaImageStoreController = ({
           figmaUrl: trimmedUrl,
           imageFormat,
           label: label?.trim() || undefined,
+          order: getNewReviewFigmaImageOrder(images),
         });
         setImageList((currentList) => ({
           images: sortReviewFigmaImages([
@@ -172,7 +173,7 @@ export const useReviewFigmaImageStoreController = ({
         setIsMutating(false);
       }
     },
-    [imageFormat, store, target, targetKey]
+    [imageFormat, images, store, target, targetKey]
   );
 
   const deleteImage = useCallback(
@@ -654,6 +655,12 @@ export function sortReviewFigmaImages(images: ReviewFigmaImage[]) {
   });
 }
 
+function getNewReviewFigmaImageOrder(images: ReviewFigmaImage[]) {
+  return images.length
+    ? Math.min(...images.map((image) => image.order)) - 1
+    : 0;
+}
+
 function createReviewFigmaImageOverlayStorageKey(
   target: ReviewFigmaRouteTarget
 ) {
@@ -796,7 +803,7 @@ function normalizeReviewFigmaImageOverlayOffsetY(value: unknown) {
 
 function clampReviewFigmaImageOverlayOpacity(value: number) {
   if (!Number.isFinite(value)) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY;
-  return Math.min(1, Math.max(0.08, value));
+  return Math.min(1, Math.max(0, value));
 }
 
 function isDefaultReviewFigmaImageOverlayState(

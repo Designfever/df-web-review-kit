@@ -1,30 +1,32 @@
-import { type DragEvent, useState } from 'react';
 import {
-  Check as CheckIcon,
+  type CSSProperties,
+  type MouseEvent,
+  type PointerEvent,
+  useRef,
+  useState,
+} from 'react';
+import {
   Contrast as InvertIcon,
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
-  FileText as PageIcon,
   ExternalLink as ExternalLinkIcon,
-  GripVertical as DragHandleIcon,
   Lock as LockIcon,
-  Monitor as ViewportIcon,
   MoveVertical as OffsetYIcon,
   Pencil as PencilIcon,
   Plus as PlusIcon,
   RefreshCw as RefreshCwIcon,
   Trash2 as TrashIcon,
   Unlock as UnlockIcon,
-  X as XIcon,
 } from 'lucide-react';
 import type { ReviewFigmaImage } from '../../figma/image.types';
-import type { ReviewFigmaRouteTarget } from '../../figma/image.types';
 import type {
   ReviewFigmaImageOverlayItemState,
 } from './image.controller';
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
 } from './image.controller';
+
+const FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS = 6;
 
 interface FigmaImagesPanelProps {
   error: string;
@@ -34,7 +36,6 @@ interface FigmaImagesPanelProps {
   isLoading: boolean;
   isMutating: boolean;
   selectedImageId: string | null;
-  target: ReviewFigmaRouteTarget;
   onAddImage: (
     figmaUrl: string,
     label?: string
@@ -62,7 +63,6 @@ export const FigmaImagesPanel = ({
   isLoading,
   isMutating,
   selectedImageId,
-  target,
   onAddImage,
   onDeleteImage,
   onRefreshImages,
@@ -76,14 +76,18 @@ export const FigmaImagesPanel = ({
   onUpdateImage,
 }: FigmaImagesPanelProps) => {
   const [figmaUrlDraft, setFigmaUrlDraft] = useState('');
-  const [labelDraft, setLabelDraft] = useState('');
   const [editingImageId, setEditingImageId] = useState<string | null>(null);
   const [editingLabelDraft, setEditingLabelDraft] = useState('');
   const [draggingImageId, setDraggingImageId] = useState<string | null>(null);
   const [dragOverImageId, setDragOverImageId] = useState<string | null>(null);
-  const [opacityDraftByImageId, setOpacityDraftByImageId] = useState<
-    Record<string, string>
-  >({});
+  const pointerDragImageIdRef = useRef<string | null>(null);
+  const pointerDragTargetIdRef = useRef<string | null>(null);
+  const pointerDragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const pointerDragDidMoveRef = useRef(false);
+  const opacityDragPointerIdRef = useRef<number | null>(null);
+  const labelEditCancelRef = useRef(false);
+  const labelInputFocusedImageIdRef = useRef<string | null>(null);
+  const labelEditFinishedImageIdRef = useRef<string | null>(null);
   const [offsetYDraftByImageId, setOffsetYDraftByImageId] = useState<
     Record<string, string>
   >({});
@@ -98,10 +102,12 @@ export const FigmaImagesPanel = ({
   const selectedOverlayState = selectedImage
     ? imageOverlayStates[selectedImage.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE
     : DEFAULT_FIGMA_IMAGE_LAYER_STATE;
-  const selectedOpacityDraft = selectedImage
-    ? opacityDraftByImageId[selectedImage.id] ??
-      String(Math.round(selectedOverlayState.opacity * 100))
-    : '';
+  const selectedOpacityPercent = selectedImage
+    ? getSnappedOpacityPercent(selectedOverlayState.opacity)
+    : 0;
+  const selectedOpacityThumbOffset =
+    FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS *
+    (1 - (selectedOpacityPercent / 100) * 2);
   const selectedOffsetYDraft = selectedImage
     ? offsetYDraftByImageId[selectedImage.id] ??
       String(selectedOverlayState.offsetY)
@@ -113,51 +119,122 @@ export const FigmaImagesPanel = ({
       : isLoading
         ? 'Loading...'
         : '';
+  const draggingImageIndex = draggingImageId
+    ? images.findIndex((image) => image.id === draggingImageId)
+    : -1;
+  const finishEditingImageLabel = (
+    imageId: string,
+    currentLabel: string
+  ) => {
+    if (labelEditFinishedImageIdRef.current === imageId) return;
+
+    labelEditFinishedImageIdRef.current = imageId;
+    labelInputFocusedImageIdRef.current = null;
+    const nextLabel = editingLabelDraft;
+    setEditingImageId(null);
+    setEditingLabelDraft('');
+    if (nextLabel === currentLabel) return;
+
+    void onUpdateImage(imageId, {
+      label: nextLabel,
+    });
+  };
+  const updateSelectedImageOpacity = (value: string) => {
+    if (!selectedImage) return;
+    const opacityPercent = Math.max(
+      0,
+      Math.min(100, Math.round(Number(value) / 10) * 10)
+    );
+    if (Number.isFinite(opacityPercent)) {
+      onSetImageOverlayOpacity(selectedImage.id, opacityPercent / 100);
+    }
+  };
+  const updateSelectedImageOpacityFromClientX = (
+    clientX: number,
+    sliderElement: HTMLDivElement
+  ) => {
+    if (!selectedImage) return;
+
+    const rect = sliderElement.getBoundingClientRect();
+    if (rect.width <= 0) return;
+
+    const trackStart = rect.left + FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS;
+    const trackWidth = Math.max(
+      1,
+      rect.width - FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS * 2
+    );
+    const endpointInset = FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS * 2;
+    const rawPercent = ((clientX - trackStart) / trackWidth) * 100;
+    let opacityPercent = Math.max(
+      0,
+      Math.min(100, Math.round(rawPercent / 10) * 10)
+    );
+    if (clientX <= rect.left + endpointInset) {
+      opacityPercent = 0;
+    } else if (clientX >= rect.right - endpointInset) {
+      opacityPercent = 100;
+    }
+    onSetImageOverlayOpacity(selectedImage.id, opacityPercent / 100);
+  };
+  const updateSelectedImageOpacityFromPointer = (
+    event: PointerEvent<HTMLDivElement>
+  ) => {
+    updateSelectedImageOpacityFromClientX(event.clientX, event.currentTarget);
+  };
+  const updateSelectedImageOpacityFromMouse = (
+    event: MouseEvent<HTMLDivElement>
+  ) => {
+    updateSelectedImageOpacityFromClientX(event.clientX, event.currentTarget);
+  };
 
   return (
-    <aside className="df-review-figma-images-panel" aria-hidden={!isListVisible}>
-      <div className="df-review-figma-images-header">
-        <div className="df-review-figma-images-title">
-          <strong>Figma Images</strong>
-          <span>
-            {target.viewport?.label ?? 'Viewport'} / {images.length}
-          </span>
-        </div>
-        <button
-          aria-label="Refresh Figma images"
-          className="df-review-figma-image-icon-button"
-          disabled={isLoading || isMutating}
-          type="button"
-          onClick={() => void onRefreshImages()}
-        >
-          <RefreshCwIcon aria-hidden="true" />
-        </button>
-      </div>
+    <aside
+      className="df-review-figma-images-panel"
+      aria-hidden={!isListVisible}
+      onPointerDownCapture={(event) => {
+        if (
+          !editingImageId ||
+          (event.target instanceof Element &&
+            event.target.closest('.df-review-figma-image-label-input'))
+        ) {
+          return;
+        }
 
+        const editingImage = images.find((image) => image.id === editingImageId);
+        if (!editingImage) return;
+        finishEditingImageLabel(editingImage.id, editingImage.label ?? '');
+      }}
+    >
       <form
         className="df-review-figma-image-form"
         onSubmit={(event) => {
           event.preventDefault();
-          void onAddImage(figmaUrlDraft, labelDraft).then((image) => {
+          void onAddImage(figmaUrlDraft).then((image) => {
             if (!image) return;
             setFigmaUrlDraft('');
-            setLabelDraft('');
           });
         }}
       >
-        <input
-          aria-label="Figma image label"
-          autoComplete="off"
-          placeholder="Label"
-          spellCheck={false}
-          value={labelDraft}
-          onChange={(event) => setLabelDraft(event.currentTarget.value)}
-        />
+        <div className="df-review-figma-images-header">
+          <div className="df-review-figma-images-title">
+            <strong>Figma</strong>
+          </div>
+          <button
+            aria-label="Refresh Figma images"
+            className="df-review-figma-image-header-button"
+            disabled={isLoading || isMutating}
+            title="Refresh"
+            type="button"
+            onClick={() => void onRefreshImages()}
+          >
+            <RefreshCwIcon aria-hidden="true" />
+          </button>
+        </div>
         <div className="df-review-figma-image-url-row">
           <input
-            aria-label="Figma node link"
+            aria-label="Figma URL"
             autoComplete="off"
-            placeholder="Figma node link"
+            placeholder="Figma URL"
             required
             spellCheck={false}
             value={figmaUrlDraft}
@@ -173,163 +250,128 @@ export const FigmaImagesPanel = ({
         </div>
       </form>
 
-      <div className="df-review-figma-image-target-summary">
-        <div>
-          <PageIcon aria-hidden="true" />
-          <span>Page</span>
-          <strong>{target.pageUrl}</strong>
-        </div>
-        <div>
-          <ViewportIcon aria-hidden="true" />
-          <span>Viewport</span>
-          <strong>{getFigmaTargetViewportLabel(target)}</strong>
-        </div>
-      </div>
-
       <div
         aria-label="Selected Figma image layer controls"
         className="df-review-figma-image-selected-controls"
       >
-        <div className="df-review-figma-image-selected-label">
-          <strong>{selectedImageLabel}</strong>
+        <div className="df-review-figma-image-selected-numbers">
+          <label className="df-review-figma-image-opacity-control">
+            <span>Opacity</span>
+            <div
+              className="df-review-figma-image-opacity-slider"
+              style={{
+                '--df-review-figma-opacity-value': `${selectedOpacityPercent}%`,
+                '--df-review-figma-opacity-left': `calc(${selectedOpacityPercent}% + ${selectedOpacityThumbOffset}px)`,
+              } as CSSProperties}
+              onPointerCancel={() => {
+                opacityDragPointerIdRef.current = null;
+              }}
+              onPointerDown={(event) => {
+                if (!selectedImage) return;
+
+                opacityDragPointerIdRef.current = event.pointerId;
+                event.currentTarget.setPointerCapture(event.pointerId);
+                event.currentTarget.querySelector('input')?.focus();
+                updateSelectedImageOpacityFromPointer(event);
+              }}
+              onPointerMove={(event) => {
+                if (opacityDragPointerIdRef.current !== event.pointerId) return;
+
+                updateSelectedImageOpacityFromPointer(event);
+              }}
+              onPointerUp={(event) => {
+                if (opacityDragPointerIdRef.current !== event.pointerId) return;
+
+                updateSelectedImageOpacityFromPointer(event);
+                opacityDragPointerIdRef.current = null;
+                if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                  event.currentTarget.releasePointerCapture(event.pointerId);
+                }
+              }}
+              onMouseDown={updateSelectedImageOpacityFromMouse}
+              onMouseMove={(event) => {
+                if (event.buttons !== 1) return;
+
+                updateSelectedImageOpacityFromMouse(event);
+              }}
+              onMouseUp={updateSelectedImageOpacityFromMouse}
+              onClick={updateSelectedImageOpacityFromMouse}
+            >
+              <input
+                aria-label={`${selectedImageLabel} overlay opacity`}
+                aria-valuemax={100}
+                aria-valuemin={0}
+                aria-valuenow={selectedOpacityPercent}
+                disabled={!selectedImage}
+                max="100"
+                min="0"
+                step="10"
+                type="range"
+                value={selectedOpacityPercent}
+                onChange={(event) =>
+                  updateSelectedImageOpacity(event.currentTarget.value)
+                }
+                onInput={(event) =>
+                  updateSelectedImageOpacity(event.currentTarget.value)
+                }
+              />
+            </div>
+            <strong>{selectedOpacityPercent}</strong>
+          </label>
+          <label className="df-review-figma-image-number-control">
+            <OffsetYIcon aria-hidden="true" />
+            <input
+              aria-label={`${selectedImageLabel} overlay Y offset`}
+              disabled={!selectedImage}
+              inputMode="numeric"
+              step="1"
+              type="number"
+              value={selectedOffsetYDraft}
+              onBlur={() => {
+                if (!selectedImage) return;
+                setOffsetYDraftByImageId((currentDrafts) => {
+                  const nextDrafts = { ...currentDrafts };
+                  delete nextDrafts[selectedImage.id];
+                  return nextDrafts;
+                });
+              }}
+              onChange={(event) => {
+                if (!selectedImage) return;
+                const value = event.currentTarget.value;
+                const offsetY = Number(value);
+                setOffsetYDraftByImageId((currentDrafts) => ({
+                  ...currentDrafts,
+                  [selectedImage.id]: value,
+                }));
+                if (value.trim() !== '' && Number.isFinite(offsetY)) {
+                  onSetImageOverlayOffsetY(selectedImage.id, offsetY);
+                }
+              }}
+            />
+          </label>
+          {selectedImage ? (
+            <a
+              aria-label={`Open ${selectedImageLabel} Figma node`}
+              className="df-review-figma-image-selected-link"
+              href={selectedImage.figmaUrl}
+              rel="noreferrer"
+              target="_blank"
+              title="Open Figma node"
+            >
+              <ExternalLinkIcon aria-hidden="true" />
+            </a>
+          ) : (
+            <button
+              aria-label="Open Figma node"
+              className="df-review-figma-image-selected-link"
+              disabled
+              title="Open Figma node"
+              type="button"
+            >
+              <ExternalLinkIcon aria-hidden="true" />
+            </button>
+          )}
         </div>
-        <div className="df-review-figma-image-selected-buttons">
-          <button
-            aria-label={
-              selectedOverlayState.isVisible
-                ? `Hide ${selectedImageLabel} overlay`
-                : `Show ${selectedImageLabel} overlay`
-            }
-            aria-pressed={selectedOverlayState.isVisible}
-            className={`df-review-figma-image-icon-button${
-              selectedOverlayState.isVisible ? ' is-active' : ''
-            }`}
-            disabled={!selectedImage}
-            title={selectedOverlayState.isVisible ? 'Hide overlay' : 'Show overlay'}
-            type="button"
-            onClick={() => {
-              if (!selectedImage) return;
-              onToggleImageOverlayVisible(selectedImage.id);
-            }}
-          >
-            {selectedOverlayState.isVisible ? (
-              <EyeIcon aria-hidden="true" />
-            ) : (
-              <EyeOffIcon aria-hidden="true" />
-            )}
-          </button>
-          <button
-            aria-label={
-              selectedOverlayState.mode === 'invert'
-                ? `Disable ${selectedImageLabel} invert`
-                : `Enable ${selectedImageLabel} invert`
-            }
-            aria-pressed={selectedOverlayState.mode === 'invert'}
-            className={`df-review-figma-image-icon-button${
-              selectedOverlayState.mode === 'invert' ? ' is-active' : ''
-            }`}
-            disabled={!selectedImage}
-            title="Invert"
-            type="button"
-            onClick={() => {
-              if (!selectedImage) return;
-              onToggleImageOverlayMode(selectedImage.id);
-            }}
-          >
-            <InvertIcon aria-hidden="true" />
-          </button>
-          <button
-            aria-label={
-              selectedOverlayState.isLocked
-                ? `Unlock ${selectedImageLabel} overlay`
-                : `Lock ${selectedImageLabel} overlay`
-            }
-            aria-pressed={selectedOverlayState.isLocked}
-            className={`df-review-figma-image-icon-button${
-              selectedOverlayState.isLocked ? ' is-active' : ''
-            }`}
-            disabled={!selectedImage}
-            title={selectedOverlayState.isLocked ? 'Unlock' : 'Lock'}
-            type="button"
-            onClick={() => {
-              if (!selectedImage) return;
-              onToggleImageOverlayLocked(selectedImage.id);
-            }}
-          >
-            {selectedOverlayState.isLocked ? (
-              <LockIcon aria-hidden="true" />
-            ) : (
-              <UnlockIcon aria-hidden="true" />
-            )}
-          </button>
-        </div>
-        <label className="df-review-figma-image-number-control">
-          <span>Opacity</span>
-          <input
-            aria-label={`${selectedImageLabel} overlay opacity`}
-            disabled={!selectedImage}
-            inputMode="numeric"
-            max="100"
-            min="8"
-            step="1"
-            type="number"
-            value={selectedOpacityDraft}
-            onBlur={() => {
-              if (!selectedImage) return;
-              setOpacityDraftByImageId((currentDrafts) => {
-                const nextDrafts = { ...currentDrafts };
-                delete nextDrafts[selectedImage.id];
-                return nextDrafts;
-              });
-            }}
-            onChange={(event) => {
-              if (!selectedImage) return;
-              const value = event.currentTarget.value;
-              const opacityPercent = Number(value);
-              setOpacityDraftByImageId((currentDrafts) => ({
-                ...currentDrafts,
-                [selectedImage.id]: value,
-              }));
-              if (
-                value.trim() !== '' &&
-                Number.isFinite(opacityPercent)
-              ) {
-                onSetImageOverlayOpacity(selectedImage.id, opacityPercent / 100);
-              }
-            }}
-          />
-        </label>
-        <label className="df-review-figma-image-number-control">
-          <OffsetYIcon aria-hidden="true" />
-          <input
-            aria-label={`${selectedImageLabel} overlay Y offset`}
-            disabled={!selectedImage}
-            inputMode="numeric"
-            step="1"
-            type="number"
-            value={selectedOffsetYDraft}
-            onBlur={() => {
-              if (!selectedImage) return;
-              setOffsetYDraftByImageId((currentDrafts) => {
-                const nextDrafts = { ...currentDrafts };
-                delete nextDrafts[selectedImage.id];
-                return nextDrafts;
-              });
-            }}
-            onChange={(event) => {
-              if (!selectedImage) return;
-              const value = event.currentTarget.value;
-              const offsetY = Number(value);
-              setOffsetYDraftByImageId((currentDrafts) => ({
-                ...currentDrafts,
-                [selectedImage.id]: value,
-              }));
-              if (value.trim() !== '' && Number.isFinite(offsetY)) {
-                onSetImageOverlayOffsetY(selectedImage.id, offsetY);
-              }
-            }}
-          />
-        </label>
       </div>
 
       {statusText && (
@@ -353,152 +395,231 @@ export const FigmaImagesPanel = ({
           const isDragging = draggingImageId === image.id;
           const isDropTarget =
             dragOverImageId === image.id && draggingImageId !== image.id;
+          const isDropBefore = isDropTarget && draggingImageIndex > index;
+          const isDropAfter =
+            isDropTarget && draggingImageIndex >= 0 && draggingImageIndex < index;
 
           return (
             <article
+              data-figma-image-id={image.id}
               className={`df-review-figma-image-card${
                 image.id === selectedImageId ? ' is-active' : ''
               }${editingImageId === image.id ? ' is-editing' : ''}${
                 isDragging ? ' is-dragging' : ''
-              }${isDropTarget ? ' is-drop-target' : ''}`}
+              }${isDropTarget ? ' is-drop-target' : ''}${
+                isDropBefore ? ' is-drop-before' : ''
+              }${isDropAfter ? ' is-drop-after' : ''}`}
               key={image.id}
-              onDragLeave={() => {
-                setDragOverImageId((currentImageId) =>
-                  currentImageId === image.id ? null : currentImageId
-                );
+              onClick={() => {
+                if (pointerDragDidMoveRef.current) {
+                  pointerDragDidMoveRef.current = false;
+                  return;
+                }
+                onSelectImage(image.id);
               }}
-              onDragOver={(event) => {
-                if (!draggingImageId || draggingImageId === image.id) return;
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'move';
-                setDragOverImageId(image.id);
+              onPointerCancel={() => {
+                pointerDragImageIdRef.current = null;
+                pointerDragTargetIdRef.current = null;
+                pointerDragStartRef.current = null;
+                setDraggingImageId(null);
+                setDragOverImageId(null);
               }}
-              onDrop={(event) => {
-                event.preventDefault();
-                const draggedImageId =
-                  draggingImageId || event.dataTransfer.getData('text/plain');
-                if (!draggedImageId || draggedImageId === image.id) {
-                  setDraggingImageId(null);
-                  setDragOverImageId(null);
+              onPointerDown={(event: PointerEvent<HTMLElement>) => {
+                if (
+                  event.button !== 0 ||
+                  isMutating ||
+                  editingImageId === image.id ||
+                  isInteractiveFigmaImageTarget(event.target)
+                ) {
+                  return;
+                }
+
+                pointerDragImageIdRef.current = image.id;
+                pointerDragTargetIdRef.current = null;
+                pointerDragStartRef.current = {
+                  x: event.clientX,
+                  y: event.clientY,
+                };
+                pointerDragDidMoveRef.current = false;
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }}
+              onPointerMove={(event) => {
+                const sourceImageId = pointerDragImageIdRef.current;
+                const dragStart = pointerDragStartRef.current;
+                if (!sourceImageId || !dragStart) return;
+
+                const hasMoved =
+                  Math.abs(event.clientX - dragStart.x) +
+                    Math.abs(event.clientY - dragStart.y) >
+                  6;
+                if (!hasMoved) return;
+
+                pointerDragDidMoveRef.current = true;
+                setDraggingImageId(sourceImageId);
+                const targetImageId = getPointerFigmaImageTargetId(event);
+                pointerDragTargetIdRef.current =
+                  targetImageId && targetImageId !== sourceImageId
+                    ? targetImageId
+                    : null;
+                setDragOverImageId(pointerDragTargetIdRef.current);
+              }}
+              onPointerUp={(event) => {
+                const sourceImageId = pointerDragImageIdRef.current;
+                const targetImageId = pointerDragTargetIdRef.current;
+                pointerDragImageIdRef.current = null;
+                pointerDragTargetIdRef.current = null;
+                pointerDragStartRef.current = null;
+                setDraggingImageId(null);
+                setDragOverImageId(null);
+                if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                  event.currentTarget.releasePointerCapture(event.pointerId);
+                }
+                if (
+                  !sourceImageId ||
+                  !targetImageId ||
+                  sourceImageId === targetImageId
+                ) {
                   return;
                 }
 
                 const nextImageIds = getReorderedFigmaImageIds(
                   images,
-                  draggedImageId,
-                  image.id
+                  sourceImageId,
+                  targetImageId
                 );
-                setDraggingImageId(null);
-                setDragOverImageId(null);
                 void onReorderImages(nextImageIds);
               }}
             >
-              <button
-                aria-label={`Drag ${imageLabel}`}
-                className="df-review-figma-image-drag-handle"
-                disabled={images.length < 2 || isMutating}
-                draggable={images.length > 1 && !isMutating}
-                title="Drag to reorder"
-                type="button"
-                onDragEnd={() => {
-                  setDraggingImageId(null);
-                  setDragOverImageId(null);
-                }}
-                onDragStart={(event: DragEvent<HTMLButtonElement>) => {
-                  if (isMutating) {
-                    event.preventDefault();
-                    return;
-                  }
-
-                  event.dataTransfer.effectAllowed = 'move';
-                  event.dataTransfer.setData('text/plain', image.id);
-                  setDraggingImageId(image.id);
-                }}
-              >
-                <DragHandleIcon aria-hidden="true" />
-              </button>
               <div
                 aria-label={`${imageLabel} overlay state`}
                 className="df-review-figma-image-layer-state"
                 title={getFigmaImageLayerStatusLabel(overlayState)}
               >
-                {overlayState.isVisible ? (
-                  <EyeIcon aria-hidden="true" className="is-visible" />
-                ) : (
-                  <EyeOffIcon aria-hidden="true" className="is-hidden" />
-                )}
-                {overlayState.mode === 'invert' && (
-                  <InvertIcon aria-hidden="true" className="is-invert" />
-                )}
-                {overlayState.isLocked && (
-                  <LockIcon aria-hidden="true" className="is-locked" />
-                )}
+                <button
+                  aria-label={
+                    overlayState.isVisible
+                      ? `Hide ${imageLabel} overlay`
+                      : `Show ${imageLabel} overlay`
+                  }
+                  aria-pressed={overlayState.isVisible}
+                  className={`df-review-figma-image-state-button${
+                    overlayState.isVisible ? ' is-active' : ''
+                  }`}
+                  title={overlayState.isVisible ? 'Hide overlay' : 'Show overlay'}
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSelectImage(image.id);
+                    onToggleImageOverlayVisible(image.id);
+                  }}
+                >
+                  {overlayState.isVisible ? (
+                    <EyeIcon aria-hidden="true" />
+                  ) : (
+                    <EyeOffIcon aria-hidden="true" />
+                  )}
+                </button>
+                <button
+                  aria-label={
+                    overlayState.isLocked
+                      ? `Unlock ${imageLabel} overlay`
+                      : `Lock ${imageLabel} overlay`
+                  }
+                  aria-pressed={overlayState.isLocked}
+                  className={`df-review-figma-image-state-button${
+                    overlayState.isLocked ? ' is-active' : ''
+                  }`}
+                  title={overlayState.isLocked ? 'Unlock' : 'Lock'}
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSelectImage(image.id);
+                    onToggleImageOverlayLocked(image.id);
+                  }}
+                >
+                  {overlayState.isLocked ? (
+                    <LockIcon aria-hidden="true" />
+                  ) : (
+                    <UnlockIcon aria-hidden="true" />
+                  )}
+                </button>
+                <button
+                  aria-label={
+                    overlayState.mode === 'invert'
+                      ? `Disable ${imageLabel} invert`
+                      : `Enable ${imageLabel} invert`
+                  }
+                  aria-pressed={overlayState.mode === 'invert'}
+                  className={`df-review-figma-image-state-button${
+                    overlayState.mode === 'invert' ? ' is-active' : ''
+                  }`}
+                  title="Invert"
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSelectImage(image.id);
+                    onToggleImageOverlayMode(image.id);
+                  }}
+                >
+                  <InvertIcon aria-hidden="true" />
+                </button>
               </div>
-              <button
-                aria-label={`Select ${imageLabel}`}
-                className="df-review-figma-image-preview"
-                type="button"
-                onClick={() => onSelectImage(image.id)}
-              >
-                <img alt="" draggable={false} src={image.imageUrl} />
-              </button>
               <div className="df-review-figma-image-card-main">
                 {editingImageId === image.id ? (
-                  <form
-                    className="df-review-figma-image-edit-form"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      void onUpdateImage(image.id, {
-                        label: editingLabelDraft,
-                      }).then((updatedImage) => {
-                        if (!updatedImage) return;
-                        setEditingImageId(null);
-                        setEditingLabelDraft('');
-                      });
-                    }}
-                  >
-                    <input
-                      aria-label="Selected Figma image label"
-                      autoComplete="off"
-                      autoFocus
-                      placeholder="Label"
-                      spellCheck={false}
-                      value={editingLabelDraft}
-                      onChange={(event) =>
-                        setEditingLabelDraft(event.currentTarget.value)
+                  <input
+                    aria-label="Selected Figma image label"
+                    autoComplete="off"
+                    autoFocus
+                    className="df-review-figma-image-label-input"
+                    disabled={isMutating}
+                    placeholder="Label"
+                    ref={(element) => {
+                      if (
+                        !element ||
+                        labelInputFocusedImageIdRef.current === image.id
+                      ) {
+                        return;
                       }
-                    />
-                    <button
-                      aria-label="Save Figma image label"
-                      className="df-review-figma-image-icon-button"
-                      disabled={isMutating}
-                      title="Save"
-                      type="submit"
-                    >
-                      <CheckIcon aria-hidden="true" />
-                    </button>
-                    <button
-                      aria-label="Cancel Figma image label edit"
-                      className="df-review-figma-image-icon-button"
-                      disabled={isMutating}
-                      title="Cancel"
-                      type="button"
-                      onClick={() => {
+
+                      labelInputFocusedImageIdRef.current = image.id;
+                      element.focus();
+                      element.select();
+                    }}
+                    spellCheck={false}
+                    value={editingLabelDraft}
+                    onBlur={() => {
+                      if (labelEditCancelRef.current) {
+                        labelEditCancelRef.current = false;
+                        labelInputFocusedImageIdRef.current = null;
+                        labelEditFinishedImageIdRef.current = image.id;
                         setEditingImageId(null);
                         setEditingLabelDraft('');
-                      }}
-                    >
-                      <XIcon aria-hidden="true" />
-                    </button>
-                  </form>
+                        return;
+                      }
+
+                      finishEditingImageLabel(image.id, image.label ?? '');
+                    }}
+                    onChange={(event) =>
+                      setEditingLabelDraft(event.currentTarget.value)
+                    }
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        event.currentTarget.blur();
+                        return;
+                      }
+
+                      if (event.key === 'Escape') {
+                        labelEditCancelRef.current = true;
+                        event.currentTarget.blur();
+                      }
+                    }}
+                  />
                 ) : (
                   <strong>{imageLabel}</strong>
                 )}
-                <span>{image.nodeId}</span>
-                <small>
-                  {image.imageFormat.toUpperCase()} /{' '}
-                  {formatFigmaImageDate(image.updatedAt)}
-                </small>
+                <small>{formatFigmaImageDate(image.updatedAt)}</small>
               </div>
               <div className="df-review-figma-image-card-actions">
                 <button
@@ -507,29 +628,27 @@ export const FigmaImagesPanel = ({
                   disabled={isMutating}
                   title="Edit label"
                   type="button"
-                  onClick={() => {
+                  onClick={(event) => {
+                    event.stopPropagation();
                     onSelectImage(image.id);
+                    labelEditCancelRef.current = false;
+                    labelInputFocusedImageIdRef.current = null;
+                    labelEditFinishedImageIdRef.current = null;
                     setEditingImageId(image.id);
                     setEditingLabelDraft(image.label ?? '');
                   }}
                 >
                   <PencilIcon aria-hidden="true" />
                 </button>
-                <a
-                  aria-label="Open Figma node"
-                  className="df-review-figma-image-icon-button"
-                  href={image.figmaUrl}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <ExternalLinkIcon aria-hidden="true" />
-                </a>
                 <button
                   aria-label="Delete Figma image"
                   className="df-review-figma-image-icon-button is-danger"
                   disabled={isMutating}
                   type="button"
-                  onClick={() => void onDeleteImage(image.id)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void onDeleteImage(image.id);
+                  }}
                 >
                   <TrashIcon aria-hidden="true" />
                 </button>
@@ -552,6 +671,12 @@ const DEFAULT_FIGMA_IMAGE_LAYER_STATE: ReviewFigmaImageOverlayItemState = {
 
 function getFigmaImageLabel(image: ReviewFigmaImage, index: number) {
   return image.label?.trim() || `Image ${index + 1}`;
+}
+
+function getSnappedOpacityPercent(opacity: number) {
+  const opacityPercent = Math.round(opacity * 100);
+  if (!Number.isFinite(opacityPercent)) return 0;
+  return Math.max(0, Math.min(100, Math.round(opacityPercent / 10) * 10));
 }
 
 function getFigmaImageLayerStatusLabel(
@@ -582,15 +707,21 @@ function getReorderedFigmaImageIds(
   return nextImageIds;
 }
 
-function getFigmaTargetViewportLabel(target: ReviewFigmaRouteTarget) {
-  const label = target.viewport?.label?.trim() || target.viewport?.scope;
-  const size =
-    typeof target.viewport?.width === 'number' &&
-    typeof target.viewport?.height === 'number'
-      ? `${target.viewport.width}x${target.viewport.height}`
-      : '';
+function isInteractiveFigmaImageTarget(target: EventTarget | null) {
+  return (
+    target instanceof Element &&
+    Boolean(
+      target.closest('button, a, input, textarea, select, [contenteditable="true"]')
+    )
+  );
+}
 
-  return [label, size].filter(Boolean).join(' / ') || 'Viewport';
+function getPointerFigmaImageTargetId(event: PointerEvent<HTMLElement>) {
+  const element = document.elementFromPoint(event.clientX, event.clientY);
+  const targetCard = element?.closest<HTMLElement>(
+    '.df-review-figma-image-card[data-figma-image-id]'
+  );
+  return targetCard?.dataset.figmaImageId ?? null;
 }
 
 function formatFigmaImageDate(value: string) {

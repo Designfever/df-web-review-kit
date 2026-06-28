@@ -1864,7 +1864,6 @@ export const ReviewShell = ({
           isLoading={isFigmaImageLoading}
           isMutating={isFigmaImageMutating}
           selectedImageId={selectedFigmaImageId}
-          target={figmaImageTarget}
           onAddImage={addFigmaImage}
           onDeleteImage={deleteFigmaImage}
           onRefreshImages={refreshFigmaImages}

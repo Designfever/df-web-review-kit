@@ -389,7 +389,6 @@ export const ReviewShell = ({
     images: figmaImageList,
     isLoading: isFigmaImageLoading,
     isMutating: isFigmaImageMutating,
-    moveImage: moveFigmaImage,
     refreshImages: refreshFigmaImages,
     reorderImages: reorderFigmaImages,
     selectedImageId: selectedFigmaImageId,
@@ -1868,7 +1867,6 @@ export const ReviewShell = ({
           target={figmaImageTarget}
           onAddImage={addFigmaImage}
           onDeleteImage={deleteFigmaImage}
-          onMoveImage={moveFigmaImage}
           onRefreshImages={refreshFigmaImages}
           onReorderImages={reorderFigmaImages}
           onSelectImage={setSelectedFigmaImageId}

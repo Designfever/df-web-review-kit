@@ -29,6 +29,7 @@ import {
   type ViewportSelection,
 } from './geometry';
 import { getRouteKey } from './location';
+import * as draftMetrics from './draft.metrics';
 import { createStyleElement } from './overlay.style';
 import type { AreaDraft, NoteDraft } from './review/draft';
 import { formatItemMeta, formatNoteDraftMeta } from './review/format';
@@ -39,7 +40,6 @@ import {
   shouldShowMarkerForScope,
 } from './review/item';
 import {
-  findReviewViewportPreset,
   getNumberedReviewItems,
   getReviewViewportScope,
 } from './review/scope';
@@ -268,81 +268,37 @@ export class WebReviewKitView {
     this.config.actions.render();
   }
 
-  private getDraftAdjustmentMetrics(draft: NoteDraft) {
-    const adjustment = draft.adjustment;
-    const x = adjustment?.x ?? 0;
-    const y = adjustment?.y ?? 0;
-    const scale = adjustment?.scale ?? 0;
-    const {
-      scale: viewportScale,
-      designWidth,
-      presetLabel,
-    } = this.getDraftViewportScale(draft.viewport);
-    const selection = draft.selection
-      ? toViewportSelection(draft.selection.viewport)
-      : undefined;
-    const scaleCssDelta = scale * viewportScale;
-    const scaleFactor =
-      selection && selection.width > 0
-        ? Math.max(
-            1 / selection.width,
-            (selection.width + scaleCssDelta) / selection.width
-          )
-        : 1;
+  // Draft adjustment geometry lives in draft.metrics.ts; these thin wrappers
+  // supply the configured viewport presets so call sites stay unchanged.
+  private get viewportPresets() {
+    return this.config.options.viewports?.presets;
+  }
 
-    return {
-      x,
-      y,
-      scale,
-      cssX: x * viewportScale,
-      cssY: y * viewportScale,
-      scaleFactor,
-      viewportScale,
-      designWidth,
-      presetLabel,
-      viewportWidth: draft.viewport.width,
-    };
+  private getDraftAdjustmentMetrics(draft: NoteDraft) {
+    return draftMetrics.getDraftAdjustmentMetrics(draft, this.viewportPresets);
   }
 
   private hasDraftAdjustment(draft: NoteDraft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return metrics.x !== 0 || metrics.y !== 0 || metrics.scale !== 0;
+    return draftMetrics.hasDraftAdjustment(draft, this.viewportPresets);
   }
 
   private getAdjustedDraftPoint(point: ReviewPoint, draft: NoteDraft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return {
-      x: point.x + metrics.cssX,
-      y: point.y + metrics.cssY,
-    };
+    return draftMetrics.getAdjustedDraftPoint(point, draft, this.viewportPresets);
   }
 
   private getAdjustedDraftSelection(
     selection: ViewportSelection,
     draft: NoteDraft
   ) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return {
-      ...selection,
-      left: selection.left + metrics.cssX,
-      top: selection.top + metrics.cssY,
-      width: selection.width * metrics.scaleFactor,
-      height: selection.height * metrics.scaleFactor,
-    };
+    return draftMetrics.getAdjustedDraftSelection(
+      selection,
+      draft,
+      this.viewportPresets
+    );
   }
 
   private getDraftViewportScale(viewport: ViewportSize) {
-    const preset = findReviewViewportPreset(
-      viewport,
-      this.config.options.viewports?.presets
-    );
-    const designWidth =
-      typeof preset.designWidth === 'number' && preset.designWidth > 0
-        ? preset.designWidth
-        : viewport.width;
-    const scale = designWidth > 0 ? viewport.width / designWidth : 1;
-
-    return { scale, designWidth, presetLabel: preset.label };
+    return draftMetrics.getDraftViewportScale(viewport, this.viewportPresets);
   }
 
   private getDraftComposerWidth(environment: ReviewEnvironment) {

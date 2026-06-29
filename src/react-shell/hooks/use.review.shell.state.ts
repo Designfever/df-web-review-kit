@@ -16,7 +16,10 @@ import {
   getInitialSource,
   getInitialTarget,
 } from '../route';
-import { getStoredReviewSidePanelVisible } from '../settings';
+import {
+  getInitialReviewSidePanel,
+  getStoredReviewSidePanelVisible,
+} from '../settings';
 import type {
   ReviewShellAdapters,
   ReviewShellViewportPreset,
@@ -54,6 +57,8 @@ export const useReviewShellState = ({
   const remoteAdapterEntry = normalizedAdapters.remote;
   const sourceEntries = normalizedAdapters.sources;
   const defaultSource = sourceEntries[0]?.label ?? 'local';
+  const initialItemId = getInitialItemId();
+  const initialSidePanel = getInitialReviewSidePanel();
   const [source, setSource] = useState<ReviewSource>(() => {
     const initialSource = getInitialSource(remoteAdapterEntry?.label);
     return sourceEntries.some((entry) => entry.label === initialSource)
@@ -76,8 +81,8 @@ export const useReviewShellState = ({
   const controllerRef = useRef<WebReviewKitController | null>(null);
   const cleanupTargetRef = useRef<(() => void) | null>(null);
   const pendingRestoreRef = useRef<ReviewItem | null>(null);
-  const pendingInitialItemIdRef = useRef(getInitialItemId());
-  const selectedItemIdRef = useRef(getInitialItemId());
+  const pendingInitialItemIdRef = useRef(initialItemId);
+  const selectedItemIdRef = useRef(initialItemId);
   const hiddenOverlayItemIdListRef = useRef<string[]>([]);
   const [target, setTarget] = useState(() =>
     getInitialTarget(reviewPathPrefix)
@@ -97,9 +102,11 @@ export const useReviewShellState = ({
       grid: false,
       figma: false,
     });
-  const [selectedItemId, setSelectedItemId] = useState(getInitialItemId());
+  const [selectedItemId, setSelectedItemId] = useState(initialItemId);
   const [isListVisible, setIsListVisible] = useState(
-    getStoredReviewSidePanelVisible
+    () =>
+      Boolean(initialItemId || initialSidePanel) ||
+      getStoredReviewSidePanelVisible()
   );
   const [isSitemapOpen, setIsSitemapOpen] = useState(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState(false);

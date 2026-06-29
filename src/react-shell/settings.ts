@@ -40,12 +40,18 @@ export const normalizeReviewTheme = (value: string | null): ReviewShellTheme =>
     ? value
     : DEFAULT_REVIEW_THEME;
 
+export const normalizeReviewSidePanel = (
+  value: string | null
+): StoredReviewSidePanel | null => {
+  if (value === 'qa' || value === 'source' || value === 'figma-images') {
+    return value;
+  }
+  return null;
+};
+
 const normalizeStoredReviewSidePanel = (
   value: string | null
-): StoredReviewSidePanel => {
-  if (value === 'source' || value === 'figma-images') return value;
-  return 'qa';
-};
+): StoredReviewSidePanel => normalizeReviewSidePanel(value) ?? 'qa';
 
 const normalizeStoredReviewQaStatusFilter = (
   value: string | null
@@ -168,6 +174,18 @@ export const getStoredReviewSidePanel = () => {
     );
   } catch {
     return 'qa';
+  }
+};
+
+export const getInitialReviewSidePanel = () => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    return normalizeReviewSidePanel(
+      new URLSearchParams(window.location.search).get('panel')
+    );
+  } catch {
+    return null;
   }
 };
 

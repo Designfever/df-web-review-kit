@@ -290,14 +290,22 @@ function buildSupabaseReviewUrl(
 ) {
   if (typeof window === 'undefined') return undefined;
 
-  const prefix = options.reviewPathPrefix ?? '/review';
-  const url = new URL(prefix, window.location.origin);
+  const url = new URL(
+    normalizeReviewUrlPath(options.reviewPathPrefix),
+    window.location.origin
+  );
   url.searchParams.set('source', source);
   url.searchParams.set('target', item.routeKey || item.normalizedPath || '/');
   url.searchParams.set('w', String(Math.round(item.viewport.width)));
   url.searchParams.set('h', String(Math.round(item.viewport.height)));
   if (itemId) url.searchParams.set('item', itemId);
   return url.toString();
+}
+
+function normalizeReviewUrlPath(value = '/review') {
+  const raw = value.trim() || '/review';
+  const path = raw.startsWith('/') ? raw : `/${raw}`;
+  return path.endsWith('/') ? path : `${path}/`;
 }
 
 function toAbsoluteReviewUrl(path: string) {

@@ -5012,6 +5012,7 @@ var updateShellUrl = (target, size, source) => {
     url.searchParams.delete("source");
   }
   url.searchParams.delete("item");
+  url.searchParams.delete("panel");
   window.history.replaceState(null, "", `${url.pathname}${url.search}`);
 };
 var updateShellUrlForItem = (target, size, itemId, source) => {
@@ -5024,6 +5025,7 @@ var getShellUrlForItem = (target, size, itemId, source) => {
   url.searchParams.set("w", String(size.width));
   url.searchParams.set("h", String(size.height));
   url.searchParams.set("item", itemId);
+  url.searchParams.set("panel", "qa");
   if (source !== "local") {
     url.searchParams.set("source", source);
   } else {
@@ -5429,10 +5431,13 @@ var REVIEW_QA_STATUS_FILTER_VALUES = /* @__PURE__ */ new Set([
   "done"
 ]);
 var normalizeReviewTheme = (value) => value === "light" || value === "system" || value === "dark" ? value : DEFAULT_REVIEW_THEME;
-var normalizeStoredReviewSidePanel = (value) => {
-  if (value === "source" || value === "figma-images") return value;
-  return "qa";
+var normalizeReviewSidePanel = (value) => {
+  if (value === "qa" || value === "source" || value === "figma-images") {
+    return value;
+  }
+  return null;
 };
+var normalizeStoredReviewSidePanel = (value) => normalizeReviewSidePanel(value) ?? "qa";
 var normalizeStoredReviewQaStatusFilter = (value) => value && REVIEW_QA_STATUS_FILTER_VALUES.has(value) ? value : "all";
 var normalizeStoredSourceTreeMetaVisibility = (value) => {
   if (!value || typeof value !== "object") {
@@ -5516,6 +5521,16 @@ var getStoredReviewSidePanel = () => {
     );
   } catch {
     return "qa";
+  }
+};
+var getInitialReviewSidePanel = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    return normalizeReviewSidePanel(
+      new URLSearchParams(window.location.search).get("panel")
+    );
+  } catch {
+    return null;
   }
 };
 var writeStoredReviewSidePanel = (sidePanel) => {
@@ -12023,6 +12038,8 @@ var useReviewShellState = ({
   const remoteAdapterEntry = normalizedAdapters.remote;
   const sourceEntries = normalizedAdapters.sources;
   const defaultSource = sourceEntries[0]?.label ?? "local";
+  const initialItemId = getInitialItemId();
+  const initialSidePanel = getInitialReviewSidePanel();
   const [source, setSource] = useState11(() => {
     const initialSource = getInitialSource(remoteAdapterEntry?.label);
     return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
@@ -12041,8 +12058,8 @@ var useReviewShellState = ({
   const controllerRef = useRef5(null);
   const cleanupTargetRef = useRef5(null);
   const pendingRestoreRef = useRef5(null);
-  const pendingInitialItemIdRef = useRef5(getInitialItemId());
-  const selectedItemIdRef = useRef5(getInitialItemId());
+  const pendingInitialItemIdRef = useRef5(initialItemId);
+  const selectedItemIdRef = useRef5(initialItemId);
   const hiddenOverlayItemIdListRef = useRef5([]);
   const [target, setTarget] = useState11(
     () => getInitialTarget(reviewPathPrefix)
@@ -12061,9 +12078,9 @@ var useReviewShellState = ({
     grid: false,
     figma: false
   });
-  const [selectedItemId, setSelectedItemId] = useState11(getInitialItemId());
+  const [selectedItemId, setSelectedItemId] = useState11(initialItemId);
   const [isListVisible, setIsListVisible] = useState11(
-    getStoredReviewSidePanelVisible
+    () => Boolean(initialItemId || initialSidePanel) || getStoredReviewSidePanelVisible()
   );
   const [isSitemapOpen, setIsSitemapOpen] = useState11(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState11(false);
@@ -12503,9 +12520,12 @@ var ReviewShell = ({
     [resolvedSourceInspector]
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
-  const [sidePanel, setSidePanel] = useState12(
-    () => isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa"
-  );
+  const [sidePanel, setSidePanel] = useState12(() => {
+    const initialSidePanel = getInitialReviewSidePanel();
+    if (initialSidePanel) return initialSidePanel;
+    if (getInitialItemId()) return "qa";
+    return isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa";
+  });
   const figmaImageStore = useMemo9(
     () => getReviewFigmaImageStore(figmaImages),
     [figmaImages]

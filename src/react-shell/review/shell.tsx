@@ -32,6 +32,7 @@ import {
 } from '../constants';
 import {
   DEFAULT_REVIEW_PATH_PREFIX,
+  getInitialItemId,
   getItemFrameTarget,
   getItemTarget,
   getShellUrlForItem,
@@ -93,6 +94,7 @@ import { useReviewShellData } from '../hooks/use.review.shell.data';
 import { useReviewShellHotkeys } from '../hooks/use.review.shell.hotkeys';
 import { useReviewShellState } from '../hooks/use.review.shell.state';
 import {
+  getInitialReviewSidePanel,
   getStoredReviewSidePanel,
   getStoredSourceTreeFilter,
   getStoredSourceTreeMetaVisibility,
@@ -272,9 +274,12 @@ export const ReviewShell = ({
     [resolvedSourceInspector]
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
-  const [sidePanel, setSidePanel] = useState<ReviewSidePanel>(() =>
-    isSourceInspectorEnabled ? getStoredReviewSidePanel() : 'qa'
-  );
+  const [sidePanel, setSidePanel] = useState<ReviewSidePanel>(() => {
+    const initialSidePanel = getInitialReviewSidePanel();
+    if (initialSidePanel) return initialSidePanel;
+    if (getInitialItemId()) return 'qa';
+    return isSourceInspectorEnabled ? getStoredReviewSidePanel() : 'qa';
+  });
   const figmaImageStore = useMemo(
     () => getReviewFigmaImageStore(figmaImages),
     [figmaImages]

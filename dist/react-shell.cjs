@@ -5054,6 +5054,7 @@ var updateShellUrl = (target, size, source) => {
     url.searchParams.delete("source");
   }
   url.searchParams.delete("item");
+  url.searchParams.delete("panel");
   window.history.replaceState(null, "", `${url.pathname}${url.search}`);
 };
 var updateShellUrlForItem = (target, size, itemId, source) => {
@@ -5066,6 +5067,7 @@ var getShellUrlForItem = (target, size, itemId, source) => {
   url.searchParams.set("w", String(size.width));
   url.searchParams.set("h", String(size.height));
   url.searchParams.set("item", itemId);
+  url.searchParams.set("panel", "qa");
   if (source !== "local") {
     url.searchParams.set("source", source);
   } else {
@@ -5471,10 +5473,13 @@ var REVIEW_QA_STATUS_FILTER_VALUES = /* @__PURE__ */ new Set([
   "done"
 ]);
 var normalizeReviewTheme = (value) => value === "light" || value === "system" || value === "dark" ? value : DEFAULT_REVIEW_THEME;
-var normalizeStoredReviewSidePanel = (value) => {
-  if (value === "source" || value === "figma-images") return value;
-  return "qa";
+var normalizeReviewSidePanel = (value) => {
+  if (value === "qa" || value === "source" || value === "figma-images") {
+    return value;
+  }
+  return null;
 };
+var normalizeStoredReviewSidePanel = (value) => normalizeReviewSidePanel(value) ?? "qa";
 var normalizeStoredReviewQaStatusFilter = (value) => value && REVIEW_QA_STATUS_FILTER_VALUES.has(value) ? value : "all";
 var normalizeStoredSourceTreeMetaVisibility = (value) => {
   if (!value || typeof value !== "object") {
@@ -5558,6 +5563,16 @@ var getStoredReviewSidePanel = () => {
     );
   } catch {
     return "qa";
+  }
+};
+var getInitialReviewSidePanel = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    return normalizeReviewSidePanel(
+      new URLSearchParams(window.location.search).get("panel")
+    );
+  } catch {
+    return null;
   }
 };
 var writeStoredReviewSidePanel = (sidePanel) => {
@@ -16335,6 +16350,8 @@ var useReviewShellState = ({
   const remoteAdapterEntry = normalizedAdapters.remote;
   const sourceEntries = normalizedAdapters.sources;
   const defaultSource = sourceEntries[0]?.label ?? "local";
+  const initialItemId = getInitialItemId();
+  const initialSidePanel = getInitialReviewSidePanel();
   const [source, setSource] = (0, import_react21.useState)(() => {
     const initialSource = getInitialSource(remoteAdapterEntry?.label);
     return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
@@ -16353,8 +16370,8 @@ var useReviewShellState = ({
   const controllerRef = (0, import_react21.useRef)(null);
   const cleanupTargetRef = (0, import_react21.useRef)(null);
   const pendingRestoreRef = (0, import_react21.useRef)(null);
-  const pendingInitialItemIdRef = (0, import_react21.useRef)(getInitialItemId());
-  const selectedItemIdRef = (0, import_react21.useRef)(getInitialItemId());
+  const pendingInitialItemIdRef = (0, import_react21.useRef)(initialItemId);
+  const selectedItemIdRef = (0, import_react21.useRef)(initialItemId);
   const hiddenOverlayItemIdListRef = (0, import_react21.useRef)([]);
   const [target, setTarget] = (0, import_react21.useState)(
     () => getInitialTarget(reviewPathPrefix)
@@ -16373,9 +16390,9 @@ var useReviewShellState = ({
     grid: false,
     figma: false
   });
-  const [selectedItemId, setSelectedItemId] = (0, import_react21.useState)(getInitialItemId());
+  const [selectedItemId, setSelectedItemId] = (0, import_react21.useState)(initialItemId);
   const [isListVisible, setIsListVisible] = (0, import_react21.useState)(
-    getStoredReviewSidePanelVisible
+    () => Boolean(initialItemId || initialSidePanel) || getStoredReviewSidePanelVisible()
   );
   const [isSitemapOpen, setIsSitemapOpen] = (0, import_react21.useState)(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = (0, import_react21.useState)(false);
@@ -16815,9 +16832,12 @@ var ReviewShell = ({
     [resolvedSourceInspector]
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
-  const [sidePanel, setSidePanel] = (0, import_react22.useState)(
-    () => isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa"
-  );
+  const [sidePanel, setSidePanel] = (0, import_react22.useState)(() => {
+    const initialSidePanel = getInitialReviewSidePanel();
+    if (initialSidePanel) return initialSidePanel;
+    if (getInitialItemId()) return "qa";
+    return isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa";
+  });
   const figmaImageStore = (0, import_react22.useMemo)(
     () => getReviewFigmaImageStore(figmaImages),
     [figmaImages]

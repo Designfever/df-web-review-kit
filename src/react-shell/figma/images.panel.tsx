@@ -23,8 +23,15 @@ import type {
   ReviewFigmaImageOverlayItemState,
 } from './image.controller';
 import {
-  DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
-} from './image.controller';
+  DEFAULT_FIGMA_IMAGE_LAYER_STATE,
+  formatFigmaImageDate,
+  getFigmaImageLabel,
+  getFigmaImageLayerStatusLabel,
+  getPointerFigmaImageTargetId,
+  getReorderedFigmaImageIds,
+  getSnappedOpacityPercent,
+  isInteractiveFigmaImageTarget,
+} from './image-panel.utils';
 
 const FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS = 6;
 
@@ -660,78 +667,3 @@ export const FigmaImagesPanel = ({
     </aside>
   );
 };
-
-const DEFAULT_FIGMA_IMAGE_LAYER_STATE: ReviewFigmaImageOverlayItemState = {
-  isLocked: false,
-  isVisible: false,
-  mode: 'normal',
-  offsetY: 0,
-  opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
-};
-
-function getFigmaImageLabel(image: ReviewFigmaImage, index: number) {
-  return image.label?.trim() || `Image ${index + 1}`;
-}
-
-function getSnappedOpacityPercent(opacity: number) {
-  const opacityPercent = Math.round(opacity * 100);
-  if (!Number.isFinite(opacityPercent)) return 0;
-  return Math.max(0, Math.min(100, Math.round(opacityPercent / 10) * 10));
-}
-
-function getFigmaImageLayerStatusLabel(
-  overlayState: ReviewFigmaImageOverlayItemState
-) {
-  return [
-    overlayState.isVisible ? 'Visible' : 'Hidden',
-    overlayState.mode === 'invert' ? 'Invert' : '',
-    overlayState.isLocked ? 'Locked' : '',
-  ]
-    .filter(Boolean)
-    .join(' / ');
-}
-
-function getReorderedFigmaImageIds(
-  images: ReviewFigmaImage[],
-  draggedImageId: string,
-  dropTargetImageId: string
-) {
-  const currentImageIds = images.map((image) => image.id);
-  const draggedIndex = currentImageIds.indexOf(draggedImageId);
-  const dropTargetIndex = currentImageIds.indexOf(dropTargetImageId);
-  if (draggedIndex < 0 || dropTargetIndex < 0) return currentImageIds;
-
-  const nextImageIds = [...currentImageIds];
-  const [imageId] = nextImageIds.splice(draggedIndex, 1);
-  nextImageIds.splice(dropTargetIndex, 0, imageId);
-  return nextImageIds;
-}
-
-function isInteractiveFigmaImageTarget(target: EventTarget | null) {
-  return (
-    target instanceof Element &&
-    Boolean(
-      target.closest('button, a, input, textarea, select, [contenteditable="true"]')
-    )
-  );
-}
-
-function getPointerFigmaImageTargetId(event: PointerEvent<HTMLElement>) {
-  const element = document.elementFromPoint(event.clientX, event.clientY);
-  const targetCard = element?.closest<HTMLElement>(
-    '.df-review-figma-image-card[data-figma-image-id]'
-  );
-  return targetCard?.dataset.figmaImageId ?? null;
-}
-
-function formatFigmaImageDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat('en', {
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    month: 'short',
-  }).format(date);
-}

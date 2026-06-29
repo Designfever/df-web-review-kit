@@ -280,6 +280,8 @@ export function clamp(value: number, min: number, max: number) {
 
 /** Keeps persisted relative coordinates stable without excessive precision. */
 export function roundRatio(value: number) {
+  // 4 decimal places: sub-pixel accurate at any realistic viewport size while
+  // avoiding long floating-point tails in stored data.
   return Math.round(value * 10000) / 10000;
 }
 

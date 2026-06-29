@@ -641,6 +641,8 @@ export class WebReviewKitView {
     clone.style.margin = '0';
     clone.style.boxSizing = 'border-box';
     clone.style.display = this.getDraftPreviewDisplay(computedStyle.display);
+    // One below the 32-bit max (2147483647): the preview clone floats above the
+    // page but stays under the overlay chrome, which uses the true maximum.
     clone.style.zIndex = '2147483646';
     clone.style.pointerEvents = 'none';
     clone.style.transition = 'none';
@@ -790,6 +792,9 @@ export class WebReviewKitView {
     return empty;
   }
 
+  // Builds the note draft layer: the on-page marker/highlight plus its composer
+  // popover. When dockComposer is set the composer renders into the side panel
+  // instead of floating next to the marker (used for the docked review mode).
   private createNotePopover(
     draft: NoteDraft,
     options: { dockComposer?: boolean } = {}
@@ -1082,6 +1087,9 @@ export class WebReviewKitView {
     handle.addEventListener('pointercancel', stopDrag);
   }
 
+  // Builds the element-adjustment controls (nudge the previewed element via
+  // arrow keys / buttons). Wires keyboard deltas to the draft transform and
+  // keeps the pin, popover, highlight and textarea in sync as the value changes.
   private createAdjustmentControls({
     draft,
     pin,

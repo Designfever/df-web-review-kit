@@ -633,6 +633,9 @@ function findClosest(
   return undefined;
 }
 
+// Builds an absolute CSS selector from <body> down to the element.
+// Each step uses :nth-of-type so the path stays stable even when siblings
+// share the same tag and carry no id/class to anchor on.
 function getDomPath(element: Element) {
   const parts: string[] = [];
   let current: Element | null = element;
@@ -663,6 +666,9 @@ function getDomPath(element: Element) {
   return `body > ${parts.join(' > ')}`;
 }
 
+// Like getDomPath but relative: the selector is scoped under a known ancestor
+// (e.g. an element with a stable attribute) so it survives layout changes above
+// that ancestor. Returns undefined if target is not actually inside ancestor.
 function getDomPathBetween(
   ancestor: Element,
   target: Element,
@@ -697,9 +703,14 @@ function getDomPathPart(element: Element) {
 
 function getTextFingerprint(element: Element) {
   const text = element.textContent?.replace(/\s+/g, ' ').trim();
+  // Cap at 120 chars: enough to identify the element, short enough to keep
+  // stored anchors small and to tolerate minor trailing-content edits.
   return text ? text.slice(0, 120) : undefined;
 }
 
+// Returns an attribute value only if it looks like a stable identifier.
+// Rejects overly long values (>160 chars, likely generated/serialized data),
+// booleans, and short numeric values (1-2 digits, likely volatile indexes).
 function getStableAttributeValue(element: Element, attributeName: string) {
   const value = element.getAttribute(attributeName)?.trim();
   if (!value || value.length > 160) return undefined;
@@ -709,6 +720,10 @@ function getStableAttributeValue(element: Element, attributeName: string) {
   return value;
 }
 
+// Scores how well a candidate's text matches the fingerprint captured earlier.
+// Tiered confidence: exact match = 1, substring containment = 0.82, otherwise
+// a token-overlap ratio. Missing data returns a neutral 0.5 so it neither
+// confirms nor rules out the candidate.
 function getTextFingerprintScore(expected?: string, actual?: string) {
   if (!expected) return 1;
   if (!actual) return 0.5;
@@ -723,6 +738,10 @@ function getTextFingerprintScore(expected?: string, actual?: string) {
   return clamp(matches.length / expectedTokens.length, 0.25, 0.76);
 }
 
+// Scores how well an element's box matches the original selection rectangle.
+// Overlapping elements score >1 (1 + overlap ratio) so any overlap always beats
+// the non-overlapping branch, which falls back to a center-distance score in
+// (0.05, 0.95). This keeps the closest enclosing element ranked highest.
 function getSelectionMatchScore(
   element: Element,
   selection: ViewportSelection

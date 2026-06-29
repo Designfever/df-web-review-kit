@@ -50,14 +50,14 @@ export function getDomAnchorFromPoint(
   if (!target) return undefined;
 
   const candidates = createAnchorCandidates(target, configuredAttribute);
-  const primary = candidates[0];
-  if (!primary) return undefined;
+  const primaryCandidate = candidates[0];
+  if (!primaryCandidate) return undefined;
 
   return {
-    ...primary,
+    ...primaryCandidate,
     candidates,
     htmlSnippet: getElementHtmlSnippet(
-      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+      getAnchorSourceElement(target, primaryCandidate, configuredAttribute) ?? target
     ),
     source: getDomSourceHint(target),
   };
@@ -72,14 +72,14 @@ export function getDomAnchorFromElement(
   if (target.ownerDocument !== environment.document) return undefined;
 
   const candidates = createAnchorCandidates(target, configuredAttribute);
-  const primary = candidates[0];
-  if (!primary) return undefined;
+  const primaryCandidate = candidates[0];
+  if (!primaryCandidate) return undefined;
 
   return {
-    ...primary,
+    ...primaryCandidate,
     candidates,
     htmlSnippet: getElementHtmlSnippet(
-      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+      getAnchorSourceElement(target, primaryCandidate, configuredAttribute) ?? target
     ),
     source: getDomSourceHint(target),
   };
@@ -343,7 +343,7 @@ function findClosestAttributeAnchor(
 ): DomAnchorCandidate | undefined {
   for (const attributeName of attributeNames) {
     const selector = `[${attributeName}]`;
-    const element = safeClosest(target, selector);
+    const element = tryClosest(target, selector);
     if (!element) continue;
 
     const value = getStableAttributeValue(element, attributeName);
@@ -491,7 +491,7 @@ function getAnchorSourceElement(
   }
 }
 
-function safeClosest(element: Element, selector: string) {
+function tryClosest(element: Element, selector: string) {
   try {
     return element.closest(selector);
   } catch {

@@ -451,6 +451,7 @@ export const reviewShellFigmaImagesStyle = `
     grid-template-areas: "state main actions";
     align-items: center;
     gap: var(--df-review-space-1-5);
+    min-height: 76px;
     min-width: 0;
     border: 1px solid var(--df-review-line-soft);
     border-radius: var(--df-review-radius-sm);
@@ -503,6 +504,16 @@ export const reviewShellFigmaImagesStyle = `
   .df-review-figma-image-card.is-editing {
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas: "state main";
+  }
+
+  .df-review-figma-image-card.is-status {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "state main";
+    cursor: default;
+  }
+
+  .df-review-figma-image-spinner {
+    grid-area: state;
   }
 
   .df-review-figma-image-layer-state {
@@ -650,6 +661,136 @@ export const reviewShellFigmaImagesStyle = `
 
   .df-review-figma-image-card.is-editing .df-review-figma-image-card-actions {
     display: none;
+  }
+
+  .df-review-figma-image-preview-dialog {
+    grid-template-rows: auto minmax(0, 1fr);
+    width: min(600px, calc(100vw - 36px));
+    max-height: min(760px, calc(100vh - 36px));
+  }
+
+  .df-review-figma-image-preview-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto var(--df-review-control-height-md);
+    align-items: center;
+    gap: var(--df-review-space-2);
+    min-width: 0;
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background: var(--df-review-card);
+  }
+
+  .df-review-figma-image-preview-header input {
+    width: 100%;
+    height: var(--df-review-control-height-md);
+    min-width: 0;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 10px;
+    color: var(--df-review-text);
+    background: var(--df-review-bg);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .df-review-figma-image-preview-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: var(--df-review-control-height-md);
+    min-width: 0;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 10px;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .df-review-figma-image-preview-link:hover,
+  .df-review-figma-image-preview-link:focus-visible {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-control-hover);
+    outline: none;
+  }
+
+  .df-review-figma-image-preview-link svg {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+  }
+
+  .df-review-figma-image-preview-close {
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+  }
+
+  .df-review-figma-image-preview-close:hover,
+  .df-review-figma-image-preview-close:focus-visible {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-control-hover);
+    outline: none;
+  }
+
+  .df-review-figma-image-preview-close svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .df-review-figma-image-preview-scroll {
+    min-height: 0;
+    overflow: auto;
+    padding: 16px;
+    background: var(--df-review-bg);
+  }
+
+  .df-review-figma-image-preview-scroll img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    object-fit: contain;
+    object-position: top center;
+  }
+
+  @media (max-width: 460px) {
+    .df-review-figma-image-preview-header {
+      grid-template-columns:
+        minmax(0, 1fr)
+        var(--df-review-control-height-md)
+        var(--df-review-control-height-md);
+      gap: var(--df-review-space-1-5);
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    .df-review-figma-image-preview-link {
+      width: var(--df-review-control-height-md);
+      padding: 0;
+    }
+
+    .df-review-figma-image-preview-link span {
+      display: none;
+    }
   }
 
   @media (hover: none) {

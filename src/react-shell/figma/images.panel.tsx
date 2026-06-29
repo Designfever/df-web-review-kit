@@ -17,6 +17,7 @@ import {
   RefreshCw as RefreshCwIcon,
   Trash2 as TrashIcon,
   Unlock as UnlockIcon,
+  X as XIcon,
 } from 'lucide-react';
 import type { ReviewFigmaImage } from '../../figma/image.types';
 import type {
@@ -32,6 +33,7 @@ import {
   getSnappedOpacityPercent,
   isInteractiveFigmaImageTarget,
 } from './image-panel.utils';
+import { ReviewSpinner } from '../review/spinner';
 
 const FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS = 6;
 
@@ -87,6 +89,7 @@ export const FigmaImagesPanel = ({
   const [editingLabelDraft, setEditingLabelDraft] = useState('');
   const [draggingImageId, setDraggingImageId] = useState<string | null>(null);
   const [dragOverImageId, setDragOverImageId] = useState<string | null>(null);
+  const [previewImageId, setPreviewImageId] = useState<string | null>(null);
   const pointerDragImageIdRef = useRef<string | null>(null);
   const pointerDragTargetIdRef = useRef<string | null>(null);
   const pointerDragStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -103,6 +106,9 @@ export const FigmaImagesPanel = ({
     : -1;
   const selectedImage =
     selectedImageIndex >= 0 ? images[selectedImageIndex] : null;
+  const previewImage = previewImageId
+    ? images.find((image) => image.id === previewImageId) ?? null
+    : null;
   const selectedImageLabel = selectedImage
     ? getFigmaImageLabel(selectedImage, selectedImageIndex)
     : 'Select layer';
@@ -121,11 +127,8 @@ export const FigmaImagesPanel = ({
     : '';
   const statusText = error
     ? error
-    : isMutating
-      ? 'Saving...'
-      : isLoading
-        ? 'Loading...'
-        : '';
+    : '';
+  const progressText = isMutating ? 'Saving...' : isLoading ? 'Loading...' : '';
   const draggingImageIndex = draggingImageId
     ? images.findIndex((image) => image.id === draggingImageId)
     : -1;
@@ -357,16 +360,15 @@ export const FigmaImagesPanel = ({
             />
           </label>
           {selectedImage ? (
-            <a
-              aria-label={`Open ${selectedImageLabel} Figma node`}
+            <button
+              aria-label={`Preview ${selectedImageLabel} Figma image`}
               className="df-review-figma-image-selected-link"
-              href={selectedImage.figmaUrl}
-              rel="noreferrer"
-              target="_blank"
-              title="Open Figma node"
+              title="Preview Figma image"
+              type="button"
+              onClick={() => setPreviewImageId(selectedImage.id)}
             >
               <ExternalLinkIcon aria-hidden="true" />
-            </a>
+            </button>
           ) : (
             <button
               aria-label="Open Figma node"
@@ -392,7 +394,19 @@ export const FigmaImagesPanel = ({
       )}
 
       <div className="df-review-figma-image-list">
-        {images.length === 0 && !isLoading && (
+        {progressText && (
+          <div
+            aria-live="polite"
+            className="df-review-figma-image-card is-status"
+            role="status"
+          >
+            <ReviewSpinner className="df-review-figma-image-spinner" />
+            <div className="df-review-figma-image-card-main">
+              <strong>{progressText}</strong>
+            </div>
+          </div>
+        )}
+        {images.length === 0 && !isLoading && !isMutating && (
           <p className="df-review-empty">No Figma images on this viewport.</p>
         )}
         {images.map((image, index) => {
@@ -664,6 +678,72 @@ export const FigmaImagesPanel = ({
           );
         })}
       </div>
+      {previewImage && (
+        <FigmaImagePreviewModal
+          image={previewImage}
+          label={getFigmaImageLabel(previewImage, images.indexOf(previewImage))}
+          onClose={() => setPreviewImageId(null)}
+        />
+      )}
     </aside>
+  );
+};
+
+interface FigmaImagePreviewModalProps {
+  image: ReviewFigmaImage;
+  label: string;
+  onClose: () => void;
+}
+
+const FigmaImagePreviewModal = ({
+  image,
+  label,
+  onClose,
+}: FigmaImagePreviewModalProps) => {
+  return (
+    <div
+      aria-label={`${label} Figma image preview`}
+      aria-modal="true"
+      className="df-review-prompt-modal"
+      role="dialog"
+    >
+      <button
+        aria-label="Close Figma image preview"
+        className="df-review-prompt-backdrop"
+        type="button"
+        onClick={onClose}
+      />
+      <div className="df-review-prompt-dialog df-review-figma-image-preview-dialog">
+        <div className="df-review-figma-image-preview-header">
+          <input
+            aria-label="Figma URL"
+            readOnly
+            spellCheck={false}
+            value={image.figmaUrl}
+          />
+          <a
+            aria-label={`Open ${label} Figma node`}
+            className="df-review-figma-image-preview-link"
+            href={image.figmaUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <span>Open Figma</span>
+            <ExternalLinkIcon aria-hidden="true" />
+          </a>
+          <button
+            aria-label="Close Figma image preview"
+            className="df-review-figma-image-preview-close"
+            type="button"
+            onClick={onClose}
+          >
+            <XIcon aria-hidden="true" />
+          </button>
+        </div>
+        <div className="df-review-figma-image-preview-scroll">
+          <img alt={label} src={image.imageUrl} />
+        </div>
+      </div>
+    </div>
   );
 };

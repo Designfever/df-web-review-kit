@@ -30,6 +30,26 @@ export const reviewShellBaseStyle = `
 	    background: transparent;
 	  }
 
+  .df-review-spinner {
+    display: inline-block;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+    box-sizing: border-box;
+    border: 3px solid color-mix(in srgb, var(--df-review-accent) 28%, transparent);
+    border-top-color: var(--df-review-accent);
+    border-radius: 50%;
+    animation: df-review-spinner-spin 760ms linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes df-review-spinner-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
   html,
   body,
   #root {

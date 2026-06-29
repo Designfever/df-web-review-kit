@@ -9,17 +9,10 @@ import type {
 import { ReviewModeToolbar } from '../review/mode.toolbar';
 import { RulerGutters } from '../ruler/gutters';
 import { RulerOverlay } from '../ruler/overlay';
-
-type ReviewTargetFigmaImageOverlay = {
-  id: string;
-  imageUrl: string;
-  isLocked?: boolean;
-  label?: string;
-  mode?: 'normal' | 'invert';
-  offsetY?: number;
-  opacity: number;
-  zIndex: number;
-};
+import {
+  useTargetFigmaImageOverlays,
+  type ReviewTargetFigmaImageOverlay,
+} from './figma.image.overlay';
 
 interface ReviewTargetFrameProps {
   canWriteArea: boolean;
@@ -70,6 +63,17 @@ export const ReviewTargetFrame = ({
 }: ReviewTargetFrameProps) => {
   const showRuler = isRulerVisible && isRulerAvailable;
   const targetHref = getTargetOpenHref(targetSrc);
+  const syncTargetFigmaImageOverlays = useTargetFigmaImageOverlays({
+    figmaImageOverlays,
+    iframeRef,
+    size,
+    targetSrc,
+  });
+  const handleLoadTarget = () => {
+    onLoadTarget();
+    syncTargetFigmaImageOverlays();
+    window.requestAnimationFrame(syncTargetFigmaImageOverlays);
+  };
 
   return (
     <main className="df-review-stage">
@@ -107,32 +111,8 @@ export const ReviewTargetFrame = ({
                     height={size.height}
                     src={targetSrc}
                     title="Review target"
-                    onLoad={onLoadTarget}
+                    onLoad={handleLoadTarget}
                   />
-                  {figmaImageOverlays.map((figmaImageOverlay) => (
-                    <div
-                      aria-label={figmaImageOverlay.label}
-                      className="df-review-figma-image-stage-overlay"
-                      key={figmaImageOverlay.id}
-                      role="img"
-                      style={{
-                        filter:
-                          figmaImageOverlay.mode === 'invert'
-                            ? 'invert(1)'
-                            : undefined,
-                        opacity: figmaImageOverlay.opacity,
-                        pointerEvents: figmaImageOverlay.isLocked
-                          ? 'none'
-                          : undefined,
-                        transform: figmaImageOverlay.offsetY
-                          ? `translate3d(0, ${figmaImageOverlay.offsetY}px, 0)`
-                          : undefined,
-                        zIndex: figmaImageOverlay.zIndex,
-                      }}
-                    >
-                      <img alt="" draggable={false} src={figmaImageOverlay.imageUrl} />
-                    </div>
-                  ))}
                   {showRuler && (
                     <RulerOverlay
                       iframeRef={iframeRef}

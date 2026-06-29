@@ -73,21 +73,6 @@ export const reviewShellStageStyle = `
     background: #fff;
   }
 
-  .df-review-figma-image-stage-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 4;
-    pointer-events: none;
-  }
-
-  .df-review-figma-image-stage-overlay img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: fill;
-    user-select: none;
-  }
-
   .df-review-frame-link-stack {
     position: absolute;
     z-index: 14;

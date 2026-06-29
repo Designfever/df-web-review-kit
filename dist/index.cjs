@@ -853,13 +853,13 @@ function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", enviro
   const target = environment.document.elementFromPoint(point.x, point.y);
   if (!target) return void 0;
   const candidates = createAnchorCandidates(target, configuredAttribute);
-  const primary = candidates[0];
-  if (!primary) return void 0;
+  const primaryCandidate = candidates[0];
+  if (!primaryCandidate) return void 0;
   return {
-    ...primary,
+    ...primaryCandidate,
     candidates,
     htmlSnippet: getElementHtmlSnippet(
-      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+      getAnchorSourceElement(target, primaryCandidate, configuredAttribute) ?? target
     ),
     source: getDomSourceHint(target)
   };
@@ -867,13 +867,13 @@ function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", enviro
 function getDomAnchorFromElement(target, configuredAttribute = "data-qa-id", environment) {
   if (target.ownerDocument !== environment.document) return void 0;
   const candidates = createAnchorCandidates(target, configuredAttribute);
-  const primary = candidates[0];
-  if (!primary) return void 0;
+  const primaryCandidate = candidates[0];
+  if (!primaryCandidate) return void 0;
   return {
-    ...primary,
+    ...primaryCandidate,
     candidates,
     htmlSnippet: getElementHtmlSnippet(
-      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+      getAnchorSourceElement(target, primaryCandidate, configuredAttribute) ?? target
     ),
     source: getDomSourceHint(target)
   };
@@ -1044,7 +1044,7 @@ function createAnchorCandidates(target, configuredAttribute) {
 function findClosestAttributeAnchor(target, attributeNames, confidence, options) {
   for (const attributeName of attributeNames) {
     const selector = `[${attributeName}]`;
-    const element = safeClosest(target, selector);
+    const element = tryClosest(target, selector);
     if (!element) continue;
     const value = getStableAttributeValue(element, attributeName);
     if (!value) continue;
@@ -1150,7 +1150,7 @@ function getAnchorSourceElement(target, candidate, configuredAttribute) {
     return target;
   }
 }
-function safeClosest(element, selector) {
+function tryClosest(element, selector) {
   try {
     return element.closest(selector);
   } catch {
@@ -1748,6 +1748,64 @@ function setDocumentScrollInstantly(environment, position) {
     Math.max(0, Math.round(position.x)),
     Math.max(0, Math.round(position.y))
   );
+}
+
+// src/core/draft.metrics.ts
+function getDraftViewportScale(viewport, presets) {
+  const preset = findReviewViewportPreset(viewport, presets);
+  const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : viewport.width;
+  const scale = designWidth > 0 ? viewport.width / designWidth : 1;
+  return { scale, designWidth, presetLabel: preset.label };
+}
+function getDraftAdjustmentMetrics(draft, presets) {
+  const adjustment = draft.adjustment;
+  const x = adjustment?.x ?? 0;
+  const y = adjustment?.y ?? 0;
+  const scale = adjustment?.scale ?? 0;
+  const {
+    scale: viewportScale,
+    designWidth,
+    presetLabel
+  } = getDraftViewportScale(draft.viewport, presets);
+  const selection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
+  const scaleCssDelta = scale * viewportScale;
+  const scaleFactor = selection && selection.width > 0 ? Math.max(
+    1 / selection.width,
+    (selection.width + scaleCssDelta) / selection.width
+  ) : 1;
+  return {
+    x,
+    y,
+    scale,
+    cssX: x * viewportScale,
+    cssY: y * viewportScale,
+    scaleFactor,
+    viewportScale,
+    designWidth,
+    presetLabel,
+    viewportWidth: draft.viewport.width
+  };
+}
+function hasDraftAdjustment(draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return metrics.x !== 0 || metrics.y !== 0 || metrics.scale !== 0;
+}
+function getAdjustedDraftPoint(point, draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return {
+    x: point.x + metrics.cssX,
+    y: point.y + metrics.cssY
+  };
+}
+function getAdjustedDraftSelection(selection, draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return {
+    ...selection,
+    left: selection.left + metrics.cssX,
+    top: selection.top + metrics.cssY,
+    width: selection.width * metrics.scaleFactor,
+    height: selection.height * metrics.scaleFactor
+  };
 }
 
 // src/core/typography.tokens.ts
@@ -2987,64 +3045,29 @@ var WebReviewKitView = class {
     this.config.actions.setSelectingArea(false);
     this.config.actions.render();
   }
+  // Draft adjustment geometry lives in draft.metrics.ts; these thin wrappers
+  // supply the configured viewport presets so call sites stay unchanged.
+  get viewportPresets() {
+    return this.config.options.viewports?.presets;
+  }
   getDraftAdjustmentMetrics(draft) {
-    const adjustment = draft.adjustment;
-    const x = adjustment?.x ?? 0;
-    const y = adjustment?.y ?? 0;
-    const scale = adjustment?.scale ?? 0;
-    const {
-      scale: viewportScale,
-      designWidth,
-      presetLabel
-    } = this.getDraftViewportScale(draft.viewport);
-    const selection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
-    const scaleCssDelta = scale * viewportScale;
-    const scaleFactor = selection && selection.width > 0 ? Math.max(
-      1 / selection.width,
-      (selection.width + scaleCssDelta) / selection.width
-    ) : 1;
-    return {
-      x,
-      y,
-      scale,
-      cssX: x * viewportScale,
-      cssY: y * viewportScale,
-      scaleFactor,
-      viewportScale,
-      designWidth,
-      presetLabel,
-      viewportWidth: draft.viewport.width
-    };
+    return getDraftAdjustmentMetrics(draft, this.viewportPresets);
   }
   hasDraftAdjustment(draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return metrics.x !== 0 || metrics.y !== 0 || metrics.scale !== 0;
+    return hasDraftAdjustment(draft, this.viewportPresets);
   }
   getAdjustedDraftPoint(point, draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return {
-      x: point.x + metrics.cssX,
-      y: point.y + metrics.cssY
-    };
+    return getAdjustedDraftPoint(point, draft, this.viewportPresets);
   }
   getAdjustedDraftSelection(selection, draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return {
-      ...selection,
-      left: selection.left + metrics.cssX,
-      top: selection.top + metrics.cssY,
-      width: selection.width * metrics.scaleFactor,
-      height: selection.height * metrics.scaleFactor
-    };
+    return getAdjustedDraftSelection(
+      selection,
+      draft,
+      this.viewportPresets
+    );
   }
   getDraftViewportScale(viewport) {
-    const preset = findReviewViewportPreset(
-      viewport,
-      this.config.options.viewports?.presets
-    );
-    const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : viewport.width;
-    const scale = designWidth > 0 ? viewport.width / designWidth : 1;
-    return { scale, designWidth, presetLabel: preset.label };
+    return getDraftViewportScale(viewport, this.viewportPresets);
   }
   getDraftComposerWidth(environment) {
     const bounds = environment.overlayRect;
@@ -3380,6 +3403,9 @@ ${adjustment}` : adjustment;
     empty.textContent = this.state.noteDraft ? "Write the note in the page box." : this.state.mode === "element" ? "Click an element to add QA." : "Click on the page to place a note.";
     return empty;
   }
+  // Builds the note draft layer: the on-page marker/highlight plus its composer
+  // popover. When dockComposer is set the composer renders into the side panel
+  // instead of floating next to the marker (used for the docked review mode).
   createNotePopover(draft, options = {}) {
     const environment = this.config.getEnvironment();
     const group = document.createElement("div");
@@ -3610,6 +3636,9 @@ ${adjustment}` : adjustment;
     handle.addEventListener("pointerup", stopDrag);
     handle.addEventListener("pointercancel", stopDrag);
   }
+  // Builds the element-adjustment controls (nudge the previewed element via
+  // arrow keys / buttons). Wires keyboard deltas to the draft transform and
+  // keeps the pin, popover, highlight and textarea in sync as the value changes.
   createAdjustmentControls({
     draft,
     pin,

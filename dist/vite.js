@@ -79,6 +79,57 @@ function createReviewFigmaImageApiUrl({
   return url.toString();
 }
 
+// src/vite/figma-asset.ts
+function parseReviewFigmaImageFormat(value) {
+  return value === "webp" || value === "png" || value === "jpg" ? value : void 0;
+}
+function getStoreRenderFormat(renderFormat, imageFormat) {
+  if (renderFormat === "jpg" || renderFormat === "png") return renderFormat;
+  if (imageFormat === "jpg") return "jpg";
+  return "png";
+}
+function getReviewFigmaImageFormatFromMimeType(mimeType) {
+  if (mimeType === "image/webp") return "webp";
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/jpeg") return "jpg";
+  return null;
+}
+function normalizeImageMimeType(value) {
+  const mimeType = value?.split(";")[0]?.trim().toLowerCase();
+  if (mimeType === "image/jpg") return "image/jpeg";
+  if (mimeType === "image/jpeg" || mimeType === "image/png" || mimeType === "image/webp") {
+    return mimeType;
+  }
+  return null;
+}
+function createReviewFigmaAssetStorageKey(id, imageFormat) {
+  return `${id}.${getReviewFigmaAssetExtension(imageFormat)}`;
+}
+function createReviewFigmaAssetUrl(assetEndpoint, storageKey) {
+  return `${assetEndpoint}/${encodeURIComponent(storageKey)}`;
+}
+function getReviewFigmaAssetStorageKeyFromPathname(pathname, assetEndpoint) {
+  try {
+    const storageKey = decodeURIComponent(
+      pathname.slice(assetEndpoint.length + 1)
+    );
+    return isSafeReviewFigmaAssetStorageKey(storageKey) ? storageKey : null;
+  } catch {
+    return null;
+  }
+}
+function isSafeReviewFigmaAssetStorageKey(value) {
+  return /^figma_[a-z0-9_]+\.(webp|png|jpg)$/.test(value);
+}
+function getReviewFigmaAssetExtension(format) {
+  return format === "jpg" ? "jpg" : format;
+}
+function getReviewFigmaAssetMimeType(storageKey) {
+  if (storageKey.endsWith(".jpg")) return "image/jpeg";
+  if (storageKey.endsWith(".webp")) return "image/webp";
+  return "image/png";
+}
+
 // src/vite.ts
 var VIRTUAL_JSX_DEV_RUNTIME_ID = "\0@designfever/web-review-kit/source-locator/jsx-dev-runtime";
 var REVIEW_SOURCE_ENV_DEFINE_KEYS = [
@@ -705,55 +756,6 @@ function parseReviewFigmaImageTarget(value) {
     };
   }
   return null;
-}
-function parseReviewFigmaImageFormat(value) {
-  return value === "webp" || value === "png" || value === "jpg" ? value : void 0;
-}
-function getStoreRenderFormat(renderFormat, imageFormat) {
-  if (renderFormat === "jpg" || renderFormat === "png") return renderFormat;
-  if (imageFormat === "jpg") return "jpg";
-  return "png";
-}
-function getReviewFigmaImageFormatFromMimeType(mimeType) {
-  if (mimeType === "image/webp") return "webp";
-  if (mimeType === "image/png") return "png";
-  if (mimeType === "image/jpeg") return "jpg";
-  return null;
-}
-function normalizeImageMimeType(value) {
-  const mimeType = value?.split(";")[0]?.trim().toLowerCase();
-  if (mimeType === "image/jpg") return "image/jpeg";
-  if (mimeType === "image/jpeg" || mimeType === "image/png" || mimeType === "image/webp") {
-    return mimeType;
-  }
-  return null;
-}
-function createReviewFigmaAssetStorageKey(id, imageFormat) {
-  return `${id}.${getReviewFigmaAssetExtension(imageFormat)}`;
-}
-function createReviewFigmaAssetUrl(assetEndpoint, storageKey) {
-  return `${assetEndpoint}/${encodeURIComponent(storageKey)}`;
-}
-function getReviewFigmaAssetStorageKeyFromPathname(pathname, assetEndpoint) {
-  try {
-    const storageKey = decodeURIComponent(
-      pathname.slice(assetEndpoint.length + 1)
-    );
-    return isSafeReviewFigmaAssetStorageKey(storageKey) ? storageKey : null;
-  } catch {
-    return null;
-  }
-}
-function isSafeReviewFigmaAssetStorageKey(value) {
-  return /^figma_[a-z0-9_]+\.(webp|png|jpg)$/.test(value);
-}
-function getReviewFigmaAssetExtension(format) {
-  return format === "jpg" ? "jpg" : format;
-}
-function getReviewFigmaAssetMimeType(storageKey) {
-  if (storageKey.endsWith(".jpg")) return "image/jpeg";
-  if (storageKey.endsWith(".webp")) return "image/webp";
-  return "image/png";
 }
 function getNextImageOrder(images, target) {
   const targetImages = listImagesForTarget(images, target);

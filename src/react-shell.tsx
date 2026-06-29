@@ -5,6 +5,7 @@ import type { ReviewShellMountOptions } from './react-shell/types';
 import { ReviewShell } from './react-shell/review/shell';
 
 export { ReviewShell } from './react-shell/review/shell';
+export { mountFigmaDevOverlay } from './react-shell/figma/dev-overlay';
 export type {
   CreateReviewPagesOptions,
   ReviewShellAdapter,
@@ -26,6 +27,10 @@ export type {
   ReviewShellViewportKind,
   ReviewShellViewportPreset,
 } from './react-shell/types';
+export type {
+  FigmaDevOverlayController,
+  FigmaDevOverlayMountOptions,
+} from './react-shell/figma/dev-overlay';
 export { createReviewPagesFromGlob } from './react-shell/pages';
 export { DEFAULT_REVIEW_VIEWPORT_PRESETS } from './react-shell/viewport';
 export {

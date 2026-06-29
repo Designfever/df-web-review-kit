@@ -36,6 +36,7 @@ export type ReviewFigmaImageOverlayItemState = {
 export type ReviewFigmaImageOverlayState = {
   selectedImageId: string | null;
   imageStates: Record<string, ReviewFigmaImageOverlayItemState>;
+  lastVisibleImageIds: string[];
 };
 
 type StoredReviewFigmaImageOverlayState = Partial<
@@ -149,13 +150,20 @@ export const useReviewFigmaImageStoreController = ({
       setIsMutating(true);
 
       try {
-        const image = await store.addImage({
+        let image = await store.addImage({
           target,
           figmaUrl: trimmedUrl,
           imageFormat,
           label: label?.trim() || undefined,
           order: getNewReviewFigmaImageOrder(images),
         });
+        const uniqueLabel = getUniqueReviewFigmaImageLabel(
+          getReviewFigmaImageComparableLabel(image),
+          images
+        );
+        if (uniqueLabel !== getReviewFigmaImageComparableLabel(image)) {
+          image = await store.updateImage(image.id, { label: uniqueLabel });
+        }
         setImageList((currentList) => ({
           images: sortReviewFigmaImages([
             ...(currentList.targetKey === targetKey ? currentList.images : [])
@@ -349,6 +357,27 @@ export const useReviewFigmaImageOverlayController = ({
   }, [storageKey]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleStorage = (event: StorageEvent) => {
+      if (
+        event.storageArea !== window.localStorage ||
+        (event.key !== storageKey && event.key !== null)
+      ) {
+        return;
+      }
+
+      setStateContainer({
+        state: readStoredReviewFigmaImageOverlayState(storageKey),
+        storageKey,
+      });
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [storageKey]);
+
+  useEffect(() => {
     if (isLoading) return;
 
     updateState((currentState) => {
@@ -363,10 +392,14 @@ export const useReviewFigmaImageOverlayController = ({
           nextImageIds.has(imageId)
         )
       );
+      const lastVisibleImageIds = currentState.lastVisibleImageIds.filter(
+        (imageId) => nextImageIds.has(imageId)
+      );
 
       if (
         selectedImageId === currentState.selectedImageId &&
-        imageStates === currentState.imageStates
+        imageStates === currentState.imageStates &&
+        lastVisibleImageIds.length === currentState.lastVisibleImageIds.length
       ) {
         return currentState;
       }
@@ -375,6 +408,7 @@ export const useReviewFigmaImageOverlayController = ({
         ...currentState,
         selectedImageId,
         imageStates,
+        lastVisibleImageIds,
       };
     });
   }, [images, isLoading, updateState]);
@@ -401,6 +435,13 @@ export const useReviewFigmaImageOverlayController = ({
         ])
       ),
     [images, state]
+  );
+  const isAnyImageOverlayVisible = useMemo(
+    () =>
+      images.some(
+        (image) => imageOverlayStates[image.id]?.isVisible === true
+      ),
+    [imageOverlayStates, images]
   );
 
   const setSelectedImageId = useCallback((selectedImageId: string | null) => {
@@ -454,6 +495,73 @@ export const useReviewFigmaImageOverlayController = ({
     },
     [updateImageOverlayState]
   );
+
+  const toggleAllImageOverlayVisible = useCallback(() => {
+    updateState((currentState) => {
+      if (images.length === 0) return currentState;
+
+      const imageIds = images.map((image) => image.id);
+      const imageIdSet = new Set(imageIds);
+      const visibleImageIds = imageIds.filter(
+        (imageId) =>
+          getReviewFigmaImageOverlayItemState(currentState, imageId).isVisible
+      );
+      let imageStates = currentState.imageStates;
+
+      if (visibleImageIds.length > 0) {
+        imageIds.forEach((imageId) => {
+          imageStates = updateReviewFigmaImageOverlayItemState(
+            imageStates,
+            imageId,
+            (itemState) => ({
+              ...itemState,
+              isVisible: false,
+            })
+          );
+        });
+
+        return {
+          ...currentState,
+          imageStates,
+          lastVisibleImageIds: visibleImageIds,
+        };
+      }
+
+      const restoreImageIds = currentState.lastVisibleImageIds.filter(
+        (imageId) => imageIdSet.has(imageId)
+      );
+      const fallbackImageId =
+        currentState.selectedImageId && imageIdSet.has(currentState.selectedImageId)
+          ? currentState.selectedImageId
+          : images[0]?.id ?? null;
+      const nextVisibleImageIds =
+        restoreImageIds.length > 0
+          ? restoreImageIds
+          : fallbackImageId
+            ? [fallbackImageId]
+            : [];
+      const nextVisibleImageIdSet = new Set(nextVisibleImageIds);
+
+      imageIds.forEach((imageId) => {
+        imageStates = updateReviewFigmaImageOverlayItemState(
+          imageStates,
+          imageId,
+          (itemState) => ({
+            ...itemState,
+            isVisible: nextVisibleImageIdSet.has(imageId),
+          })
+        );
+      });
+
+      return {
+        ...currentState,
+        selectedImageId:
+          currentState.selectedImageId ?? nextVisibleImageIds[0] ?? null,
+        imageStates,
+        lastVisibleImageIds: nextVisibleImageIds,
+      };
+    });
+  }, [images, updateState]);
 
   const setImageOverlayOpacity = useCallback(
     (imageId: string, opacity: number) => {
@@ -621,6 +729,7 @@ export const useReviewFigmaImageOverlayController = ({
 
   return {
     imageOverlayStates,
+    isAnyImageOverlayVisible,
     isOverlayVisible: selectedImageOverlayState.isVisible,
     overlayMode: selectedImageOverlayState.mode,
     overlayOffsetY: selectedImageOverlayState.offsetY,
@@ -640,6 +749,7 @@ export const useReviewFigmaImageOverlayController = ({
     toggleImageOverlayLocked,
     toggleImageOverlayMode,
     toggleImageOverlayVisible,
+    toggleAllImageOverlayVisible,
     setImageOverlayOffsetY,
     setImageOverlayOpacity,
     toggleOverlayLocked,
@@ -721,6 +831,7 @@ function writeStoredReviewFigmaImageOverlayState(
 const DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE: ReviewFigmaImageOverlayState = {
   selectedImageId: null,
   imageStates: {},
+  lastVisibleImageIds: [],
 };
 
 const DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE: ReviewFigmaImageOverlayItemState = {
@@ -741,6 +852,11 @@ function normalizeReviewFigmaImageOverlayState(
   const state = value as StoredReviewFigmaImageOverlayState;
   const selectedImageId =
     typeof state.selectedImageId === 'string' ? state.selectedImageId : null;
+  const lastVisibleImageIds = Array.isArray(state.lastVisibleImageIds)
+    ? state.lastVisibleImageIds.filter(
+        (imageId): imageId is string => typeof imageId === 'string'
+      )
+    : [];
   const imageStates = normalizeReviewFigmaImageOverlayItemStateRecord(
     state.imageStates
   );
@@ -753,6 +869,7 @@ function normalizeReviewFigmaImageOverlayState(
   return {
     selectedImageId,
     imageStates,
+    lastVisibleImageIds,
   };
 }
 
@@ -811,7 +928,8 @@ function isDefaultReviewFigmaImageOverlayState(
 ) {
   return (
     state.selectedImageId === null &&
-    Object.keys(state.imageStates).length === 0
+    Object.keys(state.imageStates).length === 0 &&
+    state.lastVisibleImageIds.length === 0
   );
 }
 
@@ -853,6 +971,30 @@ function updateReviewFigmaImageOverlayItemState(
       imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
     ),
   };
+}
+
+function getReviewFigmaImageComparableLabel(image: ReviewFigmaImage) {
+  return image.label?.trim() || image.nodeId;
+}
+
+function getUniqueReviewFigmaImageLabel(
+  label: string,
+  images: readonly ReviewFigmaImage[]
+) {
+  const trimmedLabel = label.trim();
+  if (!trimmedLabel) return trimmedLabel;
+
+  const existingLabels = new Set(
+    images.map(getReviewFigmaImageComparableLabel).filter(Boolean)
+  );
+  if (!existingLabels.has(trimmedLabel)) return trimmedLabel;
+
+  for (let index = 2; index < Number.MAX_SAFE_INTEGER; index += 1) {
+    const candidate = `${trimmedLabel}-${index}`;
+    if (!existingLabels.has(candidate)) return candidate;
+  }
+
+  return trimmedLabel;
 }
 
 function getReviewFigmaImageErrorMessage(error: unknown) {

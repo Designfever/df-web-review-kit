@@ -1,10 +1,21 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
+import type { ReviewFigmaImage } from '../../figma/image.types';
+import type { ReviewFigmaImageOverlayItemState } from '../figma/image.controller';
 import type { ReviewShellViewportPreset } from '../types';
 import { getViewportPresetKind } from '../viewport';
 
 const TARGET_FIGMA_IMAGE_ROOT_ID = 'df-review-figma-image-target-root';
 const TARGET_FIGMA_IMAGE_STYLE_ID = 'df-review-figma-image-target-style';
 const TARGET_FIGMA_IMAGE_ID_ATTRIBUTE = 'data-df-review-figma-image-id';
+const targetFigmaImageDragStates = new WeakMap<
+  HTMLElement,
+  {
+    overlayId: string;
+    pointerId: number;
+    startClientY: number;
+    startOffsetY: number;
+  }
+>();
 
 export type ReviewTargetFigmaImageOverlay = {
   id: string;
@@ -17,16 +28,44 @@ export type ReviewTargetFigmaImageOverlay = {
   zIndex: number;
 };
 
+export function createReviewTargetFigmaImageOverlays({
+  imageOverlayStates,
+  images,
+}: {
+  imageOverlayStates: Record<string, ReviewFigmaImageOverlayItemState>;
+  images: ReviewFigmaImage[];
+}): ReviewTargetFigmaImageOverlay[] {
+  return images.flatMap((image, index) => {
+    const overlayState = imageOverlayStates[image.id];
+    if (!overlayState?.isVisible) return [];
+
+    return [
+      {
+        id: image.id,
+        imageUrl: image.imageUrl,
+        isLocked: overlayState.isLocked,
+        label: image.label ?? image.nodeId,
+        mode: overlayState.mode,
+        offsetY: overlayState.offsetY,
+        opacity: overlayState.opacity,
+        zIndex: images.length - index,
+      },
+    ];
+  });
+}
+
 interface UseTargetFigmaImageOverlaysOptions {
   figmaImageOverlays: ReviewTargetFigmaImageOverlay[];
   iframeRef: RefObject<HTMLIFrameElement | null>;
   size: ReviewShellViewportPreset;
   targetSrc: string;
+  onSetOverlayOffsetY?: (id: string, offsetY: number) => void;
 }
 
 export const useTargetFigmaImageOverlays = ({
   figmaImageOverlays,
   iframeRef,
+  onSetOverlayOffsetY,
   size,
   targetSrc,
 }: UseTargetFigmaImageOverlaysOptions) => {
@@ -34,8 +73,6 @@ export const useTargetFigmaImageOverlays = ({
   const overlaySignature = createTargetFigmaImageOverlaySignature(
     figmaImageOverlays
   );
-  const isMobileViewport = getViewportPresetKind(size) === 'mobile';
-  const fixedOverlayWidth = getTargetFigmaImageFixedWidth(size);
 
   const syncTargetFigmaImageOverlays = useCallback(() => {
     let targetDocument: Document | null | undefined;
@@ -56,16 +93,16 @@ export const useTargetFigmaImageOverlays = ({
 
     targetDocumentRef.current = targetDocument;
     renderTargetFigmaImageOverlays({
-      fixedOverlayWidth,
-      isMobileViewport,
+      onSetOverlayOffsetY,
       overlays: figmaImageOverlays,
+      size,
       targetDocument,
     });
   }, [
-    fixedOverlayWidth,
     iframeRef,
-    isMobileViewport,
+    onSetOverlayOffsetY,
     overlaySignature,
+    size,
     targetSrc,
   ]);
 
@@ -84,15 +121,15 @@ export const useTargetFigmaImageOverlays = ({
   return syncTargetFigmaImageOverlays;
 };
 
-function renderTargetFigmaImageOverlays({
-  fixedOverlayWidth,
-  isMobileViewport,
+export function renderTargetFigmaImageOverlays({
+  onSetOverlayOffsetY,
   overlays,
+  size,
   targetDocument,
 }: {
-  fixedOverlayWidth: number;
-  isMobileViewport: boolean;
+  onSetOverlayOffsetY?: (id: string, offsetY: number) => void;
   overlays: ReviewTargetFigmaImageOverlay[];
+  size: ReviewShellViewportPreset;
   targetDocument: Document;
 }) {
   if (overlays.length === 0) {
@@ -100,6 +137,8 @@ function renderTargetFigmaImageOverlays({
     return;
   }
 
+  const isMobileViewport = getViewportPresetKind(size) === 'mobile';
+  const fixedOverlayWidth = getTargetFigmaImageFixedWidth(size);
   const root = ensureTargetFigmaImageRoot(targetDocument);
   const existingElements = new Map(
     Array.from(
@@ -141,25 +180,98 @@ function renderTargetFigmaImageOverlays({
     element.style.filter = overlay.mode === 'invert' ? 'invert(1)' : '';
     element.style.left = isMobileViewport ? '0' : '50%';
     element.style.opacity = String(overlay.opacity);
-    element.style.pointerEvents = 'none';
+    element.style.pointerEvents =
+      overlay.isLocked || !onSetOverlayOffsetY ? 'none' : 'auto';
     element.style.top = `${normalizeTargetFigmaImageOffsetY(
       overlay.offsetY
     )}px`;
     element.style.transform = isMobileViewport ? 'none' : 'translateX(-50%)';
     element.style.width = isMobileViewport ? '100%' : `${fixedOverlayWidth}px`;
     element.style.zIndex = String(overlay.zIndex);
+    attachTargetFigmaImageDrag({
+      element,
+      onSetOverlayOffsetY,
+      overlay,
+    });
 
     root.appendChild(element);
   });
 }
 
+function attachTargetFigmaImageDrag({
+  element,
+  onSetOverlayOffsetY,
+  overlay,
+}: {
+  element: HTMLElement;
+  onSetOverlayOffsetY?: (id: string, offsetY: number) => void;
+  overlay: ReviewTargetFigmaImageOverlay;
+}) {
+  if (overlay.isLocked || !onSetOverlayOffsetY) {
+    targetFigmaImageDragStates.delete(element);
+    element.classList.remove('is-dragging');
+    element.onpointerdown = null;
+    element.onpointermove = null;
+    element.onpointerup = null;
+    element.onpointercancel = null;
+    return;
+  }
+
+  element.onpointerdown = (event) => {
+    if (event.button !== 0) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    element.setPointerCapture(event.pointerId);
+    element.classList.add('is-dragging');
+    targetFigmaImageDragStates.set(element, {
+      overlayId: overlay.id,
+      pointerId: event.pointerId,
+      startClientY: event.clientY,
+      startOffsetY: normalizeTargetFigmaImageOffsetY(overlay.offsetY),
+    });
+  };
+
+  element.onpointermove = (event) => {
+    const dragState = targetFigmaImageDragStates.get(element);
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    const nextOffsetY = Math.round(
+      dragState.startOffsetY + event.clientY - dragState.startClientY
+    );
+    element.style.top = `${nextOffsetY}px`;
+    onSetOverlayOffsetY(dragState.overlayId, nextOffsetY);
+  };
+
+  const stopDrag = (event: PointerEvent) => {
+    const dragState = targetFigmaImageDragStates.get(element);
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    if (element.hasPointerCapture(event.pointerId)) {
+      element.releasePointerCapture(event.pointerId);
+    }
+    element.classList.remove('is-dragging');
+    targetFigmaImageDragStates.delete(element);
+  };
+
+  element.onpointerup = stopDrag;
+  element.onpointercancel = stopDrag;
+}
+
 function ensureTargetFigmaImageRoot(targetDocument: Document) {
   ensureTargetFigmaImageStyle(targetDocument);
 
-  const existingRoot = targetDocument.getElementById(
-    TARGET_FIGMA_IMAGE_ROOT_ID
+  const [existingRoot, ...duplicateRoots] = Array.from(
+    targetDocument.querySelectorAll<HTMLElement>(
+      `#${TARGET_FIGMA_IMAGE_ROOT_ID}`
+    )
   );
-  if (existingRoot instanceof HTMLElement) return existingRoot;
+  duplicateRoots.forEach((root) => root.remove());
+  if (existingRoot) return existingRoot;
 
   const root = targetDocument.createElement('div');
   root.id = TARGET_FIGMA_IMAGE_ROOT_ID;
@@ -188,9 +300,15 @@ function ensureTargetFigmaImageStyle(targetDocument: Document) {
     #${TARGET_FIGMA_IMAGE_ROOT_ID} .df-review-figma-image-target-overlay {
       position: absolute;
       display: block;
+      cursor: grab;
       user-select: none;
       -webkit-user-select: none;
-      will-change: opacity, transform;
+      touch-action: none;
+      will-change: opacity, top, transform;
+    }
+
+    #${TARGET_FIGMA_IMAGE_ROOT_ID} .df-review-figma-image-target-overlay.is-dragging {
+      cursor: grabbing;
     }
 
     #${TARGET_FIGMA_IMAGE_ROOT_ID} .df-review-figma-image-target-overlay img {
@@ -207,9 +325,13 @@ function ensureTargetFigmaImageStyle(targetDocument: Document) {
   targetDocument.head?.appendChild(style);
 }
 
-function removeTargetFigmaImageOverlays(targetDocument: Document) {
-  targetDocument.getElementById(TARGET_FIGMA_IMAGE_ROOT_ID)?.remove();
-  targetDocument.getElementById(TARGET_FIGMA_IMAGE_STYLE_ID)?.remove();
+export function removeTargetFigmaImageOverlays(targetDocument: Document) {
+  targetDocument
+    .querySelectorAll(`#${TARGET_FIGMA_IMAGE_ROOT_ID}`)
+    .forEach((element) => element.remove());
+  targetDocument
+    .querySelectorAll(`#${TARGET_FIGMA_IMAGE_STYLE_ID}`)
+    .forEach((element) => element.remove());
 }
 
 function createTargetFigmaImageOverlaySignature(
@@ -221,6 +343,7 @@ function createTargetFigmaImageOverlaySignature(
         overlay.id,
         overlay.imageUrl,
         overlay.label ?? '',
+        overlay.isLocked ? 'locked' : 'unlocked',
         overlay.mode ?? '',
         overlay.offsetY ?? 0,
         overlay.opacity,

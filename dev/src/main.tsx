@@ -12,6 +12,7 @@ import {
   createFallbackPresenceAdapter,
   createLocalPresenceAdapter,
   createSupabasePresenceAdapter,
+  mountFigmaDevOverlay,
   mountReviewShell,
   type ReviewShellAdapter,
   type ReviewShellPage,
@@ -299,4 +300,15 @@ if (window.location.pathname.startsWith(REVIEW_PATH_PREFIX)) {
       <TargetApp />
     </React.StrictMode>
   );
+  if (!new URLSearchParams(window.location.search).has('__dfwr_target')) {
+    mountFigmaDevOverlay({
+      projectId: REVIEW_PROJECT_ID,
+      presets,
+      reviewPathPrefix: REVIEW_PATH_PREFIX,
+      figmaImages: {
+        store: figmaImageStore,
+        imageFormat: 'webp',
+      },
+    });
+  }
 }

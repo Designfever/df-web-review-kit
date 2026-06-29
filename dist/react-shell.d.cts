@@ -146,6 +146,19 @@ interface ReviewShellMountOptions extends ReviewShellProps {
 
 declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, adjustmentLabel, reviewPathPrefix, sourceRoot, sourceInspector, presence, figmaImages, }: ReviewShellProps) => react.JSX.Element;
 
+interface FigmaDevOverlayMountOptions {
+    rootId?: string;
+    projectId: string;
+    presets?: ReviewShellViewportPreset[];
+    reviewPathPrefix?: string;
+    figmaImages?: ReviewShellFigmaImagesOptions;
+    pageUrl?: string | (() => string);
+}
+interface FigmaDevOverlayController {
+    destroy(): void;
+}
+declare const mountFigmaDevOverlay: (options: FigmaDevOverlayMountOptions) => FigmaDevOverlayController;
+
 declare const createReviewPagesFromGlob: (entries: ReviewShellGlobEntries, options?: CreateReviewPagesOptions) => ReviewShellPage[];
 
 declare const DEFAULT_REVIEW_VIEWPORT_PRESETS: ReviewShellViewportPreset[];
@@ -191,4 +204,4 @@ declare const createSupabasePresenceAdapter: ({ client, channelPrefix, private: 
 
 declare const mountReviewShell: (options: ReviewShellMountOptions) => void;
 
-export { type CreateReviewPagesOptions, DEFAULT_REVIEW_VIEWPORT_PRESETS, type LocalPresenceAdapterOptions, type ReviewPresenceAdapter, type ReviewPresenceContext, type ReviewPresenceSession, type ReviewPresenceState, type ReviewPresenceStatus, type ReviewPresenceUser, ReviewShell, type ReviewShellAdapter, type ReviewShellAdapters, type ReviewShellFigmaImagesOptions, type ReviewShellGlobEntries, type ReviewShellMountOptions, type ReviewShellPage, type ReviewShellProps, type ReviewShellStatusOption, type ReviewShellViewportKind, type ReviewShellViewportPreset, type ReviewSourceEditor, type ReviewSourceInspectorOptions, type SupabasePresenceAdapterOptions, type SupabasePresenceClient, createFallbackPresenceAdapter, createLocalPresenceAdapter, createReviewPagesFromGlob, createSupabasePresenceAdapter, mountReviewShell };
+export { type CreateReviewPagesOptions, DEFAULT_REVIEW_VIEWPORT_PRESETS, type FigmaDevOverlayController, type FigmaDevOverlayMountOptions, type LocalPresenceAdapterOptions, type ReviewPresenceAdapter, type ReviewPresenceContext, type ReviewPresenceSession, type ReviewPresenceState, type ReviewPresenceStatus, type ReviewPresenceUser, ReviewShell, type ReviewShellAdapter, type ReviewShellAdapters, type ReviewShellFigmaImagesOptions, type ReviewShellGlobEntries, type ReviewShellMountOptions, type ReviewShellPage, type ReviewShellProps, type ReviewShellStatusOption, type ReviewShellViewportKind, type ReviewShellViewportPreset, type ReviewSourceEditor, type ReviewSourceInspectorOptions, type SupabasePresenceAdapterOptions, type SupabasePresenceClient, createFallbackPresenceAdapter, createLocalPresenceAdapter, createReviewPagesFromGlob, createSupabasePresenceAdapter, mountFigmaDevOverlay, mountReviewShell };

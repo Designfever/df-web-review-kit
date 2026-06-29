@@ -63,6 +63,7 @@ export const useReviewFigmaImages = ({
   });
   const {
     imageOverlayStates,
+    isAnyImageOverlayVisible,
     isOverlayLocked,
     isOverlayVisible,
     overlayMode,
@@ -83,6 +84,7 @@ export const useReviewFigmaImages = ({
     toggleImageOverlayLocked,
     toggleImageOverlayMode,
     toggleImageOverlayVisible,
+    toggleAllImageOverlayVisible,
     toggleOverlayLocked,
     toggleOverlayMode,
     toggleOverlayVisible,
@@ -107,6 +109,7 @@ export const useReviewFigmaImages = ({
     error,
     images,
     imageOverlayStates,
+    isAnyImageOverlayVisible,
     isLoading,
     isMutating,
     isOverlayLocked,
@@ -132,6 +135,7 @@ export const useReviewFigmaImages = ({
     toggleImageOverlayLocked,
     toggleImageOverlayMode,
     toggleImageOverlayVisible,
+    toggleAllImageOverlayVisible,
     toggleOverlayLocked,
     toggleOverlayMode,
     toggleOverlayVisible,

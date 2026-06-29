@@ -6,17 +6,12 @@ import {
   useState,
 } from 'react';
 import {
-  Contrast as InvertIcon,
-  Eye as EyeIcon,
-  EyeOff as EyeOffIcon,
   ExternalLink as ExternalLinkIcon,
-  Lock as LockIcon,
   MoveVertical as OffsetYIcon,
   Pencil as PencilIcon,
   Plus as PlusIcon,
   RefreshCw as RefreshCwIcon,
   Trash2 as TrashIcon,
-  Unlock as UnlockIcon,
   X as XIcon,
 } from 'lucide-react';
 import type { ReviewFigmaImage } from '../../figma/image.types';
@@ -33,6 +28,7 @@ import {
   getSnappedOpacityPercent,
   isInteractiveFigmaImageTarget,
 } from './image-panel.utils';
+import { FigmaImageLayerStateButtons } from './layer-state-buttons';
 import { ReviewSpinner } from '../review/spinner';
 
 const FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS = 6;
@@ -511,80 +507,15 @@ export const FigmaImagesPanel = ({
                 void onReorderImages(nextImageIds);
               }}
             >
-              <div
-                aria-label={`${imageLabel} overlay state`}
-                className="df-review-figma-image-layer-state"
+              <FigmaImageLayerStateButtons
+                imageLabel={imageLabel}
+                overlayState={overlayState}
                 title={getFigmaImageLayerStatusLabel(overlayState)}
-              >
-                <button
-                  aria-label={
-                    overlayState.isVisible
-                      ? `Hide ${imageLabel} overlay`
-                      : `Show ${imageLabel} overlay`
-                  }
-                  aria-pressed={overlayState.isVisible}
-                  className={`df-review-figma-image-state-button${
-                    overlayState.isVisible ? ' is-active' : ''
-                  }`}
-                  title={overlayState.isVisible ? 'Hide overlay' : 'Show overlay'}
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onSelectImage(image.id);
-                    onToggleImageOverlayVisible(image.id);
-                  }}
-                >
-                  {overlayState.isVisible ? (
-                    <EyeIcon aria-hidden="true" />
-                  ) : (
-                    <EyeOffIcon aria-hidden="true" />
-                  )}
-                </button>
-                <button
-                  aria-label={
-                    overlayState.isLocked
-                      ? `Unlock ${imageLabel} overlay`
-                      : `Lock ${imageLabel} overlay`
-                  }
-                  aria-pressed={overlayState.isLocked}
-                  className={`df-review-figma-image-state-button${
-                    overlayState.isLocked ? ' is-active' : ''
-                  }`}
-                  title={overlayState.isLocked ? 'Unlock' : 'Lock'}
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onSelectImage(image.id);
-                    onToggleImageOverlayLocked(image.id);
-                  }}
-                >
-                  {overlayState.isLocked ? (
-                    <LockIcon aria-hidden="true" />
-                  ) : (
-                    <UnlockIcon aria-hidden="true" />
-                  )}
-                </button>
-                <button
-                  aria-label={
-                    overlayState.mode === 'invert'
-                      ? `Disable ${imageLabel} invert`
-                      : `Enable ${imageLabel} invert`
-                  }
-                  aria-pressed={overlayState.mode === 'invert'}
-                  className={`df-review-figma-image-state-button${
-                    overlayState.mode === 'invert' ? ' is-active' : ''
-                  }`}
-                  title="Invert"
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onSelectImage(image.id);
-                    onToggleImageOverlayMode(image.id);
-                  }}
-                >
-                  <InvertIcon aria-hidden="true" />
-                </button>
-              </div>
+                onSelect={() => onSelectImage(image.id)}
+                onToggleLocked={() => onToggleImageOverlayLocked(image.id)}
+                onToggleMode={() => onToggleImageOverlayMode(image.id)}
+                onToggleVisible={() => onToggleImageOverlayVisible(image.id)}
+              />
               <div className="df-review-figma-image-card-main">
                 {editingImageId === image.id ? (
                   <input

@@ -54,11 +54,11 @@ import {
 } from '../shell.modals';
 import { buildReviewItemPrompt } from '../prompt/prompt';
 import {
-  getFigmaFrameUrl,
   getReviewFigmaImageStore,
   getTargetFigmaFrameConfig,
   type ReviewFigmaFrameConfig,
 } from '../figma';
+import { FigmaMarkIcon } from '../figma/figma-mark-icon';
 import { FigmaImagesPanel } from '../figma/images.panel';
 import { QaItemEditModal } from '../qa/item.edit.modal';
 import { ReviewQaPanel } from '../qa/panel';
@@ -84,6 +84,7 @@ import {
   type SourceInspectorState,
 } from './source.inspector.overlay';
 import { ReviewTargetFrame } from '../target/frame';
+import { createReviewTargetFigmaImageOverlays } from '../target/figma.image.overlay';
 import { setTargetFigmaOverlayLocked } from '../target/target';
 import { ReviewTopbar } from '../topbar';
 import { useReviewController } from '../hooks/use.review.controller';
@@ -136,22 +137,6 @@ const SOURCE_PANEL_MAX_WIDTH = 440;
 const SOURCE_PANEL_MIN_WIDTH = 240;
 const SOURCE_PANEL_MAX_HEIGHT = 260;
 const SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
-
-function FigmaMarkIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="df-review-figma-mark-icon"
-      viewBox="0 0 24 24"
-    >
-      <path d="M12 3.75H8.75a3.25 3.25 0 0 0 0 6.5H12v-6.5Z" />
-      <path d="M12 3.75h3.25a3.25 3.25 0 0 1 0 6.5H12v-6.5Z" />
-      <path d="M12 10.25H8.75a3.25 3.25 0 0 0 0 6.5H12v-6.5Z" />
-      <path d="M15.25 10.25a3.25 3.25 0 1 1 0 6.5 3.25 3.25 0 0 1 0-6.5Z" />
-      <path d="M12 16.75H8.75a3.25 3.25 0 1 0 3.25 3.25v-3.25Z" />
-    </svg>
-  );
-}
 
 export const ReviewShell = ({
   projectId,
@@ -393,6 +378,7 @@ export const ReviewShell = ({
     error: figmaImageError,
     imageOverlayStates: figmaImageOverlayStates,
     images: figmaImageList,
+    isAnyImageOverlayVisible: isAnyFigmaImageOverlayVisible,
     isLoading: isFigmaImageLoading,
     isMutating: isFigmaImageMutating,
     refreshImages: refreshFigmaImages,
@@ -402,6 +388,7 @@ export const ReviewShell = ({
     setImageOverlayOpacity: setFigmaImageOverlayOpacity,
     setSelectedImageId: setSelectedFigmaImageId,
     target: figmaImageTarget,
+    toggleAllImageOverlayVisible: toggleAllFigmaImageOverlayVisible,
     toggleImageOverlayLocked: toggleFigmaImageOverlayLocked,
     toggleImageOverlayMode: toggleFigmaImageOverlayMode,
     toggleImageOverlayVisible: toggleFigmaImageOverlayVisible,
@@ -417,10 +404,6 @@ export const ReviewShell = ({
     useState<{ targetSrc: string; config: ReviewFigmaFrameConfig } | null>(null);
   const targetFigmaConfig =
     targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
-  const figmaFrameUrl = useMemo(
-    () => getFigmaFrameUrl(targetFigmaConfig, size),
-    [targetFigmaConfig, size]
-  );
   const isFigmaOverlayAvailable =
     !isFigmaImageManagementEnabled &&
     isViewportFigmaOverlayAvailable &&
@@ -1554,22 +1537,9 @@ export const ReviewShell = ({
       onToast: showToast,
     });
 
-  const figmaImageOverlays = figmaImageList.flatMap((image, index) => {
-    const overlayState = figmaImageOverlayStates[image.id];
-    if (!overlayState?.isVisible) return [];
-
-    return [
-      {
-        id: image.id,
-        imageUrl: image.imageUrl,
-        isLocked: overlayState.isLocked,
-        label: image.label ?? image.nodeId,
-        mode: overlayState.mode,
-        offsetY: overlayState.offsetY,
-        opacity: overlayState.opacity,
-        zIndex: figmaImageList.length - index,
-      },
-    ];
+  const figmaImageOverlays = createReviewTargetFigmaImageOverlays({
+    imageOverlayStates: figmaImageOverlayStates,
+    images: figmaImageList,
   });
 
   return (
@@ -1587,12 +1557,31 @@ export const ReviewShell = ({
         isRulerAvailable={isRulerAvailable}
         isRulerVisible={isRulerVisible}
         targetOverlayState={targetOverlayState}
-        isFigmaOverlayAvailable={isFigmaOverlayAvailable}
+        figmaOverlayUnavailableMessage={
+          isFigmaImageManagementEnabled
+            ? 'No Figma images on this viewport.'
+            : undefined
+        }
+        isFigmaOverlayActive={
+          isFigmaImageManagementEnabled
+            ? isAnyFigmaImageOverlayVisible
+            : targetOverlayState.figma
+        }
+        isFigmaOverlayAvailable={
+          isFigmaImageManagementEnabled
+            ? figmaImageList.length > 0
+            : isFigmaOverlayAvailable
+        }
         onDraftTargetChange={setDraftTarget}
         onApplyTarget={applyTarget}
         onOpenSitemap={() => setIsSitemapOpen(true)}
         onCopyCurrentUrl={() => void copyCurrentUrl()}
         onSizeChange={setSize}
+        onToggleFigmaOverlay={
+          isFigmaImageManagementEnabled
+            ? toggleAllFigmaImageOverlayVisible
+            : () => toggleTargetOverlay('figma')
+        }
         onToggleRuler={toggleRuler}
         onToggleTargetOverlay={toggleTargetOverlay}
       />
@@ -1853,7 +1842,6 @@ export const ReviewShell = ({
         canWriteArea={canWriteArea}
         canWriteDom={canWriteDom}
         figmaImageOverlays={figmaImageOverlays}
-        figmaFrameUrl={figmaFrameUrl}
         frameScrollRef={frameScrollRef}
         iframeRef={iframeRef}
         isRulerAvailable={isRulerAvailable}
@@ -1870,6 +1858,7 @@ export const ReviewShell = ({
         size={size}
         targetSrc={targetSrc}
         onLoadTarget={loadTargetFrame}
+        onSetFigmaImageOverlayOffsetY={setFigmaImageOverlayOffsetY}
         onSetReviewMode={setReviewMode}
       />
 

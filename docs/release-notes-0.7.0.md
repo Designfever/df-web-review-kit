@@ -18,7 +18,7 @@
 - Sitemap modal에 페이지 검색 필터를 추가했다.
 - Sitemap tree row를 ASCII prefix 대신 접기/펼치기 가능한 folder explorer 형태로 바꿨다.
 - Sitemap tree depth를 더 빨리 읽을 수 있게 indent 영역에 subtle guide line을 추가했다.
-- Sitemap tree guide line을 folder caret 중앙축에 맞추고 row divider가 guide line과 겹치지 않도록 정리했다.
+- Sitemap tree guide line을 folder caret 중앙축에 맞추고 body row divider 대신 hover/active block highlight를 사용하도록 정리했다.
 
 ## 변경
 
@@ -74,7 +74,7 @@ remote list가 늦게 도착하는 경우에도 URL의 `item` query를 복원할
 - Sitemap modal에서 페이지 이름/경로를 검색할 수 있고, 일치하는 하위 page의 상위 folder context를 유지한다.
 - Sitemap folder row는 caret으로 접고 펼칠 수 있으며, 검색 중에는 일치 항목의 상위 folder를 자동으로 펼친다.
 - Sitemap folder depth는 세로 guide line으로 보강해 깊은 경로도 한눈에 구분되게 했다.
-- Sitemap row divider는 label 영역부터 시작해 guide line과 겹치지 않는다.
+- Sitemap body row divider를 제거하고 hover/active block highlight로 행 구분을 처리한다.
 
 ## Host 적용 메모
 

@@ -260,9 +260,6 @@ export const SitemapModal = ({
                 }
                 className={rowClassName}
                 role="row"
-                style={
-                  { '--df-review-sitemap-depth': row.depth } as CSSProperties
-                }
               >
                 {rowContent}
               </div>

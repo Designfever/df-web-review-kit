@@ -741,7 +741,6 @@ var reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-row {
-    position: relative;
     min-height: 42px;
     border: 0;
     border-radius: 0;
@@ -749,17 +748,6 @@ var reviewShellSitemapStyle = `
     background: transparent;
     color: var(--df-review-text);
     text-align: left;
-  }
-
-  .df-review-sitemap-row:not(.is-summary)::after {
-    content: '';
-    position: absolute;
-    right: 10px;
-    bottom: 0;
-    left: calc(10px + var(--df-review-sitemap-depth, 0) * 18px + 28px);
-    height: 1px;
-    background: var(--df-review-line-soft);
-    pointer-events: none;
   }
 
   .df-review-sitemap-row.is-summary {
@@ -784,16 +772,11 @@ var reviewShellSitemapStyle = `
     align-items: center;
     min-height: 74px;
     padding: 0 10px;
-    border-bottom: 1px solid var(--df-review-line-soft);
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
   }
 
-  .df-review-sitemap-row:last-child {
-    border-bottom: 0;
-  }
-
-  .df-review-sitemap-row.is-page:hover,
+  .df-review-sitemap-row:not(.is-summary):hover,
   button.df-review-sitemap-row.is-summary:hover,
   .df-review-sitemap-row.is-active {
     background: var(--df-review-accent-soft);
@@ -6870,7 +6853,6 @@ var SitemapModal = ({
                   "aria-label": row.isPage ? `${row.href} / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online` : `${row.href} group / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
                   className: rowClassName,
                   role: "row",
-                  style: { "--df-review-sitemap-depth": row.depth },
                   children: rowContent
                 },
                 row.href

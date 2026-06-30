@@ -497,7 +497,7 @@ var reviewShellSitemapStyle = `
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
 	    width: min(940px, calc(100vw - 48px));
 	    max-height: min(720px, calc(100vh - 48px));
 	    overflow: hidden;
@@ -562,6 +562,86 @@ var reviewShellSitemapStyle = `
     padding: 10px 12px;
     border-bottom: 1px solid var(--df-review-line-soft);
     background: var(--df-review-panel);
+  }
+
+  .df-review-sitemap-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 34px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 10px;
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    color: var(--df-review-muted);
+  }
+
+  .df-review-sitemap-search:focus-within {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-text);
+  }
+
+  .df-review-sitemap-search svg {
+    width: 15px;
+    min-width: 15px;
+    height: 15px;
+  }
+
+  .df-review-sitemap-search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 30px;
+    border: 0;
+    padding: 0;
+    outline: none;
+    color: var(--df-review-text);
+    background: transparent;
+    appearance: none;
+    font: inherit;
+    font-size: var(--df-review-font-size-sm);
+  }
+
+  .df-review-sitemap-search input::-webkit-search-cancel-button {
+    appearance: none;
+  }
+
+  .df-review-sitemap-search input::placeholder {
+    color: var(--df-review-muted);
+  }
+
+  .df-review-sitemap-search-clear {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    background: var(--df-review-control);
+    color: var(--df-review-muted);
+  }
+
+  .df-review-sitemap-search-clear:hover {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+  }
+
+  .df-review-sitemap-search-clear svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .df-review-sitemap-search-count {
+    flex: 0 0 auto;
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: var(--df-review-font-weight-normal);
+    white-space: nowrap;
   }
 
   .df-review-sitemap-controls select {
@@ -689,6 +769,17 @@ var reviewShellSitemapStyle = `
 
   .df-review-sitemap-row.is-folder {
     cursor: default;
+  }
+
+  .df-review-sitemap-empty {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: center;
+    min-height: 74px;
+    padding: 0 10px;
+    border-bottom: 1px solid var(--df-review-line-soft);
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-sm);
   }
 
   .df-review-sitemap-row:last-child {
@@ -6336,6 +6427,7 @@ var addSitemapQaCounts = (first, second) => ({
   )
 });
 var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget, options = {}) => {
+  const searchQuery = normalizeSitemapSearchQuery(options.searchQuery);
   const sortKey = options.sortKey ?? "page";
   const sortDirection = options.sortDirection ?? "asc";
   const root = createSitemapNode("/", "/", false);
@@ -6419,6 +6511,13 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
       return a.node.label.localeCompare(b.node.label);
     });
   };
+  const summaryMatchesSearch = (summary) => {
+    if (!searchQuery) return true;
+    if (sitemapNodeMatchesSearch(summary.node, searchQuery, getPageTarget)) {
+      return true;
+    }
+    return summary.children.some(summaryMatchesSearch);
+  };
   const rows = [];
   const appendSummaryRows = (summary, depth, ancestorLastList, isLastNode) => {
     const { node } = summary;
@@ -6437,7 +6536,9 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
         users: rowUsers
       });
     }
-    const visibleChildren = sortSummaries(summary.children);
+    const visibleChildren = sortSummaries(
+      summary.children.filter(summaryMatchesSearch)
+    );
     visibleChildren.forEach((child, childIndex) => {
       appendSummaryRows(
         child,
@@ -6447,7 +6548,7 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
       );
     });
   };
-  if (root.isPage) {
+  if (root.isPage && (!searchQuery || sitemapNodeMatchesSearch(root, searchQuery, getPageTarget))) {
     const directCount = getDirectCount(root);
     const directUsers = getDirectUsers(root);
     rows.push({
@@ -6461,13 +6562,24 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
     });
   }
   const rootSummaries = sortSummaries(
-    Array.from(root.children.values()).map(createNodeSummary)
+    Array.from(root.children.values()).map(createNodeSummary).filter(summaryMatchesSearch)
   );
   rootSummaries.forEach((summary, index, siblings) => {
     appendSummaryRows(summary, 1, [], index === siblings.length - 1);
   });
   return rows;
 };
+function normalizeSitemapSearchQuery(value) {
+  return value?.trim().toLowerCase() ?? "";
+}
+function sitemapNodeMatchesSearch(node, searchQuery, getPageTarget) {
+  return [
+    node.href,
+    node.label,
+    normalizeSitemapHref(node.href),
+    node.isPage ? getPageTarget(node.href) : ""
+  ].join(" ").toLowerCase().includes(searchQuery);
+}
 
 // src/react-shell/sitemap/modal.tsx
 var import_jsx_runtime5 = require("react/jsx-runtime");
@@ -6506,6 +6618,8 @@ var SitemapModal = ({
     key: "total",
     direction: "desc"
   });
+  const [searchQuery, setSearchQuery] = (0, import_react4.useState)("");
+  const trimmedSearchQuery = searchQuery.trim();
   const allQaUsers = (0, import_react4.useMemo)(
     () => mergePresenceUsers(Array.from(pagePresenceUsers.values()).flat()),
     [pagePresenceUsers]
@@ -6517,6 +6631,7 @@ var SitemapModal = ({
     pagePresenceUsers,
     getPageTarget,
     {
+      searchQuery: trimmedSearchQuery,
       sortKey: sort.key,
       sortDirection: sort.direction
     }
@@ -6571,6 +6686,33 @@ var SitemapModal = ({
               ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-sitemap-controls", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("label", { className: "df-review-sitemap-search", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(Search, { "aria-hidden": "true" }),
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                "input",
+                {
+                  "aria-label": "Search sitemap",
+                  autoComplete: "off",
+                  placeholder: "Search pages",
+                  type: "search",
+                  value: searchQuery,
+                  onChange: (event) => setSearchQuery(event.currentTarget.value)
+                }
+              )
+            ] }),
+            trimmedSearchQuery && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+              "button",
+              {
+                "aria-label": "Clear sitemap search",
+                className: "df-review-sitemap-search-clear",
+                type: "button",
+                onClick: () => setSearchQuery(""),
+                children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(X, { "aria-hidden": "true" })
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-search-count", children: trimmedSearchQuery ? `${sitemapRows.length} matches` : `${pages.length} pages` })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-sitemap-list", style: gridStyle, children: [
             /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
@@ -6638,6 +6780,7 @@ var SitemapModal = ({
                 row.href
               );
             }),
+            sitemapRows.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-sitemap-empty", role: "status", children: "No matching pages" }),
             /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
               "button",
               {

@@ -192,10 +192,12 @@ export const createSitemapRows = (
   pagePresenceUsers: ReadonlyMap<string, ReviewPresenceUser[]>,
   getPageTarget: (href: string) => string,
   options: {
+    searchQuery?: string;
     sortKey?: SitemapSortKey;
     sortDirection?: SitemapSortDirection;
   } = {}
 ) => {
+  const searchQuery = normalizeSitemapSearchQuery(options.searchQuery);
   const sortKey = options.sortKey ?? 'page';
   const sortDirection = options.sortDirection ?? 'asc';
   const root = createSitemapNode('/', '/', false);
@@ -306,6 +308,14 @@ export const createSitemapRows = (
       return a.node.label.localeCompare(b.node.label);
     });
   };
+  const summaryMatchesSearch = (summary: SitemapTreeSummary): boolean => {
+    if (!searchQuery) return true;
+    if (sitemapNodeMatchesSearch(summary.node, searchQuery, getPageTarget)) {
+      return true;
+    }
+
+    return summary.children.some(summaryMatchesSearch);
+  };
 
   const rows: SitemapTreeRow[] = [];
 
@@ -339,7 +349,9 @@ export const createSitemapRows = (
       });
     }
 
-    const visibleChildren = sortSummaries(summary.children);
+    const visibleChildren = sortSummaries(
+      summary.children.filter(summaryMatchesSearch)
+    );
     visibleChildren.forEach((child, childIndex) => {
       appendSummaryRows(
         child,
@@ -350,7 +362,10 @@ export const createSitemapRows = (
     });
   };
 
-  if (root.isPage) {
+  if (
+    root.isPage &&
+    (!searchQuery || sitemapNodeMatchesSearch(root, searchQuery, getPageTarget))
+  ) {
     const directCount = getDirectCount(root);
     const directUsers = getDirectUsers(root);
 
@@ -366,7 +381,9 @@ export const createSitemapRows = (
   }
 
   const rootSummaries = sortSummaries(
-    Array.from(root.children.values()).map(createNodeSummary)
+    Array.from(root.children.values())
+      .map(createNodeSummary)
+      .filter(summaryMatchesSearch)
   );
 
   rootSummaries.forEach((summary, index, siblings) => {
@@ -375,3 +392,23 @@ export const createSitemapRows = (
 
   return rows;
 };
+
+function normalizeSitemapSearchQuery(value: string | undefined) {
+  return value?.trim().toLowerCase() ?? '';
+}
+
+function sitemapNodeMatchesSearch(
+  node: SitemapTreeNode,
+  searchQuery: string,
+  getPageTarget: (href: string) => string
+) {
+  return [
+    node.href,
+    node.label,
+    normalizeSitemapHref(node.href),
+    node.isPage ? getPageTarget(node.href) : '',
+  ]
+    .join(' ')
+    .toLowerCase()
+    .includes(searchQuery);
+}

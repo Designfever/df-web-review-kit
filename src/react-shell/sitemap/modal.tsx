@@ -3,6 +3,10 @@ import {
   useState,
   type CSSProperties,
 } from 'react';
+import {
+  Search as SearchIcon,
+  X as XIcon,
+} from 'lucide-react';
 import type {
   ReviewPresenceUser,
   ReviewShellPage,
@@ -88,6 +92,8 @@ export const SitemapModal = ({
     key: 'total',
     direction: 'desc',
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const trimmedSearchQuery = searchQuery.trim();
   const allQaUsers = useMemo(
     () => mergePresenceUsers(Array.from(pagePresenceUsers.values()).flat()),
     [pagePresenceUsers]
@@ -99,6 +105,7 @@ export const SitemapModal = ({
     pagePresenceUsers,
     getPageTarget,
     {
+      searchQuery: trimmedSearchQuery,
       sortKey: sort.key,
       sortDirection: sort.direction,
     }
@@ -145,6 +152,34 @@ export const SitemapModal = ({
           <button aria-label="Close sitemap" type="button" onClick={onClose}>
             x
           </button>
+        </div>
+        <div className="df-review-sitemap-controls">
+          <label className="df-review-sitemap-search">
+            <SearchIcon aria-hidden="true" />
+            <input
+              aria-label="Search sitemap"
+              autoComplete="off"
+              placeholder="Search pages"
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.currentTarget.value)}
+            />
+          </label>
+          {trimmedSearchQuery && (
+            <button
+              aria-label="Clear sitemap search"
+              className="df-review-sitemap-search-clear"
+              type="button"
+              onClick={() => setSearchQuery('')}
+            >
+              <XIcon aria-hidden="true" />
+            </button>
+          )}
+          <span className="df-review-sitemap-search-count">
+            {trimmedSearchQuery
+              ? `${sitemapRows.length} matches`
+              : `${pages.length} pages`}
+          </span>
         </div>
         <div className="df-review-sitemap-list" style={gridStyle}>
           <div className="df-review-sitemap-table-head" role="row">
@@ -217,6 +252,11 @@ export const SitemapModal = ({
               </button>
             );
           })}
+          {sitemapRows.length === 0 && (
+            <div className="df-review-sitemap-empty" role="status">
+              No matching pages
+            </div>
+          )}
           <button
             aria-label={`All QA / ${allQaCount.remaining} remaining / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`}
             className={`df-review-sitemap-row is-summary${

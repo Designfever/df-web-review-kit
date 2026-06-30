@@ -675,6 +675,12 @@ export const reviewShellQaPanelStyle = `
 	    background: var(--df-review-control-hover);
 	  }
 
+  .df-review-item-action-button.is-copied {
+    border-color: rgba(124, 199, 255, 0.42);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+  }
+
 			  .df-review-item-actions .df-review-item-submit-button {
 			    display: inline-flex;
 			    align-items: center;

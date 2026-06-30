@@ -1523,6 +1523,16 @@ export const ReviewShell = ({
     );
   };
 
+  const copyRemoteIssuePath = (item: ReviewItem) => {
+    const path = getUrlPathWithoutOrigin(item.externalIssueUrl);
+    if (!path) {
+      showToast('QA link not found');
+      return Promise.resolve();
+    }
+
+    return copyPrompt(path, `remote-link:${item.id}`, 'QA path copied');
+  };
+
   const removeItem = (item: ReviewItem) =>
     removeReviewItem({
       activeAdapterEntry,
@@ -1778,6 +1788,7 @@ export const ReviewShell = ({
         onCopyItemLabel={(numberedItem) => void copyItemLabel(numberedItem)}
         onCopyItemLink={(numberedItem) => void copyItemLink(numberedItem)}
         onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
+        onCopyRemoteIssuePath={copyRemoteIssuePath}
         onEditItem={setEditingItem}
         onQaFilterChange={setQaFilter}
         onQaStatusFilterChange={setQaStatusFilter}
@@ -1871,3 +1882,15 @@ export const ReviewShell = ({
     </div>
   );
 };
+
+function getUrlPathWithoutOrigin(value: string | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed, window.location.origin);
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return trimmed;
+  }
+}

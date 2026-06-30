@@ -2655,6 +2655,12 @@ var reviewShellQaPanelStyle = `
 	    background: var(--df-review-control-hover);
 	  }
 
+  .df-review-item-action-button.is-copied {
+    border-color: rgba(124, 199, 255, 0.42);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+  }
+
 			  .df-review-item-actions .df-review-item-submit-button {
 			    display: inline-flex;
 			    align-items: center;
@@ -8142,14 +8148,16 @@ var QaItemEditModal = ({
 };
 
 // src/react-shell/qa/item.remote.actions.tsx
-import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
+import { Fragment as Fragment2, jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
 var QaItemRemoteActions = ({
   isRemoteSource,
   isSubmitted,
   isSubmitting,
   item,
+  isRemoteIssueCopied,
   numberedItem,
   remoteAdapterEntry,
+  onCopyRemoteIssuePath,
   onSubmitItem
 }) => {
   const canSubmitToRemote = !isRemoteSource && Boolean(remoteAdapterEntry);
@@ -8176,17 +8184,31 @@ var QaItemRemoteActions = ({
             ]
           }
         ),
-        canOpenRemoteIssue && /* @__PURE__ */ jsx11(
-          "a",
-          {
-            "aria-label": "Open remote issue",
-            className: "df-review-item-action-button",
-            href: item.externalIssueUrl,
-            rel: "noreferrer",
-            target: "_blank",
-            children: /* @__PURE__ */ jsx11(ExternalLink, { "aria-hidden": "true" })
-          }
-        )
+        canOpenRemoteIssue && /* @__PURE__ */ jsxs9(Fragment2, { children: [
+          /* @__PURE__ */ jsx11(
+            "button",
+            {
+              "aria-label": isRemoteIssueCopied ? "Copied remote QA path" : "Copy remote QA path",
+              className: `df-review-item-action-button df-review-item-remote-copy${isRemoteIssueCopied ? " is-copied" : ""}`,
+              title: isRemoteIssueCopied ? "Copied remote QA path" : "Copy remote QA path",
+              type: "button",
+              onClick: () => void onCopyRemoteIssuePath(item),
+              children: /* @__PURE__ */ jsx11(Copy, { "aria-hidden": "true" })
+            }
+          ),
+          /* @__PURE__ */ jsx11(
+            "a",
+            {
+              "aria-label": "Open remote issue",
+              className: "df-review-item-action-button",
+              href: item.externalIssueUrl,
+              rel: "noreferrer",
+              target: "_blank",
+              title: "Open remote issue",
+              children: /* @__PURE__ */ jsx11(ExternalLink, { "aria-hidden": "true" })
+            }
+          )
+        ] })
       ]
     }
   );
@@ -8417,6 +8439,7 @@ var QaItemCard = ({
   onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
+  onCopyRemoteIssuePath,
   onEditItem,
   onRestoreReviewItem,
   onSubmitItem,
@@ -8432,9 +8455,11 @@ var QaItemCard = ({
   const promptCopyKey = `qa:${item.id}`;
   const labelCopyKey = `label:${item.id}`;
   const linkCopyKey = `link:${item.id}`;
+  const remoteIssueCopyKey = `remote-link:${item.id}`;
   const isPromptCopied = copiedPromptKey === promptCopyKey;
   const isLabelCopied = copiedPromptKey === labelCopyKey;
   const isLinkCopied = copiedPromptKey === linkCopyKey;
+  const isRemoteIssueCopied = copiedPromptKey === remoteIssueCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
   const isActive = item.id === selectedItemId;
   const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
@@ -8575,8 +8600,10 @@ var QaItemCard = ({
               isSubmitted,
               isSubmitting,
               item,
+              isRemoteIssueCopied,
               numberedItem,
               remoteAdapterEntry,
+              onCopyRemoteIssuePath,
               onSubmitItem
             }
           )
@@ -8725,6 +8752,7 @@ var ReviewQaPanel = ({
   onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
+  onCopyRemoteIssuePath,
   onEditItem,
   onQaFilterChange,
   onQaStatusFilterChange,
@@ -8790,6 +8818,7 @@ var ReviewQaPanel = ({
                   onCopyItemLabel,
                   onCopyItemLink,
                   onCopyItemPrompt,
+                  onCopyRemoteIssuePath,
                   onEditItem,
                   onRemoveItem,
                   onRestoreReviewItem,
@@ -9876,7 +9905,7 @@ function createSourceShortcutStyle(optionAttribute, fontOverlayAttribute) {
 }
 
 // src/react-shell/review/source.inspector.overlay.tsx
-import { Fragment as Fragment2, jsx as jsx19, jsxs as jsxs15 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx19, jsxs as jsxs15 } from "react/jsx-runtime";
 var SourceInspectorOverlay = ({
   state,
   interactionRef,
@@ -9884,7 +9913,7 @@ var SourceInspectorOverlay = ({
   onOpenCandidate
 }) => {
   if (!state) return null;
-  return /* @__PURE__ */ jsxs15(Fragment2, { children: [
+  return /* @__PURE__ */ jsxs15(Fragment3, { children: [
     /* @__PURE__ */ jsx19(
       "div",
       {
@@ -9986,7 +10015,7 @@ var ReviewModeToolbar = ({
 };
 
 // src/react-shell/ruler/gutters.tsx
-import { Fragment as Fragment3, jsx as jsx21, jsxs as jsxs17 } from "react/jsx-runtime";
+import { Fragment as Fragment4, jsx as jsx21, jsxs as jsxs17 } from "react/jsx-runtime";
 var RulerGutters = ({
   rulerHover,
   rulerScaleX,
@@ -9994,7 +10023,7 @@ var RulerGutters = ({
   rulerUnit,
   size
 }) => {
-  return /* @__PURE__ */ jsxs17(Fragment3, { children: [
+  return /* @__PURE__ */ jsxs17(Fragment4, { children: [
     /* @__PURE__ */ jsx21("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
     /* @__PURE__ */ jsxs17(
       "div",
@@ -10044,7 +10073,7 @@ var RulerGutters = ({
 };
 
 // src/react-shell/ruler/overlay.tsx
-import { Fragment as Fragment4, jsx as jsx22, jsxs as jsxs18 } from "react/jsx-runtime";
+import { Fragment as Fragment5, jsx as jsx22, jsxs as jsxs18 } from "react/jsx-runtime";
 var RulerOverlay = ({
   iframeRef,
   isRulerDragging,
@@ -10068,7 +10097,7 @@ var RulerOverlay = ({
         );
       },
       children: [
-        rulerHover && /* @__PURE__ */ jsxs18(Fragment4, { children: [
+        rulerHover && /* @__PURE__ */ jsxs18(Fragment5, { children: [
           /* @__PURE__ */ jsx22(
             "div",
             {
@@ -10086,7 +10115,7 @@ var RulerOverlay = ({
             }
           )
         ] }),
-        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs18(Fragment4, { children: [
+        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs18(Fragment5, { children: [
           /* @__PURE__ */ jsx22(
             "div",
             {
@@ -14459,6 +14488,14 @@ var ReviewShell = ({
       "QA link copied"
     );
   };
+  const copyRemoteIssuePath = (item) => {
+    const path = getUrlPathWithoutOrigin(item.externalIssueUrl);
+    if (!path) {
+      showToast("QA link not found");
+      return Promise.resolve();
+    }
+    return copyPrompt(path, `remote-link:${item.id}`, "QA path copied");
+  };
   const removeItem = (item) => removeReviewItem({
     activeAdapterEntry,
     isRemoteSource,
@@ -14670,6 +14707,7 @@ var ReviewShell = ({
             onCopyItemLabel: (numberedItem) => void copyItemLabel(numberedItem),
             onCopyItemLink: (numberedItem) => void copyItemLink(numberedItem),
             onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
+            onCopyRemoteIssuePath: copyRemoteIssuePath,
             onEditItem: setEditingItem,
             onQaFilterChange: setQaFilter,
             onQaStatusFilterChange: setQaStatusFilter,
@@ -14769,6 +14807,16 @@ var ReviewShell = ({
     }
   );
 };
+function getUrlPathWithoutOrigin(value) {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  try {
+    const url = new URL(trimmed, window.location.origin);
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return trimmed;
+  }
+}
 
 // src/react-shell/figma/dev-overlay.tsx
 import React, {

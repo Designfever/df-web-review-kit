@@ -1,4 +1,5 @@
 import {
+  Copy as CopyIcon,
   ExternalLink as ExternalLinkIcon,
   Upload as UploadIcon,
 } from 'lucide-react';
@@ -10,8 +11,10 @@ interface QaItemRemoteActionsProps {
   isSubmitted: boolean;
   isSubmitting: boolean;
   item: ReviewItem;
+  isRemoteIssueCopied: boolean;
   numberedItem: NumberedReviewItem;
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
+  onCopyRemoteIssuePath: (item: ReviewItem) => Promise<void>;
   onSubmitItem: (numberedItem: NumberedReviewItem) => Promise<void>;
 }
 
@@ -20,8 +23,10 @@ export const QaItemRemoteActions = ({
   isSubmitted,
   isSubmitting,
   item,
+  isRemoteIssueCopied,
   numberedItem,
   remoteAdapterEntry,
+  onCopyRemoteIssuePath,
   onSubmitItem,
 }: QaItemRemoteActionsProps) => {
   const canSubmitToRemote = !isRemoteSource && Boolean(remoteAdapterEntry);
@@ -54,15 +59,37 @@ export const QaItemRemoteActions = ({
         </button>
       )}
       {canOpenRemoteIssue && (
-        <a
-          aria-label="Open remote issue"
-          className="df-review-item-action-button"
-          href={item.externalIssueUrl}
-          rel="noreferrer"
-          target="_blank"
-        >
-          <ExternalLinkIcon aria-hidden="true" />
-        </a>
+        <>
+          <button
+            aria-label={
+              isRemoteIssueCopied
+                ? 'Copied remote QA path'
+                : 'Copy remote QA path'
+            }
+            className={`df-review-item-action-button df-review-item-remote-copy${
+              isRemoteIssueCopied ? ' is-copied' : ''
+            }`}
+            title={
+              isRemoteIssueCopied
+                ? 'Copied remote QA path'
+                : 'Copy remote QA path'
+            }
+            type="button"
+            onClick={() => void onCopyRemoteIssuePath(item)}
+          >
+            <CopyIcon aria-hidden="true" />
+          </button>
+          <a
+            aria-label="Open remote issue"
+            className="df-review-item-action-button"
+            href={item.externalIssueUrl}
+            rel="noreferrer"
+            target="_blank"
+            title="Open remote issue"
+          >
+            <ExternalLinkIcon aria-hidden="true" />
+          </a>
+        </>
       )}
     </div>
   );

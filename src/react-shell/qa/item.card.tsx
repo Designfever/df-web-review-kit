@@ -44,6 +44,7 @@ interface QaItemCardProps {
   onCopyItemLabel: (numberedItem: NumberedReviewItem) => void;
   onCopyItemLink: (numberedItem: NumberedReviewItem) => void;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
+  onCopyRemoteIssuePath: (item: ReviewItem) => Promise<void>;
   onEditItem: (item: ReviewItem) => void;
   onRestoreReviewItem: (item: ReviewItem) => void;
   onSubmitItem: (numberedItem: NumberedReviewItem) => Promise<void>;
@@ -78,6 +79,7 @@ export const QaItemCard = ({
   onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
+  onCopyRemoteIssuePath,
   onEditItem,
   onRestoreReviewItem,
   onSubmitItem,
@@ -96,9 +98,11 @@ export const QaItemCard = ({
   const promptCopyKey = `qa:${item.id}`;
   const labelCopyKey = `label:${item.id}`;
   const linkCopyKey = `link:${item.id}`;
+  const remoteIssueCopyKey = `remote-link:${item.id}`;
   const isPromptCopied = copiedPromptKey === promptCopyKey;
   const isLabelCopied = copiedPromptKey === labelCopyKey;
   const isLinkCopied = copiedPromptKey === linkCopyKey;
+  const isRemoteIssueCopied = copiedPromptKey === remoteIssueCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
   const isActive = item.id === selectedItemId;
   const canUpdateStatus =
@@ -244,8 +248,10 @@ export const QaItemCard = ({
           isSubmitted={isSubmitted}
           isSubmitting={isSubmitting}
           item={item}
+          isRemoteIssueCopied={isRemoteIssueCopied}
           numberedItem={numberedItem}
           remoteAdapterEntry={remoteAdapterEntry}
+          onCopyRemoteIssuePath={onCopyRemoteIssuePath}
           onSubmitItem={onSubmitItem}
         />
       </div>

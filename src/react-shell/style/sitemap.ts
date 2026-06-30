@@ -276,10 +276,6 @@ export const reviewShellSitemapStyle = `
     text-align: left;
   }
 
-  button.df-review-sitemap-row {
-    cursor: pointer;
-  }
-
   .df-review-sitemap-row.is-summary {
     position: sticky;
     bottom: 0;
@@ -311,7 +307,8 @@ export const reviewShellSitemapStyle = `
     border-bottom: 0;
   }
 
-  button.df-review-sitemap-row:hover,
+  .df-review-sitemap-row.is-page:hover,
+  button.df-review-sitemap-row.is-summary:hover,
   .df-review-sitemap-row.is-active {
     background: var(--df-review-accent-soft);
   }
@@ -319,8 +316,9 @@ export const reviewShellSitemapStyle = `
   .df-review-sitemap-path {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
+    padding-left: calc(var(--df-review-sitemap-depth, 0) * 18px);
     overflow-wrap: anywhere;
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-md);
@@ -332,12 +330,58 @@ export const reviewShellSitemapStyle = `
     color: var(--df-review-muted);
   }
 
-  .df-review-sitemap-tree-prefix {
+  .df-review-sitemap-tree-toggle,
+  .df-review-sitemap-tree-spacer {
+    display: inline-grid;
+    place-items: center;
     flex: 0 0 auto;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+  }
+
+  .df-review-sitemap-tree-toggle {
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    background: transparent;
     color: var(--df-review-muted);
-    font-family: var(--df-review-font-mono);
-    font-weight: var(--df-review-font-weight-normal);
-    white-space: pre;
+    box-shadow: none;
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-tree-toggle:hover,
+  .df-review-sitemap-tree-toggle:focus-visible {
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+  }
+
+  .df-review-sitemap-tree-toggle svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .df-review-sitemap-page-button {
+    min-width: 0;
+    min-height: 28px;
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 5px;
+    overflow: hidden;
+    color: inherit;
+    background: transparent;
+    box-shadow: none;
+    font: inherit;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-page-button:hover,
+  .df-review-sitemap-page-button:focus-visible {
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
   }
 
   .df-review-sitemap-label {
@@ -400,7 +444,8 @@ export const reviewShellSitemapStyle = `
     color: var(--df-review-muted);
   }
 
-  button.df-review-sitemap-row:hover .df-review-sitemap-path,
+  .df-review-sitemap-row.is-page:hover .df-review-sitemap-path,
+  button.df-review-sitemap-row.is-summary:hover .df-review-sitemap-path,
   .df-review-sitemap-row.is-active .df-review-sitemap-path {
     color: var(--df-review-text);
   }

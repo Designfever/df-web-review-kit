@@ -16,6 +16,7 @@
 - right rail Figma icon stroke를 다른 rail icon과 분리해 맞췄다.
 - 릴리즈 직전 QA mutation failure feedback과 Figma image target key 보정을 반영했다.
 - Sitemap modal에 페이지 검색 필터를 추가했다.
+- Sitemap tree row를 ASCII prefix 대신 접기/펼치기 가능한 folder explorer 형태로 바꿨다.
 
 ## 변경
 
@@ -69,6 +70,7 @@ remote list가 늦게 도착하는 경우에도 URL의 `item` query를 복원할
 - QA edit 실패는 toast와 edit modal inline error를 함께 유지한다.
 - Figma image target key가 review shell과 dev overlay에서 query/hash를 포함한 normalized target을 사용하도록 보정했다.
 - Sitemap modal에서 페이지 이름/경로를 검색할 수 있고, 일치하는 하위 page의 상위 folder context를 유지한다.
+- Sitemap folder row는 caret으로 접고 펼칠 수 있으며, 검색 중에는 일치 항목의 상위 folder를 자동으로 펼친다.
 
 ## Host 적용 메모
 

@@ -4,6 +4,8 @@ import {
   type CSSProperties,
 } from 'react';
 import {
+  ChevronDown as ChevronDownIcon,
+  ChevronRight as ChevronRightIcon,
   Search as SearchIcon,
   X as XIcon,
 } from 'lucide-react';
@@ -92,6 +94,9 @@ export const SitemapModal = ({
     key: 'total',
     direction: 'desc',
   });
+  const [collapsedFolderHrefs, setCollapsedFolderHrefs] = useState<Set<string>>(
+    () => new Set()
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const trimmedSearchQuery = searchQuery.trim();
   const allQaUsers = useMemo(
@@ -105,11 +110,13 @@ export const SitemapModal = ({
     pagePresenceUsers,
     getPageTarget,
     {
+      collapsedFolderHrefs,
       searchQuery: trimmedSearchQuery,
       sortKey: sort.key,
       sortDirection: sort.direction,
     }
   );
+  const matchingPageCount = sitemapRows.filter((row) => row.isPage).length;
   const gridStyle = {
     '--df-review-sitemap-grid-template': 'minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px)',
   } as CSSProperties;
@@ -125,6 +132,17 @@ export const SitemapModal = ({
       key,
       direction: getNextSortDirection(current, key),
     }));
+  };
+  const toggleFolder = (href: string) => {
+    setCollapsedFolderHrefs((currentHrefs) => {
+      const nextHrefs = new Set(currentHrefs);
+      if (nextHrefs.has(href)) {
+        nextHrefs.delete(href);
+      } else {
+        nextHrefs.add(href);
+      }
+      return nextHrefs;
+    });
   };
 
   return (
@@ -177,7 +195,7 @@ export const SitemapModal = ({
           )}
           <span className="df-review-sitemap-search-count">
             {trimmedSearchQuery
-              ? `${sitemapRows.length} matches`
+              ? `${matchingPageCount} matches`
               : `${pages.length} pages`}
           </span>
         </div>
@@ -220,36 +238,31 @@ export const SitemapModal = ({
               .join(' ');
             const rowContent = (
               <SitemapRowContent
+                depth={row.depth}
+                hasChildren={row.hasChildren}
+                isExpanded={row.isExpanded}
+                isPage={row.isPage}
                 label={row.label}
-                prefix={row.prefix}
                 qaCount={row.qaCount}
                 users={row.users}
+                onSelectPage={() => onSelectPage(row.href)}
+                onToggleFolder={() => toggleFolder(row.href)}
               />
             );
 
-            if (!row.isPage) {
-              return (
-                <div
-                  key={row.href}
-                  aria-label={`${row.href} group / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`}
-                  className={rowClassName}
-                  role="row"
-                >
-                  {rowContent}
-                </div>
-              );
-            }
-
             return (
-              <button
+              <div
                 key={row.href}
-                aria-label={`${row.href} / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`}
+                aria-label={
+                  row.isPage
+                    ? `${row.href} / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`
+                    : `${row.href} group / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`
+                }
                 className={rowClassName}
-                type="button"
-                onClick={() => onSelectPage(row.href)}
+                role="row"
               >
                 {rowContent}
-              </button>
+              </div>
             );
           })}
           {sitemapRows.length === 0 && (
@@ -266,8 +279,11 @@ export const SitemapModal = ({
             onClick={onSelectAllQa}
           >
             <SitemapRowContent
-              label=""
-              prefix=""
+              depth={0}
+              hasChildren={false}
+              isExpanded={false}
+              isPage={false}
+              label="All QA"
               qaCount={allQaCount}
               users={allQaUsers}
             />
@@ -279,20 +295,59 @@ export const SitemapModal = ({
 };
 
 const SitemapRowContent = ({
+  depth,
+  hasChildren,
+  isExpanded,
+  isPage,
   label,
-  prefix,
   qaCount,
   users,
+  onSelectPage,
+  onToggleFolder,
 }: {
+  depth: number;
+  hasChildren: boolean;
+  isExpanded: boolean;
+  isPage: boolean;
   label: string;
-  prefix: string;
   qaCount: SitemapQaCount;
   users: ReviewPresenceUser[];
+  onSelectPage?: () => void;
+  onToggleFolder?: () => void;
 }) => (
   <>
-    <span className="df-review-sitemap-path">
-      <span className="df-review-sitemap-tree-prefix">{prefix}</span>
-      <span className="df-review-sitemap-label">{label}</span>
+    <span
+      className="df-review-sitemap-path"
+      style={{ '--df-review-sitemap-depth': depth } as CSSProperties}
+    >
+      {hasChildren ? (
+        <button
+          aria-expanded={isExpanded}
+          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${label}`}
+          className="df-review-sitemap-tree-toggle"
+          type="button"
+          onClick={onToggleFolder}
+        >
+          {isExpanded ? (
+            <ChevronDownIcon aria-hidden="true" />
+          ) : (
+            <ChevronRightIcon aria-hidden="true" />
+          )}
+        </button>
+      ) : (
+        <span className="df-review-sitemap-tree-spacer" aria-hidden="true" />
+      )}
+      {isPage && onSelectPage ? (
+        <button
+          className="df-review-sitemap-page-button"
+          type="button"
+          onClick={onSelectPage}
+        >
+          {label}
+        </button>
+      ) : (
+        <span className="df-review-sitemap-label">{label}</span>
+      )}
     </span>
     <span className="df-review-sitemap-cell is-total">
       <strong>{qaCount.remaining}</strong>

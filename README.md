@@ -27,7 +27,7 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, and extension boundaries.
 - [Figma overlay](docs/figma-overlay.md): how the shell toggles a host Figma overlay.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.6.0](docs/release-notes-0.6.0.md): latest shell/source tree changes and validation notes.
+- [Release notes 0.7.0](docs/release-notes-0.7.0.md): latest Figma image, QA field, and remote adapter loading changes.
 
 ## Quick Start
 

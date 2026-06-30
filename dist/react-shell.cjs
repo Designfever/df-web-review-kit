@@ -789,8 +789,10 @@ var reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-path {
+    position: relative;
     display: inline-flex;
     align-items: center;
+    align-self: stretch;
     gap: 6px;
     min-width: 0;
     padding-left: calc(var(--df-review-sitemap-depth, 0) * 18px);
@@ -799,6 +801,26 @@ var reviewShellSitemapStyle = `
     font-size: var(--df-review-font-size-md);
     font-weight: var(--df-review-font-weight-normal);
     line-height: 1.35;
+  }
+
+  .df-review-sitemap-path::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: calc(var(--df-review-sitemap-depth, 0) * 18px);
+    background-image: repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent 16px,
+      var(--df-review-line-soft) 16px,
+      var(--df-review-line-soft) 17px,
+      transparent 17px,
+      transparent 18px
+    );
+    opacity: 0.9;
+    pointer-events: none;
   }
 
   .df-review-sitemap-row.is-folder .df-review-sitemap-path {

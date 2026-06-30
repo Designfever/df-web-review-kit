@@ -22,6 +22,7 @@ This package does not own internal operator tools, private admin keys, or produc
 
 - [Installation](docs/installation.md): install the package and mount `/review`.
 - [.env.sample](.env.sample): copyable host project env template for local, Supabase, and source opening.
+- [Adapter boundaries](docs/adapters.md): QA adapter vs Figma image store responsibilities.
 - [Custom adapter sample](docs/adaptor.sample.ts): starting point for host-owned remote adapters.
 - [DB setup](docs/db-setup.md): optional Supabase `review_items` setup, RLS, presence notes, and validation.
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, and extension boundaries.

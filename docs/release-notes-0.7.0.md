@@ -82,6 +82,7 @@ Figma image local cache를 쓰는 host는 Vite config에 review-kit plugin helpe
 
 - README quick start에 `fields`, `assigneeTitle`, `assigneeOptions`, `updateAssignee` 예시를 추가했다.
 - custom adapter sample에 optional title/assignee field와 update flow를 추가했다.
+- QA adapter와 Figma image store boundary 문서를 추가했다.
 - Figma image MVP 구조 note를 추가했다.
 
 ## 검증

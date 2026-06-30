@@ -84,7 +84,7 @@ Core never owns persistence storage directly. It only calls the configured `WebR
 - `update`
 - `remove`
 
-The default local adapter is for draft/local review work. Supabase is optional host wiring, not a required backend.
+The default local adapter is for draft/local review work. Supabase is optional host wiring, not a required backend. Figma reference images use a separate `ReviewFigmaImageStore`; see [Adapter boundaries](adapters.md).
 
 ## React Shell Boundary
 

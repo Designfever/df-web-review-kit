@@ -1,4 +1,6 @@
 import type {
+  ReviewAssigneeOption,
+  ReviewFieldsConfig,
   ReviewItem,
   ReviewItemScope,
   ReviewItemStatus,
@@ -61,6 +63,8 @@ export type ReviewShellStatusOption = {
   label: string;
 };
 
+export type ReviewShellAssigneeOption = ReviewAssigneeOption;
+
 export type ReviewShellWriteMode = 'dom' | 'note' | 'area';
 
 export type ReviewShellUpdateStatusInput = {
@@ -69,6 +73,15 @@ export type ReviewShellUpdateStatusInput = {
   status: ReviewItemStatus;
   statusOption: ReviewShellStatusOption;
   statusIndex: number;
+};
+
+export type ReviewShellUpdateAssigneeInput = {
+  id: string;
+  item: ReviewItem;
+  assigneeId: string | null;
+  assigneeName?: string;
+  assigneeOption?: ReviewShellAssigneeOption;
+  assigneeIndex: number;
 };
 
 type ReviewShellSubmissionPatch = Partial<
@@ -95,9 +108,15 @@ export type ReviewShellAdapter = {
   list: WebReviewKitAdapter['list'];
   create?: WebReviewKitAdapter['create'];
   update?: WebReviewKitAdapter['update'];
+  fields?: ReviewFieldsConfig;
   statusOptions?: readonly ReviewShellStatusOption[];
+  assigneeTitle?: string;
+  assigneeOptions?: readonly ReviewShellAssigneeOption[];
   canWrite?: boolean | readonly ReviewShellWriteMode[];
   updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<ReviewItem>;
+  updateAssignee?: (
+    input: ReviewShellUpdateAssigneeInput
+  ) => Promise<ReviewItem>;
   syncSubmission?: (
     input: ReviewShellSyncSubmissionInput
   ) => Promise<ReviewItem>;

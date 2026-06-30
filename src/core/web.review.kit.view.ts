@@ -44,10 +44,24 @@ import {
   getReviewViewportScope,
 } from './review/scope';
 
+type DraftItemFields = Partial<
+  Pick<ReviewItem, 'title' | 'comment' | 'assigneeId' | 'assigneeName'>
+>;
+
 /** Minimal item payload collected by the view before the app fills persistence metadata. */
 export type CreateReviewItemInput = Pick<ReviewItem, 'kind' | 'comment'> &
   Partial<
-    Pick<ReviewItem, 'scope' | 'viewport' | 'anchor' | 'marker' | 'selection'>
+    Pick<
+      ReviewItem,
+      | 'title'
+      | 'assigneeId'
+      | 'assigneeName'
+      | 'scope'
+      | 'viewport'
+      | 'anchor'
+      | 'marker'
+      | 'selection'
+    >
   >;
 
 const DEFAULT_ADJUSTMENT_LABEL = 'Responsive CSS px adjustments';
@@ -58,6 +72,8 @@ interface WebReviewKitViewState {
   items: ReviewItem[];
   noteDraft?: NoteDraft;
   areaDraft?: AreaDraft;
+  draftError?: string;
+  isCreatingItem: boolean;
   isSelectingArea: boolean;
   highlightedItemId?: string;
 }
@@ -74,10 +90,13 @@ interface WebReviewKitViewActions {
   setAreaDraft: (draft?: AreaDraft) => void;
   setSelectingArea: (isSelectingArea: boolean) => void;
   createItem: (input: CreateReviewItemInput) => Promise<void>;
-  bindNoteDraftToPoint: (point: ReviewPoint, comment?: string) => Promise<void>;
+  bindNoteDraftToPoint: (
+    point: ReviewPoint,
+    fields?: DraftItemFields
+  ) => Promise<void>;
   bindElementDraftToPoint: (
     point: ReviewPoint,
-    comment?: string
+    fields?: DraftItemFields
   ) => Promise<void>;
   createAreaDraft: (selection: ViewportSelection) => Promise<void>;
 }
@@ -173,7 +192,12 @@ export class WebReviewKitView {
       }
     }
 
-    if (state.isOpen && state.mode === 'area' && !state.areaDraft) {
+    if (
+      state.isOpen &&
+      state.mode === 'area' &&
+      !state.areaDraft &&
+      !state.isSelectingArea
+    ) {
       shell.append(this.createAreaLayer());
     }
 
@@ -492,6 +516,93 @@ export class WebReviewKitView {
     ].join(' ');
 
     return trimmedComment ? `${trimmedComment}\n${adjustment}` : adjustment;
+  }
+
+  private getAssigneeOption(assigneeId: string | null | undefined) {
+    if (!assigneeId) return undefined;
+    return this.config.options.assigneeOptions?.find(
+      (option) => option.value === assigneeId
+    );
+  }
+
+  private getAssigneeName(assigneeId: string | null | undefined) {
+    return this.getAssigneeOption(assigneeId)?.label;
+  }
+
+  private createDraftTitleInput(
+    value: string | undefined,
+    onInput: (value: string) => void
+  ) {
+    const input = document.createElement('input');
+    input.className = 'dfwr-input';
+    input.placeholder = 'Title';
+    input.type = 'text';
+    input.value = value ?? '';
+    input.addEventListener('input', () => onInput(input.value));
+    return input;
+  }
+
+  private isTitleFieldEnabled() {
+    return this.config.options.fields?.title === true;
+  }
+
+  private createDraftAssigneeSelect(
+    value: string | null | undefined,
+    fallbackLabel: string | undefined,
+    onChange: (assigneeId: string | null, assigneeName?: string) => void
+  ) {
+    const assigneeOptions = this.config.options.assigneeOptions ?? [];
+    if (assigneeOptions.length === 0) return undefined;
+    const assigneeTitle =
+      this.config.options.assigneeTitle?.trim() || 'Assignee';
+
+    const select = document.createElement('select');
+    select.className = 'dfwr-select';
+
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = assigneeTitle;
+    select.append(emptyOption);
+
+    const hasUnknownAssignee =
+      Boolean(value) &&
+      !assigneeOptions.some((option) => option.value === value);
+    if (hasUnknownAssignee && value) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = fallbackLabel ?? value;
+      select.append(option);
+    }
+
+    assigneeOptions.forEach((assigneeOption) => {
+      const option = document.createElement('option');
+      option.value = assigneeOption.value;
+      option.textContent = assigneeOption.label;
+      select.append(option);
+    });
+
+    select.value = value ?? '';
+    select.addEventListener('change', () => {
+      onChange(select.value || null, this.getAssigneeName(select.value));
+    });
+
+    return select;
+  }
+
+  private getDraftFields(
+    titleInput: HTMLInputElement | undefined,
+    textarea: HTMLTextAreaElement,
+    assigneeSelect: HTMLSelectElement | undefined
+  ) {
+    const title = titleInput?.value.trim();
+    const comment = textarea.value.trim();
+    const assigneeId = assigneeSelect?.value.trim() || undefined;
+    return {
+      title: title || undefined,
+      comment,
+      assigneeId,
+      assigneeName: this.getAssigneeName(assigneeId),
+    };
   }
 
   private getStyleableDraftElement(
@@ -835,6 +946,17 @@ export class WebReviewKitView {
       meta.textContent = formatNoteDraftMeta(draft);
     }
 
+    const titleInput = this.isTitleFieldEnabled()
+      ? this.createDraftTitleInput(draft.title, (title) => {
+          const noteDraft = this.state.noteDraft;
+          if (!noteDraft) return;
+          this.config.actions.setNoteDraft({
+            ...noteDraft,
+            title,
+          });
+        })
+      : undefined;
+
     const textarea = document.createElement('textarea');
     textarea.className = 'dfwr-textarea';
     textarea.placeholder = 'Review comment';
@@ -849,13 +971,31 @@ export class WebReviewKitView {
       });
     });
 
+    const assigneeSelect = this.createDraftAssigneeSelect(
+      draft.assigneeId,
+      draft.assigneeName,
+      (assigneeId, assigneeName) => {
+        const noteDraft = this.state.noteDraft;
+        if (!noteDraft) return;
+        this.config.actions.setNoteDraft({
+          ...noteDraft,
+          assigneeId,
+          assigneeName,
+        });
+      }
+    );
+
     const saveDraft = () => {
-      const comment = textarea.value.trim();
       const currentDraft = this.state.noteDraft ?? draft;
+      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
+      const comment = fields.comment;
       if (!comment && !this.hasDraftAdjustment(currentDraft)) return;
       void this.config.actions.createItem({
         kind: 'note',
+        title: fields.title,
         comment: this.withDraftAdjustmentComment(comment, currentDraft),
+        assigneeId: fields.assigneeId,
+        assigneeName: fields.assigneeName,
         viewport: currentDraft.viewport,
         anchor: currentDraft.anchor,
         marker: currentDraft.marker,
@@ -880,11 +1020,15 @@ export class WebReviewKitView {
         ? [adjustmentControls.actionButton]
         : undefined,
     });
+    const error = this.createDraftError();
 
     form.append(
       ...(meta ? [meta] : []),
       ...(adjustmentControls ? [adjustmentControls.panel] : []),
+      ...(titleInput ? [titleInput] : []),
       textarea,
+      ...(assigneeSelect ? [assigneeSelect] : []),
+      ...(error ? [error] : []),
       actions
     );
     const dragHandle =
@@ -1229,6 +1373,17 @@ export class WebReviewKitView {
 
     form.append(this.createAreaMetricsPanel(areaDraft));
 
+    const titleInput = this.isTitleFieldEnabled()
+      ? this.createDraftTitleInput(areaDraft.title, (title) => {
+          const draft = this.state.areaDraft;
+          if (!draft) return;
+          this.config.actions.setAreaDraft({
+            ...draft,
+            title,
+          });
+        })
+      : undefined;
+
     const textarea = document.createElement('textarea');
     textarea.className = 'dfwr-textarea';
     textarea.placeholder = 'Area comment';
@@ -1243,21 +1398,46 @@ export class WebReviewKitView {
       });
     });
 
+    const assigneeSelect = this.createDraftAssigneeSelect(
+      areaDraft.assigneeId,
+      areaDraft.assigneeName,
+      (assigneeId, assigneeName) => {
+        const draft = this.state.areaDraft;
+        if (!draft) return;
+        this.config.actions.setAreaDraft({
+          ...draft,
+          assigneeId,
+          assigneeName,
+        });
+      }
+    );
+
     const actions = this.createFormActions('Save area', () => {
-      const comment = textarea.value.trim();
       const draft = this.state.areaDraft;
+      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
+      const comment = fields.comment;
       if (!comment || !draft) return;
       void this.config.actions.createItem({
         kind: 'area',
+        title: fields.title,
         comment,
+        assigneeId: fields.assigneeId,
+        assigneeName: fields.assigneeName,
         viewport: draft.viewport,
         anchor: draft.anchor,
         marker: draft.marker,
         selection: draft.selection,
       });
     });
+    const error = this.createDraftError();
 
-    form.append(textarea, actions);
+    form.append(
+      ...(titleInput ? [titleInput] : []),
+      textarea,
+      ...(assigneeSelect ? [assigneeSelect] : []),
+      ...(error ? [error] : []),
+      actions
+    );
     return form;
   }
 
@@ -1378,20 +1558,29 @@ export class WebReviewKitView {
     actions.className = ['dfwr-actions', options?.className]
       .filter(Boolean)
       .join(' ');
+    const isSaving = this.state.isCreatingItem;
 
     const save = document.createElement('button');
     save.className = 'dfwr-button is-primary';
     save.type = 'button';
-    save.textContent = saveLabel;
+    save.disabled = isSaving;
+    save.setAttribute('aria-busy', isSaving ? 'true' : 'false');
+    if (isSaving) {
+      save.append(this.createSpinner('dfwr-spinner'), 'Saving...');
+    } else {
+      save.textContent = saveLabel;
+    }
     save.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
+      if (this.state.isCreatingItem) return;
       onSave();
     });
 
     const cancel = document.createElement('button');
     cancel.className = 'dfwr-button';
     cancel.type = 'button';
+    cancel.disabled = isSaving;
     cancel.textContent = 'Cancel';
     cancel.addEventListener('click', (event) => {
       this.cancelDraft(event);
@@ -1416,6 +1605,23 @@ export class WebReviewKitView {
 
     actions.append(save, cancel);
     return actions;
+  }
+
+  private createSpinner(className: string) {
+    const spinner = document.createElement('span');
+    spinner.className = className;
+    spinner.setAttribute('aria-hidden', 'true');
+    return spinner;
+  }
+
+  private createDraftError() {
+    if (!this.state.draftError) return undefined;
+
+    const error = document.createElement('p');
+    error.className = 'dfwr-form-error';
+    error.setAttribute('role', 'alert');
+    error.textContent = this.state.draftError;
+    return error;
   }
 
   private createList() {
@@ -1481,8 +1687,15 @@ export class WebReviewKitView {
     kind.textContent = item.kind;
     badges.append(scope, kind);
 
+    const title = this.isTitleFieldEnabled() ? item.title?.trim() : '';
+    const titleElement = title ? document.createElement('strong') : undefined;
+    if (title && titleElement) {
+      titleElement.className = 'dfwr-item-title';
+      titleElement.textContent = title;
+    }
+
     const comment = document.createElement('p');
-    comment.className = 'dfwr-item-comment';
+    comment.className = `dfwr-item-comment${title ? '' : ' is-primary'}`;
     comment.textContent = item.comment;
 
     const date = document.createElement('time');
@@ -1490,7 +1703,7 @@ export class WebReviewKitView {
     date.dateTime = item.createdAt;
     date.textContent = formatItemMeta(item);
 
-    body.append(badges, comment, date);
+    body.append(badges, ...(titleElement ? [titleElement] : []), comment, date);
 
     const actions = document.createElement('div');
     actions.className = 'dfwr-item-actions';
@@ -1745,9 +1958,16 @@ export class WebReviewKitView {
         event,
         this.config.getEnvironment()
       );
+      const currentDraft = this.state.noteDraft;
+      const fields = {
+        title: currentDraft?.title,
+        comment: textarea.value,
+        assigneeId: currentDraft?.assigneeId,
+        assigneeName: currentDraft?.assigneeName,
+      };
       void (this.state.mode === 'element'
-        ? this.config.actions.bindElementDraftToPoint(nextPoint, textarea.value)
-        : this.config.actions.bindNoteDraftToPoint(nextPoint, textarea.value));
+        ? this.config.actions.bindElementDraftToPoint(nextPoint, fields)
+        : this.config.actions.bindNoteDraftToPoint(nextPoint, fields));
     });
   }
 
@@ -1845,11 +2065,15 @@ export class WebReviewKitView {
     let startX = 0;
     let startY = 0;
     let selection: ViewportSelection | undefined;
+    let activePointerId: number | undefined;
+    let isDragging = false;
+    const ownerWindow = layer.ownerDocument.defaultView ?? window;
 
     const updateBox = (event: PointerEvent) => {
+      const nextEnvironment = this.config.getEnvironment();
       const nextPoint = toTargetPointFromHostEvent(
         event,
-        this.config.getEnvironment()
+        nextEnvironment
       );
       const left = Math.min(startX, nextPoint.x);
       const top = Math.min(startY, nextPoint.y);
@@ -1857,7 +2081,7 @@ export class WebReviewKitView {
       const height = Math.abs(nextPoint.y - startY);
       const hostPoint = toHostPoint(
         { x: left, y: top },
-        this.config.getEnvironment()
+        nextEnvironment
       );
 
       selection = { left, top, width, height };
@@ -1867,9 +2091,86 @@ export class WebReviewKitView {
       box.style.height = `${height}px`;
     };
 
-    layer.addEventListener('pointerdown', (event) => {
+    const addDragListeners = () => {
+      ownerWindow.addEventListener('pointermove', handlePointerMove, true);
+      ownerWindow.addEventListener('pointerup', handlePointerUp, true);
+      ownerWindow.addEventListener('pointercancel', handlePointerCancel, true);
+    };
+
+    const removeDragListeners = () => {
+      ownerWindow.removeEventListener('pointermove', handlePointerMove, true);
+      ownerWindow.removeEventListener('pointerup', handlePointerUp, true);
+      ownerWindow.removeEventListener(
+        'pointercancel',
+        handlePointerCancel,
+        true
+      );
+    };
+
+    const releasePointerCapture = (event: PointerEvent) => {
+      try {
+        if (layer.hasPointerCapture(event.pointerId)) {
+          layer.releasePointerCapture(event.pointerId);
+        }
+      } catch {
+        // Pointer capture can be gone when the iframe/overlay reflows mid-drag.
+      }
+    };
+
+    function isActivePointer(event: PointerEvent) {
+      return isDragging && event.pointerId === activePointerId;
+    }
+
+    const finishAreaSelection = (event: PointerEvent) => {
+      if (!isActivePointer(event)) return;
+
       event.preventDefault();
-      layer.setPointerCapture(event.pointerId);
+      updateBox(event);
+      releasePointerCapture(event);
+      removeDragListeners();
+      isDragging = false;
+      activePointerId = undefined;
+
+      if (!selection || selection.width < 8 || selection.height < 8) return;
+
+      this.config.actions.setSelectingArea(true);
+      this.config.actions.render();
+      void this.config.actions.createAreaDraft(selection);
+    };
+
+    function handlePointerMove(event: PointerEvent) {
+      if (!isActivePointer(event)) return;
+
+      event.preventDefault();
+      updateBox(event);
+    }
+
+    const handlePointerUp = (event: PointerEvent) => {
+      finishAreaSelection(event);
+    };
+
+    const handlePointerCancel = (event: PointerEvent) => {
+      if (!isActivePointer(event)) return;
+
+      releasePointerCapture(event);
+      removeDragListeners();
+      isDragging = false;
+      activePointerId = undefined;
+    };
+
+    layer.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+
+      event.preventDefault();
+      activePointerId = event.pointerId;
+      isDragging = true;
+
+      try {
+        layer.setPointerCapture(event.pointerId);
+      } catch {
+        // Continue with window-level listeners when capture is unavailable.
+      }
+
       const startPoint = toTargetPointFromHostEvent(
         event,
         this.config.getEnvironment()
@@ -1877,24 +2178,12 @@ export class WebReviewKitView {
       startX = startPoint.x;
       startY = startPoint.y;
       updateBox(event);
+      addDragListeners();
     });
 
-    layer.addEventListener('pointermove', (event) => {
-      if (!layer.hasPointerCapture(event.pointerId)) return;
-      updateBox(event);
-    });
-
-    layer.addEventListener('pointerup', (event) => {
-      if (!layer.hasPointerCapture(event.pointerId)) return;
-      layer.releasePointerCapture(event.pointerId);
-      updateBox(event);
-
-      if (!selection || selection.width < 8 || selection.height < 8) return;
-
-      this.config.actions.setSelectingArea(true);
-      this.config.actions.render();
-      void this.config.actions.createAreaDraft(selection);
-    });
+    layer.addEventListener('pointermove', handlePointerMove);
+    layer.addEventListener('pointerup', handlePointerUp);
+    layer.addEventListener('pointercancel', handlePointerCancel);
 
     return layer;
   }

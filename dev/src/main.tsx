@@ -57,6 +57,11 @@ const presets: ReviewShellViewportPreset[] = [
 ];
 
 const local = localAdapter({ storageKey: REVIEW_STORAGE_KEY });
+const assigneeOptions = [
+  { value: 'planning', label: 'Planning' },
+  { value: 'frontend', label: 'Frontend' },
+  { value: 'design', label: 'Design' },
+];
 const supabaseUrl = import.meta.env.VITE_REVIEW_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_REVIEW_SUPABASE_ANON_KEY;
 const supabaseClient =
@@ -80,8 +85,13 @@ const adapters: ReviewShellAdapter[] = [
     list: (query) => local.list(query),
     create: (item) => local.create(item),
     update: (id, patch) => local.update(id, patch),
+    fields: { title: true },
     statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
     updateStatus: ({ id, status }) => local.update(id, { status }),
+    assigneeTitle: '담당자',
+    assigneeOptions,
+    updateAssignee: ({ id, assigneeId, assigneeName }) =>
+      local.update(id, { assigneeId, assigneeName }),
     syncSubmission: ({ id, patch }) => local.update(id, patch),
     remove: (id) => local.remove(id),
   },
@@ -94,8 +104,13 @@ const adapters: ReviewShellAdapter[] = [
           create: (item) => remote.create(item),
           update: (id, patch) => remote.update(id, patch),
           canWrite: true,
+          fields: { title: true },
           statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
           updateStatus: ({ id, status }) => remote.update(id, { status }),
+          assigneeTitle: '담당자',
+          assigneeOptions,
+          updateAssignee: ({ id, assigneeId, assigneeName }) =>
+            remote.update(id, { assigneeId, assigneeName }),
           remove: (id) => remote.remove(id),
         } satisfies ReviewShellAdapter,
       ]

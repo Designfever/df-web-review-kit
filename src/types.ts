@@ -56,6 +56,11 @@ export interface ViewportSize {
   height: number;
 }
 
+export interface ReviewAssigneeOption {
+  value: string;
+  label: string;
+}
+
 export interface ReviewPoint {
   x: number;
   y: number;
@@ -83,6 +88,8 @@ export interface ReviewItem {
   kind: ReviewItemKind;
   title?: string;
   comment: string;
+  assigneeId?: string | null;
+  assigneeName?: string;
   createdBy?: string;
   status: ReviewItemStatus;
   viewport: ViewportSize;
@@ -159,12 +166,19 @@ export interface NumberedReviewItem {
   displayLabel: string;
 }
 
+export interface ReviewFieldsConfig {
+  title?: boolean;
+}
+
 export interface WebReviewKitOptions {
   projectId: string;
   userId?: string;
   adapter?: WebReviewKitAdapter;
   target?: WebReviewKitTarget | (() => WebReviewKitTarget | undefined);
   adjustmentLabel?: string;
+  fields?: ReviewFieldsConfig;
+  assigneeTitle?: string;
+  assigneeOptions?: readonly ReviewAssigneeOption[];
   viewports?: {
     presets?: ReviewViewportPreset[];
   };

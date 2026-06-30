@@ -63,8 +63,16 @@ mountReviewShell({
       get: (id) => local.get(id),
       list: (query) => local.list(query),
       create: (item) => local.create(item),
+      fields: { title: true },
       statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
       updateStatus: ({ id, status }) => local.update(id, { status }),
+      assigneeTitle: 'Assignee',
+      assigneeOptions: [
+        { value: 'planning', label: 'Planning' },
+        { value: 'frontend', label: 'Frontend' },
+      ],
+      updateAssignee: ({ id, assigneeId, assigneeName }) =>
+        local.update(id, { assigneeId, assigneeName }),
       syncSubmission: ({ id, patch }) => local.update(id, patch),
       remove: (id) => local.remove(id),
     },

@@ -260,23 +260,46 @@ export const reviewShellQaPanelStyle = `
     padding: var(--df-review-space-2);
   }
 
-	  .df-review-empty {
-	    margin: 0;
-	    padding: var(--df-review-space-5) var(--df-review-space-4);
-	    border: 1px dashed var(--df-review-line);
+		  .df-review-empty {
+		    display: flex;
+		    align-items: center;
+		    gap: var(--df-review-space-2);
+		    margin: 0;
+		    padding: var(--df-review-space-5) var(--df-review-space-4);
+		    border: 1px dashed var(--df-review-line);
 	    border-radius: var(--df-review-radius-lg);
 	    background: var(--df-review-card);
 	    color: var(--df-review-subtle);
 	    font-size: var(--df-review-font-size-sm);
-	    line-height: 1.45;
-	  }
+		    line-height: 1.45;
+		  }
+
+  .df-review-empty.is-loading {
+    border-style: solid;
+    color: var(--df-review-text);
+  }
+
+  .df-review-empty .df-review-spinner,
+  .df-review-item-saving .df-review-spinner,
+  .df-review-edit-actions .df-review-spinner {
+    flex: none;
+    width: 12px;
+    min-width: 12px;
+    height: 12px;
+    min-height: 12px;
+    border-width: 2px;
+  }
 
   .df-review-item-card.is-dim {
     opacity: 0.4;
   }
 
-  .df-review-item-card.is-dim:hover {
-    opacity: 0.72;
+	  .df-review-item-card.is-dim:hover {
+	    opacity: 0.72;
+	  }
+
+  .df-review-item-card.is-mutating {
+    pointer-events: auto;
   }
 
 	  .df-review-item-card {
@@ -324,6 +347,11 @@ export const reviewShellQaPanelStyle = `
 	    color: var(--df-review-text);
 	  }
 
+  .df-review-item-main strong,
+  .df-review-item-main p {
+    margin: 0;
+  }
+
   .df-review-item-main strong {
     overflow-wrap: anywhere;
     font-size: var(--df-review-font-size-md);
@@ -331,9 +359,24 @@ export const reviewShellQaPanelStyle = `
     line-height: 1.35;
   }
 
+  .df-review-item-title {
+    padding-top: 4px;
+  }
+
   .df-review-item-comment {
-    padding: 5px 0;
+    padding: 0;
+    color: var(--df-review-muted);
+    overflow-wrap: anywhere;
+    font-size: var(--df-review-font-size-sm);
+    line-height: 1.45;
     white-space: pre-wrap;
+  }
+
+  .df-review-item-comment.is-primary {
+    padding: 5px 0;
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-md);
+    line-height: 1.35;
   }
 
 	  .df-review-item-main small {
@@ -347,9 +390,18 @@ export const reviewShellQaPanelStyle = `
     line-height: 1.35;
   }
 
-  .df-review-item-error {
-    color: var(--df-review-danger) !important;
-    overflow-wrap: anywhere;
+	  .df-review-item-error {
+	    color: var(--df-review-danger) !important;
+	    overflow-wrap: anywhere;
+	  }
+
+  .df-review-item-saving {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--df-review-accent);
+    font-size: var(--df-review-font-size-xs);
+    line-height: 1.35;
   }
 
   .df-review-item-badges {
@@ -363,6 +415,8 @@ export const reviewShellQaPanelStyle = `
   .df-review-item-id,
   .df-review-item-scope,
   .df-review-item-mode,
+  .df-review-item-assignee-badge,
+  .df-review-item-assignee-select,
   .df-review-item-status-badge,
   .df-review-item-status-select {
     --df-review-scope: var(--df-review-accent);
@@ -458,6 +512,36 @@ export const reviewShellQaPanelStyle = `
     text-transform: none;
   }
 
+  .df-review-item-assignee-badge,
+  .df-review-item-assignee-select {
+    min-height: 30px;
+    min-width: 96px;
+    max-width: 132px;
+    border-radius: var(--df-review-radius-sm);
+    border-color: rgba(255, 255, 255, 0.16);
+    padding: 0 10px;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: var(--df-review-font-weight-normal);
+    text-transform: none;
+  }
+
+  .df-review-item-assignee-select {
+    cursor: pointer;
+    outline: 0;
+  }
+
+	  .df-review-item-assignee-select:focus-visible {
+	    border-color: var(--df-review-accent);
+	    box-shadow: 0 0 0 2px var(--df-review-accent-soft);
+	  }
+
+  .df-review-item-assignee-select:disabled {
+    cursor: wait;
+    opacity: 0.62;
+  }
+
   .df-review-item-status-select {
     min-height: 30px;
     min-width: 92px;
@@ -471,9 +555,14 @@ export const reviewShellQaPanelStyle = `
     text-transform: none;
   }
 
-  .df-review-item-status-select:focus-visible {
-    border-color: var(--df-review-accent);
-    box-shadow: 0 0 0 2px var(--df-review-accent-soft);
+	  .df-review-item-status-select:focus-visible {
+	    border-color: var(--df-review-accent);
+	    box-shadow: 0 0 0 2px var(--df-review-accent-soft);
+	  }
+
+  .df-review-item-status-select:disabled {
+    cursor: wait;
+    opacity: 0.62;
   }
 
   .df-review-item-status-badge.is-status-todo,
@@ -513,6 +602,7 @@ export const reviewShellQaPanelStyle = `
 
   .df-review-source-select,
   .df-review-status-filter-select,
+  .df-review-item-assignee-select,
   .df-review-item-status-select,
   .df-review-item-status-select.is-status-todo,
   .df-review-item-status-select.is-status-doing,
@@ -627,12 +717,22 @@ export const reviewShellQaPanelStyle = `
 			    margin-top: 2px;
 			  }
 
-			  .df-review-item-status-actions {
-			    display: inline-flex;
-			    grid-column: 1;
-			    align-items: center;
-			    min-width: 0;
-		    cursor: auto;
+				  .df-review-item-workflow-actions {
+				    display: inline-flex;
+				    grid-column: 1;
+				    align-items: center;
+				    gap: 6px;
+				    min-width: 0;
+				    flex-wrap: wrap;
+			    cursor: auto;
+				  }
+
+				  .df-review-item-status-actions,
+				  .df-review-item-assignee-actions {
+				    display: inline-flex;
+				    align-items: center;
+				    min-width: 0;
+			    cursor: auto;
 			  }
 
 			  .df-review-item-prompt-actions {
@@ -710,9 +810,18 @@ export const reviewShellQaPanelStyle = `
 	    color: var(--df-review-text);
 	  }
 
-  .df-review-item-action-button:disabled {
-    cursor: default;
-    opacity: 0.45;
+	  .df-review-item-action-button:disabled {
+	    cursor: default;
+	    opacity: 0.45;
+	  }
+
+  .df-review-source-refresh.is-loading svg {
+    animation: df-review-spinner-spin 760ms linear infinite;
+  }
+
+  .df-review-source-refresh:disabled {
+    cursor: wait;
+    opacity: 0.7;
   }
 
   .df-review-item-action-button svg {

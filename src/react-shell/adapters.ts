@@ -1,6 +1,7 @@
 import { REVIEW_WORKFLOW_STATUS_OPTIONS } from '../status';
 import type {
   ReviewItem,
+  ReviewFieldsConfig,
   ReviewSource,
   WebReviewKitAdapter,
 } from '../types';
@@ -8,19 +9,26 @@ import type {
   ReviewShellAdapter,
   ReviewShellAdapterMap,
   ReviewShellAdapters,
+  ReviewShellAssigneeOption,
   ReviewShellStatusOption,
   ReviewShellSyncSubmissionInput,
+  ReviewShellUpdateAssigneeInput,
   ReviewShellUpdateStatusInput,
   ReviewShellWriteMode,
 } from './types';
 
 const ALL_REVIEW_WRITE_MODES: ReviewShellWriteMode[] = ['dom', 'note', 'area'];
+const DEFAULT_ASSIGNEE_TITLE = 'Assignee';
 
 export type NormalizedReviewShellAdapter = {
   label: ReviewSource;
   adapter: WebReviewKitAdapter;
+  fields: Required<Pick<ReviewFieldsConfig, 'title'>>;
   statusOptions: ReviewShellStatusOption[];
+  assigneeTitle: string;
+  assigneeOptions: ReviewShellAssigneeOption[];
   updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<unknown>;
+  updateAssignee?: (input: ReviewShellUpdateAssigneeInput) => Promise<unknown>;
   syncSubmission?: (input: ReviewShellSyncSubmissionInput) => Promise<unknown>;
   writeModes: ReviewShellWriteMode[];
   canUpdate: boolean;
@@ -63,8 +71,13 @@ function normalizeLegacyAdapterMap(
   const local = {
     label: 'local',
     adapter: adapters.local,
+    fields: { title: false },
     statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+    assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
+    assigneeOptions: [],
     updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
+    updateAssignee: ({ id, assigneeId, assigneeName }) =>
+      adapters.local.update(id, { assigneeId, assigneeName }),
     syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
     writeModes: [...ALL_REVIEW_WRITE_MODES],
     canUpdate: true,
@@ -74,9 +87,15 @@ function normalizeLegacyAdapterMap(
     ? ({
         label: 'remote',
         adapter: adapters.remote,
+        fields: { title: false },
         statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+        assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
+        assigneeOptions: [],
         updateStatus: ({ id, status }) =>
           adapters.remote?.update(id, { status }) ??
+          Promise.reject(new Error('Remote adapter is not available.')),
+        updateAssignee: ({ id, assigneeId, assigneeName }) =>
+          adapters.remote?.update(id, { assigneeId, assigneeName }) ??
           Promise.reject(new Error('Remote adapter is not available.')),
         writeModes: [],
         canUpdate: true,
@@ -98,12 +117,28 @@ function normalizeShellAdapter(
   const statusOptions = [
     ...(adapterConfig.statusOptions ?? REVIEW_WORKFLOW_STATUS_OPTIONS),
   ];
+  const fields = {
+    title: adapterConfig.fields?.title === true,
+  };
+  const assigneeTitle =
+    adapterConfig.assigneeTitle?.trim() || DEFAULT_ASSIGNEE_TITLE;
+  const assigneeOptions = [...(adapterConfig.assigneeOptions ?? [])];
   const updateAdapter = adapterConfig.update;
   const updateStatus: NormalizedReviewShellAdapter['updateStatus'] =
     adapterConfig.updateStatus
       ? adapterConfig.updateStatus
       : updateAdapter
         ? ({ id, status }) => updateAdapter(id, { status })
+        : undefined;
+  const updateAssignee: NormalizedReviewShellAdapter['updateAssignee'] =
+    adapterConfig.updateAssignee
+      ? adapterConfig.updateAssignee
+      : updateAdapter
+        ? ({ id, assigneeId, assigneeName, assigneeOption }) =>
+            updateAdapter(id, {
+              assigneeId,
+              assigneeName: assigneeName ?? assigneeOption?.label,
+            })
         : undefined;
   const writeModes = normalizeWriteModes(
     adapterConfig.create
@@ -114,8 +149,12 @@ function normalizeShellAdapter(
   return {
     label: adapterConfig.label,
     pageId: adapterConfig.pageId,
+    fields,
     statusOptions,
+    assigneeTitle,
+    assigneeOptions,
     updateStatus,
+    updateAssignee,
     syncSubmission: adapterConfig.syncSubmission,
     writeModes,
     canUpdate: Boolean(updateAdapter),

@@ -9,3 +9,23 @@ export function FigmaMarkIcon() {
     </svg>
   );
 }
+
+export function FigmaRailIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="df-review-figma-rail-icon"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 8H8.5a3 3 0 1 1 0-6H12v6Z" />
+      <path d="M12 14H8.5a3 3 0 1 1 0-6H12v6Z" />
+      <path d="M12 17.5A3.5 3.5 0 1 1 8.5 14H12v3.5Z" />
+      <path d="M12 2h3.5a3 3 0 1 1 0 6H12V2Z" />
+      <circle cx="15.5" cy="11" r="3" />
+    </svg>
+  );
+}

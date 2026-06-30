@@ -4,6 +4,7 @@ import type { ReviewShellStatusOption } from '../types';
 
 interface QaItemStatusActionsProps {
   canUpdateStatus: boolean;
+  isDisabled?: boolean;
   item: ReviewItem;
   statusOptions: readonly ReviewShellStatusOption[];
   onChangeItemStatus: (
@@ -28,6 +29,7 @@ const getStatusOption = (
 
 export const QaItemStatusActions = ({
   canUpdateStatus,
+  isDisabled = false,
   item,
   statusOptions,
   onChangeItemStatus,
@@ -44,10 +46,11 @@ export const QaItemStatusActions = ({
       onClick={(event) => event.stopPropagation()}
     >
       {canUpdateStatus ? (
-        <select
-          aria-label="QA status"
-          className={`df-review-item-status-select ${statusClassName}`}
-          value={currentStatusOption.value}
+            <select
+              aria-label="QA status"
+              className={`df-review-item-status-select ${statusClassName}`}
+              disabled={isDisabled}
+              value={currentStatusOption.value}
           onChange={(event) =>
             void onChangeItemStatus(
               item,

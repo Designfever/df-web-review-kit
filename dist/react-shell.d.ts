@@ -1,4 +1,4 @@
-import { f as ReviewItemScope, r as ReviewSource, n as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, p as ReviewRulerConfig } from './types-DFHHVRBc.js';
+import { f as ReviewItemScope, s as ReviewSource, o as ReviewMode, W as WebReviewKitAdapter, x as ReviewFieldsConfig, a as ReviewItemStatus, k as ReviewAssigneeOption, e as ReviewItem, q as ReviewRulerConfig } from './types-DT9Z66mV.js';
 import { R as ReviewFigmaImageStore, a as ReviewFigmaImageFormat } from './image.types-BmzkFSPX.js';
 import * as react from 'react';
 
@@ -43,6 +43,7 @@ type ReviewShellStatusOption = {
     value: ReviewItemStatus;
     label: string;
 };
+type ReviewShellAssigneeOption = ReviewAssigneeOption;
 type ReviewShellWriteMode = 'dom' | 'note' | 'area';
 type ReviewShellUpdateStatusInput = {
     id: string;
@@ -50,6 +51,14 @@ type ReviewShellUpdateStatusInput = {
     status: ReviewItemStatus;
     statusOption: ReviewShellStatusOption;
     statusIndex: number;
+};
+type ReviewShellUpdateAssigneeInput = {
+    id: string;
+    item: ReviewItem;
+    assigneeId: string | null;
+    assigneeName?: string;
+    assigneeOption?: ReviewShellAssigneeOption;
+    assigneeIndex: number;
 };
 type ReviewShellSubmissionPatch = Partial<Pick<ReviewItem, 'externalIssueId' | 'externalIssueUrl' | 'submittedAt' | 'submitStatus' | 'submitError'>>;
 type ReviewShellSyncSubmissionInput = {
@@ -64,9 +73,13 @@ type ReviewShellAdapter = {
     list: WebReviewKitAdapter['list'];
     create?: WebReviewKitAdapter['create'];
     update?: WebReviewKitAdapter['update'];
+    fields?: ReviewFieldsConfig;
     statusOptions?: readonly ReviewShellStatusOption[];
+    assigneeTitle?: string;
+    assigneeOptions?: readonly ReviewShellAssigneeOption[];
     canWrite?: boolean | readonly ReviewShellWriteMode[];
     updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<ReviewItem>;
+    updateAssignee?: (input: ReviewShellUpdateAssigneeInput) => Promise<ReviewItem>;
     syncSubmission?: (input: ReviewShellSyncSubmissionInput) => Promise<ReviewItem>;
     remove?: WebReviewKitAdapter['remove'];
 };
@@ -204,4 +217,4 @@ declare const createSupabasePresenceAdapter: ({ client, channelPrefix, private: 
 
 declare const mountReviewShell: (options: ReviewShellMountOptions) => void;
 
-export { type CreateReviewPagesOptions, DEFAULT_REVIEW_VIEWPORT_PRESETS, type FigmaDevOverlayController, type FigmaDevOverlayMountOptions, type LocalPresenceAdapterOptions, type ReviewPresenceAdapter, type ReviewPresenceContext, type ReviewPresenceSession, type ReviewPresenceState, type ReviewPresenceStatus, type ReviewPresenceUser, ReviewShell, type ReviewShellAdapter, type ReviewShellAdapters, type ReviewShellFigmaImagesOptions, type ReviewShellGlobEntries, type ReviewShellMountOptions, type ReviewShellPage, type ReviewShellProps, type ReviewShellStatusOption, type ReviewShellViewportKind, type ReviewShellViewportPreset, type ReviewSourceEditor, type ReviewSourceInspectorOptions, type SupabasePresenceAdapterOptions, type SupabasePresenceClient, createFallbackPresenceAdapter, createLocalPresenceAdapter, createReviewPagesFromGlob, createSupabasePresenceAdapter, mountFigmaDevOverlay, mountReviewShell };
+export { type CreateReviewPagesOptions, DEFAULT_REVIEW_VIEWPORT_PRESETS, type FigmaDevOverlayController, type FigmaDevOverlayMountOptions, type LocalPresenceAdapterOptions, type ReviewPresenceAdapter, type ReviewPresenceContext, type ReviewPresenceSession, type ReviewPresenceState, type ReviewPresenceStatus, type ReviewPresenceUser, ReviewShell, type ReviewShellAdapter, type ReviewShellAdapters, type ReviewShellAssigneeOption, type ReviewShellFigmaImagesOptions, type ReviewShellGlobEntries, type ReviewShellMountOptions, type ReviewShellPage, type ReviewShellProps, type ReviewShellStatusOption, type ReviewShellUpdateAssigneeInput, type ReviewShellUpdateStatusInput, type ReviewShellViewportKind, type ReviewShellViewportPreset, type ReviewSourceEditor, type ReviewSourceInspectorOptions, type SupabasePresenceAdapterOptions, type SupabasePresenceClient, createFallbackPresenceAdapter, createLocalPresenceAdapter, createReviewPagesFromGlob, createSupabasePresenceAdapter, mountFigmaDevOverlay, mountReviewShell };

@@ -7,6 +7,7 @@ import {
   type WebReviewKitAdapter,
 } from '@designfever/web-review-kit';
 import type {
+  ReviewShellAssigneeOption,
   ReviewShellAdapter,
 } from '@designfever/web-review-kit/react-shell';
 
@@ -15,6 +16,9 @@ type RemoteReviewAdapterOptions = {
   projectId: string;
   source?: ReviewSource;
   token?: string;
+  fields?: ReviewShellAdapter['fields'];
+  assigneeTitle?: string;
+  assigneeOptions?: ReviewShellAssigneeOption[];
 };
 
 type RemoteReviewItemResponse = ReviewItem | { item: ReviewItem };
@@ -98,8 +102,11 @@ export function createRemoteReviewAdapter(
  * label becomes the URL source, for example /review?source=remote.
  * create controls whether the shell can write to this adapter.
  * canWrite can be true or limited to ['dom', 'note', 'area'].
- * update enables comment edits in the QA panel.
+ * update enables title/comment edits in the QA panel.
+ * fields enables optional UI fields such as title. Omit title to keep comment-only UI.
  * updateStatus drives the status buttons in the QA panel.
+ * assigneeOptions + updateAssignee drive the assignee select next to status.
+ * assigneeTitle customizes the empty option/field label. Defaults to "Assignee".
  * remove enables delete actions for this source.
  */
 export function createRemoteReviewShellAdapter(
@@ -114,9 +121,14 @@ export function createRemoteReviewShellAdapter(
     create: (item) => adapter.create(item),
     update: (id, patch) => adapter.update(id, patch),
     canWrite: true,
+    fields: options.fields,
     statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
     updateStatus: ({ id, status }) =>
       adapter.update(id, { status: normalizeRemoteStatus(status) }),
+    assigneeTitle: options.assigneeTitle,
+    assigneeOptions: options.assigneeOptions ?? [],
+    updateAssignee: ({ id, assigneeId, assigneeName }) =>
+      adapter.update(id, { assigneeId, assigneeName }),
     remove: (id) => adapter.remove(id),
   };
 }

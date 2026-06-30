@@ -48,6 +48,7 @@ export type {
   LocalAdapterOptions,
   NumberedReviewItem,
   RelativeSelection,
+  ReviewAssigneeOption,
   ReviewItem,
   ReviewItemKind,
   ReviewItemQuery,

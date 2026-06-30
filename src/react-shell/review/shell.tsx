@@ -58,7 +58,7 @@ import {
   getTargetFigmaFrameConfig,
   type ReviewFigmaFrameConfig,
 } from '../figma';
-import { FigmaMarkIcon } from '../figma/figma-mark-icon';
+import { FigmaRailIcon } from '../figma/figma-mark-icon';
 import { FigmaImagesPanel } from '../figma/images.panel';
 import { QaItemEditModal } from '../qa/item.edit.modal';
 import { ReviewQaPanel } from '../qa/panel';
@@ -115,7 +115,8 @@ import {
   refreshSitemapReviewItems,
   refreshReviewData as refreshReviewDataAction,
   submitReviewItem,
-  updateReviewItemComment,
+  updateReviewItemAssignee,
+  updateReviewItemDetails,
   updateReviewItemStatus,
 } from './shell.actions';
 import {
@@ -346,6 +347,7 @@ export const ReviewShell = ({
     getItemPresetScope,
     hiddenOverlayItemIdList,
     hiddenOverlayItemIds,
+    items,
     pageQaCounts,
     pageTargets,
     presetScopeCounts,
@@ -372,6 +374,11 @@ export const ReviewShell = ({
     target,
     viewportPresets,
   });
+  const itemRefreshIdRef = useRef(0);
+  const [isItemsLoading, setIsItemsLoading] = useState(false);
+  const [mutatingItemIds, setMutatingItemIds] = useState<Set<string>>(
+    () => new Set()
+  );
   const {
     addImage: addFigmaImage,
     deleteImage: deleteFigmaImage,
@@ -411,16 +418,33 @@ export const ReviewShell = ({
   const [editingItem, setEditingItem] = useState<ReviewItem | null>(null);
   const initialPromptText = initialPrompt.trim();
   const refreshItems = useCallback(
-    () =>
-      refreshReviewItems({
-        activeRoute,
-        adapter,
-        isRemoteSource,
-        pageId: activeAdapterEntry.pageId,
-        projectId,
-        onItemsChange: setItems,
-      }),
-    [activeAdapterEntry.pageId, activeRoute, adapter, isRemoteSource, projectId]
+    async () => {
+      const requestId = ++itemRefreshIdRef.current;
+      setIsItemsLoading(true);
+
+      try {
+        return await refreshReviewItems({
+          activeRoute,
+          adapter,
+          isRemoteSource,
+          pageId: activeAdapterEntry.pageId,
+          projectId,
+          onItemsChange: setItems,
+        });
+      } finally {
+        if (itemRefreshIdRef.current === requestId) {
+          setIsItemsLoading(false);
+        }
+      }
+    },
+    [
+      activeAdapterEntry.pageId,
+      activeRoute,
+      adapter,
+      isRemoteSource,
+      projectId,
+      setItems,
+    ]
   );
 
   const refreshSitemapItems = useCallback(
@@ -538,6 +562,9 @@ export const ReviewShell = ({
     toggleTargetOverlay,
   } = useReviewController({
     adapter,
+    fields: activeAdapterEntry.fields,
+    assigneeTitle: activeAdapterEntry.assigneeTitle,
+    assigneeOptions: activeAdapterEntry.assigneeOptions,
     cleanupTargetRef,
     controllerRef,
     frameScrollRef,
@@ -573,6 +600,19 @@ export const ReviewShell = ({
     onTargetChange: setTarget,
     onTargetOverlayStateChange: setTargetOverlayState,
   });
+
+  useEffect(() => {
+    const itemId = pendingInitialItemIdRef.current;
+    if (!itemId) return;
+
+    const item = items.find(
+      (candidate) =>
+        candidate.id === itemId || candidate.externalIssueId === itemId
+    );
+    if (!item) return;
+
+    restoreReviewItem(item);
+  }, [items, pendingInitialItemIdRef, restoreReviewItem]);
 
   const refreshReviewData = useCallback(() => {
     return refreshReviewDataAction({
@@ -1438,6 +1478,27 @@ export const ReviewShell = ({
     updateShellUrl(targetRef.current, sizeRef.current, source);
   }, [clearSelectedItem, sizeRef, source, targetRef]);
 
+  const withItemMutation = async <T,>(
+    itemId: string,
+    action: () => Promise<T>
+  ) => {
+    setMutatingItemIds((currentIds) => {
+      const nextIds = new Set(currentIds);
+      nextIds.add(itemId);
+      return nextIds;
+    });
+
+    try {
+      return await action();
+    } finally {
+      setMutatingItemIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(itemId);
+        return nextIds;
+      });
+    }
+  };
+
   const changeReviewSource = (nextSource: ReviewSource) => {
     if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
 
@@ -1452,35 +1513,60 @@ export const ReviewShell = ({
     item: ReviewItem,
     nextStatus: ReviewItemStatus
   ) =>
-    updateReviewItemStatus({
-      activeAdapterEntry,
-      item,
-      nextStatus,
-      onRefreshReviewData: refreshReviewData,
-      onToast: showToast,
-    });
+    withItemMutation(item.id, () =>
+      updateReviewItemStatus({
+        activeAdapterEntry,
+        item,
+        nextStatus,
+        onRefreshReviewData: refreshReviewData,
+        onToast: showToast,
+      })
+    );
 
-  const saveItemComment = async (item: ReviewItem, comment: string) => {
-    await updateReviewItemComment({
-      activeAdapterEntry,
-      item,
-      comment,
-      onRefreshReviewData: refreshReviewData,
-      onToast: showToast,
-    });
+  const changeItemAssignee = async (
+    item: ReviewItem,
+    assigneeId: string | null
+  ) => {
+    await withItemMutation(item.id, () =>
+      updateReviewItemAssignee({
+        activeAdapterEntry,
+        item,
+        assigneeId,
+        onRefreshReviewData: refreshReviewData,
+        onToast: showToast,
+      })
+    );
+  };
+
+  const saveItemDetails = async (
+    item: ReviewItem,
+    patch: Pick<ReviewItem, 'comment'> & Partial<Pick<ReviewItem, 'title'>>
+  ) => {
+    await withItemMutation(item.id, () =>
+      updateReviewItemDetails({
+        activeAdapterEntry,
+        fields: activeAdapterEntry.fields,
+        item,
+        ...patch,
+        onRefreshReviewData: refreshReviewData,
+        onToast: showToast,
+      })
+    );
     setEditingItem(null);
   };
 
   const submitItem = (numberedItem: NumberedReviewItem) =>
-    submitReviewItem({
-      localAdapterEntry,
-      numberedItem,
-      remoteAdapterEntry,
-      selectedItemIdRef,
-      onClearSelectedItem: clearSelectedItem,
-      onRefreshReviewData: refreshReviewData,
-      onToast: showToast,
-    });
+    withItemMutation(numberedItem.item.id, () =>
+      submitReviewItem({
+        localAdapterEntry,
+        numberedItem,
+        remoteAdapterEntry,
+        selectedItemIdRef,
+        onClearSelectedItem: clearSelectedItem,
+        onRefreshReviewData: refreshReviewData,
+        onToast: showToast,
+      })
+    );
 
   const copyPrompt = (
     value: string,
@@ -1534,18 +1620,20 @@ export const ReviewShell = ({
   };
 
   const removeItem = (item: ReviewItem) =>
-    removeReviewItem({
-      activeAdapterEntry,
-      isRemoteSource,
-      item,
-      selectedItemIdRef,
-      sizeRef,
-      source,
-      targetRef,
-      onClearSelectedItem: clearSelectedItem,
-      onRefreshReviewData: refreshReviewData,
-      onToast: showToast,
-    });
+    withItemMutation(item.id, () =>
+      removeReviewItem({
+        activeAdapterEntry,
+        isRemoteSource,
+        item,
+        selectedItemIdRef,
+        sizeRef,
+        source,
+        targetRef,
+        onClearSelectedItem: clearSelectedItem,
+        onRefreshReviewData: refreshReviewData,
+        onToast: showToast,
+      })
+    );
 
   const figmaImageOverlays = createReviewTargetFigmaImageOverlays({
     imageOverlayStates: figmaImageOverlayStates,
@@ -1647,9 +1735,10 @@ export const ReviewShell = ({
 
       {editingItem && (
         <QaItemEditModal
+          fields={activeAdapterEntry.fields}
           item={editingItem}
           onClose={() => setEditingItem(null)}
-          onSave={saveItemComment}
+          onSave={saveItemDetails}
         />
       )}
 
@@ -1711,7 +1800,7 @@ export const ReviewShell = ({
             title="Figma Images"
           >
             <span aria-hidden="true">
-              <FigmaMarkIcon />
+              <FigmaRailIcon />
             </span>
           </button>
         )}
@@ -1771,7 +1860,9 @@ export const ReviewShell = ({
         hiddenOverlayItemIds={hiddenOverlayItemIds}
         isListVisible={isQaPanelVisible}
         isAllQaVisible={isAllQaVisible}
+        isLoading={isItemsLoading}
         isRemoteSource={isRemoteSource}
+        mutatingItemIds={mutatingItemIds}
         copiedPromptKey={copiedPromptKey}
         qaFilter={qaFilter}
         qaFilterCounts={qaFilterCounts}
@@ -1782,8 +1873,11 @@ export const ReviewShell = ({
         showSourceSelect={showSourceSelect}
         source={source}
         sourceEntries={sourceEntries}
+        fields={activeAdapterEntry.fields}
+        assigneeTitle={activeAdapterEntry.assigneeTitle}
         onChangeItemStatus={changeItemStatus}
         onClearSelectedItem={clearSelectedReviewItem}
+        onChangeItemAssignee={changeItemAssignee}
         onChangeReviewSource={changeReviewSource}
         onCopyItemLabel={(numberedItem) => void copyItemLabel(numberedItem)}
         onCopyItemLink={(numberedItem) => void copyItemLink(numberedItem)}

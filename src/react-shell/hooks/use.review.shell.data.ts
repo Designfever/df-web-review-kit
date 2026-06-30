@@ -302,6 +302,7 @@ export const useReviewShellData = ({
     getItemPresetScope,
     hiddenOverlayItemIdList,
     hiddenOverlayItemIds,
+    items,
     pageQaCounts,
     pageTargets,
     presetScopeCounts,

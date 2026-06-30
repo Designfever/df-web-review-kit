@@ -10,6 +10,7 @@ export type {
   CreateReviewPagesOptions,
   ReviewShellAdapter,
   ReviewShellAdapters,
+  ReviewShellAssigneeOption,
   ReviewPresenceAdapter,
   ReviewPresenceContext,
   ReviewPresenceSession,
@@ -24,6 +25,8 @@ export type {
   ReviewShellPage,
   ReviewShellProps,
   ReviewShellStatusOption,
+  ReviewShellUpdateAssigneeInput,
+  ReviewShellUpdateStatusInput,
   ReviewShellViewportKind,
   ReviewShellViewportPreset,
 } from './react-shell/types';

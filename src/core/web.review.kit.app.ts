@@ -57,6 +57,10 @@ import {
 
 const ROOT_ID = 'df-web-review-kit-root';
 
+type DraftItemFields = Partial<
+  Pick<ReviewItem, 'title' | 'comment' | 'assigneeId' | 'assigneeName'>
+>;
+
 function isEditableEventTarget(event: KeyboardEvent) {
   const path = event.composedPath?.() ?? [];
   const element = (path[0] ?? event.target) as HTMLElement | null;
@@ -109,6 +113,8 @@ class WebReviewKitApp {
   private items: ReviewItem[] = [];
   private noteDraft?: NoteDraft;
   private areaDraft?: AreaDraft;
+  private draftError = '';
+  private isCreatingItem = false;
   private isSelectingArea = false;
   private highlightedItemId?: string;
   private hiddenItemIds?: Set<string>;
@@ -125,6 +131,8 @@ class WebReviewKitApp {
         items: this.items,
         noteDraft: this.noteDraft,
         areaDraft: this.areaDraft,
+        draftError: this.draftError,
+        isCreatingItem: this.isCreatingItem,
         isSelectingArea: this.isSelectingArea,
         highlightedItemId: this.highlightedItemId,
       }),
@@ -139,21 +147,24 @@ class WebReviewKitApp {
         clearDrafts: () => {
           this.noteDraft = undefined;
           this.areaDraft = undefined;
+          this.draftError = '';
         },
         setNoteDraft: (draft) => {
           this.noteDraft = draft;
+          this.draftError = '';
         },
         setAreaDraft: (draft) => {
           this.areaDraft = draft;
+          this.draftError = '';
         },
         setSelectingArea: (isSelectingArea) => {
           this.isSelectingArea = isSelectingArea;
         },
         createItem: (input) => this.createItem(input),
-        bindNoteDraftToPoint: (point, comment) =>
-          this.bindNoteDraftToPoint(point, comment),
-        bindElementDraftToPoint: (point, comment) =>
-          this.bindElementDraftToPoint(point, comment),
+        bindNoteDraftToPoint: (point, fields) =>
+          this.bindNoteDraftToPoint(point, fields),
+        bindElementDraftToPoint: (point, fields) =>
+          this.bindElementDraftToPoint(point, fields),
         createAreaDraft: (selection) => this.createAreaDraft(selection),
       },
     });
@@ -237,7 +248,7 @@ class WebReviewKitApp {
     this.noteDraft = undefined;
     this.areaDraft = undefined;
     this.isSelectingArea = false;
-    await this.bindElementDraftToElement(element, comment);
+    await this.bindElementDraftToElement(element, { comment });
   }
 
   getMode() {
@@ -445,7 +456,10 @@ class WebReviewKitApp {
     this.view.render(this.shadow, this.createHiddenItemsStyleElement());
   }
 
-  private async bindNoteDraftToPoint(point: ReviewPoint, comment?: string) {
+  private async bindNoteDraftToPoint(
+    point: ReviewPoint,
+    fields: DraftItemFields = {}
+  ) {
     const environment = this.getEnvironment();
     if (!environment) return;
 
@@ -470,7 +484,7 @@ class WebReviewKitApp {
         viewport,
         anchor,
         marker,
-        comment,
+        ...fields,
       };
     });
 
@@ -478,7 +492,10 @@ class WebReviewKitApp {
     this.render();
   }
 
-  private async bindElementDraftToPoint(point: ReviewPoint, comment?: string) {
+  private async bindElementDraftToPoint(
+    point: ReviewPoint,
+    fields: DraftItemFields = {}
+  ) {
     const environment = this.getEnvironment();
     if (!environment) return;
 
@@ -540,7 +557,7 @@ class WebReviewKitApp {
         anchor,
         marker,
         selection: reviewSelection,
-        comment,
+        ...fields,
         previewElement,
       };
     });
@@ -551,7 +568,7 @@ class WebReviewKitApp {
 
   private async bindElementDraftToElement(
     element: Element,
-    comment?: string
+    fields: DraftItemFields = {}
   ) {
     const environment = this.getEnvironment();
     if (!environment || element.ownerDocument !== environment.document) return;
@@ -594,7 +611,7 @@ class WebReviewKitApp {
         anchor,
         marker,
         selection: reviewSelection,
-        comment,
+        ...fields,
         previewElement,
       };
     });
@@ -607,29 +624,36 @@ class WebReviewKitApp {
 
   private async createAreaDraft(selection: ViewportSelection) {
     const environment = this.getEnvironment();
-    if (!environment) return;
+    if (!environment) {
+      this.isSelectingArea = false;
+      this.render();
+      return;
+    }
 
-    const viewport = getViewportSize(environment);
+    try {
+      const viewport = getViewportSize(environment);
 
-    this.areaDraft = await this.withOverlayHidden(() => {
-      const marker = createSelectionCenterMarker(
-        selection,
-        undefined,
-        environment
-      );
-      const reviewSelection: ReviewSelection = {
-        viewport: toPublicSelection(selection),
-      };
+      this.areaDraft = await this.withOverlayHidden(() => {
+        const marker = createSelectionCenterMarker(
+          selection,
+          undefined,
+          environment
+        );
+        const reviewSelection: ReviewSelection = {
+          viewport: toPublicSelection(selection),
+        };
 
-      return {
-        viewport,
-        marker,
-        selection: reviewSelection,
-      };
-    });
-    this.isSelectingArea = false;
-    this.setModeState('area');
-    this.render();
+        return {
+          viewport,
+          marker,
+          selection: reviewSelection,
+        };
+      });
+      this.setModeState('area');
+    } finally {
+      this.isSelectingArea = false;
+      this.render();
+    }
   }
 
   private async withOverlayHidden<T>(callback: () => Promise<T> | T) {
@@ -648,12 +672,17 @@ class WebReviewKitApp {
 
   private async createItem(input: CreateReviewItemInput) {
     const environment = this.getEnvironment();
-    if (!environment) return;
+    if (!environment || this.isCreatingItem) return;
 
     const now = new Date().toISOString();
     const routeKey = getRouteKey(environment);
     const viewport = input.viewport ?? getViewportSize(environment);
     const createdBy = this.options.userId?.trim();
+    const title = input.title?.trim();
+    const assigneeId = input.assigneeId?.trim() || undefined;
+    const assigneeOption = this.options.assigneeOptions?.find(
+      (option) => option.value === assigneeId
+    );
     const item: ReviewItem = {
       id: createId(),
       projectId: this.options.projectId,
@@ -665,8 +694,10 @@ class WebReviewKitApp {
         input.scope ??
         getReviewViewportScope(viewport, this.options.viewports?.presets),
       kind: input.kind,
-      title: input.comment.split('\n')[0]?.slice(0, 80),
+      title: title || undefined,
       comment: input.comment,
+      assigneeId,
+      assigneeName: input.assigneeName ?? assigneeOption?.label,
       createdBy: createdBy || undefined,
       status: 'todo',
       viewport,
@@ -682,13 +713,25 @@ class WebReviewKitApp {
       updatedAt: now,
     };
 
-    const createdItem = await this.adapter.create(item);
-    this.setModeState('idle');
-    this.noteDraft = undefined;
-    this.areaDraft = undefined;
-    this.highlightItem(createdItem.id);
-    await this.reload();
-    await this.options.onCreateItem?.(createdItem);
+    this.draftError = '';
+    this.isCreatingItem = true;
+    this.render();
+
+    try {
+      const createdItem = await this.adapter.create(item);
+      this.setModeState('idle');
+      this.noteDraft = undefined;
+      this.areaDraft = undefined;
+      this.highlightItem(createdItem.id);
+      await this.reload();
+      await this.options.onCreateItem?.(createdItem);
+    } catch (error) {
+      this.draftError =
+        error instanceof Error ? error.message : 'Failed to save QA.';
+    } finally {
+      this.isCreatingItem = false;
+      this.render();
+    }
   }
 
   private async restoreItem(item: ReviewItem) {

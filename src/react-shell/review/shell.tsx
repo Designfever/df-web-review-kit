@@ -402,7 +402,7 @@ export const ReviewShell = ({
     updateImage: updateFigmaImage,
   } = useReviewFigmaImages({
     imageFormat: figmaImageFormat,
-    pageUrl: activeRoute,
+    pageUrl: target,
     projectId,
     store: figmaImageStore,
     viewport: size,
@@ -1498,6 +1498,11 @@ export const ReviewShell = ({
       });
     }
   };
+  const showItemMutationError = (error: unknown, fallback: string) => {
+    showToast(
+      error instanceof Error && error.message ? error.message : fallback
+    );
+  };
 
   const changeReviewSource = (nextSource: ReviewSource) => {
     if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
@@ -1509,64 +1514,83 @@ export const ReviewShell = ({
     updateShellUrl(targetRef.current, sizeRef.current, nextSource);
   };
 
-  const changeItemStatus = (
+  const changeItemStatus = async (
     item: ReviewItem,
     nextStatus: ReviewItemStatus
-  ) =>
-    withItemMutation(item.id, () =>
-      updateReviewItemStatus({
-        activeAdapterEntry,
-        item,
-        nextStatus,
-        onRefreshReviewData: refreshReviewData,
-        onToast: showToast,
-      })
-    );
+  ) => {
+    try {
+      await withItemMutation(item.id, () =>
+        updateReviewItemStatus({
+          activeAdapterEntry,
+          item,
+          nextStatus,
+          onRefreshReviewData: refreshReviewData,
+          onToast: showToast,
+        })
+      );
+    } catch (error) {
+      showItemMutationError(error, 'QA status update failed');
+    }
+  };
 
   const changeItemAssignee = async (
     item: ReviewItem,
     assigneeId: string | null
   ) => {
-    await withItemMutation(item.id, () =>
-      updateReviewItemAssignee({
-        activeAdapterEntry,
-        item,
-        assigneeId,
-        onRefreshReviewData: refreshReviewData,
-        onToast: showToast,
-      })
-    );
+    try {
+      await withItemMutation(item.id, () =>
+        updateReviewItemAssignee({
+          activeAdapterEntry,
+          item,
+          assigneeId,
+          onRefreshReviewData: refreshReviewData,
+          onToast: showToast,
+        })
+      );
+    } catch (error) {
+      showItemMutationError(error, 'QA assignee update failed');
+    }
   };
 
   const saveItemDetails = async (
     item: ReviewItem,
     patch: Pick<ReviewItem, 'comment'> & Partial<Pick<ReviewItem, 'title'>>
   ) => {
-    await withItemMutation(item.id, () =>
-      updateReviewItemDetails({
-        activeAdapterEntry,
-        fields: activeAdapterEntry.fields,
-        item,
-        ...patch,
-        onRefreshReviewData: refreshReviewData,
-        onToast: showToast,
-      })
-    );
-    setEditingItem(null);
+    try {
+      await withItemMutation(item.id, () =>
+        updateReviewItemDetails({
+          activeAdapterEntry,
+          fields: activeAdapterEntry.fields,
+          item,
+          ...patch,
+          onRefreshReviewData: refreshReviewData,
+          onToast: showToast,
+        })
+      );
+      setEditingItem(null);
+    } catch (error) {
+      showItemMutationError(error, 'QA update failed');
+      throw error;
+    }
   };
 
-  const submitItem = (numberedItem: NumberedReviewItem) =>
-    withItemMutation(numberedItem.item.id, () =>
-      submitReviewItem({
-        localAdapterEntry,
-        numberedItem,
-        remoteAdapterEntry,
-        selectedItemIdRef,
-        onClearSelectedItem: clearSelectedItem,
-        onRefreshReviewData: refreshReviewData,
-        onToast: showToast,
-      })
-    );
+  const submitItem = async (numberedItem: NumberedReviewItem) => {
+    try {
+      await withItemMutation(numberedItem.item.id, () =>
+        submitReviewItem({
+          localAdapterEntry,
+          numberedItem,
+          remoteAdapterEntry,
+          selectedItemIdRef,
+          onClearSelectedItem: clearSelectedItem,
+          onRefreshReviewData: refreshReviewData,
+          onToast: showToast,
+        })
+      );
+    } catch (error) {
+      showItemMutationError(error, 'QA submit failed');
+    }
+  };
 
   const copyPrompt = (
     value: string,
@@ -1619,21 +1643,26 @@ export const ReviewShell = ({
     return copyPrompt(path, `remote-link:${item.id}`, 'QA path copied');
   };
 
-  const removeItem = (item: ReviewItem) =>
-    withItemMutation(item.id, () =>
-      removeReviewItem({
-        activeAdapterEntry,
-        isRemoteSource,
-        item,
-        selectedItemIdRef,
-        sizeRef,
-        source,
-        targetRef,
-        onClearSelectedItem: clearSelectedItem,
-        onRefreshReviewData: refreshReviewData,
-        onToast: showToast,
-      })
-    );
+  const removeItem = async (item: ReviewItem) => {
+    try {
+      await withItemMutation(item.id, () =>
+        removeReviewItem({
+          activeAdapterEntry,
+          isRemoteSource,
+          item,
+          selectedItemIdRef,
+          sizeRef,
+          source,
+          targetRef,
+          onClearSelectedItem: clearSelectedItem,
+          onRefreshReviewData: refreshReviewData,
+          onToast: showToast,
+        })
+      );
+    } catch (error) {
+      showItemMutationError(error, 'QA delete failed');
+    }
+  };
 
   const figmaImageOverlays = createReviewTargetFigmaImageOverlays({
     imageOverlayStates: figmaImageOverlayStates,

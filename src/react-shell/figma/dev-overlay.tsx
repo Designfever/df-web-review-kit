@@ -10,7 +10,7 @@ import {
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
 } from '../../figma/image.types';
-import { normalizeTarget, getTargetRouteKey } from '../route';
+import { normalizeTarget } from '../route';
 import type {
   ReviewShellFigmaImagesOptions,
   ReviewShellViewportPreset,
@@ -456,11 +456,8 @@ function getFigmaDevOverlayPageUrl(
   if (typeof pageUrl === 'function') return pageUrl();
   if (typeof pageUrl === 'string') return pageUrl;
 
-  return getTargetRouteKey(
-    normalizeTarget(
-      `${window.location.pathname}${window.location.search}${window.location.hash}`,
-      reviewPathPrefix
-    ),
+  return normalizeTarget(
+    `${window.location.pathname}${window.location.search}${window.location.hash}`,
     reviewPathPrefix
   );
 }

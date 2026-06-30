@@ -3,7 +3,7 @@
 0.6.0 release 이후 변경 사항 정리.
 
 비교 기준: `0.6.0`
-검토 기준: `chore/0.7.0-code-review-cleanup` PR branch (`dbf9f4f`)
+검토 기준: `main` release candidate
 
 ## 주요 변경
 
@@ -14,6 +14,7 @@
 - 느린 remote adapter, 특히 df-sheet 연동에서 list/create/update/delete pending 상태를 UI로 표시한다.
 - deep link item restore와 QA list focus 위치 보정을 개선했다.
 - right rail Figma icon stroke를 다른 rail icon과 분리해 맞췄다.
+- 릴리즈 직전 QA mutation failure feedback과 Figma image target key 보정을 반영했다.
 
 ## 변경
 
@@ -61,6 +62,12 @@ remote list가 늦게 도착하는 경우에도 URL의 `item` query를 복원할
 - focus scroll 후 layout/animation 때문에 위치가 틀어지는 케이스를 다시 보정한다.
 - df-sheet처럼 list 응답이 느린 adapter에서 deep link item focus 실패를 줄였다.
 
+### Release Candidate Fixes
+
+- QA status/assignee/submit/delete 실패 시 unhandled rejection으로 남기지 않고 toast로 feedback을 표시한다.
+- QA edit 실패는 toast와 edit modal inline error를 함께 유지한다.
+- Figma image target key가 review shell과 dev overlay에서 query/hash를 포함한 normalized target을 사용하도록 보정했다.
+
 ## Host 적용 메모
 
 ### Lexus dogfood integration
@@ -91,7 +98,10 @@ Figma image local cache를 쓰는 host는 Vite config에 review-kit plugin helpe
 
 - `pnpm run typecheck`
 - `pnpm run typecheck:dev`
+- `pnpm run lint:dead-code`
 - `pnpm run build`
+- `pnpm run build:dev`
+- `npm pack --dry-run --json`
 
 수동 확인:
 

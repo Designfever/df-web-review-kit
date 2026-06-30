@@ -326,7 +326,7 @@ function matchesPattern(pattern, absoluteFile, relativeFile) {
 }
 
 function isAbsolutePattern(value) {
-  return value.startsWith('/') || /^[a-zA-Z]:\\\\//.test(value);
+  return value.startsWith('/') || /^[a-zA-Z]:\\//.test(value);
 }
 
 function globToRegExp(value) {

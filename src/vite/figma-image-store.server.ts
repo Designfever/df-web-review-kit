@@ -251,6 +251,31 @@ function parseAddImageInput(value: unknown): AddReviewFigmaImageInput | null {
     label: typeof input.label === 'string' ? input.label : undefined,
     order: typeof input.order === 'number' ? input.order : undefined,
     imageFormat: parseReviewFigmaImageFormat(input.imageFormat),
+    asset: parseAddImageAssetInput(input.asset),
+  };
+}
+
+function parseAddImageAssetInput(
+  value: unknown
+): AddReviewFigmaImageInput['asset'] {
+  if (!value || typeof value !== 'object') return undefined;
+  const input = value as Partial<NonNullable<AddReviewFigmaImageInput['asset']>>;
+  const imageFormat = parseReviewFigmaImageFormat(input.imageFormat);
+  if (
+    !imageFormat ||
+    typeof input.dataUrl !== 'string' ||
+    typeof input.mimeType !== 'string'
+  ) {
+    return undefined;
+  }
+
+  return {
+    dataUrl: input.dataUrl,
+    imageFormat,
+    mimeType: input.mimeType,
+    byteSize: typeof input.byteSize === 'number' ? input.byteSize : undefined,
+    width: typeof input.width === 'number' ? input.width : undefined,
+    height: typeof input.height === 'number' ? input.height : undefined,
   };
 }
 
@@ -404,4 +429,3 @@ function isAllowedProjectTarget(
 function jsonError(status: number, error: string): ReviewFigmaImageStoreResponse {
   return { status, body: { error } };
 }
-

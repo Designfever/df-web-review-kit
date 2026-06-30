@@ -49,12 +49,22 @@ export type ReviewFigmaImage = {
   updatedAt: string;
 };
 
+export type ReviewFigmaImageAssetInput = {
+  dataUrl: string;
+  imageFormat: ReviewFigmaImageFormat;
+  mimeType: string;
+  byteSize?: number;
+  width?: number;
+  height?: number;
+};
+
 export type AddReviewFigmaImageInput = {
   target: ReviewFigmaImageTarget;
   figmaUrl: string;
   label?: string;
   order?: number;
   imageFormat?: ReviewFigmaImageFormat;
+  asset?: ReviewFigmaImageAssetInput;
 };
 
 export type UpdateReviewFigmaImageInput = Partial<

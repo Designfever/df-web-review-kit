@@ -1,5 +1,5 @@
 import { f as ReviewItemScope, r as ReviewSource, n as ReviewMode, W as WebReviewKitAdapter, a as ReviewItemStatus, e as ReviewItem, p as ReviewRulerConfig } from './types-DFHHVRBc.js';
-import { R as ReviewFigmaImageStore, a as ReviewFigmaImageFormat } from './image.types-DZSqTbSX.js';
+import { R as ReviewFigmaImageStore, a as ReviewFigmaImageFormat } from './image.types-BmzkFSPX.js';
 import * as react from 'react';
 
 type ReviewShellViewportKind = Exclude<ReviewItemScope, 'dom'>;

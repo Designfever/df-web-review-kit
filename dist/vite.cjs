@@ -43,125 +43,60 @@ __export(vite_exports, {
   reviewSourceLocator: () => reviewSourceLocator
 });
 module.exports = __toCommonJS(vite_exports);
-var import_promises = require("fs/promises");
-var import_node_path = __toESM(require("path"), 1);
+
+// src/vite/figma-image-store.ts
+var import_node_path3 = __toESM(require("path"), 1);
 var import_vite = require("vite");
 
-// src/figma/image.store.ts
-var DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT = "/__dfwr/figma-images";
-function getReviewFigmaImageTargetKey(target) {
-  return JSON.stringify(normalizeReviewFigmaImageTarget(target));
+// src/vite/figma-asset.ts
+function parseReviewFigmaImageFormat(value) {
+  return value === "webp" || value === "png" || value === "jpg" ? value : void 0;
 }
-function getReviewFigmaImageMimeType(format) {
-  if (format === "jpg") return "image/jpeg";
-  if (format === "png") return "image/png";
-  return "image/webp";
+function getStoreRenderFormat(renderFormat, imageFormat) {
+  if (renderFormat === "jpg" || renderFormat === "png") return renderFormat;
+  if (imageFormat === "jpg") return "jpg";
+  return "png";
 }
-function normalizeReviewFigmaImageTarget(target) {
-  if (target.type === "figma-node") {
-    return {
-      type: target.type,
-      projectId: target.projectId,
-      fileKey: target.fileKey,
-      nodeId: target.nodeId
-    };
+function getReviewFigmaImageFormatFromMimeType(mimeType) {
+  if (mimeType === "image/webp") return "webp";
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/jpeg") return "jpg";
+  return null;
+}
+function normalizeImageMimeType(value) {
+  const mimeType = value?.split(";")[0]?.trim().toLowerCase();
+  if (mimeType === "image/jpg") return "image/jpeg";
+  if (mimeType === "image/jpeg" || mimeType === "image/png" || mimeType === "image/webp") {
+    return mimeType;
   }
-  return {
-    type: target.type,
-    projectId: target.projectId,
-    pageUrl: target.pageUrl,
-    slot: target.slot ?? "",
-    viewport: target.viewport ? {
-      label: target.viewport.label ?? "",
-      width: target.viewport.width ?? null,
-      height: target.viewport.height ?? null,
-      scope: target.viewport.scope ?? ""
-    } : null
-  };
+  return null;
 }
-
-// src/figma/image.snapshot.ts
-function createReviewFigmaImagesSnapshot(images, options = {}) {
-  const targetKeys = options.targets?.length ? new Set(options.targets.map(getReviewFigmaImageTargetKey)) : null;
-  return images.filter((image) => {
-    if (options.projectId && image.projectId !== options.projectId) {
-      return false;
-    }
-    if (targetKeys && !targetKeys.has(getReviewFigmaImageTargetKey(image.target))) {
-      return false;
-    }
-    return true;
-  }).map(cloneReviewFigmaImage).sort(compareReviewFigmaSnapshotImages);
+function createReviewFigmaAssetStorageKey(id, imageFormat) {
+  return `${id}.${getReviewFigmaAssetExtension(imageFormat)}`;
 }
-function createReviewFigmaReleaseSnapshot({
-  images,
-  projectId,
-  releaseId,
-  label,
-  createdAt,
-  targets
-}) {
-  return {
-    version: 1,
-    projectId,
-    ...releaseId ? { releaseId } : null,
-    ...label ? { label } : null,
-    createdAt: createdAt ?? (/* @__PURE__ */ new Date()).toISOString(),
-    figmaImagesSnapshot: createReviewFigmaImagesSnapshot(images, {
-      projectId,
-      targets
-    })
-  };
+function createReviewFigmaAssetUrl(assetEndpoint, storageKey) {
+  return `${assetEndpoint}/${encodeURIComponent(storageKey)}`;
 }
-async function collectReviewFigmaReleaseSnapshot({
-  store,
-  targets,
-  ...snapshotOptions
-}) {
-  const imagesByTarget = await Promise.all(
-    targets.map((target) => store.listImages(target))
-  );
-  return createReviewFigmaReleaseSnapshot({
-    ...snapshotOptions,
-    targets,
-    images: dedupeReviewFigmaImages(imagesByTarget.flat())
-  });
-}
-function dedupeReviewFigmaImages(images) {
-  return Array.from(new Map(images.map((image) => [image.id, image])).values());
-}
-function cloneReviewFigmaImage(image) {
-  return {
-    ...image,
-    target: cloneReviewFigmaImageTarget(image.target)
-  };
-}
-function cloneReviewFigmaImageTarget(target) {
-  if (target.type === "figma-node") {
-    return {
-      type: target.type,
-      projectId: target.projectId,
-      fileKey: target.fileKey,
-      nodeId: target.nodeId
-    };
+function getReviewFigmaAssetStorageKeyFromPathname(pathname, assetEndpoint) {
+  try {
+    const storageKey = decodeURIComponent(
+      pathname.slice(assetEndpoint.length + 1)
+    );
+    return isSafeReviewFigmaAssetStorageKey(storageKey) ? storageKey : null;
+  } catch {
+    return null;
   }
-  return {
-    type: target.type,
-    projectId: target.projectId,
-    pageUrl: target.pageUrl,
-    slot: target.slot,
-    viewport: target.viewport ? {
-      label: target.viewport.label,
-      width: target.viewport.width,
-      height: target.viewport.height,
-      scope: target.viewport.scope
-    } : void 0
-  };
 }
-function compareReviewFigmaSnapshotImages(a, b) {
-  return a.projectId.localeCompare(b.projectId) || getReviewFigmaImageTargetKey(a.target).localeCompare(
-    getReviewFigmaImageTargetKey(b.target)
-  ) || a.order - b.order || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
+function isSafeReviewFigmaAssetStorageKey(value) {
+  return /^figma_[a-z0-9_]+\.(webp|png|jpg)$/.test(value);
+}
+function getReviewFigmaAssetExtension(format) {
+  return format === "jpg" ? "jpg" : format;
+}
+function getReviewFigmaAssetMimeType(storageKey) {
+  if (storageKey.endsWith(".jpg")) return "image/jpeg";
+  if (storageKey.endsWith(".webp")) return "image/webp";
+  return "image/png";
 }
 
 // src/figma/parse.ts
@@ -315,106 +250,130 @@ function createReviewFigmaImageApiUrl({
   return url.toString();
 }
 
-// src/vite/figma-asset.ts
-function parseReviewFigmaImageFormat(value) {
-  return value === "webp" || value === "png" || value === "jpg" ? value : void 0;
+// src/figma/image.store.ts
+var DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT = "/__dfwr/figma-images";
+function getReviewFigmaImageTargetKey(target) {
+  return JSON.stringify(normalizeReviewFigmaImageTarget(target));
 }
-function getStoreRenderFormat(renderFormat, imageFormat) {
-  if (renderFormat === "jpg" || renderFormat === "png") return renderFormat;
-  if (imageFormat === "jpg") return "jpg";
-  return "png";
+function getReviewFigmaImageMimeType(format) {
+  if (format === "jpg") return "image/jpeg";
+  if (format === "png") return "image/png";
+  return "image/webp";
 }
-function getReviewFigmaImageFormatFromMimeType(mimeType) {
-  if (mimeType === "image/webp") return "webp";
-  if (mimeType === "image/png") return "png";
-  if (mimeType === "image/jpeg") return "jpg";
-  return null;
-}
-function normalizeImageMimeType(value) {
-  const mimeType = value?.split(";")[0]?.trim().toLowerCase();
-  if (mimeType === "image/jpg") return "image/jpeg";
-  if (mimeType === "image/jpeg" || mimeType === "image/png" || mimeType === "image/webp") {
-    return mimeType;
+function normalizeReviewFigmaImageTarget(target) {
+  if (target.type === "figma-node") {
+    return {
+      type: target.type,
+      projectId: target.projectId,
+      fileKey: target.fileKey,
+      nodeId: target.nodeId
+    };
   }
-  return null;
-}
-function createReviewFigmaAssetStorageKey(id, imageFormat) {
-  return `${id}.${getReviewFigmaAssetExtension(imageFormat)}`;
-}
-function createReviewFigmaAssetUrl(assetEndpoint, storageKey) {
-  return `${assetEndpoint}/${encodeURIComponent(storageKey)}`;
-}
-function getReviewFigmaAssetStorageKeyFromPathname(pathname, assetEndpoint) {
-  try {
-    const storageKey = decodeURIComponent(
-      pathname.slice(assetEndpoint.length + 1)
-    );
-    return isSafeReviewFigmaAssetStorageKey(storageKey) ? storageKey : null;
-  } catch {
-    return null;
-  }
-}
-function isSafeReviewFigmaAssetStorageKey(value) {
-  return /^figma_[a-z0-9_]+\.(webp|png|jpg)$/.test(value);
-}
-function getReviewFigmaAssetExtension(format) {
-  return format === "jpg" ? "jpg" : format;
-}
-function getReviewFigmaAssetMimeType(storageKey) {
-  if (storageKey.endsWith(".jpg")) return "image/jpeg";
-  if (storageKey.endsWith(".webp")) return "image/webp";
-  return "image/png";
+  return {
+    type: target.type,
+    projectId: target.projectId,
+    pageUrl: target.pageUrl,
+    slot: target.slot ?? "",
+    viewport: target.viewport ? {
+      label: target.viewport.label ?? "",
+      width: target.viewport.width ?? null,
+      height: target.viewport.height ?? null,
+      scope: target.viewport.scope ?? ""
+    } : null
+  };
 }
 
-// src/vite.ts
-var VIRTUAL_JSX_DEV_RUNTIME_ID = "\0@designfever/web-review-kit/source-locator/jsx-dev-runtime";
-var REVIEW_SOURCE_ENV_DEFINE_KEYS = [
-  ["__DF_WRK_REVIEW_SOURCE_ROOT__", "VITE_REVIEW_SOURCE_ROOT"],
-  ["__DF_WRK_REVIEW_SOURCE_EDITOR__", "VITE_REVIEW_SOURCE_EDITOR"],
-  [
-    "__DF_WRK_REVIEW_SOURCE_URL_TEMPLATE__",
-    "VITE_REVIEW_SOURCE_URL_TEMPLATE"
-  ]
-];
-var createReviewSourceEnvReplacements = (env = {}) => {
-  return Object.fromEntries(
-    REVIEW_SOURCE_ENV_DEFINE_KEYS.map(([defineKey, envKey]) => [
-      defineKey,
-      JSON.stringify(env[envKey] ?? "")
-    ])
-  );
-};
-var injectReviewSourceEnv = (code, replacements) => {
-  let nextCode = code;
-  for (const [defineKey, value] of Object.entries(replacements)) {
-    nextCode = nextCode.split(`typeof ${defineKey}`).join(`typeof ${value}`).split(`: ${defineKey}`).join(`: ${value}`);
-  }
-  return nextCode === code ? null : nextCode;
-};
-var readReviewFigmaServerToken = (options = {}) => readReviewFigmaToken({
-  token: options.token,
-  env: options.env ?? getServerEnv(),
-  envKey: options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
-  enabled: options.enabled
-});
-var requireReviewFigmaServerToken = (options = {}) => requireReviewFigmaToken({
-  token: options.token,
-  env: options.env ?? getServerEnv(),
-  envKey: options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
-  enabled: options.enabled
-});
-var renderReviewFigmaServerImage = (options) => {
-  const { token, env, envKey, enabled, ...renderOptions } = options;
-  const explicitToken = typeof token === "string" ? token.trim() : token;
-  return renderReviewFigmaImage({
-    ...renderOptions,
-    token: explicitToken || requireReviewFigmaServerToken({
-      env,
-      envKey,
-      enabled
+// src/vite/figma-image-store.server.ts
+var import_promises2 = require("fs/promises");
+var import_node_path2 = __toESM(require("path"), 1);
+
+// src/figma/image.snapshot.ts
+function createReviewFigmaImagesSnapshot(images, options = {}) {
+  const targetKeys = options.targets?.length ? new Set(options.targets.map(getReviewFigmaImageTargetKey)) : null;
+  return images.filter((image) => {
+    if (options.projectId && image.projectId !== options.projectId) {
+      return false;
+    }
+    if (targetKeys && !targetKeys.has(getReviewFigmaImageTargetKey(image.target))) {
+      return false;
+    }
+    return true;
+  }).map(cloneReviewFigmaImage).sort(compareReviewFigmaSnapshotImages);
+}
+function createReviewFigmaReleaseSnapshot({
+  images,
+  projectId,
+  releaseId,
+  label,
+  createdAt,
+  targets
+}) {
+  return {
+    version: 1,
+    projectId,
+    ...releaseId ? { releaseId } : null,
+    ...label ? { label } : null,
+    createdAt: createdAt ?? (/* @__PURE__ */ new Date()).toISOString(),
+    figmaImagesSnapshot: createReviewFigmaImagesSnapshot(images, {
+      projectId,
+      targets
     })
+  };
+}
+async function collectReviewFigmaReleaseSnapshot({
+  store,
+  targets,
+  ...snapshotOptions
+}) {
+  const imagesByTarget = await Promise.all(
+    targets.map((target) => store.listImages(target))
+  );
+  return createReviewFigmaReleaseSnapshot({
+    ...snapshotOptions,
+    targets,
+    images: dedupeReviewFigmaImages(imagesByTarget.flat())
   });
-};
+}
+function dedupeReviewFigmaImages(images) {
+  return Array.from(new Map(images.map((image) => [image.id, image])).values());
+}
+function cloneReviewFigmaImage(image) {
+  return {
+    ...image,
+    target: cloneReviewFigmaImageTarget(image.target)
+  };
+}
+function cloneReviewFigmaImageTarget(target) {
+  if (target.type === "figma-node") {
+    return {
+      type: target.type,
+      projectId: target.projectId,
+      fileKey: target.fileKey,
+      nodeId: target.nodeId
+    };
+  }
+  return {
+    type: target.type,
+    projectId: target.projectId,
+    pageUrl: target.pageUrl,
+    slot: target.slot,
+    viewport: target.viewport ? {
+      label: target.viewport.label,
+      width: target.viewport.width,
+      height: target.viewport.height,
+      scope: target.viewport.scope
+    } : void 0
+  };
+}
+function compareReviewFigmaSnapshotImages(a, b) {
+  return a.projectId.localeCompare(b.projectId) || getReviewFigmaImageTargetKey(a.target).localeCompare(
+    getReviewFigmaImageTargetKey(b.target)
+  ) || a.order - b.order || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
+}
+
+// src/vite/figma-image-store.image.ts
+var import_promises = require("fs/promises");
+var import_node_path = __toESM(require("path"), 1);
 async function readReviewFigmaNodeName({
   apiBaseUrl,
   enabled,
@@ -426,9 +385,10 @@ async function readReviewFigmaNodeName({
   token
 }) {
   const explicitToken = typeof token === "string" ? token.trim() : token;
-  const figmaToken = explicitToken || requireReviewFigmaServerToken({
+  const figmaToken = explicitToken || requireReviewFigmaToken({
+    token: null,
     env,
-    envKey,
+    envKey: envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
     enabled
   });
   const fetchNode = fetchOption ?? globalThis.fetch;
@@ -443,9 +403,7 @@ async function readReviewFigmaNodeName({
   );
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(
-      body?.err || `Figma node lookup failed with ${response.status}`
-    );
+    throw new Error(body?.err || `Figma node lookup failed with ${response.status}`);
   }
   const nodes = body?.nodes;
   const node = nodes?.[nodeId] ?? Object.values(nodes ?? {})[0];
@@ -463,70 +421,297 @@ function createReviewFigmaNodeApiUrl({
   url.searchParams.set("ids", nodeId);
   return url.toString();
 }
-var reviewFigmaImageStore = (options = {}) => {
-  let root = "";
-  let dataFile = "";
-  let assetDir = "";
-  let env = {};
-  const enabled = options.enabled ?? true;
-  const endpoint = normalizeEndpoint(
-    options.endpoint ?? DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT
+async function createReviewFigmaImage({
+  assetDir,
+  assetEndpoint,
+  currentImages,
+  env,
+  input,
+  options
+}) {
+  const ref = parseReviewFigmaNodeRef(input.figmaUrl);
+  if (!ref) {
+    throw new Error("A Figma node copy link or fileKey->nodeId value is required.");
+  }
+  const id = createReviewFigmaImageId();
+  const explicitLabel = normalizeOptionalText(input.label);
+  if (input.asset) {
+    const cachedAsset2 = await cacheReviewFigmaProvidedImageAsset({
+      assetDir,
+      assetEndpoint,
+      id,
+      asset: input.asset,
+      options
+    });
+    const now2 = (/* @__PURE__ */ new Date()).toISOString();
+    const order2 = typeof input.order === "number" && Number.isFinite(input.order) ? input.order : getNextImageOrder(currentImages, input.target);
+    return {
+      id,
+      projectId: input.target.projectId,
+      target: input.target,
+      figmaUrl: input.figmaUrl,
+      fileKey: ref.fileKey,
+      nodeId: ref.nodeId,
+      imageUrl: cachedAsset2.imageUrl,
+      imageFormat: cachedAsset2.imageFormat,
+      mimeType: cachedAsset2.mimeType,
+      label: explicitLabel,
+      order: order2,
+      storageKey: cachedAsset2.storageKey,
+      width: input.asset.width,
+      height: input.asset.height,
+      byteSize: cachedAsset2.byteSize,
+      createdAt: now2,
+      updatedAt: now2
+    };
+  }
+  const nodeLabelPromise = explicitLabel ? Promise.resolve(void 0) : readReviewFigmaNodeName({
+    apiBaseUrl: options.apiBaseUrl,
+    enabled: options.enabled,
+    env,
+    envKey: options.envKey,
+    fetchOption: options.fetch,
+    fileKey: ref.fileKey,
+    nodeId: ref.nodeId,
+    token: options.token
+  }).catch(() => void 0);
+  const targetImageFormat = input.imageFormat ?? options.imageFormat ?? "webp";
+  const renderFormat = getStoreRenderFormat(options.renderFormat, targetImageFormat);
+  const explicitToken = typeof options.token === "string" ? options.token.trim() : options.token;
+  const rendered = await renderReviewFigmaImage({
+    figmaUrl: input.figmaUrl,
+    format: renderFormat,
+    scale: options.renderScale,
+    useAbsoluteBounds: options.useAbsoluteBounds,
+    apiBaseUrl: options.apiBaseUrl,
+    fetch: options.fetch,
+    token: explicitToken || requireReviewFigmaToken({
+      token: null,
+      env,
+      envKey: options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+      enabled: options.enabled
+    })
+  });
+  const cachedAsset = await cacheReviewFigmaImageAsset({
+    assetDir,
+    assetEndpoint,
+    id,
+    imageUrl: rendered.imageUrl,
+    options,
+    renderFormat,
+    targetImageFormat
+  });
+  const imageFormat = cachedAsset?.imageFormat ?? (renderFormat === "jpg" ? "jpg" : "png");
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const order = typeof input.order === "number" && Number.isFinite(input.order) ? input.order : getNextImageOrder(currentImages, input.target);
+  const nodeLabel = await nodeLabelPromise;
+  return {
+    id,
+    projectId: input.target.projectId,
+    target: input.target,
+    figmaUrl: input.figmaUrl,
+    fileKey: rendered.fileKey,
+    nodeId: rendered.nodeId,
+    imageUrl: cachedAsset?.imageUrl ?? rendered.imageUrl,
+    imageFormat,
+    mimeType: cachedAsset?.mimeType ?? getReviewFigmaImageMimeType(imageFormat),
+    label: explicitLabel ?? nodeLabel,
+    order,
+    storageKey: cachedAsset?.storageKey,
+    byteSize: cachedAsset?.byteSize,
+    createdAt: now,
+    updatedAt: now
+  };
+}
+async function cacheReviewFigmaProvidedImageAsset({
+  assetDir,
+  assetEndpoint,
+  id,
+  asset,
+  options
+}) {
+  const decodedAsset = decodeReviewFigmaImageAsset(asset);
+  const storageKey = createReviewFigmaAssetStorageKey(
+    id,
+    decodedAsset.imageFormat
   );
-  const assetEndpoint = normalizeEndpoint(
-    options.assetEndpoint ?? `${endpoint}/assets`
+  await (0, import_promises.mkdir)(assetDir, { recursive: true });
+  await (0, import_promises.writeFile)(import_node_path.default.join(assetDir, storageKey), decodedAsset.data);
+  return {
+    imageUrl: createReviewFigmaAssetUrl(assetEndpoint, storageKey),
+    imageFormat: decodedAsset.imageFormat,
+    mimeType: decodedAsset.mimeType,
+    storageKey,
+    byteSize: decodedAsset.data.byteLength
+  };
+}
+function decodeReviewFigmaImageAsset(asset) {
+  const mimeType = normalizeImageMimeType(asset.mimeType);
+  if (!mimeType) throw new Error("Unsupported Figma image asset MIME type.");
+  const imageFormat = getReviewFigmaImageFormatFromMimeType(mimeType) ?? asset.imageFormat;
+  const match = /^data:([^;,]+);base64,([a-zA-Z0-9+/=\s]+)$/.exec(
+    asset.dataUrl
+  );
+  if (!match) throw new Error("Valid Figma image asset data URL is required.");
+  const dataUrlMimeType = normalizeImageMimeType(match[1]);
+  if (dataUrlMimeType && dataUrlMimeType !== mimeType) {
+    throw new Error("Figma image asset MIME type mismatch.");
+  }
+  return {
+    data: Buffer.from(match[2].replace(/\s/g, ""), "base64"),
+    imageFormat,
+    mimeType
+  };
+}
+async function cacheReviewFigmaImageAsset({
+  assetDir,
+  assetEndpoint,
+  id,
+  imageUrl,
+  options,
+  renderFormat,
+  targetImageFormat
+}) {
+  if (options.cacheAssets === false) return null;
+  const asset = await downloadReviewFigmaImageAsset({
+    fetchOption: options.fetch,
+    imageUrl,
+    renderFormat,
+    targetImageFormat,
+    transformAsset: options.transformAsset
+  });
+  const storageKey = createReviewFigmaAssetStorageKey(id, asset.imageFormat);
+  await (0, import_promises.mkdir)(assetDir, { recursive: true });
+  await (0, import_promises.writeFile)(import_node_path.default.join(assetDir, storageKey), asset.data);
+  return {
+    imageUrl: createReviewFigmaAssetUrl(assetEndpoint, storageKey),
+    imageFormat: asset.imageFormat,
+    mimeType: asset.mimeType,
+    storageKey,
+    byteSize: asset.data.byteLength
+  };
+}
+async function downloadReviewFigmaImageAsset({
+  fetchOption,
+  imageUrl,
+  renderFormat,
+  targetImageFormat,
+  transformAsset
+}) {
+  const fetchImage = fetchOption ?? globalThis.fetch;
+  if (!fetchImage) throw new Error("Figma image caching requires fetch.");
+  const response = await fetchImage(imageUrl);
+  if (!response.ok) {
+    throw new Error(`Figma image download failed with ${response.status}`);
+  }
+  const sourceMimeType = normalizeImageMimeType(response.headers.get("content-type")) ?? getReviewFigmaImageMimeType(renderFormat === "jpg" ? "jpg" : "png");
+  const sourceImageFormat = getReviewFigmaImageFormatFromMimeType(sourceMimeType) ?? (renderFormat === "jpg" ? "jpg" : "png");
+  const sourceData = new Uint8Array(await response.arrayBuffer());
+  const transformed = transformAsset ? await transformAsset({
+    data: sourceData,
+    imageFormat: sourceImageFormat,
+    mimeType: sourceMimeType,
+    targetFormat: targetImageFormat
+  }) : null;
+  const imageFormat = transformed?.imageFormat ?? sourceImageFormat;
+  const mimeType = normalizeImageMimeType(transformed?.mimeType) ?? getReviewFigmaImageMimeType(imageFormat);
+  const data = createBufferFromImageData(transformed?.data ?? sourceData);
+  return { data, imageFormat, mimeType };
+}
+async function deleteReviewFigmaImageAsset(assetDir, storageKey) {
+  if (!storageKey) return;
+  if (!isSafeReviewFigmaAssetStorageKey(storageKey)) return;
+  await (0, import_promises.rm)(import_node_path.default.join(assetDir, storageKey), { force: true }).catch(() => null);
+}
+function createBufferFromImageData(data) {
+  return data instanceof ArrayBuffer ? Buffer.from(new Uint8Array(data)) : Buffer.from(data);
+}
+function listImagesForTarget(images, target) {
+  const targetKey = getReviewFigmaImageTargetKey(target);
+  return images.filter((image) => getReviewFigmaImageTargetKey(image.target) === targetKey).sort(compareReviewFigmaImages);
+}
+function reorderReviewFigmaImages(images, input) {
+  const targetKey = getReviewFigmaImageTargetKey(input.target);
+  const orderById = new Map(input.imageIds.map((id, index) => [id, index]));
+  const targetImages = listImagesForTarget(images, input.target);
+  const nextTargetImages = targetImages.map((image) => ({
+    ...image,
+    order: orderById.get(image.id) ?? input.imageIds.length + image.order,
+    updatedAt: orderById.has(image.id) ? (/* @__PURE__ */ new Date()).toISOString() : image.updatedAt
+  })).sort(compareReviewFigmaImages);
+  const nextTargetImageById = new Map(
+    nextTargetImages.map((image, index) => [image.id, { ...image, order: index }])
+  );
+  const allImages = images.map(
+    (image) => getReviewFigmaImageTargetKey(image.target) === targetKey ? nextTargetImageById.get(image.id) ?? image : image
   );
   return {
-    name: "df-web-review-kit-figma-image-store",
-    apply: "serve",
-    configResolved(config) {
-      root = config.root;
-      dataFile = import_node_path.default.resolve(
-        root,
-        options.dataFile ?? ".df-review/figma-images.json"
-      );
-      assetDir = options.assetDir ? import_node_path.default.resolve(root, options.assetDir) : import_node_path.default.join(import_node_path.default.dirname(dataFile), "figma-assets");
-      env = {
-        ...(0, import_vite.loadEnv)(config.mode, config.envDir, ""),
-        ...getServerEnv(),
-        ...options.env ?? {}
-      };
-    },
-    configureServer(server) {
-      if (!enabled) return;
-      server.middlewares.use(async (req, res, next) => {
-        const requestUrl = new URL(req.url ?? "/", "http://localhost");
-        const pathname = requestUrl.pathname;
-        if (pathname.startsWith(`${assetEndpoint}/`)) {
-          await sendReviewFigmaAsset(res, assetDir, assetEndpoint, pathname);
-          return;
-        }
-        if (pathname !== endpoint && !pathname.startsWith(`${endpoint}/`)) {
-          next();
-          return;
-        }
-        try {
-          const response = await handleReviewFigmaImageStoreRequest({
-            dataFile,
-            assetDir,
-            assetEndpoint,
-            endpoint,
-            options,
-            env,
-            pathname,
-            requestUrl,
-            method: req.method ?? "GET",
-            body: await readJsonRequestBody(req)
-          });
-          sendJson(res, response.status, response.body);
-        } catch (error) {
-          sendJson(res, 500, {
-            error: error instanceof Error ? error.message : "Figma image store request failed."
-          });
-        }
-      });
-    }
+    allImages,
+    targetImages: listImagesForTarget(allImages, input.target)
   };
-};
+}
+function updateReviewFigmaImage(images, id, patch) {
+  const index = images.findIndex((image) => image.id === id);
+  if (index < 0) return null;
+  const nextImage = {
+    ...images[index],
+    label: patch.label === void 0 ? images[index].label : normalizeOptionalText(patch.label),
+    order: typeof patch.order === "number" && Number.isFinite(patch.order) ? patch.order : images[index].order,
+    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  const nextImages = [...images];
+  nextImages[index] = nextImage;
+  return { image: nextImage, images: nextImages };
+}
+async function readReviewFigmaImageStoreFile(dataFile) {
+  try {
+    const raw = await (0, import_promises.readFile)(dataFile, "utf8");
+    const parsed = JSON.parse(raw);
+    return {
+      version: 1,
+      images: Array.isArray(parsed.images) ? parsed.images.flatMap((image) => isReviewFigmaImage(image) ? [image] : []) : []
+    };
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") {
+      return { version: 1, images: [] };
+    }
+    throw error;
+  }
+}
+async function writeReviewFigmaImageStoreFile(dataFile, data) {
+  await (0, import_promises.mkdir)(import_node_path.default.dirname(dataFile), { recursive: true });
+  await (0, import_promises.writeFile)(
+    dataFile,
+    `${JSON.stringify({ version: 1, images: data.images }, null, 2)}
+`,
+    "utf8"
+  );
+}
+function getNextImageOrder(images, target) {
+  const targetImages = listImagesForTarget(images, target);
+  return targetImages.length ? Math.max(...targetImages.map((image) => image.order)) + 1 : 0;
+}
+function compareReviewFigmaImages(a, b) {
+  return a.order - b.order || a.createdAt.localeCompare(b.createdAt);
+}
+function createReviewFigmaImageId() {
+  return `figma_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+function isReviewFigmaImage(value) {
+  if (!value || typeof value !== "object") return false;
+  const image = value;
+  return typeof image.id === "string" && typeof image.projectId === "string" && typeof image.figmaUrl === "string" && typeof image.fileKey === "string" && typeof image.nodeId === "string" && typeof image.imageUrl === "string" && typeof image.order === "number" && typeof image.createdAt === "string" && typeof image.updatedAt === "string";
+}
+function isNodeError(error) {
+  if (!error || typeof error !== "object") return false;
+  return "code" in error;
+}
+function normalizeOptionalText(value) {
+  if (typeof value !== "string") return void 0;
+  return value.trim() || void 0;
+}
+
+// src/vite/figma-image-store.server.ts
 async function handleReviewFigmaImageStoreRequest({
   dataFile,
   assetDir,
@@ -546,9 +731,7 @@ async function handleReviewFigmaImageStoreRequest({
     if (options.projectId && input.projectId !== options.projectId) {
       return jsonError(403, "snapshot project is not allowed.");
     }
-    if (input.targets.some(
-      (target) => !isAllowedProjectTarget(target, options.projectId)
-    )) {
+    if (input.targets.some((target) => !isAllowedProjectTarget(target, options.projectId))) {
       return jsonError(403, "snapshot target project is not allowed.");
     }
     const data = await readReviewFigmaImageStoreFile(dataFile);
@@ -570,10 +753,7 @@ async function handleReviewFigmaImageStoreRequest({
       return { status: 200, body: [] };
     }
     const data = await readReviewFigmaImageStoreFile(dataFile);
-    return {
-      status: 200,
-      body: listImagesForTarget(data.images, target)
-    };
+    return { status: 200, body: listImagesForTarget(data.images, target) };
   }
   if (method === "POST" && pathname === endpoint) {
     const input = parseAddImageInput(body);
@@ -634,213 +814,6 @@ async function handleReviewFigmaImageStoreRequest({
   }
   return jsonError(405, "method not allowed.");
 }
-async function createReviewFigmaImage({
-  assetDir,
-  assetEndpoint,
-  currentImages,
-  env,
-  input,
-  options
-}) {
-  const ref = parseReviewFigmaNodeRef(input.figmaUrl);
-  if (!ref) {
-    throw new Error("A Figma node copy link or fileKey->nodeId value is required.");
-  }
-  const id = createReviewFigmaImageId();
-  const explicitLabel = normalizeOptionalText(input.label);
-  const nodeLabelPromise = explicitLabel ? Promise.resolve(void 0) : readReviewFigmaNodeName({
-    apiBaseUrl: options.apiBaseUrl,
-    enabled: options.enabled,
-    env,
-    envKey: options.envKey,
-    fetchOption: options.fetch,
-    fileKey: ref.fileKey,
-    nodeId: ref.nodeId,
-    token: options.token
-  }).catch(() => void 0);
-  const targetImageFormat = input.imageFormat ?? options.imageFormat ?? "webp";
-  const renderFormat = getStoreRenderFormat(
-    options.renderFormat,
-    targetImageFormat
-  );
-  const rendered = await renderReviewFigmaServerImage({
-    figmaUrl: input.figmaUrl,
-    token: options.token,
-    env,
-    envKey: options.envKey,
-    enabled: options.enabled,
-    format: renderFormat,
-    scale: options.renderScale,
-    useAbsoluteBounds: options.useAbsoluteBounds,
-    apiBaseUrl: options.apiBaseUrl,
-    fetch: options.fetch
-  });
-  const cachedAsset = await cacheReviewFigmaImageAsset({
-    assetDir,
-    assetEndpoint,
-    id,
-    imageUrl: rendered.imageUrl,
-    options,
-    renderFormat,
-    targetImageFormat
-  });
-  const imageFormat = cachedAsset?.imageFormat ?? (renderFormat === "jpg" ? "jpg" : "png");
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  const order = typeof input.order === "number" && Number.isFinite(input.order) ? input.order : getNextImageOrder(currentImages, input.target);
-  const nodeLabel = await nodeLabelPromise;
-  return {
-    id,
-    projectId: input.target.projectId,
-    target: input.target,
-    figmaUrl: input.figmaUrl,
-    fileKey: rendered.fileKey,
-    nodeId: rendered.nodeId,
-    imageUrl: cachedAsset?.imageUrl ?? rendered.imageUrl,
-    imageFormat,
-    mimeType: cachedAsset?.mimeType ?? getReviewFigmaImageMimeType(imageFormat),
-    label: explicitLabel ?? nodeLabel,
-    order,
-    storageKey: cachedAsset?.storageKey,
-    byteSize: cachedAsset?.byteSize,
-    createdAt: now,
-    updatedAt: now
-  };
-}
-async function cacheReviewFigmaImageAsset({
-  assetDir,
-  assetEndpoint,
-  id,
-  imageUrl,
-  options,
-  renderFormat,
-  targetImageFormat
-}) {
-  if (options.cacheAssets === false) return null;
-  const asset = await downloadReviewFigmaImageAsset({
-    fetchOption: options.fetch,
-    imageUrl,
-    renderFormat,
-    targetImageFormat,
-    transformAsset: options.transformAsset
-  });
-  const storageKey = createReviewFigmaAssetStorageKey(id, asset.imageFormat);
-  await (0, import_promises.mkdir)(assetDir, { recursive: true });
-  await (0, import_promises.writeFile)(import_node_path.default.join(assetDir, storageKey), asset.data);
-  return {
-    imageUrl: createReviewFigmaAssetUrl(assetEndpoint, storageKey),
-    imageFormat: asset.imageFormat,
-    mimeType: asset.mimeType,
-    storageKey,
-    byteSize: asset.data.byteLength
-  };
-}
-async function downloadReviewFigmaImageAsset({
-  fetchOption,
-  imageUrl,
-  renderFormat,
-  targetImageFormat,
-  transformAsset
-}) {
-  const fetchImage = fetchOption ?? globalThis.fetch;
-  if (!fetchImage) throw new Error("Figma image caching requires fetch.");
-  const response = await fetchImage(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Figma image download failed with ${response.status}`);
-  }
-  const sourceMimeType = normalizeImageMimeType(response.headers.get("content-type")) ?? getReviewFigmaImageMimeType(renderFormat === "jpg" ? "jpg" : "png");
-  const sourceImageFormat = getReviewFigmaImageFormatFromMimeType(sourceMimeType) ?? (renderFormat === "jpg" ? "jpg" : "png");
-  const sourceData = new Uint8Array(await response.arrayBuffer());
-  const transformed = transformAsset ? await transformAsset({
-    data: sourceData,
-    imageFormat: sourceImageFormat,
-    mimeType: sourceMimeType,
-    targetFormat: targetImageFormat
-  }) : null;
-  const imageFormat = transformed?.imageFormat ?? sourceImageFormat;
-  const mimeType = normalizeImageMimeType(transformed?.mimeType) ?? getReviewFigmaImageMimeType(imageFormat);
-  const data = createBufferFromImageData(transformed?.data ?? sourceData);
-  return {
-    data,
-    imageFormat,
-    mimeType
-  };
-}
-async function deleteReviewFigmaImageAsset(assetDir, storageKey) {
-  if (!storageKey || !isSafeReviewFigmaAssetStorageKey(storageKey)) return;
-  await (0, import_promises.rm)(import_node_path.default.join(assetDir, storageKey), { force: true }).catch(() => null);
-}
-function createBufferFromImageData(data) {
-  return data instanceof ArrayBuffer ? Buffer.from(new Uint8Array(data)) : Buffer.from(data);
-}
-function listImagesForTarget(images, target) {
-  const targetKey = getReviewFigmaImageTargetKey(target);
-  return images.filter((image) => getReviewFigmaImageTargetKey(image.target) === targetKey).sort(compareReviewFigmaImages);
-}
-function reorderReviewFigmaImages(images, input) {
-  const targetKey = getReviewFigmaImageTargetKey(input.target);
-  const orderById = new Map(input.imageIds.map((id, index) => [id, index]));
-  const targetImages = listImagesForTarget(images, input.target);
-  const nextTargetImages = targetImages.map((image) => ({
-    ...image,
-    order: orderById.get(image.id) ?? input.imageIds.length + image.order,
-    updatedAt: orderById.has(image.id) ? (/* @__PURE__ */ new Date()).toISOString() : image.updatedAt
-  })).sort(compareReviewFigmaImages);
-  const nextTargetImageById = new Map(
-    nextTargetImages.map((image, index) => [
-      image.id,
-      { ...image, order: index }
-    ])
-  );
-  const allImages = images.map(
-    (image) => getReviewFigmaImageTargetKey(image.target) === targetKey ? nextTargetImageById.get(image.id) ?? image : image
-  );
-  return {
-    allImages,
-    targetImages: listImagesForTarget(allImages, input.target)
-  };
-}
-function updateReviewFigmaImage(images, id, patch) {
-  const index = images.findIndex((image) => image.id === id);
-  if (index < 0) return null;
-  const nextImage = {
-    ...images[index],
-    label: patch.label === void 0 ? images[index].label : normalizeOptionalText(patch.label),
-    order: typeof patch.order === "number" && Number.isFinite(patch.order) ? patch.order : images[index].order,
-    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-  };
-  const nextImages = [...images];
-  nextImages[index] = nextImage;
-  return {
-    image: nextImage,
-    images: nextImages
-  };
-}
-async function readReviewFigmaImageStoreFile(dataFile) {
-  try {
-    const raw = await (0, import_promises.readFile)(dataFile, "utf8");
-    const parsed = JSON.parse(raw);
-    return {
-      version: 1,
-      images: Array.isArray(parsed.images) ? parsed.images.flatMap(
-        (image) => isReviewFigmaImage(image) ? [image] : []
-      ) : []
-    };
-  } catch (error) {
-    if (isNodeError(error) && error.code === "ENOENT") {
-      return { version: 1, images: [] };
-    }
-    throw error;
-  }
-}
-async function writeReviewFigmaImageStoreFile(dataFile, data) {
-  await (0, import_promises.mkdir)(import_node_path.default.dirname(dataFile), { recursive: true });
-  await (0, import_promises.writeFile)(
-    dataFile,
-    `${JSON.stringify({ version: 1, images: data.images }, null, 2)}
-`,
-    "utf8"
-  );
-}
 async function readJsonRequestBody(req) {
   if (req.method === "GET" || req.method === "DELETE") return null;
   const chunks = [];
@@ -861,16 +834,13 @@ function sendJson(res, status, body) {
   res.end(JSON.stringify(body ?? null));
 }
 async function sendReviewFigmaAsset(res, assetDir, assetEndpoint, pathname) {
-  const storageKey = getReviewFigmaAssetStorageKeyFromPathname(
-    pathname,
-    assetEndpoint
-  );
+  const storageKey = getReviewFigmaAssetStorageKeyFromPathname(pathname, assetEndpoint);
   if (!storageKey) {
     sendPlainText(res, 400, "Invalid Figma image asset path.");
     return;
   }
   try {
-    const data = await (0, import_promises.readFile)(import_node_path.default.join(assetDir, storageKey));
+    const data = await (0, import_promises2.readFile)(import_node_path2.default.join(assetDir, storageKey));
     res.statusCode = 200;
     res.setHeader("Content-Type", getReviewFigmaAssetMimeType(storageKey));
     res.setHeader("Cache-Control", "private, max-age=31536000, immutable");
@@ -910,7 +880,24 @@ function parseAddImageInput(value) {
     figmaUrl: input.figmaUrl,
     label: typeof input.label === "string" ? input.label : void 0,
     order: typeof input.order === "number" ? input.order : void 0,
-    imageFormat: parseReviewFigmaImageFormat(input.imageFormat)
+    imageFormat: parseReviewFigmaImageFormat(input.imageFormat),
+    asset: parseAddImageAssetInput(input.asset)
+  };
+}
+function parseAddImageAssetInput(value) {
+  if (!value || typeof value !== "object") return void 0;
+  const input = value;
+  const imageFormat = parseReviewFigmaImageFormat(input.imageFormat);
+  if (!imageFormat || typeof input.dataUrl !== "string" || typeof input.mimeType !== "string") {
+    return void 0;
+  }
+  return {
+    dataUrl: input.dataUrl,
+    imageFormat,
+    mimeType: input.mimeType,
+    byteSize: typeof input.byteSize === "number" ? input.byteSize : void 0,
+    width: typeof input.width === "number" ? input.width : void 0,
+    height: typeof input.height === "number" ? input.height : void 0
   };
 }
 function parseUpdateImageInput(value) {
@@ -993,12 +980,9 @@ function parseReviewFigmaImageTarget(value) {
   }
   return null;
 }
-function getNextImageOrder(images, target) {
-  const targetImages = listImagesForTarget(images, target);
-  return targetImages.length ? Math.max(...targetImages.map((image) => image.order)) + 1 : 0;
-}
-function compareReviewFigmaImages(a, b) {
-  return a.order - b.order || a.createdAt.localeCompare(b.createdAt);
+function normalizeEndpoint(endpoint) {
+  const normalized = endpoint.trim().replace(/\/+$/, "");
+  return normalized.startsWith("/") ? normalized : `/${normalized}`;
 }
 function getEndpointItemId(pathname, endpoint) {
   if (!pathname.startsWith(`${endpoint}/`)) return null;
@@ -1006,32 +990,128 @@ function getEndpointItemId(pathname, endpoint) {
   if (!value || value.includes("/")) return null;
   return decodeURIComponent(value);
 }
-function normalizeEndpoint(endpoint) {
-  const normalized = endpoint.trim().replace(/\/+$/, "");
-  return normalized.startsWith("/") ? normalized : `/${normalized}`;
-}
-function normalizeOptionalText(value) {
-  if (typeof value !== "string") return void 0;
-  return value.trim() || void 0;
-}
-function createReviewFigmaImageId() {
-  return `figma_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
-}
 function isAllowedProjectTarget(target, projectId) {
   return !projectId || target.projectId === projectId;
-}
-function isReviewFigmaImage(value) {
-  if (!value || typeof value !== "object") return false;
-  const image = value;
-  return typeof image.id === "string" && typeof image.projectId === "string" && parseReviewFigmaImageTarget(image.target) !== null && typeof image.figmaUrl === "string" && typeof image.fileKey === "string" && typeof image.nodeId === "string" && typeof image.imageUrl === "string" && typeof image.order === "number" && typeof image.createdAt === "string" && typeof image.updatedAt === "string";
 }
 function jsonError(status, error) {
   return { status, body: { error } };
 }
-function isNodeError(error) {
-  if (!error || typeof error !== "object") return false;
-  return "code" in error;
+
+// src/vite/figma-image-store.ts
+var readReviewFigmaServerToken = (options = {}) => readReviewFigmaToken({
+  token: options.token,
+  env: options.env ?? getServerEnv(),
+  envKey: options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+  enabled: options.enabled
+});
+var requireReviewFigmaServerToken = (options = {}) => requireReviewFigmaToken({
+  token: options.token,
+  env: options.env ?? getServerEnv(),
+  envKey: options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+  enabled: options.enabled
+});
+var renderReviewFigmaServerImage = (options) => {
+  const { token, env, envKey, enabled, ...renderOptions } = options;
+  const explicitToken = typeof token === "string" ? token.trim() : token;
+  return renderReviewFigmaImage({
+    ...renderOptions,
+    token: explicitToken || requireReviewFigmaServerToken({ env, envKey, enabled })
+  });
+};
+var reviewFigmaImageStore = (options = {}) => {
+  let root = "";
+  let dataFile = "";
+  let assetDir = "";
+  let env = {};
+  const enabled = options.enabled ?? true;
+  const endpoint = normalizeEndpoint(
+    options.endpoint ?? DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT
+  );
+  const assetEndpoint = normalizeEndpoint(
+    options.assetEndpoint ?? `${endpoint}/assets`
+  );
+  return {
+    name: "df-web-review-kit-figma-image-store",
+    apply: "serve",
+    configResolved(config) {
+      root = config.root;
+      dataFile = import_node_path3.default.resolve(
+        root,
+        options.dataFile ?? ".df-review/figma-images.json"
+      );
+      assetDir = options.assetDir ? import_node_path3.default.resolve(root, options.assetDir) : import_node_path3.default.join(import_node_path3.default.dirname(dataFile), "figma-assets");
+      env = {
+        ...(0, import_vite.loadEnv)(config.mode, config.envDir, ""),
+        ...getServerEnv(),
+        ...options.env ?? {}
+      };
+    },
+    configureServer(server) {
+      if (!enabled) return;
+      server.middlewares.use(async (req, res, next) => {
+        const requestUrl = new URL(req.url ?? "/", "http://localhost");
+        const pathname = requestUrl.pathname;
+        if (pathname.startsWith(`${assetEndpoint}/`)) {
+          await sendReviewFigmaAsset(res, assetDir, assetEndpoint, pathname);
+          return;
+        }
+        if (pathname !== endpoint && !pathname.startsWith(`${endpoint}/`)) {
+          next();
+          return;
+        }
+        try {
+          const response = await handleReviewFigmaImageStoreRequest({
+            dataFile,
+            assetDir,
+            assetEndpoint,
+            endpoint,
+            options,
+            env,
+            pathname,
+            requestUrl,
+            method: req.method ?? "GET",
+            body: await readJsonRequestBody(req)
+          });
+          sendJson(res, response.status, response.body);
+        } catch (error) {
+          sendJson(res, 500, {
+            error: error instanceof Error ? error.message : "Figma image store request failed."
+          });
+        }
+      });
+    }
+  };
+};
+function getServerEnv() {
+  const runtime = globalThis;
+  return runtime.process?.env ?? {};
 }
+
+// src/vite.ts
+var VIRTUAL_JSX_DEV_RUNTIME_ID = "\0@designfever/web-review-kit/source-locator/jsx-dev-runtime";
+var REVIEW_SOURCE_ENV_DEFINE_KEYS = [
+  ["__DF_WRK_REVIEW_SOURCE_ROOT__", "VITE_REVIEW_SOURCE_ROOT"],
+  ["__DF_WRK_REVIEW_SOURCE_EDITOR__", "VITE_REVIEW_SOURCE_EDITOR"],
+  [
+    "__DF_WRK_REVIEW_SOURCE_URL_TEMPLATE__",
+    "VITE_REVIEW_SOURCE_URL_TEMPLATE"
+  ]
+];
+var createReviewSourceEnvReplacements = (env = {}) => {
+  return Object.fromEntries(
+    REVIEW_SOURCE_ENV_DEFINE_KEYS.map(([defineKey, envKey]) => [
+      defineKey,
+      JSON.stringify(env[envKey] ?? "")
+    ])
+  );
+};
+var injectReviewSourceEnv = (code, replacements) => {
+  let nextCode = code;
+  for (const [defineKey, value] of Object.entries(replacements)) {
+    nextCode = nextCode.split(`typeof ${defineKey}`).join(`typeof ${value}`).split(`: ${defineKey}`).join(`: ${value}`);
+  }
+  return nextCode === code ? null : nextCode;
+};
 var reviewSourceLocator = (options = {}) => {
   let runtimeOptions = createRuntimeOptions(options);
   let sourceEnvReplacements = createReviewSourceEnvReplacements();
@@ -1145,10 +1225,6 @@ function createRuntimeMatcher(pattern) {
 }
 function normalizePath(value) {
   return value.replace(/\\/g, "/").replace(/\/+$/, "");
-}
-function getServerEnv() {
-  const runtime = globalThis;
-  return runtime.process?.env ?? {};
 }
 function createJsxDevRuntime(options) {
   return `

@@ -75,6 +75,7 @@ export type {
   AddReviewFigmaImageInput,
   ReorderReviewFigmaImagesInput,
   ReviewFigmaImage,
+  ReviewFigmaImageAssetInput,
   ReviewFigmaImageFormat,
   ReviewFigmaImageStore,
   ReviewFigmaImageTarget,
@@ -88,7 +89,10 @@ export type {
   ReviewFigmaTokenOptions,
 } from './figma/token';
 export type { ReviewFigmaNodeRef } from './figma/parse';
-export type { ReviewFigmaImageStoreClientOptions } from './figma/image.store';
+export type {
+  ReviewFigmaImageClientRenderOptions,
+  ReviewFigmaImageStoreClientOptions,
+} from './figma/image.store';
 export type {
   CollectReviewFigmaReleaseSnapshotOptions,
   CreateReviewFigmaImagesSnapshotOptions,

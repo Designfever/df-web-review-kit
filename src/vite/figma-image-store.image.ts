@@ -2,6 +2,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type {
   ReviewFigmaImage,
+  ReviewFigmaImageAssetInput,
   ReviewFigmaImageFormat,
   ReviewFigmaImageTarget,
   AddReviewFigmaImageInput,
@@ -131,6 +132,41 @@ export async function createReviewFigmaImage({
 
   const id = createReviewFigmaImageId();
   const explicitLabel = normalizeOptionalText(input.label);
+  if (input.asset) {
+    const cachedAsset = await cacheReviewFigmaProvidedImageAsset({
+      assetDir,
+      assetEndpoint,
+      id,
+      asset: input.asset,
+      options,
+    });
+    const now = new Date().toISOString();
+    const order =
+      typeof input.order === 'number' && Number.isFinite(input.order)
+        ? input.order
+        : getNextImageOrder(currentImages, input.target);
+
+    return {
+      id,
+      projectId: input.target.projectId,
+      target: input.target,
+      figmaUrl: input.figmaUrl,
+      fileKey: ref.fileKey,
+      nodeId: ref.nodeId,
+      imageUrl: cachedAsset.imageUrl,
+      imageFormat: cachedAsset.imageFormat,
+      mimeType: cachedAsset.mimeType,
+      label: explicitLabel,
+      order,
+      storageKey: cachedAsset.storageKey,
+      width: input.asset.width,
+      height: input.asset.height,
+      byteSize: cachedAsset.byteSize,
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+
   const nodeLabelPromise = explicitLabel
     ? Promise.resolve(undefined)
     : readReviewFigmaNodeName({
@@ -206,6 +242,60 @@ type CachedReviewFigmaImageAsset = {
   storageKey: string;
   byteSize: number;
 };
+
+async function cacheReviewFigmaProvidedImageAsset({
+  assetDir,
+  assetEndpoint,
+  id,
+  asset,
+  options,
+}: {
+  assetDir: string;
+  assetEndpoint: string;
+  id: string;
+  asset: ReviewFigmaImageAssetInput;
+  options: ReviewFigmaImageStorePluginOptions;
+}): Promise<CachedReviewFigmaImageAsset> {
+  const decodedAsset = decodeReviewFigmaImageAsset(asset);
+  const storageKey = createReviewFigmaAssetStorageKey(
+    id,
+    decodedAsset.imageFormat
+  );
+
+  await mkdir(assetDir, { recursive: true });
+  await writeFile(path.join(assetDir, storageKey), decodedAsset.data);
+
+  return {
+    imageUrl: createReviewFigmaAssetUrl(assetEndpoint, storageKey),
+    imageFormat: decodedAsset.imageFormat,
+    mimeType: decodedAsset.mimeType,
+    storageKey,
+    byteSize: decodedAsset.data.byteLength,
+  };
+}
+
+function decodeReviewFigmaImageAsset(asset: ReviewFigmaImageAssetInput) {
+  const mimeType = normalizeImageMimeType(asset.mimeType);
+  if (!mimeType) throw new Error('Unsupported Figma image asset MIME type.');
+
+  const imageFormat =
+    getReviewFigmaImageFormatFromMimeType(mimeType) ?? asset.imageFormat;
+  const match = /^data:([^;,]+);base64,([a-zA-Z0-9+/=\s]+)$/.exec(
+    asset.dataUrl
+  );
+  if (!match) throw new Error('Valid Figma image asset data URL is required.');
+
+  const dataUrlMimeType = normalizeImageMimeType(match[1]);
+  if (dataUrlMimeType && dataUrlMimeType !== mimeType) {
+    throw new Error('Figma image asset MIME type mismatch.');
+  }
+
+  return {
+    data: Buffer.from(match[2].replace(/\s/g, ''), 'base64'),
+    imageFormat,
+    mimeType,
+  };
+}
 
 async function cacheReviewFigmaImageAsset({
   assetDir,
@@ -296,7 +386,8 @@ export async function deleteReviewFigmaImageAsset(
   assetDir: string,
   storageKey: string | undefined
 ) {
-  if (!storageKey || !isSafeReviewFigmaAssetStorageKey(storageKey)) return;
+  if (!storageKey) return;
+  if (!isSafeReviewFigmaAssetStorageKey(storageKey)) return;
   await rm(path.join(assetDir, storageKey), { force: true }).catch(() => null);
 }
 

@@ -10,7 +10,7 @@ import {
   getReviewViewportScope,
   localAdapter,
   normalizeReviewItemStatus
-} from "./chunk-OPGKWA5E.js";
+} from "./chunk-RL6NLI7N.js";
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
   DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
@@ -30,7 +30,7 @@ import {
   readReviewFigmaToken,
   requireReviewFigmaNodeRef,
   requireReviewFigmaToken
-} from "./chunk-56A6PF63.js";
+} from "./chunk-AB5B6O77.js";
 
 // src/adapters/supabase.ts
 var DEFAULT_SUPABASE_REVIEW_TABLE = "review_items";

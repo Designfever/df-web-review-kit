@@ -266,14 +266,25 @@ export const reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-row {
+    position: relative;
     min-height: 42px;
     border: 0;
-    border-bottom: 1px solid var(--df-review-line-soft);
     border-radius: 0;
     padding: 0 10px;
     background: transparent;
     color: var(--df-review-text);
     text-align: left;
+  }
+
+  .df-review-sitemap-row:not(.is-summary)::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    bottom: 0;
+    left: calc(10px + var(--df-review-sitemap-depth, 0) * 18px + 28px);
+    height: 1px;
+    background: var(--df-review-line-soft);
+    pointer-events: none;
   }
 
   .df-review-sitemap-row.is-summary {
@@ -338,10 +349,10 @@ export const reviewShellSitemapStyle = `
     background-image: repeating-linear-gradient(
       to right,
       transparent 0,
-      transparent 16px,
-      var(--df-review-line-soft) 16px,
-      var(--df-review-line-soft) 17px,
-      transparent 17px,
+      transparent 11px,
+      var(--df-review-line-soft) 11px,
+      var(--df-review-line-soft) 12px,
+      transparent 12px,
       transparent 18px
     );
     opacity: 0.9;

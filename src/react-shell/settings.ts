@@ -40,7 +40,7 @@ export const normalizeReviewTheme = (value: string | null): ReviewShellTheme =>
     ? value
     : DEFAULT_REVIEW_THEME;
 
-export const normalizeReviewSidePanel = (
+const normalizeReviewSidePanel = (
   value: string | null
 ): StoredReviewSidePanel | null => {
   if (value === 'qa' || value === 'source' || value === 'figma-images') {

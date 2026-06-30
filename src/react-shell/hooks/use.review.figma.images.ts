@@ -10,9 +10,9 @@ import {
 import type { ReviewShellViewportPreset } from '../types';
 import {
   createReviewFigmaRouteTarget,
-  useReviewFigmaImageOverlayController,
   useReviewFigmaImageStoreController,
 } from '../figma/image.controller';
+import { useReviewFigmaImageOverlayController } from '../figma/image.overlay.controller';
 
 interface UseReviewFigmaImagesOptions {
   imageFormat?: ReviewFigmaImageFormat;

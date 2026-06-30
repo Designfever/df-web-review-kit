@@ -1,9 +1,4 @@
-import type {
-  ReviewShellFigmaImagesOptions,
-  ReviewShellViewportPreset,
-} from './types';
-import { createReviewFigmaFrameUrl } from '../figma/parse';
-import { getViewportPresetKind } from './viewport';
+import type { ReviewShellFigmaImagesOptions } from './types';
 
 export type ReviewFigmaFrameConfig = {
   desktopNodeId?: string;
@@ -19,12 +14,6 @@ export function getReviewFigmaImageStore(
 ) {
   if (!options || options.enabled === false) return null;
   return options.store ?? null;
-}
-
-export function isReviewFigmaImageManagementEnabled(
-  options: ReviewShellFigmaImagesOptions | null | undefined
-) {
-  return Boolean(getReviewFigmaImageStore(options));
 }
 
 export function getTargetFigmaFrameConfig(
@@ -46,19 +35,6 @@ export function getTargetFigmaFrameConfig(
   } catch {
     return null;
   }
-}
-
-export function getFigmaFrameUrl(
-  config: ReviewFigmaFrameConfig | null | undefined,
-  preset: ReviewShellViewportPreset
-) {
-  if (!config) return null;
-
-  const kind = getViewportPresetKind(preset);
-  const value =
-    kind === 'mobile' ? config.mobileNodeId : config.desktopNodeId;
-
-  return value ? createReviewFigmaFrameUrl(value) : null;
 }
 
 function normalizeFigmaNodeValue(value: unknown) {

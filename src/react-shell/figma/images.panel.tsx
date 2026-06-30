@@ -17,7 +17,7 @@ import {
 import type { ReviewFigmaImage } from '../../figma/image.types';
 import type {
   ReviewFigmaImageOverlayItemState,
-} from './image.controller';
+} from './image.overlay.controller';
 import {
   DEFAULT_FIGMA_IMAGE_LAYER_STATE,
   formatFigmaImageDate,

@@ -6,13 +6,11 @@ import {
   createReviewFigmaReleaseSnapshot,
   getReviewFigmaImageMimeType,
   getReviewFigmaImageTargetKey,
-  readReviewFigmaToken,
-  requireReviewFigmaToken
-} from "./chunk-JTDOE6QO.js";
-import {
   parseReviewFigmaNodeRef,
-  requireReviewFigmaNodeRef
-} from "./chunk-QKKNRSCX.js";
+  readReviewFigmaToken,
+  requireReviewFigmaNodeRef,
+  requireReviewFigmaToken
+} from "./chunk-56A6PF63.js";
 
 // src/vite.ts
 import { mkdir, readFile, rm, writeFile } from "fs/promises";

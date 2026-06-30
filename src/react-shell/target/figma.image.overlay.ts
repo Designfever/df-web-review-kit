@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
 import type { ReviewFigmaImage } from '../../figma/image.types';
-import type { ReviewFigmaImageOverlayItemState } from '../figma/image.controller';
+import type { ReviewFigmaImageOverlayItemState } from '../figma/image.overlay.controller';
 import type { ReviewShellViewportPreset } from '../types';
 import { getViewportPresetKind } from '../viewport';
 

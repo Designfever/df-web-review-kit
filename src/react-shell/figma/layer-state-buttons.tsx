@@ -5,7 +5,7 @@ import {
   Lock as LockIcon,
   Unlock as UnlockIcon,
 } from 'lucide-react';
-import type { ReviewFigmaImageOverlayItemState } from './image.controller';
+import type { ReviewFigmaImageOverlayItemState } from './image.overlay.controller';
 
 interface FigmaImageLayerStateButtonsProps {
   imageLabel: string;

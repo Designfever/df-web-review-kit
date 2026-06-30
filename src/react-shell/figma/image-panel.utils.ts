@@ -3,8 +3,8 @@
 // component file stays focused on rendering and interaction state.
 import type { PointerEvent } from 'react';
 import type { ReviewFigmaImage } from '../../figma/image.types';
-import type { ReviewFigmaImageOverlayItemState } from './image.controller';
-import { DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY } from './image.controller';
+import type { ReviewFigmaImageOverlayItemState } from './image.overlay.controller';
+import { DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY } from './image.overlay.controller';
 
 export const DEFAULT_FIGMA_IMAGE_LAYER_STATE: ReviewFigmaImageOverlayItemState = {
   isLocked: false,

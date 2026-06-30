@@ -14,25 +14,23 @@ import {
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
   DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+  FIGMA_NODE_REF_SEPARATOR,
   REVIEW_FIGMA_TOKEN_MISSING_CODE,
   ReviewFigmaTokenError,
   collectReviewFigmaReleaseSnapshot,
+  createReviewFigmaFrameUrl,
   createReviewFigmaImageStoreClient,
   createReviewFigmaImagesSnapshot,
+  createReviewFigmaNodeValue,
   createReviewFigmaReleaseSnapshot,
   getReviewFigmaImageMimeType,
   getReviewFigmaImageTargetKey,
   isReviewFigmaTokenError,
-  readReviewFigmaToken,
-  requireReviewFigmaToken
-} from "./chunk-JTDOE6QO.js";
-import {
-  FIGMA_NODE_REF_SEPARATOR,
-  createReviewFigmaFrameUrl,
-  createReviewFigmaNodeValue,
   parseReviewFigmaNodeRef,
-  requireReviewFigmaNodeRef
-} from "./chunk-QKKNRSCX.js";
+  readReviewFigmaToken,
+  requireReviewFigmaNodeRef,
+  requireReviewFigmaToken
+} from "./chunk-56A6PF63.js";
 
 // src/adapters/supabase.ts
 var DEFAULT_SUPABASE_REVIEW_TABLE = "review_items";

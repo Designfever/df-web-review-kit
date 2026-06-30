@@ -1,11 +1,9 @@
 import type {
-  AddReviewFigmaImageInput,
   ReorderReviewFigmaImagesInput,
   ReviewFigmaImage,
   ReviewFigmaImageFormat,
   ReviewFigmaImageStore,
   ReviewFigmaImageTarget,
-  UpdateReviewFigmaImageInput,
 } from './image.types';
 
 export const DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT =
@@ -124,8 +122,4 @@ function normalizeReviewFigmaImageTarget(target: ReviewFigmaImageTarget) {
   };
 }
 
-export type {
-  AddReviewFigmaImageInput,
-  ReorderReviewFigmaImagesInput,
-  UpdateReviewFigmaImageInput,
-};
+export type { ReorderReviewFigmaImagesInput };

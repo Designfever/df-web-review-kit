@@ -658,7 +658,7 @@ var reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-list {
-    --df-review-sitemap-grid-template: minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px);
+    --df-review-sitemap-grid-template: minmax(190px, 1fr) 58px 70px 56px minmax(96px, 140px);
     position: relative;
     display: grid;
     align-content: start;
@@ -666,7 +666,7 @@ var reviewShellSitemapStyle = `
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 8px;
+    padding: 6px;
   }
 
   .df-review-sitemap-table-head,
@@ -681,7 +681,7 @@ var reviewShellSitemapStyle = `
     position: sticky;
     top: 0;
     z-index: 3;
-    min-height: 32px;
+    min-height: 30px;
     border-bottom: 1px solid var(--df-review-line);
     padding: 0 10px;
     background: var(--df-review-panel);
@@ -741,10 +741,10 @@ var reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-row {
-    min-height: 42px;
+    min-height: 34px;
     border: 0;
     border-radius: 0;
-    padding: 0 10px;
+    padding: 0 8px;
     background: transparent;
     color: var(--df-review-text);
     text-align: left;
@@ -770,8 +770,8 @@ var reviewShellSitemapStyle = `
     display: flex;
     grid-column: 1 / -1;
     align-items: center;
-    min-height: 74px;
-    padding: 0 10px;
+    min-height: 58px;
+    padding: 0 8px;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
   }
@@ -807,10 +807,10 @@ var reviewShellSitemapStyle = `
     background-image: repeating-linear-gradient(
       to right,
       transparent 0,
-      transparent 11px,
+      transparent 10px,
+      var(--df-review-line-soft) 10px,
       var(--df-review-line-soft) 11px,
-      var(--df-review-line-soft) 12px,
-      transparent 12px,
+      transparent 11px,
       transparent 18px
     );
     opacity: 0.9;
@@ -826,9 +826,9 @@ var reviewShellSitemapStyle = `
     display: inline-grid;
     place-items: center;
     flex: 0 0 auto;
-    width: 22px;
-    min-width: 22px;
-    height: 22px;
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
   }
 
   .df-review-sitemap-tree-toggle {
@@ -854,7 +854,7 @@ var reviewShellSitemapStyle = `
 
   .df-review-sitemap-page-button {
     min-width: 0;
-    min-height: 28px;
+    min-height: 24px;
     border: 0;
     border-radius: var(--df-review-radius-sm);
     padding: 0 5px;
@@ -891,12 +891,12 @@ var reviewShellSitemapStyle = `
     text-align: right;
   }
 
-  .df-review-sitemap-cell.is-total {
+  .df-review-sitemap-cell.is-todo {
     color: var(--df-review-accent);
     font-weight: var(--df-review-font-weight-normal);
   }
 
-  .df-review-sitemap-cell.is-total strong {
+  .df-review-sitemap-cell.is-todo strong {
     font: inherit;
   }
 
@@ -6554,7 +6554,7 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
   };
   const getSortValue = (summary) => {
     if (sortKey === "page") return summary.node.label;
-    if (sortKey === "total") return summary.count.remaining;
+    if (sortKey === "todo") return summary.count.status.todo;
     if (sortKey === "review") return summary.count.status.review;
     if (sortKey === "hold") return summary.count.status.hold;
     if (sortKey === "online") return summary.users.length;
@@ -6685,7 +6685,7 @@ var SitemapModal = ({
   onSelectPage
 }) => {
   const [sort, setSort] = (0, import_react4.useState)({
-    key: "total",
+    key: "todo",
     direction: "desc"
   });
   const [collapsedFolderHrefs, setCollapsedFolderHrefs] = (0, import_react4.useState)(
@@ -6712,11 +6712,11 @@ var SitemapModal = ({
   );
   const matchingPageCount = sitemapRows.filter((row) => row.isPage).length;
   const gridStyle = {
-    "--df-review-sitemap-grid-template": "minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px)"
+    "--df-review-sitemap-grid-template": "minmax(190px, 1fr) 58px 70px 56px minmax(96px, 140px)"
   };
   const sortHeaders = [
     { key: "page", label: "", title: "Page", className: "is-page" },
-    { key: "total", label: "Total", title: "Remaining total" },
+    { key: "todo", label: "Todo" },
     { key: "review", label: "Review" },
     { key: "hold", label: "Hold" },
     { key: "online", label: "Online", className: "is-online" }
@@ -6762,8 +6762,8 @@ var SitemapModal = ({
               /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { children: [
                 pages.length,
                 " pages \xB7 ",
-                allQaCount.remaining,
-                " remaining \xB7",
+                allQaCount.status.todo,
+                " todo \xB7",
                 " ",
                 allQaCount.status.review,
                 " review \xB7 ",
@@ -6850,7 +6850,7 @@ var SitemapModal = ({
               return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                 "div",
                 {
-                  "aria-label": row.isPage ? `${row.href} / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online` : `${row.href} group / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
+                  "aria-label": row.isPage ? `${row.href} / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online` : `${row.href} group / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
                   className: rowClassName,
                   role: "row",
                   children: rowContent
@@ -6862,7 +6862,7 @@ var SitemapModal = ({
             /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
               "button",
               {
-                "aria-label": `All QA / ${allQaCount.remaining} remaining / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`,
+                "aria-label": `All QA / ${allQaCount.status.todo} todo / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`,
                 className: `df-review-sitemap-row is-summary${isAllQaVisible ? " is-active" : ""}`,
                 type: "button",
                 onClick: onSelectAllQa,
@@ -6926,7 +6926,7 @@ var SitemapRowContent = ({
       ]
     }
   ),
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-total", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: qaCount.remaining }) }),
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-todo", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: qaCount.status.todo }) }),
   /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-review", children: qaCount.status.review }),
   /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-hold", children: qaCount.status.hold }),
   /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(

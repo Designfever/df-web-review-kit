@@ -91,7 +91,7 @@ export const SitemapModal = ({
   onSelectPage,
 }: SitemapModalProps) => {
   const [sort, setSort] = useState<SortState>({
-    key: 'total',
+    key: 'todo',
     direction: 'desc',
   });
   const [collapsedFolderHrefs, setCollapsedFolderHrefs] = useState<Set<string>>(
@@ -118,11 +118,11 @@ export const SitemapModal = ({
   );
   const matchingPageCount = sitemapRows.filter((row) => row.isPage).length;
   const gridStyle = {
-    '--df-review-sitemap-grid-template': 'minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px)',
+    '--df-review-sitemap-grid-template': 'minmax(190px, 1fr) 58px 70px 56px minmax(96px, 140px)',
   } as CSSProperties;
   const sortHeaders: SortHeader[] = [
     { key: 'page', label: '', title: 'Page', className: 'is-page' },
-    { key: 'total', label: 'Total', title: 'Remaining total' },
+    { key: 'todo', label: 'Todo' },
     { key: 'review', label: 'Review' },
     { key: 'hold', label: 'Hold' },
     { key: 'online', label: 'Online', className: 'is-online' },
@@ -163,7 +163,7 @@ export const SitemapModal = ({
           <div>
             <strong>Sitemap</strong>
             <span>
-              {pages.length} pages · {allQaCount.remaining} remaining ·{' '}
+              {pages.length} pages · {allQaCount.status.todo} todo ·{' '}
               {allQaCount.status.review} review · {allQaCount.status.hold} hold
             </span>
           </div>
@@ -255,8 +255,8 @@ export const SitemapModal = ({
                 key={row.href}
                 aria-label={
                   row.isPage
-                    ? `${row.href} / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`
-                    : `${row.href} group / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`
+                    ? `${row.href} / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`
+                    : `${row.href} group / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`
                 }
                 className={rowClassName}
                 role="row"
@@ -271,7 +271,7 @@ export const SitemapModal = ({
             </div>
           )}
           <button
-            aria-label={`All QA / ${allQaCount.remaining} remaining / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`}
+            aria-label={`All QA / ${allQaCount.status.todo} todo / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`}
             className={`df-review-sitemap-row is-summary${
               isAllQaVisible ? ' is-active' : ''
             }`}
@@ -349,8 +349,8 @@ const SitemapRowContent = ({
         <span className="df-review-sitemap-label">{label}</span>
       )}
     </span>
-    <span className="df-review-sitemap-cell is-total">
-      <strong>{qaCount.remaining}</strong>
+    <span className="df-review-sitemap-cell is-todo">
+      <strong>{qaCount.status.todo}</strong>
     </span>
     <span className="df-review-sitemap-cell is-review">
       {qaCount.status.review}

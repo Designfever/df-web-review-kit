@@ -52,7 +52,7 @@ export type SitemapSortDirection = 'asc' | 'desc';
 
 export type SitemapSortKey =
   | 'page'
-  | 'total'
+  | 'todo'
   | 'review'
   | 'hold'
   | 'online'
@@ -283,7 +283,7 @@ export const createSitemapRows = (
 
   const getSortValue = (summary: SitemapTreeSummary) => {
     if (sortKey === 'page') return summary.node.label;
-    if (sortKey === 'total') return summary.count.remaining;
+    if (sortKey === 'todo') return summary.count.status.todo;
     if (sortKey === 'review') return summary.count.status.review;
     if (sortKey === 'hold') return summary.count.status.hold;
     if (sortKey === 'online') return summary.users.length;

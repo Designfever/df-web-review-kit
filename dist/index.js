@@ -1,4 +1,5 @@
 import {
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
   DEFAULT_REVIEW_VIEWPORTS,
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   createWebReviewKit,
@@ -9,7 +10,27 @@ import {
   getReviewViewportScope,
   localAdapter,
   normalizeReviewItemStatus
-} from "./chunk-22HU3UBN.js";
+} from "./chunk-RPVLRULC.js";
+import {
+  DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
+  DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+  FIGMA_NODE_REF_SEPARATOR,
+  REVIEW_FIGMA_TOKEN_MISSING_CODE,
+  ReviewFigmaTokenError,
+  collectReviewFigmaReleaseSnapshot,
+  createReviewFigmaFrameUrl,
+  createReviewFigmaImageStoreClient,
+  createReviewFigmaImagesSnapshot,
+  createReviewFigmaNodeValue,
+  createReviewFigmaReleaseSnapshot,
+  getReviewFigmaImageMimeType,
+  getReviewFigmaImageTargetKey,
+  isReviewFigmaTokenError,
+  parseReviewFigmaNodeRef,
+  readReviewFigmaToken,
+  requireReviewFigmaNodeRef,
+  requireReviewFigmaToken
+} from "./chunk-AB5B6O77.js";
 
 // src/adapters/supabase.ts
 var DEFAULT_SUPABASE_REVIEW_TABLE = "review_items";
@@ -209,14 +230,21 @@ async function unwrapResponse(request, label) {
 }
 function buildSupabaseReviewUrl(item, source, options, itemId) {
   if (typeof window === "undefined") return void 0;
-  const prefix = options.reviewPathPrefix ?? "/review";
-  const url = new URL(prefix, window.location.origin);
+  const url = new URL(
+    normalizeReviewUrlPath(options.reviewPathPrefix),
+    window.location.origin
+  );
   url.searchParams.set("source", source);
   url.searchParams.set("target", item.routeKey || item.normalizedPath || "/");
   url.searchParams.set("w", String(Math.round(item.viewport.width)));
   url.searchParams.set("h", String(Math.round(item.viewport.height)));
   if (itemId) url.searchParams.set("item", itemId);
   return url.toString();
+}
+function normalizeReviewUrlPath(value = "/review") {
+  const raw = value.trim() || "/review";
+  const path = raw.startsWith("/") ? raw : `/${raw}`;
+  return path.endsWith("/") ? path : `${path}/`;
 }
 function toAbsoluteReviewUrl(path) {
   if (typeof window === "undefined") return path;
@@ -229,16 +257,35 @@ function createSupabaseReviewItemId() {
   return `review-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 export {
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+  DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
+  DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
   DEFAULT_REVIEW_VIEWPORTS,
+  FIGMA_NODE_REF_SEPARATOR,
+  REVIEW_FIGMA_TOKEN_MISSING_CODE,
   REVIEW_WORKFLOW_STATUS_OPTIONS,
+  ReviewFigmaTokenError,
+  collectReviewFigmaReleaseSnapshot,
+  createReviewFigmaFrameUrl,
+  createReviewFigmaImageStoreClient,
+  createReviewFigmaImagesSnapshot,
+  createReviewFigmaNodeValue,
+  createReviewFigmaReleaseSnapshot,
   createWebReviewKit,
   findReviewViewportPreset,
   getNumberedReviewItems,
+  getReviewFigmaImageMimeType,
+  getReviewFigmaImageTargetKey,
   getReviewItemScope,
   getReviewItemScopeLabel,
   getReviewViewportScope,
+  isReviewFigmaTokenError,
   localAdapter,
   normalizeReviewItemStatus,
+  parseReviewFigmaNodeRef,
+  readReviewFigmaToken,
+  requireReviewFigmaNodeRef,
+  requireReviewFigmaToken,
   supabaseAdapter
 };
 //# sourceMappingURL=index.js.map

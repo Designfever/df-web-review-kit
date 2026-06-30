@@ -3,6 +3,7 @@
 Install `df-web-review-kit` in a host project and mount the review shell on a `/review` route.
 
 The default setup is local-only. Remote DB and presence are optional adapters.
+For the QA adapter and Figma image store split, see [Adapter boundaries](adapters.md).
 
 ## Package Install
 
@@ -274,7 +275,7 @@ In React shell mode, DOM/area draft composers dock into the QA panel when the sh
 
 ## Custom Adapter
 
-If a team or host project owns its own QA backend, keep that adapter in the host project or in a separate package. Start from [adaptor.sample.ts](adaptor.sample.ts) and map its `WebReviewKitAdapter` methods to your backend API.
+If a team or host project owns its own QA backend, keep that adapter in the host project or in a separate package. Start from [adaptor.sample.ts](adaptor.sample.ts) and map its `WebReviewKitAdapter` methods to your backend API. Do not put Figma image storage into the QA adapter; use a separate `ReviewFigmaImageStore`.
 
 The sample explains the main interfaces:
 

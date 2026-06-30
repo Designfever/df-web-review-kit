@@ -1,4 +1,6 @@
 import type {
+  ReviewAssigneeOption,
+  ReviewFieldsConfig,
   ReviewItem,
   ReviewItemScope,
   ReviewItemStatus,
@@ -8,6 +10,10 @@ import type {
   ReviewSource,
   WebReviewKitAdapter,
 } from '../types';
+import type {
+  ReviewFigmaImageFormat,
+  ReviewFigmaImageStore,
+} from '../figma/image.types';
 
 export type ReviewShellViewportKind = Exclude<ReviewItemScope, 'dom'>;
 
@@ -57,6 +63,8 @@ export type ReviewShellStatusOption = {
   label: string;
 };
 
+export type ReviewShellAssigneeOption = ReviewAssigneeOption;
+
 export type ReviewShellWriteMode = 'dom' | 'note' | 'area';
 
 export type ReviewShellUpdateStatusInput = {
@@ -65,6 +73,15 @@ export type ReviewShellUpdateStatusInput = {
   status: ReviewItemStatus;
   statusOption: ReviewShellStatusOption;
   statusIndex: number;
+};
+
+export type ReviewShellUpdateAssigneeInput = {
+  id: string;
+  item: ReviewItem;
+  assigneeId: string | null;
+  assigneeName?: string;
+  assigneeOption?: ReviewShellAssigneeOption;
+  assigneeIndex: number;
 };
 
 type ReviewShellSubmissionPatch = Partial<
@@ -91,9 +108,15 @@ export type ReviewShellAdapter = {
   list: WebReviewKitAdapter['list'];
   create?: WebReviewKitAdapter['create'];
   update?: WebReviewKitAdapter['update'];
+  fields?: ReviewFieldsConfig;
   statusOptions?: readonly ReviewShellStatusOption[];
+  assigneeTitle?: string;
+  assigneeOptions?: readonly ReviewShellAssigneeOption[];
   canWrite?: boolean | readonly ReviewShellWriteMode[];
   updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<ReviewItem>;
+  updateAssignee?: (
+    input: ReviewShellUpdateAssigneeInput
+  ) => Promise<ReviewItem>;
   syncSubmission?: (
     input: ReviewShellSyncSubmissionInput
   ) => Promise<ReviewItem>;
@@ -160,6 +183,12 @@ export type ReviewPresenceAdapter = {
   ) => Promise<ReviewPresenceSession> | ReviewPresenceSession;
 };
 
+export type ReviewShellFigmaImagesOptions = {
+  enabled?: boolean;
+  store?: ReviewFigmaImageStore;
+  imageFormat?: ReviewFigmaImageFormat;
+};
+
 export interface CreateReviewPagesOptions {
   root?: string;
   exclude?: (href: string) => boolean;
@@ -177,6 +206,7 @@ export interface ReviewShellProps {
   sourceRoot?: string;
   sourceInspector?: ReviewSourceInspectorOptions;
   presence?: ReviewPresenceAdapter;
+  figmaImages?: ReviewShellFigmaImagesOptions;
 }
 
 export interface ReviewShellMountOptions extends ReviewShellProps {

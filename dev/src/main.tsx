@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
+  createReviewFigmaImageStoreClient,
   localAdapter,
   supabaseAdapter,
   type SupabaseReviewClient,
@@ -11,6 +12,7 @@ import {
   createFallbackPresenceAdapter,
   createLocalPresenceAdapter,
   createSupabasePresenceAdapter,
+  mountFigmaDevOverlay,
   mountReviewShell,
   type ReviewShellAdapter,
   type ReviewShellPage,
@@ -34,6 +36,7 @@ const REVIEW_PATH_PREFIX = '/review';
 const REVIEW_STORAGE_KEY = `${REVIEW_PROJECT_ID}:items`;
 const REVIEW_SUPABASE_TABLE =
   import.meta.env.VITE_REVIEW_SUPABASE_TABLE || 'review_items';
+const figmaImageStore = createReviewFigmaImageStoreClient();
 
 window.__figma = {
   desktopNodeId: 'p2DY6W7xu5WmDNtJK8v6zd->4:228',
@@ -54,6 +57,11 @@ const presets: ReviewShellViewportPreset[] = [
 ];
 
 const local = localAdapter({ storageKey: REVIEW_STORAGE_KEY });
+const assigneeOptions = [
+  { value: 'planning', label: 'Planning' },
+  { value: 'frontend', label: 'Frontend' },
+  { value: 'design', label: 'Design' },
+];
 const supabaseUrl = import.meta.env.VITE_REVIEW_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_REVIEW_SUPABASE_ANON_KEY;
 const supabaseClient =
@@ -77,8 +85,13 @@ const adapters: ReviewShellAdapter[] = [
     list: (query) => local.list(query),
     create: (item) => local.create(item),
     update: (id, patch) => local.update(id, patch),
+    fields: { title: true },
     statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
     updateStatus: ({ id, status }) => local.update(id, { status }),
+    assigneeTitle: '담당자',
+    assigneeOptions,
+    updateAssignee: ({ id, assigneeId, assigneeName }) =>
+      local.update(id, { assigneeId, assigneeName }),
     syncSubmission: ({ id, patch }) => local.update(id, patch),
     remove: (id) => local.remove(id),
   },
@@ -91,8 +104,13 @@ const adapters: ReviewShellAdapter[] = [
           create: (item) => remote.create(item),
           update: (id, patch) => remote.update(id, patch),
           canWrite: true,
+          fields: { title: true },
           statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
           updateStatus: ({ id, status }) => remote.update(id, { status }),
+          assigneeTitle: '담당자',
+          assigneeOptions,
+          updateAssignee: ({ id, assigneeId, assigneeName }) =>
+            remote.update(id, { assigneeId, assigneeName }),
           remove: (id) => remote.remove(id),
         } satisfies ReviewShellAdapter,
       ]
@@ -125,6 +143,10 @@ function mountDevReviewShell() {
     adapters,
     presets,
     presence,
+    figmaImages: {
+      store: figmaImageStore,
+      imageFormat: 'webp',
+    },
     initialPrompt,
     reviewPathPrefix: REVIEW_PATH_PREFIX,
     ruler: { enabled: true, unit: 'px' },
@@ -293,4 +315,15 @@ if (window.location.pathname.startsWith(REVIEW_PATH_PREFIX)) {
       <TargetApp />
     </React.StrictMode>
   );
+  if (!new URLSearchParams(window.location.search).has('__dfwr_target')) {
+    mountFigmaDevOverlay({
+      projectId: REVIEW_PROJECT_ID,
+      presets,
+      reviewPathPrefix: REVIEW_PATH_PREFIX,
+      figmaImages: {
+        store: figmaImageStore,
+        imageFormat: 'webp',
+      },
+    });
+  }
 }

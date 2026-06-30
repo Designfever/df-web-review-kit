@@ -20,16 +20,35 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/index.ts
 var index_exports = {};
 __export(index_exports, {
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT: () => DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+  DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT: () => DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
+  DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY: () => DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
   DEFAULT_REVIEW_VIEWPORTS: () => DEFAULT_REVIEW_VIEWPORTS,
+  FIGMA_NODE_REF_SEPARATOR: () => FIGMA_NODE_REF_SEPARATOR,
+  REVIEW_FIGMA_TOKEN_MISSING_CODE: () => REVIEW_FIGMA_TOKEN_MISSING_CODE,
   REVIEW_WORKFLOW_STATUS_OPTIONS: () => REVIEW_WORKFLOW_STATUS_OPTIONS,
+  ReviewFigmaTokenError: () => ReviewFigmaTokenError,
+  collectReviewFigmaReleaseSnapshot: () => collectReviewFigmaReleaseSnapshot,
+  createReviewFigmaFrameUrl: () => createReviewFigmaFrameUrl,
+  createReviewFigmaImageStoreClient: () => createReviewFigmaImageStoreClient,
+  createReviewFigmaImagesSnapshot: () => createReviewFigmaImagesSnapshot,
+  createReviewFigmaNodeValue: () => createReviewFigmaNodeValue,
+  createReviewFigmaReleaseSnapshot: () => createReviewFigmaReleaseSnapshot,
   createWebReviewKit: () => createWebReviewKit,
   findReviewViewportPreset: () => findReviewViewportPreset,
   getNumberedReviewItems: () => getNumberedReviewItems,
+  getReviewFigmaImageMimeType: () => getReviewFigmaImageMimeType,
+  getReviewFigmaImageTargetKey: () => getReviewFigmaImageTargetKey,
   getReviewItemScope: () => getReviewItemScope,
   getReviewItemScopeLabel: () => getReviewItemScopeLabel,
   getReviewViewportScope: () => getReviewViewportScope,
+  isReviewFigmaTokenError: () => isReviewFigmaTokenError,
   localAdapter: () => localAdapter,
   normalizeReviewItemStatus: () => normalizeReviewItemStatus,
+  parseReviewFigmaNodeRef: () => parseReviewFigmaNodeRef,
+  readReviewFigmaToken: () => readReviewFigmaToken,
+  requireReviewFigmaNodeRef: () => requireReviewFigmaNodeRef,
+  requireReviewFigmaToken: () => requireReviewFigmaToken,
   supabaseAdapter: () => supabaseAdapter
 });
 module.exports = __toCommonJS(index_exports);
@@ -345,14 +364,21 @@ async function unwrapResponse(request, label) {
 }
 function buildSupabaseReviewUrl(item, source, options, itemId) {
   if (typeof window === "undefined") return void 0;
-  const prefix = options.reviewPathPrefix ?? "/review";
-  const url = new URL(prefix, window.location.origin);
+  const url = new URL(
+    normalizeReviewUrlPath(options.reviewPathPrefix),
+    window.location.origin
+  );
   url.searchParams.set("source", source);
   url.searchParams.set("target", item.routeKey || item.normalizedPath || "/");
   url.searchParams.set("w", String(Math.round(item.viewport.width)));
   url.searchParams.set("h", String(Math.round(item.viewport.height)));
   if (itemId) url.searchParams.set("item", itemId);
   return url.toString();
+}
+function normalizeReviewUrlPath(value = "/review") {
+  const raw = value.trim() || "/review";
+  const path = raw.startsWith("/") ? raw : `/${raw}`;
+  return path.endsWith("/") ? path : `${path}/`;
 }
 function toAbsoluteReviewUrl(path) {
   if (typeof window === "undefined") return path;
@@ -363,6 +389,480 @@ function createSupabaseReviewItemId() {
     return crypto.randomUUID();
   }
   return `review-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+// src/figma/image.types.ts
+var DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT = "webp";
+
+// src/vite/figma-asset.ts
+function getReviewFigmaImageFormatFromMimeType(mimeType) {
+  if (mimeType === "image/webp") return "webp";
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/jpeg") return "jpg";
+  return null;
+}
+
+// src/figma/parse.ts
+var FIGMA_NODE_REF_SEPARATOR = "->";
+function parseReviewFigmaNodeRef(value) {
+  if (typeof value !== "string") return normalizeReviewFigmaNodeRef(value);
+  const input = value.trim();
+  if (!input) return null;
+  return parseReviewFigmaNodeRefValue(input) ?? parseReviewFigmaUrl(input);
+}
+function requireReviewFigmaNodeRef(value) {
+  const ref = parseReviewFigmaNodeRef(value);
+  if (!ref) {
+    throw new Error("A Figma node link or fileKey->nodeId value is required.");
+  }
+  return ref;
+}
+function createReviewFigmaNodeValue(ref) {
+  return `${ref.fileKey}${FIGMA_NODE_REF_SEPARATOR}${ref.nodeId}`;
+}
+function createReviewFigmaFrameUrl(value) {
+  const ref = parseReviewFigmaNodeRef(value);
+  if (!ref) return null;
+  return `https://www.figma.com/design/${encodeURIComponent(
+    ref.fileKey
+  )}?node-id=${encodeURIComponent(ref.nodeId.replace(/:/g, "-"))}`;
+}
+function parseReviewFigmaNodeRefValue(value) {
+  const [fileKey, nodeId, extra] = value.split(FIGMA_NODE_REF_SEPARATOR).map((part) => part.trim());
+  if (!fileKey || !nodeId || extra !== void 0) return null;
+  return normalizeReviewFigmaNodeRef({ fileKey, nodeId });
+}
+function parseReviewFigmaUrl(value) {
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    return null;
+  }
+  const fileKey = getFigmaFileKey(url);
+  const nodeId = normalizeFigmaNodeId(url.searchParams.get("node-id"));
+  if (!fileKey || !nodeId) return null;
+  return { fileKey, nodeId, sourceUrl: value };
+}
+function getFigmaFileKey(url) {
+  if (!/(^|\.)figma\.com$/i.test(url.hostname)) return null;
+  const parts = url.pathname.split("/").filter(Boolean);
+  const fileKeyIndex = parts.findIndex(
+    (part) => ["design", "file", "proto", "board"].includes(part)
+  );
+  const fileKey = fileKeyIndex >= 0 ? parts[fileKeyIndex + 1] : null;
+  return normalizeFigmaFileKey(fileKey);
+}
+function normalizeReviewFigmaNodeRef(value) {
+  const fileKey = normalizeFigmaFileKey(value?.fileKey);
+  const nodeId = normalizeFigmaNodeId(value?.nodeId);
+  if (!fileKey || !nodeId) return null;
+  const sourceUrl = normalizeOptionalString(value?.sourceUrl);
+  return sourceUrl ? { fileKey, nodeId, sourceUrl } : { fileKey, nodeId };
+}
+function normalizeFigmaFileKey(value) {
+  return normalizeOptionalString(value)?.replace(/[?#].*$/, "") ?? null;
+}
+function normalizeFigmaNodeId(value) {
+  const nodeId = normalizeOptionalString(value);
+  if (!nodeId) return null;
+  if (nodeId.includes(":")) return nodeId;
+  return nodeId.replace(/-/g, ":");
+}
+function normalizeOptionalString(value) {
+  if (typeof value !== "string") return null;
+  return value.trim() || null;
+}
+
+// src/figma/token.ts
+var DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY = "FIGMA_TOKEN";
+var REVIEW_FIGMA_TOKEN_MISSING_CODE = "DFWR_FIGMA_TOKEN_MISSING";
+var ReviewFigmaTokenError = class extends Error {
+  constructor(envKey = DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY) {
+    super(
+      `Figma image rendering requires server env ${envKey}. Set ${envKey} in the dev/server environment; do not expose it as VITE_${envKey}.`
+    );
+    this.code = REVIEW_FIGMA_TOKEN_MISSING_CODE;
+    this.name = "ReviewFigmaTokenError";
+    this.envKey = envKey;
+  }
+};
+function readReviewFigmaToken(options = {}) {
+  if (options.enabled === false) return null;
+  const envKey = options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY;
+  return normalizeReviewFigmaToken(options.token ?? options.env?.[envKey]);
+}
+function requireReviewFigmaToken(options = {}) {
+  const envKey = options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY;
+  const token = readReviewFigmaToken(options);
+  if (!token) throw new ReviewFigmaTokenError(envKey);
+  return token;
+}
+function isReviewFigmaTokenError(error) {
+  if (!error || typeof error !== "object") return false;
+  return error instanceof ReviewFigmaTokenError || "code" in error && error.code === REVIEW_FIGMA_TOKEN_MISSING_CODE;
+}
+function normalizeReviewFigmaToken(value) {
+  if (typeof value !== "string") return null;
+  return value.trim() || null;
+}
+
+// src/figma/render.ts
+var DEFAULT_FIGMA_API_BASE_URL = "https://api.figma.com";
+function createReviewFigmaImageApiUrl({
+  apiBaseUrl = DEFAULT_FIGMA_API_BASE_URL,
+  fileKey,
+  nodeId,
+  format = "png",
+  scale,
+  useAbsoluteBounds
+}) {
+  const url = new URL(`/v1/images/${encodeURIComponent(fileKey)}`, apiBaseUrl);
+  url.searchParams.set("ids", nodeId);
+  url.searchParams.set("format", format);
+  if (typeof scale === "number" && Number.isFinite(scale) && scale > 0) {
+    url.searchParams.set("scale", String(scale));
+  }
+  if (useAbsoluteBounds !== void 0) {
+    url.searchParams.set("use_absolute_bounds", String(useAbsoluteBounds));
+  }
+  return url.toString();
+}
+
+// src/figma/image.store.ts
+var DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT = "/__dfwr/figma-images";
+function createReviewFigmaImageStoreClient(options = {}) {
+  const endpoint = options.endpoint ?? DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT;
+  const request = createReviewFigmaImageStoreRequest(endpoint, options.fetch);
+  return {
+    listImages(target) {
+      const url = `${endpoint}?target=${encodeURIComponent(
+        JSON.stringify(target)
+      )}`;
+      return request(url);
+    },
+    async addImage(input) {
+      const nextInput = await createClientRenderedAddImageInput(
+        input,
+        options.clientRender,
+        options.fetch
+      );
+      return request(endpoint, {
+        method: "POST",
+        body: JSON.stringify(nextInput)
+      });
+    },
+    updateImage(id, patch) {
+      return request(`${endpoint}/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch)
+      });
+    },
+    reorderImages(input) {
+      return request(`${endpoint}/reorder`, {
+        method: "PATCH",
+        body: JSON.stringify(input)
+      });
+    },
+    deleteImage(id) {
+      return request(`${endpoint}/${encodeURIComponent(id)}`, {
+        method: "DELETE"
+      });
+    }
+  };
+}
+async function createClientRenderedAddImageInput(input, clientRender, fetchOption) {
+  const options = normalizeClientRenderOptions(clientRender);
+  if (!options) return input;
+  const token = readClientRenderToken(options);
+  if (!token) return input;
+  try {
+    const asset = await withTimeout(
+      createClientRenderedFigmaAsset(input.figmaUrl, token, options, fetchOption),
+      options.timeoutMs ?? 1e4
+    );
+    return {
+      ...input,
+      imageFormat: asset.imageFormat,
+      asset
+    };
+  } catch {
+    return input;
+  }
+}
+function normalizeClientRenderOptions(clientRender) {
+  if (!clientRender) return null;
+  if (clientRender === true) return {};
+  return clientRender;
+}
+function readClientRenderToken(options) {
+  const token = typeof options.token === "function" ? options.token() : options.token;
+  return typeof token === "string" ? token.trim() : "";
+}
+async function createClientRenderedFigmaAsset(figmaUrl, token, options, fetchOption) {
+  const ref = parseReviewFigmaNodeRef(figmaUrl);
+  if (!ref) throw new Error("A Figma node link is required.");
+  const requestFetch = fetchOption ?? globalThis.fetch;
+  if (!requestFetch) throw new Error("Figma client rendering requires fetch.");
+  const renderFormat = options.renderFormat ?? "png";
+  const response = await requestFetch(
+    createReviewFigmaImageApiUrl({
+      apiBaseUrl: options.apiBaseUrl,
+      fileKey: ref.fileKey,
+      nodeId: ref.nodeId,
+      format: renderFormat,
+      scale: options.renderScale,
+      useAbsoluteBounds: options.useAbsoluteBounds
+    }),
+    {
+      headers: {
+        "X-Figma-Token": token
+      }
+    }
+  );
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(body?.err || `Figma image render failed with ${response.status}`);
+  }
+  const imageUrl = body?.images?.[ref.nodeId];
+  if (!imageUrl) throw new Error(`Figma image render returned no URL for ${ref.nodeId}.`);
+  const imageResponse = await requestFetch(imageUrl);
+  if (!imageResponse.ok) {
+    throw new Error(`Figma image download failed with ${imageResponse.status}`);
+  }
+  const originalBlob = await imageResponse.blob();
+  const originalMimeType = normalizeClientImageMimeType(originalBlob.type) ?? getReviewFigmaImageMimeType(renderFormat === "jpg" ? "jpg" : "png");
+  const originalFormat = getReviewFigmaImageFormatFromMimeType(originalMimeType) ?? (renderFormat === "jpg" ? "jpg" : "png");
+  const dimensions = await readImageBlobDimensions(originalBlob);
+  const shouldConvertToWebp = options.convertToWebp ?? true;
+  const convertedBlob = shouldConvertToWebp ? await convertImageBlobToWebp(
+    originalBlob,
+    options.webpQuality ?? 0.9,
+    dimensions
+  ).catch(() => null) : null;
+  const finalBlob = convertedBlob?.type === "image/webp" ? convertedBlob : originalBlob;
+  const finalMimeType = normalizeClientImageMimeType(finalBlob.type) ?? originalMimeType;
+  const finalFormat = getReviewFigmaImageFormatFromMimeType(finalMimeType) ?? originalFormat;
+  return {
+    dataUrl: await blobToDataUrl(finalBlob),
+    imageFormat: finalFormat,
+    mimeType: finalMimeType,
+    byteSize: finalBlob.size,
+    width: dimensions.width,
+    height: dimensions.height
+  };
+}
+async function readImageBlobDimensions(blob) {
+  const image = await loadImageBlob(blob);
+  return {
+    width: image.naturalWidth || image.width,
+    height: image.naturalHeight || image.height
+  };
+}
+async function convertImageBlobToWebp(blob, quality, dimensions) {
+  if (typeof document === "undefined") return null;
+  if (!dimensions.width || !dimensions.height) return null;
+  const image = await loadImageBlob(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = dimensions.width;
+  canvas.height = dimensions.height;
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  context.drawImage(image, 0, 0);
+  return new Promise((resolve) => {
+    canvas.toBlob(resolve, "image/webp", quality);
+  });
+}
+function loadImageBlob(blob) {
+  return new Promise((resolve, reject) => {
+    if (typeof Image === "undefined" || typeof URL === "undefined") {
+      reject(new Error("Image decoding is unavailable."));
+      return;
+    }
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(blob);
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Image decoding failed."));
+    };
+    image.src = objectUrl;
+  });
+}
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error("Blob encoding failed."));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Blob encoding failed."));
+    reader.readAsDataURL(blob);
+  });
+}
+function normalizeClientImageMimeType(value) {
+  const mimeType = value?.split(";")[0]?.trim().toLowerCase();
+  if (mimeType === "image/jpg") return "image/jpeg";
+  if (mimeType === "image/jpeg" || mimeType === "image/png" || mimeType === "image/webp") {
+    return mimeType;
+  }
+  return null;
+}
+async function withTimeout(promise, timeoutMs) {
+  let timeoutId;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new Error("Figma client rendering timed out.")),
+          timeoutMs
+        );
+      })
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+function getReviewFigmaImageTargetKey(target) {
+  return JSON.stringify(normalizeReviewFigmaImageTarget(target));
+}
+function getReviewFigmaImageMimeType(format) {
+  if (format === "jpg") return "image/jpeg";
+  if (format === "png") return "image/png";
+  return "image/webp";
+}
+function createReviewFigmaImageStoreRequest(endpoint, fetchOption) {
+  return async (input, init = {}) => {
+    const requestFetch = fetchOption ?? globalThis.fetch;
+    if (!requestFetch) throw new Error("Figma image store requires fetch.");
+    const response = await requestFetch(input, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init.headers ?? {}
+      }
+    });
+    const text = await response.text();
+    const body = text ? JSON.parse(text) : null;
+    if (!response.ok) {
+      const message = typeof body?.error === "string" ? body.error : `Figma image store request failed: ${response.status}`;
+      throw new Error(message);
+    }
+    return body;
+  };
+}
+function normalizeReviewFigmaImageTarget(target) {
+  if (target.type === "figma-node") {
+    return {
+      type: target.type,
+      projectId: target.projectId,
+      fileKey: target.fileKey,
+      nodeId: target.nodeId
+    };
+  }
+  return {
+    type: target.type,
+    projectId: target.projectId,
+    pageUrl: target.pageUrl,
+    slot: target.slot ?? "",
+    viewport: target.viewport ? {
+      label: target.viewport.label ?? "",
+      width: target.viewport.width ?? null,
+      height: target.viewport.height ?? null,
+      scope: target.viewport.scope ?? ""
+    } : null
+  };
+}
+
+// src/figma/image.snapshot.ts
+function createReviewFigmaImagesSnapshot(images, options = {}) {
+  const targetKeys = options.targets?.length ? new Set(options.targets.map(getReviewFigmaImageTargetKey)) : null;
+  return images.filter((image) => {
+    if (options.projectId && image.projectId !== options.projectId) {
+      return false;
+    }
+    if (targetKeys && !targetKeys.has(getReviewFigmaImageTargetKey(image.target))) {
+      return false;
+    }
+    return true;
+  }).map(cloneReviewFigmaImage).sort(compareReviewFigmaSnapshotImages);
+}
+function createReviewFigmaReleaseSnapshot({
+  images,
+  projectId,
+  releaseId,
+  label,
+  createdAt,
+  targets
+}) {
+  return {
+    version: 1,
+    projectId,
+    ...releaseId ? { releaseId } : null,
+    ...label ? { label } : null,
+    createdAt: createdAt ?? (/* @__PURE__ */ new Date()).toISOString(),
+    figmaImagesSnapshot: createReviewFigmaImagesSnapshot(images, {
+      projectId,
+      targets
+    })
+  };
+}
+async function collectReviewFigmaReleaseSnapshot({
+  store,
+  targets,
+  ...snapshotOptions
+}) {
+  const imagesByTarget = await Promise.all(
+    targets.map((target) => store.listImages(target))
+  );
+  return createReviewFigmaReleaseSnapshot({
+    ...snapshotOptions,
+    targets,
+    images: dedupeReviewFigmaImages(imagesByTarget.flat())
+  });
+}
+function dedupeReviewFigmaImages(images) {
+  return Array.from(new Map(images.map((image) => [image.id, image])).values());
+}
+function cloneReviewFigmaImage(image) {
+  return {
+    ...image,
+    target: cloneReviewFigmaImageTarget(image.target)
+  };
+}
+function cloneReviewFigmaImageTarget(target) {
+  if (target.type === "figma-node") {
+    return {
+      type: target.type,
+      projectId: target.projectId,
+      fileKey: target.fileKey,
+      nodeId: target.nodeId
+    };
+  }
+  return {
+    type: target.type,
+    projectId: target.projectId,
+    pageUrl: target.pageUrl,
+    slot: target.slot,
+    viewport: target.viewport ? {
+      label: target.viewport.label,
+      width: target.viewport.width,
+      height: target.viewport.height,
+      scope: target.viewport.scope
+    } : void 0
+  };
+}
+function compareReviewFigmaSnapshotImages(a, b) {
+  return a.projectId.localeCompare(b.projectId) || getReviewFigmaImageTargetKey(a.target).localeCompare(
+    getReviewFigmaImageTargetKey(b.target)
+  ) || a.order - b.order || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
 }
 
 // src/core/geometry.ts
@@ -547,13 +1047,13 @@ function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", enviro
   const target = environment.document.elementFromPoint(point.x, point.y);
   if (!target) return void 0;
   const candidates = createAnchorCandidates(target, configuredAttribute);
-  const primary = candidates[0];
-  if (!primary) return void 0;
+  const primaryCandidate = candidates[0];
+  if (!primaryCandidate) return void 0;
   return {
-    ...primary,
+    ...primaryCandidate,
     candidates,
     htmlSnippet: getElementHtmlSnippet(
-      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+      getAnchorSourceElement(target, primaryCandidate, configuredAttribute) ?? target
     ),
     source: getDomSourceHint(target)
   };
@@ -561,13 +1061,13 @@ function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", enviro
 function getDomAnchorFromElement(target, configuredAttribute = "data-qa-id", environment) {
   if (target.ownerDocument !== environment.document) return void 0;
   const candidates = createAnchorCandidates(target, configuredAttribute);
-  const primary = candidates[0];
-  if (!primary) return void 0;
+  const primaryCandidate = candidates[0];
+  if (!primaryCandidate) return void 0;
   return {
-    ...primary,
+    ...primaryCandidate,
     candidates,
     htmlSnippet: getElementHtmlSnippet(
-      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+      getAnchorSourceElement(target, primaryCandidate, configuredAttribute) ?? target
     ),
     source: getDomSourceHint(target)
   };
@@ -738,7 +1238,7 @@ function createAnchorCandidates(target, configuredAttribute) {
 function findClosestAttributeAnchor(target, attributeNames, confidence, options) {
   for (const attributeName of attributeNames) {
     const selector = `[${attributeName}]`;
-    const element = safeClosest(target, selector);
+    const element = tryClosest(target, selector);
     if (!element) continue;
     const value = getStableAttributeValue(element, attributeName);
     if (!value) continue;
@@ -844,7 +1344,7 @@ function getAnchorSourceElement(target, candidate, configuredAttribute) {
     return target;
   }
 }
-function safeClosest(element, selector) {
+function tryClosest(element, selector) {
   try {
     return element.closest(selector);
   } catch {
@@ -1444,6 +1944,64 @@ function setDocumentScrollInstantly(environment, position) {
   );
 }
 
+// src/core/draft.metrics.ts
+function getDraftViewportScale(viewport, presets) {
+  const preset = findReviewViewportPreset(viewport, presets);
+  const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : viewport.width;
+  const scale = designWidth > 0 ? viewport.width / designWidth : 1;
+  return { scale, designWidth, presetLabel: preset.label };
+}
+function getDraftAdjustmentMetrics(draft, presets) {
+  const adjustment = draft.adjustment;
+  const x = adjustment?.x ?? 0;
+  const y = adjustment?.y ?? 0;
+  const scale = adjustment?.scale ?? 0;
+  const {
+    scale: viewportScale,
+    designWidth,
+    presetLabel
+  } = getDraftViewportScale(draft.viewport, presets);
+  const selection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
+  const scaleCssDelta = scale * viewportScale;
+  const scaleFactor = selection && selection.width > 0 ? Math.max(
+    1 / selection.width,
+    (selection.width + scaleCssDelta) / selection.width
+  ) : 1;
+  return {
+    x,
+    y,
+    scale,
+    cssX: x * viewportScale,
+    cssY: y * viewportScale,
+    scaleFactor,
+    viewportScale,
+    designWidth,
+    presetLabel,
+    viewportWidth: draft.viewport.width
+  };
+}
+function hasDraftAdjustment(draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return metrics.x !== 0 || metrics.y !== 0 || metrics.scale !== 0;
+}
+function getAdjustedDraftPoint(point, draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return {
+    x: point.x + metrics.cssX,
+    y: point.y + metrics.cssY
+  };
+}
+function getAdjustedDraftSelection(selection, draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return {
+    ...selection,
+    left: selection.left + metrics.cssX,
+    top: selection.top + metrics.cssY,
+    width: selection.width * metrics.scaleFactor,
+    height: selection.height * metrics.scaleFactor
+  };
+}
+
 // src/core/typography.tokens.ts
 var reviewTypographyTokens = `
     --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -1613,6 +2171,10 @@ function createStyleElement() {
     }
 
     .dfwr-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
       min-height: var(--df-review-control-height-md);
       padding: 0 12px;
       border-radius: var(--df-review-radius-sm);
@@ -1631,6 +2193,21 @@ function createStyleElement() {
       border-color: var(--df-review-color-accent);
       background: var(--df-review-color-accent);
       color: var(--df-review-color-accent-contrast);
+    }
+
+    .dfwr-button:disabled {
+      cursor: default;
+      opacity: 0.62;
+    }
+
+    .dfwr-spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 999px;
+      animation: dfwr-spin 720ms linear infinite;
     }
 
     .dfwr-icon-button {
@@ -2165,10 +2742,18 @@ function createStyleElement() {
       gap: 10px;
     }
 
+    .dfwr-form-error {
+      margin: 0;
+      color: #ff8f61;
+      font-size: var(--df-review-font-size-sm);
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .dfwr-input,
+    .dfwr-select,
     .dfwr-textarea {
       width: 100%;
-      min-height: 92px;
-      resize: vertical;
       border: 1px solid rgba(255, 255, 255, 0.16);
       border-radius: var(--df-review-radius-sm);
       padding: 10px;
@@ -2179,14 +2764,39 @@ function createStyleElement() {
       line-height: 1.45;
     }
 
+    .dfwr-input,
+    .dfwr-select {
+      min-height: 38px;
+    }
+
+    .dfwr-select {
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .dfwr-textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .dfwr-input:focus,
+    .dfwr-select:focus,
     .dfwr-textarea:focus {
       outline: 2px solid var(--df-review-color-accent-ring);
       outline-offset: 1px;
     }
 
     @media (hover: none) and (pointer: coarse) {
+      .dfwr-input,
+      .dfwr-select,
       .dfwr-textarea {
         font-size: var(--df-review-font-size-xl);
+      }
+    }
+
+    @keyframes dfwr-spin {
+      to {
+        transform: rotate(360deg);
       }
     }
 
@@ -2320,6 +2930,8 @@ function createStyleElement() {
     }
 
     .dfwr-item-body {
+      display: grid;
+      gap: 4px;
       min-width: 0;
       flex: 1;
     }
@@ -2357,13 +2969,29 @@ function createStyleElement() {
       color: rgba(247, 247, 242, 0.64);
     }
 
+    .dfwr-item-title {
+      margin: 4px 0 0;
+      color: var(--df-review-color-text);
+      font-size: var(--df-review-font-size-md);
+      font-weight: var(--df-review-font-weight-normal);
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
     .dfwr-item-comment {
+      margin: 0;
+      color: var(--df-review-color-text-muted);
+      font-size: var(--df-review-font-size-sm);
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .dfwr-item-comment.is-primary {
       margin: 4px 0;
       color: var(--df-review-color-text);
       font-size: var(--df-review-font-size-md);
       line-height: 1.42;
-      overflow-wrap: anywhere;
-      white-space: pre-wrap;
     }
 
     .dfwr-item-date {
@@ -2607,7 +3235,7 @@ var WebReviewKitView = class {
         );
       }
     }
-    if (state.isOpen && state.mode === "area" && !state.areaDraft) {
+    if (state.isOpen && state.mode === "area" && !state.areaDraft && !state.isSelectingArea) {
       shell.append(this.createAreaLayer());
     }
     if (state.isOpen && state.mode === "area" && state.areaDraft && this.config.options.ui?.panel === false) {
@@ -2681,64 +3309,29 @@ var WebReviewKitView = class {
     this.config.actions.setSelectingArea(false);
     this.config.actions.render();
   }
+  // Draft adjustment geometry lives in draft.metrics.ts; these thin wrappers
+  // supply the configured viewport presets so call sites stay unchanged.
+  get viewportPresets() {
+    return this.config.options.viewports?.presets;
+  }
   getDraftAdjustmentMetrics(draft) {
-    const adjustment = draft.adjustment;
-    const x = adjustment?.x ?? 0;
-    const y = adjustment?.y ?? 0;
-    const scale = adjustment?.scale ?? 0;
-    const {
-      scale: viewportScale,
-      designWidth,
-      presetLabel
-    } = this.getDraftViewportScale(draft.viewport);
-    const selection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
-    const scaleCssDelta = scale * viewportScale;
-    const scaleFactor = selection && selection.width > 0 ? Math.max(
-      1 / selection.width,
-      (selection.width + scaleCssDelta) / selection.width
-    ) : 1;
-    return {
-      x,
-      y,
-      scale,
-      cssX: x * viewportScale,
-      cssY: y * viewportScale,
-      scaleFactor,
-      viewportScale,
-      designWidth,
-      presetLabel,
-      viewportWidth: draft.viewport.width
-    };
+    return getDraftAdjustmentMetrics(draft, this.viewportPresets);
   }
   hasDraftAdjustment(draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return metrics.x !== 0 || metrics.y !== 0 || metrics.scale !== 0;
+    return hasDraftAdjustment(draft, this.viewportPresets);
   }
   getAdjustedDraftPoint(point, draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return {
-      x: point.x + metrics.cssX,
-      y: point.y + metrics.cssY
-    };
+    return getAdjustedDraftPoint(point, draft, this.viewportPresets);
   }
   getAdjustedDraftSelection(selection, draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return {
-      ...selection,
-      left: selection.left + metrics.cssX,
-      top: selection.top + metrics.cssY,
-      width: selection.width * metrics.scaleFactor,
-      height: selection.height * metrics.scaleFactor
-    };
+    return getAdjustedDraftSelection(
+      selection,
+      draft,
+      this.viewportPresets
+    );
   }
   getDraftViewportScale(viewport) {
-    const preset = findReviewViewportPreset(
-      viewport,
-      this.config.options.viewports?.presets
-    );
-    const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : viewport.width;
-    const scale = designWidth > 0 ? viewport.width / designWidth : 1;
-    return { scale, designWidth, presetLabel: preset.label };
+    return getDraftViewportScale(viewport, this.viewportPresets);
   }
   getDraftComposerWidth(environment) {
     const bounds = environment.overlayRect;
@@ -2883,6 +3476,67 @@ var WebReviewKitView = class {
     ].join(" ");
     return trimmedComment ? `${trimmedComment}
 ${adjustment}` : adjustment;
+  }
+  getAssigneeOption(assigneeId) {
+    if (!assigneeId) return void 0;
+    return this.config.options.assigneeOptions?.find(
+      (option) => option.value === assigneeId
+    );
+  }
+  getAssigneeName(assigneeId) {
+    return this.getAssigneeOption(assigneeId)?.label;
+  }
+  createDraftTitleInput(value, onInput) {
+    const input = document.createElement("input");
+    input.className = "dfwr-input";
+    input.placeholder = "Title";
+    input.type = "text";
+    input.value = value ?? "";
+    input.addEventListener("input", () => onInput(input.value));
+    return input;
+  }
+  isTitleFieldEnabled() {
+    return this.config.options.fields?.title === true;
+  }
+  createDraftAssigneeSelect(value, fallbackLabel, onChange) {
+    const assigneeOptions = this.config.options.assigneeOptions ?? [];
+    if (assigneeOptions.length === 0) return void 0;
+    const assigneeTitle = this.config.options.assigneeTitle?.trim() || "Assignee";
+    const select = document.createElement("select");
+    select.className = "dfwr-select";
+    const emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.textContent = assigneeTitle;
+    select.append(emptyOption);
+    const hasUnknownAssignee = Boolean(value) && !assigneeOptions.some((option) => option.value === value);
+    if (hasUnknownAssignee && value) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = fallbackLabel ?? value;
+      select.append(option);
+    }
+    assigneeOptions.forEach((assigneeOption) => {
+      const option = document.createElement("option");
+      option.value = assigneeOption.value;
+      option.textContent = assigneeOption.label;
+      select.append(option);
+    });
+    select.value = value ?? "";
+    select.addEventListener("change", () => {
+      onChange(select.value || null, this.getAssigneeName(select.value));
+    });
+    return select;
+  }
+  getDraftFields(titleInput, textarea, assigneeSelect) {
+    const title = titleInput?.value.trim();
+    const comment = textarea.value.trim();
+    const assigneeId = assigneeSelect?.value.trim() || void 0;
+    return {
+      title: title || void 0,
+      comment,
+      assigneeId,
+      assigneeName: this.getAssigneeName(assigneeId)
+    };
   }
   getStyleableDraftElement(draft, environment) {
     if (draft.previewElement && draft.previewElement.ownerDocument === environment.document && "style" in draft.previewElement) {
@@ -3074,6 +3728,9 @@ ${adjustment}` : adjustment;
     empty.textContent = this.state.noteDraft ? "Write the note in the page box." : this.state.mode === "element" ? "Click an element to add QA." : "Click on the page to place a note.";
     return empty;
   }
+  // Builds the note draft layer: the on-page marker/highlight plus its composer
+  // popover. When dockComposer is set the composer renders into the side panel
+  // instead of floating next to the marker (used for the docked review mode).
   createNotePopover(draft, options = {}) {
     const environment = this.config.getEnvironment();
     const group = document.createElement("div");
@@ -3137,6 +3794,14 @@ ${adjustment}` : adjustment;
       meta.className = "dfwr-item-date";
       meta.textContent = formatNoteDraftMeta(draft);
     }
+    const titleInput = this.isTitleFieldEnabled() ? this.createDraftTitleInput(draft.title, (title) => {
+      const noteDraft = this.state.noteDraft;
+      if (!noteDraft) return;
+      this.config.actions.setNoteDraft({
+        ...noteDraft,
+        title
+      });
+    }) : void 0;
     const textarea = document.createElement("textarea");
     textarea.className = "dfwr-textarea";
     textarea.placeholder = "Review comment";
@@ -3150,13 +3815,30 @@ ${adjustment}` : adjustment;
         comment: textarea.value
       });
     });
+    const assigneeSelect = this.createDraftAssigneeSelect(
+      draft.assigneeId,
+      draft.assigneeName,
+      (assigneeId, assigneeName) => {
+        const noteDraft = this.state.noteDraft;
+        if (!noteDraft) return;
+        this.config.actions.setNoteDraft({
+          ...noteDraft,
+          assigneeId,
+          assigneeName
+        });
+      }
+    );
     const saveDraft = () => {
-      const comment = textarea.value.trim();
       const currentDraft = this.state.noteDraft ?? draft;
+      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
+      const comment = fields.comment;
       if (!comment && !this.hasDraftAdjustment(currentDraft)) return;
       void this.config.actions.createItem({
         kind: "note",
+        title: fields.title,
         comment: this.withDraftAdjustmentComment(comment, currentDraft),
+        assigneeId: fields.assigneeId,
+        assigneeName: fields.assigneeName,
         viewport: currentDraft.viewport,
         anchor: currentDraft.anchor,
         marker: currentDraft.marker,
@@ -3174,10 +3856,14 @@ ${adjustment}` : adjustment;
     const actions = this.createFormActions("Save note", saveDraft, {
       leading: adjustmentControls?.actionButton ? [adjustmentControls.actionButton] : void 0
     });
+    const error = this.createDraftError();
     form.append(
       ...meta ? [meta] : [],
       ...adjustmentControls ? [adjustmentControls.panel] : [],
+      ...titleInput ? [titleInput] : [],
       textarea,
+      ...assigneeSelect ? [assigneeSelect] : [],
+      ...error ? [error] : [],
       actions
     );
     const dragHandle = isElementDraft && !options.dockComposer ? this.createDraftDragHandle("Move DOM composer") : void 0;
@@ -3304,6 +3990,9 @@ ${adjustment}` : adjustment;
     handle.addEventListener("pointerup", stopDrag);
     handle.addEventListener("pointercancel", stopDrag);
   }
+  // Builds the element-adjustment controls (nudge the previewed element via
+  // arrow keys / buttons). Wires keyboard deltas to the draft transform and
+  // keeps the pin, popover, highlight and textarea in sync as the value changes.
   createAdjustmentControls({
     draft,
     pin,
@@ -3448,6 +4137,14 @@ ${adjustment}` : adjustment;
       return form;
     }
     form.append(this.createAreaMetricsPanel(areaDraft));
+    const titleInput = this.isTitleFieldEnabled() ? this.createDraftTitleInput(areaDraft.title, (title) => {
+      const draft = this.state.areaDraft;
+      if (!draft) return;
+      this.config.actions.setAreaDraft({
+        ...draft,
+        title
+      });
+    }) : void 0;
     const textarea = document.createElement("textarea");
     textarea.className = "dfwr-textarea";
     textarea.placeholder = "Area comment";
@@ -3461,20 +4158,44 @@ ${adjustment}` : adjustment;
         comment: textarea.value
       });
     });
+    const assigneeSelect = this.createDraftAssigneeSelect(
+      areaDraft.assigneeId,
+      areaDraft.assigneeName,
+      (assigneeId, assigneeName) => {
+        const draft = this.state.areaDraft;
+        if (!draft) return;
+        this.config.actions.setAreaDraft({
+          ...draft,
+          assigneeId,
+          assigneeName
+        });
+      }
+    );
     const actions = this.createFormActions("Save area", () => {
-      const comment = textarea.value.trim();
       const draft = this.state.areaDraft;
+      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
+      const comment = fields.comment;
       if (!comment || !draft) return;
       void this.config.actions.createItem({
         kind: "area",
+        title: fields.title,
         comment,
+        assigneeId: fields.assigneeId,
+        assigneeName: fields.assigneeName,
         viewport: draft.viewport,
         anchor: draft.anchor,
         marker: draft.marker,
         selection: draft.selection
       });
     });
-    form.append(textarea, actions);
+    const error = this.createDraftError();
+    form.append(
+      ...titleInput ? [titleInput] : [],
+      textarea,
+      ...assigneeSelect ? [assigneeSelect] : [],
+      ...error ? [error] : [],
+      actions
+    );
     return form;
   }
   createAreaMetricsPanel(draft) {
@@ -3566,18 +4287,27 @@ ${adjustment}` : adjustment;
   createFormActions(saveLabel, onSave, options) {
     const actions = document.createElement("div");
     actions.className = ["dfwr-actions", options?.className].filter(Boolean).join(" ");
+    const isSaving = this.state.isCreatingItem;
     const save = document.createElement("button");
     save.className = "dfwr-button is-primary";
     save.type = "button";
-    save.textContent = saveLabel;
+    save.disabled = isSaving;
+    save.setAttribute("aria-busy", isSaving ? "true" : "false");
+    if (isSaving) {
+      save.append(this.createSpinner("dfwr-spinner"), "Saving...");
+    } else {
+      save.textContent = saveLabel;
+    }
     save.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
+      if (this.state.isCreatingItem) return;
       onSave();
     });
     const cancel = document.createElement("button");
     cancel.className = "dfwr-button";
     cancel.type = "button";
+    cancel.disabled = isSaving;
     cancel.textContent = "Cancel";
     cancel.addEventListener("click", (event) => {
       this.cancelDraft(event);
@@ -3599,6 +4329,20 @@ ${adjustment}` : adjustment;
     }
     actions.append(save, cancel);
     return actions;
+  }
+  createSpinner(className) {
+    const spinner = document.createElement("span");
+    spinner.className = className;
+    spinner.setAttribute("aria-hidden", "true");
+    return spinner;
+  }
+  createDraftError() {
+    if (!this.state.draftError) return void 0;
+    const error = document.createElement("p");
+    error.className = "dfwr-form-error";
+    error.setAttribute("role", "alert");
+    error.textContent = this.state.draftError;
+    return error;
   }
   createList() {
     const section = document.createElement("div");
@@ -3652,14 +4396,20 @@ ${adjustment}` : adjustment;
     kind.className = "dfwr-item-kind";
     kind.textContent = item.kind;
     badges.append(scope, kind);
+    const title = this.isTitleFieldEnabled() ? item.title?.trim() : "";
+    const titleElement = title ? document.createElement("strong") : void 0;
+    if (title && titleElement) {
+      titleElement.className = "dfwr-item-title";
+      titleElement.textContent = title;
+    }
     const comment = document.createElement("p");
-    comment.className = "dfwr-item-comment";
+    comment.className = `dfwr-item-comment${title ? "" : " is-primary"}`;
     comment.textContent = item.comment;
     const date = document.createElement("time");
     date.className = "dfwr-item-date";
     date.dateTime = item.createdAt;
     date.textContent = formatItemMeta(item);
-    body.append(badges, comment, date);
+    body.append(badges, ...titleElement ? [titleElement] : [], comment, date);
     const actions = document.createElement("div");
     actions.className = "dfwr-item-actions";
     actions.addEventListener("click", (event) => event.stopPropagation());
@@ -3848,7 +4598,14 @@ ${formatItemMeta(item)}`;
         event,
         this.config.getEnvironment()
       );
-      void (this.state.mode === "element" ? this.config.actions.bindElementDraftToPoint(nextPoint, textarea.value) : this.config.actions.bindNoteDraftToPoint(nextPoint, textarea.value));
+      const currentDraft = this.state.noteDraft;
+      const fields = {
+        title: currentDraft?.title,
+        comment: textarea.value,
+        assigneeId: currentDraft?.assigneeId,
+        assigneeName: currentDraft?.assigneeName
+      };
+      void (this.state.mode === "element" ? this.config.actions.bindElementDraftToPoint(nextPoint, fields) : this.config.actions.bindNoteDraftToPoint(nextPoint, fields));
     });
   }
   createNoteLayer() {
@@ -3926,10 +4683,14 @@ ${formatItemMeta(item)}`;
     let startX = 0;
     let startY = 0;
     let selection;
+    let activePointerId;
+    let isDragging = false;
+    const ownerWindow = layer.ownerDocument.defaultView ?? window;
     const updateBox = (event) => {
+      const nextEnvironment = this.config.getEnvironment();
       const nextPoint = toTargetPointFromHostEvent(
         event,
-        this.config.getEnvironment()
+        nextEnvironment
       );
       const left = Math.min(startX, nextPoint.x);
       const top = Math.min(startY, nextPoint.y);
@@ -3937,7 +4698,7 @@ ${formatItemMeta(item)}`;
       const height = Math.abs(nextPoint.y - startY);
       const hostPoint = toHostPoint(
         { x: left, y: top },
-        this.config.getEnvironment()
+        nextEnvironment
       );
       selection = { left, top, width, height };
       box.style.left = `${hostPoint.x}px`;
@@ -3945,9 +4706,68 @@ ${formatItemMeta(item)}`;
       box.style.width = `${width}px`;
       box.style.height = `${height}px`;
     };
-    layer.addEventListener("pointerdown", (event) => {
+    const addDragListeners = () => {
+      ownerWindow.addEventListener("pointermove", handlePointerMove, true);
+      ownerWindow.addEventListener("pointerup", handlePointerUp, true);
+      ownerWindow.addEventListener("pointercancel", handlePointerCancel, true);
+    };
+    const removeDragListeners = () => {
+      ownerWindow.removeEventListener("pointermove", handlePointerMove, true);
+      ownerWindow.removeEventListener("pointerup", handlePointerUp, true);
+      ownerWindow.removeEventListener(
+        "pointercancel",
+        handlePointerCancel,
+        true
+      );
+    };
+    const releasePointerCapture = (event) => {
+      try {
+        if (layer.hasPointerCapture(event.pointerId)) {
+          layer.releasePointerCapture(event.pointerId);
+        }
+      } catch {
+      }
+    };
+    function isActivePointer(event) {
+      return isDragging && event.pointerId === activePointerId;
+    }
+    const finishAreaSelection = (event) => {
+      if (!isActivePointer(event)) return;
       event.preventDefault();
-      layer.setPointerCapture(event.pointerId);
+      updateBox(event);
+      releasePointerCapture(event);
+      removeDragListeners();
+      isDragging = false;
+      activePointerId = void 0;
+      if (!selection || selection.width < 8 || selection.height < 8) return;
+      this.config.actions.setSelectingArea(true);
+      this.config.actions.render();
+      void this.config.actions.createAreaDraft(selection);
+    };
+    function handlePointerMove(event) {
+      if (!isActivePointer(event)) return;
+      event.preventDefault();
+      updateBox(event);
+    }
+    const handlePointerUp = (event) => {
+      finishAreaSelection(event);
+    };
+    const handlePointerCancel = (event) => {
+      if (!isActivePointer(event)) return;
+      releasePointerCapture(event);
+      removeDragListeners();
+      isDragging = false;
+      activePointerId = void 0;
+    };
+    layer.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      activePointerId = event.pointerId;
+      isDragging = true;
+      try {
+        layer.setPointerCapture(event.pointerId);
+      } catch {
+      }
       const startPoint = toTargetPointFromHostEvent(
         event,
         this.config.getEnvironment()
@@ -3955,20 +4775,11 @@ ${formatItemMeta(item)}`;
       startX = startPoint.x;
       startY = startPoint.y;
       updateBox(event);
+      addDragListeners();
     });
-    layer.addEventListener("pointermove", (event) => {
-      if (!layer.hasPointerCapture(event.pointerId)) return;
-      updateBox(event);
-    });
-    layer.addEventListener("pointerup", (event) => {
-      if (!layer.hasPointerCapture(event.pointerId)) return;
-      layer.releasePointerCapture(event.pointerId);
-      updateBox(event);
-      if (!selection || selection.width < 8 || selection.height < 8) return;
-      this.config.actions.setSelectingArea(true);
-      this.config.actions.render();
-      void this.config.actions.createAreaDraft(selection);
-    });
+    layer.addEventListener("pointermove", handlePointerMove);
+    layer.addEventListener("pointerup", handlePointerUp);
+    layer.addEventListener("pointercancel", handlePointerCancel);
     return layer;
   }
 };
@@ -4008,6 +4819,8 @@ var WebReviewKitApp = class {
     this.isOpen = false;
     this.mode = "idle";
     this.items = [];
+    this.draftError = "";
+    this.isCreatingItem = false;
     this.isSelectingArea = false;
     this.handleKeyDown = (event) => {
       if (event.key === "Escape" && this.cancelMode()) {
@@ -4038,6 +4851,8 @@ var WebReviewKitApp = class {
         items: this.items,
         noteDraft: this.noteDraft,
         areaDraft: this.areaDraft,
+        draftError: this.draftError,
+        isCreatingItem: this.isCreatingItem,
         isSelectingArea: this.isSelectingArea,
         highlightedItemId: this.highlightedItemId
       }),
@@ -4052,19 +4867,22 @@ var WebReviewKitApp = class {
         clearDrafts: () => {
           this.noteDraft = void 0;
           this.areaDraft = void 0;
+          this.draftError = "";
         },
         setNoteDraft: (draft) => {
           this.noteDraft = draft;
+          this.draftError = "";
         },
         setAreaDraft: (draft) => {
           this.areaDraft = draft;
+          this.draftError = "";
         },
         setSelectingArea: (isSelectingArea) => {
           this.isSelectingArea = isSelectingArea;
         },
         createItem: (input) => this.createItem(input),
-        bindNoteDraftToPoint: (point, comment) => this.bindNoteDraftToPoint(point, comment),
-        bindElementDraftToPoint: (point, comment) => this.bindElementDraftToPoint(point, comment),
+        bindNoteDraftToPoint: (point, fields) => this.bindNoteDraftToPoint(point, fields),
+        bindElementDraftToPoint: (point, fields) => this.bindElementDraftToPoint(point, fields),
         createAreaDraft: (selection) => this.createAreaDraft(selection)
       }
     });
@@ -4133,7 +4951,7 @@ var WebReviewKitApp = class {
     this.noteDraft = void 0;
     this.areaDraft = void 0;
     this.isSelectingArea = false;
-    await this.bindElementDraftToElement(element, comment);
+    await this.bindElementDraftToElement(element, { comment });
   }
   getMode() {
     return this.mode;
@@ -4276,7 +5094,7 @@ var WebReviewKitApp = class {
     if (!this.shadow) return;
     this.view.render(this.shadow, this.createHiddenItemsStyleElement());
   }
-  async bindNoteDraftToPoint(point, comment) {
+  async bindNoteDraftToPoint(point, fields = {}) {
     const environment = this.getEnvironment();
     if (!environment) return;
     const viewport = getViewportSize(environment);
@@ -4296,13 +5114,13 @@ var WebReviewKitApp = class {
         viewport,
         anchor,
         marker,
-        comment
+        ...fields
       };
     });
     this.noteDraft = draft;
     this.render();
   }
-  async bindElementDraftToPoint(point, comment) {
+  async bindElementDraftToPoint(point, fields = {}) {
     const environment = this.getEnvironment();
     if (!environment) return;
     const viewport = getViewportSize(environment);
@@ -4346,14 +5164,14 @@ var WebReviewKitApp = class {
         anchor,
         marker,
         selection: reviewSelection,
-        comment,
+        ...fields,
         previewElement
       };
     });
     this.noteDraft = draft;
     this.render();
   }
-  async bindElementDraftToElement(element, comment) {
+  async bindElementDraftToElement(element, fields = {}) {
     const environment = this.getEnvironment();
     if (!environment || element.ownerDocument !== environment.document) return;
     const viewport = getViewportSize(environment);
@@ -4386,7 +5204,7 @@ var WebReviewKitApp = class {
         anchor,
         marker,
         selection: reviewSelection,
-        comment,
+        ...fields,
         previewElement
       };
     });
@@ -4396,26 +5214,33 @@ var WebReviewKitApp = class {
   }
   async createAreaDraft(selection) {
     const environment = this.getEnvironment();
-    if (!environment) return;
-    const viewport = getViewportSize(environment);
-    this.areaDraft = await this.withOverlayHidden(() => {
-      const marker = createSelectionCenterMarker(
-        selection,
-        void 0,
-        environment
-      );
-      const reviewSelection = {
-        viewport: toPublicSelection(selection)
-      };
-      return {
-        viewport,
-        marker,
-        selection: reviewSelection
-      };
-    });
-    this.isSelectingArea = false;
-    this.setModeState("area");
-    this.render();
+    if (!environment) {
+      this.isSelectingArea = false;
+      this.render();
+      return;
+    }
+    try {
+      const viewport = getViewportSize(environment);
+      this.areaDraft = await this.withOverlayHidden(() => {
+        const marker = createSelectionCenterMarker(
+          selection,
+          void 0,
+          environment
+        );
+        const reviewSelection = {
+          viewport: toPublicSelection(selection)
+        };
+        return {
+          viewport,
+          marker,
+          selection: reviewSelection
+        };
+      });
+      this.setModeState("area");
+    } finally {
+      this.isSelectingArea = false;
+      this.render();
+    }
   }
   async withOverlayHidden(callback) {
     if (!this.root) return callback();
@@ -4429,11 +5254,16 @@ var WebReviewKitApp = class {
   }
   async createItem(input) {
     const environment = this.getEnvironment();
-    if (!environment) return;
+    if (!environment || this.isCreatingItem) return;
     const now = (/* @__PURE__ */ new Date()).toISOString();
     const routeKey = getRouteKey(environment);
     const viewport = input.viewport ?? getViewportSize(environment);
     const createdBy = this.options.userId?.trim();
+    const title = input.title?.trim();
+    const assigneeId = input.assigneeId?.trim() || void 0;
+    const assigneeOption = this.options.assigneeOptions?.find(
+      (option) => option.value === assigneeId
+    );
     const item = {
       id: createId(),
       projectId: this.options.projectId,
@@ -4443,8 +5273,10 @@ var WebReviewKitApp = class {
       normalizedPath: routeKey,
       scope: input.scope ?? getReviewViewportScope(viewport, this.options.viewports?.presets),
       kind: input.kind,
-      title: input.comment.split("\n")[0]?.slice(0, 80),
+      title: title || void 0,
       comment: input.comment,
+      assigneeId,
+      assigneeName: input.assigneeName ?? assigneeOption?.label,
       createdBy: createdBy || void 0,
       status: "todo",
       viewport,
@@ -4459,13 +5291,23 @@ var WebReviewKitApp = class {
       createdAt: now,
       updatedAt: now
     };
-    const createdItem = await this.adapter.create(item);
-    this.setModeState("idle");
-    this.noteDraft = void 0;
-    this.areaDraft = void 0;
-    this.highlightItem(createdItem.id);
-    await this.reload();
-    await this.options.onCreateItem?.(createdItem);
+    this.draftError = "";
+    this.isCreatingItem = true;
+    this.render();
+    try {
+      const createdItem = await this.adapter.create(item);
+      this.setModeState("idle");
+      this.noteDraft = void 0;
+      this.areaDraft = void 0;
+      this.highlightItem(createdItem.id);
+      await this.reload();
+      await this.options.onCreateItem?.(createdItem);
+    } catch (error) {
+      this.draftError = error instanceof Error ? error.message : "Failed to save QA.";
+    } finally {
+      this.isCreatingItem = false;
+      this.render();
+    }
   }
   async restoreItem(item) {
     this.setModeState("idle");
@@ -4519,16 +5361,35 @@ function createNoopController() {
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+  DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
+  DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
   DEFAULT_REVIEW_VIEWPORTS,
+  FIGMA_NODE_REF_SEPARATOR,
+  REVIEW_FIGMA_TOKEN_MISSING_CODE,
   REVIEW_WORKFLOW_STATUS_OPTIONS,
+  ReviewFigmaTokenError,
+  collectReviewFigmaReleaseSnapshot,
+  createReviewFigmaFrameUrl,
+  createReviewFigmaImageStoreClient,
+  createReviewFigmaImagesSnapshot,
+  createReviewFigmaNodeValue,
+  createReviewFigmaReleaseSnapshot,
   createWebReviewKit,
   findReviewViewportPreset,
   getNumberedReviewItems,
+  getReviewFigmaImageMimeType,
+  getReviewFigmaImageTargetKey,
   getReviewItemScope,
   getReviewItemScopeLabel,
   getReviewViewportScope,
+  isReviewFigmaTokenError,
   localAdapter,
   normalizeReviewItemStatus,
+  parseReviewFigmaNodeRef,
+  readReviewFigmaToken,
+  requireReviewFigmaNodeRef,
+  requireReviewFigmaToken,
   supabaseAdapter
 });
 //# sourceMappingURL=index.cjs.map

@@ -4,6 +4,9 @@ import { getItemTarget } from '../route';
 export const getItemTitle = (item: ReviewItem) =>
   item.title || item.comment.split('\n')[0] || item.kind;
 
+const getItemAssigneeLabel = (item: ReviewItem) =>
+  item.assigneeName || item.assigneeId || '(none)';
+
 const formatPromptViewport = (item: ReviewItem) =>
   `${Math.round(item.viewport?.width ?? 0)}x${Math.round(
     item.viewport?.height ?? 0
@@ -111,6 +114,8 @@ export const buildReviewItemPrompt = (
     `Page: ${getItemTarget(item, reviewPathPrefix)}`,
     `URL: ${item.originalUrl ?? item.pageUrl}`,
     `QA item: ${numberedItem.displayLabel}`,
+    `Title: ${item.title?.trim() || '(none)'}`,
+    `Assignee: ${getItemAssigneeLabel(item)}`,
     `Viewport: ${numberedItem.label} ${formatPromptViewport(item)}`,
     `Scroll: ${formatPromptPoint(item.scroll)}`,
     '',
@@ -136,7 +141,7 @@ export const buildReviewItemPrompt = (
       : '(not available)',
     '```',
     '',
-    'Issue:',
+    'Issue comment:',
     item.comment,
     '',
     'Request:',

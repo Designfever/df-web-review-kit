@@ -5,6 +5,8 @@ import {
   type RefObject,
 } from 'react';
 import type {
+  ReviewAssigneeOption,
+  ReviewFieldsConfig,
   ReviewItem,
   ReviewMode,
   ReviewRulerConfig,
@@ -21,6 +23,9 @@ import { getReviewKitTarget } from './review.kit.target';
 
 interface UseReviewKitLifecycleOptions {
   adapter: WebReviewKitAdapter;
+  fields: Required<Pick<ReviewFieldsConfig, 'title'>>;
+  assigneeTitle: string;
+  assigneeOptions: readonly ReviewAssigneeOption[];
   cleanupTargetRef: MutableRefObject<(() => void) | null>;
   controllerRef: MutableRefObject<WebReviewKitController | null>;
   frameScrollRef: RefObject<HTMLDivElement | null>;
@@ -51,6 +56,9 @@ interface UseReviewKitLifecycleOptions {
 
 export const useReviewKitLifecycle = ({
   adapter,
+  fields,
+  assigneeTitle,
+  assigneeOptions,
   cleanupTargetRef,
   controllerRef,
   frameScrollRef,
@@ -109,6 +117,9 @@ export const useReviewKitLifecycle = ({
       projectId,
       userId: reviewUserId.trim() || undefined,
       adapter,
+      fields,
+      assigneeTitle,
+      assigneeOptions,
       target: () => getReviewKitTarget({ frameScrollRef, iframeRef }),
       hotkeys: {
         qa: 'Shift+Q',
@@ -148,6 +159,9 @@ export const useReviewKitLifecycle = ({
     );
   }, [
     adapter,
+    fields,
+    assigneeTitle,
+    assigneeOptions,
     cleanupTargetRef,
     controllerRef,
     destroyReviewKit,

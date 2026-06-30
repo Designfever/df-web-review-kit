@@ -1,5 +1,9 @@
-import { L as LocalAdapterOptions, W as WebReviewKitAdapter, S as SupabaseReviewAdapterOptions, R as ReviewWorkflowStatus, a as ReviewItemStatus, b as WebReviewKitOptions, c as WebReviewKitController, d as ReviewViewportPreset, V as ViewportSize, e as ReviewItem, N as NumberedReviewItem, f as ReviewItemScope } from './types-DFHHVRBc.js';
-export { D as DomAnchor, g as DomAnchorCandidate, h as DomAnchorStrategy, i as DomSourceHint, j as RelativeSelection, k as ReviewItemKind, l as ReviewItemQuery, m as ReviewMarker, n as ReviewMode, o as ReviewPoint, p as ReviewRulerConfig, q as ReviewSelection, r as ReviewSource, s as ReviewSubmitStatus, t as ReviewViewportScope, u as SupabaseReviewClient, v as WebReviewKitTarget } from './types-DFHHVRBc.js';
+import { L as LocalAdapterOptions, W as WebReviewKitAdapter, S as SupabaseReviewAdapterOptions, R as ReviewWorkflowStatus, a as ReviewItemStatus, b as WebReviewKitOptions, c as WebReviewKitController, d as ReviewViewportPreset, V as ViewportSize, e as ReviewItem, N as NumberedReviewItem, f as ReviewItemScope } from './types-DT9Z66mV.js';
+export { D as DomAnchor, g as DomAnchorCandidate, h as DomAnchorStrategy, i as DomSourceHint, j as RelativeSelection, k as ReviewAssigneeOption, l as ReviewItemKind, m as ReviewItemQuery, n as ReviewMarker, o as ReviewMode, p as ReviewPoint, q as ReviewRulerConfig, r as ReviewSelection, s as ReviewSource, t as ReviewSubmitStatus, u as ReviewViewportScope, v as SupabaseReviewClient, w as WebReviewKitTarget } from './types-DT9Z66mV.js';
+import { R as ReviewFigmaImageStore, a as ReviewFigmaImageFormat, b as ReviewFigmaImageTarget } from './image.types-BmzkFSPX.js';
+export { A as AddReviewFigmaImageInput, D as DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT, c as ReorderReviewFigmaImagesInput, d as ReviewFigmaImage, e as ReviewFigmaImageAssetInput, f as ReviewFigmaImageViewport, g as ReviewFigmaNodeTarget, h as ReviewFigmaRouteTarget, U as UpdateReviewFigmaImageInput } from './image.types-BmzkFSPX.js';
+import { R as ReviewFigmaRenderFormat } from './token-nJXPPdYX.js';
+export { C as CollectReviewFigmaReleaseSnapshotOptions, a as CreateReviewFigmaImagesSnapshotOptions, b as CreateReviewFigmaReleaseSnapshotOptions, D as DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY, F as FIGMA_NODE_REF_SEPARATOR, c as REVIEW_FIGMA_TOKEN_MISSING_CODE, d as ReviewFigmaImagesSnapshot, e as ReviewFigmaNodeRef, f as ReviewFigmaReleaseSnapshot, g as ReviewFigmaTokenEnv, h as ReviewFigmaTokenError, i as ReviewFigmaTokenOptions, j as collectReviewFigmaReleaseSnapshot, k as createReviewFigmaFrameUrl, l as createReviewFigmaImagesSnapshot, m as createReviewFigmaNodeValue, n as createReviewFigmaReleaseSnapshot, o as isReviewFigmaTokenError, p as parseReviewFigmaNodeRef, r as readReviewFigmaToken, q as requireReviewFigmaNodeRef, s as requireReviewFigmaToken } from './token-nJXPPdYX.js';
 
 declare function localAdapter(options?: LocalAdapterOptions): WebReviewKitAdapter;
 
@@ -10,6 +14,26 @@ declare const REVIEW_WORKFLOW_STATUS_OPTIONS: Array<{
     label: string;
 }>;
 declare function normalizeReviewItemStatus(status: ReviewItemStatus | undefined): ReviewWorkflowStatus;
+
+declare const DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT = "/__dfwr/figma-images";
+type ReviewFigmaImageStoreClientOptions = {
+    endpoint?: string;
+    fetch?: typeof fetch;
+    clientRender?: boolean | ReviewFigmaImageClientRenderOptions;
+};
+type ReviewFigmaImageClientRenderOptions = {
+    token?: string | null | (() => string | null | undefined);
+    apiBaseUrl?: string;
+    renderFormat?: Extract<ReviewFigmaRenderFormat, 'png' | 'jpg'>;
+    renderScale?: number;
+    useAbsoluteBounds?: boolean;
+    convertToWebp?: boolean;
+    webpQuality?: number;
+    timeoutMs?: number;
+};
+declare function createReviewFigmaImageStoreClient(options?: ReviewFigmaImageStoreClientOptions): ReviewFigmaImageStore;
+declare function getReviewFigmaImageTargetKey(target: ReviewFigmaImageTarget): string;
+declare function getReviewFigmaImageMimeType(format: ReviewFigmaImageFormat): "image/webp" | "image/png" | "image/jpeg";
 
 /** Creates the vanilla runtime controller that mounts review overlays on a target page. */
 declare function createWebReviewKit(options: WebReviewKitOptions): WebReviewKitController;
@@ -27,4 +51,4 @@ declare function getReviewItemScopeLabel(item: ReviewItem, presets?: ReviewViewp
 /** Adds scope-aware display labels to review items without mutating them. */
 declare function getNumberedReviewItems(items: ReviewItem[], presets?: ReviewViewportPreset[]): NumberedReviewItem[];
 
-export { DEFAULT_REVIEW_VIEWPORTS, LocalAdapterOptions, NumberedReviewItem, REVIEW_WORKFLOW_STATUS_OPTIONS, ReviewItem, ReviewItemScope, ReviewItemStatus, ReviewViewportPreset, ReviewWorkflowStatus, SupabaseReviewAdapterOptions, ViewportSize, WebReviewKitAdapter, WebReviewKitController, WebReviewKitOptions, createWebReviewKit, findReviewViewportPreset, getNumberedReviewItems, getReviewItemScope, getReviewItemScopeLabel, getReviewViewportScope, localAdapter, normalizeReviewItemStatus, supabaseAdapter };
+export { DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT, DEFAULT_REVIEW_VIEWPORTS, LocalAdapterOptions, NumberedReviewItem, REVIEW_WORKFLOW_STATUS_OPTIONS, type ReviewFigmaImageClientRenderOptions, ReviewFigmaImageFormat, ReviewFigmaImageStore, type ReviewFigmaImageStoreClientOptions, ReviewFigmaImageTarget, ReviewItem, ReviewItemScope, ReviewItemStatus, ReviewViewportPreset, ReviewWorkflowStatus, SupabaseReviewAdapterOptions, ViewportSize, WebReviewKitAdapter, WebReviewKitController, WebReviewKitOptions, createReviewFigmaImageStoreClient, createWebReviewKit, findReviewViewportPreset, getNumberedReviewItems, getReviewFigmaImageMimeType, getReviewFigmaImageTargetKey, getReviewItemScope, getReviewItemScopeLabel, getReviewViewportScope, localAdapter, normalizeReviewItemStatus, supabaseAdapter };

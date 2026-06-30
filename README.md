@@ -22,12 +22,13 @@ This package does not own internal operator tools, private admin keys, or produc
 
 - [Installation](docs/installation.md): install the package and mount `/review`.
 - [.env.sample](.env.sample): copyable host project env template for local, Supabase, and source opening.
+- [Adapter boundaries](docs/adapters.md): QA adapter vs Figma image store responsibilities.
 - [Custom adapter sample](docs/adaptor.sample.ts): starting point for host-owned remote adapters.
 - [DB setup](docs/db-setup.md): optional Supabase `review_items` setup, RLS, presence notes, and validation.
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, and extension boundaries.
 - [Figma overlay](docs/figma-overlay.md): how the shell toggles a host Figma overlay.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.6.0](docs/release-notes-0.6.0.md): latest shell/source tree changes and validation notes.
+- [Release notes 0.7.0](docs/release-notes-0.7.0.md): latest Figma image, QA field, and remote adapter loading changes.
 
 ## Quick Start
 
@@ -63,8 +64,16 @@ mountReviewShell({
       get: (id) => local.get(id),
       list: (query) => local.list(query),
       create: (item) => local.create(item),
+      fields: { title: true },
       statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
       updateStatus: ({ id, status }) => local.update(id, { status }),
+      assigneeTitle: 'Assignee',
+      assigneeOptions: [
+        { value: 'planning', label: 'Planning' },
+        { value: 'frontend', label: 'Frontend' },
+      ],
+      updateAssignee: ({ id, assigneeId, assigneeName }) =>
+        local.update(id, { assigneeId, assigneeName }),
       syncSubmission: ({ id, patch }) => local.update(id, patch),
       remove: (id) => local.remove(id),
     },

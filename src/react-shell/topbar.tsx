@@ -1,5 +1,6 @@
 import {
-  Image as ImageIcon,
+  Copy as CopyIcon,
+  ExternalLink as ExternalLinkIcon,
   LayoutGrid as LayoutGridIcon,
   Map as MapIcon,
   Maximize2 as Maximize2Icon,
@@ -13,6 +14,7 @@ import {
 import type { ChangeEvent } from 'react';
 import type { ReviewItemScope } from '../index';
 import { FIGMA_OVERLAY_UNAVAILABLE_MESSAGE } from './constants';
+import { FigmaMarkIcon } from './figma/figma-mark-icon';
 import type {
   ReviewShellViewportPreset,
   TargetOverlayKey,
@@ -29,6 +31,8 @@ interface ReviewTopbarProps {
   isRulerAvailable: boolean;
   isRulerVisible: boolean;
   targetOverlayState: TargetOverlayState;
+  figmaOverlayUnavailableMessage?: string;
+  isFigmaOverlayActive: boolean;
   isFigmaOverlayAvailable: boolean;
   onDraftTargetChange: (value: string) => void;
   onApplyTarget: () => void;
@@ -36,6 +40,7 @@ interface ReviewTopbarProps {
   onCopyCurrentUrl: () => void;
   onSizeChange: (preset: ReviewShellViewportPreset) => void;
   onToggleRuler: () => void;
+  onToggleFigmaOverlay: () => void;
   onToggleTargetOverlay: (key: TargetOverlayKey) => void;
 }
 
@@ -58,6 +63,12 @@ const ViewportPresetIcon = ({
 const getPresetSelectValue = (preset: ReviewShellViewportPreset) =>
   `${preset.label}:${preset.width}x${preset.height}`;
 
+function getTargetOpenHref(targetSrc: string) {
+  const url = new URL(targetSrc, window.location.origin);
+  url.searchParams.delete('__dfwr_target');
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
 export const ReviewTopbar = ({
   draftTarget,
   copyLabel,
@@ -67,6 +78,8 @@ export const ReviewTopbar = ({
   isRulerAvailable,
   isRulerVisible,
   targetOverlayState,
+  figmaOverlayUnavailableMessage = FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
+  isFigmaOverlayActive,
   isFigmaOverlayAvailable,
   onDraftTargetChange,
   onApplyTarget,
@@ -74,9 +87,11 @@ export const ReviewTopbar = ({
   onCopyCurrentUrl,
   onSizeChange,
   onToggleRuler,
+  onToggleFigmaOverlay,
   onToggleTargetOverlay,
 }: ReviewTopbarProps) => {
   const selectedPresetValue = getPresetSelectValue(size);
+  const targetHref = getTargetOpenHref(draftTarget);
   const handlePresetSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const nextPreset = viewportPresets.find(
       (preset) => getPresetSelectValue(preset) === event.currentTarget.value
@@ -109,15 +124,31 @@ export const ReviewTopbar = ({
         <div className="df-review-address-actions">
           <button
             aria-label="Refresh target"
-            className="df-review-address-refresh"
+            className="df-review-address-icon-button"
             title="Refresh target"
             type="submit"
           >
             <RefreshCwIcon aria-hidden="true" />
           </button>
-          <button type="button" onClick={onCopyCurrentUrl}>
-            {copyLabel}
+          <button
+            aria-label={copyLabel}
+            className="df-review-address-icon-button"
+            title={copyLabel}
+            type="button"
+            onClick={onCopyCurrentUrl}
+          >
+            <CopyIcon aria-hidden="true" />
           </button>
+          <a
+            aria-label="Open target page"
+            className="df-review-address-icon-button"
+            href={targetHref}
+            rel="noreferrer"
+            target="_blank"
+            title="Open target page"
+          >
+            <ExternalLinkIcon aria-hidden="true" />
+          </a>
         </div>
       </form>
 
@@ -198,17 +229,19 @@ export const ReviewTopbar = ({
             aria-disabled={!isFigmaOverlayAvailable}
             aria-label={
               isFigmaOverlayAvailable
-                ? 'Toggle Figma overlay'
-                : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE
+                ? isFigmaOverlayActive
+                  ? 'Hide Figma overlays'
+                  : 'Show Figma overlays'
+                : figmaOverlayUnavailableMessage
             }
             className={`df-review-overlay-button is-figma${
-              targetOverlayState.figma ? ' is-active' : ''
+              isFigmaOverlayActive ? ' is-active' : ''
             }${isFigmaOverlayAvailable ? '' : ' is-disabled'}`}
             disabled={!isFigmaOverlayAvailable}
             type="button"
-            onClick={() => onToggleTargetOverlay('figma')}
+            onClick={onToggleFigmaOverlay}
           >
-            <ImageIcon aria-hidden="true" />
+            <FigmaMarkIcon />
           </button>
         </div>
       </div>

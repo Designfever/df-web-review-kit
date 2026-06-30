@@ -41,6 +41,7 @@ When the React shell provides a composer host, core docks DOM/area draft compose
 
 - `web.review.kit.app.ts`: controller lifecycle, state transitions, adapter calls, item creation, restore flow.
 - `web.review.kit.view.ts`: vanilla DOM renderer for core overlay UI.
+- `draft.metrics.ts`: pure geometry for draft adjustment (nudge/scale) previews, kept out of the renderer.
 - `dom.anchor.ts`: selector candidate generation, anchor rebinding, text fingerprint matching.
 - `geometry.ts`: target-space and host-space coordinate conversion.
 - `review/item.ts`: marker, selection, highlight, and fallback resolution.
@@ -83,7 +84,7 @@ Core never owns persistence storage directly. It only calls the configured `WebR
 - `update`
 - `remove`
 
-The default local adapter is for draft/local review work. Supabase is optional host wiring, not a required backend.
+The default local adapter is for draft/local review work. Supabase is optional host wiring, not a required backend. Figma reference images use a separate `ReviewFigmaImageStore`; see [Adapter boundaries](adapters.md).
 
 ## React Shell Boundary
 

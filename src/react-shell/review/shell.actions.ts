@@ -5,6 +5,7 @@ import type {
 } from 'react';
 import type {
   NumberedReviewItem,
+  ReviewFieldsConfig,
   ReviewItem,
   ReviewItemStatus,
   ReviewSource,
@@ -56,9 +57,19 @@ interface UpdateReviewItemStatusOptions {
   onToast?: (message: string) => void;
 }
 
-interface UpdateReviewItemCommentOptions {
+interface UpdateReviewItemAssigneeOptions {
   activeAdapterEntry: NormalizedReviewShellAdapter;
   item: ReviewItem;
+  assigneeId: string | null;
+  onRefreshReviewData: () => Promise<void>;
+  onToast?: (message: string) => void;
+}
+
+interface UpdateReviewItemDetailsOptions {
+  activeAdapterEntry: NormalizedReviewShellAdapter;
+  fields: Required<Pick<ReviewFieldsConfig, 'title'>>;
+  item: ReviewItem;
+  title?: string;
   comment: string;
   onRefreshReviewData: () => Promise<void>;
   onToast?: (message: string) => void;
@@ -240,13 +251,54 @@ export const updateReviewItemStatus = async ({
   onToast?.('QA status updated');
 };
 
-export const updateReviewItemComment = async ({
+export const updateReviewItemAssignee = async ({
   activeAdapterEntry,
   item,
+  assigneeId,
+  onRefreshReviewData,
+  onToast,
+}: UpdateReviewItemAssigneeOptions) => {
+  if (!activeAdapterEntry.updateAssignee) return;
+
+  const assigneeIndex = activeAdapterEntry.assigneeOptions.findIndex(
+    (assigneeOption) => assigneeOption.value === assigneeId
+  );
+  const assigneeOption = activeAdapterEntry.assigneeOptions[assigneeIndex];
+  const nextAssigneeId =
+    assigneeOption?.value ??
+    (assigneeId && item.assigneeId === assigneeId ? assigneeId : null);
+  const nextAssigneeName =
+    assigneeOption?.label ??
+    (nextAssigneeId ? item.assigneeName : undefined);
+
+  if ((item.assigneeId ?? null) === nextAssigneeId) {
+    onToast?.('No QA assignee changes');
+    return item;
+  }
+
+  const updated = await activeAdapterEntry.updateAssignee({
+    id: item.id,
+    item,
+    assigneeId: nextAssigneeId,
+    assigneeName: nextAssigneeName,
+    assigneeOption,
+    assigneeIndex,
+  });
+  await onRefreshReviewData();
+  onToast?.('QA assignee updated');
+  return updated as ReviewItem;
+};
+
+export const updateReviewItemDetails = async ({
+  activeAdapterEntry,
+  fields,
+  item,
+  title,
   comment,
   onRefreshReviewData,
   onToast,
-}: UpdateReviewItemCommentOptions) => {
+}: UpdateReviewItemDetailsOptions) => {
+  const nextTitle = title?.trim() || undefined;
   const nextComment = comment.trim();
   if (!nextComment) throw new Error('Comment is required.');
   if (!activeAdapterEntry.canUpdate) {
@@ -255,16 +307,21 @@ export const updateReviewItemComment = async ({
     );
   }
 
-  if (nextComment === item.comment.trim()) {
-    onToast?.('No QA comment changes');
+  const isTitleUnchanged =
+    !fields.title || nextTitle === (item.title?.trim() || undefined);
+  const isUnchanged = isTitleUnchanged && nextComment === item.comment.trim();
+
+  if (isUnchanged) {
+    onToast?.('No QA changes');
     return item;
   }
 
   const updated = await activeAdapterEntry.adapter.update(item.id, {
+    ...(fields.title ? { title: nextTitle } : {}),
     comment: nextComment,
   });
   await onRefreshReviewData();
-  onToast?.('QA comment updated');
+  onToast?.('QA updated');
   return updated;
 };
 

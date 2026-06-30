@@ -1,4 +1,5 @@
 import {
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   clamp,
   createWebReviewKit,
@@ -6,11 +7,11 @@ import {
   normalizeReviewItemStatus,
   reviewTypographyTokens,
   runWithAutoScrollBehavior
-} from "./chunk-22HU3UBN.js";
+} from "./chunk-RPVLRULC.js";
 
 // src/react-shell.tsx
-import React from "react";
-import { createRoot } from "react-dom/client";
+import React2 from "react";
+import { createRoot as createRoot2 } from "react-dom/client";
 
 // src/react-shell/style/base.ts
 var reviewShellBaseStyle = `
@@ -42,6 +43,26 @@ var reviewShellBaseStyle = `
 	  *::-webkit-scrollbar-corner {
 	    background: transparent;
 	  }
+
+  .df-review-spinner {
+    display: inline-block;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+    box-sizing: border-box;
+    border: 3px solid color-mix(in srgb, var(--df-review-accent) 28%, transparent);
+    border-top-color: var(--df-review-accent);
+    border-radius: 50%;
+    animation: df-review-spinner-spin 760ms linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes df-review-spinner-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
 
   html,
   body,
@@ -290,10 +311,6 @@ var reviewShellBaseStyle = `
     min-width: 0;
   }
 
-  .df-review-address-actions button:not(.df-review-address-refresh) {
-    padding-inline: 7px;
-  }
-
   .df-review-address input {
 	    width: 100%;
 	    height: var(--df-review-control-height-md);
@@ -314,6 +331,7 @@ var reviewShellBaseStyle = `
 	  }
 
 		  .df-review-address button,
+		  .df-review-address a,
 		  .df-review-presets button,
 		  .df-review-overlay-button,
 			  .df-review-mode-button,
@@ -335,6 +353,7 @@ var reviewShellBaseStyle = `
 	  }
 
 		  .df-review-address button:hover,
+		  .df-review-address a:hover,
 		  .df-review-presets button:hover,
 		  .df-review-overlay-button:hover,
 		  .df-review-mode-button:hover,
@@ -372,15 +391,16 @@ var reviewShellBaseStyle = `
 	    color: var(--df-review-accent);
 	  }
 
-  .df-review-address-refresh {
+  .df-review-address-icon-button {
     display: inline-grid;
     place-items: center;
     width: var(--df-review-control-height-md);
     min-width: var(--df-review-control-height-md);
     padding: 0;
+    text-decoration: none;
   }
 
-  .df-review-address-refresh svg {
+  .df-review-address-icon-button svg {
     width: 16px;
     height: 16px;
     fill: none;
@@ -1680,6 +1700,11 @@ var reviewShellToolbarStyle = `
     stroke-width: 1.9;
 	  }
 
+  .df-review-overlay-button .df-review-figma-mark-icon {
+    fill: currentColor;
+    stroke: none;
+  }
+
 
 
 
@@ -2214,23 +2239,46 @@ var reviewShellQaPanelStyle = `
     padding: var(--df-review-space-2);
   }
 
-	  .df-review-empty {
-	    margin: 0;
-	    padding: var(--df-review-space-5) var(--df-review-space-4);
-	    border: 1px dashed var(--df-review-line);
+		  .df-review-empty {
+		    display: flex;
+		    align-items: center;
+		    gap: var(--df-review-space-2);
+		    margin: 0;
+		    padding: var(--df-review-space-5) var(--df-review-space-4);
+		    border: 1px dashed var(--df-review-line);
 	    border-radius: var(--df-review-radius-lg);
 	    background: var(--df-review-card);
 	    color: var(--df-review-subtle);
 	    font-size: var(--df-review-font-size-sm);
-	    line-height: 1.45;
-	  }
+		    line-height: 1.45;
+		  }
+
+  .df-review-empty.is-loading {
+    border-style: solid;
+    color: var(--df-review-text);
+  }
+
+  .df-review-empty .df-review-spinner,
+  .df-review-item-saving .df-review-spinner,
+  .df-review-edit-actions .df-review-spinner {
+    flex: none;
+    width: 12px;
+    min-width: 12px;
+    height: 12px;
+    min-height: 12px;
+    border-width: 2px;
+  }
 
   .df-review-item-card.is-dim {
     opacity: 0.4;
   }
 
-  .df-review-item-card.is-dim:hover {
-    opacity: 0.72;
+	  .df-review-item-card.is-dim:hover {
+	    opacity: 0.72;
+	  }
+
+  .df-review-item-card.is-mutating {
+    pointer-events: auto;
   }
 
 	  .df-review-item-card {
@@ -2278,6 +2326,11 @@ var reviewShellQaPanelStyle = `
 	    color: var(--df-review-text);
 	  }
 
+  .df-review-item-main strong,
+  .df-review-item-main p {
+    margin: 0;
+  }
+
   .df-review-item-main strong {
     overflow-wrap: anywhere;
     font-size: var(--df-review-font-size-md);
@@ -2285,9 +2338,24 @@ var reviewShellQaPanelStyle = `
     line-height: 1.35;
   }
 
+  .df-review-item-title {
+    padding-top: 4px;
+  }
+
   .df-review-item-comment {
-    padding: 5px 0;
+    padding: 0;
+    color: var(--df-review-muted);
+    overflow-wrap: anywhere;
+    font-size: var(--df-review-font-size-sm);
+    line-height: 1.45;
     white-space: pre-wrap;
+  }
+
+  .df-review-item-comment.is-primary {
+    padding: 5px 0;
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-md);
+    line-height: 1.35;
   }
 
 	  .df-review-item-main small {
@@ -2301,9 +2369,18 @@ var reviewShellQaPanelStyle = `
     line-height: 1.35;
   }
 
-  .df-review-item-error {
-    color: var(--df-review-danger) !important;
-    overflow-wrap: anywhere;
+	  .df-review-item-error {
+	    color: var(--df-review-danger) !important;
+	    overflow-wrap: anywhere;
+	  }
+
+  .df-review-item-saving {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--df-review-accent);
+    font-size: var(--df-review-font-size-xs);
+    line-height: 1.35;
   }
 
   .df-review-item-badges {
@@ -2317,6 +2394,8 @@ var reviewShellQaPanelStyle = `
   .df-review-item-id,
   .df-review-item-scope,
   .df-review-item-mode,
+  .df-review-item-assignee-badge,
+  .df-review-item-assignee-select,
   .df-review-item-status-badge,
   .df-review-item-status-select {
     --df-review-scope: var(--df-review-accent);
@@ -2412,6 +2491,36 @@ var reviewShellQaPanelStyle = `
     text-transform: none;
   }
 
+  .df-review-item-assignee-badge,
+  .df-review-item-assignee-select {
+    min-height: 30px;
+    min-width: 96px;
+    max-width: 132px;
+    border-radius: var(--df-review-radius-sm);
+    border-color: rgba(255, 255, 255, 0.16);
+    padding: 0 10px;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: var(--df-review-font-weight-normal);
+    text-transform: none;
+  }
+
+  .df-review-item-assignee-select {
+    cursor: pointer;
+    outline: 0;
+  }
+
+	  .df-review-item-assignee-select:focus-visible {
+	    border-color: var(--df-review-accent);
+	    box-shadow: 0 0 0 2px var(--df-review-accent-soft);
+	  }
+
+  .df-review-item-assignee-select:disabled {
+    cursor: wait;
+    opacity: 0.62;
+  }
+
   .df-review-item-status-select {
     min-height: 30px;
     min-width: 92px;
@@ -2425,9 +2534,14 @@ var reviewShellQaPanelStyle = `
     text-transform: none;
   }
 
-  .df-review-item-status-select:focus-visible {
-    border-color: var(--df-review-accent);
-    box-shadow: 0 0 0 2px var(--df-review-accent-soft);
+	  .df-review-item-status-select:focus-visible {
+	    border-color: var(--df-review-accent);
+	    box-shadow: 0 0 0 2px var(--df-review-accent-soft);
+	  }
+
+  .df-review-item-status-select:disabled {
+    cursor: wait;
+    opacity: 0.62;
   }
 
   .df-review-item-status-badge.is-status-todo,
@@ -2467,6 +2581,7 @@ var reviewShellQaPanelStyle = `
 
   .df-review-source-select,
   .df-review-status-filter-select,
+  .df-review-item-assignee-select,
   .df-review-item-status-select,
   .df-review-item-status-select.is-status-todo,
   .df-review-item-status-select.is-status-doing,
@@ -2581,12 +2696,22 @@ var reviewShellQaPanelStyle = `
 			    margin-top: 2px;
 			  }
 
-			  .df-review-item-status-actions {
-			    display: inline-flex;
-			    grid-column: 1;
-			    align-items: center;
-			    min-width: 0;
-		    cursor: auto;
+				  .df-review-item-workflow-actions {
+				    display: inline-flex;
+				    grid-column: 1;
+				    align-items: center;
+				    gap: 6px;
+				    min-width: 0;
+				    flex-wrap: wrap;
+			    cursor: auto;
+				  }
+
+				  .df-review-item-status-actions,
+				  .df-review-item-assignee-actions {
+				    display: inline-flex;
+				    align-items: center;
+				    min-width: 0;
+			    cursor: auto;
 			  }
 
 			  .df-review-item-prompt-actions {
@@ -2629,6 +2754,12 @@ var reviewShellQaPanelStyle = `
 	    background: var(--df-review-control-hover);
 	  }
 
+  .df-review-item-action-button.is-copied {
+    border-color: rgba(124, 199, 255, 0.42);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+  }
+
 			  .df-review-item-actions .df-review-item-submit-button {
 			    display: inline-flex;
 			    align-items: center;
@@ -2658,9 +2789,18 @@ var reviewShellQaPanelStyle = `
 	    color: var(--df-review-text);
 	  }
 
-  .df-review-item-action-button:disabled {
-    cursor: default;
-    opacity: 0.45;
+	  .df-review-item-action-button:disabled {
+	    cursor: default;
+	    opacity: 0.45;
+	  }
+
+  .df-review-source-refresh.is-loading svg {
+    animation: df-review-spinner-spin 760ms linear infinite;
+  }
+
+  .df-review-source-refresh:disabled {
+    cursor: wait;
+    opacity: 0.7;
   }
 
   .df-review-item-action-button svg {
@@ -2673,6 +2813,810 @@ var reviewShellQaPanelStyle = `
     stroke-width: 2;
   }
 
+`;
+
+// src/react-shell/style/figma-images.ts
+var reviewShellFigmaImagesStyle = `
+  .df-review-figma-images-panel {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    position: relative;
+    z-index: 600;
+    display: grid;
+    grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    border-left: 1px solid var(--df-review-line-soft);
+    background:
+      linear-gradient(180deg, var(--df-review-panel), var(--df-review-bg));
+  }
+
+  .df-review-shell:not(.is-list-visible) .df-review-figma-images-panel,
+  .df-review-figma-images-panel[aria-hidden="true"] {
+    visibility: hidden;
+    border-left: 0;
+    pointer-events: none;
+  }
+
+  .df-review-figma-images-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--df-review-control-height-md);
+    min-width: 0;
+  }
+
+  .df-review-figma-images-title {
+    display: grid;
+    min-width: 0;
+  }
+
+  .df-review-figma-images-title strong {
+    overflow: hidden;
+    color: var(--df-review-text);
+    font-size: inherit;
+    font-weight: var(--df-review-font-weight-emphasis);
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .df-review-figma-image-form {
+    display: grid;
+    grid-template-rows:
+      var(--df-review-control-height-md)
+      var(--df-review-control-height-md);
+    align-items: center;
+    gap: var(--df-review-space-2);
+    padding: var(--df-review-space-3) var(--df-review-frame-gutter-x);
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background: var(--df-review-card);
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: var(--df-review-font-weight-normal);
+  }
+
+  .df-review-figma-image-form input {
+    width: 100%;
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    min-width: 0;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 10px;
+    color: var(--df-review-text);
+    background: var(--df-review-bg);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-sm);
+  }
+
+  .df-review-figma-image-form input:focus {
+    border-color: var(--df-review-accent);
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 1px;
+  }
+
+  .df-review-figma-image-url-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--df-review-control-height-md);
+    align-items: center;
+    gap: var(--df-review-space-1-5);
+    min-width: 0;
+  }
+
+  .df-review-figma-image-header-button {
+    display: inline-grid;
+    place-items: center;
+    justify-self: end;
+    width: 26px;
+    min-width: 26px;
+    height: 26px;
+    min-height: 26px;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    color: var(--df-review-muted);
+    background: transparent;
+    box-shadow: none;
+    cursor: pointer;
+  }
+
+  .df-review-figma-image-header-button:hover,
+  .df-review-figma-image-header-button:focus-visible {
+    color: var(--df-review-text);
+    opacity: 1;
+    outline: 0;
+  }
+
+  .df-review-figma-image-header-button:disabled {
+    cursor: default;
+    opacity: 0.36;
+  }
+
+  .df-review-figma-image-header-button svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+  }
+
+  .df-review-figma-image-url-row button,
+  .df-review-figma-image-icon-button {
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-muted);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    text-decoration: none;
+  }
+
+  .df-review-figma-image-url-row button:hover,
+  .df-review-figma-image-icon-button:hover {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+  }
+
+  .df-review-figma-image-url-row button:disabled,
+  .df-review-figma-image-icon-button:disabled {
+    cursor: default;
+    opacity: 0.42;
+  }
+
+  .df-review-figma-image-url-row button svg,
+  .df-review-figma-image-icon-button svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .df-review-figma-image-icon-button.is-danger:hover {
+    border-color: rgba(255, 143, 97, 0.34);
+    color: var(--df-review-danger);
+    background: var(--df-review-danger-soft);
+  }
+
+  .df-review-figma-image-icon-button.is-active {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover);
+  }
+
+  .df-review-figma-image-selected-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    gap: var(--df-review-space-1);
+    padding: var(--df-review-space-2) var(--df-review-frame-gutter-x);
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background: color-mix(in srgb, var(--df-review-card) 82%, transparent);
+  }
+
+  .df-review-figma-image-selected-numbers {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(54px, 64px) var(--df-review-control-height-sm);
+    justify-self: stretch;
+    gap: var(--df-review-space-1);
+    min-width: 0;
+  }
+
+  .df-review-figma-image-selected-link {
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-sm);
+    min-width: var(--df-review-control-height-sm);
+    height: var(--df-review-control-height-sm);
+    min-height: var(--df-review-control-height-sm);
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-muted);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    text-decoration: none;
+  }
+
+  .df-review-figma-image-selected-link:hover,
+  .df-review-figma-image-selected-link:focus-visible {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+    outline: none;
+  }
+
+  .df-review-figma-image-selected-link:disabled {
+    cursor: default;
+    opacity: 0.42;
+  }
+
+  .df-review-figma-image-selected-link svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .df-review-figma-image-number-control {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    height: var(--df-review-control-height-sm);
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 5px;
+    color: var(--df-review-muted);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .df-review-figma-image-number-control svg {
+    width: 13px;
+    height: 13px;
+    color: var(--df-review-subtle);
+  }
+
+  .df-review-figma-image-number-control span {
+    color: var(--df-review-subtle);
+    font-size: var(--df-review-font-size-2xs);
+    line-height: 1;
+  }
+
+  .df-review-figma-image-number-control input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    color: var(--df-review-text);
+    background: transparent;
+    font-size: var(--df-review-font-size-xs);
+    font-variant-numeric: tabular-nums;
+    outline: none;
+  }
+
+  .df-review-figma-image-number-control input:disabled {
+    color: var(--df-review-subtle);
+  }
+
+  .df-review-figma-image-number-control:focus-within {
+    border-color: var(--df-review-accent);
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 1px;
+  }
+
+  .df-review-figma-image-opacity-control {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 26px;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    height: var(--df-review-control-height-sm);
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 6px;
+    color: var(--df-review-muted);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .df-review-figma-image-opacity-control span {
+    color: var(--df-review-subtle);
+    font-size: var(--df-review-font-size-2xs);
+    line-height: 1;
+  }
+
+  .df-review-figma-image-opacity-control strong {
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: 500;
+    line-height: 1;
+    text-align: right;
+  }
+
+  .df-review-figma-image-opacity-slider {
+    --df-review-figma-opacity-thumb-size: 12px;
+    --df-review-figma-opacity-thumb-radius: 6px;
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-width: 0;
+    height: 20px;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .df-review-figma-image-opacity-slider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: var(--df-review-figma-opacity-thumb-radius);
+    left: var(--df-review-figma-opacity-thumb-radius);
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      var(--df-review-accent) 0 var(--df-review-figma-opacity-value),
+      var(--df-review-line) var(--df-review-figma-opacity-value) 100%
+    );
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .df-review-figma-image-opacity-slider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: clamp(
+      var(--df-review-figma-opacity-thumb-radius),
+      var(--df-review-figma-opacity-left, var(--df-review-figma-opacity-value)),
+      calc(100% - var(--df-review-figma-opacity-thumb-radius))
+    );
+    z-index: 2;
+    box-sizing: border-box;
+    width: var(--df-review-figma-opacity-thumb-size);
+    height: var(--df-review-figma-opacity-thumb-size);
+    border: 1px solid var(--df-review-accent);
+    border-radius: 50%;
+    background: var(--df-review-text);
+    box-shadow: 0 0 0 2px var(--df-review-bg);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .df-review-figma-image-opacity-slider input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    outline: none;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .df-review-figma-image-opacity-slider input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  .df-review-figma-image-opacity-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: var(--df-review-figma-opacity-thumb-size);
+    height: var(--df-review-figma-opacity-thumb-size);
+    margin-top: -4px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .df-review-figma-image-opacity-slider input[type="range"]::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  .df-review-figma-image-opacity-slider input[type="range"]::-moz-range-thumb {
+    width: var(--df-review-figma-opacity-thumb-size);
+    height: var(--df-review-figma-opacity-thumb-size);
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .df-review-figma-image-opacity-slider input[type="range"]:disabled {
+    cursor: default;
+  }
+
+  .df-review-figma-image-opacity-control:focus-within {
+    border-color: var(--df-review-accent);
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 1px;
+  }
+
+  .df-review-figma-image-status {
+    margin: 0;
+    padding: var(--df-review-space-2) var(--df-review-frame-gutter-x);
+    border-bottom: 1px solid var(--df-review-line-soft);
+    color: var(--df-review-muted);
+    font-size: var(--df-review-font-size-xs);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .df-review-figma-image-status.is-error {
+    color: var(--df-review-danger);
+  }
+
+  .df-review-figma-image-list {
+    display: grid;
+    align-content: start;
+    gap: var(--df-review-space-2);
+    min-height: 0;
+    overflow: auto;
+    padding: var(--df-review-space-2);
+  }
+
+  .df-review-figma-image-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "state main actions";
+    align-items: center;
+    gap: var(--df-review-space-1-5);
+    min-height: 76px;
+    min-width: 0;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    padding: var(--df-review-space-4) var(--df-review-space-2);
+    background: var(--df-review-card);
+    cursor: pointer;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+  }
+
+  .df-review-figma-image-card:hover {
+    border-color: var(--df-review-line);
+  }
+
+  .df-review-figma-image-card.is-dragging {
+    opacity: 0.58;
+  }
+
+  .df-review-figma-image-card.is-drop-target {
+    border-color: var(--df-review-line-soft);
+    box-shadow: none;
+  }
+
+  .df-review-figma-image-card.is-drop-before::before,
+  .df-review-figma-image-card.is-drop-after::after {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    right: 6px;
+    left: 6px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--df-review-accent);
+    box-shadow: 0 0 0 2px rgba(124, 199, 255, 0.16);
+    pointer-events: none;
+  }
+
+  .df-review-figma-image-card.is-drop-before::before {
+    top: -6px;
+  }
+
+  .df-review-figma-image-card.is-drop-after::after {
+    bottom: -6px;
+  }
+
+  .df-review-figma-image-card.is-active {
+    border-color: var(--df-review-accent);
+    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover), 0 0 0 3px rgba(124, 199, 255, 0.12);
+  }
+
+  .df-review-figma-image-card.is-editing {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "state main";
+  }
+
+  .df-review-figma-image-card.is-status {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "state main";
+    cursor: default;
+  }
+
+  .df-review-figma-image-spinner {
+    grid-area: state;
+  }
+
+  .df-review-figma-image-layer-state {
+    grid-area: state;
+    display: grid;
+    grid-template-columns: repeat(3, 22px);
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    height: var(--df-review-control-height-sm);
+  }
+
+  .df-review-figma-image-state-button {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    color: var(--df-review-subtle);
+    background: transparent;
+    box-shadow: none;
+    opacity: 0.62;
+  }
+
+  .df-review-figma-image-state-button:hover,
+  .df-review-figma-image-state-button:focus-visible {
+    color: var(--df-review-text);
+    opacity: 1;
+    outline: none;
+  }
+
+  .df-review-figma-image-state-button.is-active {
+    color: var(--df-review-accent);
+    opacity: 1;
+  }
+
+  .df-review-figma-image-state-button svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .df-review-figma-image-card-main {
+    grid-area: main;
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .df-review-figma-image-label-input {
+    width: 100%;
+    min-width: 0;
+    height: 24px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    padding: 0 4px;
+    color: var(--df-review-text);
+    background: transparent;
+    box-shadow: none;
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 500;
+    line-height: 1.28;
+  }
+
+  .df-review-figma-image-label-input:focus {
+    border-color: var(--df-review-accent);
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 1px;
+  }
+
+  .df-review-figma-image-label-input:disabled {
+    color: var(--df-review-subtle);
+  }
+
+  .df-review-figma-image-card-main small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .df-review-figma-image-card-main strong,
+  .df-review-figma-image-card-main small {
+    user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+  }
+
+  .df-review-figma-image-card-main strong {
+    min-width: 0;
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 500;
+    line-height: 1.28;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .df-review-figma-image-card-main small {
+    color: var(--df-review-subtle);
+    font-size: var(--df-review-font-size-2xs);
+    line-height: 1.2;
+  }
+
+  .df-review-figma-image-card-actions {
+    grid-area: actions;
+    display: grid;
+    grid-template-columns: repeat(2, 22px);
+    gap: 2px;
+  }
+
+  .df-review-figma-image-card-actions .df-review-figma-image-icon-button {
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+    border: 0;
+    border-radius: 0;
+    color: var(--df-review-subtle);
+    background: transparent;
+    box-shadow: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease, color 120ms ease;
+  }
+
+  .df-review-figma-image-card:hover .df-review-figma-image-card-actions .df-review-figma-image-icon-button,
+  .df-review-figma-image-card:focus-within .df-review-figma-image-card-actions .df-review-figma-image-icon-button {
+    opacity: 0.62;
+    pointer-events: auto;
+  }
+
+  .df-review-figma-image-card-actions .df-review-figma-image-icon-button:hover,
+  .df-review-figma-image-card-actions .df-review-figma-image-icon-button:focus-visible {
+    color: var(--df-review-text);
+    background: transparent;
+    opacity: 1;
+    outline: none;
+  }
+
+  .df-review-figma-image-card.is-editing .df-review-figma-image-card-actions {
+    display: none;
+  }
+
+  .df-review-figma-image-preview-dialog {
+    grid-template-rows: auto minmax(0, 1fr);
+    width: min(600px, calc(100vw - 36px));
+    max-height: min(760px, calc(100vh - 36px));
+  }
+
+  .df-review-figma-image-preview-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto var(--df-review-control-height-md);
+    align-items: center;
+    gap: var(--df-review-space-2);
+    min-width: 0;
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid var(--df-review-line-soft);
+    background: var(--df-review-card);
+  }
+
+  .df-review-figma-image-preview-header input {
+    width: 100%;
+    height: var(--df-review-control-height-md);
+    min-width: 0;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 10px;
+    color: var(--df-review-text);
+    background: var(--df-review-bg);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .df-review-figma-image-preview-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: var(--df-review-control-height-md);
+    min-width: 0;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 10px;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-sm);
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .df-review-figma-image-preview-link:hover,
+  .df-review-figma-image-preview-link:focus-visible {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-control-hover);
+    outline: none;
+  }
+
+  .df-review-figma-image-preview-link svg {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+  }
+
+  .df-review-figma-image-preview-close {
+    display: inline-grid;
+    place-items: center;
+    width: var(--df-review-control-height-md);
+    min-width: var(--df-review-control-height-md);
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+  }
+
+  .df-review-figma-image-preview-close:hover,
+  .df-review-figma-image-preview-close:focus-visible {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-control-hover);
+    outline: none;
+  }
+
+  .df-review-figma-image-preview-close svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .df-review-figma-image-preview-scroll {
+    min-height: 0;
+    overflow: auto;
+    padding: 16px;
+    background: var(--df-review-bg);
+  }
+
+  .df-review-figma-image-preview-scroll img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    object-fit: contain;
+    object-position: top center;
+  }
+
+  @media (max-width: 460px) {
+    .df-review-figma-image-preview-header {
+      grid-template-columns:
+        minmax(0, 1fr)
+        var(--df-review-control-height-md)
+        var(--df-review-control-height-md);
+      gap: var(--df-review-space-1-5);
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    .df-review-figma-image-preview-link {
+      width: var(--df-review-control-height-md);
+      padding: 0;
+    }
+
+    .df-review-figma-image-preview-link span {
+      display: none;
+    }
+  }
+
+  @media (hover: none) {
+    .df-review-figma-image-card.is-active .df-review-figma-image-card-actions .df-review-figma-image-icon-button {
+      opacity: 0.62;
+      pointer-events: auto;
+    }
+  }
 `;
 
 // src/react-shell/style/stage.ts
@@ -2751,54 +3695,10 @@ var reviewShellStageStyle = `
     background: #fff;
   }
 
-  .df-review-frame-link-stack {
-    position: absolute;
-    z-index: 14;
-    top: 0;
-    right: -44px;
-    display: grid;
-    gap: 8px;
-  }
+`;
 
-  .df-review-frame-link {
-    display: grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    border: 1px solid rgba(15, 23, 42, 0.16);
-    border-radius: var(--df-review-radius-md);
-    color: #17202c;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.18);
-    text-decoration: none;
-    backdrop-filter: blur(8px);
-    transition: transform 140ms ease, border-color 140ms ease, color 140ms ease,
-      background 140ms ease;
-  }
-
-  .df-review-frame-link:hover {
-    transform: translateY(-1px);
-    border-color: rgba(0, 102, 255, 0.42);
-    color: #005be8;
-    background: rgba(255, 255, 255, 0.98);
-  }
-
-  .df-review-frame-link svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .df-review-frame-link.is-target svg {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-  }
-
-  .df-review-frame-link.is-figma svg {
-    fill: currentColor;
-    stroke: none;
-  }
-
+// src/react-shell/style/source-inspector.ts
+var reviewShellSourceInspectorStyle = `
   .df-review-source-outline {
     position: fixed;
     z-index: 880;
@@ -2950,6 +3850,10 @@ var reviewShellStageStyle = `
     color: var(--df-review-source-popover-data-subtle);
   }
 
+`;
+
+// src/react-shell/style/section-outline.ts
+var reviewShellSectionOutlineStyle = `
   .df-review-section-outline {
     position: relative;
     z-index: 1;
@@ -3765,7 +4669,10 @@ function ensureReviewShellStyle() {
       reviewShellModalStyle,
       reviewShellToolbarStyle,
       reviewShellQaPanelStyle,
+      reviewShellFigmaImagesStyle,
       reviewShellStageStyle,
+      reviewShellSourceInspectorStyle,
+      reviewShellSectionOutlineStyle,
       reviewShellRulerStyle
     ].join("\n\n");
     document.head.append(style);
@@ -3774,11 +4681,11 @@ function ensureReviewShellStyle() {
 
 // src/react-shell/review/shell.tsx
 import {
-  useCallback as useCallback11,
-  useEffect as useEffect10,
-  useMemo as useMemo7,
-  useRef as useRef5,
-  useState as useState10
+  useCallback as useCallback15,
+  useEffect as useEffect13,
+  useMemo as useMemo10,
+  useRef as useRef8,
+  useState as useState13
 } from "react";
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
@@ -3916,31 +4823,38 @@ var __iconNode4 = [
 ];
 var CodeXml = createLucideIcon("code-xml", __iconNode4);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/copy.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/contrast.mjs
 var __iconNode5 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M12 18a6 6 0 0 0 0-12v12z", key: "j4l70d" }]
+];
+var Contrast = createLucideIcon("contrast", __iconNode5);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/copy.mjs
+var __iconNode6 = [
   ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
   ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
 ];
-var Copy = createLucideIcon("copy", __iconNode5);
+var Copy = createLucideIcon("copy", __iconNode6);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/database.mjs
-var __iconNode6 = [
+var __iconNode7 = [
   ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
   ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
   ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-var Database = createLucideIcon("database", __iconNode6);
+var Database = createLucideIcon("database", __iconNode7);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/external-link.mjs
-var __iconNode7 = [
+var __iconNode8 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "M10 14 21 3", key: "gplh6r" }],
   ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
 ];
-var ExternalLink = createLucideIcon("external-link", __iconNode7);
+var ExternalLink = createLucideIcon("external-link", __iconNode8);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye-off.mjs
-var __iconNode8 = [
+var __iconNode9 = [
   [
     "path",
     {
@@ -3958,10 +4872,10 @@ var __iconNode8 = [
   ],
   ["path", { d: "m2 2 20 20", key: "1ooewy" }]
 ];
-var EyeOff = createLucideIcon("eye-off", __iconNode8);
+var EyeOff = createLucideIcon("eye-off", __iconNode9);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye.mjs
-var __iconNode9 = [
+var __iconNode10 = [
   [
     "path",
     {
@@ -3971,20 +4885,7 @@ var __iconNode9 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Eye = createLucideIcon("eye", __iconNode9);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/grid-2x2-check.mjs
-var __iconNode10 = [
-  [
-    "path",
-    {
-      d: "M12 3v17a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1H3",
-      key: "11za1p"
-    }
-  ],
-  ["path", { d: "m16 19 2 2 4-4", key: "1b14m6" }]
-];
-var Grid2x2Check = createLucideIcon("grid-2x2-check", __iconNode10);
+var Eye = createLucideIcon("eye", __iconNode10);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
 var __iconNode11 = [
@@ -3994,33 +4895,56 @@ var __iconNode11 = [
 ];
 var Image = createLucideIcon("image", __iconNode11);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/images.mjs
 var __iconNode12 = [
+  ["path", { d: "m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16", key: "9kzy35" }],
+  ["path", { d: "M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2", key: "1t0f0t" }],
+  ["circle", { cx: "13", cy: "7", r: "1", fill: "currentColor", key: "1obus6" }],
+  ["rect", { x: "8", y: "2", width: "14", height: "14", rx: "2", key: "1gvhby" }]
+];
+var Images = createLucideIcon("images", __iconNode12);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
+var __iconNode13 = [
   ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
   ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
   ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
   ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
 ];
-var LayoutGrid = createLucideIcon("layout-grid", __iconNode12);
+var LayoutGrid = createLucideIcon("layout-grid", __iconNode13);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/link-2.mjs
-var __iconNode13 = [
+var __iconNode14 = [
   ["path", { d: "M9 17H7A5 5 0 0 1 7 7h2", key: "8i5ue5" }],
   ["path", { d: "M15 7h2a5 5 0 1 1 0 10h-2", key: "1b9ql8" }],
   ["line", { x1: "8", x2: "16", y1: "12", y2: "12", key: "1jonct" }]
 ];
-var Link2 = createLucideIcon("link-2", __iconNode13);
+var Link2 = createLucideIcon("link-2", __iconNode14);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
-var __iconNode14 = [
+var __iconNode15 = [
   ["path", { d: "M2 5h20", key: "1fs1ex" }],
   ["path", { d: "M6 12h12", key: "8npq4p" }],
   ["path", { d: "M9 19h6", key: "456am0" }]
 ];
-var ListFilter = createLucideIcon("list-filter", __iconNode14);
+var ListFilter = createLucideIcon("list-filter", __iconNode15);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/lock-open.mjs
+var __iconNode16 = [
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 9.9-1", key: "1mm8w8" }]
+];
+var LockOpen = createLucideIcon("lock-open", __iconNode16);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/lock.mjs
+var __iconNode17 = [
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
+];
+var Lock = createLucideIcon("lock", __iconNode17);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
-var __iconNode15 = [
+var __iconNode18 = [
   [
     "path",
     {
@@ -4031,27 +4955,27 @@ var __iconNode15 = [
   ["path", { d: "M15 5.764v15", key: "1pn4in" }],
   ["path", { d: "M9 3.236v15", key: "1uimfh" }]
 ];
-var Map2 = createLucideIcon("map", __iconNode15);
+var Map2 = createLucideIcon("map", __iconNode18);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
-var __iconNode16 = [
+var __iconNode19 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "m21 3-7 7", key: "1l2asr" }],
   ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
   ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
 ];
-var Maximize2 = createLucideIcon("maximize-2", __iconNode16);
+var Maximize2 = createLucideIcon("maximize-2", __iconNode19);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
-var __iconNode17 = [
+var __iconNode20 = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
   ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
 ];
-var Monitor = createLucideIcon("monitor", __iconNode17);
+var Monitor = createLucideIcon("monitor", __iconNode20);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/moon.mjs
-var __iconNode18 = [
+var __iconNode21 = [
   [
     "path",
     {
@@ -4060,10 +4984,18 @@ var __iconNode18 = [
     }
   ]
 ];
-var Moon = createLucideIcon("moon", __iconNode18);
+var Moon = createLucideIcon("moon", __iconNode21);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/move-vertical.mjs
+var __iconNode22 = [
+  ["path", { d: "M12 2v20", key: "t6zp3m" }],
+  ["path", { d: "m8 18 4 4 4-4", key: "bh5tu3" }],
+  ["path", { d: "m8 6 4-4 4 4", key: "ybng9g" }]
+];
+var MoveVertical = createLucideIcon("move-vertical", __iconNode22);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/pencil.mjs
-var __iconNode19 = [
+var __iconNode23 = [
   [
     "path",
     {
@@ -4073,25 +5005,32 @@ var __iconNode19 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-var Pencil = createLucideIcon("pencil", __iconNode19);
+var Pencil = createLucideIcon("pencil", __iconNode23);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/plus.mjs
+var __iconNode24 = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
+];
+var Plus = createLucideIcon("plus", __iconNode24);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
-var __iconNode20 = [
+var __iconNode25 = [
   ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
 ];
-var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode20);
+var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode25);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
-var __iconNode21 = [
+var __iconNode26 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode21);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode26);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
-var __iconNode22 = [
+var __iconNode27 = [
   [
     "path",
     {
@@ -4104,26 +5043,26 @@ var __iconNode22 = [
   ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
   ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
 ];
-var Ruler = createLucideIcon("ruler", __iconNode22);
+var Ruler = createLucideIcon("ruler", __iconNode27);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
-var __iconNode23 = [
+var __iconNode28 = [
   ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
   ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
   ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
   ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
 ];
-var Scan = createLucideIcon("scan", __iconNode23);
+var Scan = createLucideIcon("scan", __iconNode28);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/search.mjs
-var __iconNode24 = [
+var __iconNode29 = [
   ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-var Search = createLucideIcon("search", __iconNode24);
+var Search = createLucideIcon("search", __iconNode29);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
-var __iconNode25 = [
+var __iconNode30 = [
   [
     "path",
     {
@@ -4133,27 +5072,27 @@ var __iconNode25 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Settings = createLucideIcon("settings", __iconNode25);
+var Settings = createLucideIcon("settings", __iconNode30);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
-var __iconNode26 = [
+var __iconNode31 = [
   ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
   ["path", { d: "M12 18h.01", key: "mhygvu" }]
 ];
-var Smartphone = createLucideIcon("smartphone", __iconNode26);
+var Smartphone = createLucideIcon("smartphone", __iconNode31);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-check-big.mjs
-var __iconNode27 = [
+var __iconNode32 = [
   [
     "path",
     { d: "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344", key: "2acyp4" }
   ],
   ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
 ];
-var SquareCheckBig = createLucideIcon("square-check-big", __iconNode27);
+var SquareCheckBig = createLucideIcon("square-check-big", __iconNode32);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
-var __iconNode28 = [
+var __iconNode33 = [
   ["path", { d: "M5 3a2 2 0 0 0-2 2", key: "y57alp" }],
   ["path", { d: "M19 3a2 2 0 0 1 2 2", key: "18rm91" }],
   ["path", { d: "M21 19a2 2 0 0 1-2 2", key: "1j7049" }],
@@ -4167,10 +5106,10 @@ var __iconNode28 = [
   ["path", { d: "M3 14v1", key: "vnatye" }],
   ["path", { d: "M21 14v1", key: "169vum" }]
 ];
-var SquareDashed = createLucideIcon("square-dashed", __iconNode28);
+var SquareDashed = createLucideIcon("square-dashed", __iconNode33);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode29 = [
+var __iconNode34 = [
   [
     "path",
     {
@@ -4180,10 +5119,10 @@ var __iconNode29 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode29);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode34);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode30 = [
+var __iconNode35 = [
   [
     "path",
     {
@@ -4193,10 +5132,10 @@ var __iconNode30 = [
   ],
   ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
 ];
-var StickyNote = createLucideIcon("sticky-note", __iconNode30);
+var StickyNote = createLucideIcon("sticky-note", __iconNode35);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sun.mjs
-var __iconNode31 = [
+var __iconNode36 = [
   ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
   ["path", { d: "M12 2v2", key: "tus03m" }],
   ["path", { d: "M12 20v2", key: "1lh1kg" }],
@@ -4207,30 +5146,40 @@ var __iconNode31 = [
   ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
   ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
 ];
-var Sun = createLucideIcon("sun", __iconNode31);
+var Sun = createLucideIcon("sun", __iconNode36);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/trash-2.mjs
+var __iconNode37 = [
+  ["path", { d: "M10 11v6", key: "nco0om" }],
+  ["path", { d: "M14 11v6", key: "outv1u" }],
+  ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
+  ["path", { d: "M3 6h18", key: "d0wm0j" }],
+  ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
+];
+var Trash2 = createLucideIcon("trash-2", __iconNode37);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/type.mjs
-var __iconNode32 = [
+var __iconNode38 = [
   ["path", { d: "M12 4v16", key: "1654pz" }],
   ["path", { d: "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2", key: "e0r10z" }],
   ["path", { d: "M9 20h6", key: "s66wpe" }]
 ];
-var Type = createLucideIcon("type", __iconNode32);
+var Type = createLucideIcon("type", __iconNode38);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode33 = [
+var __iconNode39 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode33);
+var Upload = createLucideIcon("upload", __iconNode39);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode34 = [
+var __iconNode40 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode34);
+var X = createLucideIcon("x", __iconNode40);
 
 // src/react-shell/review/df.logo.tsx
 import { jsx, jsxs } from "react/jsx-runtime";
@@ -4424,6 +5373,7 @@ var updateShellUrl = (target, size, source) => {
     url.searchParams.delete("source");
   }
   url.searchParams.delete("item");
+  url.searchParams.delete("panel");
   window.history.replaceState(null, "", `${url.pathname}${url.search}`);
 };
 var updateShellUrlForItem = (target, size, itemId, source) => {
@@ -4436,6 +5386,7 @@ var getShellUrlForItem = (target, size, itemId, source) => {
   url.searchParams.set("w", String(size.width));
   url.searchParams.set("h", String(size.height));
   url.searchParams.set("item", itemId);
+  url.searchParams.set("panel", "qa");
   if (source !== "local") {
     url.searchParams.set("source", source);
   } else {
@@ -4643,6 +5594,7 @@ var PromptModal = ({ onClose }) => {
 
 // src/react-shell/prompt/prompt.ts
 var getItemTitle = (item) => item.title || item.comment.split("\n")[0] || item.kind;
+var getItemAssigneeLabel = (item) => item.assigneeName || item.assigneeId || "(none)";
 var formatPromptViewport = (item) => `${Math.round(item.viewport?.width ?? 0)}x${Math.round(
   item.viewport?.height ?? 0
 )}`;
@@ -4706,6 +5658,8 @@ var buildReviewItemPrompt = (numberedItem, reviewPathPrefix) => {
     `Page: ${getItemTarget(item, reviewPathPrefix)}`,
     `URL: ${item.originalUrl ?? item.pageUrl}`,
     `QA item: ${numberedItem.displayLabel}`,
+    `Title: ${item.title?.trim() || "(none)"}`,
+    `Assignee: ${getItemAssigneeLabel(item)}`,
     `Viewport: ${numberedItem.label} ${formatPromptViewport(item)}`,
     `Scroll: ${formatPromptPoint(item.scroll)}`,
     "",
@@ -4729,7 +5683,7 @@ var buildReviewItemPrompt = (numberedItem, reviewPathPrefix) => {
     anchor?.htmlSnippet ? decodePromptHtmlEntities(anchor.htmlSnippet) : "(not available)",
     "```",
     "",
-    "Issue:",
+    "Issue comment:",
     item.comment,
     "",
     "Request:",
@@ -4841,7 +5795,13 @@ var REVIEW_QA_STATUS_FILTER_VALUES = /* @__PURE__ */ new Set([
   "done"
 ]);
 var normalizeReviewTheme = (value) => value === "light" || value === "system" || value === "dark" ? value : DEFAULT_REVIEW_THEME;
-var normalizeStoredReviewSidePanel = (value) => value === "source" ? "source" : "qa";
+var normalizeReviewSidePanel = (value) => {
+  if (value === "qa" || value === "source" || value === "figma-images") {
+    return value;
+  }
+  return null;
+};
+var normalizeStoredReviewSidePanel = (value) => normalizeReviewSidePanel(value) ?? "qa";
 var normalizeStoredReviewQaStatusFilter = (value) => value && REVIEW_QA_STATUS_FILTER_VALUES.has(value) ? value : "all";
 var normalizeStoredSourceTreeMetaVisibility = (value) => {
   if (!value || typeof value !== "object") {
@@ -4925,6 +5885,16 @@ var getStoredReviewSidePanel = () => {
     );
   } catch {
     return "qa";
+  }
+};
+var getInitialReviewSidePanel = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    return normalizeReviewSidePanel(
+      new URLSearchParams(window.location.search).get("panel")
+    );
+  } catch {
+    return null;
   }
 };
 var writeStoredReviewSidePanel = (sidePanel) => {
@@ -5676,6 +6646,10 @@ var SitemapRowContent = ({
 ] });
 
 // src/react-shell/figma.ts
+function getReviewFigmaImageStore(options) {
+  if (!options || options.enabled === false) return null;
+  return options.store ?? null;
+}
 function getTargetFigmaFrameConfig(targetWindow) {
   try {
     const config = targetWindow?.__figma;
@@ -5691,41 +6665,1541 @@ function getTargetFigmaFrameConfig(targetWindow) {
     return null;
   }
 }
-function getFigmaFrameUrl(config, preset) {
-  if (!config) return null;
-  const kind = getViewportPresetKind(preset);
-  const value = kind === "mobile" ? config.mobileNodeId : config.desktopNodeId;
-  return value ? createFigmaFrameUrl(value) : null;
-}
 function normalizeFigmaNodeValue(value) {
   return typeof value === "string" ? value.trim() || void 0 : void 0;
 }
-function createFigmaFrameUrl(value) {
-  const [fileKey, nodeId] = value.split("->").map((part) => part.trim());
-  if (!fileKey || !nodeId) return null;
-  const urlNodeId = encodeURIComponent(nodeId.replace(/:/g, "-"));
-  return `https://www.figma.com/design/${encodeURIComponent(
-    fileKey
-  )}?node-id=${urlNodeId}`;
+
+// src/react-shell/figma/figma-mark-icon.tsx
+import { jsx as jsx6, jsxs as jsxs6 } from "react/jsx-runtime";
+function FigmaMarkIcon() {
+  return /* @__PURE__ */ jsx6(
+    "svg",
+    {
+      "aria-hidden": "true",
+      className: "df-review-figma-mark-icon",
+      viewBox: "0 0 24 24",
+      children: /* @__PURE__ */ jsx6("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
+    }
+  );
+}
+function FigmaRailIcon() {
+  return /* @__PURE__ */ jsxs6(
+    "svg",
+    {
+      "aria-hidden": "true",
+      className: "df-review-figma-rail-icon",
+      fill: "none",
+      stroke: "currentColor",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      viewBox: "0 0 24 24",
+      children: [
+        /* @__PURE__ */ jsx6("path", { d: "M12 8H8.5a3 3 0 1 1 0-6H12v6Z" }),
+        /* @__PURE__ */ jsx6("path", { d: "M12 14H8.5a3 3 0 1 1 0-6H12v6Z" }),
+        /* @__PURE__ */ jsx6("path", { d: "M12 17.5A3.5 3.5 0 1 1 8.5 14H12v3.5Z" }),
+        /* @__PURE__ */ jsx6("path", { d: "M12 2h3.5a3 3 0 1 1 0 6H12V2Z" }),
+        /* @__PURE__ */ jsx6("circle", { cx: "15.5", cy: "11", r: "3" })
+      ]
+    }
+  );
 }
 
+// src/react-shell/figma/images.panel.tsx
+import {
+  useRef as useRef2,
+  useState as useState4
+} from "react";
+
+// src/react-shell/figma/image.overlay.controller.ts
+import {
+  useCallback as useCallback2,
+  useEffect as useEffect2,
+  useMemo as useMemo4,
+  useState as useState3
+} from "react";
+
+// src/react-shell/figma/image.controller.ts
+import {
+  useCallback,
+  useEffect,
+  useMemo as useMemo3,
+  useRef,
+  useState as useState2
+} from "react";
+var createReviewFigmaRouteTarget = ({
+  pageUrl,
+  projectId,
+  viewport
+}) => ({
+  type: "route",
+  projectId,
+  pageUrl,
+  viewport: {
+    label: viewport.label,
+    width: viewport.width,
+    height: viewport.height,
+    scope: getViewportPresetKind(viewport)
+  }
+});
+var useReviewFigmaImageStoreController = ({
+  imageFormat = DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+  store,
+  target
+}) => {
+  const targetKey = useMemo3(
+    () => createReviewFigmaImageTargetKey(target),
+    [target]
+  );
+  const requestIdRef = useRef(0);
+  const [imageList, setImageList] = useState2(() => ({
+    images: [],
+    targetKey
+  }));
+  const [isLoading, setIsLoading] = useState2(Boolean(store));
+  const [isMutating, setIsMutating] = useState2(false);
+  const [error, setError] = useState2("");
+  const images = imageList.targetKey === targetKey ? imageList.images : [];
+  const refreshImages = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    if (!store) {
+      setImageList({ images: [], targetKey });
+      setIsLoading(false);
+      setError("");
+      return [];
+    }
+    setIsLoading(true);
+    try {
+      const nextImages = sortReviewFigmaImages(await store.listImages(target));
+      if (requestId !== requestIdRef.current) return nextImages;
+      setImageList({ images: nextImages, targetKey });
+      setError("");
+      return nextImages;
+    } catch (refreshError) {
+      if (requestId === requestIdRef.current) {
+        setError(getReviewFigmaImageErrorMessage(refreshError));
+      }
+      return [];
+    } finally {
+      if (requestId === requestIdRef.current) setIsLoading(false);
+    }
+  }, [store, target, targetKey]);
+  useEffect(() => {
+    void refreshImages();
+  }, [refreshImages]);
+  const addImage = useCallback(
+    async (figmaUrl, label) => {
+      const trimmedUrl = figmaUrl.trim();
+      if (!store || !trimmedUrl) return null;
+      setIsMutating(true);
+      try {
+        let image = await store.addImage({
+          target,
+          figmaUrl: trimmedUrl,
+          imageFormat,
+          label: label?.trim() || void 0,
+          order: getNewReviewFigmaImageOrder(images)
+        });
+        const uniqueLabel = getUniqueReviewFigmaImageLabel(
+          getReviewFigmaImageComparableLabel(image),
+          images
+        );
+        if (uniqueLabel !== getReviewFigmaImageComparableLabel(image)) {
+          image = await store.updateImage(image.id, { label: uniqueLabel });
+        }
+        setImageList((currentList) => ({
+          images: sortReviewFigmaImages([
+            ...(currentList.targetKey === targetKey ? currentList.images : []).filter((currentImage) => currentImage.id !== image.id),
+            image
+          ]),
+          targetKey
+        }));
+        setError("");
+        return image;
+      } catch (addError) {
+        setError(getReviewFigmaImageErrorMessage(addError));
+        return null;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [imageFormat, images, store, target, targetKey]
+  );
+  const deleteImage = useCallback(
+    async (id) => {
+      if (!store) return;
+      const previousImageList = imageList;
+      setImageList({
+        images: images.filter((image) => image.id !== id),
+        targetKey
+      });
+      setIsMutating(true);
+      try {
+        await store.deleteImage(id);
+        setError("");
+      } catch (deleteError) {
+        setImageList(previousImageList);
+        setError(getReviewFigmaImageErrorMessage(deleteError));
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [imageList, images, store, targetKey]
+  );
+  const updateImage = useCallback(
+    async (id, patch) => {
+      if (!store) return null;
+      const previousImageList = imageList;
+      setIsMutating(true);
+      try {
+        const image = await store.updateImage(id, patch);
+        setImageList((currentList) => ({
+          images: sortReviewFigmaImages([
+            ...(currentList.targetKey === targetKey ? currentList.images : images).filter((currentImage) => currentImage.id !== image.id),
+            image
+          ]),
+          targetKey
+        }));
+        setError("");
+        return image;
+      } catch (updateError) {
+        setImageList(previousImageList);
+        setError(getReviewFigmaImageErrorMessage(updateError));
+        return null;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [imageList, images, store, targetKey]
+  );
+  const reorderImages = useCallback(
+    async (imageIds) => {
+      if (!store) return;
+      const currentImageIds = images.map((image) => image.id);
+      const nextImageIdSet = new Set(imageIds);
+      const hasSameIds = imageIds.length === currentImageIds.length && nextImageIdSet.size === currentImageIds.length && currentImageIds.every((imageId) => nextImageIdSet.has(imageId));
+      const hasSameOrder = hasSameIds && imageIds.every((imageId, index) => imageId === currentImageIds[index]);
+      if (!hasSameIds || hasSameOrder) return;
+      const previousImages = images;
+      const imageById = new Map(images.map((image) => [image.id, image]));
+      const optimisticImages = imageIds.flatMap((imageId, order) => {
+        const image = imageById.get(imageId);
+        return image ? [{ ...image, order }] : [];
+      });
+      setImageList({ images: optimisticImages, targetKey });
+      setIsMutating(true);
+      try {
+        const savedImages = await store.reorderImages({
+          target,
+          imageIds
+        });
+        setImageList({ images: sortReviewFigmaImages(savedImages), targetKey });
+        setError("");
+      } catch (reorderError) {
+        setImageList({ images: previousImages, targetKey });
+        setError(getReviewFigmaImageErrorMessage(reorderError));
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [images, store, target, targetKey]
+  );
+  const moveImage = useCallback(
+    async (id, direction) => {
+      const currentIndex = images.findIndex((image2) => image2.id === id);
+      const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= images.length) {
+        return;
+      }
+      const reorderedImages = [...images];
+      const [image] = reorderedImages.splice(currentIndex, 1);
+      reorderedImages.splice(nextIndex, 0, image);
+      await reorderImages(reorderedImages.map((nextImage) => nextImage.id));
+    },
+    [images, reorderImages]
+  );
+  return {
+    addImage,
+    deleteImage,
+    error,
+    images,
+    isLoading: isLoading || imageList.targetKey !== targetKey,
+    isMutating,
+    moveImage,
+    refreshImages,
+    reorderImages,
+    updateImage
+  };
+};
+function sortReviewFigmaImages(images) {
+  return [...images].sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order;
+    return a.createdAt.localeCompare(b.createdAt);
+  });
+}
+function getNewReviewFigmaImageOrder(images) {
+  return images.length ? Math.min(...images.map((image) => image.order)) - 1 : 0;
+}
+function createReviewFigmaImageTargetKey(target) {
+  return [
+    target.projectId,
+    target.pageUrl,
+    target.viewport?.scope ?? "",
+    target.viewport?.label ?? "",
+    target.viewport?.width ?? "",
+    target.viewport?.height ?? "",
+    target.slot ?? ""
+  ].join("|");
+}
+function getReviewFigmaImageComparableLabel(image) {
+  return image.label?.trim() || image.nodeId;
+}
+function getUniqueReviewFigmaImageLabel(label, images) {
+  const trimmedLabel = label.trim();
+  if (!trimmedLabel) return trimmedLabel;
+  const existingLabels = new Set(
+    images.map(getReviewFigmaImageComparableLabel).filter(Boolean)
+  );
+  if (!existingLabels.has(trimmedLabel)) return trimmedLabel;
+  for (let index = 2; index < Number.MAX_SAFE_INTEGER; index += 1) {
+    const candidate = `${trimmedLabel}-${index}`;
+    if (!existingLabels.has(candidate)) return candidate;
+  }
+  return trimmedLabel;
+}
+function getReviewFigmaImageErrorMessage(error) {
+  return error instanceof Error ? error.message : "Figma image request failed.";
+}
+
+// src/react-shell/figma/image.overlay.controller.ts
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY = 0.48;
+var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX = "df-review-figma-image-overlay-state:";
+var REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION = 2;
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE = "normal";
+var useReviewFigmaImageOverlayController = ({
+  images,
+  isLoading,
+  target
+}) => {
+  const storageKey = useMemo4(
+    () => createReviewFigmaImageOverlayStorageKey(target),
+    [target]
+  );
+  const [stateContainer, setStateContainer] = useState3(() => ({
+    state: readStoredReviewFigmaImageOverlayState(storageKey),
+    storageKey
+  }));
+  const state = stateContainer.storageKey === storageKey ? stateContainer.state : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  const updateState = useCallback2(
+    (updater) => {
+      setStateContainer((currentContainer) => {
+        const currentState = currentContainer.storageKey === storageKey ? currentContainer.state : readStoredReviewFigmaImageOverlayState(storageKey);
+        return {
+          state: updater(currentState),
+          storageKey
+        };
+      });
+    },
+    [storageKey]
+  );
+  useEffect2(() => {
+    setStateContainer({
+      state: readStoredReviewFigmaImageOverlayState(storageKey),
+      storageKey
+    });
+  }, [storageKey]);
+  useEffect2(() => {
+    if (typeof window === "undefined") return;
+    const handleStorage = (event) => {
+      if (event.storageArea !== window.localStorage || event.key !== storageKey && event.key !== null) {
+        return;
+      }
+      setStateContainer({
+        state: readStoredReviewFigmaImageOverlayState(storageKey),
+        storageKey
+      });
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [storageKey]);
+  useEffect2(() => {
+    if (isLoading) return;
+    updateState((currentState) => {
+      const nextImageIds = new Set(images.map((image) => image.id));
+      const selectedImageId = currentState.selectedImageId && nextImageIds.has(currentState.selectedImageId) ? currentState.selectedImageId : images[0]?.id ?? null;
+      const imageStates = Object.fromEntries(
+        Object.entries(currentState.imageStates).filter(
+          ([imageId]) => nextImageIds.has(imageId)
+        )
+      );
+      const lastVisibleImageIds = currentState.lastVisibleImageIds.filter(
+        (imageId) => nextImageIds.has(imageId)
+      );
+      if (selectedImageId === currentState.selectedImageId && imageStates === currentState.imageStates && lastVisibleImageIds.length === currentState.lastVisibleImageIds.length) {
+        return currentState;
+      }
+      return {
+        ...currentState,
+        selectedImageId,
+        imageStates,
+        lastVisibleImageIds
+      };
+    });
+  }, [images, isLoading, updateState]);
+  useEffect2(() => {
+    if (stateContainer.storageKey !== storageKey) return;
+    writeStoredReviewFigmaImageOverlayState(storageKey, stateContainer.state);
+  }, [stateContainer, storageKey]);
+  const selectedImage = useMemo4(
+    () => images.find((image) => image.id === state.selectedImageId) ?? null,
+    [images, state.selectedImageId]
+  );
+  const selectedImageOverlayState = getReviewFigmaImageOverlayItemState(
+    state,
+    state.selectedImageId
+  );
+  const imageOverlayStates = useMemo4(
+    () => Object.fromEntries(
+      images.map((image) => [
+        image.id,
+        getReviewFigmaImageOverlayItemState(state, image.id)
+      ])
+    ),
+    [images, state]
+  );
+  const isAnyImageOverlayVisible = useMemo4(
+    () => images.some(
+      (image) => imageOverlayStates[image.id]?.isVisible === true
+    ),
+    [imageOverlayStates, images]
+  );
+  const setSelectedImageId = useCallback2((selectedImageId) => {
+    updateState((currentState) => ({
+      ...currentState,
+      selectedImageId
+    }));
+  }, [updateState]);
+  const updateImageOverlayState = useCallback2(
+    (imageId, updater) => {
+      updateState((currentState) => ({
+        ...currentState,
+        selectedImageId: imageId,
+        imageStates: updateReviewFigmaImageOverlayItemState(
+          currentState.imageStates,
+          imageId,
+          updater
+        )
+      }));
+    },
+    [updateState]
+  );
+  const showImage = useCallback2((selectedImageId) => {
+    updateState((currentState) => ({
+      ...currentState,
+      selectedImageId,
+      imageStates: updateReviewFigmaImageOverlayItemState(
+        currentState.imageStates,
+        selectedImageId,
+        (itemState) => ({
+          ...itemState,
+          isVisible: true
+        })
+      )
+    }));
+  }, [updateState]);
+  const toggleImageOverlayVisible = useCallback2(
+    (imageId) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        isVisible: !itemState.isVisible
+      }));
+    },
+    [updateImageOverlayState]
+  );
+  const toggleAllImageOverlayVisible = useCallback2(() => {
+    updateState((currentState) => {
+      if (images.length === 0) return currentState;
+      const imageIds = images.map((image) => image.id);
+      const imageIdSet = new Set(imageIds);
+      const visibleImageIds = imageIds.filter(
+        (imageId) => getReviewFigmaImageOverlayItemState(currentState, imageId).isVisible
+      );
+      let imageStates = currentState.imageStates;
+      if (visibleImageIds.length > 0) {
+        imageIds.forEach((imageId) => {
+          imageStates = updateReviewFigmaImageOverlayItemState(
+            imageStates,
+            imageId,
+            (itemState) => ({
+              ...itemState,
+              isVisible: false
+            })
+          );
+        });
+        return {
+          ...currentState,
+          imageStates,
+          lastVisibleImageIds: visibleImageIds
+        };
+      }
+      const restoreImageIds = currentState.lastVisibleImageIds.filter(
+        (imageId) => imageIdSet.has(imageId)
+      );
+      const fallbackImageId = currentState.selectedImageId && imageIdSet.has(currentState.selectedImageId) ? currentState.selectedImageId : images[0]?.id ?? null;
+      const nextVisibleImageIds = restoreImageIds.length > 0 ? restoreImageIds : fallbackImageId ? [fallbackImageId] : [];
+      const nextVisibleImageIdSet = new Set(nextVisibleImageIds);
+      imageIds.forEach((imageId) => {
+        imageStates = updateReviewFigmaImageOverlayItemState(
+          imageStates,
+          imageId,
+          (itemState) => ({
+            ...itemState,
+            isVisible: nextVisibleImageIdSet.has(imageId)
+          })
+        );
+      });
+      return {
+        ...currentState,
+        selectedImageId: currentState.selectedImageId ?? nextVisibleImageIds[0] ?? null,
+        imageStates,
+        lastVisibleImageIds: nextVisibleImageIds
+      };
+    });
+  }, [images, updateState]);
+  const setImageOverlayOpacity = useCallback2(
+    (imageId, opacity) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        opacity: clampReviewFigmaImageOverlayOpacity(opacity)
+      }));
+    },
+    [updateImageOverlayState]
+  );
+  const toggleImageOverlayLocked = useCallback2(
+    (imageId) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        isLocked: !itemState.isLocked
+      }));
+    },
+    [updateImageOverlayState]
+  );
+  const toggleImageOverlayMode = useCallback2(
+    (imageId) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        mode: itemState.mode === "invert" ? "normal" : "invert"
+      }));
+    },
+    [updateImageOverlayState]
+  );
+  const setImageOverlayOffsetY = useCallback2(
+    (imageId, offsetY) => {
+      updateImageOverlayState(imageId, (itemState) => ({
+        ...itemState,
+        offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY)
+      }));
+    },
+    [updateImageOverlayState]
+  );
+  const toggleOverlayVisible = useCallback2(() => {
+    updateState((currentState) => {
+      if (!currentState.selectedImageId && images[0]) {
+        return {
+          ...currentState,
+          selectedImageId: images[0].id,
+          imageStates: updateReviewFigmaImageOverlayItemState(
+            currentState.imageStates,
+            images[0].id,
+            (itemState) => ({
+              ...itemState,
+              isVisible: true
+            })
+          )
+        };
+      }
+      if (!currentState.selectedImageId) return currentState;
+      return {
+        ...currentState,
+        imageStates: updateReviewFigmaImageOverlayItemState(
+          currentState.imageStates,
+          currentState.selectedImageId,
+          (itemState) => ({
+            ...itemState,
+            isVisible: !itemState.isVisible
+          })
+        )
+      };
+    });
+  }, [images, updateState]);
+  const setOverlayOpacity = useCallback2((opacity) => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          opacity: clampReviewFigmaImageOverlayOpacity(opacity)
+        })
+      )
+    }));
+  }, [updateState]);
+  const setOverlayLocked = useCallback2((isLocked) => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          isLocked
+        })
+      )
+    }));
+  }, [updateState]);
+  const toggleOverlayLocked = useCallback2(() => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          isLocked: !itemState.isLocked
+        })
+      )
+    }));
+  }, [updateState]);
+  const setOverlayMode = useCallback2((mode) => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          mode: normalizeReviewFigmaImageOverlayMode(mode)
+        })
+      )
+    }));
+  }, [updateState]);
+  const toggleOverlayMode = useCallback2(() => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          mode: itemState.mode === "invert" ? "normal" : "invert"
+        })
+      )
+    }));
+  }, [updateState]);
+  const setOverlayOffsetY = useCallback2((offsetY) => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+        currentState,
+        (itemState) => ({
+          ...itemState,
+          offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY)
+        })
+      )
+    }));
+  }, [updateState]);
+  const resetOverlay = useCallback2(() => {
+    updateState((currentState) => ({
+      ...currentState,
+      imageStates: currentState.selectedImageId ? updateReviewFigmaImageOverlayItemState(
+        currentState.imageStates,
+        currentState.selectedImageId,
+        () => DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
+      ) : currentState.imageStates
+    }));
+  }, [updateState]);
+  return {
+    imageOverlayStates,
+    isAnyImageOverlayVisible,
+    isOverlayVisible: selectedImageOverlayState.isVisible,
+    overlayMode: selectedImageOverlayState.mode,
+    overlayOffsetY: selectedImageOverlayState.offsetY,
+    overlayOpacity: selectedImageOverlayState.opacity,
+    isOverlayLocked: selectedImageOverlayState.isLocked,
+    resetOverlay,
+    selectedImage,
+    selectedImageId: state.selectedImageId,
+    setOverlayLocked,
+    setOverlayMode,
+    setOverlayOffsetY,
+    setOverlayOpacity,
+    setSelectedImageId,
+    showImage,
+    state,
+    target,
+    toggleImageOverlayLocked,
+    toggleImageOverlayMode,
+    toggleImageOverlayVisible,
+    toggleAllImageOverlayVisible,
+    setImageOverlayOffsetY,
+    setImageOverlayOpacity,
+    toggleOverlayLocked,
+    toggleOverlayMode,
+    toggleOverlayVisible
+  };
+};
+function createReviewFigmaImageOverlayStorageKey(target) {
+  return `${REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX}${createReviewFigmaImageTargetKey(target)}`;
+}
+function readStoredReviewFigmaImageOverlayState(storageKey) {
+  if (typeof window === "undefined") {
+    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  }
+  try {
+    const value = window.localStorage.getItem(storageKey);
+    if (!value) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+    return normalizeReviewFigmaImageOverlayState(JSON.parse(value));
+  } catch {
+    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  }
+}
+function writeStoredReviewFigmaImageOverlayState(storageKey, state) {
+  if (typeof window === "undefined") return;
+  if (isDefaultReviewFigmaImageOverlayState(state)) {
+    try {
+      window.localStorage.removeItem(storageKey);
+    } catch {
+      return;
+    }
+    return;
+  }
+  try {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        version: REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION,
+        ...state
+      })
+    );
+  } catch {
+    return;
+  }
+}
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE = {
+  selectedImageId: null,
+  imageStates: {},
+  lastVisibleImageIds: []
+};
+var DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE = {
+  isVisible: false,
+  opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
+  isLocked: false,
+  mode: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE,
+  offsetY: 0
+};
+function normalizeReviewFigmaImageOverlayState(value) {
+  if (!value || typeof value !== "object") {
+    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
+  }
+  const state = value;
+  const selectedImageId = typeof state.selectedImageId === "string" ? state.selectedImageId : null;
+  const lastVisibleImageIds = Array.isArray(state.lastVisibleImageIds) ? state.lastVisibleImageIds.filter(
+    (imageId) => typeof imageId === "string"
+  ) : [];
+  const imageStates = normalizeReviewFigmaImageOverlayItemStateRecord(
+    state.imageStates
+  );
+  if (Object.keys(imageStates).length === 0 && selectedImageId) {
+    imageStates[selectedImageId] = normalizeReviewFigmaImageOverlayItemState(
+      state
+    );
+  }
+  return {
+    selectedImageId,
+    imageStates,
+    lastVisibleImageIds
+  };
+}
+function normalizeReviewFigmaImageOverlayItemStateRecord(value) {
+  if (!value || typeof value !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([imageId, itemState]) => {
+      if (!imageId || typeof itemState !== "object") return [];
+      return [
+        [
+          imageId,
+          normalizeReviewFigmaImageOverlayItemState(
+            itemState
+          )
+        ]
+      ];
+    })
+  );
+}
+function normalizeReviewFigmaImageOverlayItemState(value) {
+  return {
+    isVisible: value.isVisible === true,
+    opacity: clampReviewFigmaImageOverlayOpacity(
+      typeof value.opacity === "number" ? value.opacity : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
+    ),
+    isLocked: value.isLocked === true,
+    mode: normalizeReviewFigmaImageOverlayMode(value.mode),
+    offsetY: normalizeReviewFigmaImageOverlayOffsetY(value.offsetY)
+  };
+}
+function normalizeReviewFigmaImageOverlayMode(value) {
+  return value === "invert" ? "invert" : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE;
+}
+function normalizeReviewFigmaImageOverlayOffsetY(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+  return Math.round(value);
+}
+function clampReviewFigmaImageOverlayOpacity(value) {
+  if (!Number.isFinite(value)) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY;
+  return Math.min(1, Math.max(0, value));
+}
+function isDefaultReviewFigmaImageOverlayState(state) {
+  return state.selectedImageId === null && Object.keys(state.imageStates).length === 0 && state.lastVisibleImageIds.length === 0;
+}
+function getReviewFigmaImageOverlayItemState(state, imageId) {
+  return imageId ? state.imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE;
+}
+function updateSelectedReviewFigmaImageOverlayItemState(state, updater) {
+  return state.selectedImageId ? updateReviewFigmaImageOverlayItemState(
+    state.imageStates,
+    state.selectedImageId,
+    updater
+  ) : state.imageStates;
+}
+function updateReviewFigmaImageOverlayItemState(imageStates, imageId, updater) {
+  return {
+    ...imageStates,
+    [imageId]: updater(
+      imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
+    )
+  };
+}
+
+// src/react-shell/figma/image-panel.utils.ts
+var DEFAULT_FIGMA_IMAGE_LAYER_STATE = {
+  isLocked: false,
+  isVisible: false,
+  mode: "normal",
+  offsetY: 0,
+  opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
+};
+function getFigmaImageLabel(image, index) {
+  return image.label?.trim() || `Image ${index + 1}`;
+}
+function getSnappedOpacityPercent(opacity) {
+  const opacityPercent = Math.round(opacity * 100);
+  if (!Number.isFinite(opacityPercent)) return 0;
+  return Math.max(0, Math.min(100, Math.round(opacityPercent / 10) * 10));
+}
+function getFigmaImageLayerStatusLabel(overlayState) {
+  return [
+    overlayState.isVisible ? "Visible" : "Hidden",
+    overlayState.mode === "invert" ? "Invert" : "",
+    overlayState.isLocked ? "Locked" : ""
+  ].filter(Boolean).join(" / ");
+}
+function getReorderedFigmaImageIds(images, draggedImageId, dropTargetImageId) {
+  const currentImageIds = images.map((image) => image.id);
+  const draggedIndex = currentImageIds.indexOf(draggedImageId);
+  const dropTargetIndex = currentImageIds.indexOf(dropTargetImageId);
+  if (draggedIndex < 0 || dropTargetIndex < 0) return currentImageIds;
+  const nextImageIds = [...currentImageIds];
+  const [imageId] = nextImageIds.splice(draggedIndex, 1);
+  nextImageIds.splice(dropTargetIndex, 0, imageId);
+  return nextImageIds;
+}
+function isInteractiveFigmaImageTarget(target) {
+  return target instanceof Element && Boolean(
+    target.closest('button, a, input, textarea, select, [contenteditable="true"]')
+  );
+}
+function getPointerFigmaImageTargetId(event) {
+  const element = document.elementFromPoint(event.clientX, event.clientY);
+  const targetCard = element?.closest(
+    ".df-review-figma-image-card[data-figma-image-id]"
+  );
+  return targetCard?.dataset.figmaImageId ?? null;
+}
+function formatFigmaImageDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short"
+  }).format(date);
+}
+
+// src/react-shell/figma/layer-state-buttons.tsx
+import { jsx as jsx7, jsxs as jsxs7 } from "react/jsx-runtime";
+var FigmaImageLayerStateButtons = ({
+  imageLabel,
+  overlayState,
+  title,
+  onSelect,
+  onToggleLocked,
+  onToggleMode,
+  onToggleVisible
+}) => {
+  const handleAction = (action) => {
+    onSelect?.();
+    action();
+  };
+  return /* @__PURE__ */ jsxs7(
+    "div",
+    {
+      "aria-label": `${imageLabel} overlay state`,
+      className: "df-review-figma-image-layer-state",
+      title,
+      children: [
+        /* @__PURE__ */ jsx7(
+          "button",
+          {
+            "aria-label": overlayState.isVisible ? `Hide ${imageLabel} overlay` : `Show ${imageLabel} overlay`,
+            "aria-pressed": overlayState.isVisible,
+            className: `df-review-figma-image-state-button${overlayState.isVisible ? " is-active" : ""}`,
+            title: overlayState.isVisible ? "Hide overlay" : "Show overlay",
+            type: "button",
+            onClick: (event) => {
+              event.stopPropagation();
+              handleAction(onToggleVisible);
+            },
+            children: overlayState.isVisible ? /* @__PURE__ */ jsx7(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx7(EyeOff, { "aria-hidden": "true" })
+          }
+        ),
+        /* @__PURE__ */ jsx7(
+          "button",
+          {
+            "aria-label": overlayState.isLocked ? `Unlock ${imageLabel} overlay` : `Lock ${imageLabel} overlay`,
+            "aria-pressed": overlayState.isLocked,
+            className: `df-review-figma-image-state-button${overlayState.isLocked ? " is-active" : ""}`,
+            title: overlayState.isLocked ? "Unlock" : "Lock",
+            type: "button",
+            onClick: (event) => {
+              event.stopPropagation();
+              handleAction(onToggleLocked);
+            },
+            children: overlayState.isLocked ? /* @__PURE__ */ jsx7(Lock, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx7(LockOpen, { "aria-hidden": "true" })
+          }
+        ),
+        /* @__PURE__ */ jsx7(
+          "button",
+          {
+            "aria-label": overlayState.mode === "invert" ? `Disable ${imageLabel} invert` : `Enable ${imageLabel} invert`,
+            "aria-pressed": overlayState.mode === "invert",
+            className: `df-review-figma-image-state-button${overlayState.mode === "invert" ? " is-active" : ""}`,
+            title: "Invert",
+            type: "button",
+            onClick: (event) => {
+              event.stopPropagation();
+              handleAction(onToggleMode);
+            },
+            children: /* @__PURE__ */ jsx7(Contrast, { "aria-hidden": "true" })
+          }
+        )
+      ]
+    }
+  );
+};
+
+// src/react-shell/review/spinner.tsx
+import { jsx as jsx8 } from "react/jsx-runtime";
+var ReviewSpinner = ({ className, label }) => /* @__PURE__ */ jsx8(
+  "span",
+  {
+    "aria-hidden": label ? void 0 : true,
+    "aria-label": label,
+    className: `df-review-spinner${className ? ` ${className}` : ""}`,
+    role: label ? "status" : void 0
+  }
+);
+
+// src/react-shell/figma/images.panel.tsx
+import { jsx as jsx9, jsxs as jsxs8 } from "react/jsx-runtime";
+var FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS = 6;
+var FigmaImagesPanel = ({
+  error,
+  images,
+  imageOverlayStates,
+  isListVisible,
+  isLoading,
+  isMutating,
+  selectedImageId,
+  onAddImage,
+  onDeleteImage,
+  onRefreshImages,
+  onReorderImages,
+  onSelectImage,
+  onSetImageOverlayOffsetY,
+  onSetImageOverlayOpacity,
+  onToggleImageOverlayLocked,
+  onToggleImageOverlayMode,
+  onToggleImageOverlayVisible,
+  onUpdateImage
+}) => {
+  const [figmaUrlDraft, setFigmaUrlDraft] = useState4("");
+  const [editingImageId, setEditingImageId] = useState4(null);
+  const [editingLabelDraft, setEditingLabelDraft] = useState4("");
+  const [draggingImageId, setDraggingImageId] = useState4(null);
+  const [dragOverImageId, setDragOverImageId] = useState4(null);
+  const [previewImageId, setPreviewImageId] = useState4(null);
+  const pointerDragImageIdRef = useRef2(null);
+  const pointerDragTargetIdRef = useRef2(null);
+  const pointerDragStartRef = useRef2(null);
+  const pointerDragDidMoveRef = useRef2(false);
+  const opacityDragPointerIdRef = useRef2(null);
+  const labelEditCancelRef = useRef2(false);
+  const labelInputFocusedImageIdRef = useRef2(null);
+  const labelEditFinishedImageIdRef = useRef2(null);
+  const [offsetYDraftByImageId, setOffsetYDraftByImageId] = useState4({});
+  const selectedImageIndex = selectedImageId ? images.findIndex((image) => image.id === selectedImageId) : -1;
+  const selectedImage = selectedImageIndex >= 0 ? images[selectedImageIndex] : null;
+  const previewImage = previewImageId ? images.find((image) => image.id === previewImageId) ?? null : null;
+  const selectedImageLabel = selectedImage ? getFigmaImageLabel(selectedImage, selectedImageIndex) : "Select layer";
+  const selectedOverlayState = selectedImage ? imageOverlayStates[selectedImage.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE : DEFAULT_FIGMA_IMAGE_LAYER_STATE;
+  const selectedOpacityPercent = selectedImage ? getSnappedOpacityPercent(selectedOverlayState.opacity) : 0;
+  const selectedOpacityThumbOffset = FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS * (1 - selectedOpacityPercent / 100 * 2);
+  const selectedOffsetYDraft = selectedImage ? offsetYDraftByImageId[selectedImage.id] ?? String(selectedOverlayState.offsetY) : "";
+  const statusText = error ? error : "";
+  const progressText = isMutating ? "Saving..." : isLoading ? "Loading..." : "";
+  const draggingImageIndex = draggingImageId ? images.findIndex((image) => image.id === draggingImageId) : -1;
+  const finishEditingImageLabel = (imageId, currentLabel) => {
+    if (labelEditFinishedImageIdRef.current === imageId) return;
+    labelEditFinishedImageIdRef.current = imageId;
+    labelInputFocusedImageIdRef.current = null;
+    const nextLabel = editingLabelDraft;
+    setEditingImageId(null);
+    setEditingLabelDraft("");
+    if (nextLabel === currentLabel) return;
+    void onUpdateImage(imageId, {
+      label: nextLabel
+    });
+  };
+  const updateSelectedImageOpacity = (value) => {
+    if (!selectedImage) return;
+    const opacityPercent = Math.max(
+      0,
+      Math.min(100, Math.round(Number(value) / 10) * 10)
+    );
+    if (Number.isFinite(opacityPercent)) {
+      onSetImageOverlayOpacity(selectedImage.id, opacityPercent / 100);
+    }
+  };
+  const updateSelectedImageOpacityFromClientX = (clientX, sliderElement) => {
+    if (!selectedImage) return;
+    const rect = sliderElement.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const trackStart = rect.left + FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS;
+    const trackWidth = Math.max(
+      1,
+      rect.width - FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS * 2
+    );
+    const endpointInset = FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS * 2;
+    const rawPercent = (clientX - trackStart) / trackWidth * 100;
+    let opacityPercent = Math.max(
+      0,
+      Math.min(100, Math.round(rawPercent / 10) * 10)
+    );
+    if (clientX <= rect.left + endpointInset) {
+      opacityPercent = 0;
+    } else if (clientX >= rect.right - endpointInset) {
+      opacityPercent = 100;
+    }
+    onSetImageOverlayOpacity(selectedImage.id, opacityPercent / 100);
+  };
+  const updateSelectedImageOpacityFromPointer = (event) => {
+    updateSelectedImageOpacityFromClientX(event.clientX, event.currentTarget);
+  };
+  const updateSelectedImageOpacityFromMouse = (event) => {
+    updateSelectedImageOpacityFromClientX(event.clientX, event.currentTarget);
+  };
+  return /* @__PURE__ */ jsxs8(
+    "aside",
+    {
+      className: "df-review-figma-images-panel",
+      "aria-hidden": !isListVisible,
+      onPointerDownCapture: (event) => {
+        if (!editingImageId || event.target instanceof Element && event.target.closest(".df-review-figma-image-label-input")) {
+          return;
+        }
+        const editingImage = images.find((image) => image.id === editingImageId);
+        if (!editingImage) return;
+        finishEditingImageLabel(editingImage.id, editingImage.label ?? "");
+      },
+      children: [
+        /* @__PURE__ */ jsxs8(
+          "form",
+          {
+            className: "df-review-figma-image-form",
+            onSubmit: (event) => {
+              event.preventDefault();
+              void onAddImage(figmaUrlDraft).then((image) => {
+                if (!image) return;
+                setFigmaUrlDraft("");
+              });
+            },
+            children: [
+              /* @__PURE__ */ jsxs8("div", { className: "df-review-figma-images-header", children: [
+                /* @__PURE__ */ jsx9("div", { className: "df-review-figma-images-title", children: /* @__PURE__ */ jsx9("strong", { children: "Figma" }) }),
+                /* @__PURE__ */ jsx9(
+                  "button",
+                  {
+                    "aria-label": "Refresh Figma images",
+                    className: "df-review-figma-image-header-button",
+                    disabled: isLoading || isMutating,
+                    title: "Refresh",
+                    type: "button",
+                    onClick: () => void onRefreshImages(),
+                    children: /* @__PURE__ */ jsx9(RefreshCw, { "aria-hidden": "true" })
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxs8("div", { className: "df-review-figma-image-url-row", children: [
+                /* @__PURE__ */ jsx9(
+                  "input",
+                  {
+                    "aria-label": "Figma URL",
+                    autoComplete: "off",
+                    placeholder: "Figma URL",
+                    required: true,
+                    spellCheck: false,
+                    value: figmaUrlDraft,
+                    onChange: (event) => setFigmaUrlDraft(event.currentTarget.value)
+                  }
+                ),
+                /* @__PURE__ */ jsx9(
+                  "button",
+                  {
+                    "aria-label": "Add Figma image",
+                    disabled: isMutating || figmaUrlDraft.trim().length === 0,
+                    type: "submit",
+                    children: /* @__PURE__ */ jsx9(Plus, { "aria-hidden": "true" })
+                  }
+                )
+              ] })
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsx9(
+          "div",
+          {
+            "aria-label": "Selected Figma image layer controls",
+            className: "df-review-figma-image-selected-controls",
+            children: /* @__PURE__ */ jsxs8("div", { className: "df-review-figma-image-selected-numbers", children: [
+              /* @__PURE__ */ jsxs8("label", { className: "df-review-figma-image-opacity-control", children: [
+                /* @__PURE__ */ jsx9("span", { children: "Opacity" }),
+                /* @__PURE__ */ jsx9(
+                  "div",
+                  {
+                    className: "df-review-figma-image-opacity-slider",
+                    style: {
+                      "--df-review-figma-opacity-value": `${selectedOpacityPercent}%`,
+                      "--df-review-figma-opacity-left": `calc(${selectedOpacityPercent}% + ${selectedOpacityThumbOffset}px)`
+                    },
+                    onPointerCancel: () => {
+                      opacityDragPointerIdRef.current = null;
+                    },
+                    onPointerDown: (event) => {
+                      if (!selectedImage) return;
+                      opacityDragPointerIdRef.current = event.pointerId;
+                      event.currentTarget.setPointerCapture(event.pointerId);
+                      event.currentTarget.querySelector("input")?.focus();
+                      updateSelectedImageOpacityFromPointer(event);
+                    },
+                    onPointerMove: (event) => {
+                      if (opacityDragPointerIdRef.current !== event.pointerId) return;
+                      updateSelectedImageOpacityFromPointer(event);
+                    },
+                    onPointerUp: (event) => {
+                      if (opacityDragPointerIdRef.current !== event.pointerId) return;
+                      updateSelectedImageOpacityFromPointer(event);
+                      opacityDragPointerIdRef.current = null;
+                      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                        event.currentTarget.releasePointerCapture(event.pointerId);
+                      }
+                    },
+                    onMouseDown: updateSelectedImageOpacityFromMouse,
+                    onMouseMove: (event) => {
+                      if (event.buttons !== 1) return;
+                      updateSelectedImageOpacityFromMouse(event);
+                    },
+                    onMouseUp: updateSelectedImageOpacityFromMouse,
+                    onClick: updateSelectedImageOpacityFromMouse,
+                    children: /* @__PURE__ */ jsx9(
+                      "input",
+                      {
+                        "aria-label": `${selectedImageLabel} overlay opacity`,
+                        "aria-valuemax": 100,
+                        "aria-valuemin": 0,
+                        "aria-valuenow": selectedOpacityPercent,
+                        disabled: !selectedImage,
+                        max: "100",
+                        min: "0",
+                        step: "10",
+                        type: "range",
+                        value: selectedOpacityPercent,
+                        onChange: (event) => updateSelectedImageOpacity(event.currentTarget.value),
+                        onInput: (event) => updateSelectedImageOpacity(event.currentTarget.value)
+                      }
+                    )
+                  }
+                ),
+                /* @__PURE__ */ jsx9("strong", { children: selectedOpacityPercent })
+              ] }),
+              /* @__PURE__ */ jsxs8("label", { className: "df-review-figma-image-number-control", children: [
+                /* @__PURE__ */ jsx9(MoveVertical, { "aria-hidden": "true" }),
+                /* @__PURE__ */ jsx9(
+                  "input",
+                  {
+                    "aria-label": `${selectedImageLabel} overlay Y offset`,
+                    disabled: !selectedImage,
+                    inputMode: "numeric",
+                    step: "1",
+                    type: "number",
+                    value: selectedOffsetYDraft,
+                    onBlur: () => {
+                      if (!selectedImage) return;
+                      setOffsetYDraftByImageId((currentDrafts) => {
+                        const nextDrafts = { ...currentDrafts };
+                        delete nextDrafts[selectedImage.id];
+                        return nextDrafts;
+                      });
+                    },
+                    onChange: (event) => {
+                      if (!selectedImage) return;
+                      const value = event.currentTarget.value;
+                      const offsetY = Number(value);
+                      setOffsetYDraftByImageId((currentDrafts) => ({
+                        ...currentDrafts,
+                        [selectedImage.id]: value
+                      }));
+                      if (value.trim() !== "" && Number.isFinite(offsetY)) {
+                        onSetImageOverlayOffsetY(selectedImage.id, offsetY);
+                      }
+                    }
+                  }
+                )
+              ] }),
+              selectedImage ? /* @__PURE__ */ jsx9(
+                "button",
+                {
+                  "aria-label": `Preview ${selectedImageLabel} Figma image`,
+                  className: "df-review-figma-image-selected-link",
+                  title: "Preview Figma image",
+                  type: "button",
+                  onClick: () => setPreviewImageId(selectedImage.id),
+                  children: /* @__PURE__ */ jsx9(ExternalLink, { "aria-hidden": "true" })
+                }
+              ) : /* @__PURE__ */ jsx9(
+                "button",
+                {
+                  "aria-label": "Open Figma node",
+                  className: "df-review-figma-image-selected-link",
+                  disabled: true,
+                  title: "Open Figma node",
+                  type: "button",
+                  children: /* @__PURE__ */ jsx9(ExternalLink, { "aria-hidden": "true" })
+                }
+              )
+            ] })
+          }
+        ),
+        statusText && /* @__PURE__ */ jsx9(
+          "p",
+          {
+            className: `df-review-figma-image-status${error ? " is-error" : ""}`,
+            children: statusText
+          }
+        ),
+        /* @__PURE__ */ jsxs8("div", { className: "df-review-figma-image-list", children: [
+          progressText && /* @__PURE__ */ jsxs8(
+            "div",
+            {
+              "aria-live": "polite",
+              className: "df-review-figma-image-card is-status",
+              role: "status",
+              children: [
+                /* @__PURE__ */ jsx9(ReviewSpinner, { className: "df-review-figma-image-spinner" }),
+                /* @__PURE__ */ jsx9("div", { className: "df-review-figma-image-card-main", children: /* @__PURE__ */ jsx9("strong", { children: progressText }) })
+              ]
+            }
+          ),
+          images.length === 0 && !isLoading && !isMutating && /* @__PURE__ */ jsx9("p", { className: "df-review-empty", children: "No Figma images on this viewport." }),
+          images.map((image, index) => {
+            const imageLabel = getFigmaImageLabel(image, index);
+            const overlayState = imageOverlayStates[image.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE;
+            const isDragging = draggingImageId === image.id;
+            const isDropTarget = dragOverImageId === image.id && draggingImageId !== image.id;
+            const isDropBefore = isDropTarget && draggingImageIndex > index;
+            const isDropAfter = isDropTarget && draggingImageIndex >= 0 && draggingImageIndex < index;
+            return /* @__PURE__ */ jsxs8(
+              "article",
+              {
+                "data-figma-image-id": image.id,
+                className: `df-review-figma-image-card${image.id === selectedImageId ? " is-active" : ""}${editingImageId === image.id ? " is-editing" : ""}${isDragging ? " is-dragging" : ""}${isDropTarget ? " is-drop-target" : ""}${isDropBefore ? " is-drop-before" : ""}${isDropAfter ? " is-drop-after" : ""}`,
+                onClick: () => {
+                  if (pointerDragDidMoveRef.current) {
+                    pointerDragDidMoveRef.current = false;
+                    return;
+                  }
+                  onSelectImage(image.id);
+                },
+                onPointerCancel: () => {
+                  pointerDragImageIdRef.current = null;
+                  pointerDragTargetIdRef.current = null;
+                  pointerDragStartRef.current = null;
+                  setDraggingImageId(null);
+                  setDragOverImageId(null);
+                },
+                onPointerDown: (event) => {
+                  if (event.button !== 0 || isMutating || editingImageId === image.id || isInteractiveFigmaImageTarget(event.target)) {
+                    return;
+                  }
+                  pointerDragImageIdRef.current = image.id;
+                  pointerDragTargetIdRef.current = null;
+                  pointerDragStartRef.current = {
+                    x: event.clientX,
+                    y: event.clientY
+                  };
+                  pointerDragDidMoveRef.current = false;
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                },
+                onPointerMove: (event) => {
+                  const sourceImageId = pointerDragImageIdRef.current;
+                  const dragStart = pointerDragStartRef.current;
+                  if (!sourceImageId || !dragStart) return;
+                  const hasMoved = Math.abs(event.clientX - dragStart.x) + Math.abs(event.clientY - dragStart.y) > 6;
+                  if (!hasMoved) return;
+                  pointerDragDidMoveRef.current = true;
+                  setDraggingImageId(sourceImageId);
+                  const targetImageId = getPointerFigmaImageTargetId(event);
+                  pointerDragTargetIdRef.current = targetImageId && targetImageId !== sourceImageId ? targetImageId : null;
+                  setDragOverImageId(pointerDragTargetIdRef.current);
+                },
+                onPointerUp: (event) => {
+                  const sourceImageId = pointerDragImageIdRef.current;
+                  const targetImageId = pointerDragTargetIdRef.current;
+                  pointerDragImageIdRef.current = null;
+                  pointerDragTargetIdRef.current = null;
+                  pointerDragStartRef.current = null;
+                  setDraggingImageId(null);
+                  setDragOverImageId(null);
+                  if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                    event.currentTarget.releasePointerCapture(event.pointerId);
+                  }
+                  if (!sourceImageId || !targetImageId || sourceImageId === targetImageId) {
+                    return;
+                  }
+                  const nextImageIds = getReorderedFigmaImageIds(
+                    images,
+                    sourceImageId,
+                    targetImageId
+                  );
+                  void onReorderImages(nextImageIds);
+                },
+                children: [
+                  /* @__PURE__ */ jsx9(
+                    FigmaImageLayerStateButtons,
+                    {
+                      imageLabel,
+                      overlayState,
+                      title: getFigmaImageLayerStatusLabel(overlayState),
+                      onSelect: () => onSelectImage(image.id),
+                      onToggleLocked: () => onToggleImageOverlayLocked(image.id),
+                      onToggleMode: () => onToggleImageOverlayMode(image.id),
+                      onToggleVisible: () => onToggleImageOverlayVisible(image.id)
+                    }
+                  ),
+                  /* @__PURE__ */ jsxs8("div", { className: "df-review-figma-image-card-main", children: [
+                    editingImageId === image.id ? /* @__PURE__ */ jsx9(
+                      "input",
+                      {
+                        "aria-label": "Selected Figma image label",
+                        autoComplete: "off",
+                        autoFocus: true,
+                        className: "df-review-figma-image-label-input",
+                        disabled: isMutating,
+                        placeholder: "Label",
+                        ref: (element) => {
+                          if (!element || labelInputFocusedImageIdRef.current === image.id) {
+                            return;
+                          }
+                          labelInputFocusedImageIdRef.current = image.id;
+                          element.focus();
+                          element.select();
+                        },
+                        spellCheck: false,
+                        value: editingLabelDraft,
+                        onBlur: () => {
+                          if (labelEditCancelRef.current) {
+                            labelEditCancelRef.current = false;
+                            labelInputFocusedImageIdRef.current = null;
+                            labelEditFinishedImageIdRef.current = image.id;
+                            setEditingImageId(null);
+                            setEditingLabelDraft("");
+                            return;
+                          }
+                          finishEditingImageLabel(image.id, image.label ?? "");
+                        },
+                        onChange: (event) => setEditingLabelDraft(event.currentTarget.value),
+                        onClick: (event) => event.stopPropagation(),
+                        onKeyDown: (event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            event.currentTarget.blur();
+                            return;
+                          }
+                          if (event.key === "Escape") {
+                            labelEditCancelRef.current = true;
+                            event.currentTarget.blur();
+                          }
+                        }
+                      }
+                    ) : /* @__PURE__ */ jsx9("strong", { children: imageLabel }),
+                    /* @__PURE__ */ jsx9("small", { children: formatFigmaImageDate(image.updatedAt) })
+                  ] }),
+                  /* @__PURE__ */ jsxs8("div", { className: "df-review-figma-image-card-actions", children: [
+                    /* @__PURE__ */ jsx9(
+                      "button",
+                      {
+                        "aria-label": `Edit ${imageLabel} label`,
+                        className: "df-review-figma-image-icon-button",
+                        disabled: isMutating,
+                        title: "Edit label",
+                        type: "button",
+                        onClick: (event) => {
+                          event.stopPropagation();
+                          onSelectImage(image.id);
+                          labelEditCancelRef.current = false;
+                          labelInputFocusedImageIdRef.current = null;
+                          labelEditFinishedImageIdRef.current = null;
+                          setEditingImageId(image.id);
+                          setEditingLabelDraft(image.label ?? "");
+                        },
+                        children: /* @__PURE__ */ jsx9(Pencil, { "aria-hidden": "true" })
+                      }
+                    ),
+                    /* @__PURE__ */ jsx9(
+                      "button",
+                      {
+                        "aria-label": "Delete Figma image",
+                        className: "df-review-figma-image-icon-button is-danger",
+                        disabled: isMutating,
+                        type: "button",
+                        onClick: (event) => {
+                          event.stopPropagation();
+                          void onDeleteImage(image.id);
+                        },
+                        children: /* @__PURE__ */ jsx9(Trash2, { "aria-hidden": "true" })
+                      }
+                    )
+                  ] })
+                ]
+              },
+              image.id
+            );
+          })
+        ] }),
+        previewImage && /* @__PURE__ */ jsx9(
+          FigmaImagePreviewModal,
+          {
+            image: previewImage,
+            label: getFigmaImageLabel(previewImage, images.indexOf(previewImage)),
+            onClose: () => setPreviewImageId(null)
+          }
+        )
+      ]
+    }
+  );
+};
+var FigmaImagePreviewModal = ({
+  image,
+  label,
+  onClose
+}) => {
+  return /* @__PURE__ */ jsxs8(
+    "div",
+    {
+      "aria-label": `${label} Figma image preview`,
+      "aria-modal": "true",
+      className: "df-review-prompt-modal",
+      role: "dialog",
+      children: [
+        /* @__PURE__ */ jsx9(
+          "button",
+          {
+            "aria-label": "Close Figma image preview",
+            className: "df-review-prompt-backdrop",
+            type: "button",
+            onClick: onClose
+          }
+        ),
+        /* @__PURE__ */ jsxs8("div", { className: "df-review-prompt-dialog df-review-figma-image-preview-dialog", children: [
+          /* @__PURE__ */ jsxs8("div", { className: "df-review-figma-image-preview-header", children: [
+            /* @__PURE__ */ jsx9(
+              "input",
+              {
+                "aria-label": "Figma URL",
+                readOnly: true,
+                spellCheck: false,
+                value: image.figmaUrl
+              }
+            ),
+            /* @__PURE__ */ jsxs8(
+              "a",
+              {
+                "aria-label": `Open ${label} Figma node`,
+                className: "df-review-figma-image-preview-link",
+                href: image.figmaUrl,
+                rel: "noreferrer",
+                target: "_blank",
+                children: [
+                  /* @__PURE__ */ jsx9("span", { children: "Open Figma" }),
+                  /* @__PURE__ */ jsx9(ExternalLink, { "aria-hidden": "true" })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsx9(
+              "button",
+              {
+                "aria-label": "Close Figma image preview",
+                className: "df-review-figma-image-preview-close",
+                type: "button",
+                onClick: onClose,
+                children: /* @__PURE__ */ jsx9(X, { "aria-hidden": "true" })
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsx9("div", { className: "df-review-figma-image-preview-scroll", children: /* @__PURE__ */ jsx9("img", { alt: label, src: image.imageUrl }) })
+        ] })
+      ]
+    }
+  );
+};
+
 // src/react-shell/qa/item.edit.modal.tsx
-import { useEffect, useState as useState2 } from "react";
-import { jsx as jsx6, jsxs as jsxs6 } from "react/jsx-runtime";
+import { useEffect as useEffect3, useState as useState5 } from "react";
+import { jsx as jsx10, jsxs as jsxs9 } from "react/jsx-runtime";
 var QaItemEditModal = ({
+  fields,
   item,
   onClose,
   onSave
 }) => {
-  const [commentDraft, setCommentDraft] = useState2(item.comment);
-  const [error, setError] = useState2("");
-  const [isSaving, setIsSaving] = useState2(false);
-  useEffect(() => {
+  const [titleDraft, setTitleDraft] = useState5(item.title ?? "");
+  const [commentDraft, setCommentDraft] = useState5(item.comment);
+  const [error, setError] = useState5("");
+  const [isSaving, setIsSaving] = useState5(false);
+  useEffect3(() => {
+    setTitleDraft(item.title ?? "");
     setCommentDraft(item.comment);
     setError("");
     setIsSaving(false);
-  }, [item.id, item.comment]);
-  const saveComment = async () => {
+  }, [item.id, item.title, item.comment]);
+  const saveDetails = async () => {
+    const nextTitle = titleDraft.trim();
     const nextComment = commentDraft.trim();
     if (!nextComment) {
       setError("Comment is required.");
@@ -5734,15 +8208,18 @@ var QaItemEditModal = ({
     setError("");
     setIsSaving(true);
     try {
-      await onSave(item, nextComment);
+      await onSave(item, {
+        ...fields.title ? { title: nextTitle || void 0 } : {},
+        comment: nextComment
+      });
     } catch (error2) {
       setError(
-        error2 instanceof Error ? error2.message : "Failed to update QA comment."
+        error2 instanceof Error ? error2.message : "Failed to update QA."
       );
       setIsSaving(false);
     }
   };
-  return /* @__PURE__ */ jsxs6(
+  return /* @__PURE__ */ jsxs9(
     "div",
     {
       "aria-modal": "true",
@@ -5750,7 +8227,7 @@ var QaItemEditModal = ({
       role: "dialog",
       "aria-labelledby": "df-review-edit-title",
       children: [
-        /* @__PURE__ */ jsx6(
+        /* @__PURE__ */ jsx10(
           "button",
           {
             "aria-label": "Close edit dialog",
@@ -5759,21 +8236,21 @@ var QaItemEditModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ jsxs6(
+        /* @__PURE__ */ jsxs9(
           "form",
           {
             className: "df-review-edit-dialog",
             onSubmit: (event) => {
               event.preventDefault();
-              void saveComment();
+              void saveDetails();
             },
             children: [
-              /* @__PURE__ */ jsxs6("header", { className: "df-review-settings-header", children: [
-                /* @__PURE__ */ jsxs6("div", { className: "df-review-settings-title", children: [
-                  /* @__PURE__ */ jsx6("strong", { id: "df-review-edit-title", children: "Edit QA comment" }),
-                  /* @__PURE__ */ jsx6("span", { children: "Update the text shown on this QA item." })
+              /* @__PURE__ */ jsxs9("header", { className: "df-review-settings-header", children: [
+                /* @__PURE__ */ jsxs9("div", { className: "df-review-settings-title", children: [
+                  /* @__PURE__ */ jsx10("strong", { id: "df-review-edit-title", children: "Edit QA" }),
+                  /* @__PURE__ */ jsx10("span", { children: fields.title ? "Update the title and comment." : "Update the comment." })
                 ] }),
-                /* @__PURE__ */ jsx6("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ jsx6(
+                /* @__PURE__ */ jsx10("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ jsx10(
                   "button",
                   {
                     "aria-label": "Close edit dialog",
@@ -5783,13 +8260,33 @@ var QaItemEditModal = ({
                   }
                 ) })
               ] }),
-              /* @__PURE__ */ jsxs6("div", { className: "df-review-settings-body df-review-edit-body", children: [
-                /* @__PURE__ */ jsxs6("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ jsx6("span", { children: "Comment" }),
-                  /* @__PURE__ */ jsx6("div", { className: "df-review-settings-text-input df-review-edit-textarea", children: /* @__PURE__ */ jsx6(
-                    "textarea",
+              /* @__PURE__ */ jsxs9("div", { className: "df-review-settings-body df-review-edit-body", children: [
+                fields.title && /* @__PURE__ */ jsxs9("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ jsx10("span", { children: "Title" }),
+                  /* @__PURE__ */ jsx10("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ jsx10(
+                    "input",
                     {
                       autoFocus: true,
+                      value: titleDraft,
+                      onChange: (event) => {
+                        setTitleDraft(event.target.value);
+                        if (error) setError("");
+                      },
+                      onKeyDown: (event) => {
+                        if (event.key === "Escape") {
+                          event.preventDefault();
+                          onClose();
+                        }
+                      }
+                    }
+                  ) })
+                ] }),
+                /* @__PURE__ */ jsxs9("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ jsx10("span", { children: "Comment" }),
+                  /* @__PURE__ */ jsx10("div", { className: "df-review-settings-text-input df-review-edit-textarea", children: /* @__PURE__ */ jsx10(
+                    "textarea",
+                    {
+                      autoFocus: !fields.title,
                       value: commentDraft,
                       onChange: (event) => {
                         setCommentDraft(event.target.value);
@@ -5802,17 +8299,20 @@ var QaItemEditModal = ({
                         }
                         if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
                           event.preventDefault();
-                          void saveComment();
+                          void saveDetails();
                         }
                       }
                     }
                   ) })
                 ] }),
-                error && /* @__PURE__ */ jsx6("p", { className: "df-review-edit-error", children: error }),
-                /* @__PURE__ */ jsxs6("footer", { className: "df-review-settings-actions df-review-edit-actions", children: [
-                  /* @__PURE__ */ jsx6("span", {}),
-                  /* @__PURE__ */ jsx6("button", { disabled: isSaving, type: "button", onClick: onClose, children: "Cancel" }),
-                  /* @__PURE__ */ jsx6("button", { disabled: isSaving, type: "submit", children: isSaving ? "Saving\u2026" : "Save" })
+                error && /* @__PURE__ */ jsx10("p", { className: "df-review-edit-error", children: error }),
+                /* @__PURE__ */ jsxs9("footer", { className: "df-review-settings-actions df-review-edit-actions", children: [
+                  /* @__PURE__ */ jsx10("span", {}),
+                  /* @__PURE__ */ jsx10("button", { disabled: isSaving, type: "button", onClick: onClose, children: "Cancel" }),
+                  /* @__PURE__ */ jsxs9("button", { disabled: isSaving, type: "submit", children: [
+                    isSaving && /* @__PURE__ */ jsx10("span", { className: "df-review-spinner", "aria-hidden": "true" }),
+                    isSaving ? "Saving..." : "Save"
+                  ] })
                 ] })
               ] })
             ]
@@ -5823,28 +8323,73 @@ var QaItemEditModal = ({
   );
 };
 
+// src/react-shell/qa/item.assignee.actions.tsx
+import { jsx as jsx11, jsxs as jsxs10 } from "react/jsx-runtime";
+var getAssigneeLabel = (item, assigneeOptions) => item.assigneeName || assigneeOptions.find(
+  (assigneeOption) => assigneeOption.value === item.assigneeId
+)?.label || item.assigneeId || "";
+var QaItemAssigneeActions = ({
+  assigneeOptions,
+  assigneeTitle,
+  canUpdateAssignee,
+  isDisabled = false,
+  item,
+  onChangeItemAssignee
+}) => {
+  const assigneeId = item.assigneeId ?? "";
+  const currentLabel = getAssigneeLabel(item, assigneeOptions);
+  const hasUnknownAssignee = Boolean(assigneeId) && !assigneeOptions.some(
+    (assigneeOption) => assigneeOption.value === assigneeId
+  );
+  if (!canUpdateAssignee && !currentLabel) return null;
+  return /* @__PURE__ */ jsx11(
+    "div",
+    {
+      className: "df-review-item-assignee-actions",
+      onClick: (event) => event.stopPropagation(),
+      children: canUpdateAssignee ? /* @__PURE__ */ jsxs10(
+        "select",
+        {
+          "aria-label": `QA ${assigneeTitle}`,
+          className: "df-review-item-assignee-select",
+          disabled: isDisabled,
+          value: assigneeId,
+          onChange: (event) => void onChangeItemAssignee(item, event.currentTarget.value || null),
+          children: [
+            /* @__PURE__ */ jsx11("option", { value: "", children: assigneeTitle }),
+            hasUnknownAssignee && /* @__PURE__ */ jsx11("option", { value: assigneeId, children: currentLabel }),
+            assigneeOptions.map((assigneeOption) => /* @__PURE__ */ jsx11("option", { value: assigneeOption.value, children: assigneeOption.label }, assigneeOption.value))
+          ]
+        }
+      ) : /* @__PURE__ */ jsx11("span", { className: "df-review-item-assignee-badge", children: currentLabel })
+    }
+  );
+};
+
 // src/react-shell/qa/item.remote.actions.tsx
-import { jsx as jsx7, jsxs as jsxs7 } from "react/jsx-runtime";
+import { Fragment as Fragment2, jsx as jsx12, jsxs as jsxs11 } from "react/jsx-runtime";
 var QaItemRemoteActions = ({
   isRemoteSource,
   isSubmitted,
   isSubmitting,
   item,
+  isRemoteIssueCopied,
   numberedItem,
   remoteAdapterEntry,
+  onCopyRemoteIssuePath,
   onSubmitItem
 }) => {
   const canSubmitToRemote = !isRemoteSource && Boolean(remoteAdapterEntry);
   const canOpenRemoteIssue = !isRemoteSource && Boolean(item.externalIssueUrl);
   const hasRemoteActions = canSubmitToRemote || canOpenRemoteIssue;
   if (!hasRemoteActions) return null;
-  return /* @__PURE__ */ jsxs7(
+  return /* @__PURE__ */ jsxs11(
     "div",
     {
       className: "df-review-item-remote-actions",
       onClick: (event) => event.stopPropagation(),
       children: [
-        canSubmitToRemote && remoteAdapterEntry && /* @__PURE__ */ jsxs7(
+        canSubmitToRemote && remoteAdapterEntry && /* @__PURE__ */ jsxs11(
           "button",
           {
             "aria-label": "Submit to remote",
@@ -5853,29 +8398,43 @@ var QaItemRemoteActions = ({
             type: "button",
             onClick: () => void onSubmitItem(numberedItem),
             children: [
-              /* @__PURE__ */ jsx7(Upload, { "aria-hidden": "true" }),
-              /* @__PURE__ */ jsx7("span", { children: isSubmitted ? "Submitted" : isSubmitting ? "Submitting" : "Submit" })
+              /* @__PURE__ */ jsx12(Upload, { "aria-hidden": "true" }),
+              /* @__PURE__ */ jsx12("span", { children: isSubmitted ? "Submitted" : isSubmitting ? "Submitting" : "Submit" })
             ]
           }
         ),
-        canOpenRemoteIssue && /* @__PURE__ */ jsx7(
-          "a",
-          {
-            "aria-label": "Open remote issue",
-            className: "df-review-item-action-button",
-            href: item.externalIssueUrl,
-            rel: "noreferrer",
-            target: "_blank",
-            children: /* @__PURE__ */ jsx7(ExternalLink, { "aria-hidden": "true" })
-          }
-        )
+        canOpenRemoteIssue && /* @__PURE__ */ jsxs11(Fragment2, { children: [
+          /* @__PURE__ */ jsx12(
+            "button",
+            {
+              "aria-label": isRemoteIssueCopied ? "Copied remote QA path" : "Copy remote QA path",
+              className: `df-review-item-action-button df-review-item-remote-copy${isRemoteIssueCopied ? " is-copied" : ""}`,
+              title: isRemoteIssueCopied ? "Copied remote QA path" : "Copy remote QA path",
+              type: "button",
+              onClick: () => void onCopyRemoteIssuePath(item),
+              children: /* @__PURE__ */ jsx12(Copy, { "aria-hidden": "true" })
+            }
+          ),
+          /* @__PURE__ */ jsx12(
+            "a",
+            {
+              "aria-label": "Open remote issue",
+              className: "df-review-item-action-button",
+              href: item.externalIssueUrl,
+              rel: "noreferrer",
+              target: "_blank",
+              title: "Open remote issue",
+              children: /* @__PURE__ */ jsx12(ExternalLink, { "aria-hidden": "true" })
+            }
+          )
+        ] })
       ]
     }
   );
 };
 
 // src/react-shell/qa/item.status.actions.tsx
-import { jsx as jsx8 } from "react/jsx-runtime";
+import { jsx as jsx13 } from "react/jsx-runtime";
 var getStatusOption = (status, statusOptions) => {
   const normalizedStatus = normalizeReviewItemStatus(status);
   return statusOptions.find((statusOption) => statusOption.value === status) ?? statusOptions.find(
@@ -5884,6 +8443,7 @@ var getStatusOption = (status, statusOptions) => {
 };
 var QaItemStatusActions = ({
   canUpdateStatus,
+  isDisabled = false,
   item,
   statusOptions,
   onChangeItemStatus
@@ -5893,24 +8453,25 @@ var QaItemStatusActions = ({
   const statusClassName = `is-status-${normalizeReviewItemStatus(
     currentStatusOption.value
   )}`;
-  return /* @__PURE__ */ jsx8(
+  return /* @__PURE__ */ jsx13(
     "div",
     {
       className: "df-review-item-status-actions",
       onClick: (event) => event.stopPropagation(),
-      children: canUpdateStatus ? /* @__PURE__ */ jsx8(
+      children: canUpdateStatus ? /* @__PURE__ */ jsx13(
         "select",
         {
           "aria-label": "QA status",
           className: `df-review-item-status-select ${statusClassName}`,
+          disabled: isDisabled,
           value: currentStatusOption.value,
           onChange: (event) => void onChangeItemStatus(
             item,
             event.currentTarget.value
           ),
-          children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx8("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
+          children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx13("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
         }
-      ) : /* @__PURE__ */ jsx8("span", { className: `df-review-item-status-badge ${statusClassName}`, children: currentStatusOption.label })
+      ) : /* @__PURE__ */ jsx13("span", { className: `df-review-item-status-badge ${statusClassName}`, children: currentStatusOption.label })
     }
   );
 };
@@ -6054,25 +8615,25 @@ var isScrollableReviewAnchorElement = (element) => {
 };
 
 // src/react-shell/review/item.icons.tsx
-import { jsx as jsx9 } from "react/jsx-runtime";
+import { jsx as jsx14 } from "react/jsx-runtime";
 var ReviewScopeIcon = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ jsx9(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ jsx9(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ jsx9(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ jsx9(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx9(Monitor, { "aria-hidden": "true" });
+  if (scope === "mobile") return /* @__PURE__ */ jsx14(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ jsx14(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ jsx14(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ jsx14(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx14(Monitor, { "aria-hidden": "true" });
 };
 var getReviewItemMode = (item) => isAnchorRestorableReviewItem(item) ? "dom" : item.kind;
 var ReviewItemModeIcon = ({
   mode
 }) => {
-  if (mode === "area") return /* @__PURE__ */ jsx9(Scan, { "aria-hidden": "true" });
-  if (mode === "dom") return /* @__PURE__ */ jsx9(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx9(StickyNote, { "aria-hidden": "true" });
+  if (mode === "area") return /* @__PURE__ */ jsx14(Scan, { "aria-hidden": "true" });
+  if (mode === "dom") return /* @__PURE__ */ jsx14(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx14(StickyNote, { "aria-hidden": "true" });
 };
 
 // src/react-shell/qa/item.card.tsx
-import { jsx as jsx10, jsxs as jsxs8 } from "react/jsx-runtime";
+import { jsx as jsx15, jsxs as jsxs12 } from "react/jsx-runtime";
 var formatItemCardDate = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -6085,20 +8646,25 @@ var formatItemCardDate = (value) => {
 };
 var QaItemCard = ({
   activeAdapterEntry,
+  fields,
+  assigneeTitle,
   currentPresetScope,
   getItemPresetScope,
   isOverlayVisible,
+  isMutating,
   isRemoteSource,
   numberedItem,
   remoteAdapterEntry,
   copiedPromptKey,
   selectedItemId,
   onChangeItemStatus,
+  onChangeItemAssignee,
   onClearSelectedItem,
   onRemoveItem,
   onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
+  onCopyRemoteIssuePath,
   onEditItem,
   onRestoreReviewItem,
   onSubmitItem,
@@ -6108,24 +8674,29 @@ var QaItemCard = ({
   const itemMode = getReviewItemMode(item);
   const isSubmitted = item.submitStatus === "submitted";
   const isSubmitting = item.submitStatus === "submitting";
-  const canRemoveItem = activeAdapterEntry.canRemove && !isSubmitting && (isRemoteSource || !isSubmitted);
+  const canRemoveItem = activeAdapterEntry.canRemove && !isSubmitting && !isMutating && (isRemoteSource || !isSubmitted);
   const itemComment = item.comment.trim() || getItemTitle(item);
   const itemAuthor = item.createdBy?.trim();
   const promptCopyKey = `qa:${item.id}`;
   const labelCopyKey = `label:${item.id}`;
   const linkCopyKey = `link:${item.id}`;
+  const remoteIssueCopyKey = `remote-link:${item.id}`;
   const isPromptCopied = copiedPromptKey === promptCopyKey;
   const isLabelCopied = copiedPromptKey === labelCopyKey;
   const isLinkCopied = copiedPromptKey === linkCopyKey;
+  const isRemoteIssueCopied = copiedPromptKey === remoteIssueCopyKey;
   const statusOptions = activeAdapterEntry.statusOptions;
   const isActive = item.id === selectedItemId;
   const canUpdateStatus = Boolean(activeAdapterEntry.updateStatus) && statusOptions.length > 0 && !isSubmitting;
-  const canEditItem = activeAdapterEntry.canUpdate && !isSubmitting;
+  const canUpdateAssignee = Boolean(activeAdapterEntry.updateAssignee) && activeAdapterEntry.assigneeOptions.length > 0 && !isSubmitting;
+  const canEditItem = activeAdapterEntry.canUpdate && !isSubmitting && !isMutating;
+  const itemTitle = fields.title ? item.title?.trim() : "";
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor].filter(Boolean).join(" | ");
-  return /* @__PURE__ */ jsxs8(
+  return /* @__PURE__ */ jsxs12(
     "article",
     {
-      className: `df-review-item-card${isActive ? " is-active" : ""}${getItemPresetScope(item) !== currentPresetScope ? " is-dim" : ""}${isOverlayVisible ? "" : " is-overlay-hidden"}`,
+      "aria-busy": isMutating ? "true" : "false",
+      className: `df-review-item-card${isActive ? " is-active" : ""}${getItemPresetScope(item) !== currentPresetScope ? " is-dim" : ""}${isOverlayVisible ? "" : " is-overlay-hidden"}${isMutating ? " is-mutating" : ""}`,
       onClick: () => {
         if (isActive) {
           onClearSelectedItem();
@@ -6134,10 +8705,10 @@ var QaItemCard = ({
         onRestoreReviewItem(item);
       },
       children: [
-        /* @__PURE__ */ jsxs8("div", { className: "df-review-item-header", children: [
-          /* @__PURE__ */ jsxs8("div", { className: "df-review-item-main", children: [
-            /* @__PURE__ */ jsxs8("span", { className: "df-review-item-badges", children: [
-              /* @__PURE__ */ jsx10(
+        /* @__PURE__ */ jsxs12("div", { className: "df-review-item-header", children: [
+          /* @__PURE__ */ jsxs12("div", { className: "df-review-item-main", children: [
+            /* @__PURE__ */ jsxs12("span", { className: "df-review-item-badges", children: [
+              /* @__PURE__ */ jsx15(
                 "button",
                 {
                   "aria-label": isLabelCopied ? "Copied QA number" : "Copy QA number",
@@ -6151,42 +8722,53 @@ var QaItemCard = ({
                   children: numberedItem.displayLabel
                 }
               ),
-              /* @__PURE__ */ jsxs8(
+              /* @__PURE__ */ jsxs12(
                 "span",
                 {
                   className: `df-review-item-scope is-scope-${numberedItem.scope}`,
                   children: [
-                    /* @__PURE__ */ jsx10(ReviewScopeIcon, { scope: numberedItem.scope }),
+                    /* @__PURE__ */ jsx15(ReviewScopeIcon, { scope: numberedItem.scope }),
                     numberedItem.label
                   ]
                 }
               ),
-              /* @__PURE__ */ jsxs8("span", { className: `df-review-item-mode is-mode-${itemMode}`, children: [
-                /* @__PURE__ */ jsx10(ReviewItemModeIcon, { mode: itemMode }),
+              /* @__PURE__ */ jsxs12("span", { className: `df-review-item-mode is-mode-${itemMode}`, children: [
+                /* @__PURE__ */ jsx15(ReviewItemModeIcon, { mode: itemMode }),
                 itemMode
               ] })
             ] }),
-            /* @__PURE__ */ jsx10("strong", { className: "df-review-item-comment", children: itemComment }),
-            /* @__PURE__ */ jsx10("small", { className: "df-review-item-meta", children: itemMeta }),
-            item.submitError && /* @__PURE__ */ jsx10("small", { className: "df-review-item-error", children: item.submitError })
+            itemTitle && /* @__PURE__ */ jsx15("strong", { className: "df-review-item-title", children: itemTitle }),
+            /* @__PURE__ */ jsx15(
+              "p",
+              {
+                className: `df-review-item-comment${itemTitle ? "" : " is-primary"}`,
+                children: itemComment
+              }
+            ),
+            /* @__PURE__ */ jsx15("small", { className: "df-review-item-meta", children: itemMeta }),
+            isMutating && /* @__PURE__ */ jsxs12("small", { className: "df-review-item-saving", "aria-live": "polite", children: [
+              /* @__PURE__ */ jsx15("span", { className: "df-review-spinner", "aria-hidden": "true" }),
+              "Saving QA..."
+            ] }),
+            item.submitError && /* @__PURE__ */ jsx15("small", { className: "df-review-item-error", children: item.submitError })
           ] }),
-          /* @__PURE__ */ jsxs8(
+          /* @__PURE__ */ jsxs12(
             "div",
             {
               className: "df-review-item-header-actions",
               onClick: (event) => event.stopPropagation(),
               children: [
-                /* @__PURE__ */ jsx10(
+                /* @__PURE__ */ jsx15(
                   "button",
                   {
                     "aria-label": isOverlayVisible ? "Hide QA overlay" : "Show QA overlay",
                     className: `df-review-item-visibility${isOverlayVisible ? " is-visible" : " is-hidden"}`,
                     type: "button",
                     onClick: () => onToggleItemOverlayVisibility(item.id),
-                    children: isOverlayVisible ? /* @__PURE__ */ jsx10(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx10(EyeOff, { "aria-hidden": "true" })
+                    children: isOverlayVisible ? /* @__PURE__ */ jsx15(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx15(EyeOff, { "aria-hidden": "true" })
                   }
                 ),
-                /* @__PURE__ */ jsx10(
+                /* @__PURE__ */ jsx15(
                   "button",
                   {
                     "aria-label": isLinkCopied ? "Copied QA link" : "Copy QA link",
@@ -6194,50 +8776,64 @@ var QaItemCard = ({
                     title: isLinkCopied ? "Copied QA link" : "Copy QA link",
                     type: "button",
                     onClick: () => onCopyItemLink(numberedItem),
-                    children: /* @__PURE__ */ jsx10(Link2, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ jsx15(Link2, { "aria-hidden": "true" })
                   }
                 ),
-                canEditItem && /* @__PURE__ */ jsx10(
+                canEditItem && /* @__PURE__ */ jsx15(
                   "button",
                   {
-                    "aria-label": "Edit QA comment",
+                    "aria-label": "Edit QA",
                     className: "df-review-item-edit",
-                    title: "Edit QA comment",
+                    title: "Edit QA",
                     type: "button",
                     onClick: () => onEditItem(item),
-                    children: /* @__PURE__ */ jsx10(Pencil, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ jsx15(Pencil, { "aria-hidden": "true" })
                   }
                 ),
-                canRemoveItem && /* @__PURE__ */ jsx10(
+                canRemoveItem && /* @__PURE__ */ jsx15(
                   "button",
                   {
                     "aria-label": "Delete QA",
                     className: "df-review-item-delete",
                     type: "button",
                     onClick: () => void onRemoveItem(item),
-                    children: /* @__PURE__ */ jsx10(X, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ jsx15(X, { "aria-hidden": "true" })
                   }
                 )
               ]
             }
           )
         ] }),
-        /* @__PURE__ */ jsxs8("div", { className: "df-review-item-actions", children: [
-          /* @__PURE__ */ jsx10(
-            QaItemStatusActions,
-            {
-              canUpdateStatus,
-              item,
-              statusOptions,
-              onChangeItemStatus
-            }
-          ),
-          /* @__PURE__ */ jsx10(
+        /* @__PURE__ */ jsxs12("div", { className: "df-review-item-actions", children: [
+          /* @__PURE__ */ jsxs12("div", { className: "df-review-item-workflow-actions", children: [
+            /* @__PURE__ */ jsx15(
+              QaItemStatusActions,
+              {
+                canUpdateStatus,
+                isDisabled: isMutating,
+                item,
+                statusOptions,
+                onChangeItemStatus
+              }
+            ),
+            /* @__PURE__ */ jsx15(
+              QaItemAssigneeActions,
+              {
+                assigneeOptions: activeAdapterEntry.assigneeOptions,
+                assigneeTitle,
+                canUpdateAssignee,
+                isDisabled: isMutating,
+                item,
+                onChangeItemAssignee
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsx15(
             "div",
             {
               className: "df-review-item-prompt-actions",
               onClick: (event) => event.stopPropagation(),
-              children: /* @__PURE__ */ jsx10(
+              children: /* @__PURE__ */ jsx15(
                 "button",
                 {
                   "aria-label": isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
@@ -6245,20 +8841,22 @@ var QaItemCard = ({
                   title: isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
                   type: "button",
                   onClick: () => onCopyItemPrompt(numberedItem),
-                  children: isPromptCopied ? /* @__PURE__ */ jsx10(Copy, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx10(Bot, { "aria-hidden": "true" })
+                  children: isPromptCopied ? /* @__PURE__ */ jsx15(Copy, { "aria-hidden": "true" }) : /* @__PURE__ */ jsx15(Bot, { "aria-hidden": "true" })
                 }
               )
             }
           ),
-          /* @__PURE__ */ jsx10(
+          /* @__PURE__ */ jsx15(
             QaItemRemoteActions,
             {
               isRemoteSource,
               isSubmitted,
-              isSubmitting,
+              isSubmitting: isSubmitting || isMutating,
               item,
+              isRemoteIssueCopied,
               numberedItem,
               remoteAdapterEntry,
+              onCopyRemoteIssuePath,
               onSubmitItem
             }
           )
@@ -6269,12 +8867,13 @@ var QaItemCard = ({
 };
 
 // src/react-shell/qa/panel.header.tsx
-import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
+import { jsx as jsx16, jsxs as jsxs13 } from "react/jsx-runtime";
 var QaPanelHeader = ({
   activeItemCount,
   activeRemainingItemCount,
   filteredItemCount,
   isAllQaVisible,
+  isLoading,
   label,
   qaFilter,
   qaFilterCounts,
@@ -6292,11 +8891,11 @@ var QaPanelHeader = ({
   const statusFilterOptions = getStatusFilterOptions(statusOptions);
   const hasActiveFilter = qaFilter !== "all" || qaStatusFilter !== "all";
   const displayLabel = getQaSourceDisplayLabel(label);
-  return /* @__PURE__ */ jsxs9("div", { className: "df-review-list-header", children: [
-    /* @__PURE__ */ jsxs9("div", { className: "df-review-list-title", children: [
-      /* @__PURE__ */ jsxs9("span", { className: "df-review-list-meta", children: [
-        /* @__PURE__ */ jsx11("span", { children: isAllQaVisible ? `${displayLabel} QA \xB7 All pages` : `${displayLabel} QA` }),
-        /* @__PURE__ */ jsx11(
+  return /* @__PURE__ */ jsxs13("div", { className: "df-review-list-header", children: [
+    /* @__PURE__ */ jsxs13("div", { className: "df-review-list-title", children: [
+      /* @__PURE__ */ jsxs13("span", { className: "df-review-list-meta", children: [
+        /* @__PURE__ */ jsx16("span", { children: isAllQaVisible ? `${displayLabel} QA \xB7 All pages` : `${displayLabel} QA` }),
+        /* @__PURE__ */ jsx16(
           "strong",
           {
             title: `${activeRemainingItemCount} remaining of ${activeItemCount}`,
@@ -6304,10 +8903,10 @@ var QaPanelHeader = ({
           }
         )
       ] }),
-      /* @__PURE__ */ jsx11("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
+      /* @__PURE__ */ jsx16("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
         const count = qaFilterCounts.get(filter.key) ?? 0;
         const isActive = qaFilter === filter.key;
-        return /* @__PURE__ */ jsx11(
+        return /* @__PURE__ */ jsx16(
           "button",
           {
             "aria-label": `${filter.label} QA (${count})`,
@@ -6315,36 +8914,38 @@ var QaPanelHeader = ({
             className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
             type: "button",
             onClick: () => onQaFilterChange(filter.key),
-            children: /* @__PURE__ */ jsx11("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ jsx11(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ jsx11(ListFilter, { "aria-hidden": "true" }) })
+            children: /* @__PURE__ */ jsx16("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ jsx16(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ jsx16(ListFilter, { "aria-hidden": "true" }) })
           },
           filter.key
         );
       }) })
     ] }),
-    /* @__PURE__ */ jsxs9("div", { className: "df-review-list-toolbar", children: [
-      /* @__PURE__ */ jsxs9("div", { className: "df-review-list-controls", children: [
-        showSourceSelect && /* @__PURE__ */ jsx11(
+    /* @__PURE__ */ jsxs13("div", { className: "df-review-list-toolbar", children: [
+      /* @__PURE__ */ jsxs13("div", { className: "df-review-list-controls", children: [
+        showSourceSelect && /* @__PURE__ */ jsx16(
           "select",
           {
             "aria-label": "QA source",
             className: "df-review-source-select",
             value: source,
             onChange: (event) => onChangeReviewSource(event.currentTarget.value),
-            children: sourceEntries.map((entry) => /* @__PURE__ */ jsx11("option", { value: entry.label, children: entry.label }, entry.label))
+            children: sourceEntries.map((entry) => /* @__PURE__ */ jsx16("option", { value: entry.label, children: entry.label }, entry.label))
           }
         ),
-        /* @__PURE__ */ jsx11(
+        /* @__PURE__ */ jsx16(
           "button",
           {
             "aria-label": "Refresh QA",
-            className: "df-review-source-refresh",
+            "aria-busy": isLoading ? "true" : "false",
+            className: `df-review-source-refresh${isLoading ? " is-loading" : ""}`,
+            disabled: isLoading,
             type: "button",
             onClick: () => void onRefreshReviewData(),
-            children: /* @__PURE__ */ jsx11(RefreshCw, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ jsx16(RefreshCw, { "aria-hidden": "true" })
           }
         )
       ] }),
-      /* @__PURE__ */ jsxs9(
+      /* @__PURE__ */ jsxs13(
         "select",
         {
           "aria-label": "QA status filter",
@@ -6354,8 +8955,8 @@ var QaPanelHeader = ({
             event.currentTarget.value
           ),
           children: [
-            /* @__PURE__ */ jsx11("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
-            statusFilterOptions.map((statusOption) => /* @__PURE__ */ jsx11("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
+            /* @__PURE__ */ jsx16("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
+            statusFilterOptions.map((statusOption) => /* @__PURE__ */ jsx16("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
           ]
         }
       )
@@ -6379,18 +8980,22 @@ function getStatusFilterOptions(statusOptions) {
 }
 
 // src/react-shell/qa/panel.tsx
-import { jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
+import { jsx as jsx17, jsxs as jsxs14 } from "react/jsx-runtime";
 var ReviewQaPanel = ({
   activeAdapterEntry,
   activeItems,
   activeRemainingItemCount,
+  fields,
+  assigneeTitle,
   currentPresetScope,
   filteredNumberedActiveItems,
   getItemPresetScope,
   hiddenOverlayItemIds,
   isAllQaVisible,
   isListVisible,
+  isLoading,
   isRemoteSource,
+  mutatingItemIds,
   copiedPromptKey,
   qaFilter,
   qaFilterCounts,
@@ -6402,11 +9007,13 @@ var ReviewQaPanel = ({
   source,
   sourceEntries,
   onChangeItemStatus,
+  onChangeItemAssignee,
   onClearSelectedItem,
   onChangeReviewSource,
   onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
+  onCopyRemoteIssuePath,
   onEditItem,
   onQaFilterChange,
   onQaStatusFilterChange,
@@ -6417,15 +9024,16 @@ var ReviewQaPanel = ({
   onToggleItemOverlayVisibility
 }) => {
   const emptyMessage = isAllQaVisible ? `No ${activeAdapterEntry.label} QA.` : isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page.";
-  return /* @__PURE__ */ jsxs10("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: [
-    /* @__PURE__ */ jsx12("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs10("section", { className: "df-review-item-list", children: [
-      /* @__PURE__ */ jsx12(
+  return /* @__PURE__ */ jsxs14("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: [
+    /* @__PURE__ */ jsx17("div", { className: "df-review-panel-body", children: /* @__PURE__ */ jsxs14("section", { className: "df-review-item-list", children: [
+      /* @__PURE__ */ jsx17(
         QaPanelHeader,
         {
           activeItemCount: activeItems.length,
           activeRemainingItemCount,
           filteredItemCount: filteredNumberedActiveItems.length,
           isAllQaVisible,
+          isLoading,
           label: activeAdapterEntry.label,
           qaFilter,
           qaFilterCounts,
@@ -6441,7 +9049,7 @@ var ReviewQaPanel = ({
           onRefreshReviewData
         }
       ),
-      /* @__PURE__ */ jsxs10(
+      /* @__PURE__ */ jsxs14(
         "div",
         {
           className: "df-review-list-scroll",
@@ -6451,27 +9059,41 @@ var ReviewQaPanel = ({
             }
           },
           children: [
-            activeItems.length === 0 && /* @__PURE__ */ jsx12("p", { className: "df-review-empty", children: emptyMessage }),
-            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx12("p", { className: "df-review-empty", children: "No QA in this filter." }),
+            activeItems.length === 0 && /* @__PURE__ */ jsxs14(
+              "p",
+              {
+                className: `df-review-empty${isLoading ? " is-loading" : ""}`,
+                children: [
+                  isLoading && /* @__PURE__ */ jsx17("span", { className: "df-review-spinner", "aria-hidden": "true" }),
+                  /* @__PURE__ */ jsx17("span", { children: isLoading ? `Loading ${activeAdapterEntry.label} QA...` : emptyMessage })
+                ]
+              }
+            ),
+            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ jsx17("p", { className: "df-review-empty", children: "No QA in this filter." }),
             filteredNumberedActiveItems.map((numberedItem) => {
               const { item } = numberedItem;
-              return /* @__PURE__ */ jsx12(
+              return /* @__PURE__ */ jsx17(
                 QaItemCard,
                 {
                   activeAdapterEntry,
+                  fields,
+                  assigneeTitle,
                   currentPresetScope,
                   getItemPresetScope,
                   isOverlayVisible: !hiddenOverlayItemIds.has(item.id),
+                  isMutating: mutatingItemIds.has(item.id),
                   isRemoteSource,
                   numberedItem,
                   remoteAdapterEntry,
                   copiedPromptKey,
                   selectedItemId,
+                  onChangeItemAssignee,
                   onChangeItemStatus,
                   onClearSelectedItem,
                   onCopyItemLabel,
                   onCopyItemLink,
                   onCopyItemPrompt,
+                  onCopyRemoteIssuePath,
                   onEditItem,
                   onRemoveItem,
                   onRestoreReviewItem,
@@ -6485,16 +9107,16 @@ var ReviewQaPanel = ({
         }
       )
     ] }) }),
-    /* @__PURE__ */ jsx12("div", { className: "df-review-qa-draft-host" })
+    /* @__PURE__ */ jsx17("div", { className: "df-review-qa-draft-host" })
   ] });
 };
 
 // src/react-shell/presence/overlay.tsx
-import { useState as useState3 } from "react";
-import { jsx as jsx13, jsxs as jsxs11 } from "react/jsx-runtime";
+import { useState as useState6 } from "react";
+import { jsx as jsx18, jsxs as jsxs15 } from "react/jsx-runtime";
 var getPresenceName = (user) => user.displayName || user.userId;
-var PresenceUserIcon = () => /* @__PURE__ */ jsxs11("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
-  /* @__PURE__ */ jsx13(
+var PresenceUserIcon = () => /* @__PURE__ */ jsxs15("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
+  /* @__PURE__ */ jsx18(
     "circle",
     {
       cx: "15",
@@ -6505,8 +9127,8 @@ var PresenceUserIcon = () => /* @__PURE__ */ jsxs11("svg", { "aria-hidden": "tru
       strokeWidth: "2.6"
     }
   ),
-  /* @__PURE__ */ jsx13("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
-  /* @__PURE__ */ jsx13(
+  /* @__PURE__ */ jsx18("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
+  /* @__PURE__ */ jsx18(
     "path",
     {
       d: "M7.8 22.1c.9-4.1 3.4-6.1 7.2-6.1s6.3 2 7.2 6.1c-1.7 1.5-4.1 2.4-7.2 2.4s-5.5-.9-7.2-2.4z",
@@ -6519,15 +9141,15 @@ var PresenceOverlay = ({
   presenceSessionId,
   users
 }) => {
-  const [isExpanded, setIsExpanded] = useState3(false);
+  const [isExpanded, setIsExpanded] = useState6(false);
   if (users.length === 0) return null;
-  return /* @__PURE__ */ jsxs11(
+  return /* @__PURE__ */ jsxs15(
     "div",
     {
       "aria-label": `Review presence, ${users.length} online`,
       className: `df-review-presence-overlay${isExpanded ? " is-expanded" : ""}`,
       children: [
-        /* @__PURE__ */ jsxs11(
+        /* @__PURE__ */ jsxs15(
           "button",
           {
             "aria-label": `Show online reviewers, ${users.length} online`,
@@ -6536,12 +9158,12 @@ var PresenceOverlay = ({
             type: "button",
             onClick: () => setIsExpanded((current) => !current),
             children: [
-              /* @__PURE__ */ jsx13(PresenceUserIcon, {}),
-              /* @__PURE__ */ jsx13("span", { className: "df-review-presence-badge", children: users.length })
+              /* @__PURE__ */ jsx18(PresenceUserIcon, {}),
+              /* @__PURE__ */ jsx18("span", { className: "df-review-presence-badge", children: users.length })
             ]
           }
         ),
-        isExpanded && /* @__PURE__ */ jsx13("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ jsx13(
+        isExpanded && /* @__PURE__ */ jsx18("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ jsx18(
           "span",
           {
             className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
@@ -6550,7 +9172,7 @@ var PresenceOverlay = ({
               "--df-review-presence-color": user.color
             },
             title: getPresenceName(user),
-            children: /* @__PURE__ */ jsx13("span", { children: getPresenceName(user) })
+            children: /* @__PURE__ */ jsx18("span", { children: getPresenceName(user) })
           },
           user.sessionId
         )) })
@@ -7151,7 +9773,7 @@ var filterSectionOutlineEntries = (entries, terms) => {
 };
 
 // src/react-shell/review/section.outline.panel.tsx
-import { jsx as jsx14, jsxs as jsxs12 } from "react/jsx-runtime";
+import { jsx as jsx19, jsxs as jsxs16 } from "react/jsx-runtime";
 var SectionOutlinePanel = ({
   isPanelVisible,
   isFiltering,
@@ -7183,9 +9805,9 @@ var SectionOutlinePanel = ({
     const rect = getLiveSectionOutlineRect(entry);
     if (isBoxMetaVisible) {
       rows.push(
-        /* @__PURE__ */ jsxs12("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ jsx14("b", { children: "box" }),
-          /* @__PURE__ */ jsxs12("code", { children: [
+        /* @__PURE__ */ jsxs16("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ jsx19("b", { children: "box" }),
+          /* @__PURE__ */ jsxs16("code", { children: [
             "top ",
             rect.top,
             " / left ",
@@ -7201,13 +9823,13 @@ var SectionOutlinePanel = ({
     }
     if (metadata.textValue) {
       rows.push(
-        /* @__PURE__ */ jsxs12(
+        /* @__PURE__ */ jsxs16(
           "span",
           {
             className: "df-review-section-outline-meta-row is-text",
             children: [
-              /* @__PURE__ */ jsx14("b", { children: "text" }),
-              /* @__PURE__ */ jsx14("code", { children: metadata.textValue })
+              /* @__PURE__ */ jsx19("b", { children: "text" }),
+              /* @__PURE__ */ jsx19("code", { children: metadata.textValue })
             ]
           },
           "text"
@@ -7216,9 +9838,9 @@ var SectionOutlinePanel = ({
     }
     if (isFontMetaVisible && metadata.fontLabel) {
       rows.push(
-        /* @__PURE__ */ jsxs12("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ jsx14("b", { children: "font" }),
-          /* @__PURE__ */ jsx14("code", { children: metadata.fontLabel })
+        /* @__PURE__ */ jsxs16("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ jsx19("b", { children: "font" }),
+          /* @__PURE__ */ jsx19("code", { children: metadata.fontLabel })
         ] }, "font")
       );
     }
@@ -7227,13 +9849,13 @@ var SectionOutlinePanel = ({
         const mediaKey = `${mediaItem.variant}:${mediaItem.type}:${mediaItem.url}`;
         const mediaLabel = mediaItem.variant === "media" ? mediaItem.type : mediaItem.variant;
         rows.push(
-          /* @__PURE__ */ jsxs12(
+          /* @__PURE__ */ jsxs16(
             "span",
             {
               className: "df-review-section-outline-meta-row is-media",
               children: [
-                /* @__PURE__ */ jsx14("b", { children: mediaLabel }),
-                /* @__PURE__ */ jsx14(
+                /* @__PURE__ */ jsx19("b", { children: mediaLabel }),
+                /* @__PURE__ */ jsx19(
                   "a",
                   {
                     className: "df-review-section-outline-media-link",
@@ -7241,7 +9863,7 @@ var SectionOutlinePanel = ({
                     rel: "noopener noreferrer",
                     target: "_blank",
                     title: `${mediaLabel} ${mediaItem.type}`,
-                    children: /* @__PURE__ */ jsx14("code", { children: mediaItem.url })
+                    children: /* @__PURE__ */ jsx19("code", { children: mediaItem.url })
                   }
                 )
               ]
@@ -7253,14 +9875,14 @@ var SectionOutlinePanel = ({
     }
     if (isClassMetaVisible && metadata.classNames?.length) {
       rows.push(
-        /* @__PURE__ */ jsxs12("span", { className: "df-review-section-outline-meta-row is-class", children: [
-          /* @__PURE__ */ jsx14("b", { children: "class" }),
-          /* @__PURE__ */ jsx14("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ jsx14("code", { children: className }, className)) })
+        /* @__PURE__ */ jsxs16("span", { className: "df-review-section-outline-meta-row is-class", children: [
+          /* @__PURE__ */ jsx19("b", { children: "class" }),
+          /* @__PURE__ */ jsx19("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ jsx19("code", { children: className }, className)) })
         ] }, "class")
       );
     }
     if (rows.length === 0) return null;
-    return /* @__PURE__ */ jsx14(
+    return /* @__PURE__ */ jsx19(
       "div",
       {
         className: "df-review-section-outline-meta",
@@ -7274,12 +9896,12 @@ var SectionOutlinePanel = ({
     const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
     const liveRect = getLiveSectionOutlineRect(entry);
     const isZeroArea = liveRect.width <= 0 || liveRect.height <= 0;
-    return /* @__PURE__ */ jsxs12(
+    return /* @__PURE__ */ jsxs16(
       "div",
       {
         className: `df-review-section-outline-item is-depth-${entry.depth}`,
         children: [
-          /* @__PURE__ */ jsxs12(
+          /* @__PURE__ */ jsxs16(
             "div",
             {
               className: "df-review-section-outline-entry-body",
@@ -7295,13 +9917,13 @@ var SectionOutlinePanel = ({
               onPointerEnter: () => onHoverElement(entry.element),
               onPointerLeave: onClearHover,
               children: [
-                /* @__PURE__ */ jsxs12(
+                /* @__PURE__ */ jsxs16(
                   "div",
                   {
                     className: "df-review-section-outline-row",
                     style: { paddingLeft: "6px" },
                     children: [
-                      hasChildren ? /* @__PURE__ */ jsx14(
+                      hasChildren ? /* @__PURE__ */ jsx19(
                         "button",
                         {
                           "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
@@ -7309,16 +9931,16 @@ var SectionOutlinePanel = ({
                           className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
                           type: "button",
                           onClick: () => onToggleEntry(entry.id),
-                          children: /* @__PURE__ */ jsx14(ChevronDown, { "aria-hidden": "true" })
+                          children: /* @__PURE__ */ jsx19(ChevronDown, { "aria-hidden": "true" })
                         }
-                      ) : /* @__PURE__ */ jsx14(
+                      ) : /* @__PURE__ */ jsx19(
                         "span",
                         {
                           "aria-hidden": "true",
                           className: "df-review-section-outline-toggle is-placeholder"
                         }
                       ),
-                      /* @__PURE__ */ jsxs12(
+                      /* @__PURE__ */ jsxs16(
                         "button",
                         {
                           className: "df-review-section-outline-name",
@@ -7326,13 +9948,13 @@ var SectionOutlinePanel = ({
                           type: "button",
                           onClick: () => onScrollToSection(entry),
                           children: [
-                            /* @__PURE__ */ jsx14("span", { children: entry.label }),
-                            /* @__PURE__ */ jsx14("small", { children: entry.filePath })
+                            /* @__PURE__ */ jsx19("span", { children: entry.label }),
+                            /* @__PURE__ */ jsx19("small", { children: entry.filePath })
                           ]
                         }
                       ),
-                      /* @__PURE__ */ jsxs12("span", { className: "df-review-section-outline-links", children: [
-                        /* @__PURE__ */ jsx14(
+                      /* @__PURE__ */ jsxs16("span", { className: "df-review-section-outline-links", children: [
+                        /* @__PURE__ */ jsx19(
                           "button",
                           {
                             "aria-label": `Open ${entry.label} data`,
@@ -7341,10 +9963,10 @@ var SectionOutlinePanel = ({
                             type: "button",
                             disabled: !entry.data?.file,
                             onClick: () => onOpenData(entry),
-                            children: /* @__PURE__ */ jsx14(Database, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ jsx19(Database, { "aria-hidden": "true" })
                           }
                         ),
-                        /* @__PURE__ */ jsx14(
+                        /* @__PURE__ */ jsx19(
                           "button",
                           {
                             "aria-label": `Open ${entry.label} source`,
@@ -7353,10 +9975,10 @@ var SectionOutlinePanel = ({
                             type: "button",
                             disabled: !entry.source?.file,
                             onClick: () => onOpenSource(entry),
-                            children: /* @__PURE__ */ jsx14(CodeXml, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ jsx19(CodeXml, { "aria-hidden": "true" })
                           }
                         ),
-                        /* @__PURE__ */ jsx14(
+                        /* @__PURE__ */ jsx19(
                           "span",
                           {
                             "aria-hidden": "true",
@@ -7364,7 +9986,7 @@ var SectionOutlinePanel = ({
                             children: "|"
                           }
                         ),
-                        /* @__PURE__ */ jsx14(
+                        /* @__PURE__ */ jsx19(
                           "button",
                           {
                             "aria-label": `Start DOM QA for ${entry.label}`,
@@ -7373,7 +9995,7 @@ var SectionOutlinePanel = ({
                             type: "button",
                             disabled: !canWriteDom || isZeroArea,
                             onClick: () => onStartDomReview(entry),
-                            children: /* @__PURE__ */ jsx14(SquareMousePointer, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ jsx19(SquareMousePointer, { "aria-hidden": "true" })
                           }
                         )
                       ] })
@@ -7384,26 +10006,26 @@ var SectionOutlinePanel = ({
               ]
             }
           ),
-          hasChildren && !isCollapsed && /* @__PURE__ */ jsx14("div", { className: "df-review-section-outline-children", children: entry.children.map(renderEntry) })
+          hasChildren && !isCollapsed && /* @__PURE__ */ jsx19("div", { className: "df-review-section-outline-children", children: entry.children.map(renderEntry) })
         ]
       },
       entry.id
     );
   };
-  return /* @__PURE__ */ jsx14(
+  return /* @__PURE__ */ jsx19(
     "aside",
     {
       className: "df-review-source-tree-panel",
       "aria-hidden": !isPanelVisible,
-      children: /* @__PURE__ */ jsxs12("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
-        /* @__PURE__ */ jsxs12("div", { className: "df-review-section-outline-head", children: [
-          /* @__PURE__ */ jsxs12("div", { className: "df-review-section-outline-summary", children: [
-            /* @__PURE__ */ jsxs12("span", { children: [
-              /* @__PURE__ */ jsx14("strong", { children: "Component" }),
-              /* @__PURE__ */ jsx14("small", { children: isFiltering ? `${filteredCount} / ${totalCount} results` : `${rootCount} ${rootCount === 1 ? "root" : "roots"}` })
+      children: /* @__PURE__ */ jsxs16("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
+        /* @__PURE__ */ jsxs16("div", { className: "df-review-section-outline-head", children: [
+          /* @__PURE__ */ jsxs16("div", { className: "df-review-section-outline-summary", children: [
+            /* @__PURE__ */ jsxs16("span", { children: [
+              /* @__PURE__ */ jsx19("strong", { children: "Component" }),
+              /* @__PURE__ */ jsx19("small", { children: isFiltering ? `${filteredCount} / ${totalCount} results` : `${rootCount} ${rootCount === 1 ? "root" : "roots"}` })
             ] }),
-            /* @__PURE__ */ jsxs12("div", { className: "df-review-section-outline-meta-controls", children: [
-              /* @__PURE__ */ jsx14(
+            /* @__PURE__ */ jsxs16("div", { className: "df-review-section-outline-meta-controls", children: [
+              /* @__PURE__ */ jsx19(
                 "button",
                 {
                   "aria-label": "Toggle source tree box metadata",
@@ -7412,10 +10034,10 @@ var SectionOutlinePanel = ({
                   title: "top / left / width / height",
                   type: "button",
                   onClick: () => onToggleMeta("box"),
-                  children: /* @__PURE__ */ jsx14(SquareDashed, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ jsx19(SquareDashed, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ jsx14(
+              /* @__PURE__ */ jsx19(
                 "button",
                 {
                   "aria-label": "Toggle source tree font metadata",
@@ -7424,10 +10046,10 @@ var SectionOutlinePanel = ({
                   title: "font size / weight",
                   type: "button",
                   onClick: () => onToggleMeta("font"),
-                  children: /* @__PURE__ */ jsx14(Type, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ jsx19(Type, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ jsx14(
+              /* @__PURE__ */ jsx19(
                 "button",
                 {
                   "aria-label": "Toggle source tree media metadata",
@@ -7436,10 +10058,10 @@ var SectionOutlinePanel = ({
                   title: "media urls",
                   type: "button",
                   onClick: () => onToggleMeta("media"),
-                  children: /* @__PURE__ */ jsx14(Image, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ jsx19(Image, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ jsx14(
+              /* @__PURE__ */ jsx19(
                 "button",
                 {
                   "aria-label": "Toggle source tree class metadata",
@@ -7448,14 +10070,14 @@ var SectionOutlinePanel = ({
                   title: "class names",
                   type: "button",
                   onClick: () => onToggleMeta("className"),
-                  children: /* @__PURE__ */ jsx14(CodeXml, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ jsx19(CodeXml, { "aria-hidden": "true" })
                 }
               )
             ] })
           ] }),
-          /* @__PURE__ */ jsxs12("div", { className: "df-review-section-outline-filter", children: [
-            /* @__PURE__ */ jsx14(Search, { "aria-hidden": "true" }),
-            /* @__PURE__ */ jsx14(
+          /* @__PURE__ */ jsxs16("div", { className: "df-review-section-outline-filter", children: [
+            /* @__PURE__ */ jsx19(Search, { "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx19(
               "input",
               {
                 "aria-label": "Filter source tree",
@@ -7468,7 +10090,7 @@ var SectionOutlinePanel = ({
                 onChange: (event) => onFilterChange(event.currentTarget.value)
               }
             ),
-            filter && /* @__PURE__ */ jsx14(
+            filter && /* @__PURE__ */ jsx19(
               "button",
               {
                 "aria-label": "Clear source tree filter",
@@ -7476,19 +10098,89 @@ var SectionOutlinePanel = ({
                 type: "button",
                 onMouseDown: (event) => event.preventDefault(),
                 onClick: () => onFilterChange(""),
-                children: /* @__PURE__ */ jsx14(X, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ jsx19(X, { "aria-hidden": "true" })
               }
             )
           ] })
         ] }),
-        entries.length > 0 ? /* @__PURE__ */ jsx14("div", { className: "df-review-section-outline-list", children: entries.map(renderEntry) }) : /* @__PURE__ */ jsx14("div", { className: "df-review-section-outline-empty", children: isFiltering ? "No source matches" : "No sections found" })
+        entries.length > 0 ? /* @__PURE__ */ jsx19("div", { className: "df-review-section-outline-list", children: entries.map(renderEntry) }) : /* @__PURE__ */ jsx19("div", { className: "df-review-section-outline-empty", children: isFiltering ? "No source matches" : "No sections found" })
       ] })
     }
   );
 };
 
+// src/react-shell/review/source.shortcut.style.ts
+function createSourceShortcutStyle(optionAttribute, fontOverlayAttribute) {
+  return `
+      html[${optionAttribute}="true"],
+      html[${optionAttribute}="true"] * {
+        cursor: crosshair !important;
+      }
+
+      html[${optionAttribute}="true"] .helper-figma-root,
+      html[${optionAttribute}="true"] .helper-figma-root *,
+      html[${optionAttribute}="true"] .helper-figma-loading-backdrop,
+      html[${optionAttribute}="true"] .helper-figma-loading-backdrop * {
+        pointer-events: none !important;
+      }
+
+      html[${optionAttribute}="true"] body::before {
+        position: fixed !important;
+        z-index: 2147483647 !important;
+        top: 10px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        display: block !important;
+        border: 1px solid rgba(124, 199, 255, 0.72) !important;
+        border-radius: 999px !important;
+        padding: 6px 10px !important;
+        color: #ffffff !important;
+        background: rgba(15, 23, 42, 0.86) !important;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24) !important;
+        content: "Source select" !important;
+        font: 500 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+        pointer-events: none !important;
+      }
+
+      [${fontOverlayAttribute}] {
+        position: fixed !important;
+        z-index: 2147483647 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: max-content !important;
+        max-width: calc(100vw - 8px) !important;
+        border: 1px solid rgba(124, 199, 255, 0.72) !important;
+        border-radius: 6px !important;
+        padding: 4px 6px !important;
+        color: #ffffff !important;
+        background: rgba(15, 23, 42, 0.9) !important;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28) !important;
+        font: 500 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+        overflow-wrap: anywhere !important;
+        pointer-events: none !important;
+        white-space: normal !important;
+      }
+
+      [${fontOverlayAttribute}] > span {
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+      }
+
+      [${fontOverlayAttribute}] > span > span:last-child {
+        min-width: 0 !important;
+        text-align: right !important;
+      }
+
+      [${fontOverlayAttribute}][hidden] {
+        display: none !important;
+      }
+    `;
+}
+
 // src/react-shell/review/source.inspector.overlay.tsx
-import { Fragment as Fragment2, jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx20, jsxs as jsxs17 } from "react/jsx-runtime";
 var SourceInspectorOverlay = ({
   state,
   interactionRef,
@@ -7496,8 +10188,8 @@ var SourceInspectorOverlay = ({
   onOpenCandidate
 }) => {
   if (!state) return null;
-  return /* @__PURE__ */ jsxs13(Fragment2, { children: [
-    /* @__PURE__ */ jsx15(
+  return /* @__PURE__ */ jsxs17(Fragment3, { children: [
+    /* @__PURE__ */ jsx20(
       "div",
       {
         className: `df-review-source-outline${state.isPinned ? " is-pinned" : ""}`,
@@ -7509,7 +10201,7 @@ var SourceInspectorOverlay = ({
         }
       }
     ),
-    state.candidates.length > 0 && /* @__PURE__ */ jsxs13(
+    state.candidates.length > 0 && /* @__PURE__ */ jsxs17(
       "div",
       {
         className: `df-review-source-popover${state.isPinned ? " is-pinned" : ""}`,
@@ -7530,7 +10222,7 @@ var SourceInspectorOverlay = ({
         },
         onClick: (event) => event.stopPropagation(),
         children: [
-          /* @__PURE__ */ jsx15("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ jsx15(
+          /* @__PURE__ */ jsx20("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ jsx20(
             "button",
             {
               "aria-label": "Close source candidates",
@@ -7539,7 +10231,7 @@ var SourceInspectorOverlay = ({
               children: "\xD7"
             }
           ) }),
-          /* @__PURE__ */ jsx15("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ jsx15(
+          /* @__PURE__ */ jsx20("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ jsx20(
             "button",
             {
               className: `df-review-source-candidate is-${candidate.kind}`,
@@ -7549,10 +10241,10 @@ var SourceInspectorOverlay = ({
                 event.stopPropagation();
                 onOpenCandidate(candidate);
               },
-              children: /* @__PURE__ */ jsxs13("span", { className: "df-review-source-candidate-main", children: [
-                /* @__PURE__ */ jsx15("strong", { children: candidate.label }),
-                /* @__PURE__ */ jsx15("span", { children: candidate.filePath }),
-                /* @__PURE__ */ jsx15("small", { children: candidate.positionLabel || "-:-" })
+              children: /* @__PURE__ */ jsxs17("span", { className: "df-review-source-candidate-main", children: [
+                /* @__PURE__ */ jsx20("strong", { children: candidate.label }),
+                /* @__PURE__ */ jsx20("span", { children: candidate.filePath }),
+                /* @__PURE__ */ jsx20("small", { children: candidate.positionLabel || "-:-" })
               ] })
             },
             candidate.id
@@ -7564,7 +10256,7 @@ var SourceInspectorOverlay = ({
 };
 
 // src/react-shell/review/mode.toolbar.tsx
-import { jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
+import { jsx as jsx21, jsxs as jsxs18 } from "react/jsx-runtime";
 var ReviewModeToolbar = ({
   canWriteArea,
   canWriteDom,
@@ -7572,33 +10264,33 @@ var ReviewModeToolbar = ({
   onSetReviewMode
 }) => {
   if (!canWriteDom && !canWriteArea) return null;
-  return /* @__PURE__ */ jsxs14("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
-    canWriteDom && /* @__PURE__ */ jsx16(
+  return /* @__PURE__ */ jsxs18("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
+    canWriteDom && /* @__PURE__ */ jsx21(
       "button",
       {
         "aria-label": "Element",
         className: `df-review-mode-button is-element${mode === "element" ? " is-active" : ""}`,
         type: "button",
         onClick: () => onSetReviewMode("element"),
-        children: /* @__PURE__ */ jsx16(SquareMousePointer, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ jsx21(SquareMousePointer, { "aria-hidden": "true" })
       }
     ),
-    canWriteDom && canWriteArea && /* @__PURE__ */ jsx16("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
-    canWriteArea && /* @__PURE__ */ jsx16(
+    canWriteDom && canWriteArea && /* @__PURE__ */ jsx21("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
+    canWriteArea && /* @__PURE__ */ jsx21(
       "button",
       {
         "aria-label": "Area",
         className: `df-review-mode-button is-area${mode === "area" ? " is-active" : ""}`,
         type: "button",
         onClick: () => onSetReviewMode("area"),
-        children: /* @__PURE__ */ jsx16(Scan, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ jsx21(Scan, { "aria-hidden": "true" })
       }
     )
   ] });
 };
 
 // src/react-shell/ruler/gutters.tsx
-import { Fragment as Fragment3, jsx as jsx17, jsxs as jsxs15 } from "react/jsx-runtime";
+import { Fragment as Fragment4, jsx as jsx22, jsxs as jsxs19 } from "react/jsx-runtime";
 var RulerGutters = ({
   rulerHover,
   rulerScaleX,
@@ -7606,9 +10298,9 @@ var RulerGutters = ({
   rulerUnit,
   size
 }) => {
-  return /* @__PURE__ */ jsxs15(Fragment3, { children: [
-    /* @__PURE__ */ jsx17("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
-    /* @__PURE__ */ jsxs15(
+  return /* @__PURE__ */ jsxs19(Fragment4, { children: [
+    /* @__PURE__ */ jsx22("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsxs19(
       "div",
       {
         className: "df-review-ruler-gutter is-x",
@@ -7616,15 +10308,15 @@ var RulerGutters = ({
           "--df-review-ruler-step-x": `${rulerScaleX * 20}px`
         },
         children: [
-          /* @__PURE__ */ jsxs15("div", { className: "df-review-ruler-frame-label", children: [
-            /* @__PURE__ */ jsx17("strong", { children: size.label }),
-            /* @__PURE__ */ jsxs15("span", { children: [
+          /* @__PURE__ */ jsxs19("div", { className: "df-review-ruler-frame-label", children: [
+            /* @__PURE__ */ jsx22("strong", { children: size.label }),
+            /* @__PURE__ */ jsxs19("span", { children: [
               size.designWidth,
               size.designHeight ? `x${size.designHeight}` : "",
               rulerUnit
             ] })
           ] }),
-          rulerHover && /* @__PURE__ */ jsx17(
+          rulerHover && /* @__PURE__ */ jsx22(
             "div",
             {
               className: "df-review-ruler-coord is-x",
@@ -7635,14 +10327,14 @@ var RulerGutters = ({
         ]
       }
     ),
-    /* @__PURE__ */ jsx17(
+    /* @__PURE__ */ jsx22(
       "div",
       {
         className: "df-review-ruler-gutter is-y",
         style: {
           "--df-review-ruler-step-y": `${rulerScaleY * 20}px`
         },
-        children: rulerHover && /* @__PURE__ */ jsx17(
+        children: rulerHover && /* @__PURE__ */ jsx22(
           "div",
           {
             className: "df-review-ruler-coord is-y",
@@ -7656,7 +10348,7 @@ var RulerGutters = ({
 };
 
 // src/react-shell/ruler/overlay.tsx
-import { Fragment as Fragment4, jsx as jsx18, jsxs as jsxs16 } from "react/jsx-runtime";
+import { Fragment as Fragment5, jsx as jsx23, jsxs as jsxs20 } from "react/jsx-runtime";
 var RulerOverlay = ({
   iframeRef,
   isRulerDragging,
@@ -7666,7 +10358,7 @@ var RulerOverlay = ({
   rulerOverlayRef,
   size
 }) => {
-  return /* @__PURE__ */ jsxs16(
+  return /* @__PURE__ */ jsxs20(
     "div",
     {
       ref: rulerOverlayRef,
@@ -7680,8 +10372,8 @@ var RulerOverlay = ({
         );
       },
       children: [
-        rulerHover && /* @__PURE__ */ jsxs16(Fragment4, { children: [
-          /* @__PURE__ */ jsx18(
+        rulerHover && /* @__PURE__ */ jsxs20(Fragment5, { children: [
+          /* @__PURE__ */ jsx23(
             "div",
             {
               className: "df-review-ruler-guide is-x",
@@ -7689,7 +10381,7 @@ var RulerOverlay = ({
               style: { top: `${rulerHover.y}px` }
             }
           ),
-          /* @__PURE__ */ jsx18(
+          /* @__PURE__ */ jsx23(
             "div",
             {
               className: "df-review-ruler-guide is-y",
@@ -7698,8 +10390,8 @@ var RulerOverlay = ({
             }
           )
         ] }),
-        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs16(Fragment4, { children: [
-          /* @__PURE__ */ jsx18(
+        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs20(Fragment5, { children: [
+          /* @__PURE__ */ jsx23(
             "div",
             {
               className: "df-review-ruler-selection",
@@ -7712,7 +10404,7 @@ var RulerOverlay = ({
               }
             }
           ),
-          /* @__PURE__ */ jsx18(
+          /* @__PURE__ */ jsx23(
             "div",
             {
               className: "df-review-ruler-label",
@@ -7735,13 +10427,287 @@ var RulerOverlay = ({
   );
 };
 
+// src/react-shell/target/figma.image.overlay.ts
+import { useCallback as useCallback3, useEffect as useEffect4, useRef as useRef3 } from "react";
+var TARGET_FIGMA_IMAGE_ROOT_ID = "df-review-figma-image-target-root";
+var TARGET_FIGMA_IMAGE_STYLE_ID = "df-review-figma-image-target-style";
+var TARGET_FIGMA_IMAGE_ID_ATTRIBUTE = "data-df-review-figma-image-id";
+var targetFigmaImageDragStates = /* @__PURE__ */ new WeakMap();
+function createReviewTargetFigmaImageOverlays({
+  imageOverlayStates,
+  images
+}) {
+  return images.flatMap((image, index) => {
+    const overlayState = imageOverlayStates[image.id];
+    if (!overlayState?.isVisible) return [];
+    return [
+      {
+        id: image.id,
+        imageUrl: image.imageUrl,
+        isLocked: overlayState.isLocked,
+        label: image.label ?? image.nodeId,
+        mode: overlayState.mode,
+        offsetY: overlayState.offsetY,
+        opacity: overlayState.opacity,
+        zIndex: images.length - index
+      }
+    ];
+  });
+}
+var useTargetFigmaImageOverlays = ({
+  figmaImageOverlays,
+  iframeRef,
+  onSetOverlayOffsetY,
+  size,
+  targetSrc
+}) => {
+  const targetDocumentRef = useRef3(null);
+  const overlaySignature = createTargetFigmaImageOverlaySignature(
+    figmaImageOverlays
+  );
+  const syncTargetFigmaImageOverlays = useCallback3(() => {
+    let targetDocument;
+    try {
+      targetDocument = iframeRef.current?.contentDocument;
+    } catch {
+      targetDocument = null;
+    }
+    if (!targetDocument?.body) return;
+    if (targetDocumentRef.current && targetDocumentRef.current !== targetDocument) {
+      removeTargetFigmaImageOverlays(targetDocumentRef.current);
+    }
+    targetDocumentRef.current = targetDocument;
+    renderTargetFigmaImageOverlays({
+      onSetOverlayOffsetY,
+      overlays: figmaImageOverlays,
+      size,
+      targetDocument
+    });
+  }, [
+    iframeRef,
+    onSetOverlayOffsetY,
+    overlaySignature,
+    size,
+    targetSrc
+  ]);
+  useEffect4(() => {
+    syncTargetFigmaImageOverlays();
+  }, [syncTargetFigmaImageOverlays]);
+  useEffect4(() => {
+    return () => {
+      if (!targetDocumentRef.current) return;
+      removeTargetFigmaImageOverlays(targetDocumentRef.current);
+      targetDocumentRef.current = null;
+    };
+  }, []);
+  return syncTargetFigmaImageOverlays;
+};
+function renderTargetFigmaImageOverlays({
+  onSetOverlayOffsetY,
+  overlays,
+  size,
+  targetDocument
+}) {
+  if (overlays.length === 0) {
+    removeTargetFigmaImageOverlays(targetDocument);
+    return;
+  }
+  const isMobileViewport = getViewportPresetKind(size) === "mobile";
+  const fixedOverlayWidth = getTargetFigmaImageFixedWidth(size);
+  const root = ensureTargetFigmaImageRoot(targetDocument);
+  const existingElements = new Map(
+    Array.from(
+      root.querySelectorAll(
+        `[${TARGET_FIGMA_IMAGE_ID_ATTRIBUTE}]`
+      )
+    ).flatMap((element) => {
+      const id = element.getAttribute(TARGET_FIGMA_IMAGE_ID_ATTRIBUTE);
+      return id ? [[id, element]] : [];
+    })
+  );
+  const nextIds = new Set(overlays.map((overlay) => overlay.id));
+  existingElements.forEach((element, id) => {
+    if (!nextIds.has(id)) element.remove();
+  });
+  overlays.forEach((overlay) => {
+    let element = existingElements.get(overlay.id);
+    let image = element?.querySelector("img") ?? null;
+    if (!element) {
+      element = targetDocument.createElement("div");
+      element.className = "df-review-figma-image-target-overlay";
+      element.setAttribute(TARGET_FIGMA_IMAGE_ID_ATTRIBUTE, overlay.id);
+      image = targetDocument.createElement("img");
+      image.alt = "";
+      image.draggable = false;
+      element.appendChild(image);
+    }
+    if (image && image.getAttribute("src") !== overlay.imageUrl) {
+      image.setAttribute("src", overlay.imageUrl);
+    }
+    element.setAttribute("aria-label", overlay.label ?? "Figma image overlay");
+    element.setAttribute("role", "img");
+    element.dataset.viewport = isMobileViewport ? "mobile" : "fixed";
+    element.style.filter = overlay.mode === "invert" ? "invert(1)" : "";
+    element.style.left = isMobileViewport ? "0" : "50%";
+    element.style.opacity = String(overlay.opacity);
+    element.style.pointerEvents = overlay.isLocked || !onSetOverlayOffsetY ? "none" : "auto";
+    element.style.top = `${normalizeTargetFigmaImageOffsetY(
+      overlay.offsetY
+    )}px`;
+    element.style.transform = isMobileViewport ? "none" : "translateX(-50%)";
+    element.style.width = isMobileViewport ? "100%" : `${fixedOverlayWidth}px`;
+    element.style.zIndex = String(overlay.zIndex);
+    attachTargetFigmaImageDrag({
+      element,
+      onSetOverlayOffsetY,
+      overlay
+    });
+    root.appendChild(element);
+  });
+}
+function attachTargetFigmaImageDrag({
+  element,
+  onSetOverlayOffsetY,
+  overlay
+}) {
+  if (overlay.isLocked || !onSetOverlayOffsetY) {
+    targetFigmaImageDragStates.delete(element);
+    element.classList.remove("is-dragging");
+    element.onpointerdown = null;
+    element.onpointermove = null;
+    element.onpointerup = null;
+    element.onpointercancel = null;
+    return;
+  }
+  element.onpointerdown = (event) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    element.setPointerCapture(event.pointerId);
+    element.classList.add("is-dragging");
+    targetFigmaImageDragStates.set(element, {
+      overlayId: overlay.id,
+      pointerId: event.pointerId,
+      startClientY: event.clientY,
+      startOffsetY: normalizeTargetFigmaImageOffsetY(overlay.offsetY)
+    });
+  };
+  element.onpointermove = (event) => {
+    const dragState = targetFigmaImageDragStates.get(element);
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const nextOffsetY = Math.round(
+      dragState.startOffsetY + event.clientY - dragState.startClientY
+    );
+    element.style.top = `${nextOffsetY}px`;
+    onSetOverlayOffsetY(dragState.overlayId, nextOffsetY);
+  };
+  const stopDrag = (event) => {
+    const dragState = targetFigmaImageDragStates.get(element);
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (element.hasPointerCapture(event.pointerId)) {
+      element.releasePointerCapture(event.pointerId);
+    }
+    element.classList.remove("is-dragging");
+    targetFigmaImageDragStates.delete(element);
+  };
+  element.onpointerup = stopDrag;
+  element.onpointercancel = stopDrag;
+}
+function ensureTargetFigmaImageRoot(targetDocument) {
+  ensureTargetFigmaImageStyle(targetDocument);
+  const [existingRoot, ...duplicateRoots] = Array.from(
+    targetDocument.querySelectorAll(
+      `#${TARGET_FIGMA_IMAGE_ROOT_ID}`
+    )
+  );
+  duplicateRoots.forEach((root2) => root2.remove());
+  if (existingRoot) return existingRoot;
+  const root = targetDocument.createElement("div");
+  root.id = TARGET_FIGMA_IMAGE_ROOT_ID;
+  root.setAttribute("aria-hidden", "true");
+  targetDocument.body.appendChild(root);
+  return root;
+}
+function ensureTargetFigmaImageStyle(targetDocument) {
+  if (targetDocument.getElementById(TARGET_FIGMA_IMAGE_STYLE_ID)) return;
+  const style = targetDocument.createElement("style");
+  style.id = TARGET_FIGMA_IMAGE_STYLE_ID;
+  style.textContent = `
+    #${TARGET_FIGMA_IMAGE_ROOT_ID} {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 2147483000;
+      width: 100%;
+      height: 0;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    #${TARGET_FIGMA_IMAGE_ROOT_ID} .df-review-figma-image-target-overlay {
+      position: absolute;
+      display: block;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      will-change: opacity, top, transform;
+    }
+
+    #${TARGET_FIGMA_IMAGE_ROOT_ID} .df-review-figma-image-target-overlay.is-dragging {
+      cursor: grabbing;
+    }
+
+    #${TARGET_FIGMA_IMAGE_ROOT_ID} .df-review-figma-image-target-overlay img {
+      display: block;
+      width: 100%;
+      max-width: none;
+      height: auto;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      -webkit-user-select: none;
+    }
+  `;
+  targetDocument.head?.appendChild(style);
+}
+function removeTargetFigmaImageOverlays(targetDocument) {
+  targetDocument.querySelectorAll(`#${TARGET_FIGMA_IMAGE_ROOT_ID}`).forEach((element) => element.remove());
+  targetDocument.querySelectorAll(`#${TARGET_FIGMA_IMAGE_STYLE_ID}`).forEach((element) => element.remove());
+}
+function createTargetFigmaImageOverlaySignature(overlays) {
+  return overlays.map(
+    (overlay) => [
+      overlay.id,
+      overlay.imageUrl,
+      overlay.label ?? "",
+      overlay.isLocked ? "locked" : "unlocked",
+      overlay.mode ?? "",
+      overlay.offsetY ?? 0,
+      overlay.opacity,
+      overlay.zIndex
+    ].join(":")
+  ).join("|");
+}
+function getTargetFigmaImageFixedWidth(size) {
+  const width = size.designWidth ?? size.width;
+  return Math.max(1, Math.round(width));
+}
+function normalizeTargetFigmaImageOffsetY(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
 // src/react-shell/target/frame.tsx
-import { jsx as jsx19, jsxs as jsxs17 } from "react/jsx-runtime";
+import { jsx as jsx24, jsxs as jsxs21 } from "react/jsx-runtime";
 var ReviewTargetFrame = ({
   canWriteArea,
   canWriteDom,
+  figmaImageOverlays,
   frameScrollRef,
-  figmaFrameUrl,
   iframeRef,
   isRulerAvailable,
   isRulerDragging,
@@ -7757,17 +10723,29 @@ var ReviewTargetFrame = ({
   size,
   targetSrc,
   onLoadTarget,
+  onSetFigmaImageOverlayOffsetY,
   onSetReviewMode
 }) => {
   const showRuler = isRulerVisible && isRulerAvailable;
-  const targetHref = getTargetOpenHref(targetSrc);
-  return /* @__PURE__ */ jsx19("main", { className: "df-review-stage", children: /* @__PURE__ */ jsxs17("div", { className: "df-review-frame", children: [
-    /* @__PURE__ */ jsx19("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ jsx19("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ jsx19("div", { className: "df-review-target-stack", children: /* @__PURE__ */ jsxs17(
+  const syncTargetFigmaImageOverlays = useTargetFigmaImageOverlays({
+    figmaImageOverlays,
+    iframeRef,
+    onSetOverlayOffsetY: onSetFigmaImageOverlayOffsetY,
+    size,
+    targetSrc
+  });
+  const handleLoadTarget = () => {
+    onLoadTarget();
+    syncTargetFigmaImageOverlays();
+    window.requestAnimationFrame(syncTargetFigmaImageOverlays);
+  };
+  return /* @__PURE__ */ jsx24("main", { className: "df-review-stage", children: /* @__PURE__ */ jsxs21("div", { className: "df-review-frame", children: [
+    /* @__PURE__ */ jsx24("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ jsx24("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ jsx24("div", { className: "df-review-target-stack", children: /* @__PURE__ */ jsxs21(
       "div",
       {
         className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
         children: [
-          showRuler && /* @__PURE__ */ jsx19(
+          showRuler && /* @__PURE__ */ jsx24(
             RulerGutters,
             {
               rulerHover,
@@ -7777,7 +10755,7 @@ var ReviewTargetFrame = ({
               size
             }
           ),
-          /* @__PURE__ */ jsxs17(
+          /* @__PURE__ */ jsxs21(
             "div",
             {
               className: "df-review-device",
@@ -7788,7 +10766,7 @@ var ReviewTargetFrame = ({
                 minHeight: `${size.height}px`
               },
               children: [
-                /* @__PURE__ */ jsx19(
+                /* @__PURE__ */ jsx24(
                   "iframe",
                   {
                     ref: iframeRef,
@@ -7796,11 +10774,11 @@ var ReviewTargetFrame = ({
                     height: size.height,
                     src: targetSrc,
                     title: "Review target",
-                    onLoad: onLoadTarget
+                    onLoad: handleLoadTarget
                   },
                   targetSrc
                 ),
-                showRuler && /* @__PURE__ */ jsx19(
+                showRuler && /* @__PURE__ */ jsx24(
                   RulerOverlay,
                   {
                     iframeRef,
@@ -7814,37 +10792,11 @@ var ReviewTargetFrame = ({
                 )
               ]
             }
-          ),
-          /* @__PURE__ */ jsxs17("div", { className: "df-review-frame-link-stack", children: [
-            /* @__PURE__ */ jsx19(
-              "a",
-              {
-                "aria-label": "Open target page",
-                className: "df-review-frame-link is-target",
-                href: targetHref,
-                rel: "noreferrer",
-                target: "_blank",
-                title: "Open target page",
-                children: /* @__PURE__ */ jsx19(ExternalLink, { "aria-hidden": "true" })
-              }
-            ),
-            figmaFrameUrl && /* @__PURE__ */ jsx19(
-              "a",
-              {
-                "aria-label": "Open Figma frame",
-                className: "df-review-frame-link is-figma",
-                href: figmaFrameUrl,
-                rel: "noreferrer",
-                target: "_blank",
-                title: "Open Figma frame",
-                children: /* @__PURE__ */ jsx19(FigmaIcon, {})
-              }
-            )
-          ] })
+          )
         ]
       }
     ) }) }) }),
-    /* @__PURE__ */ jsx19("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ jsx19(
+    /* @__PURE__ */ jsx24("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ jsx24(
       ReviewModeToolbar,
       {
         canWriteArea,
@@ -7855,20 +10807,6 @@ var ReviewTargetFrame = ({
     ) })
   ] }) });
 };
-function getTargetOpenHref(targetSrc) {
-  const url = new URL(targetSrc, window.location.origin);
-  url.searchParams.delete("__dfwr_target");
-  return `${url.pathname}${url.search}${url.hash}`;
-}
-var FigmaIcon = () => /* @__PURE__ */ jsx19(
-  "svg",
-  {
-    "aria-hidden": "true",
-    viewBox: "0 0 24 24",
-    xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ jsx19("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
-  }
-);
 
 // src/react-shell/target/target.ts
 var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
@@ -7962,20 +10900,25 @@ var getTargetOverlayState = (targetDocument) => ({
 });
 
 // src/react-shell/topbar.tsx
-import { jsx as jsx20, jsxs as jsxs18 } from "react/jsx-runtime";
+import { jsx as jsx25, jsxs as jsxs22 } from "react/jsx-runtime";
 var ReviewScopeIcon2 = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ jsx20(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ jsx20(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ jsx20(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ jsx20(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx20(Monitor, { "aria-hidden": "true" });
+  if (scope === "mobile") return /* @__PURE__ */ jsx25(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ jsx25(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ jsx25(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ jsx25(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx25(Monitor, { "aria-hidden": "true" });
 };
 var ViewportPresetIcon = ({
   preset
 }) => {
-  return /* @__PURE__ */ jsx20(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
+  return /* @__PURE__ */ jsx25(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
 };
 var getPresetSelectValue = (preset) => `${preset.label}:${preset.width}x${preset.height}`;
+function getTargetOpenHref(targetSrc) {
+  const url = new URL(targetSrc, window.location.origin);
+  url.searchParams.delete("__dfwr_target");
+  return `${url.pathname}${url.search}${url.hash}`;
+}
 var ReviewTopbar = ({
   draftTarget,
   copyLabel,
@@ -7985,6 +10928,8 @@ var ReviewTopbar = ({
   isRulerAvailable,
   isRulerVisible,
   targetOverlayState,
+  figmaOverlayUnavailableMessage = FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
+  isFigmaOverlayActive,
   isFigmaOverlayAvailable,
   onDraftTargetChange,
   onApplyTarget,
@@ -7992,17 +10937,19 @@ var ReviewTopbar = ({
   onCopyCurrentUrl,
   onSizeChange,
   onToggleRuler,
+  onToggleFigmaOverlay,
   onToggleTargetOverlay
 }) => {
   const selectedPresetValue = getPresetSelectValue(size);
+  const targetHref = getTargetOpenHref(draftTarget);
   const handlePresetSelectChange = (event) => {
     const nextPreset = viewportPresets.find(
       (preset) => getPresetSelectValue(preset) === event.currentTarget.value
     );
     if (nextPreset) onSizeChange(nextPreset);
   };
-  return /* @__PURE__ */ jsxs18("header", { className: "df-review-topbar", children: [
-    /* @__PURE__ */ jsxs18(
+  return /* @__PURE__ */ jsxs22("header", { className: "df-review-topbar", children: [
+    /* @__PURE__ */ jsxs22(
       "form",
       {
         className: "df-review-address",
@@ -8011,17 +10958,17 @@ var ReviewTopbar = ({
           onApplyTarget();
         },
         children: [
-          /* @__PURE__ */ jsx20(
+          /* @__PURE__ */ jsx25(
             "button",
             {
               "aria-label": "Open sitemap",
               className: "df-review-sitemap-button",
               type: "button",
               onClick: onOpenSitemap,
-              children: /* @__PURE__ */ jsx20(Map2, { "aria-hidden": "true" })
+              children: /* @__PURE__ */ jsx25(Map2, { "aria-hidden": "true" })
             }
           ),
-          /* @__PURE__ */ jsx20(
+          /* @__PURE__ */ jsx25(
             "input",
             {
               "aria-label": "Path",
@@ -8029,39 +10976,61 @@ var ReviewTopbar = ({
               onChange: (event) => onDraftTargetChange(event.target.value)
             }
           ),
-          /* @__PURE__ */ jsxs18("div", { className: "df-review-address-actions", children: [
-            /* @__PURE__ */ jsx20(
+          /* @__PURE__ */ jsxs22("div", { className: "df-review-address-actions", children: [
+            /* @__PURE__ */ jsx25(
               "button",
               {
                 "aria-label": "Refresh target",
-                className: "df-review-address-refresh",
+                className: "df-review-address-icon-button",
                 title: "Refresh target",
                 type: "submit",
-                children: /* @__PURE__ */ jsx20(RefreshCw, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ jsx25(RefreshCw, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ jsx20("button", { type: "button", onClick: onCopyCurrentUrl, children: copyLabel })
+            /* @__PURE__ */ jsx25(
+              "button",
+              {
+                "aria-label": copyLabel,
+                className: "df-review-address-icon-button",
+                title: copyLabel,
+                type: "button",
+                onClick: onCopyCurrentUrl,
+                children: /* @__PURE__ */ jsx25(Copy, { "aria-hidden": "true" })
+              }
+            ),
+            /* @__PURE__ */ jsx25(
+              "a",
+              {
+                "aria-label": "Open target page",
+                className: "df-review-address-icon-button",
+                href: targetHref,
+                rel: "noreferrer",
+                target: "_blank",
+                title: "Open target page",
+                children: /* @__PURE__ */ jsx25(ExternalLink, { "aria-hidden": "true" })
+              }
+            )
           ] })
         ]
       }
     ),
-    /* @__PURE__ */ jsxs18("div", { className: "df-review-tools", children: [
-      /* @__PURE__ */ jsxs18("div", { className: "df-review-tool-controls", children: [
-        /* @__PURE__ */ jsx20("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ jsxs18(
+    /* @__PURE__ */ jsxs22("div", { className: "df-review-tools", children: [
+      /* @__PURE__ */ jsxs22("div", { className: "df-review-tool-controls", children: [
+        /* @__PURE__ */ jsx25("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ jsxs22(
           "button",
           {
             className: preset.label === size.label ? "is-active" : "",
             type: "button",
             onClick: () => onSizeChange(preset),
             children: [
-              /* @__PURE__ */ jsx20(ViewportPresetIcon, { preset }),
-              /* @__PURE__ */ jsx20("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ jsx20("strong", { children: preset.label }) }),
-              /* @__PURE__ */ jsx20("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
+              /* @__PURE__ */ jsx25(ViewportPresetIcon, { preset }),
+              /* @__PURE__ */ jsx25("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ jsx25("strong", { children: preset.label }) }),
+              /* @__PURE__ */ jsx25("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
             ]
           },
           preset.label
         )) }),
-        /* @__PURE__ */ jsx20(
+        /* @__PURE__ */ jsx25(
           "select",
           {
             "aria-label": "Viewport preset",
@@ -8071,7 +11040,7 @@ var ReviewTopbar = ({
             children: viewportPresets.map((preset) => {
               const scope = getViewportPresetKind(preset);
               const count = presetScopeCounts.get(scope) ?? 0;
-              return /* @__PURE__ */ jsx20(
+              return /* @__PURE__ */ jsx25(
                 "option",
                 {
                   value: getPresetSelectValue(preset),
@@ -8082,44 +11051,44 @@ var ReviewTopbar = ({
             })
           }
         ),
-        /* @__PURE__ */ jsx20("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ jsxs18("span", { className: "df-review-active-size", children: [
+        /* @__PURE__ */ jsx25("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+        /* @__PURE__ */ jsxs22("span", { className: "df-review-active-size", children: [
           size.width,
           "x",
           size.height
         ] })
       ] }),
-      /* @__PURE__ */ jsxs18("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
-        isRulerAvailable && /* @__PURE__ */ jsx20(
+      /* @__PURE__ */ jsxs22("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
+        isRulerAvailable && /* @__PURE__ */ jsx25(
           "button",
           {
             "aria-label": "Toggle ruler",
             className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
             type: "button",
             onClick: onToggleRuler,
-            children: /* @__PURE__ */ jsx20(Ruler, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ jsx25(Ruler, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ jsx20(
+        /* @__PURE__ */ jsx25(
           "button",
           {
             "aria-label": "Toggle grid overlay",
             className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
             type: "button",
             onClick: () => onToggleTargetOverlay("grid"),
-            children: /* @__PURE__ */ jsx20(LayoutGrid, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ jsx25(LayoutGrid, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ jsx20(
+        /* @__PURE__ */ jsx25(
           "button",
           {
             "aria-disabled": !isFigmaOverlayAvailable,
-            "aria-label": isFigmaOverlayAvailable ? "Toggle Figma overlay" : FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
-            className: `df-review-overlay-button is-figma${targetOverlayState.figma ? " is-active" : ""}${isFigmaOverlayAvailable ? "" : " is-disabled"}`,
+            "aria-label": isFigmaOverlayAvailable ? isFigmaOverlayActive ? "Hide Figma overlays" : "Show Figma overlays" : figmaOverlayUnavailableMessage,
+            className: `df-review-overlay-button is-figma${isFigmaOverlayActive ? " is-active" : ""}${isFigmaOverlayAvailable ? "" : " is-disabled"}`,
             disabled: !isFigmaOverlayAvailable,
             type: "button",
-            onClick: () => onToggleTargetOverlay("figma"),
-            children: /* @__PURE__ */ jsx20(Image, { "aria-hidden": "true" })
+            onClick: onToggleFigmaOverlay,
+            children: /* @__PURE__ */ jsx25(FigmaMarkIcon, {})
           }
         )
       ] })
@@ -8129,12 +11098,12 @@ var ReviewTopbar = ({
 
 // src/react-shell/hooks/use.review.controller.ts
 import {
-  useCallback as useCallback5
+  useCallback as useCallback8
 } from "react";
 
 // src/react-shell/hooks/use.review.item.restore.ts
 import {
-  useCallback
+  useCallback as useCallback4
 } from "react";
 function runWithAutoScrollBehavior2(targetDocument, callback) {
   const elements = [
@@ -8155,8 +11124,12 @@ function runWithAutoScrollBehavior2(targetDocument, callback) {
 }
 var RESTORE_WAIT_MAX_MS = 2600;
 var RESTORE_STABLE_FRAME_COUNT = 2;
+var RESTORE_SCROLL_RECHECK_DELAYS_MS = [120, 360];
 var waitForNextAnimationFrame = (targetWindow) => new Promise((resolve) => {
   targetWindow.requestAnimationFrame(() => resolve());
+});
+var waitForTargetTimeout = (targetWindow, ms) => new Promise((resolve) => {
+  targetWindow.setTimeout(resolve, ms);
 });
 var getRestoreLayoutSnapshot = (targetDocument, anchorElement) => {
   const root = targetDocument.documentElement;
@@ -8212,7 +11185,7 @@ var useReviewItemRestore = ({
   onSyncTargetViewport,
   onTargetChange
 }) => {
-  const clearSelectedItem = useCallback(() => {
+  const clearSelectedItem = useCallback4(() => {
     pendingRestoreRef.current = null;
     selectedItemIdRef.current = null;
     onSelectedItemIdChange(null);
@@ -8223,7 +11196,7 @@ var useReviewItemRestore = ({
     pendingRestoreRef,
     selectedItemIdRef
   ]);
-  const applyItemScroll = useCallback(
+  const applyItemScroll = useCallback4(
     async (item) => {
       if (selectedItemIdRef.current !== item.id) return false;
       const targetWindow = iframeRef.current?.contentWindow;
@@ -8237,25 +11210,36 @@ var useReviewItemRestore = ({
         isCurrentRestore
       );
       if (!isCurrentRestore()) return false;
-      runWithAutoScrollBehavior2(targetDocument, () => {
-        setDocumentScrollInstantly(
-          targetWindow,
-          targetDocument,
-          getReviewItemRestoreScrollPosition(
+      const applyScrollPosition = () => {
+        if (!isCurrentRestore()) return false;
+        const currentAnchorElement = queryReviewItemAnchorElement(targetDocument, item) ?? anchorElement;
+        runWithAutoScrollBehavior2(targetDocument, () => {
+          setDocumentScrollInstantly(
             targetWindow,
             targetDocument,
-            item,
-            anchorElement
-          )
-        );
-      });
-      onSyncTargetViewport();
+            getReviewItemRestoreScrollPosition(
+              targetWindow,
+              targetDocument,
+              item,
+              currentAnchorElement
+            )
+          );
+        });
+        onSyncTargetViewport();
+        return true;
+      };
+      if (!applyScrollPosition()) return false;
       controllerRef.current?.highlightItem(item.id);
+      for (const delay of RESTORE_SCROLL_RECHECK_DELAYS_MS) {
+        await waitForTargetTimeout(targetWindow, delay);
+        if (!applyScrollPosition()) return false;
+        controllerRef.current?.highlightItem(item.id);
+      }
       return true;
     },
     [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
   );
-  const applyPendingRestore = useCallback(() => {
+  const applyPendingRestore = useCallback4(() => {
     const item = pendingRestoreRef.current;
     if (!item) return;
     void applyItemScroll(item).then((didApply) => {
@@ -8264,11 +11248,12 @@ var useReviewItemRestore = ({
       }
     });
   }, [applyItemScroll, pendingRestoreRef]);
-  const restoreReviewItem = useCallback(
+  const restoreReviewItem = useCallback4(
     (item) => {
       const nextRoute = getItemTarget(item, reviewPathPrefix);
       const nextTarget = getItemFrameTarget(item, reviewPathPrefix);
       const nextSize = getRestoredSize(item, viewportPresets);
+      pendingInitialItemIdRef.current = null;
       pendingRestoreRef.current = item;
       selectedItemIdRef.current = item.id;
       onSelectedItemIdChange(item.id);
@@ -8290,6 +11275,7 @@ var useReviewItemRestore = ({
       onSizeChange,
       onTargetChange,
       pendingRestoreRef,
+      pendingInitialItemIdRef,
       reviewPathPrefix,
       selectedItemIdRef,
       source,
@@ -8297,13 +11283,15 @@ var useReviewItemRestore = ({
       viewportPresets
     ]
   );
-  const restoreInitialItem = useCallback(async () => {
+  const restoreInitialItem = useCallback4(async () => {
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
-    pendingInitialItemIdRef.current = null;
-    const item = await adapter.get(itemId);
-    if (item) {
-      restoreReviewItem(item);
+    try {
+      const item = await adapter.get(itemId);
+      if (item && pendingInitialItemIdRef.current === itemId) {
+        restoreReviewItem(item);
+      }
+    } catch {
     }
   }, [adapter, pendingInitialItemIdRef, restoreReviewItem]);
   return {
@@ -8316,8 +11304,8 @@ var useReviewItemRestore = ({
 
 // src/react-shell/hooks/use.review.kit.lifecycle.ts
 import {
-  useCallback as useCallback2,
-  useEffect as useEffect2
+  useCallback as useCallback5,
+  useEffect as useEffect5
 } from "react";
 
 // src/react-shell/hooks/review.frame.navigation.ts
@@ -8449,6 +11437,9 @@ var getReviewKitTarget = ({
 // src/react-shell/hooks/use.review.kit.lifecycle.ts
 var useReviewKitLifecycle = ({
   adapter,
+  fields,
+  assigneeTitle,
+  assigneeOptions,
   cleanupTargetRef,
   controllerRef,
   frameScrollRef,
@@ -8476,13 +11467,13 @@ var useReviewKitLifecycle = ({
   onSyncShellTarget,
   onSyncTargetViewport
 }) => {
-  const destroyReviewKit = useCallback2(() => {
+  const destroyReviewKit = useCallback5(() => {
     cleanupTargetRef.current?.();
     cleanupTargetRef.current = null;
     controllerRef.current?.destroy();
     controllerRef.current = null;
   }, [cleanupTargetRef, controllerRef]);
-  const initReviewKit = useCallback2(() => {
+  const initReviewKit = useCallback5(() => {
     destroyReviewKit();
     const iframe = iframeRef.current;
     const targetWindow = iframe?.contentWindow;
@@ -8503,6 +11494,9 @@ var useReviewKitLifecycle = ({
       projectId,
       userId: reviewUserId.trim() || void 0,
       adapter,
+      fields,
+      assigneeTitle,
+      assigneeOptions,
       target: () => getReviewKitTarget({ frameScrollRef, iframeRef }),
       hotkeys: {
         qa: "Shift+Q"
@@ -8542,6 +11536,9 @@ var useReviewKitLifecycle = ({
     );
   }, [
     adapter,
+    fields,
+    assigneeTitle,
+    assigneeOptions,
     cleanupTargetRef,
     controllerRef,
     destroyReviewKit,
@@ -8569,23 +11566,23 @@ var useReviewKitLifecycle = ({
     sizeRef,
     targetRef
   ]);
-  const reloadReviewKit = useCallback2(async () => {
+  const reloadReviewKit = useCallback5(async () => {
     await controllerRef.current?.reload();
   }, [controllerRef]);
-  const setControllerReviewMode = useCallback2(
+  const setControllerReviewMode = useCallback5(
     (nextMode) => {
       controllerRef.current?.setMode(nextMode);
       onModeChange(controllerRef.current?.getMode() ?? "idle");
     },
     [controllerRef, onModeChange]
   );
-  useEffect2(() => destroyReviewKit, [destroyReviewKit]);
-  useEffect2(() => {
+  useEffect5(() => destroyReviewKit, [destroyReviewKit]);
+  useEffect5(() => {
     const frameDocument = iframeRef.current?.contentDocument;
     if (!frameDocument || frameDocument.readyState !== "complete") return;
     initReviewKit();
   }, [iframeRef, initReviewKit]);
-  useEffect2(() => {
+  useEffect5(() => {
     hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
     controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
   }, [controllerRef, hiddenOverlayItemIdList, hiddenOverlayItemIdListRef]);
@@ -8598,7 +11595,7 @@ var useReviewKitLifecycle = ({
 };
 
 // src/react-shell/hooks/use.review.target.overlay.ts
-import { useCallback as useCallback3, useEffect as useEffect3, useRef } from "react";
+import { useCallback as useCallback6, useEffect as useEffect6, useRef as useRef4 } from "react";
 var TARGET_OVERLAY_REFRESH_DELAYS = [80, 240, 600];
 var useReviewTargetOverlay = ({
   iframeRef,
@@ -8606,26 +11603,26 @@ var useReviewTargetOverlay = ({
   targetOverlayState,
   onTargetOverlayStateChange
 }) => {
-  const refreshTimersRef = useRef([]);
-  const clearRefreshTimers = useCallback3(() => {
+  const refreshTimersRef = useRef4([]);
+  const clearRefreshTimers = useCallback6(() => {
     refreshTimersRef.current.forEach((timer) => window.clearTimeout(timer));
     refreshTimersRef.current = [];
   }, []);
-  const updateTargetOverlayState = useCallback3(() => {
+  const updateTargetOverlayState = useCallback6(() => {
     const state = getTargetOverlayState(
       iframeRef.current?.contentDocument ?? void 0
     );
     onTargetOverlayStateChange(state);
     return state;
   }, [iframeRef, onTargetOverlayStateChange]);
-  const refreshTargetOverlayState = useCallback3(() => {
+  const refreshTargetOverlayState = useCallback6(() => {
     clearRefreshTimers();
     updateTargetOverlayState();
     refreshTimersRef.current = TARGET_OVERLAY_REFRESH_DELAYS.map(
       (delay) => window.setTimeout(updateTargetOverlayState, delay)
     );
   }, [clearRefreshTimers, updateTargetOverlayState]);
-  const dispatchTargetOverlayHotkey = useCallback3(
+  const dispatchTargetOverlayHotkey = useCallback6(
     (overlay) => {
       const targetWindow = iframeRef.current?.contentWindow;
       if (!targetWindow) return false;
@@ -8644,7 +11641,7 @@ var useReviewTargetOverlay = ({
     },
     [iframeRef, refreshTargetOverlayState]
   );
-  const toggleTargetOverlay = useCallback3(
+  const toggleTargetOverlay = useCallback6(
     (overlay) => {
       if (overlay === "figma" && !isFigmaOverlayAvailable) {
         refreshTargetOverlayState();
@@ -8658,7 +11655,7 @@ var useReviewTargetOverlay = ({
       refreshTargetOverlayState
     ]
   );
-  const closeTargetOverlay = useCallback3(
+  const closeTargetOverlay = useCallback6(
     (overlay) => {
       const currentState = updateTargetOverlayState();
       if (!currentState[overlay]) return false;
@@ -8666,11 +11663,11 @@ var useReviewTargetOverlay = ({
     },
     [dispatchTargetOverlayHotkey, updateTargetOverlayState]
   );
-  useEffect3(() => {
+  useEffect6(() => {
     if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
     closeTargetOverlay("figma");
   }, [closeTargetOverlay, isFigmaOverlayAvailable, targetOverlayState.figma]);
-  useEffect3(() => clearRefreshTimers, [clearRefreshTimers]);
+  useEffect6(() => clearRefreshTimers, [clearRefreshTimers]);
   return {
     closeTargetOverlay,
     refreshTargetOverlayState,
@@ -8680,8 +11677,8 @@ var useReviewTargetOverlay = ({
 
 // src/react-shell/hooks/use.review.target.sync.ts
 import {
-  useCallback as useCallback4,
-  useEffect as useEffect4
+  useCallback as useCallback7,
+  useEffect as useEffect7
 } from "react";
 var useReviewTargetSync = ({
   iframeRef,
@@ -8698,7 +11695,7 @@ var useReviewTargetSync = ({
   onSyncTargetViewport,
   onTargetChange
 }) => {
-  const syncShellTarget = useCallback4(
+  const syncShellTarget = useCallback7(
     (nextTarget) => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
       const nextRouteKey = getTargetRouteKey(
@@ -8735,11 +11732,11 @@ var useReviewTargetSync = ({
       targetRef
     ]
   );
-  useEffect4(() => {
+  useEffect7(() => {
     targetRef.current = target;
     onActiveRouteChange(getTargetRouteKey(target, reviewPathPrefix));
   }, [onActiveRouteChange, reviewPathPrefix, target, targetRef]);
-  useEffect4(() => {
+  useEffect7(() => {
     sizeRef.current = size;
     if (selectedItemIdRef.current) {
       updateShellUrlForItem(
@@ -8773,6 +11770,9 @@ var useReviewTargetSync = ({
 // src/react-shell/hooks/use.review.controller.ts
 var useReviewController = ({
   adapter,
+  fields,
+  assigneeTitle,
+  assigneeOptions,
   cleanupTargetRef,
   controllerRef,
   frameScrollRef,
@@ -8808,7 +11808,7 @@ var useReviewController = ({
   onTargetOverlayStateChange,
   onCloseRuler
 }) => {
-  const syncTargetViewport = useCallback5(() => {
+  const syncTargetViewport = useCallback8(() => {
     window.dispatchEvent(new Event("resize"));
   }, []);
   const {
@@ -8865,6 +11865,9 @@ var useReviewController = ({
     setControllerReviewMode
   } = useReviewKitLifecycle({
     adapter,
+    fields,
+    assigneeTitle,
+    assigneeOptions,
     cleanupTargetRef,
     controllerRef,
     frameScrollRef,
@@ -8906,11 +11909,11 @@ var useReviewController = ({
 
 // src/react-shell/hooks/use.review.presence.ts
 import {
-  useCallback as useCallback6,
-  useEffect as useEffect5,
-  useMemo as useMemo3,
-  useRef as useRef2,
-  useState as useState4
+  useCallback as useCallback9,
+  useEffect as useEffect8,
+  useMemo as useMemo5,
+  useRef as useRef5,
+  useState as useState7
 } from "react";
 
 // src/react-shell/presence/presence.ts
@@ -9126,10 +12129,10 @@ var useReviewPresence = ({
   size,
   source
 }) => {
-  const presenceSessionRef = useRef2(null);
-  const [presenceUsers, setPresenceUsers] = useState4([]);
-  const [presenceSessionVersion, setPresenceSessionVersion] = useState4(0);
-  const presenceSessionId = useMemo3(getReviewPresenceSessionId, []);
+  const presenceSessionRef = useRef5(null);
+  const [presenceUsers, setPresenceUsers] = useState7([]);
+  const [presenceSessionVersion, setPresenceSessionVersion] = useState7(0);
+  const presenceSessionId = useMemo5(getReviewPresenceSessionId, []);
   const normalizedReviewUserId = reviewUserId.trim();
   const presenceDisplayName = getReviewPresenceDisplayName(
     normalizedReviewUserId
@@ -9137,7 +12140,7 @@ var useReviewPresence = ({
   const presenceColor = getReviewPresenceColor(
     normalizedReviewUserId || presenceSessionId
   );
-  const presenceViewport = useMemo3(
+  const presenceViewport = useMemo5(
     () => ({
       label: size.label,
       width: size.width,
@@ -9147,7 +12150,7 @@ var useReviewPresence = ({
     [size]
   );
   const presenceStatus = mode === "idle" ? "reviewing" : "editing";
-  const visiblePresenceUsers = useMemo3(
+  const visiblePresenceUsers = useMemo5(
     () => {
       const projectPresenceUsers = presenceUsers.filter(
         (user) => user.projectId === projectId && user.userId.trim()
@@ -9159,14 +12162,14 @@ var useReviewPresence = ({
     },
     [presenceUsers, projectId, reviewPathPrefix]
   );
-  const currentPagePresenceUsers = useMemo3(
+  const currentPagePresenceUsers = useMemo5(
     () => visiblePresenceUsers.filter((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
       return userTarget === activeRoute;
     }),
     [activeRoute, reviewPathPrefix, visiblePresenceUsers]
   );
-  const pagePresenceUsers = useMemo3(() => {
+  const pagePresenceUsers = useMemo5(() => {
     const usersByTarget = /* @__PURE__ */ new Map();
     visiblePresenceUsers.forEach((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
@@ -9176,7 +12179,7 @@ var useReviewPresence = ({
     });
     return usersByTarget;
   }, [reviewPathPrefix, visiblePresenceUsers]);
-  const getCurrentPresenceState = useCallback6(
+  const getCurrentPresenceState = useCallback9(
     () => ({
       projectId,
       sessionId: presenceSessionId,
@@ -9207,9 +12210,9 @@ var useReviewPresence = ({
       source
     ]
   );
-  const getCurrentPresenceStateRef = useRef2(getCurrentPresenceState);
+  const getCurrentPresenceStateRef = useRef5(getCurrentPresenceState);
   getCurrentPresenceStateRef.current = getCurrentPresenceState;
-  useEffect5(() => {
+  useEffect8(() => {
     if (!presence || !normalizedReviewUserId) {
       const session = presenceSessionRef.current;
       presenceSessionRef.current = null;
@@ -9259,7 +12262,7 @@ var useReviewPresence = ({
     presenceSessionId,
     projectId
   ]);
-  useEffect5(() => {
+  useEffect8(() => {
     const session = presenceSessionRef.current;
     if (!session || !normalizedReviewUserId) return;
     void session.update(getCurrentPresenceState());
@@ -9277,18 +12280,18 @@ var useReviewPresence = ({
 
 // src/react-shell/hooks/use.review.ruler.ts
 import {
-  useCallback as useCallback8,
-  useEffect as useEffect7,
-  useState as useState6
+  useCallback as useCallback11,
+  useEffect as useEffect10,
+  useState as useState9
 } from "react";
 
 // src/react-shell/hooks/use.review.ruler.drag.ts
 import {
-  useCallback as useCallback7,
-  useEffect as useEffect6,
-  useMemo as useMemo4,
-  useRef as useRef3,
-  useState as useState5
+  useCallback as useCallback10,
+  useEffect as useEffect9,
+  useMemo as useMemo6,
+  useRef as useRef6,
+  useState as useState8
 } from "react";
 
 // src/react-shell/ruler/ruler.ts
@@ -9318,19 +12321,19 @@ var useReviewRulerDrag = ({
   size,
   targetSrc
 }) => {
-  const rulerOverlayRef = useRef3(null);
-  const rulerDragRectRef = useRef3(null);
-  const isRulerDraggingRef = useRef3(false);
-  const sizeRef = useRef3(size);
-  const [rulerStart, setRulerStart] = useState5(null);
-  const [rulerPoint, setRulerPoint] = useState5(null);
-  const [rulerHover, setRulerHover] = useState5(null);
-  const [isRulerDragging, setIsRulerDragging] = useState5(false);
-  const rulerMeasure = useMemo4(
+  const rulerOverlayRef = useRef6(null);
+  const rulerDragRectRef = useRef6(null);
+  const isRulerDraggingRef = useRef6(false);
+  const sizeRef = useRef6(size);
+  const [rulerStart, setRulerStart] = useState8(null);
+  const [rulerPoint, setRulerPoint] = useState8(null);
+  const [rulerHover, setRulerHover] = useState8(null);
+  const [isRulerDragging, setIsRulerDragging] = useState8(false);
+  const rulerMeasure = useMemo6(
     () => getRulerMeasure(rulerStart, rulerPoint),
     [rulerPoint, rulerStart]
   );
-  const clearRulerMeasure = useCallback7(() => {
+  const clearRulerMeasure = useCallback10(() => {
     rulerDragRectRef.current = null;
     isRulerDraggingRef.current = false;
     setRulerStart(null);
@@ -9338,7 +12341,7 @@ var useReviewRulerDrag = ({
     setRulerHover(null);
     setIsRulerDragging(false);
   }, []);
-  const finishRulerDrag = useCallback7((point) => {
+  const finishRulerDrag = useCallback10((point) => {
     if (point) {
       setRulerPoint(point);
     }
@@ -9346,7 +12349,7 @@ var useReviewRulerDrag = ({
     isRulerDraggingRef.current = false;
     setIsRulerDragging(false);
   }, []);
-  const startRulerDrag = useCallback7(
+  const startRulerDrag = useCallback10(
     (clientX, clientY, rect) => {
       const point = getRulerPointFromRect(clientX, clientY, rect);
       rulerDragRectRef.current = rect;
@@ -9357,10 +12360,10 @@ var useReviewRulerDrag = ({
     },
     []
   );
-  useEffect6(() => {
+  useEffect9(() => {
     sizeRef.current = size;
   }, [size]);
-  useEffect6(() => {
+  useEffect9(() => {
     if (!isRulerVisible || !isRulerAvailable) return void 0;
     const getRulerEventClientPoint = (event) => {
       const frame2 = iframeRef.current;
@@ -9474,7 +12477,7 @@ var useReviewRulerDrag = ({
     isRulerVisible,
     startRulerDrag
   ]);
-  useEffect6(() => {
+  useEffect9(() => {
     clearRulerMeasure();
   }, [clearRulerMeasure, size.height, size.width, targetSrc]);
   return {
@@ -9495,7 +12498,7 @@ var useReviewRuler = ({
   onCancelReviewMode,
   onCloseTransientPanels
 }) => {
-  const [isRulerVisible, setIsRulerVisible] = useState6(false);
+  const [isRulerVisible, setIsRulerVisible] = useState9(false);
   const isRulerAvailable = ruler?.enabled !== false && typeof size.designWidth === "number" && size.designWidth > 0;
   const rulerUnit = ruler?.unit ?? "px";
   const rulerScaleX = isRulerAvailable && size.designWidth ? size.width / size.designWidth : 1;
@@ -9516,13 +12519,13 @@ var useReviewRuler = ({
   const rulerMeasureLabel = rulerMeasure ? `${Math.round(rulerMeasure.width / rulerScaleX)} \xD7 ${Math.round(
     rulerMeasure.height / rulerScaleY
   )} ${rulerUnit}` : "";
-  const closeRuler = useCallback8(() => {
+  const closeRuler = useCallback11(() => {
     if (!isRulerVisible) return false;
     setIsRulerVisible(false);
     clearRulerMeasure();
     return true;
   }, [clearRulerMeasure, isRulerVisible]);
-  const toggleRuler = useCallback8(() => {
+  const toggleRuler = useCallback11(() => {
     if (!isRulerAvailable) return;
     onCancelReviewMode();
     onCloseTransientPanels();
@@ -9534,7 +12537,7 @@ var useReviewRuler = ({
     onCancelReviewMode,
     onCloseTransientPanels
   ]);
-  useEffect7(() => {
+  useEffect10(() => {
     if (!isRulerVisible || isRulerAvailable) return;
     closeRuler();
   }, [closeRuler, isRulerAvailable, isRulerVisible]);
@@ -9554,34 +12557,154 @@ var useReviewRuler = ({
   };
 };
 
+// src/react-shell/hooks/use.review.figma.images.ts
+import { useCallback as useCallback12, useMemo as useMemo7 } from "react";
+var useReviewFigmaImages = ({
+  imageFormat = DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+  pageUrl,
+  projectId,
+  store,
+  viewport
+}) => {
+  const target = useMemo7(
+    () => createReviewFigmaRouteTarget({
+      pageUrl,
+      projectId,
+      viewport
+    }),
+    [
+      pageUrl,
+      projectId,
+      viewport.height,
+      viewport.label,
+      viewport.width,
+      viewport.kind
+    ]
+  );
+  const {
+    addImage: addStoreImage,
+    deleteImage,
+    error,
+    images,
+    isLoading,
+    isMutating,
+    moveImage,
+    refreshImages,
+    reorderImages,
+    updateImage
+  } = useReviewFigmaImageStoreController({
+    imageFormat,
+    store,
+    target
+  });
+  const {
+    imageOverlayStates,
+    isAnyImageOverlayVisible,
+    isOverlayLocked,
+    isOverlayVisible,
+    overlayMode,
+    overlayOffsetY,
+    overlayOpacity,
+    resetOverlay,
+    selectedImage,
+    selectedImageId,
+    setOverlayLocked,
+    setOverlayMode,
+    setOverlayOffsetY,
+    setOverlayOpacity,
+    setSelectedImageId,
+    showImage,
+    setImageOverlayOffsetY,
+    setImageOverlayOpacity,
+    state: overlayState,
+    toggleImageOverlayLocked,
+    toggleImageOverlayMode,
+    toggleImageOverlayVisible,
+    toggleAllImageOverlayVisible,
+    toggleOverlayLocked,
+    toggleOverlayMode,
+    toggleOverlayVisible
+  } = useReviewFigmaImageOverlayController({
+    images,
+    isLoading,
+    target
+  });
+  const addImage = useCallback12(
+    async (figmaUrl, label) => {
+      const image = await addStoreImage(figmaUrl, label);
+      if (image) showImage(image.id);
+      return image;
+    },
+    [addStoreImage, showImage]
+  );
+  return {
+    addImage,
+    deleteImage,
+    error,
+    images,
+    imageOverlayStates,
+    isAnyImageOverlayVisible,
+    isLoading,
+    isMutating,
+    isOverlayLocked,
+    isOverlayVisible,
+    moveImage,
+    overlayMode,
+    overlayOffsetY,
+    overlayOpacity,
+    overlayState,
+    refreshImages,
+    resetOverlay,
+    reorderImages,
+    selectedImage,
+    selectedImageId,
+    setOverlayLocked,
+    setOverlayMode,
+    setOverlayOffsetY,
+    setOverlayOpacity,
+    setSelectedImageId,
+    setImageOverlayOffsetY,
+    setImageOverlayOpacity,
+    target,
+    toggleImageOverlayLocked,
+    toggleImageOverlayMode,
+    toggleImageOverlayVisible,
+    toggleAllImageOverlayVisible,
+    toggleOverlayLocked,
+    toggleOverlayMode,
+    toggleOverlayVisible,
+    updateImage
+  };
+};
+
 // src/react-shell/hooks/use.review.settings.ts
-import { useCallback as useCallback9, useEffect as useEffect8, useState as useState7 } from "react";
+import { useCallback as useCallback13, useEffect as useEffect11, useState as useState10 } from "react";
 var useReviewSettings = ({
   onCancelReviewMode,
   onCloseInitialPrompt,
   onCloseSitemap,
   onReloadTargetFrame
 }) => {
-  const [figmaTokenDraft, setFigmaTokenDraft] = useState7(getStoredFigmaToken);
-  const [reviewUserId, setReviewUserId] = useState7(getStoredReviewUserId);
-  const [reviewUserIdDraft, setReviewUserIdDraft] = useState7(
+  const [figmaTokenDraft, setFigmaTokenDraft] = useState10(getStoredFigmaToken);
+  const [reviewUserId, setReviewUserId] = useState10(getStoredReviewUserId);
+  const [reviewUserIdDraft, setReviewUserIdDraft] = useState10(
     getStoredReviewUserId
   );
-  const [reviewTheme, setReviewTheme] = useState7(getStoredReviewTheme);
-  const [reviewThemeDraft, setReviewThemeDraft] = useState7(getStoredReviewTheme);
-  const [systemReviewTheme, setSystemReviewTheme] = useState7(getSystemReviewTheme);
-  const [figmaSettingsStatus, setFigmaSettingsStatus] = useState7("");
-  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState7(false);
-  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState7(false);
-  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState7(false);
+  const [reviewTheme, setReviewTheme] = useState10(getStoredReviewTheme);
+  const [reviewThemeDraft, setReviewThemeDraft] = useState10(getStoredReviewTheme);
+  const [systemReviewTheme, setSystemReviewTheme] = useState10(getSystemReviewTheme);
+  const [figmaSettingsStatus, setFigmaSettingsStatus] = useState10("");
+  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState10(false);
+  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState10(false);
+  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState10(false);
   const effectiveReviewTheme = reviewTheme === "system" ? systemReviewTheme : reviewTheme;
-  const closeFigmaSettings = useCallback9(() => {
+  const closeFigmaSettings = useCallback13(() => {
     setIsFigmaSettingsOpen(false);
     setFigmaSettingsStatus("");
     setIsFigmaTokenVisible(false);
     setIsFigmaTokenGuideOpen(false);
   }, []);
-  const openFigmaSettings = useCallback9(() => {
+  const openFigmaSettings = useCallback13(() => {
     onCancelReviewMode();
     onCloseSitemap();
     onCloseInitialPrompt();
@@ -9598,7 +12721,7 @@ var useReviewSettings = ({
     onCloseSitemap,
     reviewTheme
   ]);
-  const saveReviewSettings = useCallback9(
+  const saveReviewSettings = useCallback13(
     (token, userId, theme) => {
       const nextToken = token.trim();
       const nextUserId = userId.trim();
@@ -9622,7 +12745,7 @@ var useReviewSettings = ({
     },
     [closeFigmaSettings, onReloadTargetFrame]
   );
-  useEffect8(() => {
+  useEffect11(() => {
     if (typeof window === "undefined" || !window.matchMedia) return void 0;
     const query = window.matchMedia("(prefers-color-scheme: light)");
     const syncSystemTheme = () => {
@@ -9636,7 +12759,7 @@ var useReviewSettings = ({
     query.addListener(syncSystemTheme);
     return () => query.removeListener(syncSystemTheme);
   }, []);
-  useEffect8(() => {
+  useEffect11(() => {
     document.body.classList.toggle(
       "df-review-theme-light",
       effectiveReviewTheme === "light"
@@ -9675,7 +12798,7 @@ var useReviewSettings = ({
 };
 
 // src/react-shell/hooks/use.review.shell.data.ts
-import { useCallback as useCallback10, useMemo as useMemo5, useState as useState8 } from "react";
+import { useCallback as useCallback14, useMemo as useMemo8, useState as useState11 } from "react";
 var SITEMAP_STATUS_DONE = "done";
 var useReviewShellData = ({
   activeRoute,
@@ -9689,28 +12812,28 @@ var useReviewShellData = ({
   target,
   viewportPresets
 }) => {
-  const [items, setItems] = useState8([]);
-  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = useState8(
+  const [items, setItems] = useState11([]);
+  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = useState11(
     () => /* @__PURE__ */ new Set()
   );
-  const [qaFilter, setQaFilter] = useState8("all");
-  const [qaStatusFilter, setQaStatusFilterState] = useState8(getStoredReviewQaStatusFilter);
-  const [sitemapItems, setSitemapItems] = useState8(() => ({
+  const [qaFilter, setQaFilter] = useState11("all");
+  const [qaStatusFilter, setQaStatusFilterState] = useState11(getStoredReviewQaStatusFilter);
+  const [sitemapItems, setSitemapItems] = useState11(() => ({
     local: [],
     remote: []
   }));
-  const targetSrc = useMemo5(() => buildTargetSrc(target), [target]);
-  const pageTargets = useMemo5(
+  const targetSrc = useMemo8(() => buildTargetSrc(target), [target]);
+  const pageTargets = useMemo8(
     () => new Set(
       pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
     ),
     [pages, reviewPathPrefix]
   );
-  const sitemapSourceItems = useMemo5(
+  const sitemapSourceItems = useMemo8(
     () => isRemoteSource ? sitemapItems.remote : sitemapItems.local,
     [isRemoteSource, sitemapItems]
   );
-  const activeItems = useMemo5(
+  const activeItems = useMemo8(
     () => {
       const sourceItems = isAllQaVisible ? sitemapSourceItems : items.filter(
         (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
@@ -9721,29 +12844,29 @@ var useReviewShellData = ({
     },
     [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
   );
-  const numberedActiveItems = useMemo5(
+  const numberedActiveItems = useMemo8(
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
     [activeItems, reviewViewportPresets]
   );
-  const scopeFilteredNumberedActiveItems = useMemo5(
+  const scopeFilteredNumberedActiveItems = useMemo8(
     () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
       (numberedItem) => numberedItem.scope === qaFilter
     ),
     [numberedActiveItems, qaFilter]
   );
-  const statusFilteredNumberedActiveItems = useMemo5(
+  const statusFilteredNumberedActiveItems = useMemo8(
     () => qaStatusFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
       (numberedItem) => normalizeReviewItemStatus(numberedItem.item.status) === qaStatusFilter
     ),
     [numberedActiveItems, qaStatusFilter]
   );
-  const filteredNumberedActiveItems = useMemo5(
+  const filteredNumberedActiveItems = useMemo8(
     () => qaStatusFilter === "all" ? scopeFilteredNumberedActiveItems : scopeFilteredNumberedActiveItems.filter(
       (numberedItem) => normalizeReviewItemStatus(numberedItem.item.status) === qaStatusFilter
     ),
     [qaStatusFilter, scopeFilteredNumberedActiveItems]
   );
-  const hiddenOverlayItemIdList = useMemo5(
+  const hiddenOverlayItemIdList = useMemo8(
     () => {
       const nextHiddenItemIds = new Set(hiddenOverlayItemIds);
       if (qaStatusFilter !== "all") {
@@ -9757,7 +12880,7 @@ var useReviewShellData = ({
     },
     [activeItems, hiddenOverlayItemIds, qaStatusFilter]
   );
-  const qaFilterCounts = useMemo5(() => {
+  const qaFilterCounts = useMemo8(() => {
     const counts = /* @__PURE__ */ new Map();
     counts.set("all", statusFilteredNumberedActiveItems.length);
     statusFilteredNumberedActiveItems.forEach((numberedItem) => {
@@ -9765,7 +12888,7 @@ var useReviewShellData = ({
     });
     return counts;
   }, [statusFilteredNumberedActiveItems]);
-  const qaStatusFilterCounts = useMemo5(() => {
+  const qaStatusFilterCounts = useMemo8(() => {
     const counts = /* @__PURE__ */ new Map();
     counts.set("all", scopeFilteredNumberedActiveItems.length);
     scopeFilteredNumberedActiveItems.forEach((numberedItem) => {
@@ -9774,7 +12897,7 @@ var useReviewShellData = ({
     });
     return counts;
   }, [scopeFilteredNumberedActiveItems]);
-  const getItemPreset = useCallback10(
+  const getItemPreset = useCallback14(
     (item) => findViewportPreset(
       viewportPresets,
       item.viewport?.width ?? 0,
@@ -9782,11 +12905,11 @@ var useReviewShellData = ({
     ),
     [viewportPresets]
   );
-  const getItemPresetScope = useCallback10(
+  const getItemPresetScope = useCallback14(
     (item) => getViewportPresetKind(getItemPreset(item)),
     [getItemPreset]
   );
-  const getItemPresetColumn = useCallback10(
+  const getItemPresetColumn = useCallback14(
     (item) => {
       const preset = getItemPreset(item);
       const presetIndex = Math.max(0, viewportPresets.indexOf(preset));
@@ -9794,17 +12917,17 @@ var useReviewShellData = ({
     },
     [getItemPreset, viewportPresets]
   );
-  const getItemCountScope = useCallback10(
+  const getItemCountScope = useCallback14(
     (item) => item.scope === "dom" ? "dom" : getItemPresetScope(item),
     [getItemPresetScope]
   );
-  const activeRemainingItemCount = useMemo5(
+  const activeRemainingItemCount = useMemo8(
     () => activeItems.filter(
       (item) => normalizeReviewItemStatus(item.status) !== SITEMAP_STATUS_DONE
     ).length,
     [activeItems]
   );
-  const presetScopeCounts = useMemo5(() => {
+  const presetScopeCounts = useMemo8(() => {
     const counts = /* @__PURE__ */ new Map();
     activeItems.forEach((item) => {
       const scope = getItemPresetScope(item);
@@ -9813,11 +12936,11 @@ var useReviewShellData = ({
     return counts;
   }, [activeItems, getItemPresetScope]);
   const currentPresetScope = getViewportPresetKind(size);
-  const setQaStatusFilter = useCallback10((filter) => {
+  const setQaStatusFilter = useCallback14((filter) => {
     setQaStatusFilterState(filter);
     writeStoredReviewQaStatusFilter(filter);
   }, []);
-  const pageQaCounts = useMemo5(() => {
+  const pageQaCounts = useMemo8(() => {
     const counts = /* @__PURE__ */ new Map();
     const addItems = (sourceKey, sourceItems) => {
       sourceItems.forEach((item) => {
@@ -9859,14 +12982,14 @@ var useReviewShellData = ({
     addItems("remote", sitemapItems.remote);
     return counts;
   }, [getItemCountScope, getItemPresetColumn, reviewPathPrefix, sitemapItems]);
-  const allQaCount = useMemo5(
+  const allQaCount = useMemo8(
     () => Array.from(pageQaCounts.values()).reduce(
       addSitemapQaCounts,
       createEmptySitemapQaCount()
     ),
     [pageQaCounts]
   );
-  const selectedNumberedItem = useMemo5(
+  const selectedNumberedItem = useMemo8(
     () => selectedItemId ? numberedActiveItems.find(
       (numberedItem) => numberedItem.item.id === selectedItemId
     ) : void 0,
@@ -9881,6 +13004,7 @@ var useReviewShellData = ({
     getItemPresetScope,
     hiddenOverlayItemIdList,
     hiddenOverlayItemIds,
+    items,
     pageQaCounts,
     pageTargets,
     presetScopeCounts,
@@ -9899,7 +13023,7 @@ var useReviewShellData = ({
 };
 
 // src/react-shell/hooks/use.review.shell.hotkeys.ts
-import { useEffect as useEffect9 } from "react";
+import { useEffect as useEffect12 } from "react";
 var useReviewShellHotkeys = ({
   isFigmaSettingsOpen,
   isInitialPromptOpen,
@@ -9916,7 +13040,7 @@ var useReviewShellHotkeys = ({
   onToggleRuler,
   onToggleTargetOverlay
 }) => {
-  useEffect9(() => {
+  useEffect12(() => {
     if (mode === "idle" && !isRulerVisible && !isInitialPromptOpen && !isSitemapOpen && !isFigmaSettingsOpen) {
       return;
     }
@@ -9960,7 +13084,7 @@ var useReviewShellHotkeys = ({
     onCloseRuler,
     onCloseSitemap
   ]);
-  useEffect9(() => {
+  useEffect12(() => {
     const handleHotkey = (event) => {
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
         return;
@@ -9993,13 +13117,14 @@ var useReviewShellHotkeys = ({
 
 // src/react-shell/hooks/use.review.shell.state.ts
 import {
-  useMemo as useMemo6,
-  useRef as useRef4,
-  useState as useState9
+  useMemo as useMemo9,
+  useRef as useRef7,
+  useState as useState12
 } from "react";
 
 // src/react-shell/adapters.ts
 var ALL_REVIEW_WRITE_MODES = ["dom", "note", "area"];
+var DEFAULT_ASSIGNEE_TITLE = "Assignee";
 function normalizeReviewShellAdapters(adapters) {
   if (Array.isArray(adapters)) {
     const normalized = adapters.map((adapter) => normalizeShellAdapter(adapter));
@@ -10020,8 +13145,12 @@ function normalizeLegacyAdapterMap(adapters) {
   const local = {
     label: "local",
     adapter: adapters.local,
+    fields: { title: false },
     statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+    assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
+    assigneeOptions: [],
     updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
+    updateAssignee: ({ id, assigneeId, assigneeName }) => adapters.local.update(id, { assigneeId, assigneeName }),
     syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
     writeModes: [...ALL_REVIEW_WRITE_MODES],
     canUpdate: true,
@@ -10030,8 +13159,12 @@ function normalizeLegacyAdapterMap(adapters) {
   const remote = adapters.remote ? {
     label: "remote",
     adapter: adapters.remote,
+    fields: { title: false },
     statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+    assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
+    assigneeOptions: [],
     updateStatus: ({ id, status }) => adapters.remote?.update(id, { status }) ?? Promise.reject(new Error("Remote adapter is not available.")),
+    updateAssignee: ({ id, assigneeId, assigneeName }) => adapters.remote?.update(id, { assigneeId, assigneeName }) ?? Promise.reject(new Error("Remote adapter is not available.")),
     writeModes: [],
     canUpdate: true,
     canRemove: false,
@@ -10047,16 +13180,29 @@ function normalizeShellAdapter(adapterConfig) {
   const statusOptions = [
     ...adapterConfig.statusOptions ?? REVIEW_WORKFLOW_STATUS_OPTIONS
   ];
+  const fields = {
+    title: adapterConfig.fields?.title === true
+  };
+  const assigneeTitle = adapterConfig.assigneeTitle?.trim() || DEFAULT_ASSIGNEE_TITLE;
+  const assigneeOptions = [...adapterConfig.assigneeOptions ?? []];
   const updateAdapter = adapterConfig.update;
   const updateStatus = adapterConfig.updateStatus ? adapterConfig.updateStatus : updateAdapter ? ({ id, status }) => updateAdapter(id, { status }) : void 0;
+  const updateAssignee = adapterConfig.updateAssignee ? adapterConfig.updateAssignee : updateAdapter ? ({ id, assigneeId, assigneeName, assigneeOption }) => updateAdapter(id, {
+    assigneeId,
+    assigneeName: assigneeName ?? assigneeOption?.label
+  }) : void 0;
   const writeModes = normalizeWriteModes(
     adapterConfig.create ? adapterConfig.canWrite ?? adapterConfig.label === "local" : false
   );
   return {
     label: adapterConfig.label,
     pageId: adapterConfig.pageId,
+    fields,
     statusOptions,
+    assigneeTitle,
+    assigneeOptions,
     updateStatus,
+    updateAssignee,
     syncSubmission: adapterConfig.syncSubmission,
     writeModes,
     canUpdate: Boolean(updateAdapter),
@@ -10140,11 +13286,11 @@ var useReviewShellState = ({
   reviewPathPrefix
 }) => {
   const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const reviewViewportPresets = useMemo6(
+  const reviewViewportPresets = useMemo9(
     () => toReviewViewportPresets(viewportPresets),
     [viewportPresets]
   );
-  const normalizedAdapters = useMemo6(
+  const normalizedAdapters = useMemo9(
     () => normalizeReviewShellAdapters(adapters),
     [adapters]
   );
@@ -10152,7 +13298,9 @@ var useReviewShellState = ({
   const remoteAdapterEntry = normalizedAdapters.remote;
   const sourceEntries = normalizedAdapters.sources;
   const defaultSource = sourceEntries[0]?.label ?? "local";
-  const [source, setSource] = useState9(() => {
+  const initialItemId = getInitialItemId();
+  const initialSidePanel = getInitialReviewSidePanel();
+  const [source, setSource] = useState12(() => {
     const initialSource = getInitialSource(remoteAdapterEntry?.label);
     return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
   });
@@ -10165,42 +13313,42 @@ var useReviewShellState = ({
   const canWriteArea = activeAdapterEntry.writeModes.includes("area");
   const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
   const adapter = activeAdapterEntry.adapter;
-  const iframeRef = useRef4(null);
-  const frameScrollRef = useRef4(null);
-  const controllerRef = useRef4(null);
-  const cleanupTargetRef = useRef4(null);
-  const pendingRestoreRef = useRef4(null);
-  const pendingInitialItemIdRef = useRef4(getInitialItemId());
-  const selectedItemIdRef = useRef4(getInitialItemId());
-  const hiddenOverlayItemIdListRef = useRef4([]);
-  const [target, setTarget] = useState9(
+  const iframeRef = useRef7(null);
+  const frameScrollRef = useRef7(null);
+  const controllerRef = useRef7(null);
+  const cleanupTargetRef = useRef7(null);
+  const pendingRestoreRef = useRef7(null);
+  const pendingInitialItemIdRef = useRef7(initialItemId);
+  const selectedItemIdRef = useRef7(initialItemId);
+  const hiddenOverlayItemIdListRef = useRef7([]);
+  const [target, setTarget] = useState12(
     () => getInitialTarget(reviewPathPrefix)
   );
-  const [draftTarget, setDraftTarget] = useState9(
+  const [draftTarget, setDraftTarget] = useState12(
     () => getInitialTarget(reviewPathPrefix)
   );
-  const [activeRoute, setActiveRoute] = useState9(
+  const [activeRoute, setActiveRoute] = useState12(
     () => getTargetRouteKey(getInitialTarget(reviewPathPrefix), reviewPathPrefix)
   );
-  const [size, setSize] = useState9(
+  const [size, setSize] = useState12(
     () => getInitialSize(viewportPresets)
   );
-  const [mode, setMode] = useState9("idle");
-  const [targetOverlayState, setTargetOverlayState] = useState9({
+  const [mode, setMode] = useState12("idle");
+  const [targetOverlayState, setTargetOverlayState] = useState12({
     grid: false,
     figma: false
   });
-  const [selectedItemId, setSelectedItemId] = useState9(getInitialItemId());
-  const [isListVisible, setIsListVisible] = useState9(
-    getStoredReviewSidePanelVisible
+  const [selectedItemId, setSelectedItemId] = useState12(initialItemId);
+  const [isListVisible, setIsListVisible] = useState12(
+    () => Boolean(initialItemId || initialSidePanel) || getStoredReviewSidePanelVisible()
   );
-  const [isSitemapOpen, setIsSitemapOpen] = useState9(false);
-  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState9(false);
-  const [copyLabel, setCopyLabel] = useState9("Copy URL");
-  const [toastMessage, setToastMessage] = useState9("");
-  const [copiedPromptKey, setCopiedPromptKey] = useState9(null);
-  const targetRef = useRef4(target);
-  const sizeRef = useRef4(size);
+  const [isSitemapOpen, setIsSitemapOpen] = useState12(false);
+  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState12(false);
+  const [copyLabel, setCopyLabel] = useState12("Copy URL");
+  const [toastMessage, setToastMessage] = useState12("");
+  const [copiedPromptKey, setCopiedPromptKey] = useState12(null);
+  const targetRef = useRef7(target);
+  const sizeRef = useRef7(size);
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
   return {
     activeAdapterEntry,
@@ -10378,13 +13526,46 @@ var updateReviewItemStatus = async ({
   await onRefreshReviewData();
   onToast?.("QA status updated");
 };
-var updateReviewItemComment = async ({
+var updateReviewItemAssignee = async ({
   activeAdapterEntry,
   item,
+  assigneeId,
+  onRefreshReviewData,
+  onToast
+}) => {
+  if (!activeAdapterEntry.updateAssignee) return;
+  const assigneeIndex = activeAdapterEntry.assigneeOptions.findIndex(
+    (assigneeOption2) => assigneeOption2.value === assigneeId
+  );
+  const assigneeOption = activeAdapterEntry.assigneeOptions[assigneeIndex];
+  const nextAssigneeId = assigneeOption?.value ?? (assigneeId && item.assigneeId === assigneeId ? assigneeId : null);
+  const nextAssigneeName = assigneeOption?.label ?? (nextAssigneeId ? item.assigneeName : void 0);
+  if ((item.assigneeId ?? null) === nextAssigneeId) {
+    onToast?.("No QA assignee changes");
+    return item;
+  }
+  const updated = await activeAdapterEntry.updateAssignee({
+    id: item.id,
+    item,
+    assigneeId: nextAssigneeId,
+    assigneeName: nextAssigneeName,
+    assigneeOption,
+    assigneeIndex
+  });
+  await onRefreshReviewData();
+  onToast?.("QA assignee updated");
+  return updated;
+};
+var updateReviewItemDetails = async ({
+  activeAdapterEntry,
+  fields,
+  item,
+  title,
   comment,
   onRefreshReviewData,
   onToast
 }) => {
+  const nextTitle = title?.trim() || void 0;
   const nextComment = comment.trim();
   if (!nextComment) throw new Error("Comment is required.");
   if (!activeAdapterEntry.canUpdate) {
@@ -10392,15 +13573,18 @@ var updateReviewItemComment = async ({
       `Review adapter "${activeAdapterEntry.label}" does not support edit.`
     );
   }
-  if (nextComment === item.comment.trim()) {
-    onToast?.("No QA comment changes");
+  const isTitleUnchanged = !fields.title || nextTitle === (item.title?.trim() || void 0);
+  const isUnchanged = isTitleUnchanged && nextComment === item.comment.trim();
+  if (isUnchanged) {
+    onToast?.("No QA changes");
     return item;
   }
   const updated = await activeAdapterEntry.adapter.update(item.id, {
+    ...fields.title ? { title: nextTitle } : {},
     comment: nextComment
   });
   await onRefreshReviewData();
-  onToast?.("QA comment updated");
+  onToast?.("QA updated");
   return updated;
 };
 var submitReviewItem = async ({
@@ -10496,7 +13680,7 @@ var removeReviewItem = async ({
 };
 
 // src/react-shell/review/shell.tsx
-import { jsx as jsx21, jsxs as jsxs19 } from "react/jsx-runtime";
+import { jsx as jsx26, jsxs as jsxs23 } from "react/jsx-runtime";
 var SOURCE_PANEL_MAX_WIDTH = 440;
 var SOURCE_PANEL_MIN_WIDTH = 240;
 var SOURCE_PANEL_MAX_HEIGHT = 260;
@@ -10512,7 +13696,8 @@ var ReviewShell = ({
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
   sourceRoot,
   sourceInspector,
-  presence
+  presence,
+  figmaImages
 }) => {
   const {
     activeAdapterEntry,
@@ -10570,42 +13755,42 @@ var ReviewShell = ({
     presets,
     reviewPathPrefix
   });
-  const sourceShortcutCleanupRef = useRef5(null);
-  const sourceInspectorInteractionRef = useRef5(false);
-  const [sourceInspectorState, setSourceInspectorState] = useState10(null);
-  const [sectionOutline, setSectionOutline] = useState10(null);
-  const [sectionOutlineFilter, setSectionOutlineFilter] = useState10(
+  const sourceShortcutCleanupRef = useRef8(null);
+  const sourceInspectorInteractionRef = useRef8(false);
+  const [sourceInspectorState, setSourceInspectorState] = useState13(null);
+  const [sectionOutline, setSectionOutline] = useState13(null);
+  const [sectionOutlineFilter, setSectionOutlineFilter] = useState13(
     () => getStoredSourceTreeFilter()
   );
-  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] = useState10(() => getStoredSourceTreeMetaVisibility());
+  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] = useState13(() => getStoredSourceTreeMetaVisibility());
   const isSectionOutlineBoxMetaVisible = sectionOutlineMetaVisibility.box;
   const isSectionOutlineFontMetaVisible = sectionOutlineMetaVisibility.font;
   const isSectionOutlineMediaMetaVisible = sectionOutlineMetaVisibility.media;
   const isSectionOutlineClassMetaVisible = sectionOutlineMetaVisibility.className;
-  const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = useState10(() => /* @__PURE__ */ new Set());
-  const [isAllQaVisible, setIsAllQaVisible] = useState10(false);
-  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = useState10(false);
-  const resolvedReviewSourceOptions = useMemo7(
+  const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = useState13(() => /* @__PURE__ */ new Set());
+  const [isAllQaVisible, setIsAllQaVisible] = useState13(false);
+  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = useState13(false);
+  const resolvedReviewSourceOptions = useMemo10(
     () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
     [sourceInspector, sourceRoot]
   );
   const resolvedSourceInspector = resolvedReviewSourceOptions.sourceInspector;
   const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
-  const sourceOpenOptions = useMemo7(
+  const sourceOpenOptions = useMemo10(
     () => ({
       ...resolvedSourceInspector,
       sourceRoot: resolvedSourceRoot
     }),
     [resolvedSourceInspector, resolvedSourceRoot]
   );
-  const sourceCandidateOptions = useMemo7(
+  const sourceCandidateOptions = useMemo10(
     () => ({
       ignore: resolvedSourceInspector?.ignore,
       includePlacer: resolvedSourceInspector?.includePlacer
     }),
     [resolvedSourceInspector]
   );
-  const sectionOutlineOptions = useMemo7(
+  const sectionOutlineOptions = useMemo10(
     () => ({
       includePlacer: resolvedSourceInspector?.includePlacer,
       ignore: resolvedSourceInspector?.ignore,
@@ -10614,27 +13799,41 @@ var ReviewShell = ({
     [resolvedSourceInspector]
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
-  const [sidePanel, setSidePanel] = useState10(
-    () => isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa"
+  const [sidePanel, setSidePanel] = useState13(() => {
+    const initialSidePanel = getInitialReviewSidePanel();
+    if (initialSidePanel) return initialSidePanel;
+    if (getInitialItemId()) return "qa";
+    return isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa";
+  });
+  const figmaImageStore = useMemo10(
+    () => getReviewFigmaImageStore(figmaImages),
+    [figmaImages]
   );
+  const isFigmaImageManagementEnabled = Boolean(figmaImageStore);
+  const figmaImageFormat = figmaImages?.imageFormat ?? DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT;
   const isSourceTreeHoverOutlineEnabled = resolvedSourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === "qa";
   const isSourceTreePanelVisible = isSourceInspectorEnabled && isListVisible && sidePanel === "source";
-  useEffect10(() => {
+  const isFigmaImagesPanelVisible = isFigmaImageManagementEnabled && isListVisible && sidePanel === "figma-images";
+  useEffect13(() => {
     if (isSourceInspectorEnabled || sidePanel !== "source") return;
     setSidePanel("qa");
   }, [isSourceInspectorEnabled, sidePanel]);
-  useEffect10(() => {
+  useEffect13(() => {
+    if (isFigmaImageManagementEnabled || sidePanel !== "figma-images") return;
+    setSidePanel("qa");
+  }, [isFigmaImageManagementEnabled, sidePanel]);
+  useEffect13(() => {
     writeStoredReviewSidePanel(sidePanel);
   }, [sidePanel]);
-  useEffect10(() => {
+  useEffect13(() => {
     writeStoredReviewSidePanelVisible(isListVisible);
   }, [isListVisible]);
-  const updateSectionOutlineFilter = useCallback11((nextFilter) => {
+  const updateSectionOutlineFilter = useCallback15((nextFilter) => {
     setSectionOutlineFilter(nextFilter);
     writeStoredSourceTreeFilter(nextFilter);
   }, []);
-  const updateSectionOutlineMetaVisibility = useCallback11(
+  const updateSectionOutlineMetaVisibility = useCallback15(
     (key) => {
       setSectionOutlineMetaVisibility((current) => {
         const next = { ...current, [key]: !current[key] };
@@ -10644,19 +13843,19 @@ var ReviewShell = ({
     },
     []
   );
-  const sectionOutlineFilterTerms = useMemo7(
+  const sectionOutlineFilterTerms = useMemo10(
     () => getSectionOutlineFilterTerms(sectionOutlineFilter),
     [sectionOutlineFilter]
   );
-  const filteredSectionOutline = useMemo7(
+  const filteredSectionOutline = useMemo10(
     () => sectionOutline ? filterSectionOutlineEntries(sectionOutline, sectionOutlineFilterTerms) : [],
     [sectionOutline, sectionOutlineFilterTerms]
   );
-  const sectionOutlineTotalCount = useMemo7(
+  const sectionOutlineTotalCount = useMemo10(
     () => getSectionOutlineEntryCount(sectionOutline ?? []),
     [sectionOutline]
   );
-  const filteredSectionOutlineCount = useMemo7(
+  const filteredSectionOutlineCount = useMemo10(
     () => getSectionOutlineEntryCount(filteredSectionOutline),
     [filteredSectionOutline]
   );
@@ -10670,6 +13869,7 @@ var ReviewShell = ({
     getItemPresetScope,
     hiddenOverlayItemIdList,
     hiddenOverlayItemIds,
+    items,
     pageQaCounts,
     pageTargets,
     presetScopeCounts,
@@ -10696,27 +13896,73 @@ var ReviewShell = ({
     target,
     viewportPresets
   });
-  const [targetFigmaState, setTargetFigmaState] = useState10(null);
-  const targetFigmaConfig = targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
-  const figmaFrameUrl = useMemo7(
-    () => getFigmaFrameUrl(targetFigmaConfig, size),
-    [targetFigmaConfig, size]
+  const itemRefreshIdRef = useRef8(0);
+  const [isItemsLoading, setIsItemsLoading] = useState13(false);
+  const [mutatingItemIds, setMutatingItemIds] = useState13(
+    () => /* @__PURE__ */ new Set()
   );
-  const isFigmaOverlayAvailable = isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
-  const [editingItem, setEditingItem] = useState10(null);
+  const {
+    addImage: addFigmaImage,
+    deleteImage: deleteFigmaImage,
+    error: figmaImageError,
+    imageOverlayStates: figmaImageOverlayStates,
+    images: figmaImageList,
+    isAnyImageOverlayVisible: isAnyFigmaImageOverlayVisible,
+    isLoading: isFigmaImageLoading,
+    isMutating: isFigmaImageMutating,
+    refreshImages: refreshFigmaImages,
+    reorderImages: reorderFigmaImages,
+    selectedImageId: selectedFigmaImageId,
+    setImageOverlayOffsetY: setFigmaImageOverlayOffsetY,
+    setImageOverlayOpacity: setFigmaImageOverlayOpacity,
+    setSelectedImageId: setSelectedFigmaImageId,
+    target: figmaImageTarget,
+    toggleAllImageOverlayVisible: toggleAllFigmaImageOverlayVisible,
+    toggleImageOverlayLocked: toggleFigmaImageOverlayLocked,
+    toggleImageOverlayMode: toggleFigmaImageOverlayMode,
+    toggleImageOverlayVisible: toggleFigmaImageOverlayVisible,
+    updateImage: updateFigmaImage
+  } = useReviewFigmaImages({
+    imageFormat: figmaImageFormat,
+    pageUrl: activeRoute,
+    projectId,
+    store: figmaImageStore,
+    viewport: size
+  });
+  const [targetFigmaState, setTargetFigmaState] = useState13(null);
+  const targetFigmaConfig = targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
+  const isFigmaOverlayAvailable = !isFigmaImageManagementEnabled && isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
+  const [editingItem, setEditingItem] = useState13(null);
   const initialPromptText = initialPrompt.trim();
-  const refreshItems = useCallback11(
-    () => refreshReviewItems({
+  const refreshItems = useCallback15(
+    async () => {
+      const requestId = ++itemRefreshIdRef.current;
+      setIsItemsLoading(true);
+      try {
+        return await refreshReviewItems({
+          activeRoute,
+          adapter,
+          isRemoteSource,
+          pageId: activeAdapterEntry.pageId,
+          projectId,
+          onItemsChange: setItems
+        });
+      } finally {
+        if (itemRefreshIdRef.current === requestId) {
+          setIsItemsLoading(false);
+        }
+      }
+    },
+    [
+      activeAdapterEntry.pageId,
       activeRoute,
       adapter,
       isRemoteSource,
-      pageId: activeAdapterEntry.pageId,
       projectId,
-      onItemsChange: setItems
-    }),
-    [activeAdapterEntry.pageId, activeRoute, adapter, isRemoteSource, projectId]
+      setItems
+    ]
   );
-  const refreshSitemapItems = useCallback11(
+  const refreshSitemapItems = useCallback15(
     () => refreshSitemapReviewItems({
       localAdapterEntry,
       projectId,
@@ -10725,20 +13971,20 @@ var ReviewShell = ({
     }),
     [localAdapterEntry, projectId, remoteAdapterEntry]
   );
-  const cancelReviewMode = useCallback11(() => {
+  const cancelReviewMode = useCallback15(() => {
     const controller = controllerRef.current;
     if (!controller || controller.getMode() === "idle") return false;
     controller.setMode("idle");
     setMode(controller.getMode());
     return true;
   }, []);
-  const closePromptModal = useCallback11(() => {
+  const closePromptModal = useCallback15(() => {
     setIsInitialPromptOpen(false);
   }, []);
-  const closeSitemap = useCallback11(() => {
+  const closeSitemap = useCallback15(() => {
     setIsSitemapOpen(false);
   }, []);
-  const reloadTargetFrame = useCallback11(() => {
+  const reloadTargetFrame = useCallback15(() => {
     try {
       iframeRef.current?.contentWindow?.location.reload();
     } catch {
@@ -10785,7 +14031,7 @@ var ReviewShell = ({
     size,
     source
   });
-  const closeRulerPanels = useCallback11(() => {
+  const closeRulerPanels = useCallback15(() => {
     closeSitemap();
     closeFigmaSettings();
   }, [closeFigmaSettings, closeSitemap]);
@@ -10820,6 +14066,9 @@ var ReviewShell = ({
     toggleTargetOverlay
   } = useReviewController({
     adapter,
+    fields: activeAdapterEntry.fields,
+    assigneeTitle: activeAdapterEntry.assigneeTitle,
+    assigneeOptions: activeAdapterEntry.assigneeOptions,
     cleanupTargetRef,
     controllerRef,
     frameScrollRef,
@@ -10855,14 +14104,23 @@ var ReviewShell = ({
     onTargetChange: setTarget,
     onTargetOverlayStateChange: setTargetOverlayState
   });
-  const refreshReviewData2 = useCallback11(() => {
+  useEffect13(() => {
+    const itemId = pendingInitialItemIdRef.current;
+    if (!itemId) return;
+    const item = items.find(
+      (candidate) => candidate.id === itemId || candidate.externalIssueId === itemId
+    );
+    if (!item) return;
+    restoreReviewItem(item);
+  }, [items, pendingInitialItemIdRef, restoreReviewItem]);
+  const refreshReviewData2 = useCallback15(() => {
     return refreshReviewData({
       onRefreshItems: refreshItems,
       onRefreshSitemapItems: refreshSitemapItems,
       onReloadReviewKit: reloadReviewKit
     });
   }, [refreshItems, refreshSitemapItems, reloadReviewKit]);
-  const toggleItemOverlayVisibility = useCallback11((itemId) => {
+  const toggleItemOverlayVisibility = useCallback15((itemId) => {
     setHiddenOverlayItemIds((currentHiddenOverlayItemIds) => {
       const nextHiddenItemIds = new Set(currentHiddenOverlayItemIds);
       if (nextHiddenItemIds.has(itemId)) {
@@ -10873,17 +14131,17 @@ var ReviewShell = ({
       return nextHiddenItemIds;
     });
   }, []);
-  useEffect10(() => {
+  useEffect13(() => {
     void refreshItems();
   }, [refreshItems]);
-  useEffect10(() => {
+  useEffect13(() => {
     void refreshSitemapItems();
   }, [refreshSitemapItems]);
-  useEffect10(() => {
+  useEffect13(() => {
     if (!isSitemapOpen) return;
     void refreshSitemapItems();
   }, [isSitemapOpen, refreshSitemapItems]);
-  useEffect10(() => {
+  useEffect13(() => {
     const frameScroll = frameScrollRef.current;
     if (!frameScroll) return void 0;
     const centerFrameScroll = () => {
@@ -10984,7 +14242,7 @@ var ReviewShell = ({
   const copyCurrentUrl = () => copyCurrentReviewUrl({
     onCopyLabelChange: setCopyLabel
   });
-  const showToast = useCallback11(
+  const showToast = useCallback15(
     (message) => {
       setToastMessage(message);
       window.setTimeout(() => {
@@ -10993,29 +14251,29 @@ var ReviewShell = ({
     },
     [setToastMessage]
   );
-  const refreshTargetFigmaConfig = useCallback11(() => {
+  const refreshTargetFigmaConfig = useCallback15(() => {
     const config = getTargetFigmaFrameConfig(
       iframeRef.current?.contentWindow
     );
     setTargetFigmaState(config ? { targetSrc, config } : null);
   }, [iframeRef, targetSrc]);
-  useEffect10(() => {
+  useEffect13(() => {
     const targetDocument = iframeRef.current?.contentDocument;
     setTargetFigmaOverlayLocked(targetDocument, mode === "element");
     return () => {
       setTargetFigmaOverlayLocked(targetDocument, false);
     };
   }, [iframeRef, mode, targetSrc]);
-  const clearSourceInspector = useCallback11(() => {
+  const clearSourceInspector = useCallback15(() => {
     sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
-  useEffect10(() => {
+  useEffect13(() => {
     clearSourceInspector();
     setCollapsedSectionOutlineIds(/* @__PURE__ */ new Set());
     setSectionOutline(null);
   }, [clearSourceInspector, targetSrc]);
-  const getSourceInspectorRect = useCallback11(
+  const getSourceInspectorRect = useCallback15(
     (element) => {
       const frame = iframeRef.current;
       if (!frame) return null;
@@ -11040,7 +14298,7 @@ var ReviewShell = ({
     },
     [iframeRef]
   );
-  const getSourceInspectorPanelPosition = useCallback11(
+  const getSourceInspectorPanelPosition = useCallback15(
     (rect) => {
       const margin = 12;
       const gap = 10;
@@ -11066,7 +14324,7 @@ var ReviewShell = ({
     },
     []
   );
-  const showSourceInspectorForTarget = useCallback11(
+  const showSourceInspectorForTarget = useCallback15(
     (target2, isPinned = false) => {
       const candidates = getSourceCandidates(target2, sourceCandidateOptions).map(
         (candidate) => ({
@@ -11102,7 +14360,7 @@ var ReviewShell = ({
       sourceOpenOptions
     ]
   );
-  const showSourceOutlineForTarget = useCallback11(
+  const showSourceOutlineForTarget = useCallback15(
     (target2) => {
       const firstCandidate = getSourceCandidates(
         target2,
@@ -11126,7 +14384,7 @@ var ReviewShell = ({
     },
     [getSourceInspectorRect, sourceCandidateOptions]
   );
-  const showSourceOutlineForElement = useCallback11(
+  const showSourceOutlineForElement = useCallback15(
     (element) => {
       if (!isSourceTreeHoverOutlineEnabled) return;
       const rect = getSourceInspectorRect(element);
@@ -11150,10 +14408,10 @@ var ReviewShell = ({
     },
     [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
   );
-  const clearSourceOutlineHover = useCallback11(() => {
+  const clearSourceOutlineHover = useCallback15(() => {
     setSourceInspectorState((current) => current?.isPinned ? current : null);
   }, []);
-  const openSourceCandidate = useCallback11(
+  const openSourceCandidate = useCallback15(
     (candidate) => {
       const didOpen = openSourceInEditor(candidate.source, {
         ...sourceOpenOptions,
@@ -11164,7 +14422,7 @@ var ReviewShell = ({
     },
     [clearSourceInspector, showToast, sourceOpenOptions]
   );
-  const getCurrentSectionOutline = useCallback11(
+  const getCurrentSectionOutline = useCallback15(
     () => {
       let frameDocument = null;
       try {
@@ -11179,7 +14437,7 @@ var ReviewShell = ({
     },
     [iframeRef, sectionOutlineOptions]
   );
-  const setSectionOutlineWithDefaultCollapse = useCallback11(
+  const setSectionOutlineWithDefaultCollapse = useCallback15(
     (nextSectionOutline) => {
       setSectionOutline(nextSectionOutline);
       setCollapsedSectionOutlineIds(
@@ -11188,7 +14446,7 @@ var ReviewShell = ({
     },
     []
   );
-  useEffect10(() => {
+  useEffect13(() => {
     if (sidePanel !== "source" || !isListVisible) return void 0;
     const refreshSectionOutline = () => {
       const nextSectionOutline = getCurrentSectionOutline();
@@ -11210,11 +14468,11 @@ var ReviewShell = ({
     sidePanel,
     targetSrc
   ]);
-  const toggleQaPanel = useCallback11(() => {
+  const toggleQaPanel = useCallback15(() => {
     setSidePanel("qa");
     setIsListVisible((current) => sidePanel === "qa" ? !current : true);
   }, [setIsListVisible, sidePanel]);
-  const toggleSourceTreePanel = useCallback11(() => {
+  const toggleSourceTreePanel = useCallback15(() => {
     if (!isSourceInspectorEnabled) return;
     if (sidePanel === "source" && isListVisible) {
       setIsListVisible(false);
@@ -11234,7 +14492,21 @@ var ReviewShell = ({
     setIsListVisible,
     sidePanel
   ]);
-  const toggleSectionOutlineEntry = useCallback11((entryId) => {
+  const toggleFigmaImagesPanel = useCallback15(() => {
+    if (!isFigmaImageManagementEnabled) return;
+    if (sidePanel === "figma-images" && isListVisible) {
+      setIsListVisible(false);
+      return;
+    }
+    setSidePanel("figma-images");
+    setIsListVisible(true);
+  }, [
+    isFigmaImageManagementEnabled,
+    isListVisible,
+    setIsListVisible,
+    sidePanel
+  ]);
+  const toggleSectionOutlineEntry = useCallback15((entryId) => {
     setCollapsedSectionOutlineIds((current) => {
       const next = new Set(current);
       if (next.has(entryId)) {
@@ -11245,7 +14517,7 @@ var ReviewShell = ({
       return next;
     });
   }, []);
-  const scrollToSection = useCallback11((entry) => {
+  const scrollToSection = useCallback15((entry) => {
     scrollElementInTarget(entry.element, "start");
     centerFrameScrollOnElement(
       frameScrollRef.current,
@@ -11253,7 +14525,7 @@ var ReviewShell = ({
       entry.element
     );
   }, [frameScrollRef, iframeRef]);
-  const openSectionSource = useCallback11(
+  const openSectionSource = useCallback15(
     (entry) => {
       const didOpen = openSourceInEditor(entry.source, {
         ...sourceOpenOptions,
@@ -11263,14 +14535,14 @@ var ReviewShell = ({
     },
     [showToast, sourceOpenOptions]
   );
-  const openSectionData = useCallback11(
+  const openSectionData = useCallback15(
     (entry) => {
       const didOpen = openSourceInEditor(entry.data, sourceOpenOptions);
       showToast(didOpen ? "Data opened" : "Data hint not found");
     },
     [showToast, sourceOpenOptions]
   );
-  const startSectionDomReview = useCallback11(
+  const startSectionDomReview = useCallback15(
     (entry) => {
       if (!canWriteDom) {
         showToast("DOM QA unavailable");
@@ -11325,11 +14597,11 @@ var ReviewShell = ({
       showToast
     ]
   );
-  const cleanupSourceOpenShortcut = useCallback11(() => {
+  const cleanupSourceOpenShortcut = useCallback15(() => {
     sourceShortcutCleanupRef.current?.();
     sourceShortcutCleanupRef.current = null;
   }, []);
-  const bindSourceOpenShortcut = useCallback11(() => {
+  const bindSourceOpenShortcut = useCallback15(() => {
     cleanupSourceOpenShortcut();
     let frameDocument = null;
     try {
@@ -11345,72 +14617,10 @@ var ReviewShell = ({
     const fontOverlayAttribute = "data-dfwr-source-fonts";
     const style = frameDocument.createElement("style");
     style.dataset.dfwrSourceOpenShortcut = "true";
-    style.textContent = `
-      html[${optionAttribute}="true"],
-      html[${optionAttribute}="true"] * {
-        cursor: crosshair !important;
-      }
-
-      html[${optionAttribute}="true"] .helper-figma-root,
-      html[${optionAttribute}="true"] .helper-figma-root *,
-      html[${optionAttribute}="true"] .helper-figma-loading-backdrop,
-      html[${optionAttribute}="true"] .helper-figma-loading-backdrop * {
-        pointer-events: none !important;
-      }
-
-      html[${optionAttribute}="true"] body::before {
-        position: fixed !important;
-        z-index: 2147483647 !important;
-        top: 10px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        display: block !important;
-        border: 1px solid rgba(124, 199, 255, 0.72) !important;
-        border-radius: 999px !important;
-        padding: 6px 10px !important;
-        color: #ffffff !important;
-        background: rgba(15, 23, 42, 0.86) !important;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24) !important;
-        content: "Source select" !important;
-        font: 500 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-        pointer-events: none !important;
-      }
-
-      [${fontOverlayAttribute}] {
-        position: fixed !important;
-        z-index: 2147483647 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        width: max-content !important;
-        max-width: calc(100vw - 8px) !important;
-        border: 1px solid rgba(124, 199, 255, 0.72) !important;
-        border-radius: 6px !important;
-        padding: 4px 6px !important;
-        color: #ffffff !important;
-        background: rgba(15, 23, 42, 0.9) !important;
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28) !important;
-        font: 500 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
-        overflow-wrap: anywhere !important;
-        pointer-events: none !important;
-        white-space: normal !important;
-      }
-
-      [${fontOverlayAttribute}] > span {
-        display: grid !important;
-        grid-template-columns: auto minmax(0, 1fr) !important;
-        justify-content: space-between !important;
-        gap: 10px !important;
-      }
-
-      [${fontOverlayAttribute}] > span > span:last-child {
-        min-width: 0 !important;
-        text-align: right !important;
-      }
-
-      [${fontOverlayAttribute}][hidden] {
-        display: none !important;
-      }
-    `;
+    style.textContent = createSourceShortcutStyle(
+      optionAttribute,
+      fontOverlayAttribute
+    );
     frameRoot.append(style);
     const fontOverlay = frameDocument.createElement("div");
     fontOverlay.setAttribute(fontOverlayAttribute, "true");
@@ -11581,10 +14791,10 @@ var ReviewShell = ({
     showSourceOutlineForTarget,
     showSourceInspectorForTarget
   ]);
-  useEffect10(() => {
+  useEffect13(() => {
     return cleanupSourceOpenShortcut;
   }, [cleanupSourceOpenShortcut]);
-  const loadTargetFrame = useCallback11(() => {
+  const loadTargetFrame = useCallback15(() => {
     initReviewKit();
     refreshTargetFigmaConfig();
     setTargetFigmaOverlayLocked(
@@ -11609,14 +14819,30 @@ var ReviewShell = ({
     setSectionOutlineWithDefaultCollapse,
     sidePanel
   ]);
-  useEffect10(() => {
+  useEffect13(() => {
     const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
     return () => window.cancelAnimationFrame(frame);
   }, [bindSourceOpenShortcut, targetSrc]);
-  const clearSelectedReviewItem = useCallback11(() => {
+  const clearSelectedReviewItem = useCallback15(() => {
     clearSelectedItem();
     updateShellUrl(targetRef.current, sizeRef.current, source);
   }, [clearSelectedItem, sizeRef, source, targetRef]);
+  const withItemMutation = async (itemId, action) => {
+    setMutatingItemIds((currentIds) => {
+      const nextIds = new Set(currentIds);
+      nextIds.add(itemId);
+      return nextIds;
+    });
+    try {
+      return await action();
+    } finally {
+      setMutatingItemIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(itemId);
+        return nextIds;
+      });
+    }
+  };
   const changeReviewSource = (nextSource) => {
     if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
     cancelReviewMode();
@@ -11625,32 +14851,54 @@ var ReviewShell = ({
     setSource(nextSource);
     updateShellUrl(targetRef.current, sizeRef.current, nextSource);
   };
-  const changeItemStatus = (item, nextStatus) => updateReviewItemStatus({
-    activeAdapterEntry,
-    item,
-    nextStatus,
-    onRefreshReviewData: refreshReviewData2,
-    onToast: showToast
-  });
-  const saveItemComment = async (item, comment) => {
-    await updateReviewItemComment({
+  const changeItemStatus = (item, nextStatus) => withItemMutation(
+    item.id,
+    () => updateReviewItemStatus({
       activeAdapterEntry,
       item,
-      comment,
+      nextStatus,
       onRefreshReviewData: refreshReviewData2,
       onToast: showToast
-    });
+    })
+  );
+  const changeItemAssignee = async (item, assigneeId) => {
+    await withItemMutation(
+      item.id,
+      () => updateReviewItemAssignee({
+        activeAdapterEntry,
+        item,
+        assigneeId,
+        onRefreshReviewData: refreshReviewData2,
+        onToast: showToast
+      })
+    );
+  };
+  const saveItemDetails = async (item, patch) => {
+    await withItemMutation(
+      item.id,
+      () => updateReviewItemDetails({
+        activeAdapterEntry,
+        fields: activeAdapterEntry.fields,
+        item,
+        ...patch,
+        onRefreshReviewData: refreshReviewData2,
+        onToast: showToast
+      })
+    );
     setEditingItem(null);
   };
-  const submitItem = (numberedItem) => submitReviewItem({
-    localAdapterEntry,
-    numberedItem,
-    remoteAdapterEntry,
-    selectedItemIdRef,
-    onClearSelectedItem: clearSelectedItem,
-    onRefreshReviewData: refreshReviewData2,
-    onToast: showToast
-  });
+  const submitItem = (numberedItem) => withItemMutation(
+    numberedItem.item.id,
+    () => submitReviewItem({
+      localAdapterEntry,
+      numberedItem,
+      remoteAdapterEntry,
+      selectedItemIdRef,
+      onClearSelectedItem: clearSelectedItem,
+      onRefreshReviewData: refreshReviewData2,
+      onToast: showToast
+    })
+  );
   const copyPrompt = (value, key, toastMessage2 = "Prompt copied") => copyReviewPrompt({
     key,
     toastMessage: toastMessage2,
@@ -11681,24 +14929,39 @@ var ReviewShell = ({
       "QA link copied"
     );
   };
-  const removeItem = (item) => removeReviewItem({
-    activeAdapterEntry,
-    isRemoteSource,
-    item,
-    selectedItemIdRef,
-    sizeRef,
-    source,
-    targetRef,
-    onClearSelectedItem: clearSelectedItem,
-    onRefreshReviewData: refreshReviewData2,
-    onToast: showToast
+  const copyRemoteIssuePath = (item) => {
+    const path = getUrlPathWithoutOrigin(item.externalIssueUrl);
+    if (!path) {
+      showToast("QA link not found");
+      return Promise.resolve();
+    }
+    return copyPrompt(path, `remote-link:${item.id}`, "QA path copied");
+  };
+  const removeItem = (item) => withItemMutation(
+    item.id,
+    () => removeReviewItem({
+      activeAdapterEntry,
+      isRemoteSource,
+      item,
+      selectedItemIdRef,
+      sizeRef,
+      source,
+      targetRef,
+      onClearSelectedItem: clearSelectedItem,
+      onRefreshReviewData: refreshReviewData2,
+      onToast: showToast
+    })
+  );
+  const figmaImageOverlays = createReviewTargetFigmaImageOverlays({
+    imageOverlayStates: figmaImageOverlayStates,
+    images: figmaImageList
   });
-  return /* @__PURE__ */ jsxs19(
+  return /* @__PURE__ */ jsxs23(
     "div",
     {
       className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
       children: [
-        /* @__PURE__ */ jsx21(
+        /* @__PURE__ */ jsx26(
           ReviewTopbar,
           {
             draftTarget,
@@ -11709,17 +14972,20 @@ var ReviewShell = ({
             isRulerAvailable,
             isRulerVisible,
             targetOverlayState,
-            isFigmaOverlayAvailable,
+            figmaOverlayUnavailableMessage: isFigmaImageManagementEnabled ? "No Figma images on this viewport." : void 0,
+            isFigmaOverlayActive: isFigmaImageManagementEnabled ? isAnyFigmaImageOverlayVisible : targetOverlayState.figma,
+            isFigmaOverlayAvailable: isFigmaImageManagementEnabled ? figmaImageList.length > 0 : isFigmaOverlayAvailable,
             onDraftTargetChange: setDraftTarget,
             onApplyTarget: applyTarget,
             onOpenSitemap: () => setIsSitemapOpen(true),
             onCopyCurrentUrl: () => void copyCurrentUrl(),
             onSizeChange: setSize,
+            onToggleFigmaOverlay: isFigmaImageManagementEnabled ? toggleAllFigmaImageOverlayVisible : () => toggleTargetOverlay("figma"),
             onToggleRuler: toggleRuler,
             onToggleTargetOverlay: toggleTargetOverlay
           }
         ),
-        isSitemapOpen && /* @__PURE__ */ jsx21(
+        isSitemapOpen && /* @__PURE__ */ jsx26(
           SitemapModal,
           {
             pages,
@@ -11734,7 +15000,7 @@ var ReviewShell = ({
             onSelectPage: selectPage
           }
         ),
-        isFigmaSettingsOpen && /* @__PURE__ */ jsx21(
+        isFigmaSettingsOpen && /* @__PURE__ */ jsx26(
           ReviewSettingsModal,
           {
             figmaTokenDraft,
@@ -11753,8 +15019,8 @@ var ReviewShell = ({
             onSave: saveReviewSettings
           }
         ),
-        isInitialPromptOpen && /* @__PURE__ */ jsx21(PromptModal, { onClose: closePromptModal }),
-        isInitialPromptScriptOpen && /* @__PURE__ */ jsx21(
+        isInitialPromptOpen && /* @__PURE__ */ jsx26(PromptModal, { onClose: closePromptModal }),
+        isInitialPromptScriptOpen && /* @__PURE__ */ jsx26(
           InitialPromptModal,
           {
             initialPromptText,
@@ -11763,17 +15029,18 @@ var ReviewShell = ({
             onCopyPrompt: (text, key) => void copyPrompt(text, key)
           }
         ),
-        editingItem && /* @__PURE__ */ jsx21(
+        editingItem && /* @__PURE__ */ jsx26(
           QaItemEditModal,
           {
+            fields: activeAdapterEntry.fields,
             item: editingItem,
             onClose: () => setEditingItem(null),
-            onSave: saveItemComment
+            onSave: saveItemDetails
           }
         ),
-        toastMessage && /* @__PURE__ */ jsx21("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
-        /* @__PURE__ */ jsxs19("div", { className: "df-review-side-rail", children: [
-          /* @__PURE__ */ jsx21(
+        toastMessage && /* @__PURE__ */ jsx26("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
+        /* @__PURE__ */ jsxs23("div", { className: "df-review-side-rail", children: [
+          /* @__PURE__ */ jsx26(
             "button",
             {
               "aria-label": isQaPanelVisible ? "Hide QA list" : "Show QA list",
@@ -11782,10 +15049,10 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleQaPanel,
               title: "QA",
-              children: /* @__PURE__ */ jsx21("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx21(SquareCheckBig, {}) })
+              children: /* @__PURE__ */ jsx26("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx26(SquareCheckBig, {}) })
             }
           ),
-          isSourceInspectorEnabled && /* @__PURE__ */ jsx21(
+          isSourceInspectorEnabled && /* @__PURE__ */ jsx26(
             "button",
             {
               "aria-controls": "df-review-section-outline",
@@ -11795,11 +15062,23 @@ var ReviewShell = ({
               type: "button",
               onClick: toggleSourceTreePanel,
               title: "Source Tree",
-              children: /* @__PURE__ */ jsx21("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx21(Grid2x2Check, {}) })
+              children: /* @__PURE__ */ jsx26("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx26(Images, {}) })
             }
           ),
-          /* @__PURE__ */ jsxs19("div", { className: "df-review-side-actions", children: [
-            /* @__PURE__ */ jsx21(
+          isFigmaImageManagementEnabled && /* @__PURE__ */ jsx26(
+            "button",
+            {
+              "aria-label": isFigmaImagesPanelVisible ? "Hide Figma images" : "Show Figma images",
+              "aria-pressed": isFigmaImagesPanelVisible,
+              className: `df-review-side-toggle${isFigmaImagesPanelVisible ? " is-active" : ""}`,
+              type: "button",
+              onClick: toggleFigmaImagesPanel,
+              title: "Figma Images",
+              children: /* @__PURE__ */ jsx26("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx26(FigmaRailIcon, {}) })
+            }
+          ),
+          /* @__PURE__ */ jsxs23("div", { className: "df-review-side-actions", children: [
+            /* @__PURE__ */ jsx26(
               "button",
               {
                 "aria-label": "Open initial prompt",
@@ -11807,10 +15086,10 @@ var ReviewShell = ({
                 type: "button",
                 onClick: () => setIsInitialPromptScriptOpen(true),
                 title: "Initial prompt",
-                children: /* @__PURE__ */ jsx21("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx21(Bot, {}) })
+                children: /* @__PURE__ */ jsx26("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx26(Bot, {}) })
               }
             ),
-            /* @__PURE__ */ jsx21(
+            /* @__PURE__ */ jsx26(
               "button",
               {
                 "aria-label": "Open settings",
@@ -11818,18 +15097,18 @@ var ReviewShell = ({
                 type: "button",
                 onClick: openFigmaSettings,
                 title: "Settings",
-                children: /* @__PURE__ */ jsx21("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx21(Settings, {}) })
+                children: /* @__PURE__ */ jsx26("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx26(Settings, {}) })
               }
             ),
-            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsx21(
+            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsx26(
               PresenceOverlay,
               {
                 presenceSessionId,
                 users: currentPagePresenceUsers
               }
             ),
-            /* @__PURE__ */ jsx21("span", { className: "df-review-side-divider", "aria-hidden": "true" }),
-            /* @__PURE__ */ jsx21(
+            /* @__PURE__ */ jsx26("span", { className: "df-review-side-divider", "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx26(
               "button",
               {
                 "aria-label": "Open about",
@@ -11839,12 +15118,12 @@ var ReviewShell = ({
                   setIsInitialPromptOpen(true);
                 },
                 title: "About",
-                children: /* @__PURE__ */ jsx21("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx21(DfLogoIcon, {}) })
+                children: /* @__PURE__ */ jsx26("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx26(DfLogoIcon, {}) })
               }
             )
           ] })
         ] }),
-        /* @__PURE__ */ jsx21(
+        /* @__PURE__ */ jsx26(
           ReviewQaPanel,
           {
             activeAdapterEntry,
@@ -11856,7 +15135,9 @@ var ReviewShell = ({
             hiddenOverlayItemIds,
             isListVisible: isQaPanelVisible,
             isAllQaVisible,
+            isLoading: isItemsLoading,
             isRemoteSource,
+            mutatingItemIds,
             copiedPromptKey,
             qaFilter,
             qaFilterCounts,
@@ -11867,12 +15148,16 @@ var ReviewShell = ({
             showSourceSelect,
             source,
             sourceEntries,
+            fields: activeAdapterEntry.fields,
+            assigneeTitle: activeAdapterEntry.assigneeTitle,
             onChangeItemStatus: changeItemStatus,
             onClearSelectedItem: clearSelectedReviewItem,
+            onChangeItemAssignee: changeItemAssignee,
             onChangeReviewSource: changeReviewSource,
             onCopyItemLabel: (numberedItem) => void copyItemLabel(numberedItem),
             onCopyItemLink: (numberedItem) => void copyItemLink(numberedItem),
             onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
+            onCopyRemoteIssuePath: copyRemoteIssuePath,
             onEditItem: setEditingItem,
             onQaFilterChange: setQaFilter,
             onQaStatusFilterChange: setQaStatusFilter,
@@ -11883,7 +15168,30 @@ var ReviewShell = ({
             onToggleItemOverlayVisibility: toggleItemOverlayVisibility
           }
         ),
-        isSourceInspectorEnabled && /* @__PURE__ */ jsx21(
+        isFigmaImageManagementEnabled && /* @__PURE__ */ jsx26(
+          FigmaImagesPanel,
+          {
+            error: figmaImageError,
+            imageOverlayStates: figmaImageOverlayStates,
+            images: figmaImageList,
+            isListVisible: isFigmaImagesPanelVisible,
+            isLoading: isFigmaImageLoading,
+            isMutating: isFigmaImageMutating,
+            selectedImageId: selectedFigmaImageId,
+            onAddImage: addFigmaImage,
+            onDeleteImage: deleteFigmaImage,
+            onRefreshImages: refreshFigmaImages,
+            onReorderImages: reorderFigmaImages,
+            onSelectImage: setSelectedFigmaImageId,
+            onSetImageOverlayOffsetY: setFigmaImageOverlayOffsetY,
+            onSetImageOverlayOpacity: setFigmaImageOverlayOpacity,
+            onToggleImageOverlayLocked: toggleFigmaImageOverlayLocked,
+            onToggleImageOverlayMode: toggleFigmaImageOverlayMode,
+            onToggleImageOverlayVisible: toggleFigmaImageOverlayVisible,
+            onUpdateImage: updateFigmaImage
+          }
+        ),
+        isSourceInspectorEnabled && /* @__PURE__ */ jsx26(
           SectionOutlinePanel,
           {
             isPanelVisible: isSourceTreePanelVisible,
@@ -11910,12 +15218,12 @@ var ReviewShell = ({
             onClearHover: clearSourceOutlineHover
           }
         ),
-        /* @__PURE__ */ jsx21(
+        /* @__PURE__ */ jsx26(
           ReviewTargetFrame,
           {
             canWriteArea,
             canWriteDom,
-            figmaFrameUrl,
+            figmaImageOverlays,
             frameScrollRef,
             iframeRef,
             isRulerAvailable,
@@ -11932,10 +15240,11 @@ var ReviewShell = ({
             size,
             targetSrc,
             onLoadTarget: loadTargetFrame,
+            onSetFigmaImageOverlayOffsetY: setFigmaImageOverlayOffsetY,
             onSetReviewMode: setReviewMode
           }
         ),
-        /* @__PURE__ */ jsx21(
+        /* @__PURE__ */ jsx26(
           SourceInspectorOverlay,
           {
             state: sourceInspectorState,
@@ -11948,6 +15257,691 @@ var ReviewShell = ({
     }
   );
 };
+function getUrlPathWithoutOrigin(value) {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  try {
+    const url = new URL(trimmed, window.location.origin);
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return trimmed;
+  }
+}
+
+// src/react-shell/figma/dev-overlay.tsx
+import React, {
+  useEffect as useEffect14,
+  useMemo as useMemo11,
+  useState as useState14
+} from "react";
+import { createRoot } from "react-dom/client";
+import { jsx as jsx27, jsxs as jsxs24 } from "react/jsx-runtime";
+var FIGMA_DEV_OVERLAY_ROOT_ID = "df-review-figma-dev-overlay-root";
+var FIGMA_DEV_OVERLAY_MOUNT_ID = "df-review-figma-dev-overlay-mount";
+var mountFigmaDevOverlay = (options) => {
+  if (typeof document === "undefined" || !document.body) {
+    return { destroy: () => void 0 };
+  }
+  const rootId = options.rootId ?? FIGMA_DEV_OVERLAY_ROOT_ID;
+  document.getElementById(rootId)?.remove();
+  const host = document.createElement("div");
+  host.id = rootId;
+  host.style.display = "contents";
+  const shadow = host.attachShadow({ mode: "open" });
+  const style = document.createElement("style");
+  style.textContent = figmaDevOverlayStyle;
+  const mountNode = document.createElement("div");
+  mountNode.id = FIGMA_DEV_OVERLAY_MOUNT_ID;
+  shadow.append(style, mountNode);
+  document.body.appendChild(host);
+  const root = createRoot(mountNode);
+  root.render(
+    /* @__PURE__ */ jsx27(React.StrictMode, { children: /* @__PURE__ */ jsx27(FigmaDevOverlayWidget, { ...options }) })
+  );
+  return {
+    destroy() {
+      root.unmount();
+      host.remove();
+      removeTargetFigmaImageOverlays(document);
+    }
+  };
+};
+var FigmaDevOverlayWidget = ({
+  figmaImages,
+  pageUrl,
+  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
+  projectId,
+  reviewPathPrefix
+}) => {
+  const figmaImageStore = getReviewFigmaImageStore(figmaImages);
+  const viewport = useCurrentViewport();
+  const currentPageUrl = useCurrentPageUrl(pageUrl, reviewPathPrefix);
+  const viewportBoundaries = useMemo11(
+    () => getFigmaDevViewportBoundaries(presets),
+    [presets]
+  );
+  const matchedViewportMatch = useMemo11(
+    () => findBoundaryFigmaDevViewportMatch(presets, viewport.width),
+    [presets, viewport.width]
+  );
+  const matchedViewport = matchedViewportMatch?.preset ?? null;
+  const activeViewport = matchedViewport ?? viewportBoundaries?.minPreset ?? presets[0] ?? DEFAULT_REVIEW_VIEWPORT_PRESETS[0];
+  const {
+    error,
+    images,
+    imageOverlayStates,
+    isAnyImageOverlayVisible,
+    isLoading,
+    selectedImageId,
+    setImageOverlayOffsetY,
+    setImageOverlayOpacity,
+    setSelectedImageId,
+    toggleImageOverlayLocked,
+    toggleImageOverlayMode,
+    toggleImageOverlayVisible
+  } = useReviewFigmaImages({
+    imageFormat: figmaImages?.imageFormat ?? DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+    pageUrl: currentPageUrl,
+    projectId,
+    store: matchedViewport ? figmaImageStore : null,
+    viewport: activeViewport
+  });
+  const [isPanelOpen, setIsPanelOpen] = useState14(false);
+  const [isWidgetVisible, setIsWidgetVisible] = useState14(false);
+  const [offsetYDraftByImageId, setOffsetYDraftByImageId] = useState14({});
+  const selectedImage = selectedImageId ? images.find((image) => image.id === selectedImageId) ?? null : null;
+  const selectedImageIndex = selectedImage ? images.indexOf(selectedImage) : -1;
+  const selectedImageLabel = selectedImage ? getFigmaImageLabel(selectedImage, selectedImageIndex) : "Figma layer";
+  const selectedOverlayState = selectedImage ? imageOverlayStates[selectedImage.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE : DEFAULT_FIGMA_IMAGE_LAYER_STATE;
+  const selectedOpacityPercent = selectedImage ? getSnappedOpacityPercent(selectedOverlayState.opacity) : 0;
+  const selectedOffsetYDraft = selectedImage ? offsetYDraftByImageId[selectedImage.id] ?? String(selectedOverlayState.offsetY) : "";
+  const figmaImageOverlays = useMemo11(
+    () => createReviewTargetFigmaImageOverlays({
+      imageOverlayStates,
+      images
+    }),
+    [imageOverlayStates, images]
+  );
+  useEffect14(() => {
+    if (!isWidgetVisible || !matchedViewport) {
+      removeTargetFigmaImageOverlays(document);
+      return;
+    }
+    renderTargetFigmaImageOverlays({
+      onSetOverlayOffsetY: setImageOverlayOffsetY,
+      overlays: figmaImageOverlays,
+      size: matchedViewport,
+      targetDocument: document
+    });
+  }, [
+    figmaImageOverlays,
+    isWidgetVisible,
+    matchedViewport,
+    setImageOverlayOffsetY
+  ]);
+  useEffect14(
+    () => () => {
+      removeTargetFigmaImageOverlays(document);
+    },
+    []
+  );
+  useEffect14(() => {
+    const handleKeyDown = (event) => {
+      if (!event.shiftKey || event.metaKey || event.ctrlKey || event.altKey || event.code !== "KeyF" && event.key.toLowerCase() !== "f" || isEditableFigmaDevOverlayEventTarget(event)) {
+        return;
+      }
+      event.preventDefault();
+      setIsPanelOpen(false);
+      setIsWidgetVisible((currentVisible) => !currentVisible);
+    };
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
+  }, []);
+  if (!figmaImageStore) return null;
+  if (!isWidgetVisible) return null;
+  const updateSelectedImageOpacity = (value) => {
+    if (!selectedImage) return;
+    const opacityPercent = Math.max(
+      0,
+      Math.min(100, Math.round(Number(value) / 10) * 10)
+    );
+    if (Number.isFinite(opacityPercent)) {
+      setImageOverlayOpacity(selectedImage.id, opacityPercent / 100);
+    }
+  };
+  return /* @__PURE__ */ jsxs24(
+    "aside",
+    {
+      "aria-label": "Figma overlay",
+      className: `df-review-figma-dev-widget${isPanelOpen ? " is-open" : ""}${isAnyImageOverlayVisible ? " is-active" : ""}`,
+      children: [
+        isPanelOpen && /* @__PURE__ */ jsxs24("div", { className: "df-review-figma-dev-panel", children: [
+          /* @__PURE__ */ jsxs24("div", { className: "df-review-figma-dev-panel-header", children: [
+            /* @__PURE__ */ jsx27("strong", { children: "Figma" }),
+            /* @__PURE__ */ jsx27("span", { children: matchedViewportMatch ? `${matchedViewportMatch.label} \xB7 ${matchedViewportMatch.rangeLabel}` : `${viewport.width}px` })
+          ] }),
+          selectedImage && /* @__PURE__ */ jsxs24("div", { className: "df-review-figma-dev-selected-controls", children: [
+            /* @__PURE__ */ jsxs24("label", { className: "df-review-figma-dev-opacity-control", children: [
+              /* @__PURE__ */ jsx27("span", { children: "Opacity" }),
+              /* @__PURE__ */ jsx27(
+                "input",
+                {
+                  "aria-label": `${selectedImageLabel} overlay opacity`,
+                  max: "100",
+                  min: "0",
+                  step: "10",
+                  type: "range",
+                  value: selectedOpacityPercent,
+                  onChange: (event) => updateSelectedImageOpacity(event.currentTarget.value),
+                  onInput: (event) => updateSelectedImageOpacity(event.currentTarget.value)
+                }
+              ),
+              /* @__PURE__ */ jsx27("strong", { children: selectedOpacityPercent })
+            ] }),
+            /* @__PURE__ */ jsxs24("label", { className: "df-review-figma-dev-y-control", children: [
+              /* @__PURE__ */ jsx27(MoveVertical, { "aria-hidden": "true" }),
+              /* @__PURE__ */ jsx27(
+                "input",
+                {
+                  "aria-label": `${selectedImageLabel} overlay Y offset`,
+                  inputMode: "numeric",
+                  step: "1",
+                  type: "number",
+                  value: selectedOffsetYDraft,
+                  onBlur: () => {
+                    setOffsetYDraftByImageId((currentDrafts) => {
+                      const nextDrafts = { ...currentDrafts };
+                      delete nextDrafts[selectedImage.id];
+                      return nextDrafts;
+                    });
+                  },
+                  onChange: (event) => {
+                    const value = event.currentTarget.value;
+                    const offsetY = Number(value);
+                    setOffsetYDraftByImageId((currentDrafts) => ({
+                      ...currentDrafts,
+                      [selectedImage.id]: value
+                    }));
+                    if (value.trim() !== "" && Number.isFinite(offsetY)) {
+                      setImageOverlayOffsetY(selectedImage.id, offsetY);
+                    }
+                  }
+                }
+              )
+            ] })
+          ] }),
+          error && /* @__PURE__ */ jsx27("p", { className: "df-review-figma-dev-status", children: error }),
+          !matchedViewport ? /* @__PURE__ */ jsxs24("p", { className: "df-review-figma-dev-empty", children: [
+            "No Figma layers for this viewport.",
+            viewportBoundaries ? ` Mobile ${viewportBoundaries.mobileRangeLabel} / Full width ${viewportBoundaries.fullWidthRangeLabel}` : ""
+          ] }) : isLoading ? /* @__PURE__ */ jsx27("p", { className: "df-review-figma-dev-status", children: "Loading..." }) : images.length === 0 ? /* @__PURE__ */ jsx27("p", { className: "df-review-figma-dev-empty", children: "No Figma layers for this viewport." }) : /* @__PURE__ */ jsx27("div", { className: "df-review-figma-dev-list", children: images.map((image, index) => {
+            const imageLabel = getFigmaImageLabel(image, index);
+            const overlayState = imageOverlayStates[image.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE;
+            return /* @__PURE__ */ jsxs24(
+              "article",
+              {
+                className: `df-review-figma-dev-row${image.id === selectedImageId ? " is-active" : ""}`,
+                role: "button",
+                tabIndex: 0,
+                onClick: () => setSelectedImageId(image.id),
+                onKeyDown: (event) => {
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  setSelectedImageId(image.id);
+                },
+                children: [
+                  /* @__PURE__ */ jsx27(
+                    FigmaImageLayerStateButtons,
+                    {
+                      imageLabel,
+                      overlayState,
+                      title: getFigmaImageLayerStatusLabel(overlayState),
+                      onSelect: () => setSelectedImageId(image.id),
+                      onToggleLocked: () => toggleImageOverlayLocked(image.id),
+                      onToggleMode: () => toggleImageOverlayMode(image.id),
+                      onToggleVisible: () => toggleImageOverlayVisible(image.id)
+                    }
+                  ),
+                  /* @__PURE__ */ jsxs24("span", { className: "df-review-figma-dev-row-main", children: [
+                    /* @__PURE__ */ jsx27("strong", { children: imageLabel }),
+                    /* @__PURE__ */ jsx27("small", { children: formatFigmaImageDate(image.updatedAt) })
+                  ] })
+                ]
+              },
+              image.id
+            );
+          }) })
+        ] }),
+        /* @__PURE__ */ jsx27("div", { className: "df-review-figma-dev-bar", children: /* @__PURE__ */ jsxs24(
+          "button",
+          {
+            "aria-expanded": isPanelOpen,
+            "aria-label": isPanelOpen ? "Hide Figma layer controls" : "Show Figma layer controls",
+            className: "df-review-figma-dev-button is-figma",
+            title: isPanelOpen ? "Hide layers" : "Show layers",
+            type: "button",
+            onClick: () => setIsPanelOpen((isOpen) => !isOpen),
+            children: [
+              /* @__PURE__ */ jsx27(FigmaMarkIcon, {}),
+              /* @__PURE__ */ jsx27("span", { className: "df-review-figma-dev-button-count", children: images.length })
+            ]
+          }
+        ) })
+      ]
+    }
+  );
+};
+function useCurrentPageUrl(pageUrl, reviewPathPrefix) {
+  const [currentPageUrl, setCurrentPageUrl] = useState14(
+    () => getFigmaDevOverlayPageUrl(pageUrl, reviewPathPrefix)
+  );
+  useEffect14(() => {
+    const updatePageUrl = () => {
+      setCurrentPageUrl(getFigmaDevOverlayPageUrl(pageUrl, reviewPathPrefix));
+    };
+    window.addEventListener("popstate", updatePageUrl);
+    window.addEventListener("hashchange", updatePageUrl);
+    return () => {
+      window.removeEventListener("popstate", updatePageUrl);
+      window.removeEventListener("hashchange", updatePageUrl);
+    };
+  }, [pageUrl, reviewPathPrefix]);
+  return currentPageUrl;
+}
+function isEditableFigmaDevOverlayEventTarget(event) {
+  const path = event.composedPath?.() ?? [];
+  const element = path[0] ?? event.target;
+  if (!element || typeof element.tagName !== "string") return false;
+  const tagName = element.tagName;
+  return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT" || element.isContentEditable === true;
+}
+function useCurrentViewport() {
+  const [viewport, setViewport] = useState14(getCurrentViewportSize);
+  useEffect14(() => {
+    const updateViewport = () => setViewport(getCurrentViewportSize());
+    window.addEventListener("resize", updateViewport);
+    window.addEventListener("orientationchange", updateViewport);
+    window.visualViewport?.addEventListener("resize", updateViewport);
+    return () => {
+      window.removeEventListener("resize", updateViewport);
+      window.removeEventListener("orientationchange", updateViewport);
+      window.visualViewport?.removeEventListener("resize", updateViewport);
+    };
+  }, []);
+  return viewport;
+}
+function getCurrentViewportSize() {
+  return {
+    height: Math.round(window.innerHeight),
+    width: Math.round(window.innerWidth)
+  };
+}
+function getFigmaDevOverlayPageUrl(pageUrl, reviewPathPrefix) {
+  if (typeof pageUrl === "function") return pageUrl();
+  if (typeof pageUrl === "string") return pageUrl;
+  return getTargetRouteKey(
+    normalizeTarget(
+      `${window.location.pathname}${window.location.search}${window.location.hash}`,
+      reviewPathPrefix
+    ),
+    reviewPathPrefix
+  );
+}
+function findBoundaryFigmaDevViewportMatch(presets, width) {
+  const boundaries = getFigmaDevViewportBoundaries(presets);
+  if (!boundaries) return null;
+  if (width <= boundaries.minPreset.width) {
+    return {
+      label: "Mobile",
+      preset: boundaries.minPreset,
+      rangeLabel: boundaries.mobileRangeLabel
+    };
+  }
+  if (width >= boundaries.maxPreset.width) {
+    return {
+      label: "Full width",
+      preset: boundaries.maxPreset,
+      rangeLabel: boundaries.fullWidthRangeLabel
+    };
+  }
+  return null;
+}
+function getFigmaDevViewportBoundaries(presets) {
+  if (presets.length === 0) return null;
+  const sortedPresets = [...presets].sort((a, b) => a.width - b.width);
+  const minPreset = sortedPresets[0];
+  const maxPreset = sortedPresets[sortedPresets.length - 1];
+  return {
+    fullWidthRangeLabel: `>= ${maxPreset.width}px`,
+    maxPreset,
+    minPreset,
+    mobileRangeLabel: `<= ${minPreset.width}px`
+  };
+}
+var figmaDevOverlayStyle = `
+  :host {
+    all: initial;
+    color-scheme: dark;
+    font-family:
+      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", sans-serif;
+    --df-review-figma-dev-bg: rgba(15, 18, 24, 0.94);
+    --df-review-figma-dev-panel: rgba(19, 24, 33, 0.96);
+    --df-review-figma-dev-control: #202938;
+    --df-review-figma-dev-control-hover: #273345;
+    --df-review-figma-dev-border: rgba(226, 233, 245, 0.16);
+    --df-review-figma-dev-border-soft: rgba(226, 233, 245, 0.09);
+    --df-review-figma-dev-text: #edf3fb;
+    --df-review-figma-dev-muted: rgba(237, 243, 251, 0.58);
+    --df-review-figma-dev-subtle: rgba(237, 243, 251, 0.42);
+    --df-review-figma-dev-accent: #7cc7ff;
+    --df-review-figma-dev-accent-soft: rgba(124, 199, 255, 0.16);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  .df-review-figma-dev-widget {
+    position: fixed;
+    right: calc(16px + env(safe-area-inset-right));
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 2147483200;
+    display: grid;
+    justify-items: end;
+    gap: 8px;
+    color: var(--df-review-figma-dev-text);
+    font-size: 13px;
+    line-height: 1.25;
+    pointer-events: none;
+  }
+
+  .df-review-figma-dev-panel,
+  .df-review-figma-dev-bar {
+    pointer-events: auto;
+  }
+
+  .df-review-figma-dev-panel {
+    display: grid;
+    gap: 8px;
+    width: min(360px, calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    max-height: min(460px, calc(100vh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    overflow: hidden;
+    border: 1px solid var(--df-review-figma-dev-border);
+    border-radius: 8px;
+    padding: 10px;
+    background: var(--df-review-figma-dev-panel);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .df-review-figma-dev-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .df-review-figma-dev-panel-header strong {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .df-review-figma-dev-panel-header span,
+  .df-review-figma-dev-status,
+  .df-review-figma-dev-empty {
+    color: var(--df-review-figma-dev-muted);
+    font-size: 12px;
+  }
+
+  .df-review-figma-dev-selected-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 84px;
+    gap: 8px;
+  }
+
+  .df-review-figma-dev-opacity-control,
+  .df-review-figma-dev-y-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    height: 36px;
+    border: 1px solid var(--df-review-figma-dev-border);
+    border-radius: 8px;
+    padding: 0 10px;
+    background: var(--df-review-figma-dev-control);
+  }
+
+  .df-review-figma-dev-opacity-control span {
+    color: var(--df-review-figma-dev-muted);
+    font-size: 12px;
+  }
+
+  .df-review-figma-dev-opacity-control strong {
+    min-width: 24px;
+    text-align: right;
+    font-size: 13px;
+  }
+
+  .df-review-figma-dev-opacity-control input[type="range"] {
+    flex: 1;
+    min-width: 0;
+    height: 24px;
+    accent-color: var(--df-review-figma-dev-accent);
+  }
+
+  .df-review-figma-dev-y-control svg {
+    width: 15px;
+    height: 15px;
+    color: var(--df-review-figma-dev-muted);
+  }
+
+  .df-review-figma-dev-y-control input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    color: var(--df-review-figma-dev-text);
+    background: transparent;
+    font: inherit;
+    outline: none;
+  }
+
+  .df-review-figma-dev-status,
+  .df-review-figma-dev-empty {
+    margin: 0;
+    border: 1px dashed var(--df-review-figma-dev-border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .df-review-figma-dev-list {
+    display: grid;
+    gap: 6px;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .df-review-figma-dev-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--df-review-figma-dev-border-soft);
+    border-radius: 8px;
+    padding: 12px 10px;
+    color: var(--df-review-figma-dev-text);
+    background: rgba(237, 243, 251, 0.035);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .df-review-figma-dev-row:hover,
+  .df-review-figma-dev-row:focus-visible {
+    border-color: var(--df-review-figma-dev-border);
+    outline: none;
+  }
+
+  .df-review-figma-dev-row.is-active {
+    border-color: var(--df-review-figma-dev-accent);
+    box-shadow: inset 0 0 0 1px var(--df-review-figma-dev-accent-soft);
+  }
+
+  .df-review-figma-dev-row-main {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .df-review-figma-dev-row-main strong {
+    color: var(--df-review-figma-dev-text);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .df-review-figma-dev-row-main small {
+    color: var(--df-review-figma-dev-muted);
+    font-size: 12px;
+  }
+
+  .df-review-figma-image-layer-state {
+    display: grid;
+    grid-template-columns: repeat(3, 22px);
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    height: 24px;
+  }
+
+  .df-review-figma-image-state-button {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    color: var(--df-review-figma-dev-subtle);
+    background: transparent;
+    box-shadow: none;
+    opacity: 0.68;
+    cursor: pointer;
+  }
+
+  .df-review-figma-image-state-button:hover,
+  .df-review-figma-image-state-button:focus-visible {
+    color: var(--df-review-figma-dev-text);
+    opacity: 1;
+    outline: none;
+  }
+
+  .df-review-figma-image-state-button.is-active {
+    color: var(--df-review-figma-dev-accent);
+    opacity: 1;
+  }
+
+  .df-review-figma-image-state-button svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .df-review-figma-dev-bar {
+    display: inline-flex;
+    align-items: center;
+    pointer-events: auto;
+  }
+
+  .df-review-figma-dev-button {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--df-review-figma-dev-border);
+    border-radius: 8px;
+    padding: 0;
+    color: var(--df-review-figma-dev-muted);
+    background: var(--df-review-figma-dev-control);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
+    cursor: pointer;
+  }
+
+  .df-review-figma-dev-button:hover,
+  .df-review-figma-dev-button:focus-visible,
+  .df-review-figma-dev-widget.is-active .df-review-figma-dev-button.is-figma {
+    color: var(--df-review-figma-dev-accent);
+    border-color: rgba(124, 199, 255, 0.5);
+    outline: none;
+  }
+
+  .df-review-figma-dev-button:disabled {
+    color: var(--df-review-figma-dev-subtle);
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .df-review-figma-dev-button svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .df-review-figma-dev-button .df-review-figma-mark-icon {
+    width: 17px;
+    height: 17px;
+    fill: currentColor;
+  }
+
+  .df-review-figma-dev-button.is-figma {
+    width: 38px;
+    height: 38px;
+  }
+
+  .df-review-figma-dev-button-count {
+    position: absolute;
+    right: -3px;
+    top: -4px;
+    display: inline-grid;
+    place-items: center;
+    min-width: 15px;
+    height: 15px;
+    border: 1px solid rgba(15, 18, 24, 0.86);
+    border-radius: 4px;
+    padding: 0 3px;
+    color: currentColor;
+    background: rgba(15, 18, 24, 0.92);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .df-review-figma-dev-button.is-figma:disabled .df-review-figma-dev-button-count {
+    color: var(--df-review-figma-dev-subtle);
+  }
+
+  @media (max-width: 420px) {
+    .df-review-figma-dev-widget {
+      right: calc(10px + env(safe-area-inset-right));
+      bottom: calc(10px + env(safe-area-inset-bottom));
+    }
+
+    .df-review-figma-dev-selected-controls {
+      grid-template-columns: 1fr;
+    }
+  }
+`;
 
 // src/react-shell/pages.ts
 var escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -12123,7 +16117,7 @@ var createSupabasePresenceAdapter = ({
 });
 
 // src/react-shell.tsx
-import { jsx as jsx22 } from "react/jsx-runtime";
+import { jsx as jsx28 } from "react/jsx-runtime";
 var mountReviewShell = (options) => {
   if (typeof document === "undefined" || !document.head) return;
   const { rootId = "root", ...shellProps } = options;
@@ -12133,8 +16127,8 @@ var mountReviewShell = (options) => {
   root.style.width = "100%";
   root.style.height = "100%";
   root.style.margin = "0";
-  createRoot(root).render(
-    /* @__PURE__ */ jsx22(React.StrictMode, { children: /* @__PURE__ */ jsx22(ReviewShell, { ...shellProps }) })
+  createRoot2(root).render(
+    /* @__PURE__ */ jsx28(React2.StrictMode, { children: /* @__PURE__ */ jsx28(ReviewShell, { ...shellProps }) })
   );
 };
 export {
@@ -12144,6 +16138,7 @@ export {
   createLocalPresenceAdapter,
   createReviewPagesFromGlob,
   createSupabasePresenceAdapter,
+  mountFigmaDevOverlay,
   mountReviewShell
 };
 /*! Bundled license information:
@@ -12161,21 +16156,26 @@ lucide-react/dist/esm/icons/bot.mjs:
 lucide-react/dist/esm/icons/chevron-down.mjs:
 lucide-react/dist/esm/icons/circle-question-mark.mjs:
 lucide-react/dist/esm/icons/code-xml.mjs:
+lucide-react/dist/esm/icons/contrast.mjs:
 lucide-react/dist/esm/icons/copy.mjs:
 lucide-react/dist/esm/icons/database.mjs:
 lucide-react/dist/esm/icons/external-link.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
 lucide-react/dist/esm/icons/eye.mjs:
-lucide-react/dist/esm/icons/grid-2x2-check.mjs:
 lucide-react/dist/esm/icons/image.mjs:
+lucide-react/dist/esm/icons/images.mjs:
 lucide-react/dist/esm/icons/layout-grid.mjs:
 lucide-react/dist/esm/icons/link-2.mjs:
 lucide-react/dist/esm/icons/list-filter.mjs:
+lucide-react/dist/esm/icons/lock-open.mjs:
+lucide-react/dist/esm/icons/lock.mjs:
 lucide-react/dist/esm/icons/map.mjs:
 lucide-react/dist/esm/icons/maximize-2.mjs:
 lucide-react/dist/esm/icons/monitor.mjs:
 lucide-react/dist/esm/icons/moon.mjs:
+lucide-react/dist/esm/icons/move-vertical.mjs:
 lucide-react/dist/esm/icons/pencil.mjs:
+lucide-react/dist/esm/icons/plus.mjs:
 lucide-react/dist/esm/icons/rectangle-horizontal.mjs:
 lucide-react/dist/esm/icons/refresh-cw.mjs:
 lucide-react/dist/esm/icons/ruler.mjs:
@@ -12188,6 +16188,7 @@ lucide-react/dist/esm/icons/square-dashed.mjs:
 lucide-react/dist/esm/icons/square-mouse-pointer.mjs:
 lucide-react/dist/esm/icons/sticky-note.mjs:
 lucide-react/dist/esm/icons/sun.mjs:
+lucide-react/dist/esm/icons/trash-2.mjs:
 lucide-react/dist/esm/icons/type.mjs:
 lucide-react/dist/esm/icons/upload.mjs:
 lucide-react/dist/esm/icons/x.mjs:

@@ -7,7 +7,7 @@ import {
 } from 'react';
 import {
   Bot as BotIcon,
-  Grid2x2Check as ComponentTreeIcon,
+  Images as ComponentTreeIcon,
   SquareCheckBig as QaListIcon,
   Settings as SettingsIcon,
 } from 'lucide-react';
@@ -25,10 +25,14 @@ import type {
 } from '../types';
 import { resolveReviewSourceOptions } from '../env';
 import {
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
+} from '../../figma/image.types';
+import {
   DEFAULT_INITIAL_REVIEW_PROMPT,
 } from '../constants';
 import {
   DEFAULT_REVIEW_PATH_PREFIX,
+  getInitialItemId,
   getItemFrameTarget,
   getItemTarget,
   getShellUrlForItem,
@@ -50,10 +54,12 @@ import {
 } from '../shell.modals';
 import { buildReviewItemPrompt } from '../prompt/prompt';
 import {
-  getFigmaFrameUrl,
+  getReviewFigmaImageStore,
   getTargetFigmaFrameConfig,
   type ReviewFigmaFrameConfig,
 } from '../figma';
+import { FigmaRailIcon } from '../figma/figma-mark-icon';
+import { FigmaImagesPanel } from '../figma/images.panel';
 import { QaItemEditModal } from '../qa/item.edit.modal';
 import { ReviewQaPanel } from '../qa/panel';
 import { PresenceOverlay } from '../presence/overlay';
@@ -70,6 +76,7 @@ import {
   type SectionOutlineEntry,
 } from '../section.outline';
 import { SectionOutlinePanel } from './section.outline.panel';
+import { createSourceShortcutStyle } from './source.shortcut.style';
 import {
   SourceInspectorOverlay,
   type SourceInspectorCandidate,
@@ -77,16 +84,19 @@ import {
   type SourceInspectorState,
 } from './source.inspector.overlay';
 import { ReviewTargetFrame } from '../target/frame';
+import { createReviewTargetFigmaImageOverlays } from '../target/figma.image.overlay';
 import { setTargetFigmaOverlayLocked } from '../target/target';
 import { ReviewTopbar } from '../topbar';
 import { useReviewController } from '../hooks/use.review.controller';
 import { useReviewPresence } from '../hooks/use.review.presence';
 import { useReviewRuler } from '../hooks/use.review.ruler';
+import { useReviewFigmaImages } from '../hooks/use.review.figma.images';
 import { useReviewSettings } from '../hooks/use.review.settings';
 import { useReviewShellData } from '../hooks/use.review.shell.data';
 import { useReviewShellHotkeys } from '../hooks/use.review.shell.hotkeys';
 import { useReviewShellState } from '../hooks/use.review.shell.state';
 import {
+  getInitialReviewSidePanel,
   getStoredReviewSidePanel,
   getStoredSourceTreeFilter,
   getStoredSourceTreeMetaVisibility,
@@ -105,7 +115,8 @@ import {
   refreshSitemapReviewItems,
   refreshReviewData as refreshReviewDataAction,
   submitReviewItem,
-  updateReviewItemComment,
+  updateReviewItemAssignee,
+  updateReviewItemDetails,
   updateReviewItemStatus,
 } from './shell.actions';
 import {
@@ -139,7 +150,8 @@ export const ReviewShell = ({
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
   sourceRoot,
   sourceInspector,
-  presence
+  presence,
+  figmaImages,
 }: ReviewShellProps) => {
   const {
     activeAdapterEntry,
@@ -249,19 +261,38 @@ export const ReviewShell = ({
     [resolvedSourceInspector]
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
-  const [sidePanel, setSidePanel] = useState<ReviewSidePanel>(() =>
-    isSourceInspectorEnabled ? getStoredReviewSidePanel() : 'qa'
+  const [sidePanel, setSidePanel] = useState<ReviewSidePanel>(() => {
+    const initialSidePanel = getInitialReviewSidePanel();
+    if (initialSidePanel) return initialSidePanel;
+    if (getInitialItemId()) return 'qa';
+    return isSourceInspectorEnabled ? getStoredReviewSidePanel() : 'qa';
+  });
+  const figmaImageStore = useMemo(
+    () => getReviewFigmaImageStore(figmaImages),
+    [figmaImages]
   );
+  const isFigmaImageManagementEnabled = Boolean(figmaImageStore);
+  const figmaImageFormat =
+    figmaImages?.imageFormat ?? DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT;
   const isSourceTreeHoverOutlineEnabled =
     resolvedSourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === 'qa';
   const isSourceTreePanelVisible =
     isSourceInspectorEnabled && isListVisible && sidePanel === 'source';
+  const isFigmaImagesPanelVisible =
+    isFigmaImageManagementEnabled &&
+    isListVisible &&
+    sidePanel === 'figma-images';
 
   useEffect(() => {
     if (isSourceInspectorEnabled || sidePanel !== 'source') return;
     setSidePanel('qa');
   }, [isSourceInspectorEnabled, sidePanel]);
+
+  useEffect(() => {
+    if (isFigmaImageManagementEnabled || sidePanel !== 'figma-images') return;
+    setSidePanel('qa');
+  }, [isFigmaImageManagementEnabled, sidePanel]);
 
   useEffect(() => {
     writeStoredReviewSidePanel(sidePanel);
@@ -316,6 +347,7 @@ export const ReviewShell = ({
     getItemPresetScope,
     hiddenOverlayItemIdList,
     hiddenOverlayItemIds,
+    items,
     pageQaCounts,
     pageTargets,
     presetScopeCounts,
@@ -342,29 +374,77 @@ export const ReviewShell = ({
     target,
     viewportPresets,
   });
+  const itemRefreshIdRef = useRef(0);
+  const [isItemsLoading, setIsItemsLoading] = useState(false);
+  const [mutatingItemIds, setMutatingItemIds] = useState<Set<string>>(
+    () => new Set()
+  );
+  const {
+    addImage: addFigmaImage,
+    deleteImage: deleteFigmaImage,
+    error: figmaImageError,
+    imageOverlayStates: figmaImageOverlayStates,
+    images: figmaImageList,
+    isAnyImageOverlayVisible: isAnyFigmaImageOverlayVisible,
+    isLoading: isFigmaImageLoading,
+    isMutating: isFigmaImageMutating,
+    refreshImages: refreshFigmaImages,
+    reorderImages: reorderFigmaImages,
+    selectedImageId: selectedFigmaImageId,
+    setImageOverlayOffsetY: setFigmaImageOverlayOffsetY,
+    setImageOverlayOpacity: setFigmaImageOverlayOpacity,
+    setSelectedImageId: setSelectedFigmaImageId,
+    target: figmaImageTarget,
+    toggleAllImageOverlayVisible: toggleAllFigmaImageOverlayVisible,
+    toggleImageOverlayLocked: toggleFigmaImageOverlayLocked,
+    toggleImageOverlayMode: toggleFigmaImageOverlayMode,
+    toggleImageOverlayVisible: toggleFigmaImageOverlayVisible,
+    updateImage: updateFigmaImage,
+  } = useReviewFigmaImages({
+    imageFormat: figmaImageFormat,
+    pageUrl: activeRoute,
+    projectId,
+    store: figmaImageStore,
+    viewport: size,
+  });
   const [targetFigmaState, setTargetFigmaState] =
     useState<{ targetSrc: string; config: ReviewFigmaFrameConfig } | null>(null);
   const targetFigmaConfig =
     targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
-  const figmaFrameUrl = useMemo(
-    () => getFigmaFrameUrl(targetFigmaConfig, size),
-    [targetFigmaConfig, size]
-  );
   const isFigmaOverlayAvailable =
-    isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
+    !isFigmaImageManagementEnabled &&
+    isViewportFigmaOverlayAvailable &&
+    Boolean(targetFigmaConfig);
   const [editingItem, setEditingItem] = useState<ReviewItem | null>(null);
   const initialPromptText = initialPrompt.trim();
   const refreshItems = useCallback(
-    () =>
-      refreshReviewItems({
-        activeRoute,
-        adapter,
-        isRemoteSource,
-        pageId: activeAdapterEntry.pageId,
-        projectId,
-        onItemsChange: setItems,
-      }),
-    [activeAdapterEntry.pageId, activeRoute, adapter, isRemoteSource, projectId]
+    async () => {
+      const requestId = ++itemRefreshIdRef.current;
+      setIsItemsLoading(true);
+
+      try {
+        return await refreshReviewItems({
+          activeRoute,
+          adapter,
+          isRemoteSource,
+          pageId: activeAdapterEntry.pageId,
+          projectId,
+          onItemsChange: setItems,
+        });
+      } finally {
+        if (itemRefreshIdRef.current === requestId) {
+          setIsItemsLoading(false);
+        }
+      }
+    },
+    [
+      activeAdapterEntry.pageId,
+      activeRoute,
+      adapter,
+      isRemoteSource,
+      projectId,
+      setItems,
+    ]
   );
 
   const refreshSitemapItems = useCallback(
@@ -482,6 +562,9 @@ export const ReviewShell = ({
     toggleTargetOverlay,
   } = useReviewController({
     adapter,
+    fields: activeAdapterEntry.fields,
+    assigneeTitle: activeAdapterEntry.assigneeTitle,
+    assigneeOptions: activeAdapterEntry.assigneeOptions,
     cleanupTargetRef,
     controllerRef,
     frameScrollRef,
@@ -517,6 +600,19 @@ export const ReviewShell = ({
     onTargetChange: setTarget,
     onTargetOverlayStateChange: setTargetOverlayState,
   });
+
+  useEffect(() => {
+    const itemId = pendingInitialItemIdRef.current;
+    if (!itemId) return;
+
+    const item = items.find(
+      (candidate) =>
+        candidate.id === itemId || candidate.externalIssueId === itemId
+    );
+    if (!item) return;
+
+    restoreReviewItem(item);
+  }, [items, pendingInitialItemIdRef, restoreReviewItem]);
 
   const refreshReviewData = useCallback(() => {
     return refreshReviewDataAction({
@@ -974,6 +1070,23 @@ export const ReviewShell = ({
     sidePanel,
   ]);
 
+  const toggleFigmaImagesPanel = useCallback(() => {
+    if (!isFigmaImageManagementEnabled) return;
+
+    if (sidePanel === 'figma-images' && isListVisible) {
+      setIsListVisible(false);
+      return;
+    }
+
+    setSidePanel('figma-images');
+    setIsListVisible(true);
+  }, [
+    isFigmaImageManagementEnabled,
+    isListVisible,
+    setIsListVisible,
+    sidePanel,
+  ]);
+
   const toggleSectionOutlineEntry = useCallback((entryId: string) => {
     setCollapsedSectionOutlineIds((current) => {
       const next = new Set(current);
@@ -1105,72 +1218,10 @@ export const ReviewShell = ({
     const fontOverlayAttribute = 'data-dfwr-source-fonts';
     const style = frameDocument.createElement('style');
     style.dataset.dfwrSourceOpenShortcut = 'true';
-    style.textContent = `
-      html[${optionAttribute}="true"],
-      html[${optionAttribute}="true"] * {
-        cursor: crosshair !important;
-      }
-
-      html[${optionAttribute}="true"] .helper-figma-root,
-      html[${optionAttribute}="true"] .helper-figma-root *,
-      html[${optionAttribute}="true"] .helper-figma-loading-backdrop,
-      html[${optionAttribute}="true"] .helper-figma-loading-backdrop * {
-        pointer-events: none !important;
-      }
-
-      html[${optionAttribute}="true"] body::before {
-        position: fixed !important;
-        z-index: 2147483647 !important;
-        top: 10px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        display: block !important;
-        border: 1px solid rgba(124, 199, 255, 0.72) !important;
-        border-radius: 999px !important;
-        padding: 6px 10px !important;
-        color: #ffffff !important;
-        background: rgba(15, 23, 42, 0.86) !important;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24) !important;
-        content: "Source select" !important;
-        font: 500 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-        pointer-events: none !important;
-      }
-
-      [${fontOverlayAttribute}] {
-        position: fixed !important;
-        z-index: 2147483647 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        width: max-content !important;
-        max-width: calc(100vw - 8px) !important;
-        border: 1px solid rgba(124, 199, 255, 0.72) !important;
-        border-radius: 6px !important;
-        padding: 4px 6px !important;
-        color: #ffffff !important;
-        background: rgba(15, 23, 42, 0.9) !important;
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28) !important;
-        font: 500 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
-        overflow-wrap: anywhere !important;
-        pointer-events: none !important;
-        white-space: normal !important;
-      }
-
-      [${fontOverlayAttribute}] > span {
-        display: grid !important;
-        grid-template-columns: auto minmax(0, 1fr) !important;
-        justify-content: space-between !important;
-        gap: 10px !important;
-      }
-
-      [${fontOverlayAttribute}] > span > span:last-child {
-        min-width: 0 !important;
-        text-align: right !important;
-      }
-
-      [${fontOverlayAttribute}][hidden] {
-        display: none !important;
-      }
-    `;
+    style.textContent = createSourceShortcutStyle(
+      optionAttribute,
+      fontOverlayAttribute,
+    );
 
     frameRoot.append(style);
 
@@ -1427,6 +1478,27 @@ export const ReviewShell = ({
     updateShellUrl(targetRef.current, sizeRef.current, source);
   }, [clearSelectedItem, sizeRef, source, targetRef]);
 
+  const withItemMutation = async <T,>(
+    itemId: string,
+    action: () => Promise<T>
+  ) => {
+    setMutatingItemIds((currentIds) => {
+      const nextIds = new Set(currentIds);
+      nextIds.add(itemId);
+      return nextIds;
+    });
+
+    try {
+      return await action();
+    } finally {
+      setMutatingItemIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(itemId);
+        return nextIds;
+      });
+    }
+  };
+
   const changeReviewSource = (nextSource: ReviewSource) => {
     if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
 
@@ -1441,35 +1513,60 @@ export const ReviewShell = ({
     item: ReviewItem,
     nextStatus: ReviewItemStatus
   ) =>
-    updateReviewItemStatus({
-      activeAdapterEntry,
-      item,
-      nextStatus,
-      onRefreshReviewData: refreshReviewData,
-      onToast: showToast,
-    });
+    withItemMutation(item.id, () =>
+      updateReviewItemStatus({
+        activeAdapterEntry,
+        item,
+        nextStatus,
+        onRefreshReviewData: refreshReviewData,
+        onToast: showToast,
+      })
+    );
 
-  const saveItemComment = async (item: ReviewItem, comment: string) => {
-    await updateReviewItemComment({
-      activeAdapterEntry,
-      item,
-      comment,
-      onRefreshReviewData: refreshReviewData,
-      onToast: showToast,
-    });
+  const changeItemAssignee = async (
+    item: ReviewItem,
+    assigneeId: string | null
+  ) => {
+    await withItemMutation(item.id, () =>
+      updateReviewItemAssignee({
+        activeAdapterEntry,
+        item,
+        assigneeId,
+        onRefreshReviewData: refreshReviewData,
+        onToast: showToast,
+      })
+    );
+  };
+
+  const saveItemDetails = async (
+    item: ReviewItem,
+    patch: Pick<ReviewItem, 'comment'> & Partial<Pick<ReviewItem, 'title'>>
+  ) => {
+    await withItemMutation(item.id, () =>
+      updateReviewItemDetails({
+        activeAdapterEntry,
+        fields: activeAdapterEntry.fields,
+        item,
+        ...patch,
+        onRefreshReviewData: refreshReviewData,
+        onToast: showToast,
+      })
+    );
     setEditingItem(null);
   };
 
   const submitItem = (numberedItem: NumberedReviewItem) =>
-    submitReviewItem({
-      localAdapterEntry,
-      numberedItem,
-      remoteAdapterEntry,
-      selectedItemIdRef,
-      onClearSelectedItem: clearSelectedItem,
-      onRefreshReviewData: refreshReviewData,
-      onToast: showToast,
-    });
+    withItemMutation(numberedItem.item.id, () =>
+      submitReviewItem({
+        localAdapterEntry,
+        numberedItem,
+        remoteAdapterEntry,
+        selectedItemIdRef,
+        onClearSelectedItem: clearSelectedItem,
+        onRefreshReviewData: refreshReviewData,
+        onToast: showToast,
+      })
+    );
 
   const copyPrompt = (
     value: string,
@@ -1512,19 +1609,36 @@ export const ReviewShell = ({
     );
   };
 
+  const copyRemoteIssuePath = (item: ReviewItem) => {
+    const path = getUrlPathWithoutOrigin(item.externalIssueUrl);
+    if (!path) {
+      showToast('QA link not found');
+      return Promise.resolve();
+    }
+
+    return copyPrompt(path, `remote-link:${item.id}`, 'QA path copied');
+  };
+
   const removeItem = (item: ReviewItem) =>
-    removeReviewItem({
-      activeAdapterEntry,
-      isRemoteSource,
-      item,
-      selectedItemIdRef,
-      sizeRef,
-      source,
-      targetRef,
-      onClearSelectedItem: clearSelectedItem,
-      onRefreshReviewData: refreshReviewData,
-      onToast: showToast,
-    });
+    withItemMutation(item.id, () =>
+      removeReviewItem({
+        activeAdapterEntry,
+        isRemoteSource,
+        item,
+        selectedItemIdRef,
+        sizeRef,
+        source,
+        targetRef,
+        onClearSelectedItem: clearSelectedItem,
+        onRefreshReviewData: refreshReviewData,
+        onToast: showToast,
+      })
+    );
+
+  const figmaImageOverlays = createReviewTargetFigmaImageOverlays({
+    imageOverlayStates: figmaImageOverlayStates,
+    images: figmaImageList,
+  });
 
   return (
     <div
@@ -1541,12 +1655,31 @@ export const ReviewShell = ({
         isRulerAvailable={isRulerAvailable}
         isRulerVisible={isRulerVisible}
         targetOverlayState={targetOverlayState}
-        isFigmaOverlayAvailable={isFigmaOverlayAvailable}
+        figmaOverlayUnavailableMessage={
+          isFigmaImageManagementEnabled
+            ? 'No Figma images on this viewport.'
+            : undefined
+        }
+        isFigmaOverlayActive={
+          isFigmaImageManagementEnabled
+            ? isAnyFigmaImageOverlayVisible
+            : targetOverlayState.figma
+        }
+        isFigmaOverlayAvailable={
+          isFigmaImageManagementEnabled
+            ? figmaImageList.length > 0
+            : isFigmaOverlayAvailable
+        }
         onDraftTargetChange={setDraftTarget}
         onApplyTarget={applyTarget}
         onOpenSitemap={() => setIsSitemapOpen(true)}
         onCopyCurrentUrl={() => void copyCurrentUrl()}
         onSizeChange={setSize}
+        onToggleFigmaOverlay={
+          isFigmaImageManagementEnabled
+            ? toggleAllFigmaImageOverlayVisible
+            : () => toggleTargetOverlay('figma')
+        }
         onToggleRuler={toggleRuler}
         onToggleTargetOverlay={toggleTargetOverlay}
       />
@@ -1602,9 +1735,10 @@ export const ReviewShell = ({
 
       {editingItem && (
         <QaItemEditModal
+          fields={activeAdapterEntry.fields}
           item={editingItem}
           onClose={() => setEditingItem(null)}
-          onSave={saveItemComment}
+          onSave={saveItemDetails}
         />
       )}
 
@@ -1647,6 +1781,26 @@ export const ReviewShell = ({
           >
             <span aria-hidden="true">
               <ComponentTreeIcon />
+            </span>
+          </button>
+        )}
+        {isFigmaImageManagementEnabled && (
+          <button
+            aria-label={
+              isFigmaImagesPanelVisible
+                ? 'Hide Figma images'
+                : 'Show Figma images'
+            }
+            aria-pressed={isFigmaImagesPanelVisible}
+            className={`df-review-side-toggle${
+              isFigmaImagesPanelVisible ? ' is-active' : ''
+            }`}
+            type="button"
+            onClick={toggleFigmaImagesPanel}
+            title="Figma Images"
+          >
+            <span aria-hidden="true">
+              <FigmaRailIcon />
             </span>
           </button>
         )}
@@ -1706,7 +1860,9 @@ export const ReviewShell = ({
         hiddenOverlayItemIds={hiddenOverlayItemIds}
         isListVisible={isQaPanelVisible}
         isAllQaVisible={isAllQaVisible}
+        isLoading={isItemsLoading}
         isRemoteSource={isRemoteSource}
+        mutatingItemIds={mutatingItemIds}
         copiedPromptKey={copiedPromptKey}
         qaFilter={qaFilter}
         qaFilterCounts={qaFilterCounts}
@@ -1717,12 +1873,16 @@ export const ReviewShell = ({
         showSourceSelect={showSourceSelect}
         source={source}
         sourceEntries={sourceEntries}
+        fields={activeAdapterEntry.fields}
+        assigneeTitle={activeAdapterEntry.assigneeTitle}
         onChangeItemStatus={changeItemStatus}
         onClearSelectedItem={clearSelectedReviewItem}
+        onChangeItemAssignee={changeItemAssignee}
         onChangeReviewSource={changeReviewSource}
         onCopyItemLabel={(numberedItem) => void copyItemLabel(numberedItem)}
         onCopyItemLink={(numberedItem) => void copyItemLink(numberedItem)}
         onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
+        onCopyRemoteIssuePath={copyRemoteIssuePath}
         onEditItem={setEditingItem}
         onQaFilterChange={setQaFilter}
         onQaStatusFilterChange={setQaStatusFilter}
@@ -1732,6 +1892,29 @@ export const ReviewShell = ({
         onSubmitItem={submitItem}
         onToggleItemOverlayVisibility={toggleItemOverlayVisibility}
       />
+
+      {isFigmaImageManagementEnabled && (
+        <FigmaImagesPanel
+          error={figmaImageError}
+          imageOverlayStates={figmaImageOverlayStates}
+          images={figmaImageList}
+          isListVisible={isFigmaImagesPanelVisible}
+          isLoading={isFigmaImageLoading}
+          isMutating={isFigmaImageMutating}
+          selectedImageId={selectedFigmaImageId}
+          onAddImage={addFigmaImage}
+          onDeleteImage={deleteFigmaImage}
+          onRefreshImages={refreshFigmaImages}
+          onReorderImages={reorderFigmaImages}
+          onSelectImage={setSelectedFigmaImageId}
+          onSetImageOverlayOffsetY={setFigmaImageOverlayOffsetY}
+          onSetImageOverlayOpacity={setFigmaImageOverlayOpacity}
+          onToggleImageOverlayLocked={toggleFigmaImageOverlayLocked}
+          onToggleImageOverlayMode={toggleFigmaImageOverlayMode}
+          onToggleImageOverlayVisible={toggleFigmaImageOverlayVisible}
+          onUpdateImage={updateFigmaImage}
+        />
+      )}
 
       {isSourceInspectorEnabled && (
         <SectionOutlinePanel
@@ -1763,7 +1946,7 @@ export const ReviewShell = ({
       <ReviewTargetFrame
         canWriteArea={canWriteArea}
         canWriteDom={canWriteDom}
-        figmaFrameUrl={figmaFrameUrl}
+        figmaImageOverlays={figmaImageOverlays}
         frameScrollRef={frameScrollRef}
         iframeRef={iframeRef}
         isRulerAvailable={isRulerAvailable}
@@ -1780,6 +1963,7 @@ export const ReviewShell = ({
         size={size}
         targetSrc={targetSrc}
         onLoadTarget={loadTargetFrame}
+        onSetFigmaImageOverlayOffsetY={setFigmaImageOverlayOffsetY}
         onSetReviewMode={setReviewMode}
       />
 
@@ -1792,3 +1976,15 @@ export const ReviewShell = ({
     </div>
   );
 };
+
+function getUrlPathWithoutOrigin(value: string | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed, window.location.origin);
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return trimmed;
+  }
+}

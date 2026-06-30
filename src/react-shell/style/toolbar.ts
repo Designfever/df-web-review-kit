@@ -275,6 +275,11 @@ export const reviewShellToolbarStyle = `
     stroke-width: 1.9;
 	  }
 
+  .df-review-overlay-button .df-review-figma-mark-icon {
+    fill: currentColor;
+    stroke: none;
+  }
+
 
 
 

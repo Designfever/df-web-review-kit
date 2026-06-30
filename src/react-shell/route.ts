@@ -135,6 +135,7 @@ export const updateShellUrl = (
     url.searchParams.delete('source');
   }
   url.searchParams.delete('item');
+  url.searchParams.delete('panel');
   window.history.replaceState(null, '', `${url.pathname}${url.search}`);
 };
 
@@ -159,6 +160,7 @@ export const getShellUrlForItem = (
   url.searchParams.set('w', String(size.width));
   url.searchParams.set('h', String(size.height));
   url.searchParams.set('item', itemId);
+  url.searchParams.set('panel', 'qa');
   if (source !== 'local') {
     url.searchParams.set('source', source);
   } else {

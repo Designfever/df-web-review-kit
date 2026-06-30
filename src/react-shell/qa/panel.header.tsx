@@ -18,6 +18,7 @@ interface QaPanelHeaderProps {
   activeRemainingItemCount: number;
   filteredItemCount: number;
   isAllQaVisible: boolean;
+  isLoading: boolean;
   label: ReviewSource;
   qaFilter: ReviewQaFilter;
   qaFilterCounts: ReadonlyMap<ReviewQaFilter, number>;
@@ -38,6 +39,7 @@ export const QaPanelHeader = ({
   activeRemainingItemCount,
   filteredItemCount,
   isAllQaVisible,
+  isLoading,
   label,
   qaFilter,
   qaFilterCounts,
@@ -121,7 +123,11 @@ export const QaPanelHeader = ({
           )}
           <button
             aria-label="Refresh QA"
-            className="df-review-source-refresh"
+            aria-busy={isLoading ? 'true' : 'false'}
+            className={`df-review-source-refresh${
+              isLoading ? ' is-loading' : ''
+            }`}
+            disabled={isLoading}
             type="button"
             onClick={() => void onRefreshReviewData()}
           >

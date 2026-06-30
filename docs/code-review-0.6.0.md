@@ -44,10 +44,14 @@
 | `src/react-shell/style/modals.ts` | settings/edit/prompt modal | 606 |
 | `src/react-shell/style/toolbar.ts` | tools, side rail, presence | 530 |
 | `src/react-shell/style/qa-panel.ts` | QA panel/list/card/actions | 722 |
-| `src/react-shell/style/stage.ts` | frame, source popover, section outline | 744 |
+| `src/react-shell/style/stage.ts` | stage/frame/target/device | 138 |
+| `src/react-shell/style/source-inspector.ts` | source outline/popover/candidate | 153 |
+| `src/react-shell/style/section-outline.ts` | section outline panel | 539 |
 | `src/react-shell/style/ruler.ts` | ruler + responsive media query | 262 |
 
 동작 변화 없이 문자열을 나눠서 `ensureReviewShellStyle()`에서 concat만 하도록 정리했다.
+
+> 0.7.0 후속(아래 6장)에서 `stage.ts`를 `stage` / `source-inspector` / `section-outline` 3개로 더 쪼갰다.
 
 ---
 
@@ -192,3 +196,37 @@ pnpm build
 - `pnpm build` 통과
 
 `pnpm build` 결과로 `dist/**` 산출물이 갱신됐고, 기존 chunk hash는 `chunk-IN36JHEU` → `chunk-BDP7FS4Q`로 변경됐다.
+
+---
+
+## 6. 0.7.0 후속 정리 (continued)
+
+같은 브랜치에서 Figma image 기능이 추가된 뒤, 위험도 낮은 정리를 한 단계 더 진행했다. 모두 동작/공개 API 변화 없는 내부 리팩터이며 단계별 커밋으로 나눴다.
+
+### CSS
+
+- `shell.tsx`에 인라인으로 박혀 있던 source-select 단축키 CSS(65줄)를 `react-shell/review/source.shortcut.style.ts`로 추출 (`createSourceShortcutStyle`).
+- 비대했던 `style/stage.ts`(827줄)를 도메인 기준으로 3분할: `stage.ts`(138) / `source-inspector.ts`(153) / `section-outline.ts`(539). 실제 내용이 stage가 아니라 section/source 위주였던 점을 반영.
+
+### 네이밍 (내부 한정, export 무변경)
+
+- `dom.anchor.ts`: `primary` → `primaryCandidate`, `safeClosest` → `tryClosest`.
+- `normalizeStoredReviewSidePanel` 등 정상 normalizer는 형제 함수와의 일관성 때문에 유지.
+
+### 주석
+
+- `dom.anchor.ts`의 경로 생성(`getDomPath`/`getDomPathBetween`)·스코어링(`getTextFingerprintScore`/`getSelectionMatchScore`) 알고리즘, `view.ts`의 큰 메서드(`createNotePopover`/`createAdjustmentControls`), 매직 넘버(z-index `2147483646`, 길이 제한 160/120, `roundRatio` 정밀도) 설명 추가.
+
+### 파일 분할 (안전 범위)
+
+| 원본 | 추출 | 결과 |
+|---|---|---|
+| `vite.ts` (1492) | `vite/figma-asset.ts` (포맷/경로 헬퍼 10개) | 1424 |
+| `core/web.review.kit.view.ts` (1937) | `core/draft.metrics.ts` (draft adjustment 순수 geometry) | 1901 |
+| `react-shell/figma/images.panel.tsx` (737) | `figma/image-panel.utils.ts` (순수 유틸 8개) | 669 |
+
+§4의 `web.review.kit.view.ts` 항목 중 "draft controller 분리"의 첫 조각으로 순수 geometry부터 뽑았다. `shell.tsx`의 대규모 hook 분리와 `images.panel`의 `ImageCard` 컴포넌트 분리(drag 상태·ref 결합으로 회귀 위험 큼)는 여전히 후속 작업으로 남겨 둔다.
+
+### 검증
+
+각 단계마다 `pnpm typecheck` 통과, 추출 단계는 `pnpm lint:dead-code`(knip) 0 issue, 최종 `pnpm build` 통과 확인.

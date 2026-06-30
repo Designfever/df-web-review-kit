@@ -1,5 +1,6 @@
 import type {
   NumberedReviewItem,
+  ReviewFieldsConfig,
   ReviewItem,
   ReviewItemStatus,
   ReviewSource,
@@ -17,13 +18,17 @@ interface ReviewQaPanelProps {
   activeAdapterEntry: NormalizedReviewShellAdapter;
   activeItems: ReviewItem[];
   activeRemainingItemCount: number;
+  fields: Required<Pick<ReviewFieldsConfig, 'title'>>;
+  assigneeTitle: string;
   currentPresetScope: ReviewShellViewportKind;
   filteredNumberedActiveItems: NumberedReviewItem[];
   getItemPresetScope: (item: ReviewItem) => ReviewShellViewportKind;
   hiddenOverlayItemIds: ReadonlySet<string>;
   isAllQaVisible: boolean;
   isListVisible: boolean;
+  isLoading: boolean;
   isRemoteSource: boolean;
+  mutatingItemIds: ReadonlySet<string>;
   copiedPromptKey: string | null;
   qaFilter: ReviewQaFilter;
   qaFilterCounts: ReadonlyMap<ReviewQaFilter, number>;
@@ -38,11 +43,16 @@ interface ReviewQaPanelProps {
     item: ReviewItem,
     nextStatus: ReviewItemStatus
   ) => Promise<void>;
+  onChangeItemAssignee: (
+    item: ReviewItem,
+    assigneeId: string | null
+  ) => Promise<void>;
   onClearSelectedItem: () => void;
   onChangeReviewSource: (nextSource: ReviewSource) => void;
   onCopyItemLabel: (numberedItem: NumberedReviewItem) => void;
   onCopyItemLink: (numberedItem: NumberedReviewItem) => void;
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
+  onCopyRemoteIssuePath: (item: ReviewItem) => Promise<void>;
   onEditItem: (item: ReviewItem) => void;
   onQaFilterChange: (filter: ReviewQaFilter) => void;
   onQaStatusFilterChange: (filter: ReviewQaStatusFilter) => void;
@@ -57,13 +67,17 @@ export const ReviewQaPanel = ({
   activeAdapterEntry,
   activeItems,
   activeRemainingItemCount,
+  fields,
+  assigneeTitle,
   currentPresetScope,
   filteredNumberedActiveItems,
   getItemPresetScope,
   hiddenOverlayItemIds,
   isAllQaVisible,
   isListVisible,
+  isLoading,
   isRemoteSource,
+  mutatingItemIds,
   copiedPromptKey,
   qaFilter,
   qaFilterCounts,
@@ -75,11 +89,13 @@ export const ReviewQaPanel = ({
   source,
   sourceEntries,
   onChangeItemStatus,
+  onChangeItemAssignee,
   onClearSelectedItem,
   onChangeReviewSource,
   onCopyItemLabel,
   onCopyItemLink,
   onCopyItemPrompt,
+  onCopyRemoteIssuePath,
   onEditItem,
   onQaFilterChange,
   onQaStatusFilterChange,
@@ -104,6 +120,7 @@ export const ReviewQaPanel = ({
             activeRemainingItemCount={activeRemainingItemCount}
             filteredItemCount={filteredNumberedActiveItems.length}
             isAllQaVisible={isAllQaVisible}
+            isLoading={isLoading}
             label={activeAdapterEntry.label}
             qaFilter={qaFilter}
             qaFilterCounts={qaFilterCounts}
@@ -127,7 +144,18 @@ export const ReviewQaPanel = ({
             }}
           >
             {activeItems.length === 0 && (
-              <p className="df-review-empty">{emptyMessage}</p>
+              <p
+                className={`df-review-empty${isLoading ? ' is-loading' : ''}`}
+              >
+                {isLoading && (
+                  <span className="df-review-spinner" aria-hidden="true" />
+                )}
+                <span>
+                  {isLoading
+                    ? `Loading ${activeAdapterEntry.label} QA...`
+                    : emptyMessage}
+                </span>
+              </p>
             )}
             {activeItems.length > 0 &&
               filteredNumberedActiveItems.length === 0 && (
@@ -140,19 +168,24 @@ export const ReviewQaPanel = ({
                 <QaItemCard
                   key={item.id}
                   activeAdapterEntry={activeAdapterEntry}
+                  fields={fields}
+                  assigneeTitle={assigneeTitle}
                   currentPresetScope={currentPresetScope}
                   getItemPresetScope={getItemPresetScope}
                   isOverlayVisible={!hiddenOverlayItemIds.has(item.id)}
+                  isMutating={mutatingItemIds.has(item.id)}
                   isRemoteSource={isRemoteSource}
                   numberedItem={numberedItem}
                   remoteAdapterEntry={remoteAdapterEntry}
                   copiedPromptKey={copiedPromptKey}
                   selectedItemId={selectedItemId}
+                  onChangeItemAssignee={onChangeItemAssignee}
                   onChangeItemStatus={onChangeItemStatus}
                   onClearSelectedItem={onClearSelectedItem}
                   onCopyItemLabel={onCopyItemLabel}
                   onCopyItemLink={onCopyItemLink}
                   onCopyItemPrompt={onCopyItemPrompt}
+                  onCopyRemoteIssuePath={onCopyRemoteIssuePath}
                   onEditItem={onEditItem}
                   onRemoveItem={onRemoveItem}
                   onRestoreReviewItem={onRestoreReviewItem}

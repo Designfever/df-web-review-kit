@@ -1,4 +1,6 @@
-import type { Plugin, ResolvedConfig } from 'vite';
+import { type Plugin, type ResolvedConfig } from 'vite';
+
+export * from './vite/figma-image-store';
 
 type SourceLocatorPattern = string | RegExp;
 

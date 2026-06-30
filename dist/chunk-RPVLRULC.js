@@ -111,6 +111,9 @@ function normalizeStoredReviewItem(value) {
   };
 }
 
+// src/figma/image.types.ts
+var DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT = "webp";
+
 // src/core/review/scope.ts
 var DEFAULT_REVIEW_VIEWPORTS = [
   { label: "Mobile", width: 390, height: 720, scope: "mobile" },
@@ -389,13 +392,13 @@ function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", enviro
   const target = environment.document.elementFromPoint(point.x, point.y);
   if (!target) return void 0;
   const candidates = createAnchorCandidates(target, configuredAttribute);
-  const primary = candidates[0];
-  if (!primary) return void 0;
+  const primaryCandidate = candidates[0];
+  if (!primaryCandidate) return void 0;
   return {
-    ...primary,
+    ...primaryCandidate,
     candidates,
     htmlSnippet: getElementHtmlSnippet(
-      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+      getAnchorSourceElement(target, primaryCandidate, configuredAttribute) ?? target
     ),
     source: getDomSourceHint(target)
   };
@@ -403,13 +406,13 @@ function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", enviro
 function getDomAnchorFromElement(target, configuredAttribute = "data-qa-id", environment) {
   if (target.ownerDocument !== environment.document) return void 0;
   const candidates = createAnchorCandidates(target, configuredAttribute);
-  const primary = candidates[0];
-  if (!primary) return void 0;
+  const primaryCandidate = candidates[0];
+  if (!primaryCandidate) return void 0;
   return {
-    ...primary,
+    ...primaryCandidate,
     candidates,
     htmlSnippet: getElementHtmlSnippet(
-      getAnchorSourceElement(target, primary, configuredAttribute) ?? target
+      getAnchorSourceElement(target, primaryCandidate, configuredAttribute) ?? target
     ),
     source: getDomSourceHint(target)
   };
@@ -580,7 +583,7 @@ function createAnchorCandidates(target, configuredAttribute) {
 function findClosestAttributeAnchor(target, attributeNames, confidence, options) {
   for (const attributeName of attributeNames) {
     const selector = `[${attributeName}]`;
-    const element = safeClosest(target, selector);
+    const element = tryClosest(target, selector);
     if (!element) continue;
     const value = getStableAttributeValue(element, attributeName);
     if (!value) continue;
@@ -686,7 +689,7 @@ function getAnchorSourceElement(target, candidate, configuredAttribute) {
     return target;
   }
 }
-function safeClosest(element, selector) {
+function tryClosest(element, selector) {
   try {
     return element.closest(selector);
   } catch {
@@ -1190,6 +1193,64 @@ function setDocumentScrollInstantly(environment, position) {
   );
 }
 
+// src/core/draft.metrics.ts
+function getDraftViewportScale(viewport, presets) {
+  const preset = findReviewViewportPreset(viewport, presets);
+  const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : viewport.width;
+  const scale = designWidth > 0 ? viewport.width / designWidth : 1;
+  return { scale, designWidth, presetLabel: preset.label };
+}
+function getDraftAdjustmentMetrics(draft, presets) {
+  const adjustment = draft.adjustment;
+  const x = adjustment?.x ?? 0;
+  const y = adjustment?.y ?? 0;
+  const scale = adjustment?.scale ?? 0;
+  const {
+    scale: viewportScale,
+    designWidth,
+    presetLabel
+  } = getDraftViewportScale(draft.viewport, presets);
+  const selection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
+  const scaleCssDelta = scale * viewportScale;
+  const scaleFactor = selection && selection.width > 0 ? Math.max(
+    1 / selection.width,
+    (selection.width + scaleCssDelta) / selection.width
+  ) : 1;
+  return {
+    x,
+    y,
+    scale,
+    cssX: x * viewportScale,
+    cssY: y * viewportScale,
+    scaleFactor,
+    viewportScale,
+    designWidth,
+    presetLabel,
+    viewportWidth: draft.viewport.width
+  };
+}
+function hasDraftAdjustment(draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return metrics.x !== 0 || metrics.y !== 0 || metrics.scale !== 0;
+}
+function getAdjustedDraftPoint(point, draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return {
+    x: point.x + metrics.cssX,
+    y: point.y + metrics.cssY
+  };
+}
+function getAdjustedDraftSelection(selection, draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return {
+    ...selection,
+    left: selection.left + metrics.cssX,
+    top: selection.top + metrics.cssY,
+    width: selection.width * metrics.scaleFactor,
+    height: selection.height * metrics.scaleFactor
+  };
+}
+
 // src/core/typography.tokens.ts
 var reviewTypographyTokens = `
     --df-review-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -1359,6 +1420,10 @@ function createStyleElement() {
     }
 
     .dfwr-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
       min-height: var(--df-review-control-height-md);
       padding: 0 12px;
       border-radius: var(--df-review-radius-sm);
@@ -1377,6 +1442,21 @@ function createStyleElement() {
       border-color: var(--df-review-color-accent);
       background: var(--df-review-color-accent);
       color: var(--df-review-color-accent-contrast);
+    }
+
+    .dfwr-button:disabled {
+      cursor: default;
+      opacity: 0.62;
+    }
+
+    .dfwr-spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 999px;
+      animation: dfwr-spin 720ms linear infinite;
     }
 
     .dfwr-icon-button {
@@ -1911,10 +1991,18 @@ function createStyleElement() {
       gap: 10px;
     }
 
+    .dfwr-form-error {
+      margin: 0;
+      color: #ff8f61;
+      font-size: var(--df-review-font-size-sm);
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .dfwr-input,
+    .dfwr-select,
     .dfwr-textarea {
       width: 100%;
-      min-height: 92px;
-      resize: vertical;
       border: 1px solid rgba(255, 255, 255, 0.16);
       border-radius: var(--df-review-radius-sm);
       padding: 10px;
@@ -1925,14 +2013,39 @@ function createStyleElement() {
       line-height: 1.45;
     }
 
+    .dfwr-input,
+    .dfwr-select {
+      min-height: 38px;
+    }
+
+    .dfwr-select {
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .dfwr-textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .dfwr-input:focus,
+    .dfwr-select:focus,
     .dfwr-textarea:focus {
       outline: 2px solid var(--df-review-color-accent-ring);
       outline-offset: 1px;
     }
 
     @media (hover: none) and (pointer: coarse) {
+      .dfwr-input,
+      .dfwr-select,
       .dfwr-textarea {
         font-size: var(--df-review-font-size-xl);
+      }
+    }
+
+    @keyframes dfwr-spin {
+      to {
+        transform: rotate(360deg);
       }
     }
 
@@ -2066,6 +2179,8 @@ function createStyleElement() {
     }
 
     .dfwr-item-body {
+      display: grid;
+      gap: 4px;
       min-width: 0;
       flex: 1;
     }
@@ -2103,13 +2218,29 @@ function createStyleElement() {
       color: rgba(247, 247, 242, 0.64);
     }
 
+    .dfwr-item-title {
+      margin: 4px 0 0;
+      color: var(--df-review-color-text);
+      font-size: var(--df-review-font-size-md);
+      font-weight: var(--df-review-font-weight-normal);
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
     .dfwr-item-comment {
+      margin: 0;
+      color: var(--df-review-color-text-muted);
+      font-size: var(--df-review-font-size-sm);
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .dfwr-item-comment.is-primary {
       margin: 4px 0;
       color: var(--df-review-color-text);
       font-size: var(--df-review-font-size-md);
       line-height: 1.42;
-      overflow-wrap: anywhere;
-      white-space: pre-wrap;
     }
 
     .dfwr-item-date {
@@ -2353,7 +2484,7 @@ var WebReviewKitView = class {
         );
       }
     }
-    if (state.isOpen && state.mode === "area" && !state.areaDraft) {
+    if (state.isOpen && state.mode === "area" && !state.areaDraft && !state.isSelectingArea) {
       shell.append(this.createAreaLayer());
     }
     if (state.isOpen && state.mode === "area" && state.areaDraft && this.config.options.ui?.panel === false) {
@@ -2427,64 +2558,29 @@ var WebReviewKitView = class {
     this.config.actions.setSelectingArea(false);
     this.config.actions.render();
   }
+  // Draft adjustment geometry lives in draft.metrics.ts; these thin wrappers
+  // supply the configured viewport presets so call sites stay unchanged.
+  get viewportPresets() {
+    return this.config.options.viewports?.presets;
+  }
   getDraftAdjustmentMetrics(draft) {
-    const adjustment = draft.adjustment;
-    const x = adjustment?.x ?? 0;
-    const y = adjustment?.y ?? 0;
-    const scale = adjustment?.scale ?? 0;
-    const {
-      scale: viewportScale,
-      designWidth,
-      presetLabel
-    } = this.getDraftViewportScale(draft.viewport);
-    const selection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
-    const scaleCssDelta = scale * viewportScale;
-    const scaleFactor = selection && selection.width > 0 ? Math.max(
-      1 / selection.width,
-      (selection.width + scaleCssDelta) / selection.width
-    ) : 1;
-    return {
-      x,
-      y,
-      scale,
-      cssX: x * viewportScale,
-      cssY: y * viewportScale,
-      scaleFactor,
-      viewportScale,
-      designWidth,
-      presetLabel,
-      viewportWidth: draft.viewport.width
-    };
+    return getDraftAdjustmentMetrics(draft, this.viewportPresets);
   }
   hasDraftAdjustment(draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return metrics.x !== 0 || metrics.y !== 0 || metrics.scale !== 0;
+    return hasDraftAdjustment(draft, this.viewportPresets);
   }
   getAdjustedDraftPoint(point, draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return {
-      x: point.x + metrics.cssX,
-      y: point.y + metrics.cssY
-    };
+    return getAdjustedDraftPoint(point, draft, this.viewportPresets);
   }
   getAdjustedDraftSelection(selection, draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return {
-      ...selection,
-      left: selection.left + metrics.cssX,
-      top: selection.top + metrics.cssY,
-      width: selection.width * metrics.scaleFactor,
-      height: selection.height * metrics.scaleFactor
-    };
+    return getAdjustedDraftSelection(
+      selection,
+      draft,
+      this.viewportPresets
+    );
   }
   getDraftViewportScale(viewport) {
-    const preset = findReviewViewportPreset(
-      viewport,
-      this.config.options.viewports?.presets
-    );
-    const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : viewport.width;
-    const scale = designWidth > 0 ? viewport.width / designWidth : 1;
-    return { scale, designWidth, presetLabel: preset.label };
+    return getDraftViewportScale(viewport, this.viewportPresets);
   }
   getDraftComposerWidth(environment) {
     const bounds = environment.overlayRect;
@@ -2629,6 +2725,67 @@ var WebReviewKitView = class {
     ].join(" ");
     return trimmedComment ? `${trimmedComment}
 ${adjustment}` : adjustment;
+  }
+  getAssigneeOption(assigneeId) {
+    if (!assigneeId) return void 0;
+    return this.config.options.assigneeOptions?.find(
+      (option) => option.value === assigneeId
+    );
+  }
+  getAssigneeName(assigneeId) {
+    return this.getAssigneeOption(assigneeId)?.label;
+  }
+  createDraftTitleInput(value, onInput) {
+    const input = document.createElement("input");
+    input.className = "dfwr-input";
+    input.placeholder = "Title";
+    input.type = "text";
+    input.value = value ?? "";
+    input.addEventListener("input", () => onInput(input.value));
+    return input;
+  }
+  isTitleFieldEnabled() {
+    return this.config.options.fields?.title === true;
+  }
+  createDraftAssigneeSelect(value, fallbackLabel, onChange) {
+    const assigneeOptions = this.config.options.assigneeOptions ?? [];
+    if (assigneeOptions.length === 0) return void 0;
+    const assigneeTitle = this.config.options.assigneeTitle?.trim() || "Assignee";
+    const select = document.createElement("select");
+    select.className = "dfwr-select";
+    const emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.textContent = assigneeTitle;
+    select.append(emptyOption);
+    const hasUnknownAssignee = Boolean(value) && !assigneeOptions.some((option) => option.value === value);
+    if (hasUnknownAssignee && value) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = fallbackLabel ?? value;
+      select.append(option);
+    }
+    assigneeOptions.forEach((assigneeOption) => {
+      const option = document.createElement("option");
+      option.value = assigneeOption.value;
+      option.textContent = assigneeOption.label;
+      select.append(option);
+    });
+    select.value = value ?? "";
+    select.addEventListener("change", () => {
+      onChange(select.value || null, this.getAssigneeName(select.value));
+    });
+    return select;
+  }
+  getDraftFields(titleInput, textarea, assigneeSelect) {
+    const title = titleInput?.value.trim();
+    const comment = textarea.value.trim();
+    const assigneeId = assigneeSelect?.value.trim() || void 0;
+    return {
+      title: title || void 0,
+      comment,
+      assigneeId,
+      assigneeName: this.getAssigneeName(assigneeId)
+    };
   }
   getStyleableDraftElement(draft, environment) {
     if (draft.previewElement && draft.previewElement.ownerDocument === environment.document && "style" in draft.previewElement) {
@@ -2820,6 +2977,9 @@ ${adjustment}` : adjustment;
     empty.textContent = this.state.noteDraft ? "Write the note in the page box." : this.state.mode === "element" ? "Click an element to add QA." : "Click on the page to place a note.";
     return empty;
   }
+  // Builds the note draft layer: the on-page marker/highlight plus its composer
+  // popover. When dockComposer is set the composer renders into the side panel
+  // instead of floating next to the marker (used for the docked review mode).
   createNotePopover(draft, options = {}) {
     const environment = this.config.getEnvironment();
     const group = document.createElement("div");
@@ -2883,6 +3043,14 @@ ${adjustment}` : adjustment;
       meta.className = "dfwr-item-date";
       meta.textContent = formatNoteDraftMeta(draft);
     }
+    const titleInput = this.isTitleFieldEnabled() ? this.createDraftTitleInput(draft.title, (title) => {
+      const noteDraft = this.state.noteDraft;
+      if (!noteDraft) return;
+      this.config.actions.setNoteDraft({
+        ...noteDraft,
+        title
+      });
+    }) : void 0;
     const textarea = document.createElement("textarea");
     textarea.className = "dfwr-textarea";
     textarea.placeholder = "Review comment";
@@ -2896,13 +3064,30 @@ ${adjustment}` : adjustment;
         comment: textarea.value
       });
     });
+    const assigneeSelect = this.createDraftAssigneeSelect(
+      draft.assigneeId,
+      draft.assigneeName,
+      (assigneeId, assigneeName) => {
+        const noteDraft = this.state.noteDraft;
+        if (!noteDraft) return;
+        this.config.actions.setNoteDraft({
+          ...noteDraft,
+          assigneeId,
+          assigneeName
+        });
+      }
+    );
     const saveDraft = () => {
-      const comment = textarea.value.trim();
       const currentDraft = this.state.noteDraft ?? draft;
+      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
+      const comment = fields.comment;
       if (!comment && !this.hasDraftAdjustment(currentDraft)) return;
       void this.config.actions.createItem({
         kind: "note",
+        title: fields.title,
         comment: this.withDraftAdjustmentComment(comment, currentDraft),
+        assigneeId: fields.assigneeId,
+        assigneeName: fields.assigneeName,
         viewport: currentDraft.viewport,
         anchor: currentDraft.anchor,
         marker: currentDraft.marker,
@@ -2920,10 +3105,14 @@ ${adjustment}` : adjustment;
     const actions = this.createFormActions("Save note", saveDraft, {
       leading: adjustmentControls?.actionButton ? [adjustmentControls.actionButton] : void 0
     });
+    const error = this.createDraftError();
     form.append(
       ...meta ? [meta] : [],
       ...adjustmentControls ? [adjustmentControls.panel] : [],
+      ...titleInput ? [titleInput] : [],
       textarea,
+      ...assigneeSelect ? [assigneeSelect] : [],
+      ...error ? [error] : [],
       actions
     );
     const dragHandle = isElementDraft && !options.dockComposer ? this.createDraftDragHandle("Move DOM composer") : void 0;
@@ -3050,6 +3239,9 @@ ${adjustment}` : adjustment;
     handle.addEventListener("pointerup", stopDrag);
     handle.addEventListener("pointercancel", stopDrag);
   }
+  // Builds the element-adjustment controls (nudge the previewed element via
+  // arrow keys / buttons). Wires keyboard deltas to the draft transform and
+  // keeps the pin, popover, highlight and textarea in sync as the value changes.
   createAdjustmentControls({
     draft,
     pin,
@@ -3194,6 +3386,14 @@ ${adjustment}` : adjustment;
       return form;
     }
     form.append(this.createAreaMetricsPanel(areaDraft));
+    const titleInput = this.isTitleFieldEnabled() ? this.createDraftTitleInput(areaDraft.title, (title) => {
+      const draft = this.state.areaDraft;
+      if (!draft) return;
+      this.config.actions.setAreaDraft({
+        ...draft,
+        title
+      });
+    }) : void 0;
     const textarea = document.createElement("textarea");
     textarea.className = "dfwr-textarea";
     textarea.placeholder = "Area comment";
@@ -3207,20 +3407,44 @@ ${adjustment}` : adjustment;
         comment: textarea.value
       });
     });
+    const assigneeSelect = this.createDraftAssigneeSelect(
+      areaDraft.assigneeId,
+      areaDraft.assigneeName,
+      (assigneeId, assigneeName) => {
+        const draft = this.state.areaDraft;
+        if (!draft) return;
+        this.config.actions.setAreaDraft({
+          ...draft,
+          assigneeId,
+          assigneeName
+        });
+      }
+    );
     const actions = this.createFormActions("Save area", () => {
-      const comment = textarea.value.trim();
       const draft = this.state.areaDraft;
+      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
+      const comment = fields.comment;
       if (!comment || !draft) return;
       void this.config.actions.createItem({
         kind: "area",
+        title: fields.title,
         comment,
+        assigneeId: fields.assigneeId,
+        assigneeName: fields.assigneeName,
         viewport: draft.viewport,
         anchor: draft.anchor,
         marker: draft.marker,
         selection: draft.selection
       });
     });
-    form.append(textarea, actions);
+    const error = this.createDraftError();
+    form.append(
+      ...titleInput ? [titleInput] : [],
+      textarea,
+      ...assigneeSelect ? [assigneeSelect] : [],
+      ...error ? [error] : [],
+      actions
+    );
     return form;
   }
   createAreaMetricsPanel(draft) {
@@ -3312,18 +3536,27 @@ ${adjustment}` : adjustment;
   createFormActions(saveLabel, onSave, options) {
     const actions = document.createElement("div");
     actions.className = ["dfwr-actions", options?.className].filter(Boolean).join(" ");
+    const isSaving = this.state.isCreatingItem;
     const save = document.createElement("button");
     save.className = "dfwr-button is-primary";
     save.type = "button";
-    save.textContent = saveLabel;
+    save.disabled = isSaving;
+    save.setAttribute("aria-busy", isSaving ? "true" : "false");
+    if (isSaving) {
+      save.append(this.createSpinner("dfwr-spinner"), "Saving...");
+    } else {
+      save.textContent = saveLabel;
+    }
     save.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
+      if (this.state.isCreatingItem) return;
       onSave();
     });
     const cancel = document.createElement("button");
     cancel.className = "dfwr-button";
     cancel.type = "button";
+    cancel.disabled = isSaving;
     cancel.textContent = "Cancel";
     cancel.addEventListener("click", (event) => {
       this.cancelDraft(event);
@@ -3345,6 +3578,20 @@ ${adjustment}` : adjustment;
     }
     actions.append(save, cancel);
     return actions;
+  }
+  createSpinner(className) {
+    const spinner = document.createElement("span");
+    spinner.className = className;
+    spinner.setAttribute("aria-hidden", "true");
+    return spinner;
+  }
+  createDraftError() {
+    if (!this.state.draftError) return void 0;
+    const error = document.createElement("p");
+    error.className = "dfwr-form-error";
+    error.setAttribute("role", "alert");
+    error.textContent = this.state.draftError;
+    return error;
   }
   createList() {
     const section = document.createElement("div");
@@ -3398,14 +3645,20 @@ ${adjustment}` : adjustment;
     kind.className = "dfwr-item-kind";
     kind.textContent = item.kind;
     badges.append(scope, kind);
+    const title = this.isTitleFieldEnabled() ? item.title?.trim() : "";
+    const titleElement = title ? document.createElement("strong") : void 0;
+    if (title && titleElement) {
+      titleElement.className = "dfwr-item-title";
+      titleElement.textContent = title;
+    }
     const comment = document.createElement("p");
-    comment.className = "dfwr-item-comment";
+    comment.className = `dfwr-item-comment${title ? "" : " is-primary"}`;
     comment.textContent = item.comment;
     const date = document.createElement("time");
     date.className = "dfwr-item-date";
     date.dateTime = item.createdAt;
     date.textContent = formatItemMeta(item);
-    body.append(badges, comment, date);
+    body.append(badges, ...titleElement ? [titleElement] : [], comment, date);
     const actions = document.createElement("div");
     actions.className = "dfwr-item-actions";
     actions.addEventListener("click", (event) => event.stopPropagation());
@@ -3594,7 +3847,14 @@ ${formatItemMeta(item)}`;
         event,
         this.config.getEnvironment()
       );
-      void (this.state.mode === "element" ? this.config.actions.bindElementDraftToPoint(nextPoint, textarea.value) : this.config.actions.bindNoteDraftToPoint(nextPoint, textarea.value));
+      const currentDraft = this.state.noteDraft;
+      const fields = {
+        title: currentDraft?.title,
+        comment: textarea.value,
+        assigneeId: currentDraft?.assigneeId,
+        assigneeName: currentDraft?.assigneeName
+      };
+      void (this.state.mode === "element" ? this.config.actions.bindElementDraftToPoint(nextPoint, fields) : this.config.actions.bindNoteDraftToPoint(nextPoint, fields));
     });
   }
   createNoteLayer() {
@@ -3672,10 +3932,14 @@ ${formatItemMeta(item)}`;
     let startX = 0;
     let startY = 0;
     let selection;
+    let activePointerId;
+    let isDragging = false;
+    const ownerWindow = layer.ownerDocument.defaultView ?? window;
     const updateBox = (event) => {
+      const nextEnvironment = this.config.getEnvironment();
       const nextPoint = toTargetPointFromHostEvent(
         event,
-        this.config.getEnvironment()
+        nextEnvironment
       );
       const left = Math.min(startX, nextPoint.x);
       const top = Math.min(startY, nextPoint.y);
@@ -3683,7 +3947,7 @@ ${formatItemMeta(item)}`;
       const height = Math.abs(nextPoint.y - startY);
       const hostPoint = toHostPoint(
         { x: left, y: top },
-        this.config.getEnvironment()
+        nextEnvironment
       );
       selection = { left, top, width, height };
       box.style.left = `${hostPoint.x}px`;
@@ -3691,9 +3955,68 @@ ${formatItemMeta(item)}`;
       box.style.width = `${width}px`;
       box.style.height = `${height}px`;
     };
-    layer.addEventListener("pointerdown", (event) => {
+    const addDragListeners = () => {
+      ownerWindow.addEventListener("pointermove", handlePointerMove, true);
+      ownerWindow.addEventListener("pointerup", handlePointerUp, true);
+      ownerWindow.addEventListener("pointercancel", handlePointerCancel, true);
+    };
+    const removeDragListeners = () => {
+      ownerWindow.removeEventListener("pointermove", handlePointerMove, true);
+      ownerWindow.removeEventListener("pointerup", handlePointerUp, true);
+      ownerWindow.removeEventListener(
+        "pointercancel",
+        handlePointerCancel,
+        true
+      );
+    };
+    const releasePointerCapture = (event) => {
+      try {
+        if (layer.hasPointerCapture(event.pointerId)) {
+          layer.releasePointerCapture(event.pointerId);
+        }
+      } catch {
+      }
+    };
+    function isActivePointer(event) {
+      return isDragging && event.pointerId === activePointerId;
+    }
+    const finishAreaSelection = (event) => {
+      if (!isActivePointer(event)) return;
       event.preventDefault();
-      layer.setPointerCapture(event.pointerId);
+      updateBox(event);
+      releasePointerCapture(event);
+      removeDragListeners();
+      isDragging = false;
+      activePointerId = void 0;
+      if (!selection || selection.width < 8 || selection.height < 8) return;
+      this.config.actions.setSelectingArea(true);
+      this.config.actions.render();
+      void this.config.actions.createAreaDraft(selection);
+    };
+    function handlePointerMove(event) {
+      if (!isActivePointer(event)) return;
+      event.preventDefault();
+      updateBox(event);
+    }
+    const handlePointerUp = (event) => {
+      finishAreaSelection(event);
+    };
+    const handlePointerCancel = (event) => {
+      if (!isActivePointer(event)) return;
+      releasePointerCapture(event);
+      removeDragListeners();
+      isDragging = false;
+      activePointerId = void 0;
+    };
+    layer.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      activePointerId = event.pointerId;
+      isDragging = true;
+      try {
+        layer.setPointerCapture(event.pointerId);
+      } catch {
+      }
       const startPoint = toTargetPointFromHostEvent(
         event,
         this.config.getEnvironment()
@@ -3701,20 +4024,11 @@ ${formatItemMeta(item)}`;
       startX = startPoint.x;
       startY = startPoint.y;
       updateBox(event);
+      addDragListeners();
     });
-    layer.addEventListener("pointermove", (event) => {
-      if (!layer.hasPointerCapture(event.pointerId)) return;
-      updateBox(event);
-    });
-    layer.addEventListener("pointerup", (event) => {
-      if (!layer.hasPointerCapture(event.pointerId)) return;
-      layer.releasePointerCapture(event.pointerId);
-      updateBox(event);
-      if (!selection || selection.width < 8 || selection.height < 8) return;
-      this.config.actions.setSelectingArea(true);
-      this.config.actions.render();
-      void this.config.actions.createAreaDraft(selection);
-    });
+    layer.addEventListener("pointermove", handlePointerMove);
+    layer.addEventListener("pointerup", handlePointerUp);
+    layer.addEventListener("pointercancel", handlePointerCancel);
     return layer;
   }
 };
@@ -3754,6 +4068,8 @@ var WebReviewKitApp = class {
     this.isOpen = false;
     this.mode = "idle";
     this.items = [];
+    this.draftError = "";
+    this.isCreatingItem = false;
     this.isSelectingArea = false;
     this.handleKeyDown = (event) => {
       if (event.key === "Escape" && this.cancelMode()) {
@@ -3784,6 +4100,8 @@ var WebReviewKitApp = class {
         items: this.items,
         noteDraft: this.noteDraft,
         areaDraft: this.areaDraft,
+        draftError: this.draftError,
+        isCreatingItem: this.isCreatingItem,
         isSelectingArea: this.isSelectingArea,
         highlightedItemId: this.highlightedItemId
       }),
@@ -3798,19 +4116,22 @@ var WebReviewKitApp = class {
         clearDrafts: () => {
           this.noteDraft = void 0;
           this.areaDraft = void 0;
+          this.draftError = "";
         },
         setNoteDraft: (draft) => {
           this.noteDraft = draft;
+          this.draftError = "";
         },
         setAreaDraft: (draft) => {
           this.areaDraft = draft;
+          this.draftError = "";
         },
         setSelectingArea: (isSelectingArea) => {
           this.isSelectingArea = isSelectingArea;
         },
         createItem: (input) => this.createItem(input),
-        bindNoteDraftToPoint: (point, comment) => this.bindNoteDraftToPoint(point, comment),
-        bindElementDraftToPoint: (point, comment) => this.bindElementDraftToPoint(point, comment),
+        bindNoteDraftToPoint: (point, fields) => this.bindNoteDraftToPoint(point, fields),
+        bindElementDraftToPoint: (point, fields) => this.bindElementDraftToPoint(point, fields),
         createAreaDraft: (selection) => this.createAreaDraft(selection)
       }
     });
@@ -3879,7 +4200,7 @@ var WebReviewKitApp = class {
     this.noteDraft = void 0;
     this.areaDraft = void 0;
     this.isSelectingArea = false;
-    await this.bindElementDraftToElement(element, comment);
+    await this.bindElementDraftToElement(element, { comment });
   }
   getMode() {
     return this.mode;
@@ -4022,7 +4343,7 @@ var WebReviewKitApp = class {
     if (!this.shadow) return;
     this.view.render(this.shadow, this.createHiddenItemsStyleElement());
   }
-  async bindNoteDraftToPoint(point, comment) {
+  async bindNoteDraftToPoint(point, fields = {}) {
     const environment = this.getEnvironment();
     if (!environment) return;
     const viewport = getViewportSize(environment);
@@ -4042,13 +4363,13 @@ var WebReviewKitApp = class {
         viewport,
         anchor,
         marker,
-        comment
+        ...fields
       };
     });
     this.noteDraft = draft;
     this.render();
   }
-  async bindElementDraftToPoint(point, comment) {
+  async bindElementDraftToPoint(point, fields = {}) {
     const environment = this.getEnvironment();
     if (!environment) return;
     const viewport = getViewportSize(environment);
@@ -4092,14 +4413,14 @@ var WebReviewKitApp = class {
         anchor,
         marker,
         selection: reviewSelection,
-        comment,
+        ...fields,
         previewElement
       };
     });
     this.noteDraft = draft;
     this.render();
   }
-  async bindElementDraftToElement(element, comment) {
+  async bindElementDraftToElement(element, fields = {}) {
     const environment = this.getEnvironment();
     if (!environment || element.ownerDocument !== environment.document) return;
     const viewport = getViewportSize(environment);
@@ -4132,7 +4453,7 @@ var WebReviewKitApp = class {
         anchor,
         marker,
         selection: reviewSelection,
-        comment,
+        ...fields,
         previewElement
       };
     });
@@ -4142,26 +4463,33 @@ var WebReviewKitApp = class {
   }
   async createAreaDraft(selection) {
     const environment = this.getEnvironment();
-    if (!environment) return;
-    const viewport = getViewportSize(environment);
-    this.areaDraft = await this.withOverlayHidden(() => {
-      const marker = createSelectionCenterMarker(
-        selection,
-        void 0,
-        environment
-      );
-      const reviewSelection = {
-        viewport: toPublicSelection(selection)
-      };
-      return {
-        viewport,
-        marker,
-        selection: reviewSelection
-      };
-    });
-    this.isSelectingArea = false;
-    this.setModeState("area");
-    this.render();
+    if (!environment) {
+      this.isSelectingArea = false;
+      this.render();
+      return;
+    }
+    try {
+      const viewport = getViewportSize(environment);
+      this.areaDraft = await this.withOverlayHidden(() => {
+        const marker = createSelectionCenterMarker(
+          selection,
+          void 0,
+          environment
+        );
+        const reviewSelection = {
+          viewport: toPublicSelection(selection)
+        };
+        return {
+          viewport,
+          marker,
+          selection: reviewSelection
+        };
+      });
+      this.setModeState("area");
+    } finally {
+      this.isSelectingArea = false;
+      this.render();
+    }
   }
   async withOverlayHidden(callback) {
     if (!this.root) return callback();
@@ -4175,11 +4503,16 @@ var WebReviewKitApp = class {
   }
   async createItem(input) {
     const environment = this.getEnvironment();
-    if (!environment) return;
+    if (!environment || this.isCreatingItem) return;
     const now = (/* @__PURE__ */ new Date()).toISOString();
     const routeKey = getRouteKey(environment);
     const viewport = input.viewport ?? getViewportSize(environment);
     const createdBy = this.options.userId?.trim();
+    const title = input.title?.trim();
+    const assigneeId = input.assigneeId?.trim() || void 0;
+    const assigneeOption = this.options.assigneeOptions?.find(
+      (option) => option.value === assigneeId
+    );
     const item = {
       id: createId(),
       projectId: this.options.projectId,
@@ -4189,8 +4522,10 @@ var WebReviewKitApp = class {
       normalizedPath: routeKey,
       scope: input.scope ?? getReviewViewportScope(viewport, this.options.viewports?.presets),
       kind: input.kind,
-      title: input.comment.split("\n")[0]?.slice(0, 80),
+      title: title || void 0,
       comment: input.comment,
+      assigneeId,
+      assigneeName: input.assigneeName ?? assigneeOption?.label,
       createdBy: createdBy || void 0,
       status: "todo",
       viewport,
@@ -4205,13 +4540,23 @@ var WebReviewKitApp = class {
       createdAt: now,
       updatedAt: now
     };
-    const createdItem = await this.adapter.create(item);
-    this.setModeState("idle");
-    this.noteDraft = void 0;
-    this.areaDraft = void 0;
-    this.highlightItem(createdItem.id);
-    await this.reload();
-    await this.options.onCreateItem?.(createdItem);
+    this.draftError = "";
+    this.isCreatingItem = true;
+    this.render();
+    try {
+      const createdItem = await this.adapter.create(item);
+      this.setModeState("idle");
+      this.noteDraft = void 0;
+      this.areaDraft = void 0;
+      this.highlightItem(createdItem.id);
+      await this.reload();
+      await this.options.onCreateItem?.(createdItem);
+    } catch (error) {
+      this.draftError = error instanceof Error ? error.message : "Failed to save QA.";
+    } finally {
+      this.isCreatingItem = false;
+      this.render();
+    }
   }
   async restoreItem(item) {
     this.setModeState("idle");
@@ -4268,6 +4613,7 @@ export {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   normalizeReviewItemStatus,
   localAdapter,
+  DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
   clamp,
   DEFAULT_REVIEW_VIEWPORTS,
   findReviewViewportPreset,
@@ -4279,4 +4625,4 @@ export {
   reviewTypographyTokens,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-22HU3UBN.js.map
+//# sourceMappingURL=chunk-RPVLRULC.js.map

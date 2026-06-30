@@ -24,7 +24,10 @@ export interface AreaDraft extends ReviewDraftComposer {
   anchor?: DomAnchor;
   marker?: ReviewMarker;
   selection?: ReviewSelection;
+  title?: string;
   comment?: string;
+  assigneeId?: string | null;
+  assigneeName?: string;
 }
 
 /** In-progress note or DOM item before it is persisted through the adapter. */
@@ -33,7 +36,10 @@ export interface NoteDraft extends ReviewDraftComposer {
   anchor?: DomAnchor;
   marker: ReviewMarker;
   selection?: ReviewSelection;
+  title?: string;
   comment?: string;
+  assigneeId?: string | null;
+  assigneeName?: string;
   adjustment?: ReviewAdjustmentDraft;
   previewElement?: ReviewDraftPreviewElement;
 }

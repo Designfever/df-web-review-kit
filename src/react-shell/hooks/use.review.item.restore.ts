@@ -66,10 +66,16 @@ function runWithAutoScrollBehavior(
 
 const RESTORE_WAIT_MAX_MS = 2600;
 const RESTORE_STABLE_FRAME_COUNT = 2;
+const RESTORE_SCROLL_RECHECK_DELAYS_MS = [120, 360] as const;
 
 const waitForNextAnimationFrame = (targetWindow: Window) =>
   new Promise<void>((resolve) => {
     targetWindow.requestAnimationFrame(() => resolve());
+  });
+
+const waitForTargetTimeout = (targetWindow: Window, ms: number) =>
+  new Promise<void>((resolve) => {
+    targetWindow.setTimeout(resolve, ms);
   });
 
 const getRestoreLayoutSnapshot = (
@@ -176,20 +182,36 @@ export const useReviewItemRestore = ({
       );
       if (!isCurrentRestore()) return false;
 
-      runWithAutoScrollBehavior(targetDocument, () => {
-        setDocumentScrollInstantly(
-          targetWindow,
-          targetDocument,
-          getReviewItemRestoreScrollPosition(
+      const applyScrollPosition = () => {
+        if (!isCurrentRestore()) return false;
+        const currentAnchorElement =
+          queryReviewItemAnchorElement(targetDocument, item) ?? anchorElement;
+
+        runWithAutoScrollBehavior(targetDocument, () => {
+          setDocumentScrollInstantly(
             targetWindow,
             targetDocument,
-            item,
-            anchorElement
-          )
-        );
-      });
-      onSyncTargetViewport();
+            getReviewItemRestoreScrollPosition(
+              targetWindow,
+              targetDocument,
+              item,
+              currentAnchorElement
+            )
+          );
+        });
+        onSyncTargetViewport();
+        return true;
+      };
+
+      if (!applyScrollPosition()) return false;
       controllerRef.current?.highlightItem(item.id);
+
+      for (const delay of RESTORE_SCROLL_RECHECK_DELAYS_MS) {
+        await waitForTargetTimeout(targetWindow, delay);
+        if (!applyScrollPosition()) return false;
+        controllerRef.current?.highlightItem(item.id);
+      }
+
       return true;
     },
     [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
@@ -212,6 +234,7 @@ export const useReviewItemRestore = ({
       const nextTarget = getItemFrameTarget(item, reviewPathPrefix);
       const nextSize = getRestoredSize(item, viewportPresets);
 
+      pendingInitialItemIdRef.current = null;
       pendingRestoreRef.current = item;
       selectedItemIdRef.current = item.id;
       onSelectedItemIdChange(item.id);
@@ -235,6 +258,7 @@ export const useReviewItemRestore = ({
       onSizeChange,
       onTargetChange,
       pendingRestoreRef,
+      pendingInitialItemIdRef,
       reviewPathPrefix,
       selectedItemIdRef,
       source,
@@ -247,11 +271,13 @@ export const useReviewItemRestore = ({
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
 
-    pendingInitialItemIdRef.current = null;
-
-    const item = await adapter.get(itemId);
-    if (item) {
-      restoreReviewItem(item);
+    try {
+      const item = await adapter.get(itemId);
+      if (item && pendingInitialItemIdRef.current === itemId) {
+        restoreReviewItem(item);
+      }
+    } catch {
+      /* retry when the list response arrives */
     }
   }, [adapter, pendingInitialItemIdRef, restoreReviewItem]);
 

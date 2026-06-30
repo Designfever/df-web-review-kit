@@ -40,6 +40,10 @@ interface ViewportSize {
     width: number;
     height: number;
 }
+interface ReviewAssigneeOption {
+    value: string;
+    label: string;
+}
 interface ReviewPoint {
     x: number;
     y: number;
@@ -64,6 +68,8 @@ interface ReviewItem {
     kind: ReviewItemKind;
     title?: string;
     comment: string;
+    assigneeId?: string | null;
+    assigneeName?: string;
     createdBy?: string;
     status: ReviewItemStatus;
     viewport: ViewportSize;
@@ -129,12 +135,18 @@ interface NumberedReviewItem {
     number?: number;
     displayLabel: string;
 }
+interface ReviewFieldsConfig {
+    title?: boolean;
+}
 interface WebReviewKitOptions {
     projectId: string;
     userId?: string;
     adapter?: WebReviewKitAdapter;
     target?: WebReviewKitTarget | (() => WebReviewKitTarget | undefined);
     adjustmentLabel?: string;
+    fields?: ReviewFieldsConfig;
+    assigneeTitle?: string;
+    assigneeOptions?: readonly ReviewAssigneeOption[];
     viewports?: {
         presets?: ReviewViewportPreset[];
     };
@@ -179,4 +191,4 @@ interface WebReviewKitTarget {
     getComposerHost?: () => HTMLElement | null | undefined;
 }
 
-export type { DomAnchor as D, LocalAdapterOptions as L, NumberedReviewItem as N, ReviewWorkflowStatus as R, SupabaseReviewAdapterOptions as S, ViewportSize as V, WebReviewKitAdapter as W, ReviewItemStatus as a, WebReviewKitOptions as b, WebReviewKitController as c, ReviewViewportPreset as d, ReviewItem as e, ReviewItemScope as f, DomAnchorCandidate as g, DomAnchorStrategy as h, DomSourceHint as i, RelativeSelection as j, ReviewItemKind as k, ReviewItemQuery as l, ReviewMarker as m, ReviewMode as n, ReviewPoint as o, ReviewRulerConfig as p, ReviewSelection as q, ReviewSource as r, ReviewSubmitStatus as s, ReviewViewportScope as t, SupabaseReviewClient as u, WebReviewKitTarget as v };
+export type { DomAnchor as D, LocalAdapterOptions as L, NumberedReviewItem as N, ReviewWorkflowStatus as R, SupabaseReviewAdapterOptions as S, ViewportSize as V, WebReviewKitAdapter as W, ReviewItemStatus as a, WebReviewKitOptions as b, WebReviewKitController as c, ReviewViewportPreset as d, ReviewItem as e, ReviewItemScope as f, DomAnchorCandidate as g, DomAnchorStrategy as h, DomSourceHint as i, RelativeSelection as j, ReviewAssigneeOption as k, ReviewItemKind as l, ReviewItemQuery as m, ReviewMarker as n, ReviewMode as o, ReviewPoint as p, ReviewRulerConfig as q, ReviewSelection as r, ReviewSource as s, ReviewSubmitStatus as t, ReviewViewportScope as u, SupabaseReviewClient as v, WebReviewKitTarget as w, ReviewFieldsConfig as x };

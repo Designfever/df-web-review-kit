@@ -21,7 +21,7 @@ import {
   readReviewFigmaToken,
   renderReviewFigmaImage,
   requireReviewFigmaToken
-} from "./chunk-K26WLRRP.js";
+} from "./chunk-UNDQZ4Y2.js";
 
 // src/vite/figma-image-store.ts
 import path3 from "path";

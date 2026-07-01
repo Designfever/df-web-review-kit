@@ -217,8 +217,14 @@ function getReviewFigmaAssetMimeType(storageKey) {
 // src/figma/image.store.ts
 var DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT = "/__dfwr/figma-images";
 function createReviewFigmaImageStoreClient(options = {}) {
+  return createEndpointReviewFigmaImageStore(options);
+}
+function createEndpointReviewFigmaImageStore(options = {}) {
   const endpoint = options.endpoint ?? DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT;
-  const request = createReviewFigmaImageStoreRequest(endpoint, options.fetch);
+  const request = createReviewFigmaImageStoreRequest(
+    options.fetch,
+    options.headers
+  );
   return {
     listImages(target) {
       const url = `${endpoint}?target=${encodeURIComponent(
@@ -439,19 +445,27 @@ function getReviewFigmaImageMimeType(format) {
   if (format === "png") return "image/png";
   return "image/webp";
 }
-function createReviewFigmaImageStoreRequest(endpoint, fetchOption) {
+function createReviewFigmaImageStoreRequest(fetchOption, headersProvider) {
   return async (input, init = {}) => {
     const requestFetch = fetchOption ?? globalThis.fetch;
     if (!requestFetch) throw new Error("Figma image store requires fetch.");
     const figmaToken = init.figmaToken ?? "";
-    const { figmaToken: _figmaToken, ...requestInit } = init;
+    const {
+      figmaToken: _figmaToken,
+      headers: requestHeaders,
+      ...requestInit
+    } = init;
+    const headers = new Headers();
+    headers.set("Content-Type", "application/json");
+    if (figmaToken) headers.set("X-Figma-Token", figmaToken);
+    appendReviewFigmaImageStoreHeaders(
+      headers,
+      await readReviewFigmaImageStoreHeaders(headersProvider)
+    );
+    appendReviewFigmaImageStoreHeaders(headers, requestHeaders);
     const response = await requestFetch(input, {
       ...requestInit,
-      headers: {
-        "Content-Type": "application/json",
-        ...figmaToken ? { "X-Figma-Token": figmaToken } : {},
-        ...requestInit.headers ?? {}
-      }
+      headers
     });
     const text = await response.text();
     const body = text ? JSON.parse(text) : null;
@@ -461,6 +475,15 @@ function createReviewFigmaImageStoreRequest(endpoint, fetchOption) {
     }
     return body;
   };
+}
+async function readReviewFigmaImageStoreHeaders(provider) {
+  return typeof provider === "function" ? provider() : provider;
+}
+function appendReviewFigmaImageStoreHeaders(target, source) {
+  if (!source) return;
+  new Headers(source).forEach((value, key) => {
+    target.set(key, value);
+  });
 }
 function readReviewFigmaImageToken(provider) {
   const token = typeof provider === "function" ? provider() : provider;
@@ -606,6 +629,7 @@ export {
   createReviewFigmaImageApiUrl,
   DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
   createReviewFigmaImageStoreClient,
+  createEndpointReviewFigmaImageStore,
   createReviewFigmaClientRenderedAsset,
   getReviewFigmaImageTargetKey,
   getReviewFigmaImageMimeType,
@@ -613,4 +637,4 @@ export {
   createReviewFigmaReleaseSnapshot,
   collectReviewFigmaReleaseSnapshot
 };
-//# sourceMappingURL=chunk-K26WLRRP.js.map
+//# sourceMappingURL=chunk-UNDQZ4Y2.js.map

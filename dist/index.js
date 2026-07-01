@@ -18,6 +18,7 @@ import {
   REVIEW_FIGMA_TOKEN_MISSING_CODE,
   ReviewFigmaTokenError,
   collectReviewFigmaReleaseSnapshot,
+  createEndpointReviewFigmaImageStore,
   createReviewFigmaClientRenderedAsset,
   createReviewFigmaFrameUrl,
   createReviewFigmaImageStoreClient,
@@ -31,7 +32,7 @@ import {
   readReviewFigmaToken,
   requireReviewFigmaNodeRef,
   requireReviewFigmaToken
-} from "./chunk-K26WLRRP.js";
+} from "./chunk-UNDQZ4Y2.js";
 
 // src/adapters/supabase.ts
 var DEFAULT_SUPABASE_REVIEW_TABLE = "review_items";
@@ -562,6 +563,7 @@ export {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   ReviewFigmaTokenError,
   collectReviewFigmaReleaseSnapshot,
+  createEndpointReviewFigmaImageStore,
   createRemoteReviewFigmaImageStore,
   createReviewFigmaFrameUrl,
   createReviewFigmaImageStoreClient,

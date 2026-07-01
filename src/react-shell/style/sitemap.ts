@@ -291,6 +291,16 @@ export const reviewShellSitemapStyle = `
     cursor: default;
   }
 
+  .df-review-sitemap-row.is-clickable {
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-row.is-clickable .df-review-sitemap-path,
+  .df-review-sitemap-row.is-clickable .df-review-sitemap-cell,
+  .df-review-sitemap-row.is-clickable .df-review-sitemap-page-label {
+    cursor: pointer;
+  }
+
   .df-review-sitemap-empty {
     display: flex;
     grid-column: 1 / -1;
@@ -302,9 +312,15 @@ export const reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-row:not(.is-summary):hover,
+  .df-review-sitemap-row.is-clickable:focus-visible,
   button.df-review-sitemap-row.is-summary:hover,
   .df-review-sitemap-row.is-active {
     background: var(--df-review-accent-soft);
+  }
+
+  .df-review-sitemap-row.is-clickable:focus-visible {
+    outline: 1px solid var(--df-review-accent);
+    outline-offset: -1px;
   }
 
   .df-review-sitemap-path {
@@ -377,27 +393,17 @@ export const reviewShellSitemapStyle = `
     height: 15px;
   }
 
-  .df-review-sitemap-page-button {
+  .df-review-sitemap-page-label {
     min-width: 0;
     min-height: 24px;
-    border: 0;
     border-radius: var(--df-review-radius-sm);
     padding: 0 5px;
     overflow: hidden;
     color: inherit;
-    background: transparent;
-    box-shadow: none;
     font: inherit;
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
-    cursor: pointer;
-  }
-
-  .df-review-sitemap-page-button:hover,
-  .df-review-sitemap-page-button:focus-visible {
-    color: var(--df-review-text);
-    background: var(--df-review-control-hover);
   }
 
   .df-review-sitemap-label {
@@ -423,6 +429,11 @@ export const reviewShellSitemapStyle = `
 
   .df-review-sitemap-cell.is-todo strong {
     font: inherit;
+  }
+
+  .df-review-sitemap-cell.is-zero {
+    color: var(--df-review-muted);
+    opacity: 0.45;
   }
 
   .df-review-sitemap-cell.is-online {

@@ -60,6 +60,18 @@ const getSortIndicator = (sort: SortState, key: SitemapSortKey) => {
   return sort.direction === 'desc' ? '↓' : '↑';
 };
 
+const getCountCellClassName = (
+  status: 'todo' | 'review' | 'hold',
+  count: number
+) =>
+  [
+    'df-review-sitemap-cell',
+    `is-${status}`,
+    count === 0 ? 'is-zero' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
 const mergePresenceUsers = (users: ReviewPresenceUser[]) => {
   const userByKey = new Map<string, ReviewPresenceUser>();
 
@@ -91,8 +103,8 @@ export const SitemapModal = ({
   onSelectPage,
 }: SitemapModalProps) => {
   const [sort, setSort] = useState<SortState>({
-    key: 'todo',
-    direction: 'desc',
+    key: 'page',
+    direction: 'asc',
   });
   const [collapsedFolderHrefs, setCollapsedFolderHrefs] = useState<Set<string>>(
     () => new Set()
@@ -121,7 +133,7 @@ export const SitemapModal = ({
     '--df-review-sitemap-grid-template': 'minmax(190px, 1fr) 58px 70px 56px minmax(96px, 140px)',
   } as CSSProperties;
   const sortHeaders: SortHeader[] = [
-    { key: 'page', label: '', title: 'Page', className: 'is-page' },
+    { key: 'page', label: 'Path', className: 'is-page' },
     { key: 'todo', label: 'Todo' },
     { key: 'review', label: 'Review' },
     { key: 'hold', label: 'Hold' },
@@ -229,10 +241,14 @@ export const SitemapModal = ({
             ))}
           </div>
           {sitemapRows.map((row) => {
+            const selectRowPage = () => {
+              if (row.isPage) onSelectPage(row.href);
+            };
             const rowClassName = [
               'df-review-sitemap-row',
               row.isPage ? 'is-page' : 'is-folder',
               row.isActive ? 'is-active' : '',
+              row.isPage ? 'is-clickable' : '',
             ]
               .filter(Boolean)
               .join(' ');
@@ -245,7 +261,6 @@ export const SitemapModal = ({
                 label={row.label}
                 qaCount={row.qaCount}
                 users={row.users}
-                onSelectPage={() => onSelectPage(row.href)}
                 onToggleFolder={() => toggleFolder(row.href)}
               />
             );
@@ -259,7 +274,19 @@ export const SitemapModal = ({
                     : `${row.href} group / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`
                 }
                 className={rowClassName}
-                role="row"
+                role={row.isPage ? 'button' : 'row'}
+                tabIndex={row.isPage ? 0 : undefined}
+                onClick={row.isPage ? selectRowPage : undefined}
+                onKeyDown={
+                  row.isPage
+                    ? (event) => {
+                        if (event.currentTarget !== event.target) return;
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                        event.preventDefault();
+                        selectRowPage();
+                      }
+                    : undefined
+                }
               >
                 {rowContent}
               </div>
@@ -302,7 +329,6 @@ const SitemapRowContent = ({
   label,
   qaCount,
   users,
-  onSelectPage,
   onToggleFolder,
 }: {
   depth: number;
@@ -312,7 +338,6 @@ const SitemapRowContent = ({
   label: string;
   qaCount: SitemapQaCount;
   users: ReviewPresenceUser[];
-  onSelectPage?: () => void;
   onToggleFolder?: () => void;
 }) => (
   <>
@@ -326,7 +351,10 @@ const SitemapRowContent = ({
           aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${label}`}
           className="df-review-sitemap-tree-toggle"
           type="button"
-          onClick={onToggleFolder}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleFolder?.();
+          }}
         >
           {isExpanded ? (
             <ChevronDownIcon aria-hidden="true" />
@@ -337,25 +365,21 @@ const SitemapRowContent = ({
       ) : (
         <span className="df-review-sitemap-tree-spacer" aria-hidden="true" />
       )}
-      {isPage && onSelectPage ? (
-        <button
-          className="df-review-sitemap-page-button"
-          type="button"
-          onClick={onSelectPage}
-        >
+      {isPage ? (
+        <span className="df-review-sitemap-page-label">
           {label}
-        </button>
+        </span>
       ) : (
         <span className="df-review-sitemap-label">{label}</span>
       )}
     </span>
-    <span className="df-review-sitemap-cell is-todo">
+    <span className={getCountCellClassName('todo', qaCount.status.todo)}>
       <strong>{qaCount.status.todo}</strong>
     </span>
-    <span className="df-review-sitemap-cell is-review">
+    <span className={getCountCellClassName('review', qaCount.status.review)}>
       {qaCount.status.review}
     </span>
-    <span className="df-review-sitemap-cell is-hold">
+    <span className={getCountCellClassName('hold', qaCount.status.hold)}>
       {qaCount.status.hold}
     </span>
     <span className="df-review-sitemap-cell is-online">

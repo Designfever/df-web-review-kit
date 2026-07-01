@@ -766,6 +766,16 @@ var reviewShellSitemapStyle = `
     cursor: default;
   }
 
+  .df-review-sitemap-row.is-clickable {
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-row.is-clickable .df-review-sitemap-path,
+  .df-review-sitemap-row.is-clickable .df-review-sitemap-cell,
+  .df-review-sitemap-row.is-clickable .df-review-sitemap-page-label {
+    cursor: pointer;
+  }
+
   .df-review-sitemap-empty {
     display: flex;
     grid-column: 1 / -1;
@@ -777,9 +787,15 @@ var reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-row:not(.is-summary):hover,
+  .df-review-sitemap-row.is-clickable:focus-visible,
   button.df-review-sitemap-row.is-summary:hover,
   .df-review-sitemap-row.is-active {
     background: var(--df-review-accent-soft);
+  }
+
+  .df-review-sitemap-row.is-clickable:focus-visible {
+    outline: 1px solid var(--df-review-accent);
+    outline-offset: -1px;
   }
 
   .df-review-sitemap-path {
@@ -852,27 +868,17 @@ var reviewShellSitemapStyle = `
     height: 15px;
   }
 
-  .df-review-sitemap-page-button {
+  .df-review-sitemap-page-label {
     min-width: 0;
     min-height: 24px;
-    border: 0;
     border-radius: var(--df-review-radius-sm);
     padding: 0 5px;
     overflow: hidden;
     color: inherit;
-    background: transparent;
-    box-shadow: none;
     font: inherit;
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
-    cursor: pointer;
-  }
-
-  .df-review-sitemap-page-button:hover,
-  .df-review-sitemap-page-button:focus-visible {
-    color: var(--df-review-text);
-    background: var(--df-review-control-hover);
   }
 
   .df-review-sitemap-label {
@@ -898,6 +904,11 @@ var reviewShellSitemapStyle = `
 
   .df-review-sitemap-cell.is-todo strong {
     font: inherit;
+  }
+
+  .df-review-sitemap-cell.is-zero {
+    color: var(--df-review-muted);
+    opacity: 0.45;
   }
 
   .df-review-sitemap-cell.is-online {
@@ -6661,6 +6672,11 @@ var getSortIndicator = (sort, key) => {
   if (sort.key !== key) return "";
   return sort.direction === "desc" ? "\u2193" : "\u2191";
 };
+var getCountCellClassName = (status, count) => [
+  "df-review-sitemap-cell",
+  `is-${status}`,
+  count === 0 ? "is-zero" : ""
+].filter(Boolean).join(" ");
 var mergePresenceUsers = (users) => {
   const userByKey = /* @__PURE__ */ new Map();
   users.forEach((user) => {
@@ -6685,8 +6701,8 @@ var SitemapModal = ({
   onSelectPage
 }) => {
   const [sort, setSort] = (0, import_react4.useState)({
-    key: "todo",
-    direction: "desc"
+    key: "page",
+    direction: "asc"
   });
   const [collapsedFolderHrefs, setCollapsedFolderHrefs] = (0, import_react4.useState)(
     () => /* @__PURE__ */ new Set()
@@ -6715,7 +6731,7 @@ var SitemapModal = ({
     "--df-review-sitemap-grid-template": "minmax(190px, 1fr) 58px 70px 56px minmax(96px, 140px)"
   };
   const sortHeaders = [
-    { key: "page", label: "", title: "Page", className: "is-page" },
+    { key: "page", label: "Path", className: "is-page" },
     { key: "todo", label: "Todo" },
     { key: "review", label: "Review" },
     { key: "hold", label: "Hold" },
@@ -6828,10 +6844,14 @@ var SitemapModal = ({
               header.key
             )) }),
             sitemapRows.map((row) => {
+              const selectRowPage = () => {
+                if (row.isPage) onSelectPage(row.href);
+              };
               const rowClassName = [
                 "df-review-sitemap-row",
                 row.isPage ? "is-page" : "is-folder",
-                row.isActive ? "is-active" : ""
+                row.isActive ? "is-active" : "",
+                row.isPage ? "is-clickable" : ""
               ].filter(Boolean).join(" ");
               const rowContent = /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                 SitemapRowContent,
@@ -6843,7 +6863,6 @@ var SitemapModal = ({
                   label: row.label,
                   qaCount: row.qaCount,
                   users: row.users,
-                  onSelectPage: () => onSelectPage(row.href),
                   onToggleFolder: () => toggleFolder(row.href)
                 }
               );
@@ -6852,7 +6871,15 @@ var SitemapModal = ({
                 {
                   "aria-label": row.isPage ? `${row.href} / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online` : `${row.href} group / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
                   className: rowClassName,
-                  role: "row",
+                  role: row.isPage ? "button" : "row",
+                  tabIndex: row.isPage ? 0 : void 0,
+                  onClick: row.isPage ? selectRowPage : void 0,
+                  onKeyDown: row.isPage ? (event) => {
+                    if (event.currentTarget !== event.target) return;
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    event.preventDefault();
+                    selectRowPage();
+                  } : void 0,
                   children: rowContent
                 },
                 row.href
@@ -6894,7 +6921,6 @@ var SitemapRowContent = ({
   label,
   qaCount,
   users,
-  onSelectPage,
   onToggleFolder
 }) => /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
   /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
@@ -6910,25 +6936,20 @@ var SitemapRowContent = ({
             "aria-label": `${isExpanded ? "Collapse" : "Expand"} ${label}`,
             className: "df-review-sitemap-tree-toggle",
             type: "button",
-            onClick: onToggleFolder,
+            onClick: (event) => {
+              event.stopPropagation();
+              onToggleFolder?.();
+            },
             children: isExpanded ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(ChevronDown, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(ChevronRight, { "aria-hidden": "true" })
           }
         ) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-tree-spacer", "aria-hidden": "true" }),
-        isPage && onSelectPage ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-          "button",
-          {
-            className: "df-review-sitemap-page-button",
-            type: "button",
-            onClick: onSelectPage,
-            children: label
-          }
-        ) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-label", children: label })
+        isPage ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-page-label", children: label }) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-label", children: label })
       ]
     }
   ),
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-todo", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: qaCount.status.todo }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-review", children: qaCount.status.review }),
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-hold", children: qaCount.status.hold }),
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: getCountCellClassName("todo", qaCount.status.todo), children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: qaCount.status.todo }) }),
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: getCountCellClassName("review", qaCount.status.review), children: qaCount.status.review }),
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: getCountCellClassName("hold", qaCount.status.hold), children: qaCount.status.hold }),
   /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
     "span",
     {

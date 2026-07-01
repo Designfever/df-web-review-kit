@@ -211,11 +211,13 @@ export const ReviewShell = ({
   });
   const sourceShortcutCleanupRef = useRef<(() => void) | null>(null);
   const sourceInspectorInteractionRef = useRef(false);
+  const sectionOutlineCountRef = useRef(0);
   const [sourceInspectorState, setSourceInspectorState] =
     useState<SourceInspectorState | null>(null);
   const [sectionOutline, setSectionOutline] = useState<
     SectionOutlineEntry[] | null
   >(null);
+  const [targetFrameLoadVersion, setTargetFrameLoadVersion] = useState(0);
   const [sectionOutlineFilter, setSectionOutlineFilter] = useState(() =>
     getStoredSourceTreeFilter()
   );
@@ -338,6 +340,10 @@ export const ReviewShell = ({
     [filteredSectionOutline]
   );
   const isSectionOutlineFiltering = sectionOutlineFilterTerms.length > 0;
+
+  useEffect(() => {
+    sectionOutlineCountRef.current = sectionOutlineTotalCount;
+  }, [sectionOutlineTotalCount]);
   const {
     activeItems,
     activeRemainingItemCount,
@@ -1010,6 +1016,8 @@ export const ReviewShell = ({
   const setSectionOutlineWithDefaultCollapse = useCallback(
     (nextSectionOutline: SectionOutlineEntry[]) => {
       setSectionOutline(nextSectionOutline);
+      sectionOutlineCountRef.current =
+        getSectionOutlineEntryCount(nextSectionOutline);
       setCollapsedSectionOutlineIds(
         getDefaultCollapsedSectionOutlineIds(nextSectionOutline)
       );
@@ -1017,29 +1025,84 @@ export const ReviewShell = ({
     []
   );
 
+  const refreshCurrentSectionOutline = useCallback(
+    (resetCollapse = false) => {
+      const nextSectionOutline = getCurrentSectionOutline();
+      if (!nextSectionOutline) return false;
+
+      setSectionOutline(nextSectionOutline);
+      const nextCount = getSectionOutlineEntryCount(nextSectionOutline);
+      const shouldResetCollapse = resetCollapse ||
+        sectionOutlineCountRef.current === 0;
+      sectionOutlineCountRef.current = nextCount;
+
+      if (shouldResetCollapse) {
+        setCollapsedSectionOutlineIds(
+          getDefaultCollapsedSectionOutlineIds(nextSectionOutline)
+        );
+      }
+
+      return true;
+    },
+    [getCurrentSectionOutline]
+  );
+
   useEffect(() => {
     if (sidePanel !== 'source' || !isListVisible) return undefined;
 
     const refreshSectionOutline = () => {
-      const nextSectionOutline = getCurrentSectionOutline();
-      if (!nextSectionOutline) return;
-      setSectionOutlineWithDefaultCollapse(nextSectionOutline);
+      refreshCurrentSectionOutline(true);
     };
 
     const animationFrame = window.requestAnimationFrame(refreshSectionOutline);
     const firstTimeout = window.setTimeout(refreshSectionOutline, 120);
     const secondTimeout = window.setTimeout(refreshSectionOutline, 500);
+    const thirdTimeout = window.setTimeout(refreshSectionOutline, 1200);
 
     return () => {
       window.cancelAnimationFrame(animationFrame);
       window.clearTimeout(firstTimeout);
       window.clearTimeout(secondTimeout);
+      window.clearTimeout(thirdTimeout);
     };
   }, [
-    getCurrentSectionOutline,
     isListVisible,
-    setSectionOutlineWithDefaultCollapse,
+    refreshCurrentSectionOutline,
     sidePanel,
+    targetFrameLoadVersion,
+    targetSrc,
+  ]);
+
+  useEffect(() => {
+    if (sidePanel !== 'source' || !isListVisible) return undefined;
+
+    const frameDocument = iframeRef.current?.contentDocument;
+    const body = frameDocument?.body;
+    if (!body) return undefined;
+
+    let refreshTimeout: number | null = null;
+    const scheduleRefresh = () => {
+      if (refreshTimeout) window.clearTimeout(refreshTimeout);
+      refreshTimeout = window.setTimeout(() => {
+        refreshTimeout = null;
+        refreshCurrentSectionOutline(false);
+      }, 80);
+    };
+
+    const observer = new MutationObserver(scheduleRefresh);
+    observer.observe(body, { childList: true, subtree: true });
+    scheduleRefresh();
+
+    return () => {
+      if (refreshTimeout) window.clearTimeout(refreshTimeout);
+      observer.disconnect();
+    };
+  }, [
+    iframeRef,
+    isListVisible,
+    refreshCurrentSectionOutline,
+    sidePanel,
+    targetFrameLoadVersion,
     targetSrc,
   ]);
 
@@ -1057,16 +1120,12 @@ export const ReviewShell = ({
     }
 
     setSidePanel('source');
-    const nextSectionOutline = getCurrentSectionOutline();
-    if (nextSectionOutline) {
-      setSectionOutlineWithDefaultCollapse(nextSectionOutline);
-    }
+    refreshCurrentSectionOutline(true);
     setIsListVisible(true);
   }, [
-    getCurrentSectionOutline,
     isListVisible,
     isSourceInspectorEnabled,
-    setSectionOutlineWithDefaultCollapse,
+    refreshCurrentSectionOutline,
     setIsListVisible,
     sidePanel,
   ]);
@@ -1444,6 +1503,7 @@ export const ReviewShell = ({
   }, [cleanupSourceOpenShortcut]);
 
   const loadTargetFrame = useCallback(() => {
+    setTargetFrameLoadVersion((currentVersion) => currentVersion + 1);
     initReviewKit();
     refreshTargetFigmaConfig();
     setTargetFigmaOverlayLocked(
@@ -1452,20 +1512,16 @@ export const ReviewShell = ({
     );
     bindSourceOpenShortcut();
     if (sidePanel === 'source' && isListVisible) {
-      const nextSectionOutline = getCurrentSectionOutline();
-      if (nextSectionOutline) {
-        setSectionOutlineWithDefaultCollapse(nextSectionOutline);
-      }
+      refreshCurrentSectionOutline(true);
     }
   }, [
     bindSourceOpenShortcut,
-    getCurrentSectionOutline,
     iframeRef,
     initReviewKit,
     isListVisible,
     mode,
     refreshTargetFigmaConfig,
-    setSectionOutlineWithDefaultCollapse,
+    refreshCurrentSectionOutline,
     sidePanel,
   ]);
 

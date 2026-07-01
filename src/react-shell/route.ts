@@ -117,7 +117,10 @@ export const getFrameRouteTarget = (
   targetWindow: Window,
   reviewPathPrefix: string
 ) => {
-  return normalizeTarget(targetWindow.location.pathname, reviewPathPrefix);
+  return normalizeTarget(
+    `${targetWindow.location.pathname}${targetWindow.location.search}${targetWindow.location.hash}`,
+    reviewPathPrefix
+  );
 };
 
 export const updateShellUrl = (

@@ -5573,7 +5573,10 @@ var buildTargetSrc = (target) => {
   return `${url.pathname}${url.search}${url.hash}`;
 };
 var getFrameRouteTarget = (targetWindow, reviewPathPrefix) => {
-  return normalizeTarget(targetWindow.location.pathname, reviewPathPrefix);
+  return normalizeTarget(
+    `${targetWindow.location.pathname}${targetWindow.location.search}${targetWindow.location.hash}`,
+    reviewPathPrefix
+  );
 };
 var updateShellUrl = (target, size, source) => {
   const url = new URL(window.location.href);
@@ -18635,8 +18638,10 @@ var ReviewShell = ({
   });
   const sourceShortcutCleanupRef = (0, import_react24.useRef)(null);
   const sourceInspectorInteractionRef = (0, import_react24.useRef)(false);
+  const sectionOutlineCountRef = (0, import_react24.useRef)(0);
   const [sourceInspectorState, setSourceInspectorState] = (0, import_react24.useState)(null);
   const [sectionOutline, setSectionOutline] = (0, import_react24.useState)(null);
+  const [targetFrameLoadVersion, setTargetFrameLoadVersion] = (0, import_react24.useState)(0);
   const [sectionOutlineFilter, setSectionOutlineFilter] = (0, import_react24.useState)(
     () => getStoredSourceTreeFilter()
   );
@@ -18738,6 +18743,9 @@ var ReviewShell = ({
     [filteredSectionOutline]
   );
   const isSectionOutlineFiltering = sectionOutlineFilterTerms.length > 0;
+  (0, import_react24.useEffect)(() => {
+    sectionOutlineCountRef.current = sectionOutlineTotalCount;
+  }, [sectionOutlineTotalCount]);
   const {
     activeItems,
     activeRemainingItemCount,
@@ -19319,32 +19327,78 @@ var ReviewShell = ({
   const setSectionOutlineWithDefaultCollapse = (0, import_react24.useCallback)(
     (nextSectionOutline) => {
       setSectionOutline(nextSectionOutline);
+      sectionOutlineCountRef.current = getSectionOutlineEntryCount(nextSectionOutline);
       setCollapsedSectionOutlineIds(
         getDefaultCollapsedSectionOutlineIds(nextSectionOutline)
       );
     },
     []
   );
+  const refreshCurrentSectionOutline = (0, import_react24.useCallback)(
+    (resetCollapse = false) => {
+      const nextSectionOutline = getCurrentSectionOutline();
+      if (!nextSectionOutline) return false;
+      setSectionOutline(nextSectionOutline);
+      const nextCount = getSectionOutlineEntryCount(nextSectionOutline);
+      const shouldResetCollapse = resetCollapse || sectionOutlineCountRef.current === 0;
+      sectionOutlineCountRef.current = nextCount;
+      if (shouldResetCollapse) {
+        setCollapsedSectionOutlineIds(
+          getDefaultCollapsedSectionOutlineIds(nextSectionOutline)
+        );
+      }
+      return true;
+    },
+    [getCurrentSectionOutline]
+  );
   (0, import_react24.useEffect)(() => {
     if (sidePanel !== "source" || !isListVisible) return void 0;
     const refreshSectionOutline = () => {
-      const nextSectionOutline = getCurrentSectionOutline();
-      if (!nextSectionOutline) return;
-      setSectionOutlineWithDefaultCollapse(nextSectionOutline);
+      refreshCurrentSectionOutline(true);
     };
     const animationFrame = window.requestAnimationFrame(refreshSectionOutline);
     const firstTimeout = window.setTimeout(refreshSectionOutline, 120);
     const secondTimeout = window.setTimeout(refreshSectionOutline, 500);
+    const thirdTimeout = window.setTimeout(refreshSectionOutline, 1200);
     return () => {
       window.cancelAnimationFrame(animationFrame);
       window.clearTimeout(firstTimeout);
       window.clearTimeout(secondTimeout);
+      window.clearTimeout(thirdTimeout);
     };
   }, [
-    getCurrentSectionOutline,
     isListVisible,
-    setSectionOutlineWithDefaultCollapse,
+    refreshCurrentSectionOutline,
     sidePanel,
+    targetFrameLoadVersion,
+    targetSrc
+  ]);
+  (0, import_react24.useEffect)(() => {
+    if (sidePanel !== "source" || !isListVisible) return void 0;
+    const frameDocument = iframeRef.current?.contentDocument;
+    const body = frameDocument?.body;
+    if (!body) return void 0;
+    let refreshTimeout = null;
+    const scheduleRefresh = () => {
+      if (refreshTimeout) window.clearTimeout(refreshTimeout);
+      refreshTimeout = window.setTimeout(() => {
+        refreshTimeout = null;
+        refreshCurrentSectionOutline(false);
+      }, 80);
+    };
+    const observer = new MutationObserver(scheduleRefresh);
+    observer.observe(body, { childList: true, subtree: true });
+    scheduleRefresh();
+    return () => {
+      if (refreshTimeout) window.clearTimeout(refreshTimeout);
+      observer.disconnect();
+    };
+  }, [
+    iframeRef,
+    isListVisible,
+    refreshCurrentSectionOutline,
+    sidePanel,
+    targetFrameLoadVersion,
     targetSrc
   ]);
   const toggleQaPanel = (0, import_react24.useCallback)(() => {
@@ -19358,16 +19412,12 @@ var ReviewShell = ({
       return;
     }
     setSidePanel("source");
-    const nextSectionOutline = getCurrentSectionOutline();
-    if (nextSectionOutline) {
-      setSectionOutlineWithDefaultCollapse(nextSectionOutline);
-    }
+    refreshCurrentSectionOutline(true);
     setIsListVisible(true);
   }, [
-    getCurrentSectionOutline,
     isListVisible,
     isSourceInspectorEnabled,
-    setSectionOutlineWithDefaultCollapse,
+    refreshCurrentSectionOutline,
     setIsListVisible,
     sidePanel
   ]);
@@ -19674,6 +19724,7 @@ var ReviewShell = ({
     return cleanupSourceOpenShortcut;
   }, [cleanupSourceOpenShortcut]);
   const loadTargetFrame = (0, import_react24.useCallback)(() => {
+    setTargetFrameLoadVersion((currentVersion) => currentVersion + 1);
     initReviewKit();
     refreshTargetFigmaConfig();
     setTargetFigmaOverlayLocked(
@@ -19682,20 +19733,16 @@ var ReviewShell = ({
     );
     bindSourceOpenShortcut();
     if (sidePanel === "source" && isListVisible) {
-      const nextSectionOutline = getCurrentSectionOutline();
-      if (nextSectionOutline) {
-        setSectionOutlineWithDefaultCollapse(nextSectionOutline);
-      }
+      refreshCurrentSectionOutline(true);
     }
   }, [
     bindSourceOpenShortcut,
-    getCurrentSectionOutline,
     iframeRef,
     initReviewKit,
     isListVisible,
     mode,
     refreshTargetFigmaConfig,
-    setSectionOutlineWithDefaultCollapse,
+    refreshCurrentSectionOutline,
     sidePanel
   ]);
   (0, import_react24.useEffect)(() => {

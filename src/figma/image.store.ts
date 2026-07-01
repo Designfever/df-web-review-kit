@@ -23,12 +23,23 @@ type ReviewFigmaImageTokenProvider =
   | undefined
   | (() => string | null | undefined);
 
+export type ReviewFigmaImageStoreHeadersProvider =
+  | HeadersInit
+  | null
+  | undefined
+  | (() => HeadersInit | null | undefined | Promise<HeadersInit | null | undefined>);
+
 export type ReviewFigmaImageStoreClientOptions = {
   endpoint?: string;
   fetch?: typeof fetch;
   token?: ReviewFigmaImageTokenProvider;
   clientRender?: boolean | ReviewFigmaImageClientRenderOptions;
 };
+
+export type EndpointReviewFigmaImageStoreOptions =
+  ReviewFigmaImageStoreClientOptions & {
+    headers?: ReviewFigmaImageStoreHeadersProvider;
+  };
 
 export type ReviewFigmaImageClientRenderOptions = {
   token?: string | null | (() => string | null | undefined);
@@ -51,9 +62,18 @@ export type CreateReviewFigmaClientRenderedAssetOptions =
 export function createReviewFigmaImageStoreClient(
   options: ReviewFigmaImageStoreClientOptions = {}
 ): ReviewFigmaImageStore {
+  return createEndpointReviewFigmaImageStore(options);
+}
+
+export function createEndpointReviewFigmaImageStore(
+  options: EndpointReviewFigmaImageStoreOptions = {}
+): ReviewFigmaImageStore {
   const endpoint =
     options.endpoint ?? DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT;
-  const request = createReviewFigmaImageStoreRequest(endpoint, options.fetch);
+  const request = createReviewFigmaImageStoreRequest(
+    options.fetch,
+    options.headers
+  );
 
   return {
     listImages(target) {
@@ -339,8 +359,8 @@ type ReviewFigmaImageStoreRequestInit = RequestInit & {
 };
 
 function createReviewFigmaImageStoreRequest(
-  endpoint: string,
-  fetchOption: typeof fetch | undefined
+  fetchOption: typeof fetch | undefined,
+  headersProvider: ReviewFigmaImageStoreHeadersProvider
 ) {
   return async <T>(
     input: string,
@@ -349,15 +369,23 @@ function createReviewFigmaImageStoreRequest(
     const requestFetch = fetchOption ?? globalThis.fetch;
     if (!requestFetch) throw new Error('Figma image store requires fetch.');
     const figmaToken = init.figmaToken ?? '';
-    const { figmaToken: _figmaToken, ...requestInit } = init;
+    const {
+      figmaToken: _figmaToken,
+      headers: requestHeaders,
+      ...requestInit
+    } = init;
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+    if (figmaToken) headers.set('X-Figma-Token', figmaToken);
+    appendReviewFigmaImageStoreHeaders(
+      headers,
+      await readReviewFigmaImageStoreHeaders(headersProvider)
+    );
+    appendReviewFigmaImageStoreHeaders(headers, requestHeaders);
 
     const response = await requestFetch(input, {
       ...requestInit,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(figmaToken ? { 'X-Figma-Token': figmaToken } : {}),
-        ...(requestInit.headers ?? {}),
-      },
+      headers,
     });
     const text = await response.text();
     const body = text ? JSON.parse(text) : null;
@@ -372,6 +400,22 @@ function createReviewFigmaImageStoreRequest(
 
     return body as T;
   };
+}
+
+async function readReviewFigmaImageStoreHeaders(
+  provider: ReviewFigmaImageStoreHeadersProvider
+) {
+  return typeof provider === 'function' ? provider() : provider;
+}
+
+function appendReviewFigmaImageStoreHeaders(
+  target: Headers,
+  source: HeadersInit | null | undefined
+) {
+  if (!source) return;
+  new Headers(source).forEach((value, key) => {
+    target.set(key, value);
+  });
 }
 
 function readReviewFigmaImageToken(provider: ReviewFigmaImageTokenProvider) {

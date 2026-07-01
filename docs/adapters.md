@@ -101,6 +101,30 @@ export default defineConfig({
 });
 ```
 
+For host-owned storage where a server API owns both file persistence and
+metadata, use the endpoint factory. Calling it without options uses the same
+default dev endpoint as `createReviewFigmaImageStoreClient()`.
+
+```tsx
+import { createEndpointReviewFigmaImageStore } from '@designfever/web-review-kit';
+
+const figmaImageStore = createEndpointReviewFigmaImageStore({
+  endpoint: import.meta.env.VITE_REVIEW_FIGMA_IMAGE_ENDPOINT,
+  headers: () => ({
+    'X-Review-Project': projectId,
+  }),
+});
+
+mountReviewShell({
+  projectId,
+  pages,
+  adapters,
+  figmaImages: {
+    store: figmaImageStore,
+  },
+});
+```
+
 For shared browser-side storage backed by a Supabase-like table and an asset
 upload endpoint, use the remote factory:
 
@@ -136,6 +160,11 @@ Guidelines:
   factory `token` option. If it is empty, Settings `figma-token` is used as the
   fallback.
 - If no `figmaImages.store` is configured, QA should still work.
+- Prefer `createEndpointReviewFigmaImageStore()` when browser-side DB
+  credentials, row-level policies, or asset cleanup make direct remote writes
+  awkward. The endpoint should expose the `ReviewFigmaImageStore` CRUD shape.
+- Only pass browser-safe auth headers to the endpoint. Server-side secrets stay
+  on the endpoint implementation.
 - Keep remote Figma image storage separate from `ReviewShellAdapter`.
 
 ## Host Wiring Rule

@@ -17,11 +17,15 @@ declare function normalizeReviewItemStatus(status: ReviewItemStatus | undefined)
 
 declare const DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT = "/__dfwr/figma-images";
 type ReviewFigmaImageTokenProvider = string | null | undefined | (() => string | null | undefined);
+type ReviewFigmaImageStoreHeadersProvider = HeadersInit | null | undefined | (() => HeadersInit | null | undefined | Promise<HeadersInit | null | undefined>);
 type ReviewFigmaImageStoreClientOptions = {
     endpoint?: string;
     fetch?: typeof fetch;
     token?: ReviewFigmaImageTokenProvider;
     clientRender?: boolean | ReviewFigmaImageClientRenderOptions;
+};
+type EndpointReviewFigmaImageStoreOptions = ReviewFigmaImageStoreClientOptions & {
+    headers?: ReviewFigmaImageStoreHeadersProvider;
 };
 type ReviewFigmaImageClientRenderOptions = {
     token?: string | null | (() => string | null | undefined);
@@ -34,6 +38,7 @@ type ReviewFigmaImageClientRenderOptions = {
     timeoutMs?: number;
 };
 declare function createReviewFigmaImageStoreClient(options?: ReviewFigmaImageStoreClientOptions): ReviewFigmaImageStore;
+declare function createEndpointReviewFigmaImageStore(options?: EndpointReviewFigmaImageStoreOptions): ReviewFigmaImageStore;
 declare function getReviewFigmaImageTargetKey(target: ReviewFigmaImageTarget): string;
 declare function getReviewFigmaImageMimeType(format: ReviewFigmaImageFormat): "image/webp" | "image/png" | "image/jpeg";
 
@@ -118,4 +123,4 @@ declare function getReviewItemScopeLabel(item: ReviewItem, presets?: ReviewViewp
 /** Adds scope-aware display labels to review items without mutating them. */
 declare function getNumberedReviewItems(items: ReviewItem[], presets?: ReviewViewportPreset[]): NumberedReviewItem[];
 
-export { DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT, DEFAULT_REVIEW_FIGMA_REMOTE_IMAGES_TABLE, DEFAULT_REVIEW_VIEWPORTS, LocalAdapterOptions, NumberedReviewItem, REVIEW_WORKFLOW_STATUS_OPTIONS, type RemoteReviewFigmaImageStoreOptions, type ReviewFigmaImageClientRenderOptions, ReviewFigmaImageFormat, ReviewFigmaImageStore, type ReviewFigmaImageStoreClientOptions, ReviewFigmaImageTarget, type ReviewFigmaRemoteAssetUploadResponse, type ReviewFigmaRemoteDbClient, type ReviewFigmaRemoteImageRow, ReviewItem, ReviewItemScope, ReviewItemStatus, ReviewViewportPreset, ReviewWorkflowStatus, SupabaseReviewAdapterOptions, ViewportSize, WebReviewKitAdapter, WebReviewKitController, WebReviewKitOptions, createRemoteReviewFigmaImageStore, createReviewFigmaImageStoreClient, createWebReviewKit, findReviewViewportPreset, getNumberedReviewItems, getReviewFigmaImageMimeType, getReviewFigmaImageTargetKey, getReviewItemScope, getReviewItemScopeLabel, getReviewViewportScope, localAdapter, normalizeReviewItemStatus, supabaseAdapter };
+export { DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT, DEFAULT_REVIEW_FIGMA_REMOTE_IMAGES_TABLE, DEFAULT_REVIEW_VIEWPORTS, type EndpointReviewFigmaImageStoreOptions, LocalAdapterOptions, NumberedReviewItem, REVIEW_WORKFLOW_STATUS_OPTIONS, type RemoteReviewFigmaImageStoreOptions, type ReviewFigmaImageClientRenderOptions, ReviewFigmaImageFormat, ReviewFigmaImageStore, type ReviewFigmaImageStoreClientOptions, type ReviewFigmaImageStoreHeadersProvider, ReviewFigmaImageTarget, type ReviewFigmaRemoteAssetUploadResponse, type ReviewFigmaRemoteDbClient, type ReviewFigmaRemoteImageRow, ReviewItem, ReviewItemScope, ReviewItemStatus, ReviewViewportPreset, ReviewWorkflowStatus, SupabaseReviewAdapterOptions, ViewportSize, WebReviewKitAdapter, WebReviewKitController, WebReviewKitOptions, createEndpointReviewFigmaImageStore, createRemoteReviewFigmaImageStore, createReviewFigmaImageStoreClient, createWebReviewKit, findReviewViewportPreset, getNumberedReviewItems, getReviewFigmaImageMimeType, getReviewFigmaImageTargetKey, getReviewItemScope, getReviewItemScopeLabel, getReviewViewportScope, localAdapter, normalizeReviewItemStatus, supabaseAdapter };

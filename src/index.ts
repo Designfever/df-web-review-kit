@@ -7,6 +7,7 @@ export {
 export { DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT } from './figma/image.types';
 export {
   DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
+  createEndpointReviewFigmaImageStore,
   createReviewFigmaImageStoreClient,
   getReviewFigmaImageMimeType,
   getReviewFigmaImageTargetKey,
@@ -101,7 +102,9 @@ export type {
   ReviewFigmaRemoteImageRow,
 } from './figma/remote.image.store';
 export type {
+  EndpointReviewFigmaImageStoreOptions,
   ReviewFigmaImageClientRenderOptions,
+  ReviewFigmaImageStoreHeadersProvider,
   ReviewFigmaImageStoreClientOptions,
 } from './figma/image.store';
 export type {

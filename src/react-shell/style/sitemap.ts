@@ -183,7 +183,7 @@ export const reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-list {
-    --df-review-sitemap-grid-template: minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px);
+    --df-review-sitemap-grid-template: minmax(190px, 1fr) 58px 70px 56px minmax(96px, 140px);
     position: relative;
     display: grid;
     align-content: start;
@@ -191,7 +191,7 @@ export const reviewShellSitemapStyle = `
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 8px;
+    padding: 6px;
   }
 
   .df-review-sitemap-table-head,
@@ -206,7 +206,7 @@ export const reviewShellSitemapStyle = `
     position: sticky;
     top: 0;
     z-index: 3;
-    min-height: 32px;
+    min-height: 30px;
     border-bottom: 1px solid var(--df-review-line);
     padding: 0 10px;
     background: var(--df-review-panel);
@@ -266,18 +266,13 @@ export const reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-row {
-    min-height: 42px;
+    min-height: 34px;
     border: 0;
-    border-bottom: 1px solid var(--df-review-line-soft);
     border-radius: 0;
-    padding: 0 10px;
+    padding: 0 8px;
     background: transparent;
     color: var(--df-review-text);
     text-align: left;
-  }
-
-  button.df-review-sitemap-row {
-    cursor: pointer;
   }
 
   .df-review-sitemap-row.is-summary {
@@ -300,27 +295,26 @@ export const reviewShellSitemapStyle = `
     display: flex;
     grid-column: 1 / -1;
     align-items: center;
-    min-height: 74px;
-    padding: 0 10px;
-    border-bottom: 1px solid var(--df-review-line-soft);
+    min-height: 58px;
+    padding: 0 8px;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
   }
 
-  .df-review-sitemap-row:last-child {
-    border-bottom: 0;
-  }
-
-  button.df-review-sitemap-row:hover,
+  .df-review-sitemap-row:not(.is-summary):hover,
+  button.df-review-sitemap-row.is-summary:hover,
   .df-review-sitemap-row.is-active {
     background: var(--df-review-accent-soft);
   }
 
   .df-review-sitemap-path {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    align-self: stretch;
+    gap: 6px;
     min-width: 0;
+    padding-left: calc(var(--df-review-sitemap-depth, 0) * 18px);
     overflow-wrap: anywhere;
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-md);
@@ -328,16 +322,82 @@ export const reviewShellSitemapStyle = `
     line-height: 1.35;
   }
 
+  .df-review-sitemap-path::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: calc(var(--df-review-sitemap-depth, 0) * 18px);
+    background-image: repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent 10px,
+      var(--df-review-line-soft) 10px,
+      var(--df-review-line-soft) 11px,
+      transparent 11px,
+      transparent 18px
+    );
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
   .df-review-sitemap-row.is-folder .df-review-sitemap-path {
     color: var(--df-review-muted);
   }
 
-  .df-review-sitemap-tree-prefix {
+  .df-review-sitemap-tree-toggle,
+  .df-review-sitemap-tree-spacer {
+    display: inline-grid;
+    place-items: center;
     flex: 0 0 auto;
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+  }
+
+  .df-review-sitemap-tree-toggle {
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    background: transparent;
     color: var(--df-review-muted);
-    font-family: var(--df-review-font-mono);
-    font-weight: var(--df-review-font-weight-normal);
-    white-space: pre;
+    box-shadow: none;
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-tree-toggle:hover,
+  .df-review-sitemap-tree-toggle:focus-visible {
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+  }
+
+  .df-review-sitemap-tree-toggle svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .df-review-sitemap-page-button {
+    min-width: 0;
+    min-height: 24px;
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 5px;
+    overflow: hidden;
+    color: inherit;
+    background: transparent;
+    box-shadow: none;
+    font: inherit;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-page-button:hover,
+  .df-review-sitemap-page-button:focus-visible {
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
   }
 
   .df-review-sitemap-label {
@@ -356,12 +416,12 @@ export const reviewShellSitemapStyle = `
     text-align: right;
   }
 
-  .df-review-sitemap-cell.is-total {
+  .df-review-sitemap-cell.is-todo {
     color: var(--df-review-accent);
     font-weight: var(--df-review-font-weight-normal);
   }
 
-  .df-review-sitemap-cell.is-total strong {
+  .df-review-sitemap-cell.is-todo strong {
     font: inherit;
   }
 
@@ -400,7 +460,8 @@ export const reviewShellSitemapStyle = `
     color: var(--df-review-muted);
   }
 
-  button.df-review-sitemap-row:hover .df-review-sitemap-path,
+  .df-review-sitemap-row.is-page:hover .df-review-sitemap-path,
+  button.df-review-sitemap-row.is-summary:hover .df-review-sitemap-path,
   .df-review-sitemap-row.is-active .df-review-sitemap-path {
     color: var(--df-review-text);
   }

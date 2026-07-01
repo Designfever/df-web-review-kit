@@ -39,7 +39,9 @@ type SitemapTreeNode = {
 type SitemapTreeRow = {
   href: string;
   label: string;
-  prefix: string;
+  depth: number;
+  hasChildren: boolean;
+  isExpanded: boolean;
   isPage: boolean;
   isActive: boolean;
   qaCount: SitemapQaCount;
@@ -50,7 +52,7 @@ export type SitemapSortDirection = 'asc' | 'desc';
 
 export type SitemapSortKey =
   | 'page'
-  | 'total'
+  | 'todo'
   | 'review'
   | 'hold'
   | 'online'
@@ -192,11 +194,14 @@ export const createSitemapRows = (
   pagePresenceUsers: ReadonlyMap<string, ReviewPresenceUser[]>,
   getPageTarget: (href: string) => string,
   options: {
+    collapsedFolderHrefs?: ReadonlySet<string>;
     searchQuery?: string;
     sortKey?: SitemapSortKey;
     sortDirection?: SitemapSortDirection;
   } = {}
 ) => {
+  const collapsedFolderHrefs =
+    options.collapsedFolderHrefs ?? new Set<string>();
   const searchQuery = normalizeSitemapSearchQuery(options.searchQuery);
   const sortKey = options.sortKey ?? 'page';
   const sortDirection = options.sortDirection ?? 'asc';
@@ -278,7 +283,7 @@ export const createSitemapRows = (
 
   const getSortValue = (summary: SitemapTreeSummary) => {
     if (sortKey === 'page') return summary.node.label;
-    if (sortKey === 'total') return summary.count.remaining;
+    if (sortKey === 'todo') return summary.count.status.todo;
     if (sortKey === 'review') return summary.count.status.review;
     if (sortKey === 'hold') return summary.count.status.hold;
     if (sortKey === 'online') return summary.users.length;
@@ -321,27 +326,34 @@ export const createSitemapRows = (
 
   const appendSummaryRows = (
     summary: SitemapTreeSummary,
-    depth: number,
-    ancestorLastList: boolean[],
-    isLastNode: boolean
+    depth: number
   ) => {
     const { node } = summary;
     const rowCount = node.isPage ? summary.directCount : summary.count;
     const rowUsers = node.isPage ? summary.directUsers : summary.users;
+    const nodeMatchesSearch =
+      Boolean(searchQuery) &&
+      sitemapNodeMatchesSearch(node, searchQuery, getPageTarget);
+    const visibleChildren = sortSummaries(
+      summary.children.filter(
+        (child) =>
+          !searchQuery || nodeMatchesSearch || summaryMatchesSearch(child)
+      )
+    );
+    const hasChildren = visibleChildren.length > 0;
+    const isExpanded =
+      hasChildren &&
+      (Boolean(searchQuery) || !collapsedFolderHrefs.has(node.href));
 
-    if (node.isPage || depth > 0) {
-      const prefix =
-        depth === 0
-          ? ''
-          : `${ancestorLastList.map((isLast) => (isLast ? '   ' : '│  ')).join('')}${
-              isLastNode ? '└─ ' : '├─ '
-            }`;
+    if (node.isPage || hasChildren || depth > 0) {
       const pageTarget = node.isPage ? getPageTarget(node.href) : null;
 
       rows.push({
         href: node.href,
         label: node.label,
-        prefix,
+        depth,
+        hasChildren,
+        isExpanded,
         isPage: node.isPage,
         isActive: pageTarget === activeRoute,
         qaCount: rowCount,
@@ -349,16 +361,10 @@ export const createSitemapRows = (
       });
     }
 
-    const visibleChildren = sortSummaries(
-      summary.children.filter(summaryMatchesSearch)
-    );
-    visibleChildren.forEach((child, childIndex) => {
-      appendSummaryRows(
-        child,
-        depth + 1,
-        depth === 0 ? [] : [...ancestorLastList, isLastNode],
-        childIndex === visibleChildren.length - 1
-      );
+    if (!isExpanded) return;
+
+    visibleChildren.forEach((child) => {
+      appendSummaryRows(child, depth + 1);
     });
   };
 
@@ -372,7 +378,9 @@ export const createSitemapRows = (
     rows.push({
       href: root.href,
       label: root.label,
-      prefix: '',
+      depth: 0,
+      hasChildren: false,
+      isExpanded: false,
       isPage: true,
       isActive: getPageTarget(root.href) === activeRoute,
       qaCount: directCount,
@@ -386,8 +394,8 @@ export const createSitemapRows = (
       .filter(summaryMatchesSearch)
   );
 
-  rootSummaries.forEach((summary, index, siblings) => {
-    appendSummaryRows(summary, 1, [], index === siblings.length - 1);
+  rootSummaries.forEach((summary) => {
+    appendSummaryRows(summary, 0);
   });
 
   return rows;

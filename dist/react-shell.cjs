@@ -658,7 +658,7 @@ var reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-list {
-    --df-review-sitemap-grid-template: minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px);
+    --df-review-sitemap-grid-template: minmax(190px, 1fr) 58px 70px 56px minmax(96px, 140px);
     position: relative;
     display: grid;
     align-content: start;
@@ -666,7 +666,7 @@ var reviewShellSitemapStyle = `
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 8px;
+    padding: 6px;
   }
 
   .df-review-sitemap-table-head,
@@ -681,7 +681,7 @@ var reviewShellSitemapStyle = `
     position: sticky;
     top: 0;
     z-index: 3;
-    min-height: 32px;
+    min-height: 30px;
     border-bottom: 1px solid var(--df-review-line);
     padding: 0 10px;
     background: var(--df-review-panel);
@@ -741,18 +741,13 @@ var reviewShellSitemapStyle = `
   }
 
   .df-review-sitemap-row {
-    min-height: 42px;
+    min-height: 34px;
     border: 0;
-    border-bottom: 1px solid var(--df-review-line-soft);
     border-radius: 0;
-    padding: 0 10px;
+    padding: 0 8px;
     background: transparent;
     color: var(--df-review-text);
     text-align: left;
-  }
-
-  button.df-review-sitemap-row {
-    cursor: pointer;
   }
 
   .df-review-sitemap-row.is-summary {
@@ -775,27 +770,26 @@ var reviewShellSitemapStyle = `
     display: flex;
     grid-column: 1 / -1;
     align-items: center;
-    min-height: 74px;
-    padding: 0 10px;
-    border-bottom: 1px solid var(--df-review-line-soft);
+    min-height: 58px;
+    padding: 0 8px;
     color: var(--df-review-muted);
     font-size: var(--df-review-font-size-sm);
   }
 
-  .df-review-sitemap-row:last-child {
-    border-bottom: 0;
-  }
-
-  button.df-review-sitemap-row:hover,
+  .df-review-sitemap-row:not(.is-summary):hover,
+  button.df-review-sitemap-row.is-summary:hover,
   .df-review-sitemap-row.is-active {
     background: var(--df-review-accent-soft);
   }
 
   .df-review-sitemap-path {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    align-self: stretch;
+    gap: 6px;
     min-width: 0;
+    padding-left: calc(var(--df-review-sitemap-depth, 0) * 18px);
     overflow-wrap: anywhere;
     color: var(--df-review-text);
     font-size: var(--df-review-font-size-md);
@@ -803,16 +797,82 @@ var reviewShellSitemapStyle = `
     line-height: 1.35;
   }
 
+  .df-review-sitemap-path::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: calc(var(--df-review-sitemap-depth, 0) * 18px);
+    background-image: repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent 10px,
+      var(--df-review-line-soft) 10px,
+      var(--df-review-line-soft) 11px,
+      transparent 11px,
+      transparent 18px
+    );
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
   .df-review-sitemap-row.is-folder .df-review-sitemap-path {
     color: var(--df-review-muted);
   }
 
-  .df-review-sitemap-tree-prefix {
+  .df-review-sitemap-tree-toggle,
+  .df-review-sitemap-tree-spacer {
+    display: inline-grid;
+    place-items: center;
     flex: 0 0 auto;
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+  }
+
+  .df-review-sitemap-tree-toggle {
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0;
+    background: transparent;
     color: var(--df-review-muted);
-    font-family: var(--df-review-font-mono);
-    font-weight: var(--df-review-font-weight-normal);
-    white-space: pre;
+    box-shadow: none;
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-tree-toggle:hover,
+  .df-review-sitemap-tree-toggle:focus-visible {
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+  }
+
+  .df-review-sitemap-tree-toggle svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .df-review-sitemap-page-button {
+    min-width: 0;
+    min-height: 24px;
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 5px;
+    overflow: hidden;
+    color: inherit;
+    background: transparent;
+    box-shadow: none;
+    font: inherit;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-page-button:hover,
+  .df-review-sitemap-page-button:focus-visible {
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
   }
 
   .df-review-sitemap-label {
@@ -831,12 +891,12 @@ var reviewShellSitemapStyle = `
     text-align: right;
   }
 
-  .df-review-sitemap-cell.is-total {
+  .df-review-sitemap-cell.is-todo {
     color: var(--df-review-accent);
     font-weight: var(--df-review-font-weight-normal);
   }
 
-  .df-review-sitemap-cell.is-total strong {
+  .df-review-sitemap-cell.is-todo strong {
     font: inherit;
   }
 
@@ -875,7 +935,8 @@ var reviewShellSitemapStyle = `
     color: var(--df-review-muted);
   }
 
-  button.df-review-sitemap-row:hover .df-review-sitemap-path,
+  .df-review-sitemap-row.is-page:hover .df-review-sitemap-path,
+  button.df-review-sitemap-row.is-summary:hover .df-review-sitemap-path,
   .df-review-sitemap-row.is-active .df-review-sitemap-path {
     color: var(--df-review-text);
   }
@@ -4941,54 +5002,58 @@ var Bot = createLucideIcon("bot", __iconNode);
 var __iconNode2 = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
 var ChevronDown = createLucideIcon("chevron-down", __iconNode2);
 
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/chevron-right.mjs
+var __iconNode3 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+var ChevronRight = createLucideIcon("chevron-right", __iconNode3);
+
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/circle-question-mark.mjs
-var __iconNode3 = [
+var __iconNode4 = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3", key: "1u773s" }],
   ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-var CircleQuestionMark = createLucideIcon("circle-question-mark", __iconNode3);
+var CircleQuestionMark = createLucideIcon("circle-question-mark", __iconNode4);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/code-xml.mjs
-var __iconNode4 = [
+var __iconNode5 = [
   ["path", { d: "m18 16 4-4-4-4", key: "1inbqp" }],
   ["path", { d: "m6 8-4 4 4 4", key: "15zrgr" }],
   ["path", { d: "m14.5 4-5 16", key: "e7oirm" }]
 ];
-var CodeXml = createLucideIcon("code-xml", __iconNode4);
+var CodeXml = createLucideIcon("code-xml", __iconNode5);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/contrast.mjs
-var __iconNode5 = [
+var __iconNode6 = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "M12 18a6 6 0 0 0 0-12v12z", key: "j4l70d" }]
 ];
-var Contrast = createLucideIcon("contrast", __iconNode5);
+var Contrast = createLucideIcon("contrast", __iconNode6);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/copy.mjs
-var __iconNode6 = [
+var __iconNode7 = [
   ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
   ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
 ];
-var Copy = createLucideIcon("copy", __iconNode6);
+var Copy = createLucideIcon("copy", __iconNode7);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/database.mjs
-var __iconNode7 = [
+var __iconNode8 = [
   ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
   ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
   ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-var Database = createLucideIcon("database", __iconNode7);
+var Database = createLucideIcon("database", __iconNode8);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/external-link.mjs
-var __iconNode8 = [
+var __iconNode9 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "M10 14 21 3", key: "gplh6r" }],
   ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
 ];
-var ExternalLink = createLucideIcon("external-link", __iconNode8);
+var ExternalLink = createLucideIcon("external-link", __iconNode9);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye-off.mjs
-var __iconNode9 = [
+var __iconNode10 = [
   [
     "path",
     {
@@ -5006,10 +5071,10 @@ var __iconNode9 = [
   ],
   ["path", { d: "m2 2 20 20", key: "1ooewy" }]
 ];
-var EyeOff = createLucideIcon("eye-off", __iconNode9);
+var EyeOff = createLucideIcon("eye-off", __iconNode10);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye.mjs
-var __iconNode10 = [
+var __iconNode11 = [
   [
     "path",
     {
@@ -5019,66 +5084,66 @@ var __iconNode10 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Eye = createLucideIcon("eye", __iconNode10);
+var Eye = createLucideIcon("eye", __iconNode11);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
-var __iconNode11 = [
+var __iconNode12 = [
   ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
   ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
   ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
 ];
-var Image = createLucideIcon("image", __iconNode11);
+var Image = createLucideIcon("image", __iconNode12);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/images.mjs
-var __iconNode12 = [
+var __iconNode13 = [
   ["path", { d: "m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16", key: "9kzy35" }],
   ["path", { d: "M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2", key: "1t0f0t" }],
   ["circle", { cx: "13", cy: "7", r: "1", fill: "currentColor", key: "1obus6" }],
   ["rect", { x: "8", y: "2", width: "14", height: "14", rx: "2", key: "1gvhby" }]
 ];
-var Images = createLucideIcon("images", __iconNode12);
+var Images = createLucideIcon("images", __iconNode13);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
-var __iconNode13 = [
+var __iconNode14 = [
   ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
   ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
   ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
   ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
 ];
-var LayoutGrid = createLucideIcon("layout-grid", __iconNode13);
+var LayoutGrid = createLucideIcon("layout-grid", __iconNode14);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/link-2.mjs
-var __iconNode14 = [
+var __iconNode15 = [
   ["path", { d: "M9 17H7A5 5 0 0 1 7 7h2", key: "8i5ue5" }],
   ["path", { d: "M15 7h2a5 5 0 1 1 0 10h-2", key: "1b9ql8" }],
   ["line", { x1: "8", x2: "16", y1: "12", y2: "12", key: "1jonct" }]
 ];
-var Link2 = createLucideIcon("link-2", __iconNode14);
+var Link2 = createLucideIcon("link-2", __iconNode15);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
-var __iconNode15 = [
+var __iconNode16 = [
   ["path", { d: "M2 5h20", key: "1fs1ex" }],
   ["path", { d: "M6 12h12", key: "8npq4p" }],
   ["path", { d: "M9 19h6", key: "456am0" }]
 ];
-var ListFilter = createLucideIcon("list-filter", __iconNode15);
+var ListFilter = createLucideIcon("list-filter", __iconNode16);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/lock-open.mjs
-var __iconNode16 = [
+var __iconNode17 = [
   ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
   ["path", { d: "M7 11V7a5 5 0 0 1 9.9-1", key: "1mm8w8" }]
 ];
-var LockOpen = createLucideIcon("lock-open", __iconNode16);
+var LockOpen = createLucideIcon("lock-open", __iconNode17);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/lock.mjs
-var __iconNode17 = [
+var __iconNode18 = [
   ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
   ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
 ];
-var Lock = createLucideIcon("lock", __iconNode17);
+var Lock = createLucideIcon("lock", __iconNode18);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
-var __iconNode18 = [
+var __iconNode19 = [
   [
     "path",
     {
@@ -5089,27 +5154,27 @@ var __iconNode18 = [
   ["path", { d: "M15 5.764v15", key: "1pn4in" }],
   ["path", { d: "M9 3.236v15", key: "1uimfh" }]
 ];
-var Map2 = createLucideIcon("map", __iconNode18);
+var Map2 = createLucideIcon("map", __iconNode19);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
-var __iconNode19 = [
+var __iconNode20 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "m21 3-7 7", key: "1l2asr" }],
   ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
   ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
 ];
-var Maximize2 = createLucideIcon("maximize-2", __iconNode19);
+var Maximize2 = createLucideIcon("maximize-2", __iconNode20);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
-var __iconNode20 = [
+var __iconNode21 = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
   ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
 ];
-var Monitor = createLucideIcon("monitor", __iconNode20);
+var Monitor = createLucideIcon("monitor", __iconNode21);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/moon.mjs
-var __iconNode21 = [
+var __iconNode22 = [
   [
     "path",
     {
@@ -5118,18 +5183,18 @@ var __iconNode21 = [
     }
   ]
 ];
-var Moon = createLucideIcon("moon", __iconNode21);
+var Moon = createLucideIcon("moon", __iconNode22);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/move-vertical.mjs
-var __iconNode22 = [
+var __iconNode23 = [
   ["path", { d: "M12 2v20", key: "t6zp3m" }],
   ["path", { d: "m8 18 4 4 4-4", key: "bh5tu3" }],
   ["path", { d: "m8 6 4-4 4 4", key: "ybng9g" }]
 ];
-var MoveVertical = createLucideIcon("move-vertical", __iconNode22);
+var MoveVertical = createLucideIcon("move-vertical", __iconNode23);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/pencil.mjs
-var __iconNode23 = [
+var __iconNode24 = [
   [
     "path",
     {
@@ -5139,32 +5204,32 @@ var __iconNode23 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-var Pencil = createLucideIcon("pencil", __iconNode23);
+var Pencil = createLucideIcon("pencil", __iconNode24);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/plus.mjs
-var __iconNode24 = [
+var __iconNode25 = [
   ["path", { d: "M5 12h14", key: "1ays0h" }],
   ["path", { d: "M12 5v14", key: "s699le" }]
 ];
-var Plus = createLucideIcon("plus", __iconNode24);
+var Plus = createLucideIcon("plus", __iconNode25);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
-var __iconNode25 = [
+var __iconNode26 = [
   ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
 ];
-var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode25);
+var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode26);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
-var __iconNode26 = [
+var __iconNode27 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode26);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode27);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
-var __iconNode27 = [
+var __iconNode28 = [
   [
     "path",
     {
@@ -5177,26 +5242,26 @@ var __iconNode27 = [
   ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
   ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
 ];
-var Ruler = createLucideIcon("ruler", __iconNode27);
+var Ruler = createLucideIcon("ruler", __iconNode28);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
-var __iconNode28 = [
+var __iconNode29 = [
   ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
   ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
   ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
   ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
 ];
-var Scan = createLucideIcon("scan", __iconNode28);
+var Scan = createLucideIcon("scan", __iconNode29);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/search.mjs
-var __iconNode29 = [
+var __iconNode30 = [
   ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-var Search = createLucideIcon("search", __iconNode29);
+var Search = createLucideIcon("search", __iconNode30);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
-var __iconNode30 = [
+var __iconNode31 = [
   [
     "path",
     {
@@ -5206,27 +5271,27 @@ var __iconNode30 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Settings = createLucideIcon("settings", __iconNode30);
+var Settings = createLucideIcon("settings", __iconNode31);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
-var __iconNode31 = [
+var __iconNode32 = [
   ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
   ["path", { d: "M12 18h.01", key: "mhygvu" }]
 ];
-var Smartphone = createLucideIcon("smartphone", __iconNode31);
+var Smartphone = createLucideIcon("smartphone", __iconNode32);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-check-big.mjs
-var __iconNode32 = [
+var __iconNode33 = [
   [
     "path",
     { d: "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344", key: "2acyp4" }
   ],
   ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
 ];
-var SquareCheckBig = createLucideIcon("square-check-big", __iconNode32);
+var SquareCheckBig = createLucideIcon("square-check-big", __iconNode33);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
-var __iconNode33 = [
+var __iconNode34 = [
   ["path", { d: "M5 3a2 2 0 0 0-2 2", key: "y57alp" }],
   ["path", { d: "M19 3a2 2 0 0 1 2 2", key: "18rm91" }],
   ["path", { d: "M21 19a2 2 0 0 1-2 2", key: "1j7049" }],
@@ -5240,10 +5305,10 @@ var __iconNode33 = [
   ["path", { d: "M3 14v1", key: "vnatye" }],
   ["path", { d: "M21 14v1", key: "169vum" }]
 ];
-var SquareDashed = createLucideIcon("square-dashed", __iconNode33);
+var SquareDashed = createLucideIcon("square-dashed", __iconNode34);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode34 = [
+var __iconNode35 = [
   [
     "path",
     {
@@ -5253,10 +5318,10 @@ var __iconNode34 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode34);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode35);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode35 = [
+var __iconNode36 = [
   [
     "path",
     {
@@ -5266,10 +5331,10 @@ var __iconNode35 = [
   ],
   ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
 ];
-var StickyNote = createLucideIcon("sticky-note", __iconNode35);
+var StickyNote = createLucideIcon("sticky-note", __iconNode36);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sun.mjs
-var __iconNode36 = [
+var __iconNode37 = [
   ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
   ["path", { d: "M12 2v2", key: "tus03m" }],
   ["path", { d: "M12 20v2", key: "1lh1kg" }],
@@ -5280,40 +5345,40 @@ var __iconNode36 = [
   ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
   ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
 ];
-var Sun = createLucideIcon("sun", __iconNode36);
+var Sun = createLucideIcon("sun", __iconNode37);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/trash-2.mjs
-var __iconNode37 = [
+var __iconNode38 = [
   ["path", { d: "M10 11v6", key: "nco0om" }],
   ["path", { d: "M14 11v6", key: "outv1u" }],
   ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
   ["path", { d: "M3 6h18", key: "d0wm0j" }],
   ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
 ];
-var Trash2 = createLucideIcon("trash-2", __iconNode37);
+var Trash2 = createLucideIcon("trash-2", __iconNode38);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/type.mjs
-var __iconNode38 = [
+var __iconNode39 = [
   ["path", { d: "M12 4v16", key: "1654pz" }],
   ["path", { d: "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2", key: "e0r10z" }],
   ["path", { d: "M9 20h6", key: "s66wpe" }]
 ];
-var Type = createLucideIcon("type", __iconNode38);
+var Type = createLucideIcon("type", __iconNode39);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode39 = [
+var __iconNode40 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode39);
+var Upload = createLucideIcon("upload", __iconNode40);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode40 = [
+var __iconNode41 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode40);
+var X = createLucideIcon("x", __iconNode41);
 
 // src/react-shell/review/df.logo.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
@@ -6427,6 +6492,7 @@ var addSitemapQaCounts = (first, second) => ({
   )
 });
 var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, getPageTarget, options = {}) => {
+  const collapsedFolderHrefs = options.collapsedFolderHrefs ?? /* @__PURE__ */ new Set();
   const searchQuery = normalizeSitemapSearchQuery(options.searchQuery);
   const sortKey = options.sortKey ?? "page";
   const sortDirection = options.sortDirection ?? "asc";
@@ -6488,7 +6554,7 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
   };
   const getSortValue = (summary) => {
     if (sortKey === "page") return summary.node.label;
-    if (sortKey === "total") return summary.count.remaining;
+    if (sortKey === "todo") return summary.count.status.todo;
     if (sortKey === "review") return summary.count.status.review;
     if (sortKey === "hold") return summary.count.status.hold;
     if (sortKey === "online") return summary.users.length;
@@ -6519,33 +6585,35 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
     return summary.children.some(summaryMatchesSearch);
   };
   const rows = [];
-  const appendSummaryRows = (summary, depth, ancestorLastList, isLastNode) => {
+  const appendSummaryRows = (summary, depth) => {
     const { node } = summary;
     const rowCount = node.isPage ? summary.directCount : summary.count;
     const rowUsers = node.isPage ? summary.directUsers : summary.users;
-    if (node.isPage || depth > 0) {
-      const prefix = depth === 0 ? "" : `${ancestorLastList.map((isLast) => isLast ? "   " : "\u2502  ").join("")}${isLastNode ? "\u2514\u2500 " : "\u251C\u2500 "}`;
+    const nodeMatchesSearch = Boolean(searchQuery) && sitemapNodeMatchesSearch(node, searchQuery, getPageTarget);
+    const visibleChildren = sortSummaries(
+      summary.children.filter(
+        (child) => !searchQuery || nodeMatchesSearch || summaryMatchesSearch(child)
+      )
+    );
+    const hasChildren = visibleChildren.length > 0;
+    const isExpanded = hasChildren && (Boolean(searchQuery) || !collapsedFolderHrefs.has(node.href));
+    if (node.isPage || hasChildren || depth > 0) {
       const pageTarget = node.isPage ? getPageTarget(node.href) : null;
       rows.push({
         href: node.href,
         label: node.label,
-        prefix,
+        depth,
+        hasChildren,
+        isExpanded,
         isPage: node.isPage,
         isActive: pageTarget === activeRoute,
         qaCount: rowCount,
         users: rowUsers
       });
     }
-    const visibleChildren = sortSummaries(
-      summary.children.filter(summaryMatchesSearch)
-    );
-    visibleChildren.forEach((child, childIndex) => {
-      appendSummaryRows(
-        child,
-        depth + 1,
-        depth === 0 ? [] : [...ancestorLastList, isLastNode],
-        childIndex === visibleChildren.length - 1
-      );
+    if (!isExpanded) return;
+    visibleChildren.forEach((child) => {
+      appendSummaryRows(child, depth + 1);
     });
   };
   if (root.isPage && (!searchQuery || sitemapNodeMatchesSearch(root, searchQuery, getPageTarget))) {
@@ -6554,7 +6622,9 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
     rows.push({
       href: root.href,
       label: root.label,
-      prefix: "",
+      depth: 0,
+      hasChildren: false,
+      isExpanded: false,
       isPage: true,
       isActive: getPageTarget(root.href) === activeRoute,
       qaCount: directCount,
@@ -6564,8 +6634,8 @@ var createSitemapRows = (pages, activeRoute, pageQaCounts, pagePresenceUsers, ge
   const rootSummaries = sortSummaries(
     Array.from(root.children.values()).map(createNodeSummary).filter(summaryMatchesSearch)
   );
-  rootSummaries.forEach((summary, index, siblings) => {
-    appendSummaryRows(summary, 1, [], index === siblings.length - 1);
+  rootSummaries.forEach((summary) => {
+    appendSummaryRows(summary, 0);
   });
   return rows;
 };
@@ -6615,9 +6685,12 @@ var SitemapModal = ({
   onSelectPage
 }) => {
   const [sort, setSort] = (0, import_react4.useState)({
-    key: "total",
+    key: "todo",
     direction: "desc"
   });
+  const [collapsedFolderHrefs, setCollapsedFolderHrefs] = (0, import_react4.useState)(
+    () => /* @__PURE__ */ new Set()
+  );
   const [searchQuery, setSearchQuery] = (0, import_react4.useState)("");
   const trimmedSearchQuery = searchQuery.trim();
   const allQaUsers = (0, import_react4.useMemo)(
@@ -6631,17 +6704,19 @@ var SitemapModal = ({
     pagePresenceUsers,
     getPageTarget,
     {
+      collapsedFolderHrefs,
       searchQuery: trimmedSearchQuery,
       sortKey: sort.key,
       sortDirection: sort.direction
     }
   );
+  const matchingPageCount = sitemapRows.filter((row) => row.isPage).length;
   const gridStyle = {
-    "--df-review-sitemap-grid-template": "minmax(190px, 1fr) 74px 78px 64px minmax(108px, 160px)"
+    "--df-review-sitemap-grid-template": "minmax(190px, 1fr) 58px 70px 56px minmax(96px, 140px)"
   };
   const sortHeaders = [
     { key: "page", label: "", title: "Page", className: "is-page" },
-    { key: "total", label: "Total", title: "Remaining total" },
+    { key: "todo", label: "Todo" },
     { key: "review", label: "Review" },
     { key: "hold", label: "Hold" },
     { key: "online", label: "Online", className: "is-online" }
@@ -6651,6 +6726,17 @@ var SitemapModal = ({
       key,
       direction: getNextSortDirection(current, key)
     }));
+  };
+  const toggleFolder = (href) => {
+    setCollapsedFolderHrefs((currentHrefs) => {
+      const nextHrefs = new Set(currentHrefs);
+      if (nextHrefs.has(href)) {
+        nextHrefs.delete(href);
+      } else {
+        nextHrefs.add(href);
+      }
+      return nextHrefs;
+    });
   };
   return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
     "div",
@@ -6676,8 +6762,8 @@ var SitemapModal = ({
               /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { children: [
                 pages.length,
                 " pages \xB7 ",
-                allQaCount.remaining,
-                " remaining \xB7",
+                allQaCount.status.todo,
+                " todo \xB7",
                 " ",
                 allQaCount.status.review,
                 " review \xB7 ",
@@ -6712,7 +6798,7 @@ var SitemapModal = ({
                 children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(X, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-search-count", children: trimmedSearchQuery ? `${sitemapRows.length} matches` : `${pages.length} pages` })
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-search-count", children: trimmedSearchQuery ? `${matchingPageCount} matches` : `${pages.length} pages` })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-sitemap-list", style: gridStyle, children: [
             /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
@@ -6750,31 +6836,23 @@ var SitemapModal = ({
               const rowContent = /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                 SitemapRowContent,
                 {
+                  depth: row.depth,
+                  hasChildren: row.hasChildren,
+                  isExpanded: row.isExpanded,
+                  isPage: row.isPage,
                   label: row.label,
-                  prefix: row.prefix,
                   qaCount: row.qaCount,
-                  users: row.users
+                  users: row.users,
+                  onSelectPage: () => onSelectPage(row.href),
+                  onToggleFolder: () => toggleFolder(row.href)
                 }
               );
-              if (!row.isPage) {
-                return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-                  "div",
-                  {
-                    "aria-label": `${row.href} group / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
-                    className: rowClassName,
-                    role: "row",
-                    children: rowContent
-                  },
-                  row.href
-                );
-              }
               return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-                "button",
+                "div",
                 {
-                  "aria-label": `${row.href} / ${row.qaCount.remaining} remaining / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
+                  "aria-label": row.isPage ? `${row.href} / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online` : `${row.href} group / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
                   className: rowClassName,
-                  type: "button",
-                  onClick: () => onSelectPage(row.href),
+                  role: "row",
                   children: rowContent
                 },
                 row.href
@@ -6784,15 +6862,18 @@ var SitemapModal = ({
             /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
               "button",
               {
-                "aria-label": `All QA / ${allQaCount.remaining} remaining / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`,
+                "aria-label": `All QA / ${allQaCount.status.todo} todo / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`,
                 className: `df-review-sitemap-row is-summary${isAllQaVisible ? " is-active" : ""}`,
                 type: "button",
                 onClick: onSelectAllQa,
                 children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                   SitemapRowContent,
                   {
-                    label: "",
-                    prefix: "",
+                    depth: 0,
+                    hasChildren: false,
+                    isExpanded: false,
+                    isPage: false,
+                    label: "All QA",
                     qaCount: allQaCount,
                     users: allQaUsers
                   }
@@ -6806,16 +6887,46 @@ var SitemapModal = ({
   );
 };
 var SitemapRowContent = ({
+  depth,
+  hasChildren,
+  isExpanded,
+  isPage,
   label,
-  prefix,
   qaCount,
-  users
+  users,
+  onSelectPage,
+  onToggleFolder
 }) => /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { className: "df-review-sitemap-path", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-tree-prefix", children: prefix }),
-    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-label", children: label })
-  ] }),
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-total", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: qaCount.remaining }) }),
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+    "span",
+    {
+      className: "df-review-sitemap-path",
+      style: { "--df-review-sitemap-depth": depth },
+      children: [
+        hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+          "button",
+          {
+            "aria-expanded": isExpanded,
+            "aria-label": `${isExpanded ? "Collapse" : "Expand"} ${label}`,
+            className: "df-review-sitemap-tree-toggle",
+            type: "button",
+            onClick: onToggleFolder,
+            children: isExpanded ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(ChevronDown, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(ChevronRight, { "aria-hidden": "true" })
+          }
+        ) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-tree-spacer", "aria-hidden": "true" }),
+        isPage && onSelectPage ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+          "button",
+          {
+            className: "df-review-sitemap-page-button",
+            type: "button",
+            onClick: onSelectPage,
+            children: label
+          }
+        ) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-label", children: label })
+      ]
+    }
+  ),
+  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-todo", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: qaCount.status.todo }) }),
   /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-review", children: qaCount.status.review }),
   /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-hold", children: qaCount.status.hold }),
   /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
@@ -20911,6 +21022,7 @@ lucide-react/dist/esm/Icon.mjs:
 lucide-react/dist/esm/createLucideIcon.mjs:
 lucide-react/dist/esm/icons/bot.mjs:
 lucide-react/dist/esm/icons/chevron-down.mjs:
+lucide-react/dist/esm/icons/chevron-right.mjs:
 lucide-react/dist/esm/icons/circle-question-mark.mjs:
 lucide-react/dist/esm/icons/code-xml.mjs:
 lucide-react/dist/esm/icons/contrast.mjs:

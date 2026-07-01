@@ -41,6 +41,13 @@ export type ReviewFigmaImageClientRenderOptions = {
   timeoutMs?: number;
 };
 
+export type CreateReviewFigmaClientRenderedAssetOptions =
+  ReviewFigmaImageClientRenderOptions & {
+    figmaUrl: string;
+    token: string;
+    fetch?: typeof fetch;
+  };
+
 export function createReviewFigmaImageStoreClient(
   options: ReviewFigmaImageStoreClientOptions = {}
 ): ReviewFigmaImageStore {
@@ -101,10 +108,12 @@ async function createClientRenderedAddImageInput(
   if (!token) return input;
 
   try {
-    const asset = await withTimeout(
-      createClientRenderedFigmaAsset(input.figmaUrl, token, options, fetchOption),
-      options.timeoutMs ?? 10000
-    );
+    const asset = await createReviewFigmaClientRenderedAsset({
+      ...options,
+      fetch: fetchOption,
+      figmaUrl: input.figmaUrl,
+      token,
+    });
     return {
       ...input,
       imageFormat: asset.imageFormat,
@@ -203,6 +212,18 @@ async function createClientRenderedFigmaAsset(
     width: dimensions.width,
     height: dimensions.height,
   };
+}
+
+export function createReviewFigmaClientRenderedAsset({
+  fetch: fetchOption,
+  figmaUrl,
+  token,
+  ...options
+}: CreateReviewFigmaClientRenderedAssetOptions): Promise<ReviewFigmaImageAssetInput> {
+  return withTimeout(
+    createClientRenderedFigmaAsset(figmaUrl, token, options, fetchOption),
+    options.timeoutMs ?? 10000
+  );
 }
 
 async function readImageBlobDimensions(blob: Blob) {

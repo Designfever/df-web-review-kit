@@ -101,14 +101,42 @@ export default defineConfig({
 });
 ```
 
+For shared browser-side storage backed by a Supabase-like table and an asset
+upload endpoint, use the remote factory:
+
+```tsx
+import {
+  createRemoteReviewFigmaImageStore,
+  type ReviewFigmaRemoteDbClient,
+} from '@designfever/web-review-kit';
+
+const figmaImageStore = createRemoteReviewFigmaImageStore({
+  client: supabaseClient as unknown as ReviewFigmaRemoteDbClient,
+  uploadEndpoint: import.meta.env.VITE_FIGMA_ASSET_UPLOAD_ENDPOINT,
+  token: () => import.meta.env.VITE_FIGMA_TOKEN,
+});
+
+mountReviewShell({
+  projectId,
+  pages,
+  adapters,
+  figmaImages: {
+    store: figmaImageStore,
+  },
+});
+```
+
 Guidelines:
 
 - Do not put Figma image metadata into QA adapter metadata.
 - Do not use `VITE_FIGMA_TOKEN` for server rendering. Keep shared tokens in
   `FIGMA_TOKEN`; use Settings `figma-token` only as a browser-local review
   fallback.
+- For remote browser-side stores, project env can provide a token via the
+  factory `token` option. If it is empty, Settings `figma-token` is used as the
+  fallback.
 - If no `figmaImages.store` is configured, QA should still work.
-- If Figma image storage moves remote later, implement a `ReviewFigmaImageStore`-shaped client instead of extending `ReviewShellAdapter`.
+- Keep remote Figma image storage separate from `ReviewShellAdapter`.
 
 ## Host Wiring Rule
 

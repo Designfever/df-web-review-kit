@@ -12,6 +12,10 @@ export {
   getReviewFigmaImageTargetKey,
 } from './figma/image.store';
 export {
+  DEFAULT_REVIEW_FIGMA_REMOTE_IMAGES_TABLE,
+  createRemoteReviewFigmaImageStore,
+} from './figma/remote.image.store';
+export {
   collectReviewFigmaReleaseSnapshot,
   createReviewFigmaImagesSnapshot,
   createReviewFigmaReleaseSnapshot,
@@ -90,6 +94,12 @@ export type {
   ReviewFigmaTokenOptions,
 } from './figma/token';
 export type { ReviewFigmaNodeRef } from './figma/parse';
+export type {
+  RemoteReviewFigmaImageStoreOptions,
+  ReviewFigmaRemoteAssetUploadResponse,
+  ReviewFigmaRemoteDbClient,
+  ReviewFigmaRemoteImageRow,
+} from './figma/remote.image.store';
 export type {
   ReviewFigmaImageClientRenderOptions,
   ReviewFigmaImageStoreClientOptions,

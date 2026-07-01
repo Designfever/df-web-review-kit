@@ -265,10 +265,12 @@ async function createClientRenderedAddImageInput(input, clientRender, fetchOptio
   const token = readClientRenderToken(options);
   if (!token) return input;
   try {
-    const asset = await withTimeout(
-      createClientRenderedFigmaAsset(input.figmaUrl, token, options, fetchOption),
-      options.timeoutMs ?? 1e4
-    );
+    const asset = await createReviewFigmaClientRenderedAsset({
+      ...options,
+      fetch: fetchOption,
+      figmaUrl: input.figmaUrl,
+      token
+    });
     return {
       ...input,
       imageFormat: asset.imageFormat,
@@ -339,6 +341,17 @@ async function createClientRenderedFigmaAsset(figmaUrl, token, options, fetchOpt
     width: dimensions.width,
     height: dimensions.height
   };
+}
+function createReviewFigmaClientRenderedAsset({
+  fetch: fetchOption,
+  figmaUrl,
+  token,
+  ...options
+}) {
+  return withTimeout(
+    createClientRenderedFigmaAsset(figmaUrl, token, options, fetchOption),
+    options.timeoutMs ?? 1e4
+  );
 }
 async function readImageBlobDimensions(blob) {
   const image = await loadImageBlob(blob);
@@ -593,10 +606,11 @@ export {
   createReviewFigmaImageApiUrl,
   DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
   createReviewFigmaImageStoreClient,
+  createReviewFigmaClientRenderedAsset,
   getReviewFigmaImageTargetKey,
   getReviewFigmaImageMimeType,
   createReviewFigmaImagesSnapshot,
   createReviewFigmaReleaseSnapshot,
   collectReviewFigmaReleaseSnapshot
 };
-//# sourceMappingURL=chunk-2ZLU5FTD.js.map
+//# sourceMappingURL=chunk-K26WLRRP.js.map

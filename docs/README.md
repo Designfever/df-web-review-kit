@@ -12,7 +12,8 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 6. [Architecture and runtime logic](architecture.md)
 7. [Figma overlay](figma-overlay.md)
 8. [Grid overlay](grid-overlay.md)
-9. [Release notes 0.7.0](release-notes-0.7.0.md)
+9. [Release notes 0.7.1](release-notes-0.7.1.md)
+10. [Release notes 0.7.0](release-notes-0.7.0.md)
 
 ## Document Roles
 
@@ -24,7 +25,8 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 - `architecture.md`: core/runtime, React shell, coordinate, anchor, and feature boundary notes.
 - `figma-overlay.md`: host requirements for the Figma overlay toggle.
 - `grid-overlay.md`: host requirements for the grid/helper overlay toggle.
-- `release-notes-0.7.0.md`: latest release changes, host notes, and validation scope.
+- `release-notes-0.7.1.md`: latest release changes, host notes, and validation scope.
+- `release-notes-0.7.0.md`: previous release changes and validation scope.
 
 ## Boundary
 

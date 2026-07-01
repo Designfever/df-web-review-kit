@@ -549,7 +549,10 @@ function createReviewFigmaImageStoreClient(options = {}) {
       );
       return request(endpoint, {
         method: "POST",
-        body: JSON.stringify(nextInput)
+        body: JSON.stringify(nextInput),
+        figmaToken: readReviewFigmaImageToken(
+          options.token ?? getStoredReviewFigmaImageToken
+        )
       });
     },
     updateImage(id, patch) {
@@ -742,11 +745,14 @@ function createReviewFigmaImageStoreRequest(endpoint, fetchOption) {
   return async (input, init = {}) => {
     const requestFetch = fetchOption ?? globalThis.fetch;
     if (!requestFetch) throw new Error("Figma image store requires fetch.");
+    const figmaToken = init.figmaToken ?? "";
+    const { figmaToken: _figmaToken, ...requestInit } = init;
     const response = await requestFetch(input, {
-      ...init,
+      ...requestInit,
       headers: {
         "Content-Type": "application/json",
-        ...init.headers ?? {}
+        ...figmaToken ? { "X-Figma-Token": figmaToken } : {},
+        ...requestInit.headers ?? {}
       }
     });
     const text = await response.text();
@@ -757,6 +763,18 @@ function createReviewFigmaImageStoreRequest(endpoint, fetchOption) {
     }
     return body;
   };
+}
+function readReviewFigmaImageToken(provider) {
+  const token = typeof provider === "function" ? provider() : provider;
+  return typeof token === "string" ? token.trim() : "";
+}
+function getStoredReviewFigmaImageToken() {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem("figma-token") ?? "";
+  } catch {
+    return "";
+  }
 }
 function normalizeReviewFigmaImageTarget(target) {
   if (target.type === "figma-node") {

@@ -115,13 +115,17 @@ export const writeStoredFigmaToken = (token: string) => {
   }
 };
 
-export const getStoredReviewUserId = () => {
-  if (typeof window === 'undefined') return '';
+export const getStoredReviewUserId = (fallback = '') => {
+  const normalizedFallback = fallback.trim();
+  if (typeof window === 'undefined') return normalizedFallback;
 
   try {
-    return window.localStorage.getItem(REVIEW_USER_ID_STORAGE_KEY) ?? '';
+    return (
+      window.localStorage.getItem(REVIEW_USER_ID_STORAGE_KEY)?.trim() ||
+      normalizedFallback
+    );
   } catch {
-    return '';
+    return normalizedFallback;
   }
 };
 

@@ -19,7 +19,7 @@ Use `adapter` for both concepts in conversation only when the context is clear. 
 | Data | `ReviewItem` records | `ReviewFigmaImage` records and image assets |
 | Main actions | `get`, `list`, `create`, `update`, `remove` | `listImages`, `addImage`, `updateImage`, `reorderImages`, `deleteImage` |
 | UI fields | `fields.title`, `statusOptions`, `assigneeOptions` | image label, order, opacity/layer controls |
-| Token/secrets | Host backend decides | `FIGMA_TOKEN` stays server-side for Vite/dev endpoint |
+| Token/secrets | Host backend decides | `FIGMA_TOKEN` server env first, Settings `figma-token` request fallback |
 | Typical storage | localStorage, Supabase, df-sheet, custom QA API | `.df-review/figma-images.json`, `.df-review/figma-assets/`, future asset backend |
 
 ## QA Adapter
@@ -104,7 +104,9 @@ export default defineConfig({
 Guidelines:
 
 - Do not put Figma image metadata into QA adapter metadata.
-- Do not use `VITE_FIGMA_TOKEN` for server rendering. Keep `FIGMA_TOKEN` on the server/dev process.
+- Do not use `VITE_FIGMA_TOKEN` for server rendering. Keep shared tokens in
+  `FIGMA_TOKEN`; use Settings `figma-token` only as a browser-local review
+  fallback.
 - If no `figmaImages.store` is configured, QA should still work.
 - If Figma image storage moves remote later, implement a `ReviewFigmaImageStore`-shaped client instead of extending `ReviewShellAdapter`.
 

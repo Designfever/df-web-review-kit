@@ -13,6 +13,7 @@ import {
 import type { ReviewShellTheme } from '../types';
 
 interface UseReviewSettingsOptions {
+  defaultReviewUserId?: string;
   onCancelReviewMode: () => void | boolean;
   onCloseInitialPrompt: () => void;
   onCloseSitemap: () => void;
@@ -20,15 +21,18 @@ interface UseReviewSettingsOptions {
 }
 
 export const useReviewSettings = ({
+  defaultReviewUserId = '',
   onCancelReviewMode,
   onCloseInitialPrompt,
   onCloseSitemap,
   onReloadTargetFrame,
 }: UseReviewSettingsOptions) => {
   const [figmaTokenDraft, setFigmaTokenDraft] = useState(getStoredFigmaToken);
-  const [reviewUserId, setReviewUserId] = useState(getStoredReviewUserId);
+  const [reviewUserId, setReviewUserId] = useState(() =>
+    getStoredReviewUserId(defaultReviewUserId)
+  );
   const [reviewUserIdDraft, setReviewUserIdDraft] = useState(
-    getStoredReviewUserId
+    () => getStoredReviewUserId(defaultReviewUserId)
   );
   const [reviewTheme, setReviewTheme] = useState(getStoredReviewTheme);
   const [reviewThemeDraft, setReviewThemeDraft] =
@@ -54,7 +58,7 @@ export const useReviewSettings = ({
     onCloseSitemap();
     onCloseInitialPrompt();
     setFigmaTokenDraft(getStoredFigmaToken());
-    setReviewUserIdDraft(getStoredReviewUserId());
+    setReviewUserIdDraft(getStoredReviewUserId(defaultReviewUserId));
     setReviewThemeDraft(reviewTheme);
     setFigmaSettingsStatus('');
     setIsFigmaTokenVisible(false);
@@ -64,6 +68,7 @@ export const useReviewSettings = ({
     onCancelReviewMode,
     onCloseInitialPrompt,
     onCloseSitemap,
+    defaultReviewUserId,
     reviewTheme,
   ]);
 
@@ -95,6 +100,14 @@ export const useReviewSettings = ({
     },
     [closeFigmaSettings, onReloadTargetFrame]
   );
+
+  useEffect(() => {
+    if (getStoredReviewUserId()) return;
+
+    const nextDefaultUserId = defaultReviewUserId.trim();
+    setReviewUserId(nextDefaultUserId);
+    setReviewUserIdDraft(nextDefaultUserId);
+  }, [defaultReviewUserId]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return undefined;

@@ -15,8 +15,9 @@ import {
 } from '../figma/image.store';
 import { parseReviewFigmaNodeRef } from '../figma/parse';
 import {
-  requireReviewFigmaToken,
   DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+  ReviewFigmaTokenError,
+  readReviewFigmaToken,
   type ReviewFigmaTokenEnv,
 } from '../figma/token';
 import {
@@ -38,6 +39,33 @@ export type ReviewFigmaImageStoreFile = {
   images: ReviewFigmaImage[];
 };
 
+function requireReviewFigmaRequestToken({
+  enabled,
+  env,
+  envKey,
+  requestToken,
+  token,
+}: {
+  enabled?: boolean;
+  env: ReviewFigmaTokenEnv;
+  envKey?: string;
+  requestToken?: string | null;
+  token?: string | null;
+}) {
+  const tokenEnvKey = envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY;
+  const figmaToken =
+    readReviewFigmaToken({ token, env, envKey: tokenEnvKey, enabled }) ||
+    readReviewFigmaToken({
+      token: requestToken,
+      env: {},
+      envKey: tokenEnvKey,
+      enabled,
+    });
+
+  if (!figmaToken) throw new ReviewFigmaTokenError(tokenEnvKey);
+  return figmaToken;
+}
+
 async function readReviewFigmaNodeName({
   apiBaseUrl,
   enabled,
@@ -47,6 +75,7 @@ async function readReviewFigmaNodeName({
   fileKey,
   nodeId,
   token,
+  requestToken,
 }: {
   apiBaseUrl?: string;
   enabled?: boolean;
@@ -56,16 +85,15 @@ async function readReviewFigmaNodeName({
   fileKey: string;
   nodeId: string;
   token?: string | null;
+  requestToken?: string | null;
 }) {
-  const explicitToken = typeof token === 'string' ? token.trim() : token;
-  const figmaToken =
-    explicitToken ||
-    requireReviewFigmaToken({
-      token: null,
-      env,
-      envKey: envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
-      enabled,
-    });
+  const figmaToken = requireReviewFigmaRequestToken({
+    enabled,
+    env,
+    envKey,
+    requestToken,
+    token,
+  });
   const fetchNode = fetchOption ?? globalThis.fetch;
   if (!fetchNode) throw new Error('Figma node name lookup requires fetch.');
 
@@ -117,6 +145,7 @@ export async function createReviewFigmaImage({
   env,
   input,
   options,
+  requestToken,
 }: {
   assetDir: string;
   assetEndpoint: string;
@@ -124,6 +153,7 @@ export async function createReviewFigmaImage({
   env: ReviewFigmaTokenEnv;
   input: AddReviewFigmaImageInput;
   options: ReviewFigmaImageStorePluginOptions;
+  requestToken?: string | null;
 }): Promise<ReviewFigmaImage> {
   const ref = parseReviewFigmaNodeRef(input.figmaUrl);
   if (!ref) {
@@ -178,10 +208,10 @@ export async function createReviewFigmaImage({
         fileKey: ref.fileKey,
         nodeId: ref.nodeId,
         token: options.token,
+        requestToken,
       }).catch(() => undefined);
   const targetImageFormat = input.imageFormat ?? options.imageFormat ?? 'webp';
   const renderFormat = getStoreRenderFormat(options.renderFormat, targetImageFormat);
-  const explicitToken = typeof options.token === 'string' ? options.token.trim() : options.token;
   const rendered = await renderReviewFigmaImage({
     figmaUrl: input.figmaUrl,
     format: renderFormat,
@@ -190,12 +220,12 @@ export async function createReviewFigmaImage({
     apiBaseUrl: options.apiBaseUrl,
     fetch: options.fetch,
     token:
-      explicitToken ||
-      requireReviewFigmaToken({
-        token: null,
-        env,
-        envKey: options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+      requireReviewFigmaRequestToken({
         enabled: options.enabled,
+        env,
+        envKey: options.envKey,
+        requestToken,
+        token: options.token,
       }),
   });
   const cachedAsset = await cacheReviewFigmaImageAsset({

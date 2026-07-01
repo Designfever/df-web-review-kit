@@ -34,6 +34,7 @@ const REVIEW_PROJECT_ID =
   import.meta.env.VITE_REVIEW_PROJECT_ID || 'df-web-review-kit';
 const REVIEW_PATH_PREFIX = '/review';
 const REVIEW_STORAGE_KEY = `${REVIEW_PROJECT_ID}:items`;
+const REVIEW_USER_ID = import.meta.env.VITE_REVIEW_USER_ID || '';
 const REVIEW_SUPABASE_TABLE =
   import.meta.env.VITE_REVIEW_SUPABASE_TABLE || 'review_items';
 const figmaImageStore = createReviewFigmaImageStoreClient();
@@ -81,6 +82,7 @@ const remote = supabaseClient
 const adapters: ReviewShellAdapter[] = [
   {
     label: 'local',
+    defaultUserId: REVIEW_USER_ID,
     get: (id) => local.get(id),
     list: (query) => local.list(query),
     create: (item) => local.create(item),
@@ -99,6 +101,7 @@ const adapters: ReviewShellAdapter[] = [
     ? [
         {
           label: 'supabase',
+          defaultUserId: REVIEW_USER_ID,
           get: (id) => remote.get(id),
           list: (query) => remote.list(query),
           create: (item) => remote.create(item),

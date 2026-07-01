@@ -5748,7 +5748,7 @@ var ABOUT_SECTIONS = [
   },
   {
     title: "Figma token",
-    body: "Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration."
+    body: "Project owners can set FIGMA_TOKEN on the server. Reviewers who cannot change env can add a browser-local Figma token in Settings; it is stored as figma-token and used only as an image-store fallback."
   },
   {
     title: "User ID",
@@ -6048,12 +6048,13 @@ var writeStoredFigmaToken = (token) => {
     return;
   }
 };
-var getStoredReviewUserId = () => {
-  if (typeof window === "undefined") return "";
+var getStoredReviewUserId = (fallback = "") => {
+  const normalizedFallback = fallback.trim();
+  if (typeof window === "undefined") return normalizedFallback;
   try {
-    return window.localStorage.getItem(REVIEW_USER_ID_STORAGE_KEY) ?? "";
+    return window.localStorage.getItem(REVIEW_USER_ID_STORAGE_KEY)?.trim() || normalizedFallback;
   } catch {
-    return "";
+    return normalizedFallback;
   }
 };
 var writeStoredReviewUserId = (userId) => {
@@ -17547,15 +17548,18 @@ var useReviewFigmaImages = ({
 // src/react-shell/hooks/use.review.settings.ts
 var import_react20 = require("react");
 var useReviewSettings = ({
+  defaultReviewUserId = "",
   onCancelReviewMode,
   onCloseInitialPrompt,
   onCloseSitemap,
   onReloadTargetFrame
 }) => {
   const [figmaTokenDraft, setFigmaTokenDraft] = (0, import_react20.useState)(getStoredFigmaToken);
-  const [reviewUserId, setReviewUserId] = (0, import_react20.useState)(getStoredReviewUserId);
+  const [reviewUserId, setReviewUserId] = (0, import_react20.useState)(
+    () => getStoredReviewUserId(defaultReviewUserId)
+  );
   const [reviewUserIdDraft, setReviewUserIdDraft] = (0, import_react20.useState)(
-    getStoredReviewUserId
+    () => getStoredReviewUserId(defaultReviewUserId)
   );
   const [reviewTheme, setReviewTheme] = (0, import_react20.useState)(getStoredReviewTheme);
   const [reviewThemeDraft, setReviewThemeDraft] = (0, import_react20.useState)(getStoredReviewTheme);
@@ -17576,7 +17580,7 @@ var useReviewSettings = ({
     onCloseSitemap();
     onCloseInitialPrompt();
     setFigmaTokenDraft(getStoredFigmaToken());
-    setReviewUserIdDraft(getStoredReviewUserId());
+    setReviewUserIdDraft(getStoredReviewUserId(defaultReviewUserId));
     setReviewThemeDraft(reviewTheme);
     setFigmaSettingsStatus("");
     setIsFigmaTokenVisible(false);
@@ -17586,6 +17590,7 @@ var useReviewSettings = ({
     onCancelReviewMode,
     onCloseInitialPrompt,
     onCloseSitemap,
+    defaultReviewUserId,
     reviewTheme
   ]);
   const saveReviewSettings = (0, import_react20.useCallback)(
@@ -17612,6 +17617,12 @@ var useReviewSettings = ({
     },
     [closeFigmaSettings, onReloadTargetFrame]
   );
+  (0, import_react20.useEffect)(() => {
+    if (getStoredReviewUserId()) return;
+    const nextDefaultUserId = defaultReviewUserId.trim();
+    setReviewUserId(nextDefaultUserId);
+    setReviewUserIdDraft(nextDefaultUserId);
+  }, [defaultReviewUserId]);
   (0, import_react20.useEffect)(() => {
     if (typeof window === "undefined" || !window.matchMedia) return void 0;
     const query = window.matchMedia("(prefers-color-scheme: light)");
@@ -18012,6 +18023,7 @@ function normalizeLegacyAdapterMap(adapters) {
     statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
     assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
     assigneeOptions: [],
+    defaultUserId: adapters.defaultUserId?.trim() ?? "",
     updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
     updateAssignee: ({ id, assigneeId, assigneeName }) => adapters.local.update(id, { assigneeId, assigneeName }),
     syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
@@ -18026,6 +18038,7 @@ function normalizeLegacyAdapterMap(adapters) {
     statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
     assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
     assigneeOptions: [],
+    defaultUserId: adapters.defaultUserId?.trim() ?? "",
     updateStatus: ({ id, status }) => adapters.remote?.update(id, { status }) ?? Promise.reject(new Error("Remote adapter is not available.")),
     updateAssignee: ({ id, assigneeId, assigneeName }) => adapters.remote?.update(id, { assigneeId, assigneeName }) ?? Promise.reject(new Error("Remote adapter is not available.")),
     writeModes: [],
@@ -18048,6 +18061,7 @@ function normalizeShellAdapter(adapterConfig) {
   };
   const assigneeTitle = adapterConfig.assigneeTitle?.trim() || DEFAULT_ASSIGNEE_TITLE;
   const assigneeOptions = [...adapterConfig.assigneeOptions ?? []];
+  const defaultUserId = adapterConfig.defaultUserId?.trim() ?? "";
   const updateAdapter = adapterConfig.update;
   const updateStatus = adapterConfig.updateStatus ? adapterConfig.updateStatus : updateAdapter ? ({ id, status }) => updateAdapter(id, { status }) : void 0;
   const updateAssignee = adapterConfig.updateAssignee ? adapterConfig.updateAssignee : updateAdapter ? ({ id, assigneeId, assigneeName, assigneeOption }) => updateAdapter(id, {
@@ -18064,6 +18078,7 @@ function normalizeShellAdapter(adapterConfig) {
     statusOptions,
     assigneeTitle,
     assigneeOptions,
+    defaultUserId,
     updateStatus,
     updateAssignee,
     syncSubmission: adapterConfig.syncSubmission,
@@ -18874,6 +18889,7 @@ var ReviewShell = ({
     setReviewThemeDraft,
     setReviewUserIdDraft
   } = useReviewSettings({
+    defaultReviewUserId: activeAdapterEntry.defaultUserId,
     onCancelReviewMode: cancelReviewMode,
     onCloseInitialPrompt: closePromptModal,
     onCloseSitemap: closeSitemap,

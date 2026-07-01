@@ -104,6 +104,7 @@ export type ReviewShellSyncSubmissionInput = {
 export type ReviewShellAdapter = {
   label: ReviewSource;
   pageId?: string;
+  defaultUserId?: string;
   get: WebReviewKitAdapter['get'];
   list: WebReviewKitAdapter['list'];
   create?: WebReviewKitAdapter['create'];
@@ -127,6 +128,7 @@ export type ReviewShellAdapterMap = {
   local: WebReviewKitAdapter;
   remote?: WebReviewKitAdapter | null;
   remotePageId?: string;
+  defaultUserId?: string;
 };
 
 export type ReviewShellAdapters = ReviewShellAdapterMap | ReviewShellAdapter[];

@@ -19,7 +19,7 @@ const ABOUT_SECTIONS = [
   {
     title: 'Figma token',
     body:
-      'Add a browser-safe Figma token in Settings only when the host page already supports the Figma overlay helper. The package stores it in localStorage as figma-token and does not own a server-side Figma integration.',
+      'Project owners can set FIGMA_TOKEN on the server. Reviewers who cannot change env can add a browser-local Figma token in Settings; it is stored as figma-token and used only as an image-store fallback.',
   },
   {
     title: 'User ID',

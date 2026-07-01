@@ -16,9 +16,11 @@ declare const REVIEW_WORKFLOW_STATUS_OPTIONS: Array<{
 declare function normalizeReviewItemStatus(status: ReviewItemStatus | undefined): ReviewWorkflowStatus;
 
 declare const DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT = "/__dfwr/figma-images";
+type ReviewFigmaImageTokenProvider = string | null | undefined | (() => string | null | undefined);
 type ReviewFigmaImageStoreClientOptions = {
     endpoint?: string;
     fetch?: typeof fetch;
+    token?: ReviewFigmaImageTokenProvider;
     clientRender?: boolean | ReviewFigmaImageClientRenderOptions;
 };
 type ReviewFigmaImageClientRenderOptions = {

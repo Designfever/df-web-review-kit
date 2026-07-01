@@ -1,12 +1,14 @@
 # Figma Overlay
 
-The Figma overlay button in the review shell toggles a host-page helper. The package does not fetch Figma data by itself and does not own a server-side Figma token.
+The Figma overlay button in the review shell toggles a host-page helper. The
+Figma image manager can also call the review-kit image store when the host wires
+one.
 
 ## User Flow
 
 - Open `/review`.
 - Click the settings button.
-- Enter a Figma token if the host helper requires one.
+- Enter a Figma token if the host helper or image store fallback requires one.
 - Click the Figma overlay button or press `f`.
 
 The token is stored in browser localStorage with this key:
@@ -15,7 +17,11 @@ The token is stored in browser localStorage with this key:
 figma-token
 ```
 
-Treat this as a dev/debug convenience. Do not use it for private server tokens.
+For Figma image add/render requests, the server/dev process uses `FIGMA_TOKEN`
+first. If that env token is missing, the browser sends this Settings token to
+the same-origin image store request as a fallback.
+
+Treat this as a review/debug convenience. Do not expose `VITE_FIGMA_TOKEN`.
 
 ## Availability
 
@@ -49,4 +55,5 @@ If the button does nothing:
 - Confirm the helper renders `.helper-figma-root` or `.helper-figma-loading-backdrop`.
 - Confirm the current viewport preset is `mobile` or `wide`.
 
-If the overlay needs a private Figma integration, move that work to a backend/admin service and expose only browser-safe state to the host page.
+If the overlay needs a private shared Figma integration, move that work to a
+backend/admin service and expose only browser-safe state to the host page.

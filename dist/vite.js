@@ -1,6 +1,7 @@
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
   DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
+  ReviewFigmaTokenError,
   collectReviewFigmaReleaseSnapshot,
   createReviewFigmaAssetStorageKey,
   createReviewFigmaAssetUrl,
@@ -20,7 +21,7 @@ import {
   readReviewFigmaToken,
   renderReviewFigmaImage,
   requireReviewFigmaToken
-} from "./chunk-AB5B6O77.js";
+} from "./chunk-2ZLU5FTD.js";
 
 // src/vite/figma-image-store.ts
 import path3 from "path";
@@ -33,6 +34,23 @@ import path2 from "path";
 // src/vite/figma-image-store.image.ts
 import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import path from "path";
+function requireReviewFigmaRequestToken({
+  enabled,
+  env,
+  envKey,
+  requestToken,
+  token
+}) {
+  const tokenEnvKey = envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY;
+  const figmaToken = readReviewFigmaToken({ token, env, envKey: tokenEnvKey, enabled }) || readReviewFigmaToken({
+    token: requestToken,
+    env: {},
+    envKey: tokenEnvKey,
+    enabled
+  });
+  if (!figmaToken) throw new ReviewFigmaTokenError(tokenEnvKey);
+  return figmaToken;
+}
 async function readReviewFigmaNodeName({
   apiBaseUrl,
   enabled,
@@ -41,14 +59,15 @@ async function readReviewFigmaNodeName({
   fetchOption,
   fileKey,
   nodeId,
-  token
+  token,
+  requestToken
 }) {
-  const explicitToken = typeof token === "string" ? token.trim() : token;
-  const figmaToken = explicitToken || requireReviewFigmaToken({
-    token: null,
+  const figmaToken = requireReviewFigmaRequestToken({
+    enabled,
     env,
-    envKey: envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
-    enabled
+    envKey,
+    requestToken,
+    token
   });
   const fetchNode = fetchOption ?? globalThis.fetch;
   if (!fetchNode) throw new Error("Figma node name lookup requires fetch.");
@@ -86,7 +105,8 @@ async function createReviewFigmaImage({
   currentImages,
   env,
   input,
-  options
+  options,
+  requestToken
 }) {
   const ref = parseReviewFigmaNodeRef(input.figmaUrl);
   if (!ref) {
@@ -132,11 +152,11 @@ async function createReviewFigmaImage({
     fetchOption: options.fetch,
     fileKey: ref.fileKey,
     nodeId: ref.nodeId,
-    token: options.token
+    token: options.token,
+    requestToken
   }).catch(() => void 0);
   const targetImageFormat = input.imageFormat ?? options.imageFormat ?? "webp";
   const renderFormat = getStoreRenderFormat(options.renderFormat, targetImageFormat);
-  const explicitToken = typeof options.token === "string" ? options.token.trim() : options.token;
   const rendered = await renderReviewFigmaImage({
     figmaUrl: input.figmaUrl,
     format: renderFormat,
@@ -144,11 +164,12 @@ async function createReviewFigmaImage({
     useAbsoluteBounds: options.useAbsoluteBounds,
     apiBaseUrl: options.apiBaseUrl,
     fetch: options.fetch,
-    token: explicitToken || requireReviewFigmaToken({
-      token: null,
+    token: requireReviewFigmaRequestToken({
+      enabled: options.enabled,
       env,
-      envKey: options.envKey ?? DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
-      enabled: options.enabled
+      envKey: options.envKey,
+      requestToken,
+      token: options.token
     })
   });
   const cachedAsset = await cacheReviewFigmaImageAsset({
@@ -381,7 +402,8 @@ async function handleReviewFigmaImageStoreRequest({
   pathname,
   requestUrl,
   body,
-  env
+  env,
+  requestToken
 }) {
   if (method === "OPTIONS") return { status: 204, body: null };
   if ((method === "GET" || method === "POST") && pathname === `${endpoint}/snapshot`) {
@@ -427,7 +449,8 @@ async function handleReviewFigmaImageStoreRequest({
       currentImages: data.images,
       env,
       input,
-      options
+      options,
+      requestToken
     });
     data.images = [image, ...data.images];
     await writeReviewFigmaImageStoreFile(dataFile, data);
@@ -729,7 +752,8 @@ var reviewFigmaImageStore = (options = {}) => {
             pathname,
             requestUrl,
             method: req.method ?? "GET",
-            body: await readJsonRequestBody(req)
+            body: await readJsonRequestBody(req),
+            requestToken: readRequestFigmaToken(req)
           });
           sendJson(res, response.status, response.body);
         } catch (error) {
@@ -741,6 +765,11 @@ var reviewFigmaImageStore = (options = {}) => {
     }
   };
 };
+function readRequestFigmaToken(req) {
+  const value = req.headers?.["x-figma-token"];
+  const token = Array.isArray(value) ? value[0] : value;
+  return typeof token === "string" ? token.trim() || null : null;
+}
 function getServerEnv() {
   const runtime = globalThis;
   return runtime.process?.env ?? {};

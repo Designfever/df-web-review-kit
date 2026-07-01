@@ -27,6 +27,7 @@ export type NormalizedReviewShellAdapter = {
   statusOptions: ReviewShellStatusOption[];
   assigneeTitle: string;
   assigneeOptions: ReviewShellAssigneeOption[];
+  defaultUserId: string;
   updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<unknown>;
   updateAssignee?: (input: ReviewShellUpdateAssigneeInput) => Promise<unknown>;
   syncSubmission?: (input: ReviewShellSyncSubmissionInput) => Promise<unknown>;
@@ -75,6 +76,7 @@ function normalizeLegacyAdapterMap(
     statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
     assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
     assigneeOptions: [],
+    defaultUserId: adapters.defaultUserId?.trim() ?? '',
     updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
     updateAssignee: ({ id, assigneeId, assigneeName }) =>
       adapters.local.update(id, { assigneeId, assigneeName }),
@@ -91,6 +93,7 @@ function normalizeLegacyAdapterMap(
         statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
         assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
         assigneeOptions: [],
+        defaultUserId: adapters.defaultUserId?.trim() ?? '',
         updateStatus: ({ id, status }) =>
           adapters.remote?.update(id, { status }) ??
           Promise.reject(new Error('Remote adapter is not available.')),
@@ -123,6 +126,7 @@ function normalizeShellAdapter(
   const assigneeTitle =
     adapterConfig.assigneeTitle?.trim() || DEFAULT_ASSIGNEE_TITLE;
   const assigneeOptions = [...(adapterConfig.assigneeOptions ?? [])];
+  const defaultUserId = adapterConfig.defaultUserId?.trim() ?? '';
   const updateAdapter = adapterConfig.update;
   const updateStatus: NormalizedReviewShellAdapter['updateStatus'] =
     adapterConfig.updateStatus
@@ -153,6 +157,7 @@ function normalizeShellAdapter(
     statusOptions,
     assigneeTitle,
     assigneeOptions,
+    defaultUserId,
     updateStatus,
     updateAssignee,
     syncSubmission: adapterConfig.syncSubmission,

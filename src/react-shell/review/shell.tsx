@@ -503,6 +503,7 @@ export const ReviewShell = ({
     setReviewThemeDraft,
     setReviewUserIdDraft,
   } = useReviewSettings({
+    defaultReviewUserId: activeAdapterEntry.defaultUserId,
     onCancelReviewMode: cancelReviewMode,
     onCloseInitialPrompt: closePromptModal,
     onCloseSitemap: closeSitemap,

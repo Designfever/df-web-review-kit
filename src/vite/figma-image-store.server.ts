@@ -46,6 +46,7 @@ export async function handleReviewFigmaImageStoreRequest({
   requestUrl,
   body,
   env,
+  requestToken,
 }: {
   dataFile: string;
   assetDir: string;
@@ -57,6 +58,7 @@ export async function handleReviewFigmaImageStoreRequest({
   pathname: string;
   requestUrl: URL;
   body: unknown;
+  requestToken?: string | null;
 }): Promise<ReviewFigmaImageStoreResponse> {
   if (method === 'OPTIONS') return { status: 204, body: null };
 
@@ -112,6 +114,7 @@ export async function handleReviewFigmaImageStoreRequest({
       env,
       input,
       options,
+      requestToken,
     });
     data.images = [image, ...data.images];
     await writeReviewFigmaImageStoreFile(dataFile, data);

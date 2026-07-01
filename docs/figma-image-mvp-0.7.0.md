@@ -45,10 +45,10 @@ and submission sync do not become coupled to image management.
 
 ### Current Figma Integration
 
-The current Figma integration is only a host-helper toggle:
+The previous Figma integration was only a host-helper toggle:
 
-- `docs/figma-overlay.md` states that the package does not fetch Figma data or
-  own a server-side token.
+- `docs/figma-overlay.md` documents the host-helper toggle and the image store
+  token fallback.
 - `src/react-shell/figma.ts` reads `window.__figma` and builds a Figma frame
   link from `fileKey->nodeId`.
 - `src/react-shell/hooks/use.review.target.overlay.ts` dispatches `KeyF` into
@@ -198,16 +198,19 @@ store contract:
 - `PATCH /__dfwr/figma-images/:id`
 - `DELETE /__dfwr/figma-images/:id`
 
-The dev endpoint reads `FIGMA_TOKEN` from server env only when it needs to call
-Figma. Do not expose `VITE_FIGMA_TOKEN`.
+The dev endpoint reads `FIGMA_TOKEN` from server env first when it needs to call
+Figma. If the env token is absent, the browser Settings token stored as
+`figma-token` can be sent to the same-origin image store request as a fallback.
+Do not expose `VITE_FIGMA_TOKEN`.
 
 Token validation is intentionally lazy:
 
 - Store missing or disabled: no token check, keep the current host-helper
   fallback.
 - Store enabled but no image render/add request has happened: no token check.
-- Image render/add request: require `FIGMA_TOKEN` from the dev/server
-  environment and return `DFWR_FIGMA_TOKEN_MISSING` when it is absent.
+- Image render/add request: use `FIGMA_TOKEN` from the dev/server environment
+  first, then the Settings `figma-token` request fallback. Return
+  `DFWR_FIGMA_TOKEN_MISSING` when both are absent.
 
 ## Impact Files
 
@@ -224,9 +227,8 @@ Expected package-side implementation files:
 - `src/react-shell/topbar.tsx`: keep the existing overlay toggle available when
   no image store exists.
 - `src/react-shell/review/settings.modal.tsx` and
-  `src/react-shell/hooks/use.review.settings.ts`: stop treating browser
-  `figma-token` as the new API token. Keep it only for legacy host helpers if
-  needed.
+  `src/react-shell/hooks/use.review.settings.ts`: keep `figma-token` as a
+  browser-local review fallback for users who cannot set server env.
 - `src/vite.ts`: add the dev local metadata endpoint.
 - `dev/vite.config.ts` and `dev/src/main.tsx`: wire the local MVP for dogfood.
 
@@ -320,8 +322,9 @@ For the following implementation todos:
 
 - Adapter missing: `/review` still works with current keyboard shortcut/Figma
   helper fallback.
-- Adapter configured and `FIGMA_TOKEN` missing: adding/rendering a Figma image
-  returns a clear error without breaking the rest of the review shell.
+- Adapter configured and both `FIGMA_TOKEN` plus Settings `figma-token` are
+  missing: adding/rendering a Figma image returns a clear error without breaking
+  the rest of the review shell.
 - Adapter configured and `FIGMA_TOKEN` present: a Figma node copy link can be
   added, listed, deleted, reordered, and survives dev server restart.
 - Existing QA adapters still pass `pnpm typecheck` and `pnpm build`.

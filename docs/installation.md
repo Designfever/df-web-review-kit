@@ -63,6 +63,7 @@ import {
 
 const REVIEW_PROJECT_ID = import.meta.env.VITE_REVIEW_PROJECT_ID || 'my-project';
 const REVIEW_PATH_PREFIX = '/review';
+const REVIEW_USER_ID = import.meta.env.VITE_REVIEW_USER_ID || '';
 
 const local = localAdapter({
   storageKey: `${REVIEW_PROJECT_ID}-review-items`,
@@ -155,6 +156,7 @@ const remote = supabaseClient
 const adapters = [
   {
     label: 'local',
+    defaultUserId: REVIEW_USER_ID,
     get: (id) => local.get(id),
     list: (query) => local.list(query),
     create: (item) => local.create(item),
@@ -168,6 +170,7 @@ const adapters = [
     ? [
         {
           label: 'supabase',
+          defaultUserId: REVIEW_USER_ID,
           get: (id) => remote.get(id),
           list: (query) => remote.list(query),
           create: (item) => remote.create(item),

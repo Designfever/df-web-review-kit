@@ -30,7 +30,7 @@ import {
   readReviewFigmaToken,
   requireReviewFigmaNodeRef,
   requireReviewFigmaToken
-} from "./chunk-AB5B6O77.js";
+} from "./chunk-2ZLU5FTD.js";
 
 // src/adapters/supabase.ts
 var DEFAULT_SUPABASE_REVIEW_TABLE = "review_items";

@@ -189,6 +189,7 @@ export const reviewFigmaImageStore = (
             requestUrl,
             method: req.method ?? 'GET',
             body: await readJsonRequestBody(req),
+            requestToken: readRequestFigmaToken(req),
           });
 
           sendJson(res, response.status, response.body);
@@ -204,6 +205,13 @@ export const reviewFigmaImageStore = (
     },
   };
 };
+
+function readRequestFigmaToken(req: { headers?: Record<string, unknown> }) {
+  const value = req.headers?.['x-figma-token'];
+  const token = Array.isArray(value) ? value[0] : value;
+
+  return typeof token === 'string' ? token.trim() || null : null;
+}
 
 function getServerEnv(): ReviewFigmaTokenEnv {
   const runtime = globalThis as typeof globalThis & {

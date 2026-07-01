@@ -12,9 +12,10 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 6. [Architecture and runtime logic](architecture.md)
 7. [Figma overlay](figma-overlay.md)
 8. [Grid overlay](grid-overlay.md)
-9. [Release notes 0.7.2](release-notes-0.7.2.md)
-10. [Release notes 0.7.1](release-notes-0.7.1.md)
-11. [Release notes 0.7.0](release-notes-0.7.0.md)
+9. [Release notes 0.7.3](release-notes-0.7.3.md)
+10. [Release notes 0.7.2](release-notes-0.7.2.md)
+11. [Release notes 0.7.1](release-notes-0.7.1.md)
+12. [Release notes 0.7.0](release-notes-0.7.0.md)
 
 ## Document Roles
 
@@ -27,7 +28,8 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 - `figma-overlay.md`: host requirements for the Figma overlay toggle.
 - `grid-overlay.md`: host requirements for the grid/helper overlay toggle.
 - `release-notes-0.7.3.md`: latest release changes, endpoint Figma image store API, and validation scope.
-- `release-notes-0.7.1.md`: previous release changes, host notes, and validation scope.
+- `release-notes-0.7.2.md`: previous release changes, host notes, and validation scope.
+- `release-notes-0.7.1.md`: previous release changes and validation scope.
 - `release-notes-0.7.0.md`: previous release changes and validation scope.
 
 ## Boundary

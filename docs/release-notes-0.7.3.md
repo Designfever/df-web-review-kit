@@ -5,7 +5,9 @@
 비교 기준: `0.7.2`
 검토 기준: `main`
 
-## 변경
+## 주요 변경
+
+이번 릴리즈의 핵심은 Figma adapter endpoint 추가다. Host-owned API가 Figma image metadata와 asset 저장을 서버 쪽에서 함께 처리할 수 있게 했다.
 
 - `createEndpointReviewFigmaImageStore()`를 추가했다.
 - 옵션 없이 호출하면 기존 dev/local endpoint인 `/__dfwr/figma-images`를 사용한다.

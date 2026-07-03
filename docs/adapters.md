@@ -16,11 +16,11 @@ Use `adapter` for both concepts in conversation only when the context is clear. 
 | Public type | `ReviewShellAdapter`, `WebReviewKitAdapter` | `ReviewFigmaImageStore` |
 | Mount option | `mountReviewShell({ adapters })` | `mountReviewShell({ figmaImages: { store } })` |
 | Vite plugin | Not required | `reviewFigmaImageStore()` for dev/local cache |
-| Data | `ReviewItem` records | `ReviewFigmaImage` records and image assets |
-| Main actions | `get`, `list`, `create`, `update`, `remove` | `listImages`, `addImage`, `updateImage`, `reorderImages`, `deleteImage` |
+| Data | `ReviewItem` records and QA attachment metadata | `ReviewFigmaImage` records and image assets |
+| Main actions | `get`, `list`, `create`, `update`, `remove`, optional `uploadAttachment` | `listImages`, `addImage`, `updateImage`, `reorderImages`, `deleteImage` |
 | UI fields | `fields.title`, `statusOptions`, `assigneeOptions` | image label, order, opacity/layer controls |
 | Token/secrets | Host backend decides | `FIGMA_TOKEN` server env first, Settings `figma-token` request fallback |
-| Typical storage | localStorage, Supabase, df-sheet, custom QA API | `.df-review/figma-images.json`, `.df-review/figma-assets/`, future asset backend |
+| Typical storage | localStorage, Supabase, df-sheet, custom QA API, host-owned attachment bucket | `.df-review/figma-images.json`, `.df-review/figma-assets/`, future asset backend |
 
 ## QA Adapter
 
@@ -47,6 +47,7 @@ mountReviewShell({
       assigneeOptions,
       updateAssignee: ({ id, assigneeId, assigneeName }) =>
         dfSheet.updateAssignee(id, { assigneeId, assigneeName }),
+      uploadAttachment: (input) => dfSheet.uploadAttachment(input),
       remove: (id) => dfSheet.remove(id),
     },
   ],
@@ -57,9 +58,12 @@ Guidelines:
 
 - Keep backend-specific mapping inside the host adapter.
 - `fields.title` only controls whether title UI appears. Omit it for comment-only QA.
+- Use `ReviewItem.externalLinks` for one or more external issue/sheet buttons. The shell renders them under the QA body and falls back to `externalIssueUrl` when the array is omitted.
+- Use `ReviewShellAdapter.uploadAttachment` for comment paste and iframe capture files. Iframe captures usually arrive as WebP and only fall back to SVG when raster capture is unavailable. It receives a browser `File | Blob` plus optional metadata and must return a `ReviewAttachment` with `url`, `name`, `mime`, `size`, and optional `metadata`.
 - `assigneeOptions` and `updateAssignee` are optional. If omitted, assignee UI should not become a required workflow.
 - `statusOptions` can be project-specific, but status remains a QA item field.
 - Slow remote adapters should return promises normally; the shell owns loading and pending UI.
+- Upload failures should reject with a useful message. If the backend can classify the failure, set `reason` to values such as `quota-exceeded`, `storage-full`, `unsupported-type`, `permission-denied`, or `upload-failed` so the UI can show a concrete reason instead of silently submitting without a URL.
 
 ## Figma Image Store
 

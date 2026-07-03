@@ -87,6 +87,8 @@ export type ReviewShellUpdateAssigneeInput = {
 type ReviewShellSubmissionPatch = Partial<
   Pick<
     ReviewItem,
+    | 'attachments'
+    | 'externalLinks'
     | 'externalIssueId'
     | 'externalIssueUrl'
     | 'submittedAt'
@@ -109,6 +111,7 @@ export type ReviewShellAdapter = {
   list: WebReviewKitAdapter['list'];
   create?: WebReviewKitAdapter['create'];
   update?: WebReviewKitAdapter['update'];
+  uploadAttachment?: WebReviewKitAdapter['uploadAttachment'];
   fields?: ReviewFieldsConfig;
   statusOptions?: readonly ReviewShellStatusOption[];
   assigneeTitle?: string;

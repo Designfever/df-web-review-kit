@@ -1,5 +1,6 @@
 import type { RefObject } from 'react';
 import type { WebReviewKitTarget } from '../../types';
+import { captureIframeViewport } from '../target/capture';
 
 interface GetReviewKitTargetOptions {
   frameScrollRef: RefObject<HTMLDivElement | null>;
@@ -45,5 +46,6 @@ export const getReviewKitTarget = ({
     },
     getComposerHost: () =>
       document.querySelector<HTMLElement>('.df-review-qa-draft-host'),
+    captureViewport: (input) => captureIframeViewport(frame, input),
   };
 };

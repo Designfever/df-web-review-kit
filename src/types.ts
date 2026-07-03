@@ -61,6 +61,85 @@ export interface ReviewAssigneeOption {
   label: string;
 }
 
+export type ReviewExternalLinkIcon =
+  | 'external'
+  | 'github'
+  | 'issue'
+  | 'jira'
+  | 'sheet'
+  | (string & {});
+
+export interface ReviewExternalLink {
+  label: string;
+  url: string;
+  title?: string;
+  icon?: ReviewExternalLinkIcon;
+}
+
+export type ReviewAttachmentKind =
+  | 'file'
+  | 'image'
+  | 'capture'
+  | (string & {});
+
+export interface ReviewAttachment {
+  id?: string;
+  url: string;
+  name: string;
+  mime: string;
+  size: number;
+  kind?: ReviewAttachmentKind;
+  width?: number;
+  height?: number;
+  metadata?: Record<string, unknown>;
+  createdAt?: string;
+}
+
+export interface ReviewAttachmentUploadInput {
+  file: File | Blob;
+  name?: string;
+  mime?: string;
+  kind?: ReviewAttachmentKind;
+  item?: ReviewItem;
+  metadata?: Record<string, unknown>;
+}
+
+export type ReviewAttachmentUploadErrorReason =
+  | 'quota-exceeded'
+  | 'storage-full'
+  | 'unsupported-type'
+  | 'permission-denied'
+  | 'upload-failed'
+  | (string & {});
+
+export interface ReviewAttachmentUploadError extends Error {
+  reason: ReviewAttachmentUploadErrorReason;
+}
+
+export interface ReviewViewportCaptureInput {
+  routeKey: string;
+  pageUrl: string;
+  originalUrl?: string;
+  viewport: ViewportSize;
+  devicePixelRatio?: number;
+  scroll: {
+    x: number;
+    y: number;
+  };
+  marker?: ReviewMarker;
+  selection?: ReviewSelection;
+  timestamp: string;
+}
+
+export interface ReviewViewportCaptureResult {
+  file: Blob;
+  name?: string;
+  mime?: string;
+  width?: number;
+  height?: number;
+  metadata?: Record<string, unknown>;
+}
+
 export interface ReviewPoint {
   x: number;
   y: number;
@@ -101,8 +180,10 @@ export interface ReviewItem {
   anchor?: DomAnchor;
   marker?: ReviewMarker;
   selection?: ReviewSelection;
+  attachments?: ReviewAttachment[];
   externalIssueId?: string;
   externalIssueUrl?: string;
+  externalLinks?: ReviewExternalLink[];
   submittedAt?: string;
   submitStatus?: ReviewSubmitStatus;
   submitError?: string;
@@ -127,6 +208,9 @@ export interface WebReviewKitAdapter {
     id: string,
     patch: Partial<Omit<ReviewItem, 'id' | 'createdAt'>>
   ): Promise<ReviewItem>;
+  uploadAttachment?(
+    input: ReviewAttachmentUploadInput
+  ): Promise<ReviewAttachment>;
   remove(id: string): Promise<void>;
 }
 
@@ -223,4 +307,7 @@ export interface WebReviewKitTarget {
   getViewportRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
   getOverlayRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
   getComposerHost?: () => HTMLElement | null | undefined;
+  captureViewport?: (
+    input: ReviewViewportCaptureInput
+  ) => Promise<ReviewViewportCaptureResult>;
 }

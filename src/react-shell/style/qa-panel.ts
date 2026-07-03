@@ -379,6 +379,60 @@ export const reviewShellQaPanelStyle = `
     line-height: 1.35;
   }
 
+  .df-review-item-external-links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding-top: 2px;
+    flex-wrap: wrap;
+    cursor: auto;
+  }
+
+  .df-review-item-external-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    min-height: 26px;
+    max-width: 100%;
+    border: 1px solid rgba(124, 199, 255, 0.26);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 8px;
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+    font-size: var(--df-review-font-size-xs);
+    line-height: 1;
+    text-decoration: none;
+    transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+  }
+
+  .df-review-item-external-link:hover,
+  .df-review-item-external-link:focus-visible {
+    border-color: rgba(124, 199, 255, 0.56);
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+    outline: none;
+  }
+
+  .df-review-item-external-link svg {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+  }
+
+  .df-review-item-external-link span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
 	  .df-review-item-main small {
 	    color: var(--df-review-subtle);
 	    font-size: var(--df-review-font-size-xs);

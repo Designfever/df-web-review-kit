@@ -777,6 +777,7 @@ function getServerEnv() {
 
 // src/vite.ts
 var VIRTUAL_JSX_DEV_RUNTIME_ID = "\0@designfever/web-review-kit/source-locator/jsx-dev-runtime";
+var typescriptModulePromise;
 var REVIEW_SOURCE_ENV_DEFINE_KEYS = [
   ["__DF_WRK_REVIEW_SOURCE_ROOT__", "VITE_REVIEW_SOURCE_ROOT"],
   ["__DF_WRK_REVIEW_SOURCE_EDITOR__", "VITE_REVIEW_SOURCE_EDITOR"],
@@ -820,9 +821,11 @@ var reviewSourceLocator = (options = {}) => {
       if (id !== VIRTUAL_JSX_DEV_RUNTIME_ID) return null;
       return createJsxDevRuntime(runtimeOptions);
     },
-    transform(code) {
+    async transform(code, id) {
       const injectedCode = injectReviewSourceEnv(code, sourceEnvReplacements);
-      return injectedCode ? { code: injectedCode, map: null } : null;
+      const inputCode = injectedCode ?? code;
+      const componentInjectedCode = runtimeOptions.enabled ? await injectReviewSourceComponentHints(inputCode, id, runtimeOptions) : null;
+      return injectedCode || componentInjectedCode ? { code: componentInjectedCode ?? inputCode, map: null } : null;
     }
   };
 };
@@ -875,6 +878,93 @@ var reviewDataLocator = (options = {}) => {
     }
   };
 };
+async function injectReviewSourceComponentHints(code, id, options) {
+  const file = normalizePath(id.split("?")[0]);
+  if (!isJsxSourceFile(file, code)) return null;
+  const relativeFile = options.root && file.startsWith(options.root + "/") ? file.slice(options.root.length + 1) : file;
+  if (options.include.length > 0 && !options.include.some((matcher) => matchesPath(matcher, file, relativeFile))) {
+    return null;
+  }
+  if (options.exclude.some((matcher) => matchesPath(matcher, file, relativeFile))) {
+    return null;
+  }
+  const ts = await loadTypeScript();
+  if (!ts) return null;
+  const sourceFile = ts.createSourceFile(
+    file,
+    code,
+    ts.ScriptTarget.Latest,
+    true,
+    file.endsWith(".jsx") ? ts.ScriptKind.JSX : ts.ScriptKind.TSX
+  );
+  const insertions = getSourceComponentInsertions(
+    ts,
+    sourceFile,
+    options.componentAttribute
+  );
+  if (insertions.length === 0) return null;
+  return applySourceComponentInsertions(code, insertions);
+}
+async function loadTypeScript() {
+  const importTypeScript = new Function(
+    "specifier",
+    "return import(specifier)"
+  );
+  typescriptModulePromise ?? (typescriptModulePromise = importTypeScript("typescript").then((module) => module).catch(() => null));
+  return typescriptModulePromise;
+}
+function isJsxSourceFile(file, code) {
+  return /\.[cm]?[jt]sx$/.test(file) && code.includes("<");
+}
+function getSourceComponentInsertions(ts, sourceFile, componentAttribute) {
+  const insertions = [];
+  const visit = (node, currentComponent) => {
+    const component = getComponentNameForNode(ts, node) ?? currentComponent;
+    if (component && isIntrinsicJsxElement(ts, node, sourceFile) && !hasJsxAttribute(ts, node, componentAttribute) && !hasJsxAttribute(ts, node, "data-component")) {
+      insertions.push({
+        offset: node.tagName.end,
+        value: ` ${componentAttribute}=${JSON.stringify(component)}`
+      });
+    }
+    ts.forEachChild(node, (child) => visit(child, component));
+  };
+  visit(sourceFile, void 0);
+  return insertions;
+}
+function getComponentNameForNode(ts, node) {
+  if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) {
+    const name = node.name?.text;
+    return isComponentName(name) ? name : void 0;
+  }
+  if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
+    const name = node.name.text;
+    return isComponentName(name) && node.initializer ? name : void 0;
+  }
+  return void 0;
+}
+function isIntrinsicJsxElement(ts, node, sourceFile) {
+  if (!ts.isJsxOpeningElement(node) && !ts.isJsxSelfClosingElement(node)) {
+    return false;
+  }
+  const tagName = node.tagName.getText(sourceFile);
+  return /^[a-z]/.test(tagName) || tagName.includes("-");
+}
+function hasJsxAttribute(ts, node, name) {
+  return node.attributes.properties.some(
+    (property) => ts.isJsxAttribute(property) && property.name.getText() === name
+  );
+}
+function isComponentName(name) {
+  return Boolean(name && /^[A-Z][A-Za-z0-9_$]*$/.test(name));
+}
+function applySourceComponentInsertions(code, insertions) {
+  return insertions.slice().sort((a, b) => b.offset - a.offset).reduce(
+    (nextCode, insertion) => `${nextCode.slice(0, insertion.offset)}${insertion.value}${nextCode.slice(
+      insertion.offset
+    )}`,
+    code
+  );
+}
 function matchesPath(matcher, absoluteFile, relativeFile) {
   if (matcher.type === "regex") {
     const regex = new RegExp(matcher.value, matcher.flags);
@@ -902,7 +992,8 @@ function createRuntimeOptions(options, config) {
     column: options.column ?? true,
     fileAttribute: `${attributePrefix}-file`,
     lineAttribute: `${attributePrefix}-line`,
-    columnAttribute: `${attributePrefix}-column`
+    columnAttribute: `${attributePrefix}-column`,
+    componentAttribute: `${attributePrefix}-component`
   };
 }
 function createRuntimeMatcher(pattern) {

@@ -2,6 +2,20 @@ import type { TargetOverlayState } from '../types';
 
 const HIDE_SCROLLBAR_STYLE_ID = 'df-review-hide-scrollbar';
 const FIGMA_POINTER_LOCK_STYLE_ID = 'df-review-figma-pointer-lock';
+const FIGMA_SOURCE_SELECT_POINTER_LOCK_STYLE_ID =
+  'df-review-source-select-figma-pointer-lock';
+const FIGMA_POINTER_LOCK_STYLE_TEXT = [
+  '#df-review-figma-image-target-root,',
+  '#df-review-figma-image-target-root *,',
+  '.df-review-figma-image-target-overlay,',
+  '.df-review-figma-image-target-overlay *,',
+  '.helper-figma-root,',
+  '.helper-figma-root *,',
+  '.helper-figma-loading-backdrop,',
+  '.helper-figma-loading-backdrop * {',
+  'pointer-events: none !important;',
+  '}',
+].join('\n');
 
 export const setTargetScrollbarHidden = (
   targetDocument: Document | null | undefined,
@@ -22,29 +36,45 @@ export const setTargetScrollbarHidden = (
   }
 };
 
-export const setTargetFigmaOverlayLocked = (
+const setTargetFigmaPointerLockStyle = (
   targetDocument: Document | null | undefined,
+  styleId: string,
   locked: boolean
 ) => {
   if (!targetDocument) return;
 
-  const existing = targetDocument.getElementById(FIGMA_POINTER_LOCK_STYLE_ID);
+  const existing = targetDocument.getElementById(styleId);
   if (locked) {
     if (existing) return;
     const style = targetDocument.createElement('style');
-    style.id = FIGMA_POINTER_LOCK_STYLE_ID;
-    style.textContent = [
-      '.helper-figma-root,',
-      '.helper-figma-root *,',
-      '.helper-figma-loading-backdrop,',
-      '.helper-figma-loading-backdrop * {',
-      'pointer-events: none !important;',
-      '}',
-    ].join('\n');
+    style.id = styleId;
+    style.textContent = FIGMA_POINTER_LOCK_STYLE_TEXT;
     targetDocument.head?.appendChild(style);
   } else {
     existing?.remove();
   }
+};
+
+export const setTargetFigmaOverlayLocked = (
+  targetDocument: Document | null | undefined,
+  locked: boolean
+) => {
+  setTargetFigmaPointerLockStyle(
+    targetDocument,
+    FIGMA_POINTER_LOCK_STYLE_ID,
+    locked
+  );
+};
+
+export const setTargetFigmaSourceSelectLocked = (
+  targetDocument: Document | null | undefined,
+  locked: boolean
+) => {
+  setTargetFigmaPointerLockStyle(
+    targetDocument,
+    FIGMA_SOURCE_SELECT_POINTER_LOCK_STYLE_ID,
+    locked
+  );
 };
 
 export const isEditableEventTarget = (event: KeyboardEvent) => {

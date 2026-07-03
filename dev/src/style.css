@@ -44,6 +44,11 @@ input {
   padding: 24px;
 }
 
+.dev-page-body {
+  display: grid;
+  gap: 16px;
+}
+
 .dev-nav {
   position: sticky;
   top: 16px;
@@ -143,11 +148,12 @@ h2 {
   letter-spacing: -0.04em;
 }
 
-.dev-hero > p,
-.dev-section > p,
+.dev-hero-copy > p,
+.dev-section-heading > p,
 .dev-card p,
 .dev-panel p,
-.dev-long-card p {
+.dev-long-card p,
+.dev-state-tile p {
   max-width: 660px;
   color: rgba(255, 255, 255, 0.68);
   font-size: 17px;
@@ -195,7 +201,8 @@ h2 {
 
 .dev-card,
 .dev-panel,
-.dev-long-card {
+.dev-long-card,
+.dev-state-tile {
   min-height: 220px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 28px;
@@ -230,6 +237,11 @@ h2 {
   margin: 48px 0 20px;
 }
 
+.dev-component-stack {
+  display: grid;
+  gap: 16px;
+}
+
 .dev-component-row label {
   display: grid;
   gap: 8px;
@@ -261,12 +273,42 @@ h2 {
   background-size: 40px 40px;
 }
 
+.dev-panel-inner {
+  display: grid;
+  gap: 12px;
+}
+
 .dev-panel strong {
   font-size: 32px;
   letter-spacing: -0.05em;
 }
 
+.dev-state-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dev-state-tile {
+  min-height: 180px;
+}
+
+.dev-state-tile span {
+  display: inline-flex;
+  margin-bottom: 32px;
+  color: #7cc7ff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
 .dev-long {
+  display: grid;
+  gap: 18px;
+}
+
+.dev-long-list {
   display: grid;
   gap: 18px;
 }
@@ -300,6 +342,10 @@ h2 {
   }
 
   .dev-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dev-state-grid {
     grid-template-columns: 1fr;
   }
 }

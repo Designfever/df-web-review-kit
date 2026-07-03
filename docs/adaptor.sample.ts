@@ -1,5 +1,7 @@
 import {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
+  type ReviewAttachment,
+  type ReviewAttachmentUploadInput,
   type ReviewItem,
   type ReviewItemQuery,
   type ReviewItemStatus,
@@ -17,17 +19,21 @@ type RemoteReviewAdapterOptions = {
   source?: ReviewSource;
   token?: string;
   fields?: ReviewShellAdapter['fields'];
+  attachmentUploadPath?: string;
   assigneeTitle?: string;
   assigneeOptions?: ReviewShellAssigneeOption[];
 };
 
 type RemoteReviewItemResponse = ReviewItem | { item: ReviewItem };
+type RemoteReviewAttachmentResponse =
+  | ReviewAttachment
+  | { attachment: ReviewAttachment };
 
 /*
  * WebReviewKitAdapter is the core storage contract.
  *
  * ReviewItem is the full QA payload. Persist it as structured JSON so marker,
- * anchor, selection, viewport, scroll, status, and external issue fields survive.
+ * anchor, selection, viewport, scroll, status, and external link fields survive.
  *
  * ReviewItemQuery is used by the shell for current-page lists and sitemap counts.
  * A remote backend should support at least projectId, routeKey, status, source,
@@ -107,6 +113,8 @@ export function createRemoteReviewAdapter(
  * updateStatus drives the status buttons in the QA panel.
  * assigneeOptions + updateAssignee drive the assignee select next to status.
  * assigneeTitle customizes the empty option/field label. Defaults to "Assignee".
+ * uploadAttachment lets paste/capture flows upload File/Blob data before the
+ * returned metadata is stored on ReviewItem.attachments.
  * remove enables delete actions for this source.
  */
 export function createRemoteReviewShellAdapter(
@@ -129,8 +137,42 @@ export function createRemoteReviewShellAdapter(
     assigneeOptions: options.assigneeOptions ?? [],
     updateAssignee: ({ id, assigneeId, assigneeName }) =>
       adapter.update(id, { assigneeId, assigneeName }),
+    uploadAttachment: options.attachmentUploadPath
+      ? (input) => uploadReviewAttachment(input, options)
+      : undefined,
     remove: (id) => adapter.remove(id),
   };
+}
+
+async function uploadReviewAttachment(
+  input: ReviewAttachmentUploadInput,
+  options: RemoteReviewAdapterOptions
+) {
+  if (!options.attachmentUploadPath) {
+    throw new Error('remote review attachment upload path is not configured');
+  }
+
+  const name =
+    input.name || (input.file instanceof File ? input.file.name : 'attachment');
+  const mime = input.mime || input.file.type;
+  const form = new FormData();
+  form.set('file', input.file, name);
+  form.set('name', name);
+  if (mime) form.set('mime', mime);
+  if (input.kind) form.set('kind', input.kind);
+  if (input.item) form.set('item_id', input.item.id);
+  if (input.metadata) form.set('metadata', JSON.stringify(input.metadata));
+
+  return readReviewAttachment(
+    await requestJson<RemoteReviewAttachmentResponse>(
+      options.attachmentUploadPath,
+      options,
+      {
+        method: 'POST',
+        body: form,
+      }
+    )
+  );
 }
 
 function appendParam(
@@ -160,7 +202,11 @@ async function requestJson<T>(
   const headers = new Headers(init.headers);
 
   headers.set('Accept', 'application/json');
-  if (init.body && !headers.has('Content-Type')) {
+  if (
+    init.body &&
+    !(init.body instanceof FormData) &&
+    !headers.has('Content-Type')
+  ) {
     headers.set('Content-Type', 'application/json');
   }
   if (options.token) {
@@ -183,6 +229,10 @@ async function requestJson<T>(
 
 function readReviewItem(response: RemoteReviewItemResponse) {
   return 'item' in response ? response.item : response;
+}
+
+function readReviewAttachment(response: RemoteReviewAttachmentResponse) {
+  return 'attachment' in response ? response.attachment : response;
 }
 
 function ensureTrailingSlash(value: string) {

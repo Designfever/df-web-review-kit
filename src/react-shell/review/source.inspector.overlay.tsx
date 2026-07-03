@@ -102,7 +102,11 @@ export const SourceInspectorOverlay = ({
                 <span className="df-review-source-candidate-main">
                   <strong>{candidate.label}</strong>
                   <span>{candidate.filePath}</span>
-                  <small>{candidate.positionLabel || '-:-'}</small>
+                  <small>
+                    {[candidate.positionLabel || '-:-', candidate.detail]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </small>
                 </span>
               </button>
             ))}

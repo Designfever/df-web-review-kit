@@ -122,12 +122,17 @@ export const getSectionOutlineEntryCount = (
     0
   );
 
+const DEFAULT_VISIBLE_SECTION_OUTLINE_DEPTH = 6;
+
 export const getDefaultCollapsedSectionOutlineIds = (
   entries: SectionOutlineEntry[]
 ) => {
   const collapsedIds = new Set<string>();
   const visit = (entry: SectionOutlineEntry) => {
-    if (entry.children.length > 0) {
+    if (
+      entry.children.length > 0 &&
+      entry.depth >= DEFAULT_VISIBLE_SECTION_OUTLINE_DEPTH
+    ) {
       collapsedIds.add(entry.id);
     }
     entry.children.forEach(visit);

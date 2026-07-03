@@ -133,3 +133,7 @@ export function isCoreOutlineNode(label: string, file: string | undefined) {
     ['coresection', 'corecontent', 'corecolumn'].includes(label.toLowerCase())
   );
 }
+
+export function isPlacerSourceNode(label: string, file: string | undefined) {
+  return `${label} ${file ?? ''}`.toLowerCase().includes('placer');
+}

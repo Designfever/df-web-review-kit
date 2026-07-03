@@ -729,6 +729,82 @@ export function createStyleElement() {
       overflow-wrap: anywhere;
     }
 
+    .dfwr-attachment-queue {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .dfwr-attachment-label {
+      color: var(--df-review-color-text-muted);
+      font-size: var(--df-review-font-size-xs);
+      line-height: 1.35;
+    }
+
+    .dfwr-attachment-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dfwr-attachment-item {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--df-review-radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .dfwr-attachment-thumb {
+      display: block;
+      width: 42px;
+      height: 42px;
+      object-fit: cover;
+      border-radius: var(--df-review-radius-xs);
+      background: var(--df-review-color-panel-strong);
+    }
+
+    .dfwr-attachment-thumb.is-file {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--df-review-color-text-muted);
+      font-size: var(--df-review-font-size-xs);
+      font-weight: var(--df-review-font-weight-emphasis);
+    }
+
+    .dfwr-attachment-name {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--df-review-color-text);
+      font-size: var(--df-review-font-size-sm);
+      line-height: 1.35;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dfwr-attachment-remove {
+      appearance: none;
+      min-height: 28px;
+      padding: 0 8px;
+      border: 1px solid var(--df-review-color-border-strong);
+      border-radius: var(--df-review-radius-sm);
+      color: var(--df-review-color-text-muted);
+      background: var(--df-review-color-control);
+      cursor: pointer;
+      font: inherit;
+      font-size: var(--df-review-font-size-xs);
+      line-height: 1;
+    }
+
+    .dfwr-attachment-remove:hover {
+      color: var(--df-review-color-text);
+      background: var(--df-review-color-control-hover);
+    }
+
     .dfwr-input,
     .dfwr-select,
     .dfwr-textarea {

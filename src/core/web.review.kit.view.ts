@@ -22,6 +22,7 @@ import {
   roundPoint,
   toHostPoint,
   toHostSelection,
+  toPublicSelection,
   toTargetPoint,
   toTargetPointFromHostEvent,
   toViewportSelection,
@@ -31,7 +32,11 @@ import {
 import { getRouteKey } from './location';
 import * as draftMetrics from './draft.metrics';
 import { createStyleElement } from './overlay.style';
-import type { AreaDraft, NoteDraft } from './review/draft';
+import type {
+  AreaDraft,
+  NoteDraft,
+  ReviewDraftAttachment,
+} from './review/draft';
 import { formatItemMeta, formatNoteDraftMeta } from './review/format';
 import {
   getBoundMarkerPoint,
@@ -62,7 +67,9 @@ export type CreateReviewItemInput = Pick<ReviewItem, 'kind' | 'comment'> &
       | 'marker'
       | 'selection'
     >
-  >;
+  > & {
+    attachments?: ReviewDraftAttachment[];
+  };
 
 const DEFAULT_ADJUSTMENT_LABEL = 'Responsive CSS px adjustments';
 
@@ -74,6 +81,7 @@ interface WebReviewKitViewState {
   areaDraft?: AreaDraft;
   draftError?: string;
   isCreatingItem: boolean;
+  isCapturingViewport: boolean;
   isSelectingArea: boolean;
   highlightedItemId?: string;
 }
@@ -90,6 +98,9 @@ interface WebReviewKitViewActions {
   setAreaDraft: (draft?: AreaDraft) => void;
   setSelectingArea: (isSelectingArea: boolean) => void;
   createItem: (input: CreateReviewItemInput) => Promise<void>;
+  captureNoteDraft: (
+    input: Pick<NoteDraft, 'marker' | 'selection' | 'viewport'>
+  ) => Promise<void>;
   bindNoteDraftToPoint: (
     point: ReviewPoint,
     fields?: DraftItemFields
@@ -605,6 +616,257 @@ export class WebReviewKitView {
     };
   }
 
+  private attachDraftImagePasteQueue(
+    textarea: HTMLTextAreaElement,
+    options: {
+      getAttachments: () => ReviewDraftAttachment[] | undefined;
+      onAttachmentsChange: (attachments: ReviewDraftAttachment[]) => void;
+      onCommentChange: (comment: string) => void;
+    }
+  ) {
+    textarea.addEventListener('paste', (event) => {
+      const imageFiles = this.getClipboardImageFiles(event.clipboardData);
+      if (imageFiles.length === 0) return;
+
+      event.preventDefault();
+      const text = event.clipboardData?.getData('text/plain');
+      if (text) {
+        this.insertTextAtTextareaSelection(textarea, text);
+        options.onCommentChange(textarea.value);
+      }
+
+      const attachments = imageFiles.map((file, index) =>
+        this.createDraftImageAttachment(file, index)
+      );
+      options.onAttachmentsChange([
+        ...(options.getAttachments() ?? []),
+        ...attachments,
+      ]);
+      this.config.actions.render();
+    });
+  }
+
+  private getClipboardImageFiles(data: DataTransfer | null) {
+    if (!data) return [];
+
+    const itemFiles = Array.from(data.items)
+      .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => Boolean(file));
+    if (itemFiles.length > 0) return itemFiles;
+
+    return Array.from(data.files).filter((file) =>
+      file.type.startsWith('image/')
+    );
+  }
+
+  private createDraftImageAttachment(file: File, index: number) {
+    const mime = file.type || 'image/png';
+    const name =
+      file.name ||
+      `pasted-image-${Date.now()}-${index + 1}${this.getImageExtension(mime)}`;
+    return {
+      id: this.createDraftAttachmentId(),
+      file,
+      name,
+      mime,
+      size: file.size,
+      kind: 'image',
+      previewUrl: URL.createObjectURL(file),
+      metadata: { source: 'paste' },
+    } satisfies ReviewDraftAttachment;
+  }
+
+  private createDraftAttachmentId() {
+    return (
+      window.crypto?.randomUUID?.() ??
+      `draft-attachment-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2)}`
+    );
+  }
+
+  private getImageExtension(mime: string) {
+    if (mime === 'image/jpeg') return '.jpg';
+    if (mime === 'image/gif') return '.gif';
+    if (mime === 'image/webp') return '.webp';
+    if (mime === 'image/svg+xml') return '.svg';
+    return '.png';
+  }
+
+  private insertTextAtTextareaSelection(
+    textarea: HTMLTextAreaElement,
+    text: string
+  ) {
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? start;
+    textarea.value = [
+      textarea.value.slice(0, start),
+      text,
+      textarea.value.slice(end),
+    ].join('');
+    const nextSelection = start + text.length;
+    textarea.setSelectionRange(nextSelection, nextSelection);
+  }
+
+  private createDraftAttachmentQueue(
+    attachments: ReviewDraftAttachment[] | undefined,
+    onRemove: (attachmentId: string) => void
+  ) {
+    if (!attachments?.length) return undefined;
+
+    const queue = document.createElement('div');
+    queue.className = 'dfwr-attachment-queue';
+
+    const label = document.createElement('div');
+    label.className = 'dfwr-attachment-label';
+    label.textContent = `Attachments (${attachments.length})`;
+
+    const list = document.createElement('div');
+    list.className = 'dfwr-attachment-list';
+
+    attachments.forEach((attachment) => {
+      const item = document.createElement('div');
+      item.className = 'dfwr-attachment-item';
+
+      const preview = this.createDraftAttachmentPreview(attachment);
+
+      const name = document.createElement('div');
+      name.className = 'dfwr-attachment-name';
+      name.textContent = attachment.name;
+      name.title = attachment.name;
+
+      const remove = document.createElement('button');
+      remove.className = 'dfwr-attachment-remove';
+      remove.type = 'button';
+      remove.textContent = 'Remove';
+      remove.setAttribute('aria-label', `Remove ${attachment.name}`);
+      remove.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onRemove(attachment.id);
+      });
+
+      item.append(preview, name, remove);
+      list.append(item);
+    });
+
+    queue.append(label, list);
+    return queue;
+  }
+
+  private createDraftAttachmentPreview(attachment: ReviewDraftAttachment) {
+    if (attachment.previewUrl && attachment.mime.startsWith('image/')) {
+      const image = document.createElement('img');
+      image.className = 'dfwr-attachment-thumb';
+      image.src = attachment.previewUrl;
+      image.alt = '';
+      image.decoding = 'async';
+      return image;
+    }
+
+    const fallback = document.createElement('div');
+    fallback.className = 'dfwr-attachment-thumb is-file';
+    fallback.textContent = 'IMG';
+    return fallback;
+  }
+
+  private removeDraftAttachment(
+    attachments: ReviewDraftAttachment[] | undefined,
+    attachmentId: string
+  ) {
+    if (!attachments?.length) return [];
+
+    const removed = attachments.find(
+      (attachment) => attachment.id === attachmentId
+    );
+    if (removed?.previewUrl) {
+      URL.revokeObjectURL(removed.previewUrl);
+    }
+    return attachments.filter((attachment) => attachment.id !== attachmentId);
+  }
+
+  private canCaptureViewport() {
+    return Boolean(this.config.getEnvironment()?.captureViewport);
+  }
+
+  private createDraftCaptureButton(
+    draft: NoteDraft,
+    options: {
+      isElementDraft: boolean;
+      textarea: HTMLTextAreaElement;
+    }
+  ) {
+    const button = document.createElement('button');
+    const isCapturing = this.state.isCapturingViewport;
+    const canCapture = this.canCaptureViewport();
+
+    button.className = 'dfwr-button';
+    button.type = 'button';
+    button.disabled = !canCapture || isCapturing || this.state.isCreatingItem;
+    button.setAttribute('aria-busy', isCapturing ? 'true' : 'false');
+    button.title = canCapture
+      ? 'Capture current viewport'
+      : 'Viewport capture helper is not available';
+    if (isCapturing) {
+      button.append(this.createSpinner('dfwr-spinner'), 'Capturing...');
+    } else {
+      button.textContent = 'Capture';
+    }
+
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!this.canCaptureViewport() || this.state.isCapturingViewport) return;
+
+      const noteDraft = this.state.noteDraft ?? draft;
+      const nextDraft = {
+        ...noteDraft,
+        comment: options.textarea.value,
+      };
+      this.config.actions.setNoteDraft(nextDraft);
+      void this.config.actions.captureNoteDraft(
+        this.getCaptureNoteDraft(nextDraft, options.isElementDraft)
+      );
+    });
+
+    return button;
+  }
+
+  private getCaptureNoteDraft(draft: NoteDraft, isElementDraft: boolean) {
+    if (!isElementDraft) {
+      return {
+        viewport: draft.viewport,
+        marker: draft.marker,
+        selection: draft.selection,
+      };
+    }
+
+    const marker = {
+      ...draft.marker,
+      viewport: roundPoint(
+        this.getAdjustedDraftPoint(draft.marker.viewport, draft)
+      ),
+    };
+    const selection = draft.selection
+      ? {
+          ...draft.selection,
+          viewport: toPublicSelection(
+            this.getAdjustedDraftSelection(
+              toViewportSelection(draft.selection.viewport),
+              draft
+            )
+          ),
+        }
+      : undefined;
+
+    return {
+      viewport: draft.viewport,
+      marker,
+      selection,
+    };
+  }
+
   private getStyleableDraftElement(
     draft: NoteDraft,
     environment: ReviewEnvironment
@@ -970,6 +1232,25 @@ export class WebReviewKitView {
         comment: textarea.value,
       });
     });
+    this.attachDraftImagePasteQueue(textarea, {
+      getAttachments: () =>
+        this.state.noteDraft?.attachments ?? draft.attachments,
+      onAttachmentsChange: (attachments) => {
+        const noteDraft = this.state.noteDraft ?? draft;
+        this.config.actions.setNoteDraft({
+          ...noteDraft,
+          comment: textarea.value,
+          attachments,
+        });
+      },
+      onCommentChange: (comment) => {
+        const noteDraft = this.state.noteDraft ?? draft;
+        this.config.actions.setNoteDraft({
+          ...noteDraft,
+          comment,
+        });
+      },
+    });
 
     const assigneeSelect = this.createDraftAssigneeSelect(
       draft.assigneeId,
@@ -989,7 +1270,14 @@ export class WebReviewKitView {
       const currentDraft = this.state.noteDraft ?? draft;
       const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
       const comment = fields.comment;
-      if (!comment && !this.hasDraftAdjustment(currentDraft)) return;
+      const hasAttachments = Boolean(currentDraft.attachments?.length);
+      if (
+        !comment &&
+        !this.hasDraftAdjustment(currentDraft) &&
+        !hasAttachments
+      ) {
+        return;
+      }
       void this.config.actions.createItem({
         kind: 'note',
         title: fields.title,
@@ -1000,6 +1288,7 @@ export class WebReviewKitView {
         anchor: currentDraft.anchor,
         marker: currentDraft.marker,
         selection: currentDraft.selection,
+        attachments: currentDraft.attachments,
       });
     };
 
@@ -1014,19 +1303,38 @@ export class WebReviewKitView {
             dockToggle: options.dockComposer,
           })
         : undefined;
+    const leadingActions = [
+      adjustmentControls?.actionButton,
+      this.createDraftCaptureButton(draft, { isElementDraft, textarea }),
+    ].filter((element): element is HTMLButtonElement => Boolean(element));
 
     const actions = this.createFormActions('Save note', saveDraft, {
-      leading: adjustmentControls?.actionButton
-        ? [adjustmentControls.actionButton]
-        : undefined,
+      leading: leadingActions.length > 0 ? leadingActions : undefined,
     });
     const error = this.createDraftError();
+    const attachmentQueue = this.createDraftAttachmentQueue(
+      draft.attachments,
+      (attachmentId) => {
+        const noteDraft = this.state.noteDraft ?? draft;
+        const attachments = this.removeDraftAttachment(
+          noteDraft.attachments,
+          attachmentId
+        );
+        this.config.actions.setNoteDraft({
+          ...noteDraft,
+          comment: textarea.value,
+          attachments: attachments.length > 0 ? attachments : undefined,
+        });
+        this.config.actions.render();
+      }
+    );
 
     form.append(
       ...(meta ? [meta] : []),
       ...(adjustmentControls ? [adjustmentControls.panel] : []),
       ...(titleInput ? [titleInput] : []),
       textarea,
+      ...(attachmentQueue ? [attachmentQueue] : []),
       ...(assigneeSelect ? [assigneeSelect] : []),
       ...(error ? [error] : []),
       actions
@@ -1397,6 +1705,25 @@ export class WebReviewKitView {
         comment: textarea.value,
       });
     });
+    this.attachDraftImagePasteQueue(textarea, {
+      getAttachments: () =>
+        this.state.areaDraft?.attachments ?? areaDraft.attachments,
+      onAttachmentsChange: (attachments) => {
+        const draft = this.state.areaDraft ?? areaDraft;
+        this.config.actions.setAreaDraft({
+          ...draft,
+          comment: textarea.value,
+          attachments,
+        });
+      },
+      onCommentChange: (comment) => {
+        const draft = this.state.areaDraft ?? areaDraft;
+        this.config.actions.setAreaDraft({
+          ...draft,
+          comment,
+        });
+      },
+    });
 
     const assigneeSelect = this.createDraftAssigneeSelect(
       areaDraft.assigneeId,
@@ -1416,7 +1743,7 @@ export class WebReviewKitView {
       const draft = this.state.areaDraft;
       const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
       const comment = fields.comment;
-      if (!comment || !draft) return;
+      if ((!comment && !draft?.attachments?.length) || !draft) return;
       void this.config.actions.createItem({
         kind: 'area',
         title: fields.title,
@@ -1427,13 +1754,31 @@ export class WebReviewKitView {
         anchor: draft.anchor,
         marker: draft.marker,
         selection: draft.selection,
+        attachments: draft.attachments,
       });
     });
     const error = this.createDraftError();
+    const attachmentQueue = this.createDraftAttachmentQueue(
+      areaDraft.attachments,
+      (attachmentId) => {
+        const draft = this.state.areaDraft ?? areaDraft;
+        const attachments = this.removeDraftAttachment(
+          draft.attachments,
+          attachmentId
+        );
+        this.config.actions.setAreaDraft({
+          ...draft,
+          comment: textarea.value,
+          attachments: attachments.length > 0 ? attachments : undefined,
+        });
+        this.config.actions.render();
+      }
+    );
 
     form.append(
       ...(titleInput ? [titleInput] : []),
       textarea,
+      ...(attachmentQueue ? [attachmentQueue] : []),
       ...(assigneeSelect ? [assigneeSelect] : []),
       ...(error ? [error] : []),
       actions

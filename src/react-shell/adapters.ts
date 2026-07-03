@@ -31,6 +31,7 @@ export type NormalizedReviewShellAdapter = {
   updateStatus?: (input: ReviewShellUpdateStatusInput) => Promise<unknown>;
   updateAssignee?: (input: ReviewShellUpdateAssigneeInput) => Promise<unknown>;
   syncSubmission?: (input: ReviewShellSyncSubmissionInput) => Promise<unknown>;
+  uploadAttachment?: WebReviewKitAdapter['uploadAttachment'];
   writeModes: ReviewShellWriteMode[];
   canUpdate: boolean;
   canRemove: boolean;
@@ -81,6 +82,7 @@ function normalizeLegacyAdapterMap(
     updateAssignee: ({ id, assigneeId, assigneeName }) =>
       adapters.local.update(id, { assigneeId, assigneeName }),
     syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
+    uploadAttachment: adapters.local.uploadAttachment,
     writeModes: [...ALL_REVIEW_WRITE_MODES],
     canUpdate: true,
     canRemove: true,
@@ -100,6 +102,7 @@ function normalizeLegacyAdapterMap(
         updateAssignee: ({ id, assigneeId, assigneeName }) =>
           adapters.remote?.update(id, { assigneeId, assigneeName }) ??
           Promise.reject(new Error('Remote adapter is not available.')),
+        uploadAttachment: adapters.remote.uploadAttachment,
         writeModes: [],
         canUpdate: true,
         canRemove: false,
@@ -161,6 +164,7 @@ function normalizeShellAdapter(
     updateStatus,
     updateAssignee,
     syncSubmission: adapterConfig.syncSubmission,
+    uploadAttachment: adapterConfig.uploadAttachment,
     writeModes,
     canUpdate: Boolean(updateAdapter),
     canRemove: Boolean(adapterConfig.remove),
@@ -220,6 +224,7 @@ function normalizeShellAdapter(
         if (!updated) throw new Error(`Review item not found after update: ${id}`);
         return updated;
       },
+      uploadAttachment: adapterConfig.uploadAttachment,
       remove: async (id) => {
         if (!adapterConfig.remove) {
           throw new Error(

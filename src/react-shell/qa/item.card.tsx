@@ -16,6 +16,7 @@ import type {
 import type { NormalizedReviewShellAdapter } from '../adapters';
 import { getItemTitle } from '../prompt/prompt';
 import { QaItemAssigneeActions } from './item.assignee.actions';
+import { QaItemExternalLinks } from './item.external.links';
 import { QaItemRemoteActions } from './item.remote.actions';
 import { QaItemStatusActions } from './item.status.actions';
 import {
@@ -191,6 +192,7 @@ export const QaItemCard = ({
           >
             {itemComment}
           </p>
+          <QaItemExternalLinks item={item} />
           <small className="df-review-item-meta">{itemMeta}</small>
           {isMutating && (
             <small className="df-review-item-saving" aria-live="polite">

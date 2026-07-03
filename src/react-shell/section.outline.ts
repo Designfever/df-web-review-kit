@@ -8,6 +8,7 @@ import {
   getSourceHintFromElement,
   hasEquivalentSourceFileKey,
   isCoreOutlineNode,
+  isPlacerSourceNode,
   matchesIgnore,
   type GetSourceCandidatesOptions,
 } from './source.hint';
@@ -100,9 +101,30 @@ function getSectionOutlineRoots(
     (element) => {
       const source = getSourceHintFromElement(element);
       const label = getOutlineLabel(element, source, '');
-      return !isSkippedOutlineNode(label, source?.file, options);
+      return (
+        !isSkippedOutlineNode(label, source?.file, options) &&
+        !hasSectionOutlineRootAncestor(element, root, options)
+      );
     }
   );
+}
+
+function hasSectionOutlineRootAncestor(
+  element: Element,
+  root: ParentNode,
+  options: GetSectionOutlineOptions | undefined
+) {
+  let parent = element.parentElement;
+  while (parent && parent !== root) {
+    if (parent.matches(SECTION_OUTLINE_ROOT_SELECTOR)) {
+      const source = getSourceHintFromElement(parent);
+      const label = getOutlineLabel(parent, source, '');
+      if (!isSkippedOutlineNode(label, source?.file, options)) return true;
+    }
+    parent = parent.parentElement;
+  }
+
+  return false;
 }
 
 function getSectionOutlineChildren(
@@ -389,5 +411,5 @@ function isSkippedOutlineNode(
 }
 
 function isPlacerOutlineNode(label: string, file: string | undefined) {
-  return `${label} ${file ?? ''}`.toLowerCase().includes('placer');
+  return isPlacerSourceNode(label, file);
 }

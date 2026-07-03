@@ -1,4 +1,4 @@
-import { f as ReviewItemScope, s as ReviewSource, o as ReviewMode, W as WebReviewKitAdapter, x as ReviewFieldsConfig, a as ReviewItemStatus, k as ReviewAssigneeOption, e as ReviewItem, q as ReviewRulerConfig } from './types-DT9Z66mV.cjs';
+import { f as ReviewItemScope, z as ReviewSource, v as ReviewMode, W as WebReviewKitAdapter, F as ReviewFieldsConfig, a as ReviewItemStatus, k as ReviewAssigneeOption, e as ReviewItem, x as ReviewRulerConfig } from './types-DkLzNhH0.cjs';
 import { R as ReviewFigmaImageStore, a as ReviewFigmaImageFormat } from './image.types-BmzkFSPX.cjs';
 import * as react from 'react';
 
@@ -60,7 +60,7 @@ type ReviewShellUpdateAssigneeInput = {
     assigneeOption?: ReviewShellAssigneeOption;
     assigneeIndex: number;
 };
-type ReviewShellSubmissionPatch = Partial<Pick<ReviewItem, 'externalIssueId' | 'externalIssueUrl' | 'submittedAt' | 'submitStatus' | 'submitError'>>;
+type ReviewShellSubmissionPatch = Partial<Pick<ReviewItem, 'attachments' | 'externalLinks' | 'externalIssueId' | 'externalIssueUrl' | 'submittedAt' | 'submitStatus' | 'submitError'>>;
 type ReviewShellSyncSubmissionInput = {
     id: string;
     item: ReviewItem;
@@ -74,6 +74,7 @@ type ReviewShellAdapter = {
     list: WebReviewKitAdapter['list'];
     create?: WebReviewKitAdapter['create'];
     update?: WebReviewKitAdapter['update'];
+    uploadAttachment?: WebReviewKitAdapter['uploadAttachment'];
     fields?: ReviewFieldsConfig;
     statusOptions?: readonly ReviewShellStatusOption[];
     assigneeTitle?: string;

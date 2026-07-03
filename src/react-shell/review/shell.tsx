@@ -85,7 +85,10 @@ import {
 } from './source.inspector.overlay';
 import { ReviewTargetFrame } from '../target/frame';
 import { createReviewTargetFigmaImageOverlays } from '../target/figma.image.overlay';
-import { setTargetFigmaOverlayLocked } from '../target/target';
+import {
+  setTargetFigmaOverlayLocked,
+  setTargetFigmaSourceSelectLocked,
+} from '../target/target';
 import { ReviewTopbar } from '../topbar';
 import { useReviewController } from '../hooks/use.review.controller';
 import { useReviewPresence } from '../hooks/use.review.presence';
@@ -1362,6 +1365,7 @@ export const ReviewShell = ({
 
     const setSourceSelecting = (isSelecting: boolean) => {
       isSourceSelecting = isSelecting;
+      setTargetFigmaSourceSelectLocked(frameDocument, isSelecting);
       if (isSelecting) {
         isSourcePanelPinned = false;
         frameDocument.documentElement.setAttribute(optionAttribute, 'true');

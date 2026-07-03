@@ -7,11 +7,12 @@ import type {
   ViewportSize,
   WebReviewKitOptions,
 } from '../types';
+import { getDomAnchorFromPoint, getElementViewportSelection } from './dom.anchor';
 import {
-  getDomAnchorFromPoint,
-  getElementViewportSelection,
-  resolveAnchorElement,
-} from './dom.anchor';
+  attachDraftImagePasteQueue,
+  createDraftAttachmentQueue,
+  removeDraftAttachment,
+} from './draft.attachments';
 import {
   clampPoint,
   clamp,
@@ -31,6 +32,7 @@ import {
 } from './geometry';
 import { getRouteKey } from './location';
 import * as draftMetrics from './draft.metrics';
+import { DraftPreviewController } from './draft.preview';
 import { createStyleElement } from './overlay.style';
 import type {
   AreaDraft,
@@ -119,29 +121,27 @@ interface WebReviewKitViewConfig {
   actions: WebReviewKitViewActions;
 }
 
-type DraftPreviewElement = HTMLElement | SVGElement;
-
-interface DraftPreviewSnapshot {
-  element: DraftPreviewElement;
-  clone: DraftPreviewElement;
-  visibility: string;
-}
-
 /** Vanilla DOM renderer for the core overlay, separate from React shell chrome. */
 export class WebReviewKitView {
-  private draftPreview?: DraftPreviewSnapshot;
+  private readonly draftPreview: DraftPreviewController;
   private shellComposerHost?: HTMLElement;
 
-  constructor(private readonly config: WebReviewKitViewConfig) {}
+  constructor(private readonly config: WebReviewKitViewConfig) {
+    this.draftPreview = new DraftPreviewController({
+      getEnvironment: () => this.config.getEnvironment(),
+      getMetrics: (draft) => this.getDraftAdjustmentMetrics(draft),
+      hasAdjustment: (draft) => this.hasDraftAdjustment(draft),
+    });
+  }
 
   clearDraftPreview() {
-    this.restoreDraftPreview();
+    this.draftPreview.clear();
     this.clearShellComposer();
   }
 
   render(shadow: ShadowRoot, hiddenItemsStyle: HTMLStyleElement) {
     const state = this.state;
-    this.syncDraftPreview(
+    this.draftPreview.sync(
       state.isOpen && state.mode === 'element' ? state.noteDraft : undefined
     );
 
@@ -616,176 +616,6 @@ export class WebReviewKitView {
     };
   }
 
-  private attachDraftImagePasteQueue(
-    textarea: HTMLTextAreaElement,
-    options: {
-      getAttachments: () => ReviewDraftAttachment[] | undefined;
-      onAttachmentsChange: (attachments: ReviewDraftAttachment[]) => void;
-      onCommentChange: (comment: string) => void;
-    }
-  ) {
-    textarea.addEventListener('paste', (event) => {
-      const imageFiles = this.getClipboardImageFiles(event.clipboardData);
-      if (imageFiles.length === 0) return;
-
-      event.preventDefault();
-      const text = event.clipboardData?.getData('text/plain');
-      if (text) {
-        this.insertTextAtTextareaSelection(textarea, text);
-        options.onCommentChange(textarea.value);
-      }
-
-      const attachments = imageFiles.map((file, index) =>
-        this.createDraftImageAttachment(file, index)
-      );
-      options.onAttachmentsChange([
-        ...(options.getAttachments() ?? []),
-        ...attachments,
-      ]);
-      this.config.actions.render();
-    });
-  }
-
-  private getClipboardImageFiles(data: DataTransfer | null) {
-    if (!data) return [];
-
-    const itemFiles = Array.from(data.items)
-      .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
-      .map((item) => item.getAsFile())
-      .filter((file): file is File => Boolean(file));
-    if (itemFiles.length > 0) return itemFiles;
-
-    return Array.from(data.files).filter((file) =>
-      file.type.startsWith('image/')
-    );
-  }
-
-  private createDraftImageAttachment(file: File, index: number) {
-    const mime = file.type || 'image/png';
-    const name =
-      file.name ||
-      `pasted-image-${Date.now()}-${index + 1}${this.getImageExtension(mime)}`;
-    return {
-      id: this.createDraftAttachmentId(),
-      file,
-      name,
-      mime,
-      size: file.size,
-      kind: 'image',
-      previewUrl: URL.createObjectURL(file),
-      metadata: { source: 'paste' },
-    } satisfies ReviewDraftAttachment;
-  }
-
-  private createDraftAttachmentId() {
-    return (
-      window.crypto?.randomUUID?.() ??
-      `draft-attachment-${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2)}`
-    );
-  }
-
-  private getImageExtension(mime: string) {
-    if (mime === 'image/jpeg') return '.jpg';
-    if (mime === 'image/gif') return '.gif';
-    if (mime === 'image/webp') return '.webp';
-    if (mime === 'image/svg+xml') return '.svg';
-    return '.png';
-  }
-
-  private insertTextAtTextareaSelection(
-    textarea: HTMLTextAreaElement,
-    text: string
-  ) {
-    const start = textarea.selectionStart ?? textarea.value.length;
-    const end = textarea.selectionEnd ?? start;
-    textarea.value = [
-      textarea.value.slice(0, start),
-      text,
-      textarea.value.slice(end),
-    ].join('');
-    const nextSelection = start + text.length;
-    textarea.setSelectionRange(nextSelection, nextSelection);
-  }
-
-  private createDraftAttachmentQueue(
-    attachments: ReviewDraftAttachment[] | undefined,
-    onRemove: (attachmentId: string) => void
-  ) {
-    if (!attachments?.length) return undefined;
-
-    const queue = document.createElement('div');
-    queue.className = 'dfwr-attachment-queue';
-
-    const label = document.createElement('div');
-    label.className = 'dfwr-attachment-label';
-    label.textContent = `Attachments (${attachments.length})`;
-
-    const list = document.createElement('div');
-    list.className = 'dfwr-attachment-list';
-
-    attachments.forEach((attachment) => {
-      const item = document.createElement('div');
-      item.className = 'dfwr-attachment-item';
-
-      const preview = this.createDraftAttachmentPreview(attachment);
-
-      const name = document.createElement('div');
-      name.className = 'dfwr-attachment-name';
-      name.textContent = attachment.name;
-      name.title = attachment.name;
-
-      const remove = document.createElement('button');
-      remove.className = 'dfwr-attachment-remove';
-      remove.type = 'button';
-      remove.textContent = 'Remove';
-      remove.setAttribute('aria-label', `Remove ${attachment.name}`);
-      remove.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onRemove(attachment.id);
-      });
-
-      item.append(preview, name, remove);
-      list.append(item);
-    });
-
-    queue.append(label, list);
-    return queue;
-  }
-
-  private createDraftAttachmentPreview(attachment: ReviewDraftAttachment) {
-    if (attachment.previewUrl && attachment.mime.startsWith('image/')) {
-      const image = document.createElement('img');
-      image.className = 'dfwr-attachment-thumb';
-      image.src = attachment.previewUrl;
-      image.alt = '';
-      image.decoding = 'async';
-      return image;
-    }
-
-    const fallback = document.createElement('div');
-    fallback.className = 'dfwr-attachment-thumb is-file';
-    fallback.textContent = 'IMG';
-    return fallback;
-  }
-
-  private removeDraftAttachment(
-    attachments: ReviewDraftAttachment[] | undefined,
-    attachmentId: string
-  ) {
-    if (!attachments?.length) return [];
-
-    const removed = attachments.find(
-      (attachment) => attachment.id === attachmentId
-    );
-    if (removed?.previewUrl) {
-      URL.revokeObjectURL(removed.previewUrl);
-    }
-    return attachments.filter((attachment) => attachment.id !== attachmentId);
-  }
-
   private canCaptureViewport() {
     return Boolean(this.config.getEnvironment()?.captureViewport);
   }
@@ -865,151 +695,6 @@ export class WebReviewKitView {
       marker,
       selection,
     };
-  }
-
-  private getStyleableDraftElement(
-    draft: NoteDraft,
-    environment: ReviewEnvironment
-  ): DraftPreviewElement | undefined {
-    if (
-      draft.previewElement &&
-      draft.previewElement.ownerDocument === environment.document &&
-      'style' in draft.previewElement
-    ) {
-      return draft.previewElement;
-    }
-
-    if (!draft.anchor) return undefined;
-
-    const preferredSelection = draft.selection
-      ? toViewportSelection(draft.selection.viewport)
-      : undefined;
-    const element = resolveAnchorElement(
-      draft.anchor,
-      environment,
-      preferredSelection
-    )?.element;
-    if (!element) return undefined;
-
-    if ('style' in element) return element as DraftPreviewElement;
-
-    return undefined;
-  }
-
-  private syncDraftPreview(draft?: NoteDraft) {
-    const environment = this.config.getEnvironment();
-    if (!draft || !environment || !this.hasDraftAdjustment(draft)) {
-      this.restoreDraftPreview();
-      return;
-    }
-
-    const element = this.getStyleableDraftElement(draft, environment);
-    if (!element) {
-      this.restoreDraftPreview();
-      return;
-    }
-
-    if (this.draftPreview?.element !== element) {
-      this.restoreDraftPreview();
-    }
-
-    if (!this.draftPreview) {
-      const computedStyle = environment.window.getComputedStyle(element);
-      const clone = element.cloneNode(true) as DraftPreviewElement;
-      this.removeDuplicateIds(clone);
-      this.copyComputedStyle(element, clone, environment);
-      this.positionDraftPreviewClone(clone, element, computedStyle);
-      environment.document.body?.appendChild(clone);
-      this.draftPreview = {
-        element,
-        clone,
-        visibility: element.style.visibility,
-      };
-      element.style.visibility = 'hidden';
-    }
-
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    const translate = `translate(${this.toCssNumber(metrics.cssX)}px, ${this.toCssNumber(
-      metrics.cssY
-    )}px)`;
-    const scale =
-      metrics.scaleFactor === 1
-        ? ''
-        : `scale(${this.toCssNumber(metrics.scaleFactor)})`;
-    this.draftPreview.clone.style.transform = [translate, scale]
-      .filter(Boolean)
-      .join(' ');
-  }
-
-  private restoreDraftPreview() {
-    if (!this.draftPreview) return;
-
-    const { element, clone, visibility } = this.draftPreview;
-    clone.remove();
-    element.style.visibility = visibility;
-    this.draftPreview = undefined;
-  }
-
-  private positionDraftPreviewClone(
-    clone: DraftPreviewElement,
-    element: DraftPreviewElement,
-    computedStyle: CSSStyleDeclaration
-  ) {
-    const rect = element.getBoundingClientRect();
-    clone.setAttribute('data-dfwr-adjust-preview', 'true');
-    clone.setAttribute('aria-hidden', 'true');
-    clone.style.position = 'fixed';
-    clone.style.left = `${this.toCssNumber(rect.left)}px`;
-    clone.style.top = `${this.toCssNumber(rect.top)}px`;
-    clone.style.right = 'auto';
-    clone.style.bottom = 'auto';
-    clone.style.width = `${this.toCssNumber(rect.width)}px`;
-    clone.style.height = `${this.toCssNumber(rect.height)}px`;
-    clone.style.maxWidth = 'none';
-    clone.style.maxHeight = 'none';
-    clone.style.margin = '0';
-    clone.style.boxSizing = 'border-box';
-    clone.style.display = this.getDraftPreviewDisplay(computedStyle.display);
-    // One below the 32-bit max (2147483647): the preview clone floats above the
-    // page but stays under the overlay chrome, which uses the true maximum.
-    clone.style.zIndex = '2147483646';
-    clone.style.pointerEvents = 'none';
-    clone.style.transition = 'none';
-    clone.style.willChange = 'transform';
-    clone.style.transformOrigin = 'top left';
-    clone.style.transform = 'none';
-  }
-
-  private getDraftPreviewDisplay(display: string) {
-    if (display === 'inline' || display === 'contents') return 'inline-block';
-    return display || 'block';
-  }
-
-  private copyComputedStyle(
-    element: DraftPreviewElement,
-    clone: DraftPreviewElement,
-    environment: ReviewEnvironment
-  ) {
-    const computedStyle = environment.window.getComputedStyle(element);
-    for (let index = 0; index < computedStyle.length; index += 1) {
-      const property = computedStyle.item(index);
-      clone.style.setProperty(
-        property,
-        computedStyle.getPropertyValue(property),
-        computedStyle.getPropertyPriority(property)
-      );
-    }
-  }
-
-  private removeDuplicateIds(element: Element) {
-    element.removeAttribute('id');
-    element.querySelectorAll('[id]').forEach((child) => {
-      child.removeAttribute('id');
-    });
-  }
-
-  private toCssNumber(value: number) {
-    return Math.round(value * 1000) / 1000;
   }
 
   private createHeader() {
@@ -1232,7 +917,7 @@ export class WebReviewKitView {
         comment: textarea.value,
       });
     });
-    this.attachDraftImagePasteQueue(textarea, {
+    attachDraftImagePasteQueue(textarea, {
       getAttachments: () =>
         this.state.noteDraft?.attachments ?? draft.attachments,
       onAttachmentsChange: (attachments) => {
@@ -1250,6 +935,7 @@ export class WebReviewKitView {
           comment,
         });
       },
+      onPasteComplete: () => this.config.actions.render(),
     });
 
     const assigneeSelect = this.createDraftAssigneeSelect(
@@ -1312,11 +998,12 @@ export class WebReviewKitView {
       leading: leadingActions.length > 0 ? leadingActions : undefined,
     });
     const error = this.createDraftError();
-    const attachmentQueue = this.createDraftAttachmentQueue(
+    const attachmentQueue = createDraftAttachmentQueue(
+      document,
       draft.attachments,
       (attachmentId) => {
         const noteDraft = this.state.noteDraft ?? draft;
-        const attachments = this.removeDraftAttachment(
+        const attachments = removeDraftAttachment(
           noteDraft.attachments,
           attachmentId
         );
@@ -1663,7 +1350,7 @@ export class WebReviewKitView {
       selectionHighlight.style.height = `${rect.height}px`;
     }
 
-    this.syncDraftPreview(draft);
+    this.draftPreview.sync(draft);
   }
 
   private createAreaForm() {
@@ -1705,7 +1392,7 @@ export class WebReviewKitView {
         comment: textarea.value,
       });
     });
-    this.attachDraftImagePasteQueue(textarea, {
+    attachDraftImagePasteQueue(textarea, {
       getAttachments: () =>
         this.state.areaDraft?.attachments ?? areaDraft.attachments,
       onAttachmentsChange: (attachments) => {
@@ -1723,6 +1410,7 @@ export class WebReviewKitView {
           comment,
         });
       },
+      onPasteComplete: () => this.config.actions.render(),
     });
 
     const assigneeSelect = this.createDraftAssigneeSelect(
@@ -1758,11 +1446,12 @@ export class WebReviewKitView {
       });
     });
     const error = this.createDraftError();
-    const attachmentQueue = this.createDraftAttachmentQueue(
+    const attachmentQueue = createDraftAttachmentQueue(
+      document,
       areaDraft.attachments,
       (attachmentId) => {
         const draft = this.state.areaDraft ?? areaDraft;
-        const attachments = this.removeDraftAttachment(
+        const attachments = removeDraftAttachment(
           draft.attachments,
           attachmentId
         );

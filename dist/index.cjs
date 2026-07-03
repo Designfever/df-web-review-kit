@@ -2295,6 +2295,124 @@ function setDocumentScrollInstantly(environment, position) {
   );
 }
 
+// src/core/draft.attachments.ts
+function attachDraftImagePasteQueue(textarea, options) {
+  textarea.addEventListener("paste", (event) => {
+    const imageFiles = getClipboardImageFiles(event.clipboardData);
+    if (imageFiles.length === 0) return;
+    event.preventDefault();
+    const text = event.clipboardData?.getData("text/plain");
+    if (text) {
+      insertTextAtTextareaSelection(textarea, text);
+      options.onCommentChange(textarea.value);
+    }
+    const attachments = imageFiles.map(
+      (file, index) => createDraftImageAttachment(file, index)
+    );
+    options.onAttachmentsChange([
+      ...options.getAttachments() ?? [],
+      ...attachments
+    ]);
+    options.onPasteComplete();
+  });
+}
+function createDraftAttachmentQueue(ownerDocument, attachments, onRemove) {
+  if (!attachments?.length) return void 0;
+  const queue = ownerDocument.createElement("div");
+  queue.className = "dfwr-attachment-queue";
+  const label = ownerDocument.createElement("div");
+  label.className = "dfwr-attachment-label";
+  label.textContent = `Attachments (${attachments.length})`;
+  const list = ownerDocument.createElement("div");
+  list.className = "dfwr-attachment-list";
+  attachments.forEach((attachment) => {
+    const item = ownerDocument.createElement("div");
+    item.className = "dfwr-attachment-item";
+    const preview = createDraftAttachmentPreview(ownerDocument, attachment);
+    const name = ownerDocument.createElement("div");
+    name.className = "dfwr-attachment-name";
+    name.textContent = attachment.name;
+    name.title = attachment.name;
+    const remove = ownerDocument.createElement("button");
+    remove.className = "dfwr-attachment-remove";
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.setAttribute("aria-label", `Remove ${attachment.name}`);
+    remove.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onRemove(attachment.id);
+    });
+    item.append(preview, name, remove);
+    list.append(item);
+  });
+  queue.append(label, list);
+  return queue;
+}
+function removeDraftAttachment(attachments, attachmentId) {
+  if (!attachments?.length) return [];
+  const removed = attachments.find((attachment) => attachment.id === attachmentId);
+  if (removed?.previewUrl) {
+    URL.revokeObjectURL(removed.previewUrl);
+  }
+  return attachments.filter((attachment) => attachment.id !== attachmentId);
+}
+function getClipboardImageFiles(data) {
+  if (!data) return [];
+  const itemFiles = Array.from(data.items).filter((item) => item.kind === "file" && item.type.startsWith("image/")).map((item) => item.getAsFile()).filter((file) => Boolean(file));
+  if (itemFiles.length > 0) return itemFiles;
+  return Array.from(data.files).filter((file) => file.type.startsWith("image/"));
+}
+function createDraftImageAttachment(file, index) {
+  const mime = file.type || "image/png";
+  const name = file.name || `pasted-image-${Date.now()}-${index + 1}${getImageExtension(mime)}`;
+  return {
+    id: createDraftAttachmentId(),
+    file,
+    name,
+    mime,
+    size: file.size,
+    kind: "image",
+    previewUrl: URL.createObjectURL(file),
+    metadata: { source: "paste" }
+  };
+}
+function createDraftAttachmentId() {
+  return window.crypto?.randomUUID?.() ?? `draft-attachment-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+function getImageExtension(mime) {
+  if (mime === "image/jpeg") return ".jpg";
+  if (mime === "image/gif") return ".gif";
+  if (mime === "image/webp") return ".webp";
+  if (mime === "image/svg+xml") return ".svg";
+  return ".png";
+}
+function insertTextAtTextareaSelection(textarea, text) {
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? start;
+  textarea.value = [
+    textarea.value.slice(0, start),
+    text,
+    textarea.value.slice(end)
+  ].join("");
+  const nextSelection = start + text.length;
+  textarea.setSelectionRange(nextSelection, nextSelection);
+}
+function createDraftAttachmentPreview(ownerDocument, attachment) {
+  if (attachment.previewUrl && attachment.mime.startsWith("image/")) {
+    const image = ownerDocument.createElement("img");
+    image.className = "dfwr-attachment-thumb";
+    image.src = attachment.previewUrl;
+    image.alt = "";
+    image.decoding = "async";
+    return image;
+  }
+  const fallback = ownerDocument.createElement("div");
+  fallback.className = "dfwr-attachment-thumb is-file";
+  fallback.textContent = "IMG";
+  return fallback;
+}
+
 // src/core/draft.metrics.ts
 function getDraftViewportScale(viewport, presets) {
   const preset = findReviewViewportPreset(viewport, presets);
@@ -2351,6 +2469,117 @@ function getAdjustedDraftSelection(selection, draft, presets) {
     width: selection.width * metrics.scaleFactor,
     height: selection.height * metrics.scaleFactor
   };
+}
+
+// src/core/draft.preview.ts
+var DraftPreviewController = class {
+  constructor(config) {
+    this.config = config;
+  }
+  clear() {
+    if (!this.snapshot) return;
+    const { element, clone, visibility } = this.snapshot;
+    clone.remove();
+    element.style.visibility = visibility;
+    this.snapshot = void 0;
+  }
+  sync(draft) {
+    const environment = this.config.getEnvironment();
+    if (!draft || !environment || !this.config.hasAdjustment(draft)) {
+      this.clear();
+      return;
+    }
+    const element = this.getStyleableDraftElement(draft, environment);
+    if (!element) {
+      this.clear();
+      return;
+    }
+    if (this.snapshot?.element !== element) {
+      this.clear();
+    }
+    if (!this.snapshot) {
+      const computedStyle = environment.window.getComputedStyle(element);
+      const clone = element.cloneNode(true);
+      removeDuplicateIds(clone);
+      copyComputedStyle(element, clone, environment);
+      positionDraftPreviewClone(clone, element, computedStyle);
+      environment.document.body?.appendChild(clone);
+      this.snapshot = {
+        element,
+        clone,
+        visibility: element.style.visibility
+      };
+      element.style.visibility = "hidden";
+    }
+    const metrics = this.config.getMetrics(draft);
+    const translate = `translate(${toCssNumber(metrics.cssX)}px, ${toCssNumber(
+      metrics.cssY
+    )}px)`;
+    const scale = metrics.scaleFactor === 1 ? "" : `scale(${toCssNumber(metrics.scaleFactor)})`;
+    this.snapshot.clone.style.transform = [translate, scale].filter(Boolean).join(" ");
+  }
+  getStyleableDraftElement(draft, environment) {
+    if (draft.previewElement && draft.previewElement.ownerDocument === environment.document && "style" in draft.previewElement) {
+      return draft.previewElement;
+    }
+    if (!draft.anchor) return void 0;
+    const preferredSelection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
+    const element = resolveAnchorElement(
+      draft.anchor,
+      environment,
+      preferredSelection
+    )?.element;
+    if (!element) return void 0;
+    if ("style" in element) return element;
+    return void 0;
+  }
+};
+function positionDraftPreviewClone(clone, element, computedStyle) {
+  const rect = element.getBoundingClientRect();
+  clone.setAttribute("data-dfwr-adjust-preview", "true");
+  clone.setAttribute("aria-hidden", "true");
+  clone.style.position = "fixed";
+  clone.style.left = `${toCssNumber(rect.left)}px`;
+  clone.style.top = `${toCssNumber(rect.top)}px`;
+  clone.style.right = "auto";
+  clone.style.bottom = "auto";
+  clone.style.width = `${toCssNumber(rect.width)}px`;
+  clone.style.height = `${toCssNumber(rect.height)}px`;
+  clone.style.maxWidth = "none";
+  clone.style.maxHeight = "none";
+  clone.style.margin = "0";
+  clone.style.boxSizing = "border-box";
+  clone.style.display = getDraftPreviewDisplay(computedStyle.display);
+  clone.style.zIndex = "2147483646";
+  clone.style.pointerEvents = "none";
+  clone.style.transition = "none";
+  clone.style.willChange = "transform";
+  clone.style.transformOrigin = "top left";
+  clone.style.transform = "none";
+}
+function getDraftPreviewDisplay(display) {
+  if (display === "inline" || display === "contents") return "inline-block";
+  return display || "block";
+}
+function copyComputedStyle(element, clone, environment) {
+  const computedStyle = environment.window.getComputedStyle(element);
+  for (let index = 0; index < computedStyle.length; index += 1) {
+    const property = computedStyle.item(index);
+    clone.style.setProperty(
+      property,
+      computedStyle.getPropertyValue(property),
+      computedStyle.getPropertyPriority(property)
+    );
+  }
+}
+function removeDuplicateIds(element) {
+  element.removeAttribute("id");
+  element.querySelectorAll("[id]").forEach((child) => {
+    child.removeAttribute("id");
+  });
+}
+function toCssNumber(value) {
+  return Math.round(value * 1e3) / 1e3;
 }
 
 // src/core/typography.tokens.ts
@@ -3609,14 +3838,19 @@ var DEFAULT_ADJUSTMENT_LABEL = "Responsive CSS px adjustments";
 var WebReviewKitView = class {
   constructor(config) {
     this.config = config;
+    this.draftPreview = new DraftPreviewController({
+      getEnvironment: () => this.config.getEnvironment(),
+      getMetrics: (draft) => this.getDraftAdjustmentMetrics(draft),
+      hasAdjustment: (draft) => this.hasDraftAdjustment(draft)
+    });
   }
   clearDraftPreview() {
-    this.restoreDraftPreview();
+    this.draftPreview.clear();
     this.clearShellComposer();
   }
   render(shadow, hiddenItemsStyle) {
     const state = this.state;
-    this.syncDraftPreview(
+    this.draftPreview.sync(
       state.isOpen && state.mode === "element" ? state.noteDraft : void 0
     );
     shadow.replaceChildren();
@@ -3965,126 +4199,6 @@ ${adjustment}` : adjustment;
       assigneeName: this.getAssigneeName(assigneeId)
     };
   }
-  attachDraftImagePasteQueue(textarea, options) {
-    textarea.addEventListener("paste", (event) => {
-      const imageFiles = this.getClipboardImageFiles(event.clipboardData);
-      if (imageFiles.length === 0) return;
-      event.preventDefault();
-      const text = event.clipboardData?.getData("text/plain");
-      if (text) {
-        this.insertTextAtTextareaSelection(textarea, text);
-        options.onCommentChange(textarea.value);
-      }
-      const attachments = imageFiles.map(
-        (file, index) => this.createDraftImageAttachment(file, index)
-      );
-      options.onAttachmentsChange([
-        ...options.getAttachments() ?? [],
-        ...attachments
-      ]);
-      this.config.actions.render();
-    });
-  }
-  getClipboardImageFiles(data) {
-    if (!data) return [];
-    const itemFiles = Array.from(data.items).filter((item) => item.kind === "file" && item.type.startsWith("image/")).map((item) => item.getAsFile()).filter((file) => Boolean(file));
-    if (itemFiles.length > 0) return itemFiles;
-    return Array.from(data.files).filter(
-      (file) => file.type.startsWith("image/")
-    );
-  }
-  createDraftImageAttachment(file, index) {
-    const mime = file.type || "image/png";
-    const name = file.name || `pasted-image-${Date.now()}-${index + 1}${this.getImageExtension(mime)}`;
-    return {
-      id: this.createDraftAttachmentId(),
-      file,
-      name,
-      mime,
-      size: file.size,
-      kind: "image",
-      previewUrl: URL.createObjectURL(file),
-      metadata: { source: "paste" }
-    };
-  }
-  createDraftAttachmentId() {
-    return window.crypto?.randomUUID?.() ?? `draft-attachment-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  }
-  getImageExtension(mime) {
-    if (mime === "image/jpeg") return ".jpg";
-    if (mime === "image/gif") return ".gif";
-    if (mime === "image/webp") return ".webp";
-    if (mime === "image/svg+xml") return ".svg";
-    return ".png";
-  }
-  insertTextAtTextareaSelection(textarea, text) {
-    const start = textarea.selectionStart ?? textarea.value.length;
-    const end = textarea.selectionEnd ?? start;
-    textarea.value = [
-      textarea.value.slice(0, start),
-      text,
-      textarea.value.slice(end)
-    ].join("");
-    const nextSelection = start + text.length;
-    textarea.setSelectionRange(nextSelection, nextSelection);
-  }
-  createDraftAttachmentQueue(attachments, onRemove) {
-    if (!attachments?.length) return void 0;
-    const queue = document.createElement("div");
-    queue.className = "dfwr-attachment-queue";
-    const label = document.createElement("div");
-    label.className = "dfwr-attachment-label";
-    label.textContent = `Attachments (${attachments.length})`;
-    const list = document.createElement("div");
-    list.className = "dfwr-attachment-list";
-    attachments.forEach((attachment) => {
-      const item = document.createElement("div");
-      item.className = "dfwr-attachment-item";
-      const preview = this.createDraftAttachmentPreview(attachment);
-      const name = document.createElement("div");
-      name.className = "dfwr-attachment-name";
-      name.textContent = attachment.name;
-      name.title = attachment.name;
-      const remove = document.createElement("button");
-      remove.className = "dfwr-attachment-remove";
-      remove.type = "button";
-      remove.textContent = "Remove";
-      remove.setAttribute("aria-label", `Remove ${attachment.name}`);
-      remove.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onRemove(attachment.id);
-      });
-      item.append(preview, name, remove);
-      list.append(item);
-    });
-    queue.append(label, list);
-    return queue;
-  }
-  createDraftAttachmentPreview(attachment) {
-    if (attachment.previewUrl && attachment.mime.startsWith("image/")) {
-      const image = document.createElement("img");
-      image.className = "dfwr-attachment-thumb";
-      image.src = attachment.previewUrl;
-      image.alt = "";
-      image.decoding = "async";
-      return image;
-    }
-    const fallback = document.createElement("div");
-    fallback.className = "dfwr-attachment-thumb is-file";
-    fallback.textContent = "IMG";
-    return fallback;
-  }
-  removeDraftAttachment(attachments, attachmentId) {
-    if (!attachments?.length) return [];
-    const removed = attachments.find(
-      (attachment) => attachment.id === attachmentId
-    );
-    if (removed?.previewUrl) {
-      URL.revokeObjectURL(removed.previewUrl);
-    }
-    return attachments.filter((attachment) => attachment.id !== attachmentId);
-  }
   canCaptureViewport() {
     return Boolean(this.config.getEnvironment()?.captureViewport);
   }
@@ -4146,110 +4260,6 @@ ${adjustment}` : adjustment;
       marker,
       selection
     };
-  }
-  getStyleableDraftElement(draft, environment) {
-    if (draft.previewElement && draft.previewElement.ownerDocument === environment.document && "style" in draft.previewElement) {
-      return draft.previewElement;
-    }
-    if (!draft.anchor) return void 0;
-    const preferredSelection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
-    const element = resolveAnchorElement(
-      draft.anchor,
-      environment,
-      preferredSelection
-    )?.element;
-    if (!element) return void 0;
-    if ("style" in element) return element;
-    return void 0;
-  }
-  syncDraftPreview(draft) {
-    const environment = this.config.getEnvironment();
-    if (!draft || !environment || !this.hasDraftAdjustment(draft)) {
-      this.restoreDraftPreview();
-      return;
-    }
-    const element = this.getStyleableDraftElement(draft, environment);
-    if (!element) {
-      this.restoreDraftPreview();
-      return;
-    }
-    if (this.draftPreview?.element !== element) {
-      this.restoreDraftPreview();
-    }
-    if (!this.draftPreview) {
-      const computedStyle = environment.window.getComputedStyle(element);
-      const clone = element.cloneNode(true);
-      this.removeDuplicateIds(clone);
-      this.copyComputedStyle(element, clone, environment);
-      this.positionDraftPreviewClone(clone, element, computedStyle);
-      environment.document.body?.appendChild(clone);
-      this.draftPreview = {
-        element,
-        clone,
-        visibility: element.style.visibility
-      };
-      element.style.visibility = "hidden";
-    }
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    const translate = `translate(${this.toCssNumber(metrics.cssX)}px, ${this.toCssNumber(
-      metrics.cssY
-    )}px)`;
-    const scale = metrics.scaleFactor === 1 ? "" : `scale(${this.toCssNumber(metrics.scaleFactor)})`;
-    this.draftPreview.clone.style.transform = [translate, scale].filter(Boolean).join(" ");
-  }
-  restoreDraftPreview() {
-    if (!this.draftPreview) return;
-    const { element, clone, visibility } = this.draftPreview;
-    clone.remove();
-    element.style.visibility = visibility;
-    this.draftPreview = void 0;
-  }
-  positionDraftPreviewClone(clone, element, computedStyle) {
-    const rect = element.getBoundingClientRect();
-    clone.setAttribute("data-dfwr-adjust-preview", "true");
-    clone.setAttribute("aria-hidden", "true");
-    clone.style.position = "fixed";
-    clone.style.left = `${this.toCssNumber(rect.left)}px`;
-    clone.style.top = `${this.toCssNumber(rect.top)}px`;
-    clone.style.right = "auto";
-    clone.style.bottom = "auto";
-    clone.style.width = `${this.toCssNumber(rect.width)}px`;
-    clone.style.height = `${this.toCssNumber(rect.height)}px`;
-    clone.style.maxWidth = "none";
-    clone.style.maxHeight = "none";
-    clone.style.margin = "0";
-    clone.style.boxSizing = "border-box";
-    clone.style.display = this.getDraftPreviewDisplay(computedStyle.display);
-    clone.style.zIndex = "2147483646";
-    clone.style.pointerEvents = "none";
-    clone.style.transition = "none";
-    clone.style.willChange = "transform";
-    clone.style.transformOrigin = "top left";
-    clone.style.transform = "none";
-  }
-  getDraftPreviewDisplay(display) {
-    if (display === "inline" || display === "contents") return "inline-block";
-    return display || "block";
-  }
-  copyComputedStyle(element, clone, environment) {
-    const computedStyle = environment.window.getComputedStyle(element);
-    for (let index = 0; index < computedStyle.length; index += 1) {
-      const property = computedStyle.item(index);
-      clone.style.setProperty(
-        property,
-        computedStyle.getPropertyValue(property),
-        computedStyle.getPropertyPriority(property)
-      );
-    }
-  }
-  removeDuplicateIds(element) {
-    element.removeAttribute("id");
-    element.querySelectorAll("[id]").forEach((child) => {
-      child.removeAttribute("id");
-    });
-  }
-  toCssNumber(value) {
-    return Math.round(value * 1e3) / 1e3;
   }
   createHeader() {
     const header = document.createElement("div");
@@ -4424,7 +4434,7 @@ ${adjustment}` : adjustment;
         comment: textarea.value
       });
     });
-    this.attachDraftImagePasteQueue(textarea, {
+    attachDraftImagePasteQueue(textarea, {
       getAttachments: () => this.state.noteDraft?.attachments ?? draft.attachments,
       onAttachmentsChange: (attachments) => {
         const noteDraft = this.state.noteDraft ?? draft;
@@ -4440,7 +4450,8 @@ ${adjustment}` : adjustment;
           ...noteDraft,
           comment
         });
-      }
+      },
+      onPasteComplete: () => this.config.actions.render()
     });
     const assigneeSelect = this.createDraftAssigneeSelect(
       draft.assigneeId,
@@ -4492,11 +4503,12 @@ ${adjustment}` : adjustment;
       leading: leadingActions.length > 0 ? leadingActions : void 0
     });
     const error = this.createDraftError();
-    const attachmentQueue = this.createDraftAttachmentQueue(
+    const attachmentQueue = createDraftAttachmentQueue(
+      document,
       draft.attachments,
       (attachmentId) => {
         const noteDraft = this.state.noteDraft ?? draft;
-        const attachments = this.removeDraftAttachment(
+        const attachments = removeDraftAttachment(
           noteDraft.attachments,
           attachmentId
         );
@@ -4775,7 +4787,7 @@ ${adjustment}` : adjustment;
       selectionHighlight.style.width = `${rect.width}px`;
       selectionHighlight.style.height = `${rect.height}px`;
     }
-    this.syncDraftPreview(draft);
+    this.draftPreview.sync(draft);
   }
   createAreaForm() {
     const form = document.createElement("form");
@@ -4810,7 +4822,7 @@ ${adjustment}` : adjustment;
         comment: textarea.value
       });
     });
-    this.attachDraftImagePasteQueue(textarea, {
+    attachDraftImagePasteQueue(textarea, {
       getAttachments: () => this.state.areaDraft?.attachments ?? areaDraft.attachments,
       onAttachmentsChange: (attachments) => {
         const draft = this.state.areaDraft ?? areaDraft;
@@ -4826,7 +4838,8 @@ ${adjustment}` : adjustment;
           ...draft,
           comment
         });
-      }
+      },
+      onPasteComplete: () => this.config.actions.render()
     });
     const assigneeSelect = this.createDraftAssigneeSelect(
       areaDraft.assigneeId,
@@ -4860,11 +4873,12 @@ ${adjustment}` : adjustment;
       });
     });
     const error = this.createDraftError();
-    const attachmentQueue = this.createDraftAttachmentQueue(
+    const attachmentQueue = createDraftAttachmentQueue(
+      document,
       areaDraft.attachments,
       (attachmentId) => {
         const draft = this.state.areaDraft ?? areaDraft;
-        const attachments = this.removeDraftAttachment(
+        const attachments = removeDraftAttachment(
           draft.attachments,
           attachmentId
         );

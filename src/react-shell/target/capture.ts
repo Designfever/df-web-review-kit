@@ -25,8 +25,26 @@ export async function captureIframeViewport(
   }
 
   const viewport = getCaptureViewport(input.viewport, targetWindow);
+  const region = getCaptureRegion(input.captureRegion, viewport);
   const scale = getCaptureScale(targetWindow);
   const errors: string[] = [];
+
+  if (region) {
+    try {
+      return await createHtml2CanvasCapture(
+        targetDocument,
+        targetWindow,
+        viewport,
+        scale,
+        input,
+        region
+      );
+    } catch (error) {
+      throw new Error(
+        `Selected region capture failed: ${getUnknownErrorMessage(error)}`
+      );
+    }
+  }
 
   try {
     return await createHtml2CanvasCapture(
@@ -74,7 +92,8 @@ async function createHtml2CanvasCapture(
   targetWindow: Window,
   viewport: ViewportSize,
   scale: number,
-  input: ReviewViewportCaptureInput
+  input: ReviewViewportCaptureInput,
+  region?: RelativeSelection
 ) {
   const html2canvas = (await import('html2canvas')).default;
   const scrollX = Math.round(targetWindow.scrollX || 0);
@@ -89,6 +108,10 @@ async function createHtml2CanvasCapture(
       element.hasAttribute('data-dfwr-source-open-shortcut'),
     imageTimeout: 5000,
     logging: false,
+    onclone: (documentClone) => {
+      normalizeUnsupportedCaptureStyles(documentClone);
+      normalizeUnsupportedCaptureColors(documentClone);
+    },
     removeContainer: true,
     scale,
     scrollX,
@@ -101,8 +124,13 @@ async function createHtml2CanvasCapture(
     y: scrollY,
   };
 
-  const canvas = await html2canvas(targetDocument.documentElement, options);
-  drawCaptureAnnotations(canvas, scale, input);
+  const sourceCanvas = await html2canvas(targetDocument.documentElement, options);
+  const canvas = region
+    ? cropCaptureCanvas(targetDocument, sourceCanvas, region, scale)
+    : sourceCanvas;
+  if (!region) {
+    drawCaptureAnnotations(canvas, scale, input);
+  }
   const file = await canvasToBlob(canvas, CAPTURE_MIME, CAPTURE_QUALITY);
 
   return {
@@ -113,9 +141,38 @@ async function createHtml2CanvasCapture(
     height: canvas.height,
     metadata: {
       captureRenderer: 'html2canvas',
+      captureTarget: region ? 'selection' : 'viewport',
+      ...(region ? { captureRegion: region } : {}),
       captureScale: scale,
     },
   };
+}
+
+function cropCaptureCanvas(
+  targetDocument: Document,
+  sourceCanvas: HTMLCanvasElement,
+  region: RelativeSelection,
+  scale: number
+) {
+  const x = Math.round(region.x * scale);
+  const y = Math.round(region.y * scale);
+  const width = Math.min(
+    Math.max(1, Math.round(region.width * scale)),
+    Math.max(1, sourceCanvas.width - x)
+  );
+  const height = Math.min(
+    Math.max(1, Math.round(region.height * scale)),
+    Math.max(1, sourceCanvas.height - y)
+  );
+  const canvas = targetDocument.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Capture canvas is not available.');
+
+  context.drawImage(sourceCanvas, x, y, width, height, 0, 0, width, height);
+  return canvas;
 }
 
 async function createSvgCanvasCapture(
@@ -156,6 +213,26 @@ function getCaptureViewport(viewport: ViewportSize, targetWindow: Window) {
     width: Math.max(1, Math.round(viewport.width || targetWindow.innerWidth)),
     height: Math.max(1, Math.round(viewport.height || targetWindow.innerHeight)),
   };
+}
+
+function getCaptureRegion(
+  region: RelativeSelection | undefined,
+  viewport: ViewportSize
+): RelativeSelection | undefined {
+  if (!region) return undefined;
+
+  const x = Math.max(0, Math.round(region.x));
+  const y = Math.max(0, Math.round(region.y));
+  const width = Math.min(
+    Math.max(1, Math.round(region.width)),
+    Math.max(1, viewport.width - x)
+  );
+  const height = Math.min(
+    Math.max(1, Math.round(region.height)),
+    Math.max(1, viewport.height - y)
+  );
+
+  return { x, y, width, height };
 }
 
 function getCaptureScale(targetWindow: Window) {
@@ -210,6 +287,217 @@ function prepareCaptureClone(clone: HTMLElement) {
   clone
     .querySelectorAll('[data-dfwr-source-open-shortcut]')
     .forEach((element) => element.remove());
+}
+
+function normalizeUnsupportedCaptureStyles(documentClone: Document) {
+  documentClone.querySelectorAll('style').forEach((styleElement) => {
+    if (!hasUnsupportedColorFunction(styleElement.textContent ?? '')) return;
+    styleElement.textContent = normalizeUnsupportedStyleText(
+      styleElement.textContent
+    );
+  });
+
+  Array.from(documentClone.styleSheets).forEach((sheet) => {
+    try {
+      normalizeCssRuleList(sheet.cssRules);
+    } catch {
+      // Ignore inaccessible stylesheets.
+    }
+  });
+}
+
+function normalizeCssRuleList(rules: CSSRuleList) {
+  Array.from(rules).forEach((rule) => {
+    const style = (rule as CSSStyleRule).style;
+    if (style) normalizeStyleDeclaration(style);
+
+    const nestedRules = (rule as CSSGroupingRule).cssRules;
+    if (nestedRules) normalizeCssRuleList(nestedRules);
+  });
+}
+
+function normalizeStyleDeclaration(style: CSSStyleDeclaration) {
+  for (let index = 0; index < style.length; index += 1) {
+    const property = style.item(index);
+    const value = style.getPropertyValue(property);
+    if (!hasUnsupportedColorFunction(value)) continue;
+
+    try {
+      style.setProperty(
+        property,
+        normalizeUnsupportedStyleValue(property, value),
+        style.getPropertyPriority(property)
+      );
+    } catch {
+      // Ignore read-only CSS rules in the cloned tree.
+    }
+  }
+}
+
+function normalizeUnsupportedCaptureColors(documentClone: Document) {
+  const view = documentClone.defaultView;
+  if (!view) return;
+
+  const elements = [
+    documentClone.documentElement,
+    ...Array.from(documentClone.documentElement.querySelectorAll('*')),
+  ];
+
+  elements.forEach((element) => {
+    const HTMLElementConstructor = view.HTMLElement;
+    const SVGElementConstructor = view.SVGElement;
+    const isHtmlElement =
+      typeof HTMLElementConstructor === 'function' &&
+      element instanceof HTMLElementConstructor;
+    const isSvgElement =
+      typeof SVGElementConstructor === 'function' &&
+      element instanceof SVGElementConstructor;
+
+    if (!isHtmlElement && !isSvgElement) {
+      return;
+    }
+
+    const style = view.getComputedStyle(element);
+    for (let index = 0; index < style.length; index += 1) {
+      const property = style.item(index);
+      const value = style.getPropertyValue(property);
+      if (!hasUnsupportedColorFunction(value)) continue;
+
+      try {
+        element.style.setProperty(
+          property,
+          normalizeUnsupportedStyleValue(property, value)
+        );
+      } catch {
+        // Ignore properties that cannot be assigned inline in the cloned tree.
+      }
+    }
+  });
+}
+
+function hasUnsupportedColorFunction(value: string) {
+  return /okl(?:ch|ab)\(|color-mix\(/i.test(value);
+}
+
+function normalizeUnsupportedStyleText(value: string) {
+  return normalizeUnsupportedColorFunctions(value);
+}
+
+function normalizeUnsupportedStyleValue(property: string, value: string) {
+  if (/color-mix\(/i.test(value)) {
+    if (property.includes('shadow')) return 'none';
+    if (property === 'background' || property === 'background-image') {
+      return 'none';
+    }
+    return 'rgba(0, 0, 0, 0)';
+  }
+
+  return normalizeUnsupportedColorFunctions(value);
+}
+
+function normalizeUnsupportedColorFunctions(value: string) {
+  return value
+    .replace(
+      /oklch\(\s*([+-]?\d*\.?\d+%?)\s+([+-]?\d*\.?\d+)\s+([+-]?\d*\.?\d+)(deg|rad|turn)?(?:\s*\/\s*([+-]?\d*\.?\d+%?))?\s*\)/gi,
+      (_match, lightness, chroma, hue, unit, alpha) =>
+        oklchToRgbString(lightness, chroma, hue, unit, alpha)
+    )
+    .replace(
+      /oklab\(\s*([+-]?\d*\.?\d+%?)\s+([+-]?\d*\.?\d+%?)\s+([+-]?\d*\.?\d+%?)(?:\s*\/\s*([+-]?\d*\.?\d+%?))?\s*\)/gi,
+      (_match, lightness, okA, okB, alpha) =>
+        oklabToRgbString(lightness, okA, okB, alpha)
+    );
+}
+
+function oklchToRgbString(
+  lightness: string,
+  chroma: string,
+  hue: string,
+  unit?: string,
+  alpha?: string
+) {
+  const l = parsePercentNumber(lightness);
+  const c = Number.parseFloat(chroma);
+  const h = parseHueDegrees(hue, unit);
+  const a = alpha ? parsePercentNumber(alpha) : 1;
+  const hueRadians = (h * Math.PI) / 180;
+  const okA = c * Math.cos(hueRadians);
+  const okB = c * Math.sin(hueRadians);
+
+  return oklabComponentsToRgbString(l, okA, okB, a);
+}
+
+function oklabToRgbString(
+  lightness: string,
+  okA: string,
+  okB: string,
+  alpha?: string
+) {
+  return oklabComponentsToRgbString(
+    parsePercentNumber(lightness),
+    parseOklabChannel(okA),
+    parseOklabChannel(okB),
+    alpha ? parsePercentNumber(alpha) : 1
+  );
+}
+
+function oklabComponentsToRgbString(
+  l: number,
+  okA: number,
+  okB: number,
+  alpha: number
+) {
+  const l_ = l + 0.3963377774 * okA + 0.2158037573 * okB;
+  const m_ = l - 0.1055613458 * okA - 0.0638541728 * okB;
+  const s_ = l - 0.0894841775 * okA - 1.291485548 * okB;
+
+  const l3 = l_ * l_ * l_;
+  const m3 = m_ * m_ * m_;
+  const s3 = s_ * s_ * s_;
+
+  const r = linearRgbToSrgb(4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3);
+  const g = linearRgbToSrgb(-1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3);
+  const b = linearRgbToSrgb(-0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3);
+  const red = Math.round(clamp01(r) * 255);
+  const green = Math.round(clamp01(g) * 255);
+  const blue = Math.round(clamp01(b) * 255);
+  const opacity = clamp01(alpha);
+
+  return opacity < 1
+    ? `rgba(${red}, ${green}, ${blue}, ${roundAlpha(opacity)})`
+    : `rgb(${red}, ${green}, ${blue})`;
+}
+
+function parsePercentNumber(value: string) {
+  const number = Number.parseFloat(value);
+  return value.trim().endsWith('%') ? number / 100 : number;
+}
+
+function parseOklabChannel(value: string) {
+  const number = Number.parseFloat(value);
+  return value.trim().endsWith('%') ? (number / 100) * 0.4 : number;
+}
+
+function parseHueDegrees(value: string, unit?: string) {
+  const number = Number.parseFloat(value);
+  if (unit === 'rad') return (number * 180) / Math.PI;
+  if (unit === 'turn') return number * 360;
+  return number;
+}
+
+function linearRgbToSrgb(value: number) {
+  return value <= 0.0031308
+    ? 12.92 * value
+    : 1.055 * Math.pow(value, 1 / 2.4) - 0.055;
+}
+
+function clamp01(value: number) {
+  if (Number.isNaN(value)) return 0;
+  return Math.min(1, Math.max(0, value));
+}
+
+function roundAlpha(value: number) {
+  return Math.round(value * 1000) / 1000;
 }
 
 function getDocumentWidth(

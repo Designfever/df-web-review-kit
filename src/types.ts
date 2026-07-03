@@ -121,6 +121,7 @@ export interface ReviewViewportCaptureInput {
   pageUrl: string;
   originalUrl?: string;
   viewport: ViewportSize;
+  captureRegion?: RelativeSelection;
   devicePixelRatio?: number;
   scroll: {
     x: number;

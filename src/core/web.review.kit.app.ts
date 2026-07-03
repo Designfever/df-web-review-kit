@@ -7,6 +7,7 @@ import type {
   ReviewMode,
   ReviewPoint,
   ReviewSelection,
+  RelativeSelection,
   ReviewViewportCaptureInput,
   ReviewViewportCaptureResult,
   WebReviewKitAdapter,
@@ -65,8 +66,8 @@ type DraftItemFields = Partial<
   Pick<ReviewItem, 'title' | 'comment' | 'assigneeId' | 'assigneeName'>
 >;
 
-type CaptureNoteDraftInput = Pick<
-  NoteDraft,
+type CaptureDraftInput = Pick<
+  AreaDraft,
   'marker' | 'selection' | 'viewport'
 >;
 
@@ -169,6 +170,7 @@ class WebReviewKitApp {
         },
         createItem: (input) => this.createItem(input),
         captureNoteDraft: (input) => this.captureNoteDraft(input),
+        captureAreaDraft: (input) => this.captureAreaDraft(input),
         bindNoteDraftToPoint: (point, fields) =>
           this.bindNoteDraftToPoint(point, fields),
         bindElementDraftToPoint: (point, fields) =>
@@ -692,7 +694,7 @@ class WebReviewKitApp {
     }
   }
 
-  private async captureNoteDraft(input: CaptureNoteDraftInput) {
+  private async captureNoteDraft(input: CaptureDraftInput) {
     if (this.isCapturingViewport) return;
 
     const environment = this.getEnvironment();
@@ -704,7 +706,11 @@ class WebReviewKitApp {
       return;
     }
 
-    const captureInput = this.createViewportCaptureInput(environment, input);
+    const captureInput = this.createViewportCaptureInput(
+      environment,
+      input,
+      input.selection?.viewport
+    );
     this.draftError = '';
     this.isCapturingViewport = true;
     this.render();
@@ -728,9 +734,50 @@ class WebReviewKitApp {
     }
   }
 
+  private async captureAreaDraft(input: CaptureDraftInput) {
+    if (this.isCapturingViewport) return;
+
+    const environment = this.getEnvironment();
+    const draft = this.areaDraft;
+    if (!draft) return;
+    if (!environment?.captureViewport) {
+      this.draftError = 'Viewport capture helper is not available.';
+      this.render();
+      return;
+    }
+
+    const captureInput = this.createViewportCaptureInput(
+      environment,
+      input,
+      input.selection?.viewport
+    );
+    this.draftError = '';
+    this.isCapturingViewport = true;
+    this.render();
+
+    try {
+      const result = await environment.captureViewport(captureInput);
+      const attachment = this.createCaptureDraftAttachment(result, captureInput);
+      const currentDraft = this.areaDraft ?? draft;
+      this.areaDraft = {
+        ...currentDraft,
+        attachments: [...(currentDraft.attachments ?? []), attachment],
+      };
+    } catch (error) {
+      this.draftError = this.getErrorMessage(
+        error,
+        'Failed to capture viewport.'
+      );
+    } finally {
+      this.isCapturingViewport = false;
+      this.render();
+    }
+  }
+
   private createViewportCaptureInput(
     environment: ReviewEnvironment,
-    draft: CaptureNoteDraftInput
+    draft: CaptureDraftInput,
+    captureRegion?: RelativeSelection
   ): ReviewViewportCaptureInput {
     const timestamp = new Date().toISOString();
     const viewport = draft.viewport ?? getViewportSize(environment);
@@ -741,6 +788,7 @@ class WebReviewKitApp {
       pageUrl: getPageUrl(environment),
       originalUrl: getOriginalUrl(environment),
       viewport,
+      captureRegion,
       devicePixelRatio: environment.window.devicePixelRatio || 1,
       scroll: {
         x: environment.window.scrollX,

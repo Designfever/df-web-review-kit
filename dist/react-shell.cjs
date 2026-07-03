@@ -2880,22 +2880,34 @@ var reviewShellQaPanelStyle = `
     background: var(--df-review-danger-soft);
   }
 
-	  .df-review-item-main img {
-	    width: 100%;
-	    max-height: 110px;
-	    border: 1px solid var(--df-review-line);
-	    border-radius: var(--df-review-radius-sm);
-	    object-fit: cover;
-	    background: var(--df-review-control);
+  .df-review-item-attachments {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
   }
 
-	  .df-review-item-header-actions {
-	    display: inline-flex;
-	    align-items: center;
-	    justify-content: flex-end;
-	    gap: 2px;
-	    cursor: auto;
-	  }
+  .df-review-item-attachment {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    background: var(--df-review-control);
+  }
+
+  .df-review-item-attachment img {
+    display: block;
+    width: 100%;
+    max-height: 140px;
+    object-fit: cover;
+  }
+
+  .df-review-item-header-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    cursor: auto;
+  }
 
   .df-review-item-delete,
   .df-review-item-edit,
@@ -9076,6 +9088,33 @@ var formatItemCardDate = (value) => {
     month: "short"
   }).format(date);
 };
+var isImageAttachment = (attachment) => Boolean(attachment.url) && (attachment.kind === "capture" || attachment.kind === "image" || attachment.mime.startsWith("image/"));
+var QaItemAttachments = ({
+  attachments
+}) => {
+  const imageAttachments = attachments.filter(isImageAttachment);
+  if (imageAttachments.length === 0) return null;
+  return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "df-review-item-attachments", children: imageAttachments.map((attachment, index) => /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+    "a",
+    {
+      className: "df-review-item-attachment",
+      href: attachment.url,
+      rel: "noreferrer",
+      target: "_blank",
+      title: attachment.name,
+      onClick: (event) => event.stopPropagation(),
+      children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+        "img",
+        {
+          alt: attachment.name,
+          loading: "lazy",
+          src: attachment.url
+        }
+      )
+    },
+    attachment.id ?? `${attachment.url}-${index}`
+  )) });
+};
 var QaItemCard = ({
   activeAdapterEntry,
   fields,
@@ -9177,7 +9216,8 @@ var QaItemCard = ({
                 children: itemComment
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(QaItemExternalLinks, { item }),
+            item.attachments && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(QaItemAttachments, { attachments: item.attachments }),
+            !isRemoteSource && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(QaItemExternalLinks, { item }),
             /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("small", { className: "df-review-item-meta", children: itemMeta }),
             isMutating && /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("small", { className: "df-review-item-saving", "aria-live": "polite", children: [
               /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "df-review-spinner", "aria-hidden": "true" }),
@@ -14989,6 +15029,18 @@ ${adjustment}` : adjustment;
       event.preventDefault();
       event.stopPropagation();
       if (!this.canCaptureViewport() || this.state.isCapturingViewport) return;
+      if (options.kind === "area") {
+        const areaDraft = this.state.areaDraft ?? draft;
+        const nextDraft2 = {
+          ...areaDraft,
+          comment: options.textarea.value
+        };
+        this.config.actions.setAreaDraft(nextDraft2);
+        void this.config.actions.captureAreaDraft(
+          this.getCaptureAreaDraft(nextDraft2)
+        );
+        return;
+      }
       const noteDraft = this.state.noteDraft ?? draft;
       const nextDraft = {
         ...noteDraft,
@@ -15000,6 +15052,13 @@ ${adjustment}` : adjustment;
       );
     });
     return button;
+  }
+  getCaptureAreaDraft(draft) {
+    return {
+      viewport: draft.viewport,
+      marker: draft.marker,
+      selection: draft.selection
+    };
   }
   getCaptureNoteDraft(draft, isElementDraft) {
     if (!isElementDraft) {
@@ -15266,7 +15325,11 @@ ${adjustment}` : adjustment;
     }) : void 0;
     const leadingActions = [
       adjustmentControls?.actionButton,
-      this.createDraftCaptureButton(draft, { isElementDraft, textarea })
+      this.createDraftCaptureButton(draft, {
+        kind: "note",
+        isElementDraft,
+        textarea
+      })
     ].filter((element) => Boolean(element));
     const actions = this.createFormActions("Save note", saveDraft, {
       leading: leadingActions.length > 0 ? leadingActions : void 0
@@ -15623,24 +15686,35 @@ ${adjustment}` : adjustment;
         });
       }
     );
-    const actions = this.createFormActions("Save area", () => {
-      const draft = this.state.areaDraft;
-      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
-      const comment = fields.comment;
-      if (!comment && !draft?.attachments?.length || !draft) return;
-      void this.config.actions.createItem({
-        kind: "area",
-        title: fields.title,
-        comment,
-        assigneeId: fields.assigneeId,
-        assigneeName: fields.assigneeName,
-        viewport: draft.viewport,
-        anchor: draft.anchor,
-        marker: draft.marker,
-        selection: draft.selection,
-        attachments: draft.attachments
-      });
-    });
+    const actions = this.createFormActions(
+      "Save area",
+      () => {
+        const draft = this.state.areaDraft;
+        const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
+        const comment = fields.comment;
+        if (!comment && !draft?.attachments?.length || !draft) return;
+        void this.config.actions.createItem({
+          kind: "area",
+          title: fields.title,
+          comment,
+          assigneeId: fields.assigneeId,
+          assigneeName: fields.assigneeName,
+          viewport: draft.viewport,
+          anchor: draft.anchor,
+          marker: draft.marker,
+          selection: draft.selection,
+          attachments: draft.attachments
+        });
+      },
+      {
+        leading: [
+          this.createDraftCaptureButton(areaDraft, {
+            kind: "area",
+            textarea
+          })
+        ]
+      }
+    );
     const error = this.createDraftError();
     const attachmentQueue = createDraftAttachmentQueue(
       document,
@@ -16351,6 +16425,7 @@ var WebReviewKitApp = class {
         },
         createItem: (input) => this.createItem(input),
         captureNoteDraft: (input) => this.captureNoteDraft(input),
+        captureAreaDraft: (input) => this.captureAreaDraft(input),
         bindNoteDraftToPoint: (point, fields) => this.bindNoteDraftToPoint(point, fields),
         bindElementDraftToPoint: (point, fields) => this.bindElementDraftToPoint(point, fields),
         createAreaDraft: (selection) => this.createAreaDraft(selection)
@@ -16744,7 +16819,11 @@ var WebReviewKitApp = class {
       this.render();
       return;
     }
-    const captureInput = this.createViewportCaptureInput(environment, input);
+    const captureInput = this.createViewportCaptureInput(
+      environment,
+      input,
+      input.selection?.viewport
+    );
     this.draftError = "";
     this.isCapturingViewport = true;
     this.render();
@@ -16766,7 +16845,43 @@ var WebReviewKitApp = class {
       this.render();
     }
   }
-  createViewportCaptureInput(environment, draft) {
+  async captureAreaDraft(input) {
+    if (this.isCapturingViewport) return;
+    const environment = this.getEnvironment();
+    const draft = this.areaDraft;
+    if (!draft) return;
+    if (!environment?.captureViewport) {
+      this.draftError = "Viewport capture helper is not available.";
+      this.render();
+      return;
+    }
+    const captureInput = this.createViewportCaptureInput(
+      environment,
+      input,
+      input.selection?.viewport
+    );
+    this.draftError = "";
+    this.isCapturingViewport = true;
+    this.render();
+    try {
+      const result = await environment.captureViewport(captureInput);
+      const attachment = this.createCaptureDraftAttachment(result, captureInput);
+      const currentDraft = this.areaDraft ?? draft;
+      this.areaDraft = {
+        ...currentDraft,
+        attachments: [...currentDraft.attachments ?? [], attachment]
+      };
+    } catch (error) {
+      this.draftError = this.getErrorMessage(
+        error,
+        "Failed to capture viewport."
+      );
+    } finally {
+      this.isCapturingViewport = false;
+      this.render();
+    }
+  }
+  createViewportCaptureInput(environment, draft, captureRegion) {
     const timestamp = (/* @__PURE__ */ new Date()).toISOString();
     const viewport = draft.viewport ?? getViewportSize(environment);
     const routeKey = getRouteKey(environment);
@@ -16775,6 +16890,7 @@ var WebReviewKitApp = class {
       pageUrl: getPageUrl(environment),
       originalUrl: getOriginalUrl(environment),
       viewport,
+      captureRegion,
       devicePixelRatio: environment.window.devicePixelRatio || 1,
       scroll: {
         x: environment.window.scrollX,
@@ -17062,8 +17178,25 @@ async function captureIframeViewport(frame, input) {
     throw new Error("Capture target document is not ready.");
   }
   const viewport = getCaptureViewport(input.viewport, targetWindow);
+  const region = getCaptureRegion(input.captureRegion, viewport);
   const scale = getCaptureScale(targetWindow);
   const errors = [];
+  if (region) {
+    try {
+      return await createHtml2CanvasCapture(
+        targetDocument,
+        targetWindow,
+        viewport,
+        scale,
+        input,
+        region
+      );
+    } catch (error) {
+      throw new Error(
+        `Selected region capture failed: ${getUnknownErrorMessage(error)}`
+      );
+    }
+  }
   try {
     return await createHtml2CanvasCapture(
       targetDocument,
@@ -17101,7 +17234,7 @@ async function captureIframeViewport(frame, input) {
     }
   };
 }
-async function createHtml2CanvasCapture(targetDocument, targetWindow, viewport, scale, input) {
+async function createHtml2CanvasCapture(targetDocument, targetWindow, viewport, scale, input, region) {
   const html2canvas = (await import("html2canvas")).default;
   const scrollX = Math.round(targetWindow.scrollX || 0);
   const scrollY = Math.round(targetWindow.scrollY || 0);
@@ -17113,6 +17246,10 @@ async function createHtml2CanvasCapture(targetDocument, targetWindow, viewport, 
     ignoreElements: (element) => element.tagName === "SCRIPT" || element.hasAttribute("data-dfwr-source-open-shortcut"),
     imageTimeout: 5e3,
     logging: false,
+    onclone: (documentClone) => {
+      normalizeUnsupportedCaptureStyles(documentClone);
+      normalizeUnsupportedCaptureColors(documentClone);
+    },
     removeContainer: true,
     scale,
     scrollX,
@@ -17124,8 +17261,11 @@ async function createHtml2CanvasCapture(targetDocument, targetWindow, viewport, 
     x: scrollX,
     y: scrollY
   };
-  const canvas = await html2canvas(targetDocument.documentElement, options);
-  drawCaptureAnnotations(canvas, scale, input);
+  const sourceCanvas = await html2canvas(targetDocument.documentElement, options);
+  const canvas = region ? cropCaptureCanvas(targetDocument, sourceCanvas, region, scale) : sourceCanvas;
+  if (!region) {
+    drawCaptureAnnotations(canvas, scale, input);
+  }
   const file = await canvasToBlob(canvas, CAPTURE_MIME, CAPTURE_QUALITY);
   return {
     file,
@@ -17135,9 +17275,30 @@ async function createHtml2CanvasCapture(targetDocument, targetWindow, viewport, 
     height: canvas.height,
     metadata: {
       captureRenderer: "html2canvas",
+      captureTarget: region ? "selection" : "viewport",
+      ...region ? { captureRegion: region } : {},
       captureScale: scale
     }
   };
+}
+function cropCaptureCanvas(targetDocument, sourceCanvas, region, scale) {
+  const x = Math.round(region.x * scale);
+  const y = Math.round(region.y * scale);
+  const width = Math.min(
+    Math.max(1, Math.round(region.width * scale)),
+    Math.max(1, sourceCanvas.width - x)
+  );
+  const height = Math.min(
+    Math.max(1, Math.round(region.height * scale)),
+    Math.max(1, sourceCanvas.height - y)
+  );
+  const canvas = targetDocument.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Capture canvas is not available.");
+  context.drawImage(sourceCanvas, x, y, width, height, 0, 0, width, height);
+  return canvas;
 }
 async function createSvgCanvasCapture(targetDocument, image, viewport, scale, input) {
   const canvas = targetDocument.createElement("canvas");
@@ -17167,6 +17328,20 @@ function getCaptureViewport(viewport, targetWindow) {
     width: Math.max(1, Math.round(viewport.width || targetWindow.innerWidth)),
     height: Math.max(1, Math.round(viewport.height || targetWindow.innerHeight))
   };
+}
+function getCaptureRegion(region, viewport) {
+  if (!region) return void 0;
+  const x = Math.max(0, Math.round(region.x));
+  const y = Math.max(0, Math.round(region.y));
+  const width = Math.min(
+    Math.max(1, Math.round(region.width)),
+    Math.max(1, viewport.width - x)
+  );
+  const height = Math.min(
+    Math.max(1, Math.round(region.height)),
+    Math.max(1, viewport.height - y)
+  );
+  return { x, y, width, height };
 }
 function getCaptureScale(targetWindow) {
   const devicePixelRatio = targetWindow.devicePixelRatio || window.devicePixelRatio || 1;
@@ -17205,6 +17380,156 @@ function prepareCaptureClone(clone) {
   clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
   clone.querySelectorAll("script").forEach((element) => element.remove());
   clone.querySelectorAll("[data-dfwr-source-open-shortcut]").forEach((element) => element.remove());
+}
+function normalizeUnsupportedCaptureStyles(documentClone) {
+  documentClone.querySelectorAll("style").forEach((styleElement) => {
+    if (!hasUnsupportedColorFunction(styleElement.textContent ?? "")) return;
+    styleElement.textContent = normalizeUnsupportedStyleText(
+      styleElement.textContent
+    );
+  });
+  Array.from(documentClone.styleSheets).forEach((sheet) => {
+    try {
+      normalizeCssRuleList(sheet.cssRules);
+    } catch {
+    }
+  });
+}
+function normalizeCssRuleList(rules) {
+  Array.from(rules).forEach((rule) => {
+    const style = rule.style;
+    if (style) normalizeStyleDeclaration(style);
+    const nestedRules = rule.cssRules;
+    if (nestedRules) normalizeCssRuleList(nestedRules);
+  });
+}
+function normalizeStyleDeclaration(style) {
+  for (let index = 0; index < style.length; index += 1) {
+    const property = style.item(index);
+    const value = style.getPropertyValue(property);
+    if (!hasUnsupportedColorFunction(value)) continue;
+    try {
+      style.setProperty(
+        property,
+        normalizeUnsupportedStyleValue(property, value),
+        style.getPropertyPriority(property)
+      );
+    } catch {
+    }
+  }
+}
+function normalizeUnsupportedCaptureColors(documentClone) {
+  const view = documentClone.defaultView;
+  if (!view) return;
+  const elements = [
+    documentClone.documentElement,
+    ...Array.from(documentClone.documentElement.querySelectorAll("*"))
+  ];
+  elements.forEach((element) => {
+    const HTMLElementConstructor = view.HTMLElement;
+    const SVGElementConstructor = view.SVGElement;
+    const isHtmlElement = typeof HTMLElementConstructor === "function" && element instanceof HTMLElementConstructor;
+    const isSvgElement = typeof SVGElementConstructor === "function" && element instanceof SVGElementConstructor;
+    if (!isHtmlElement && !isSvgElement) {
+      return;
+    }
+    const style = view.getComputedStyle(element);
+    for (let index = 0; index < style.length; index += 1) {
+      const property = style.item(index);
+      const value = style.getPropertyValue(property);
+      if (!hasUnsupportedColorFunction(value)) continue;
+      try {
+        element.style.setProperty(
+          property,
+          normalizeUnsupportedStyleValue(property, value)
+        );
+      } catch {
+      }
+    }
+  });
+}
+function hasUnsupportedColorFunction(value) {
+  return /okl(?:ch|ab)\(|color-mix\(/i.test(value);
+}
+function normalizeUnsupportedStyleText(value) {
+  return normalizeUnsupportedColorFunctions(value);
+}
+function normalizeUnsupportedStyleValue(property, value) {
+  if (/color-mix\(/i.test(value)) {
+    if (property.includes("shadow")) return "none";
+    if (property === "background" || property === "background-image") {
+      return "none";
+    }
+    return "rgba(0, 0, 0, 0)";
+  }
+  return normalizeUnsupportedColorFunctions(value);
+}
+function normalizeUnsupportedColorFunctions(value) {
+  return value.replace(
+    /oklch\(\s*([+-]?\d*\.?\d+%?)\s+([+-]?\d*\.?\d+)\s+([+-]?\d*\.?\d+)(deg|rad|turn)?(?:\s*\/\s*([+-]?\d*\.?\d+%?))?\s*\)/gi,
+    (_match, lightness, chroma, hue, unit, alpha) => oklchToRgbString(lightness, chroma, hue, unit, alpha)
+  ).replace(
+    /oklab\(\s*([+-]?\d*\.?\d+%?)\s+([+-]?\d*\.?\d+%?)\s+([+-]?\d*\.?\d+%?)(?:\s*\/\s*([+-]?\d*\.?\d+%?))?\s*\)/gi,
+    (_match, lightness, okA, okB, alpha) => oklabToRgbString(lightness, okA, okB, alpha)
+  );
+}
+function oklchToRgbString(lightness, chroma, hue, unit, alpha) {
+  const l = parsePercentNumber(lightness);
+  const c = Number.parseFloat(chroma);
+  const h = parseHueDegrees(hue, unit);
+  const a = alpha ? parsePercentNumber(alpha) : 1;
+  const hueRadians = h * Math.PI / 180;
+  const okA = c * Math.cos(hueRadians);
+  const okB = c * Math.sin(hueRadians);
+  return oklabComponentsToRgbString(l, okA, okB, a);
+}
+function oklabToRgbString(lightness, okA, okB, alpha) {
+  return oklabComponentsToRgbString(
+    parsePercentNumber(lightness),
+    parseOklabChannel(okA),
+    parseOklabChannel(okB),
+    alpha ? parsePercentNumber(alpha) : 1
+  );
+}
+function oklabComponentsToRgbString(l, okA, okB, alpha) {
+  const l_ = l + 0.3963377774 * okA + 0.2158037573 * okB;
+  const m_ = l - 0.1055613458 * okA - 0.0638541728 * okB;
+  const s_ = l - 0.0894841775 * okA - 1.291485548 * okB;
+  const l3 = l_ * l_ * l_;
+  const m3 = m_ * m_ * m_;
+  const s3 = s_ * s_ * s_;
+  const r = linearRgbToSrgb(4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3);
+  const g = linearRgbToSrgb(-1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3);
+  const b = linearRgbToSrgb(-0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3);
+  const red = Math.round(clamp01(r) * 255);
+  const green = Math.round(clamp01(g) * 255);
+  const blue = Math.round(clamp01(b) * 255);
+  const opacity = clamp01(alpha);
+  return opacity < 1 ? `rgba(${red}, ${green}, ${blue}, ${roundAlpha(opacity)})` : `rgb(${red}, ${green}, ${blue})`;
+}
+function parsePercentNumber(value) {
+  const number = Number.parseFloat(value);
+  return value.trim().endsWith("%") ? number / 100 : number;
+}
+function parseOklabChannel(value) {
+  const number = Number.parseFloat(value);
+  return value.trim().endsWith("%") ? number / 100 * 0.4 : number;
+}
+function parseHueDegrees(value, unit) {
+  const number = Number.parseFloat(value);
+  if (unit === "rad") return number * 180 / Math.PI;
+  if (unit === "turn") return number * 360;
+  return number;
+}
+function linearRgbToSrgb(value) {
+  return value <= 31308e-7 ? 12.92 * value : 1.055 * Math.pow(value, 1 / 2.4) - 0.055;
+}
+function clamp01(value) {
+  if (Number.isNaN(value)) return 0;
+  return Math.min(1, Math.max(0, value));
+}
+function roundAlpha(value) {
+  return Math.round(value * 1e3) / 1e3;
 }
 function getDocumentWidth(targetDocument, targetWindow, viewport) {
   const root = targetDocument.documentElement;

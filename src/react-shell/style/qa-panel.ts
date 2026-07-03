@@ -689,22 +689,34 @@ export const reviewShellQaPanelStyle = `
     background: var(--df-review-danger-soft);
   }
 
-	  .df-review-item-main img {
-	    width: 100%;
-	    max-height: 110px;
-	    border: 1px solid var(--df-review-line);
-	    border-radius: var(--df-review-radius-sm);
-	    object-fit: cover;
-	    background: var(--df-review-control);
+  .df-review-item-attachments {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
   }
 
-	  .df-review-item-header-actions {
-	    display: inline-flex;
-	    align-items: center;
-	    justify-content: flex-end;
-	    gap: 2px;
-	    cursor: auto;
-	  }
+  .df-review-item-attachment {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    background: var(--df-review-control);
+  }
+
+  .df-review-item-attachment img {
+    display: block;
+    width: 100%;
+    max-height: 140px;
+    object-fit: cover;
+  }
+
+  .df-review-item-header-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    cursor: auto;
+  }
 
   .df-review-item-delete,
   .df-review-item-edit,

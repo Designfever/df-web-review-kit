@@ -101,7 +101,10 @@ interface WebReviewKitViewActions {
   setSelectingArea: (isSelectingArea: boolean) => void;
   createItem: (input: CreateReviewItemInput) => Promise<void>;
   captureNoteDraft: (
-    input: Pick<NoteDraft, 'marker' | 'selection' | 'viewport'>
+    input: Pick<AreaDraft, 'marker' | 'selection' | 'viewport'>
+  ) => Promise<void>;
+  captureAreaDraft: (
+    input: Pick<AreaDraft, 'marker' | 'selection' | 'viewport'>
   ) => Promise<void>;
   bindNoteDraftToPoint: (
     point: ReviewPoint,
@@ -621,11 +624,17 @@ export class WebReviewKitView {
   }
 
   private createDraftCaptureButton(
-    draft: NoteDraft,
-    options: {
-      isElementDraft: boolean;
-      textarea: HTMLTextAreaElement;
-    }
+    draft: NoteDraft | AreaDraft,
+    options:
+      | {
+          kind: 'note';
+          isElementDraft: boolean;
+          textarea: HTMLTextAreaElement;
+        }
+      | {
+          kind: 'area';
+          textarea: HTMLTextAreaElement;
+        }
   ) {
     const button = document.createElement('button');
     const isCapturing = this.state.isCapturingViewport;
@@ -649,7 +658,20 @@ export class WebReviewKitView {
       event.stopPropagation();
       if (!this.canCaptureViewport() || this.state.isCapturingViewport) return;
 
-      const noteDraft = this.state.noteDraft ?? draft;
+      if (options.kind === 'area') {
+        const areaDraft = this.state.areaDraft ?? (draft as AreaDraft);
+        const nextDraft = {
+          ...areaDraft,
+          comment: options.textarea.value,
+        };
+        this.config.actions.setAreaDraft(nextDraft);
+        void this.config.actions.captureAreaDraft(
+          this.getCaptureAreaDraft(nextDraft)
+        );
+        return;
+      }
+
+      const noteDraft = this.state.noteDraft ?? (draft as NoteDraft);
       const nextDraft = {
         ...noteDraft,
         comment: options.textarea.value,
@@ -661,6 +683,14 @@ export class WebReviewKitView {
     });
 
     return button;
+  }
+
+  private getCaptureAreaDraft(draft: AreaDraft) {
+    return {
+      viewport: draft.viewport,
+      marker: draft.marker,
+      selection: draft.selection,
+    };
   }
 
   private getCaptureNoteDraft(draft: NoteDraft, isElementDraft: boolean) {
@@ -991,7 +1021,11 @@ export class WebReviewKitView {
         : undefined;
     const leadingActions = [
       adjustmentControls?.actionButton,
-      this.createDraftCaptureButton(draft, { isElementDraft, textarea }),
+      this.createDraftCaptureButton(draft, {
+        kind: 'note',
+        isElementDraft,
+        textarea,
+      }),
     ].filter((element): element is HTMLButtonElement => Boolean(element));
 
     const actions = this.createFormActions('Save note', saveDraft, {
@@ -1427,24 +1461,35 @@ export class WebReviewKitView {
       }
     );
 
-    const actions = this.createFormActions('Save area', () => {
-      const draft = this.state.areaDraft;
-      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
-      const comment = fields.comment;
-      if ((!comment && !draft?.attachments?.length) || !draft) return;
-      void this.config.actions.createItem({
-        kind: 'area',
-        title: fields.title,
-        comment,
-        assigneeId: fields.assigneeId,
-        assigneeName: fields.assigneeName,
-        viewport: draft.viewport,
-        anchor: draft.anchor,
-        marker: draft.marker,
-        selection: draft.selection,
-        attachments: draft.attachments,
-      });
-    });
+    const actions = this.createFormActions(
+      'Save area',
+      () => {
+        const draft = this.state.areaDraft;
+        const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
+        const comment = fields.comment;
+        if ((!comment && !draft?.attachments?.length) || !draft) return;
+        void this.config.actions.createItem({
+          kind: 'area',
+          title: fields.title,
+          comment,
+          assigneeId: fields.assigneeId,
+          assigneeName: fields.assigneeName,
+          viewport: draft.viewport,
+          anchor: draft.anchor,
+          marker: draft.marker,
+          selection: draft.selection,
+          attachments: draft.attachments,
+        });
+      },
+      {
+        leading: [
+          this.createDraftCaptureButton(areaDraft, {
+            kind: 'area',
+            textarea,
+          }),
+        ],
+      }
+    );
     const error = this.createDraftError();
     const attachmentQueue = createDraftAttachmentQueue(
       document,

@@ -4220,6 +4220,18 @@ ${adjustment}` : adjustment;
       event.preventDefault();
       event.stopPropagation();
       if (!this.canCaptureViewport() || this.state.isCapturingViewport) return;
+      if (options.kind === "area") {
+        const areaDraft = this.state.areaDraft ?? draft;
+        const nextDraft2 = {
+          ...areaDraft,
+          comment: options.textarea.value
+        };
+        this.config.actions.setAreaDraft(nextDraft2);
+        void this.config.actions.captureAreaDraft(
+          this.getCaptureAreaDraft(nextDraft2)
+        );
+        return;
+      }
       const noteDraft = this.state.noteDraft ?? draft;
       const nextDraft = {
         ...noteDraft,
@@ -4231,6 +4243,13 @@ ${adjustment}` : adjustment;
       );
     });
     return button;
+  }
+  getCaptureAreaDraft(draft) {
+    return {
+      viewport: draft.viewport,
+      marker: draft.marker,
+      selection: draft.selection
+    };
   }
   getCaptureNoteDraft(draft, isElementDraft) {
     if (!isElementDraft) {
@@ -4497,7 +4516,11 @@ ${adjustment}` : adjustment;
     }) : void 0;
     const leadingActions = [
       adjustmentControls?.actionButton,
-      this.createDraftCaptureButton(draft, { isElementDraft, textarea })
+      this.createDraftCaptureButton(draft, {
+        kind: "note",
+        isElementDraft,
+        textarea
+      })
     ].filter((element) => Boolean(element));
     const actions = this.createFormActions("Save note", saveDraft, {
       leading: leadingActions.length > 0 ? leadingActions : void 0
@@ -4854,24 +4877,35 @@ ${adjustment}` : adjustment;
         });
       }
     );
-    const actions = this.createFormActions("Save area", () => {
-      const draft = this.state.areaDraft;
-      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
-      const comment = fields.comment;
-      if (!comment && !draft?.attachments?.length || !draft) return;
-      void this.config.actions.createItem({
-        kind: "area",
-        title: fields.title,
-        comment,
-        assigneeId: fields.assigneeId,
-        assigneeName: fields.assigneeName,
-        viewport: draft.viewport,
-        anchor: draft.anchor,
-        marker: draft.marker,
-        selection: draft.selection,
-        attachments: draft.attachments
-      });
-    });
+    const actions = this.createFormActions(
+      "Save area",
+      () => {
+        const draft = this.state.areaDraft;
+        const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
+        const comment = fields.comment;
+        if (!comment && !draft?.attachments?.length || !draft) return;
+        void this.config.actions.createItem({
+          kind: "area",
+          title: fields.title,
+          comment,
+          assigneeId: fields.assigneeId,
+          assigneeName: fields.assigneeName,
+          viewport: draft.viewport,
+          anchor: draft.anchor,
+          marker: draft.marker,
+          selection: draft.selection,
+          attachments: draft.attachments
+        });
+      },
+      {
+        leading: [
+          this.createDraftCaptureButton(areaDraft, {
+            kind: "area",
+            textarea
+          })
+        ]
+      }
+    );
     const error = this.createDraftError();
     const attachmentQueue = createDraftAttachmentQueue(
       document,
@@ -5582,6 +5616,7 @@ var WebReviewKitApp = class {
         },
         createItem: (input) => this.createItem(input),
         captureNoteDraft: (input) => this.captureNoteDraft(input),
+        captureAreaDraft: (input) => this.captureAreaDraft(input),
         bindNoteDraftToPoint: (point, fields) => this.bindNoteDraftToPoint(point, fields),
         bindElementDraftToPoint: (point, fields) => this.bindElementDraftToPoint(point, fields),
         createAreaDraft: (selection) => this.createAreaDraft(selection)
@@ -5975,7 +6010,11 @@ var WebReviewKitApp = class {
       this.render();
       return;
     }
-    const captureInput = this.createViewportCaptureInput(environment, input);
+    const captureInput = this.createViewportCaptureInput(
+      environment,
+      input,
+      input.selection?.viewport
+    );
     this.draftError = "";
     this.isCapturingViewport = true;
     this.render();
@@ -5997,7 +6036,43 @@ var WebReviewKitApp = class {
       this.render();
     }
   }
-  createViewportCaptureInput(environment, draft) {
+  async captureAreaDraft(input) {
+    if (this.isCapturingViewport) return;
+    const environment = this.getEnvironment();
+    const draft = this.areaDraft;
+    if (!draft) return;
+    if (!environment?.captureViewport) {
+      this.draftError = "Viewport capture helper is not available.";
+      this.render();
+      return;
+    }
+    const captureInput = this.createViewportCaptureInput(
+      environment,
+      input,
+      input.selection?.viewport
+    );
+    this.draftError = "";
+    this.isCapturingViewport = true;
+    this.render();
+    try {
+      const result = await environment.captureViewport(captureInput);
+      const attachment = this.createCaptureDraftAttachment(result, captureInput);
+      const currentDraft = this.areaDraft ?? draft;
+      this.areaDraft = {
+        ...currentDraft,
+        attachments: [...currentDraft.attachments ?? [], attachment]
+      };
+    } catch (error) {
+      this.draftError = this.getErrorMessage(
+        error,
+        "Failed to capture viewport."
+      );
+    } finally {
+      this.isCapturingViewport = false;
+      this.render();
+    }
+  }
+  createViewportCaptureInput(environment, draft, captureRegion) {
     const timestamp = (/* @__PURE__ */ new Date()).toISOString();
     const viewport = draft.viewport ?? getViewportSize(environment);
     const routeKey = getRouteKey(environment);
@@ -6006,6 +6081,7 @@ var WebReviewKitApp = class {
       pageUrl: getPageUrl(environment),
       originalUrl: getOriginalUrl(environment),
       viewport,
+      captureRegion,
       devicePixelRatio: environment.window.devicePixelRatio || 1,
       scroll: {
         x: environment.window.scrollX,

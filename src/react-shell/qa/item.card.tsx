@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type {
   NumberedReviewItem,
+  ReviewAttachment,
   ReviewFieldsConfig,
   ReviewItem,
   ReviewItemStatus,
@@ -71,6 +72,44 @@ const formatItemCardDate = (value: string) => {
     minute: '2-digit',
     month: 'short',
   }).format(date);
+};
+
+const isImageAttachment = (attachment: ReviewAttachment) =>
+  Boolean(attachment.url) &&
+  (attachment.kind === 'capture' ||
+    attachment.kind === 'image' ||
+    attachment.mime.startsWith('image/'));
+
+const QaItemAttachments = ({
+  attachments,
+}: {
+  attachments: ReviewAttachment[];
+}) => {
+  const imageAttachments = attachments.filter(isImageAttachment);
+
+  if (imageAttachments.length === 0) return null;
+
+  return (
+    <div className="df-review-item-attachments">
+      {imageAttachments.map((attachment, index) => (
+        <a
+          key={attachment.id ?? `${attachment.url}-${index}`}
+          className="df-review-item-attachment"
+          href={attachment.url}
+          rel="noreferrer"
+          target="_blank"
+          title={attachment.name}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <img
+            alt={attachment.name}
+            loading="lazy"
+            src={attachment.url}
+          />
+        </a>
+      ))}
+    </div>
+  );
 };
 
 export const QaItemCard = ({
@@ -192,7 +231,10 @@ export const QaItemCard = ({
           >
             {itemComment}
           </p>
-          <QaItemExternalLinks item={item} />
+          {item.attachments && (
+            <QaItemAttachments attachments={item.attachments} />
+          )}
+          {!isRemoteSource && <QaItemExternalLinks item={item} />}
           <small className="df-review-item-meta">{itemMeta}</small>
           {isMutating && (
             <small className="df-review-item-saving" aria-live="polite">

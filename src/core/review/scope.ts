@@ -14,12 +14,11 @@ export const DEFAULT_REVIEW_VIEWPORTS: ReviewViewportPreset[] = [
   { label: 'Wide', width: 1980, height: 1080, scope: 'wide' },
 ];
 
-const REVIEW_SCOPE_LABELS: Record<ReviewItemScope, string> = {
+const REVIEW_SCOPE_LABELS: Record<Exclude<ReviewItemScope, 'dom'>, string> = {
   mobile: 'Mobile',
   tablet: 'Tablet',
   desktop: 'Desktop',
   wide: 'Wide',
-  dom: 'Element',
 };
 
 const normalizeReviewItemScope = (value: unknown): ReviewItemScope | undefined => {
@@ -96,11 +95,18 @@ export function getReviewViewportScope(
   return inferViewportScope(findReviewViewportPreset(viewport, presets));
 }
 
-/** Resolves an item's persisted scope, falling back to its captured viewport. */
+/**
+ * Resolves an item's persisted scope, falling back to its captured viewport.
+ *
+ * 'dom'(구버전 'element') scope 는 의도적으로 뷰포트 scope 로 폴백한다.
+ * 마커 표시 조건이 `scope === currentScope`(현재 뷰포트 scope)라서 'dom' 을
+ * 그대로 반환하면 레거시 아이템의 마커가 어느 뷰포트에서도 보이지 않게 된다.
+ * 현재 코드는 'dom' scope 를 저장하지 않으므로 이 폴백은 레거시 데이터 전용이다.
+ */
 export function getReviewItemScope(
   item: ReviewItem,
   presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
-): ReviewItemScope {
+): Exclude<ReviewItemScope, 'dom'> {
   const scope = normalizeReviewItemScope(item.scope);
   if (scope && scope !== 'dom') return scope;
   return getReviewViewportScope(item.viewport, presets);
@@ -112,8 +118,6 @@ export function getReviewItemScopeLabel(
   presets: ReviewViewportPreset[] = DEFAULT_REVIEW_VIEWPORTS
 ) {
   const scope = getReviewItemScope(item, presets);
-  if (scope === 'dom') return REVIEW_SCOPE_LABELS.dom;
-
   const preset = findReviewViewportPreset(item.viewport, presets);
   return preset.label || REVIEW_SCOPE_LABELS[scope];
 }

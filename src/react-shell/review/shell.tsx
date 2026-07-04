@@ -1,3 +1,14 @@
+// 리뷰 셸의 최상위 컴포넌트. 상태 덩어리는 hooks/ 로 분리되어 있고
+// 여기서는 훅들을 조합해 topbar / 패널 / target frame / 오버레이를 배치한다.
+//
+// 분리된 훅 지도:
+// - use.review.shell.state      셸 전역 상태 (target/size/source/mode 등)
+// - use.review.shell.data       아이템 목록/필터/카운트 파생 데이터
+// - use.review.command.key      ⌘ 누르는 동안 오버레이 숨김
+// - use.review.source.inspector 소스 인스펙터 + Alt 단축키 바인딩
+// - use.review.section.outline  Source Tree(컴포넌트 아웃라인) 패널
+// - use.review.item.actions     QA 아이템 mutation/복사 액션
+// - use.review.controller       코어 리뷰킷 컨트롤러 연결
 import {
   useCallback,
   useEffect,
@@ -5,17 +16,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import {
-  Bot as BotIcon,
-  ListChecks as QaListIcon,
-  Network as ComponentTreeIcon,
-  Settings as SettingsIcon,
-} from 'lucide-react';
-import { DfLogoIcon } from './df.logo';
 import type {
-  NumberedReviewItem,
   ReviewItem,
-  ReviewItemStatus,
   ReviewMode,
   ReviewSource,
 } from '../../types';
@@ -33,8 +35,6 @@ import {
 import {
   DEFAULT_REVIEW_PATH_PREFIX,
   getInitialItemId,
-  getItemFrameTarget,
-  getItemTarget,
   getShellUrlForItem,
   getTargetRouteKey,
   normalizeTarget,
@@ -44,7 +44,6 @@ import {
 import {
   DEFAULT_REVIEW_VIEWPORT_PRESETS,
   findViewportPreset,
-  getRestoredSize,
 } from '../viewport';
 import {
   InitialPromptModal,
@@ -52,103 +51,54 @@ import {
   ReviewSettingsModal,
   SitemapModal,
 } from '../shell.modals';
-import { buildReviewItemPrompt } from '../prompt/prompt';
 import {
   getReviewFigmaImageStore,
   getTargetFigmaFrameConfig,
   type ReviewFigmaFrameConfig,
 } from '../figma';
-import { FigmaRailIcon } from '../figma/figma-mark-icon';
 import { FigmaImagesPanel } from '../figma/images.panel';
 import { QaItemEditModal } from '../qa/item.edit.modal';
 import { ReviewQaPanel } from '../qa/panel';
-import { PresenceOverlay } from '../presence/overlay';
-import {
-  getSourceCandidates,
-  getSourceOpenUrl,
-  openSourceInEditor,
-  type GetSourceCandidatesOptions,
-  type SourceOpenOptions,
+import type {
+  GetSourceCandidatesOptions,
+  SourceOpenOptions,
 } from '../source.open';
-import {
-  getSectionOutline,
-  type GetSectionOutlineOptions,
-  type SectionOutlineEntry,
-} from '../section.outline';
+import type { GetSectionOutlineOptions } from '../section.outline';
 import { SectionOutlinePanel } from './section.outline.panel';
-import { createSourceShortcutStyle } from './source.shortcut.style';
-import {
-  SourceInspectorOverlay,
-  type SourceInspectorCandidate,
-  type SourceInspectorRect,
-  type SourceInspectorState,
-} from './source.inspector.overlay';
+import { SourceInspectorOverlay } from './source.inspector.overlay';
+import { ReviewSideRail } from './side.rail';
 import { ReviewTargetFrame } from '../target/frame';
 import { createReviewTargetFigmaImageOverlays } from '../target/figma.image.overlay';
-import {
-  setTargetFigmaOverlayLocked,
-  setTargetFigmaSourceSelectLocked,
-} from '../target/target';
+import { setTargetFigmaOverlayLocked } from '../target/target';
 import { ReviewTopbar } from '../topbar';
+import { useReviewCommandKey } from '../hooks/use.review.command.key';
 import { useReviewController } from '../hooks/use.review.controller';
+import { useReviewItemActions } from '../hooks/use.review.item.actions';
 import { useReviewPresence } from '../hooks/use.review.presence';
 import { useReviewRuler } from '../hooks/use.review.ruler';
 import { useReviewFigmaImages } from '../hooks/use.review.figma.images';
+import { useReviewSectionOutline } from '../hooks/use.review.section.outline';
 import { useReviewSettings } from '../hooks/use.review.settings';
 import { useReviewShellData } from '../hooks/use.review.shell.data';
 import { useReviewShellHotkeys } from '../hooks/use.review.shell.hotkeys';
 import { useReviewShellState } from '../hooks/use.review.shell.state';
+import { useReviewSourceInspector } from '../hooks/use.review.source.inspector';
 import {
   getInitialReviewSidePanel,
   getStoredReviewSidePanel,
-  getStoredSourceTreeFilter,
-  getStoredSourceTreeMetaVisibility,
-  type StoredReviewSidePanel,
-  type StoredSourceTreeMetaVisibility,
   writeStoredReviewSidePanel,
   writeStoredReviewSidePanelVisible,
-  writeStoredSourceTreeFilter,
-  writeStoredSourceTreeMetaVisibility,
+  type StoredReviewSidePanel,
 } from '../settings';
 import {
   copyCurrentReviewUrl,
-  copyReviewPrompt,
-  removeReviewItem,
   refreshReviewItems,
   refreshSitemapReviewItems,
   refreshReviewData as refreshReviewDataAction,
-  submitReviewItem,
-  updateReviewItemAssignee,
-  updateReviewItemDetails,
-  updateReviewItemStatus,
 } from './shell.actions';
-import {
-  centerFrameScrollOnElement,
-  filterSectionOutlineEntries,
-  getDefaultCollapsedSectionOutlineIds,
-  getReviewModeWriteMode,
-  getSectionOutlineEntryCount,
-  getSectionOutlineFilterTerms,
-  scrollElementInTarget,
-  waitForFrame,
-  waitForMs,
-} from './shell.helpers';
+import { getReviewModeWriteMode } from './shell.helpers';
 
 type ReviewSidePanel = StoredReviewSidePanel;
-type SourceTreeMetaVisibilityKey = keyof StoredSourceTreeMetaVisibility;
-
-const SOURCE_PANEL_MAX_WIDTH = 440;
-const SOURCE_PANEL_MIN_WIDTH = 240;
-const SOURCE_PANEL_MAX_HEIGHT = 260;
-const SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
-
-const isCommandModifierKeyEvent = (event: KeyboardEvent) =>
-  event.key === 'Meta' ||
-  event.code === 'MetaLeft' ||
-  event.code === 'MetaRight';
-
-const isCommandKeyDownEvent = (event: KeyboardEvent) =>
-  isCommandModifierKeyEvent(event) || event.metaKey;
 
 export const ReviewShell = ({
   projectId,
@@ -220,31 +170,12 @@ export const ReviewShell = ({
     presets,
     reviewPathPrefix,
   });
-  const sourceShortcutCleanupRef = useRef<(() => void) | null>(null);
-  const sourceInspectorInteractionRef = useRef(false);
-  const sectionOutlineCountRef = useRef(0);
-  const [sourceInspectorState, setSourceInspectorState] =
-    useState<SourceInspectorState | null>(null);
-  const [sectionOutline, setSectionOutline] = useState<
-    SectionOutlineEntry[] | null
-  >(null);
   const [targetFrameLoadVersion, setTargetFrameLoadVersion] = useState(0);
-  const [sectionOutlineFilter, setSectionOutlineFilter] = useState(() =>
-    getStoredSourceTreeFilter()
-  );
-  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] =
-    useState(() => getStoredSourceTreeMetaVisibility());
-  const isSectionOutlineBoxMetaVisible = sectionOutlineMetaVisibility.box;
-  const isSectionOutlineFontMetaVisible = sectionOutlineMetaVisibility.font;
-  const isSectionOutlineMediaMetaVisible = sectionOutlineMetaVisibility.media;
-  const isSectionOutlineClassMetaVisible =
-    sectionOutlineMetaVisibility.className;
-  const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = useState<
-    Set<string>
-  >(() => new Set());
   const [isAllQaVisible, setIsAllQaVisible] = useState(false);
   const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] =
     useState(false);
+
+  // 소스 인스펙터 관련 옵션들. env(VITE_REVIEW_SOURCE_*) 값이 prop 보다 우선한다.
   const resolvedReviewSourceOptions = useMemo(
     () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
     [sourceInspector, sourceRoot]
@@ -274,6 +205,10 @@ export const ReviewShell = ({
     [resolvedSourceInspector]
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
+  const isSourceTreeHoverOutlineEnabled =
+    resolvedSourceInspector?.hoverOutline !== false;
+
+  // 사이드 패널 선택 상태. URL 로 특정 아이템이 지정되면 QA 패널을 우선한다.
   const [sidePanel, setSidePanel] = useState<ReviewSidePanel>(() => {
     const initialSidePanel = getInitialReviewSidePanel();
     if (initialSidePanel) return initialSidePanel;
@@ -287,8 +222,6 @@ export const ReviewShell = ({
   const isFigmaImageManagementEnabled = Boolean(figmaImageStore);
   const figmaImageFormat =
     figmaImages?.imageFormat ?? DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT;
-  const isSourceTreeHoverOutlineEnabled =
-    resolvedSourceInspector?.hoverOutline !== false;
   const isQaPanelVisible = isListVisible && sidePanel === 'qa';
   const isSourceTreePanelVisible =
     isSourceInspectorEnabled && isListVisible && sidePanel === 'source';
@@ -297,6 +230,7 @@ export const ReviewShell = ({
     isListVisible &&
     sidePanel === 'figma-images';
 
+  // 기능이 비활성화되면 해당 패널에 머물 수 없으니 QA 로 되돌린다.
   useEffect(() => {
     if (isSourceInspectorEnabled || sidePanel !== 'source') return;
     setSidePanel('qa');
@@ -315,46 +249,6 @@ export const ReviewShell = ({
     writeStoredReviewSidePanelVisible(isListVisible);
   }, [isListVisible]);
 
-  const updateSectionOutlineFilter = useCallback((nextFilter: string) => {
-    setSectionOutlineFilter(nextFilter);
-    writeStoredSourceTreeFilter(nextFilter);
-  }, []);
-
-  const updateSectionOutlineMetaVisibility = useCallback(
-    (key: SourceTreeMetaVisibilityKey) => {
-      setSectionOutlineMetaVisibility((current) => {
-        const next = { ...current, [key]: !current[key] };
-        writeStoredSourceTreeMetaVisibility(next);
-        return next;
-      });
-    },
-    []
-  );
-
-  const sectionOutlineFilterTerms = useMemo(
-    () => getSectionOutlineFilterTerms(sectionOutlineFilter),
-    [sectionOutlineFilter]
-  );
-  const filteredSectionOutline = useMemo(
-    () =>
-      sectionOutline
-        ? filterSectionOutlineEntries(sectionOutline, sectionOutlineFilterTerms)
-        : [],
-    [sectionOutline, sectionOutlineFilterTerms]
-  );
-  const sectionOutlineTotalCount = useMemo(
-    () => getSectionOutlineEntryCount(sectionOutline ?? []),
-    [sectionOutline]
-  );
-  const filteredSectionOutlineCount = useMemo(
-    () => getSectionOutlineEntryCount(filteredSectionOutline),
-    [filteredSectionOutline]
-  );
-  const isSectionOutlineFiltering = sectionOutlineFilterTerms.length > 0;
-
-  useEffect(() => {
-    sectionOutlineCountRef.current = sectionOutlineTotalCount;
-  }, [sectionOutlineTotalCount]);
   const {
     activeItems,
     activeRemainingItemCount,
@@ -393,10 +287,13 @@ export const ReviewShell = ({
   });
   const itemRefreshIdRef = useRef(0);
   const [isItemsLoading, setIsItemsLoading] = useState(false);
-  const [mutatingItemIds, setMutatingItemIds] = useState<Set<string>>(
-    () => new Set()
-  );
-  const [isCommandKeyPressed, setIsCommandKeyPressed] = useState(false);
+
+  // ⌘ 를 누르는 동안 모든 QA 오버레이를 잠시 숨긴다 (원본 비교용).
+  const isCommandKeyPressed = useReviewCommandKey({
+    iframeRef,
+    targetFrameLoadVersion,
+    targetSrc,
+  });
   const effectiveHiddenOverlayItemIdList = useMemo(() => {
     if (!isCommandKeyPressed) return hiddenOverlayItemIdList;
 
@@ -405,51 +302,6 @@ export const ReviewShell = ({
     return Array.from(itemIds);
   }, [activeItems, hiddenOverlayItemIdList, isCommandKeyPressed]);
 
-  useEffect(() => {
-    const targetDocument = iframeRef.current?.contentDocument;
-    const targetWindow = iframeRef.current?.contentWindow;
-
-    const setCommandKeyPressed = (pressed: boolean) => {
-      setIsCommandKeyPressed((current) =>
-        current === pressed ? current : pressed
-      );
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (isCommandKeyDownEvent(event)) setCommandKeyPressed(true);
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (isCommandModifierKeyEvent(event) || !event.metaKey) {
-        setCommandKeyPressed(false);
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') setCommandKeyPressed(false);
-    };
-
-    const clearCommandKeyPressed = () => setCommandKeyPressed(false);
-
-    window.addEventListener('keydown', handleKeyDown, true);
-    window.addEventListener('keyup', handleKeyUp, true);
-    window.addEventListener('blur', clearCommandKeyPressed);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    targetDocument?.addEventListener('keydown', handleKeyDown, true);
-    targetDocument?.addEventListener('keyup', handleKeyUp, true);
-    targetWindow?.addEventListener('blur', clearCommandKeyPressed);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown, true);
-      window.removeEventListener('keyup', handleKeyUp, true);
-      window.removeEventListener('blur', clearCommandKeyPressed);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      targetDocument?.removeEventListener('keydown', handleKeyDown, true);
-      targetDocument?.removeEventListener('keyup', handleKeyUp, true);
-      targetWindow?.removeEventListener('blur', clearCommandKeyPressed);
-      clearCommandKeyPressed();
-    };
-  }, [iframeRef, targetFrameLoadVersion, targetSrc]);
   const {
     addImage: addFigmaImage,
     deleteImage: deleteFigmaImage,
@@ -465,7 +317,6 @@ export const ReviewShell = ({
     setImageOverlayOffsetY: setFigmaImageOverlayOffsetY,
     setImageOverlayOpacity: setFigmaImageOverlayOpacity,
     setSelectedImageId: setSelectedFigmaImageId,
-    target: figmaImageTarget,
     toggleAllImageOverlayVisible: toggleAllFigmaImageOverlayVisible,
     toggleImageOverlayLocked: toggleFigmaImageOverlayLocked,
     toggleImageOverlayMode: toggleFigmaImageOverlayMode,
@@ -486,10 +337,11 @@ export const ReviewShell = ({
     !isFigmaImageManagementEnabled &&
     isViewportFigmaOverlayAvailable &&
     Boolean(targetFigmaConfig);
-  const [editingItem, setEditingItem] = useState<ReviewItem | null>(null);
   const initialPromptText = initialPrompt.trim();
+
   const refreshItems = useCallback(
     async () => {
+      // 응답 역전 방지: 마지막 요청만 로딩 상태를 해제할 수 있다.
       const requestId = ++itemRefreshIdRef.current;
       setIsItemsLoading(true);
 
@@ -553,6 +405,16 @@ export const ReviewShell = ({
       return;
     }
   }, []);
+
+  const showToast = useCallback(
+    (message: string) => {
+      setToastMessage(message);
+      window.setTimeout(() => {
+        setToastMessage((current) => (current === message ? '' : current));
+      }, 1600);
+    },
+    [setToastMessage]
+  );
 
   const {
     closeFigmaSettings,
@@ -673,6 +535,7 @@ export const ReviewShell = ({
     onTargetOverlayStateChange: setTargetOverlayState,
   });
 
+  // URL 에 item id 가 있으면 목록 로드 후 해당 아이템을 복원한다.
   useEffect(() => {
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
@@ -720,6 +583,7 @@ export const ReviewShell = ({
     void refreshSitemapItems();
   }, [isSitemapOpen, refreshSitemapItems]);
 
+  // 패널 토글/뷰포트 변경 후 target frame 을 가로 중앙으로 다시 맞춘다.
   useEffect(() => {
     const frameScroll = frameScrollRef.current;
     if (!frameScroll) return undefined;
@@ -734,6 +598,7 @@ export const ReviewShell = ({
     };
 
     const animationFrame = window.requestAnimationFrame(centerFrameScroll);
+    // 패널 여닫는 CSS 트랜지션이 끝난 뒤 한 번 더 보정한다.
     const transitionTimeout = window.setTimeout(centerFrameScroll, 180);
 
     return () => {
@@ -742,6 +607,7 @@ export const ReviewShell = ({
     };
   }, [isListVisible, size.height, size.width, syncTargetViewport, targetSrc]);
 
+  /** 주소창 입력(target[@source][ WxH][ #item]) 을 파싱해 이동한다. */
   const applyTarget = async () => {
     const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
     const normalizedTarget = parsedInput.target;
@@ -790,6 +656,7 @@ export const ReviewShell = ({
     setSize(nextSize);
     setTarget(normalizedTarget);
     updateShellUrl(normalizedTarget, nextSize, nextSource);
+    // 같은 target 재입력은 새로고침으로 처리한다.
     if (isCurrentTarget) reloadTargetFrame();
   };
 
@@ -819,6 +686,7 @@ export const ReviewShell = ({
     if (writeMode && !activeAdapterEntry.writeModes.includes(writeMode)) return;
     closeRuler();
     if (writeMode && mode !== nextMode) {
+      // 작성 모드 진입 시 QA 패널을 열어 draft 폼이 보이게 한다.
       setSidePanel('qa');
       setIsListVisible(true);
     }
@@ -830,16 +698,6 @@ export const ReviewShell = ({
       onCopyLabelChange: setCopyLabel,
     });
 
-  const showToast = useCallback(
-    (message: string) => {
-      setToastMessage(message);
-      window.setTimeout(() => {
-        setToastMessage((current) => (current === message ? '' : current));
-      }, 1600);
-    },
-    [setToastMessage]
-  );
-
   const refreshTargetFigmaConfig = useCallback(() => {
     const config = getTargetFigmaFrameConfig(
       iframeRef.current?.contentWindow
@@ -847,6 +705,7 @@ export const ReviewShell = ({
     setTargetFigmaState(config ? { targetSrc, config } : null);
   }, [iframeRef, targetSrc]);
 
+  // element 리뷰 중에는 target 의 figma 오버레이 조작을 잠근다.
   useEffect(() => {
     const targetDocument = iframeRef.current?.contentDocument;
     setTargetFigmaOverlayLocked(targetDocument, mode === 'element');
@@ -855,304 +714,64 @@ export const ReviewShell = ({
     };
   }, [iframeRef, mode, targetSrc]);
 
-  const clearSourceInspector = useCallback(() => {
-    sourceInspectorInteractionRef.current = false;
-    setSourceInspectorState(null);
-  }, []);
-
-  useEffect(() => {
-    clearSourceInspector();
-    setCollapsedSectionOutlineIds(new Set());
-    setSectionOutline(null);
-  }, [clearSourceInspector, targetSrc]);
-
-  const getSourceInspectorRect = useCallback(
-    (element: Element): SourceInspectorRect | null => {
-      const frame = iframeRef.current;
-      if (!frame) return null;
-
-      const frameRect = frame.getBoundingClientRect();
-      const elementRect = element.getBoundingClientRect();
-      const left = Math.max(frameRect.left, frameRect.left + elementRect.left);
-      const top = Math.max(frameRect.top, frameRect.top + elementRect.top);
-      const right = Math.min(
-        frameRect.right,
-        frameRect.left + elementRect.right
-      );
-      const bottom = Math.min(
-        frameRect.bottom,
-        frameRect.top + elementRect.bottom
-      );
-
-      return {
-        height: Math.max(2, bottom - top),
-        left,
-        top,
-        width: Math.max(2, right - left),
-      };
-    },
-    [iframeRef]
-  );
-
-  const getSourceInspectorPanelPosition = useCallback(
-    (rect: SourceInspectorRect) => {
-      const margin = 12;
-      const gap = 10;
-      const preferredLeft = rect.left + rect.width + gap;
-      const rightSpace = window.innerWidth - preferredLeft - margin;
-      const leftSpace = rect.left - gap - margin;
-      const canOpenRight = rightSpace >= SOURCE_PANEL_MIN_WIDTH;
-      const canOpenLeft = leftSpace >= SOURCE_PANEL_MIN_WIDTH;
-      const left = canOpenRight || !canOpenLeft ? preferredLeft : margin;
-      const right = canOpenRight || !canOpenLeft
-        ? null
-        : Math.max(margin, window.innerWidth - (rect.left - gap));
-      const maxWidth = Math.min(
-        SOURCE_PANEL_MAX_WIDTH,
-        Math.max(
-          SOURCE_PANEL_MIN_WIDTH,
-          canOpenRight
-            ? rightSpace
-            : canOpenLeft
-              ? leftSpace
-              : window.innerWidth - margin * 2
-        )
-      );
-      const top = Math.min(
-        Math.max(margin, rect.top),
-        Math.max(margin, window.innerHeight - SOURCE_PANEL_MAX_HEIGHT - margin)
-      );
-
-      return { left, maxWidth, right, top };
-    },
-    []
-  );
-
-  const showSourceInspectorForTarget = useCallback(
-    (target: EventTarget | null, isPinned = false) => {
-      const candidates = getSourceCandidates(target, sourceCandidateOptions).map(
-        (candidate) => ({
-          ...candidate,
-          openUrl: getSourceOpenUrl(candidate.source, {
-            ...sourceOpenOptions,
-            omitPosition: !candidate.usesPosition,
-          }),
-        })
-      );
-      const firstCandidate = candidates[0];
-      const rect = firstCandidate
-        ? getSourceInspectorRect(firstCandidate.element)
-        : null;
-
-      if (!firstCandidate || !rect) {
-        setSourceInspectorState(null);
-        return [];
-      }
-
-      const { left, maxWidth, right, top } =
-        getSourceInspectorPanelPosition(rect);
-      setSourceInspectorState({
-        candidates,
-        isPinned,
-        panelLeft: left,
-        panelMaxWidth: maxWidth,
-        panelRight: right,
-        panelTop: top,
-        rect,
-      });
-      return candidates;
-    },
-    [
-      getSourceInspectorPanelPosition,
-      getSourceInspectorRect,
-      sourceCandidateOptions,
-      sourceOpenOptions,
-    ]
-  );
-
-  const showSourceOutlineForTarget = useCallback(
-    (target: EventTarget | null) => {
-      const firstCandidate = getSourceCandidates(
-        target,
-        sourceCandidateOptions
-      )[0];
-      const rect = firstCandidate
-        ? getSourceInspectorRect(firstCandidate.element)
-        : null;
-
-      if (!firstCandidate || !rect) {
-        setSourceInspectorState(null);
-        return null;
-      }
-
-      setSourceInspectorState({
-        candidates: [],
-        isPinned: false,
-        panelLeft: 0,
-        panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
-        panelRight: null,
-        panelTop: 0,
-        rect,
-      });
-      return firstCandidate;
-    },
-    [getSourceInspectorRect, sourceCandidateOptions]
-  );
-
-  const showSourceOutlineForElement = useCallback(
-    (element: Element) => {
-      if (!isSourceTreeHoverOutlineEnabled) return;
-
-      const rect = getSourceInspectorRect(element);
-
-      if (!rect) {
-        setSourceInspectorState((current) =>
-          current?.isPinned ? current : null
-        );
-        return;
-      }
-
-      setSourceInspectorState((current) =>
-        current?.isPinned
-          ? current
-          : {
-              candidates: [],
-              isPinned: false,
-              panelLeft: 0,
-              panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
-              panelRight: null,
-              panelTop: 0,
-              rect,
-            }
-      );
-    },
-    [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
-  );
-
-  const clearSourceOutlineHover = useCallback(() => {
-    setSourceInspectorState((current) => (current?.isPinned ? current : null));
-  }, []);
-
-  const openSourceCandidate = useCallback(
-    (candidate: SourceInspectorCandidate) => {
-      const didOpen = openSourceInEditor(candidate.source, {
-        ...sourceOpenOptions,
-        omitPosition: !candidate.usesPosition,
-      });
-      showToast(didOpen ? 'Source opened' : 'Source root required');
-      clearSourceInspector();
-    },
-    [clearSourceInspector, showToast, sourceOpenOptions]
-  );
-
-  const getCurrentSectionOutline = useCallback(
-    (): SectionOutlineEntry[] | null => {
-      let frameDocument: Document | null = null;
-      try {
-        frameDocument = iframeRef.current?.contentDocument ?? null;
-      } catch {
-        frameDocument = null;
-      }
-      if (!frameDocument || frameDocument.readyState !== 'complete') {
-        return null;
-      }
-      return getSectionOutline(frameDocument, sectionOutlineOptions);
-    },
-    [iframeRef, sectionOutlineOptions]
-  );
-
-  const setSectionOutlineWithDefaultCollapse = useCallback(
-    (nextSectionOutline: SectionOutlineEntry[]) => {
-      setSectionOutline(nextSectionOutline);
-      sectionOutlineCountRef.current =
-        getSectionOutlineEntryCount(nextSectionOutline);
-      setCollapsedSectionOutlineIds(
-        getDefaultCollapsedSectionOutlineIds(nextSectionOutline)
-      );
-    },
-    []
-  );
-
-  const refreshCurrentSectionOutline = useCallback(
-    (resetCollapse = false) => {
-      const nextSectionOutline = getCurrentSectionOutline();
-      if (!nextSectionOutline) return false;
-
-      setSectionOutline(nextSectionOutline);
-      const nextCount = getSectionOutlineEntryCount(nextSectionOutline);
-      const shouldResetCollapse = resetCollapse ||
-        sectionOutlineCountRef.current === 0;
-      sectionOutlineCountRef.current = nextCount;
-
-      if (shouldResetCollapse) {
-        setCollapsedSectionOutlineIds(
-          getDefaultCollapsedSectionOutlineIds(nextSectionOutline)
-        );
-      }
-
-      return true;
-    },
-    [getCurrentSectionOutline]
-  );
-
-  useEffect(() => {
-    if (sidePanel !== 'source' || !isListVisible) return undefined;
-
-    const refreshSectionOutline = () => {
-      refreshCurrentSectionOutline(true);
-    };
-
-    const animationFrame = window.requestAnimationFrame(refreshSectionOutline);
-    const firstTimeout = window.setTimeout(refreshSectionOutline, 120);
-    const secondTimeout = window.setTimeout(refreshSectionOutline, 500);
-    const thirdTimeout = window.setTimeout(refreshSectionOutline, 1200);
-
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.clearTimeout(firstTimeout);
-      window.clearTimeout(secondTimeout);
-      window.clearTimeout(thirdTimeout);
-    };
-  }, [
-    isListVisible,
-    refreshCurrentSectionOutline,
-    sidePanel,
-    targetFrameLoadVersion,
-    targetSrc,
-  ]);
-
-  useEffect(() => {
-    if (sidePanel !== 'source' || !isListVisible) return undefined;
-
-    const frameDocument = iframeRef.current?.contentDocument;
-    const body = frameDocument?.body;
-    if (!body) return undefined;
-
-    let refreshTimeout: number | null = null;
-    const scheduleRefresh = () => {
-      if (refreshTimeout) window.clearTimeout(refreshTimeout);
-      refreshTimeout = window.setTimeout(() => {
-        refreshTimeout = null;
-        refreshCurrentSectionOutline(false);
-      }, 80);
-    };
-
-    const observer = new MutationObserver(scheduleRefresh);
-    observer.observe(body, { childList: true, subtree: true });
-    scheduleRefresh();
-
-    return () => {
-      if (refreshTimeout) window.clearTimeout(refreshTimeout);
-      observer.disconnect();
-    };
-  }, [
+  const {
+    bindSourceOpenShortcut,
+    clearSourceInspector,
+    clearSourceOutlineHover,
+    openSourceCandidate,
+    showSourceOutlineForElement,
+    sourceInspectorInteractionRef,
+    sourceInspectorState,
+  } = useReviewSourceInspector({
     iframeRef,
-    isListVisible,
+    isSourceInspectorEnabled,
+    isSourceTreeHoverOutlineEnabled,
+    sourceCandidateOptions,
+    sourceOpenOptions,
+    targetSrc,
+    onCancelReviewMode: cancelReviewMode,
+    onToast: showToast,
+  });
+
+  const showQaPanel = useCallback(() => {
+    setSidePanel('qa');
+    setIsListVisible(true);
+  }, [setIsListVisible]);
+
+  const {
+    collapsedSectionOutlineIds,
+    filteredSectionOutline,
+    filteredSectionOutlineCount,
+    isSectionOutlineFiltering,
+    openSectionData,
+    openSectionSource,
+    openSectionUsageSource,
     refreshCurrentSectionOutline,
-    sidePanel,
+    scrollToSection,
+    sectionOutline,
+    sectionOutlineFilter,
+    sectionOutlineMetaVisibility,
+    sectionOutlineTotalCount,
+    startSectionDomReview,
+    toggleSectionOutlineEntry,
+    updateSectionOutlineFilter,
+    updateSectionOutlineMetaVisibility,
+  } = useReviewSectionOutline({
+    canWriteDom,
+    controllerRef,
+    frameScrollRef,
+    iframeRef,
+    isPanelVisible: isSourceTreePanelVisible,
+    sectionOutlineOptions,
+    sourceOpenOptions,
     targetFrameLoadVersion,
     targetSrc,
-  ]);
+    onClearSourceInspector: clearSourceInspector,
+    onInitReviewKit: initReviewKit,
+    onModeChange: setMode,
+    onShowQaPanel: showQaPanel,
+    onToast: showToast,
+  });
 
   const toggleQaPanel = useCallback(() => {
     setSidePanel('qa');
@@ -1195,6 +814,38 @@ export const ReviewShell = ({
     sidePanel,
   ]);
 
+  const {
+    changeItemAssignee,
+    changeItemStatus,
+    clearEditingItem,
+    copyItemLabel,
+    copyItemLink,
+    copyItemPrompt,
+    copyPrompt,
+    copyRemoteIssuePath,
+    editingItem,
+    mutatingItemIds,
+    removeItem,
+    saveItemDetails,
+    setEditingItem,
+    submitItem,
+  } = useReviewItemActions({
+    activeAdapterEntry,
+    isRemoteSource,
+    localAdapterEntry,
+    remoteAdapterEntry,
+    reviewPathPrefix,
+    selectedItemIdRef,
+    sizeRef,
+    source,
+    targetRef,
+    viewportPresets,
+    onClearSelectedItem: clearSelectedItem,
+    onCopiedPromptKeyChange: setCopiedPromptKey,
+    onRefreshReviewData: refreshReviewData,
+    onToast: showToast,
+  });
+
   useReviewShellHotkeys({
     isRailHotkeyBlocked:
       isFigmaSettingsOpen ||
@@ -1221,373 +872,7 @@ export const ReviewShell = ({
     onToggleTargetOverlay: toggleTargetOverlay,
   });
 
-  const toggleSectionOutlineEntry = useCallback((entryId: string) => {
-    setCollapsedSectionOutlineIds((current) => {
-      const next = new Set(current);
-      if (next.has(entryId)) {
-        next.delete(entryId);
-      } else {
-        next.add(entryId);
-      }
-      return next;
-    });
-  }, []);
-
-  const scrollToSection = useCallback((entry: SectionOutlineEntry) => {
-    scrollElementInTarget(entry.element, 'start');
-    centerFrameScrollOnElement(
-      frameScrollRef.current,
-      iframeRef.current,
-      entry.element
-    );
-  }, [frameScrollRef, iframeRef]);
-
-  const openSectionSource = useCallback(
-    (entry: SectionOutlineEntry) => {
-      const didOpen = openSourceInEditor(entry.source, {
-        ...sourceOpenOptions,
-        omitPosition: true,
-      });
-      showToast(didOpen ? 'Source opened' : 'Source root required');
-    },
-    [showToast, sourceOpenOptions]
-  );
-
-  const openSectionUsageSource = useCallback(
-    (entry: SectionOutlineEntry) => {
-      const didOpen = openSourceInEditor(
-        entry.metadata.usage?.source,
-        sourceOpenOptions
-      );
-      showToast(didOpen ? 'Usage opened' : 'Usage source not found');
-    },
-    [showToast, sourceOpenOptions]
-  );
-
-  const openSectionData = useCallback(
-    (entry: SectionOutlineEntry) => {
-      const didOpen = openSourceInEditor(entry.data, sourceOpenOptions);
-      showToast(didOpen ? 'Data opened' : 'Data hint not found');
-    },
-    [showToast, sourceOpenOptions]
-  );
-
-  const startSectionDomReview = useCallback(
-    (entry: SectionOutlineEntry) => {
-      if (!canWriteDom) {
-        showToast('DOM QA unavailable');
-        return;
-      }
-
-      const rect = entry.element.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) {
-        showToast('Component has no visible area here');
-        return;
-      }
-
-      clearSourceInspector();
-      setSidePanel('qa');
-      setIsListVisible(true);
-
-      let targetWindow: Window | null = null;
-      try {
-        targetWindow =
-          entry.element.ownerDocument.defaultView ??
-          iframeRef.current?.contentWindow ??
-          null;
-      } catch {
-        targetWindow = null;
-      }
-
-      void waitForMs(SOURCE_TREE_PANEL_CLOSE_DELAY_MS)
-        .then(async () => {
-          initReviewKit();
-          await waitForFrame(targetWindow);
-          const controller = controllerRef.current;
-          if (!controller) {
-            showToast('DOM QA unavailable');
-            return;
-          }
-
-          scrollElementInTarget(entry.element, 'center');
-          await waitForFrame(targetWindow);
-          centerFrameScrollOnElement(
-            frameScrollRef.current,
-            iframeRef.current,
-            entry.element
-          );
-          await waitForFrame(targetWindow);
-          await controller.startElementReview(entry.element);
-          await waitForFrame(targetWindow);
-          setMode(controller.getMode());
-        })
-        .catch(() => {
-          setMode(controllerRef.current?.getMode() ?? 'idle');
-        });
-    },
-    [
-      canWriteDom,
-      clearSourceInspector,
-      controllerRef,
-      frameScrollRef,
-      iframeRef,
-      initReviewKit,
-      setIsListVisible,
-      setMode,
-      showToast,
-    ]
-  );
-
-  const cleanupSourceOpenShortcut = useCallback(() => {
-    sourceShortcutCleanupRef.current?.();
-    sourceShortcutCleanupRef.current = null;
-  }, []);
-
-  const bindSourceOpenShortcut = useCallback(() => {
-    cleanupSourceOpenShortcut();
-
-    let frameDocument: Document | null = null;
-    try {
-      frameDocument = iframeRef.current?.contentDocument ?? null;
-    } catch {
-      return;
-    }
-
-    if (!frameDocument || !isSourceInspectorEnabled) return;
-
-    const frameRoot = frameDocument.head ?? frameDocument.documentElement;
-    const frameBody = frameDocument.body ?? frameDocument.documentElement;
-    if (!frameRoot || !frameBody) return;
-
-    const optionAttribute = 'data-dfwr-source-option';
-    const fontOverlayAttribute = 'data-dfwr-source-fonts';
-    const style = frameDocument.createElement('style');
-    style.dataset.dfwrSourceOpenShortcut = 'true';
-    style.textContent = createSourceShortcutStyle(
-      optionAttribute,
-      fontOverlayAttribute,
-    );
-
-    frameRoot.append(style);
-
-    const fontOverlay = frameDocument.createElement('div');
-    fontOverlay.setAttribute(fontOverlayAttribute, 'true');
-    fontOverlay.hidden = true;
-    frameBody.append(fontOverlay);
-
-    let hoveredElement: Element | null = null;
-    let lastSourceTarget: EventTarget | null = null;
-    let isSourceSelecting = false;
-    let isSourcePanelPinned = false;
-
-    const getFontHints = (element: Element | null) => {
-      if (!element) return [];
-
-      const values: Array<{ tag: string; value: string }> = [];
-      const addValue = (target: Element) => {
-        const value = target.getAttribute('data-font')?.trim();
-        const tag = target.tagName.toLowerCase();
-        if (
-          value &&
-          !values.some((item) => item.tag === tag && item.value === value)
-        ) {
-          values.push({ tag, value });
-        }
-      };
-
-      addValue(element);
-      element.querySelectorAll('[data-font]').forEach(addValue);
-      return values;
-    };
-
-    const updateFontOverlay = (element: Element | null) => {
-      const values = isSourceSelecting ? getFontHints(element) : [];
-      if (!values.length || !element) {
-        fontOverlay.hidden = true;
-        return;
-      }
-
-      const rect = element.getBoundingClientRect();
-      const frameWidth = frameDocument.documentElement.clientWidth;
-      const showAbove = rect.top > 48;
-      const top = Math.max(4, showAbove ? rect.top : rect.bottom);
-
-      fontOverlay.replaceChildren();
-      fontOverlay.style.minWidth = '72px';
-      fontOverlay.style.left = '4px';
-      fontOverlay.style.top = `${top}px`;
-      fontOverlay.style.transform = showAbove
-        ? 'translateY(calc(-100% - 6px))'
-        : 'translateY(6px)';
-      fontOverlay.style.visibility = 'hidden';
-      const rows = values.map(({ tag, value }) => {
-        const row = frameDocument.createElement('span');
-        const tagText = frameDocument.createElement('span');
-        const valueText = frameDocument.createElement('span');
-        tagText.textContent = tag;
-        valueText.textContent = value;
-        row.append(tagText, valueText);
-        return row;
-      });
-      fontOverlay.append(...rows);
-      fontOverlay.hidden = false;
-      const overlayWidth = fontOverlay.getBoundingClientRect().width;
-      const left = Math.max(
-        4,
-        Math.min(rect.left, frameWidth - overlayWidth - 4)
-      );
-      fontOverlay.style.left = `${left}px`;
-      fontOverlay.style.visibility = '';
-    };
-
-    const setHoveredElement = (element: Element | null) => {
-      hoveredElement = element;
-      updateFontOverlay(element);
-    };
-
-    const setSourceSelecting = (isSelecting: boolean) => {
-      isSourceSelecting = isSelecting;
-      setTargetFigmaSourceSelectLocked(frameDocument, isSelecting);
-      if (isSelecting) {
-        isSourcePanelPinned = false;
-        frameDocument.documentElement.setAttribute(optionAttribute, 'true');
-        const candidate = showSourceOutlineForTarget(lastSourceTarget);
-        setHoveredElement(candidate?.element ?? hoveredElement);
-        return;
-      }
-
-      setHoveredElement(null);
-      fontOverlay.hidden = true;
-      frameDocument.documentElement.removeAttribute(optionAttribute);
-      if (!isSourcePanelPinned && !sourceInspectorInteractionRef.current) {
-        clearSourceInspector();
-      }
-    };
-
-    const handleMouseMove = (event: MouseEvent) => {
-      // 팝업이 고정된 동안에는 마우스 이동으로 target 을 다시 추적하지 않는다.
-      // (닫기/다른 곳 클릭 전까지 고정 유지)
-      if (isSourcePanelPinned) return;
-
-      lastSourceTarget = event.target;
-      const candidates = getSourceCandidates(event.target, sourceCandidateOptions);
-      const sourceElement = candidates[0]?.element ?? null;
-
-      if (event.altKey && !isSourceSelecting) {
-        setSourceSelecting(true);
-      }
-
-      if (isSourceSelecting && !isSourcePanelPinned) {
-        showSourceOutlineForTarget(event.target);
-      }
-
-      setHoveredElement(isSourceSelecting ? sourceElement : null);
-    };
-
-    const handleClick = (event: MouseEvent) => {
-      if (!isSourceSelecting && !event.altKey) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-
-      const candidates = showSourceInspectorForTarget(event.target, true);
-      if (!candidates.length) {
-        showToast('Source hint not found');
-        isSourcePanelPinned = false;
-        setSourceSelecting(false);
-        return;
-      }
-
-      isSourcePanelPinned = true;
-      setSourceSelecting(false);
-    };
-
-    const isOptionKeyEvent = (event: KeyboardEvent) =>
-      event.key === 'Alt' ||
-      event.code === 'AltLeft' ||
-      event.code === 'AltRight' ||
-      event.altKey;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        isSourcePanelPinned = false;
-        setSourceSelecting(false);
-        clearSourceInspector();
-        return;
-      }
-      if (!isOptionKeyEvent(event)) return;
-      // 팝업 고정 중에는 Option 키(반복 입력 포함)로 다시 추적하지 않는다.
-      if (isSourcePanelPinned) return;
-
-      cancelReviewMode();
-      setSourceSelecting(true);
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (isOptionKeyEvent(event) || !event.altKey) setSourceSelecting(false);
-    };
-
-    const handleBlur = () => {
-      isSourcePanelPinned = false;
-      setSourceSelecting(false);
-    };
-
-    const handleWindowPointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (
-        target instanceof Element &&
-        target.closest('.df-review-source-popover')
-      ) {
-        sourceInspectorInteractionRef.current = true;
-        return;
-      }
-
-      isSourcePanelPinned = false;
-      sourceInspectorInteractionRef.current = false;
-      setSourceSelecting(false);
-      clearSourceInspector();
-    };
-
-    frameDocument.addEventListener('mousemove', handleMouseMove, true);
-    frameDocument.addEventListener('click', handleClick, true);
-    frameDocument.addEventListener('keydown', handleKeyDown, true);
-    frameDocument.addEventListener('keyup', handleKeyUp, true);
-    window.addEventListener('keydown', handleKeyDown, true);
-    window.addEventListener('keyup', handleKeyUp, true);
-    window.addEventListener('blur', handleBlur);
-    window.addEventListener('pointerdown', handleWindowPointerDown, true);
-
-    sourceShortcutCleanupRef.current = () => {
-      frameDocument.removeEventListener('mousemove', handleMouseMove, true);
-      frameDocument.removeEventListener('click', handleClick, true);
-      frameDocument.removeEventListener('keydown', handleKeyDown, true);
-      frameDocument.removeEventListener('keyup', handleKeyUp, true);
-      window.removeEventListener('keydown', handleKeyDown, true);
-      window.removeEventListener('keyup', handleKeyUp, true);
-      window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('pointerdown', handleWindowPointerDown, true);
-      isSourcePanelPinned = false;
-      setSourceSelecting(false);
-      style.remove();
-      fontOverlay.remove();
-    };
-  }, [
-    cancelReviewMode,
-    clearSourceInspector,
-    cleanupSourceOpenShortcut,
-    iframeRef,
-    isSourceInspectorEnabled,
-    showToast,
-    sourceCandidateOptions,
-    showSourceOutlineForTarget,
-    showSourceInspectorForTarget,
-  ]);
-
-  useEffect(() => {
-    return cleanupSourceOpenShortcut;
-  }, [cleanupSourceOpenShortcut]);
-
+  /** target iframe 로드 완료 시 리뷰킷과 부가 기능을 다시 연결한다. */
   const loadTargetFrame = useCallback(() => {
     setTargetFrameLoadVersion((currentVersion) => currentVersion + 1);
     initReviewKit();
@@ -1597,55 +882,23 @@ export const ReviewShell = ({
       mode === 'element'
     );
     bindSourceOpenShortcut();
-    if (sidePanel === 'source' && isListVisible) {
+    if (isSourceTreePanelVisible) {
       refreshCurrentSectionOutline(true);
     }
   }, [
     bindSourceOpenShortcut,
     iframeRef,
     initReviewKit,
-    isListVisible,
+    isSourceTreePanelVisible,
     mode,
     refreshTargetFigmaConfig,
     refreshCurrentSectionOutline,
-    sidePanel,
   ]);
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
-    return () => window.cancelAnimationFrame(frame);
-  }, [bindSourceOpenShortcut, targetSrc]);
 
   const clearSelectedReviewItem = useCallback(() => {
     clearSelectedItem();
     updateShellUrl(targetRef.current, sizeRef.current, source);
   }, [clearSelectedItem, sizeRef, source, targetRef]);
-
-  const withItemMutation = async <T,>(
-    itemId: string,
-    action: () => Promise<T>
-  ) => {
-    setMutatingItemIds((currentIds) => {
-      const nextIds = new Set(currentIds);
-      nextIds.add(itemId);
-      return nextIds;
-    });
-
-    try {
-      return await action();
-    } finally {
-      setMutatingItemIds((currentIds) => {
-        const nextIds = new Set(currentIds);
-        nextIds.delete(itemId);
-        return nextIds;
-      });
-    }
-  };
-  const showItemMutationError = (error: unknown, fallback: string) => {
-    showToast(
-      error instanceof Error && error.message ? error.message : fallback
-    );
-  };
 
   const changeReviewSource = (nextSource: ReviewSource) => {
     if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
@@ -1655,156 +908,6 @@ export const ReviewShell = ({
     setItems([]);
     setSource(nextSource);
     updateShellUrl(targetRef.current, sizeRef.current, nextSource);
-  };
-
-  const changeItemStatus = async (
-    item: ReviewItem,
-    nextStatus: ReviewItemStatus
-  ) => {
-    try {
-      await withItemMutation(item.id, () =>
-        updateReviewItemStatus({
-          activeAdapterEntry,
-          item,
-          nextStatus,
-          onRefreshReviewData: refreshReviewData,
-          onToast: showToast,
-        })
-      );
-    } catch (error) {
-      showItemMutationError(error, 'QA status update failed');
-    }
-  };
-
-  const changeItemAssignee = async (
-    item: ReviewItem,
-    assigneeId: string | null
-  ) => {
-    try {
-      await withItemMutation(item.id, () =>
-        updateReviewItemAssignee({
-          activeAdapterEntry,
-          item,
-          assigneeId,
-          onRefreshReviewData: refreshReviewData,
-          onToast: showToast,
-        })
-      );
-    } catch (error) {
-      showItemMutationError(error, 'QA assignee update failed');
-    }
-  };
-
-  const saveItemDetails = async (
-    item: ReviewItem,
-    patch: Pick<ReviewItem, 'comment'> & Partial<Pick<ReviewItem, 'title'>>
-  ) => {
-    try {
-      await withItemMutation(item.id, () =>
-        updateReviewItemDetails({
-          activeAdapterEntry,
-          fields: activeAdapterEntry.fields,
-          item,
-          ...patch,
-          onRefreshReviewData: refreshReviewData,
-          onToast: showToast,
-        })
-      );
-      setEditingItem(null);
-    } catch (error) {
-      showItemMutationError(error, 'QA update failed');
-      throw error;
-    }
-  };
-
-  const submitItem = async (numberedItem: NumberedReviewItem) => {
-    try {
-      await withItemMutation(numberedItem.item.id, () =>
-        submitReviewItem({
-          localAdapterEntry,
-          numberedItem,
-          remoteAdapterEntry,
-          selectedItemIdRef,
-          onClearSelectedItem: clearSelectedItem,
-          onRefreshReviewData: refreshReviewData,
-          onToast: showToast,
-        })
-      );
-    } catch (error) {
-      showItemMutationError(error, 'QA submit failed');
-    }
-  };
-
-  const copyPrompt = (
-    value: string,
-    key: string,
-    toastMessage = 'Prompt copied'
-  ) =>
-    copyReviewPrompt({
-      key,
-      toastMessage,
-      value,
-      onCopiedPromptKeyChange: setCopiedPromptKey,
-      onToast: showToast,
-    });
-
-  const copyItemPrompt = (numberedItem: NumberedReviewItem) =>
-    copyPrompt(
-      buildReviewItemPrompt(numberedItem, reviewPathPrefix),
-      `qa:${numberedItem.item.id}`,
-      'QA prompt copied'
-    );
-
-  const copyItemLabel = (numberedItem: NumberedReviewItem) =>
-    copyPrompt(
-      numberedItem.displayLabel,
-      `label:${numberedItem.item.id}`,
-      'QA number copied'
-    );
-
-  const copyItemLink = (numberedItem: NumberedReviewItem) => {
-    const { item } = numberedItem;
-    return copyPrompt(
-      getShellUrlForItem(
-        getItemFrameTarget(item, reviewPathPrefix),
-        getRestoredSize(item, viewportPresets),
-        item.id,
-        source
-      ).href,
-      `link:${item.id}`,
-      'QA link copied'
-    );
-  };
-
-  const copyRemoteIssuePath = (item: ReviewItem) => {
-    const path = getUrlPathWithoutOrigin(item.externalIssueUrl);
-    if (!path) {
-      showToast('QA link not found');
-      return Promise.resolve();
-    }
-
-    return copyPrompt(path, `remote-link:${item.id}`, 'QA path copied');
-  };
-
-  const removeItem = async (item: ReviewItem) => {
-    try {
-      await withItemMutation(item.id, () =>
-        removeReviewItem({
-          activeAdapterEntry,
-          isRemoteSource,
-          item,
-          selectedItemIdRef,
-          sizeRef,
-          source,
-          targetRef,
-          onClearSelectedItem: clearSelectedItem,
-          onRefreshReviewData: refreshReviewData,
-          onToast: showToast,
-        })
-      );
-    } catch (error) {
-      showItemMutationError(error, 'QA delete failed');
-    }
   };
 
   const figmaImageOverlays = createReviewTargetFigmaImageOverlays({
@@ -1909,7 +1012,7 @@ export const ReviewShell = ({
         <QaItemEditModal
           fields={activeAdapterEntry.fields}
           item={editingItem}
-          onClose={() => setEditingItem(null)}
+          onClose={clearEditingItem}
           onSave={saveItemDetails}
         />
       )}
@@ -1920,119 +1023,21 @@ export const ReviewShell = ({
         </div>
       )}
 
-      <div className="df-review-side-rail">
-        {isFigmaImageManagementEnabled && (
-          <button
-            aria-label={
-              isFigmaImagesPanelVisible
-                ? 'Hide Figma images'
-                : 'Show Figma images'
-            }
-            aria-pressed={isFigmaImagesPanelVisible}
-            className={`df-review-side-toggle${
-              isFigmaImagesPanelVisible ? ' is-active' : ''
-            }`}
-            data-review-tooltip="Figma Images"
-            data-review-tooltip-placement="left"
-            type="button"
-            onClick={toggleFigmaImagesPanel}
-            title="Figma Images"
-          >
-            <span aria-hidden="true">
-              <FigmaRailIcon />
-            </span>
-          </button>
-        )}
-        <button
-          aria-label={isQaPanelVisible ? 'Hide QA list' : 'Show QA list'}
-          aria-pressed={isQaPanelVisible}
-          className={`df-review-side-toggle${
-            isQaPanelVisible ? ' is-active' : ''
-          }`}
-          data-review-tooltip="QA"
-          data-review-tooltip-placement="left"
-          type="button"
-          onClick={toggleQaPanel}
-          title="QA"
-        >
-          <span aria-hidden="true">
-            <QaListIcon />
-          </span>
-        </button>
-        {isSourceInspectorEnabled && (
-          <button
-            aria-controls="df-review-section-outline"
-            aria-label={
-              isSourceTreePanelVisible
-                ? 'Hide component list'
-                : 'Show component list'
-            }
-            aria-pressed={isSourceTreePanelVisible}
-            className={`df-review-side-toggle${
-              isSourceTreePanelVisible ? ' is-active' : ''
-            }`}
-            data-review-tooltip="Component List"
-            data-review-tooltip-placement="left"
-            type="button"
-            onClick={toggleSourceTreePanel}
-            title="Component List"
-          >
-            <span aria-hidden="true">
-              <ComponentTreeIcon />
-            </span>
-          </button>
-        )}
-        <div className="df-review-side-actions">
-          <button
-            aria-label="Open initial prompt"
-            className="df-review-side-toggle"
-            data-review-tooltip="Initial prompt"
-            data-review-tooltip-placement="left"
-            type="button"
-            onClick={() => setIsInitialPromptScriptOpen(true)}
-            title="Initial prompt"
-          >
-            <span aria-hidden="true">
-              <BotIcon />
-            </span>
-          </button>
-          <button
-            aria-label="Open settings"
-            className="df-review-side-toggle"
-            data-review-tooltip="Settings"
-            data-review-tooltip-placement="left"
-            type="button"
-            onClick={openFigmaSettings}
-            title="Settings"
-          >
-            <span aria-hidden="true">
-              <SettingsIcon />
-            </span>
-          </button>
-          {currentPagePresenceUsers.length > 0 && (
-            <PresenceOverlay
-              presenceSessionId={presenceSessionId}
-              users={currentPagePresenceUsers}
-            />
-          )}
-          <span className="df-review-side-divider" aria-hidden="true" />
-          <button
-            aria-label="Open about"
-            className="df-review-side-toggle"
-            data-review-tooltip="About"
-            data-review-tooltip-placement="left"
-            type="button"
-            onClick={() => {
-              setIsInitialPromptOpen(true);
-            }}
-            title="About"
-          >
-            <span aria-hidden="true">
-              <DfLogoIcon />
-            </span>
-          </button>
-        </div>
-      </div>
+      <ReviewSideRail
+        currentPagePresenceUsers={currentPagePresenceUsers}
+        isFigmaImageManagementEnabled={isFigmaImageManagementEnabled}
+        isFigmaImagesPanelVisible={isFigmaImagesPanelVisible}
+        isQaPanelVisible={isQaPanelVisible}
+        isSourceInspectorEnabled={isSourceInspectorEnabled}
+        isSourceTreePanelVisible={isSourceTreePanelVisible}
+        presenceSessionId={presenceSessionId}
+        onOpenAbout={() => setIsInitialPromptOpen(true)}
+        onOpenInitialPrompt={() => setIsInitialPromptScriptOpen(true)}
+        onOpenSettings={openFigmaSettings}
+        onToggleFigmaImagesPanel={toggleFigmaImagesPanel}
+        onToggleQaPanel={toggleQaPanel}
+        onToggleSourceTreePanel={toggleSourceTreePanel}
+      />
 
       <ReviewQaPanel
         activeAdapterEntry={activeAdapterEntry}
@@ -2111,10 +1116,10 @@ export const ReviewShell = ({
           entries={filteredSectionOutline}
           collapsedIds={collapsedSectionOutlineIds}
           canWriteDom={canWriteDom}
-          isBoxMetaVisible={isSectionOutlineBoxMetaVisible}
-          isFontMetaVisible={isSectionOutlineFontMetaVisible}
-          isMediaMetaVisible={isSectionOutlineMediaMetaVisible}
-          isClassMetaVisible={isSectionOutlineClassMetaVisible}
+          isBoxMetaVisible={sectionOutlineMetaVisibility.box}
+          isFontMetaVisible={sectionOutlineMetaVisibility.font}
+          isMediaMetaVisible={sectionOutlineMetaVisibility.media}
+          isClassMetaVisible={sectionOutlineMetaVisibility.className}
           onToggleMeta={updateSectionOutlineMetaVisibility}
           onFilterChange={updateSectionOutlineFilter}
           onToggleEntry={toggleSectionOutlineEntry}
@@ -2161,15 +1166,3 @@ export const ReviewShell = ({
     </div>
   );
 };
-
-function getUrlPathWithoutOrigin(value: string | undefined) {
-  const trimmed = value?.trim();
-  if (!trimmed) return null;
-
-  try {
-    const url = new URL(trimmed, window.location.origin);
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return trimmed;
-  }
-}

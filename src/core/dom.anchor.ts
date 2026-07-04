@@ -29,17 +29,6 @@ const SEMANTIC_ANCHOR_ATTRIBUTES = [
   'href',
 ];
 
-/** Resolves a DOM anchor from the center of a target-space selection. */
-export function getDomAnchor(
-  selection: ViewportSelection,
-  configuredAttribute = 'data-qa-id',
-  environment: ReviewEnvironment
-): DomAnchor | undefined {
-  const x = selection.left + selection.width / 2;
-  const y = selection.top + selection.height / 2;
-  return getDomAnchorFromPoint({ x, y }, configuredAttribute, environment);
-}
-
 /** Builds the best DOM anchor candidate set from a target-space point. */
 export function getDomAnchorFromPoint(
   point: ReviewPoint,

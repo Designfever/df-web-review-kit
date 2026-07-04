@@ -40,7 +40,7 @@ When the React shell provides a composer host, core docks DOM/area draft compose
 ## Core Modules
 
 - `web.review.kit.app.ts`: controller lifecycle, state transitions, adapter calls, item creation, restore flow.
-- `web.review.kit.view.ts`: vanilla DOM renderer for core overlay UI.
+- `web.review.kit.view.ts`: thin render orchestrator. Decides which overlay layers to render and docks the draft composer into the shell panel. All DOM building lives in `view/`.
 - `draft.metrics.ts`: pure geometry for draft adjustment (nudge/scale) previews, kept out of the renderer.
 - `dom.anchor.ts`: selector candidate generation, anchor rebinding, text fingerprint matching.
 - `geometry.ts`: target-space and host-space coordinate conversion.
@@ -49,6 +49,21 @@ When the React shell provides a composer host, core docks DOM/area draft compose
 - `review/format.ts`: compact item/draft metadata labels.
 - `scroll.ts`: scroll restore helpers.
 - `location.ts`: public URL and route key helpers.
+
+### Core View Modules (`src/core/view/`)
+
+The overlay renderer is split by role. Modules never reach into the app directly; they receive `WebReviewKitViewConfig` (options + state getter + actions) or the narrower `DraftLayerContext` defined in `view/types.ts`.
+
+- `dom.draft.ts`: DOM draft layer — pin, highlight, composer popover, adjustment (nudge/scale) controls, pin/composer drag.
+- `area.draft.ts`: area draft form, on-page selection overlay, and floating/docked composer popover.
+- `selection.layers.ts`: element-pick hover layer and area drag-select layer.
+- `markers.ts`: stored item marker/highlight layer.
+- `panel.ts`: built-in side panel for standalone core usage (header, toolbar, item list). Disabled under the React shell.
+- `form.widgets.ts`: shared draft form widgets (title input, assignee select, save/cancel actions, drag handle).
+- `draft.capture.ts`: viewport capture button and capture payload builders.
+- `composer.position.ts`: composer sizing/clamping and drag wiring (pure placement math).
+- `draft.text.ts`: metric/adjustment display formatting and the saved-comment adjustment suffix.
+- `icons.ts`: stateless SVG icon and spinner builders.
 
 ## Coordinate Spaces
 
@@ -102,6 +117,19 @@ The default local adapter is for draft/local review work. Supabase is optional h
 - QA panel composer host for shell-owned layout
 
 React shell should call the core controller instead of duplicating target overlay logic.
+
+### Shell Hook Decomposition
+
+`review/shell.tsx` composes feature hooks instead of owning all state itself. When adding shell behavior, extend the matching hook (or add one) rather than growing the component:
+
+- `hooks/use.review.shell.state.ts`: global shell state — target, size, source, mode, refs.
+- `hooks/use.review.shell.data.ts`: item list, filters, counts, and derived view data.
+- `hooks/use.review.controller.ts`: core runtime wiring (init/reload/restore/mode).
+- `hooks/use.review.item.actions.ts`: QA item mutations (status/assignee/edit/submit/remove) and prompt/link copy actions, with per-item mutation tracking.
+- `hooks/use.review.source.inspector.ts`: source inspector panel state and the Alt(Option) source-select shortcut bound into the target iframe.
+- `hooks/use.review.section.outline.ts`: Source Tree outline extraction, filter/collapse state, refresh scheduling (load retries + MutationObserver), and entry actions.
+- `hooks/use.review.command.key.ts`: hide-all-overlays-while-⌘-held tracking across host and iframe.
+- `review/side.rail.tsx`: right-side rail (panel toggles, prompt/settings/about, presence).
 
 ## Figma Overlay Direction
 

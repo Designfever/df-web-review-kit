@@ -31,6 +31,10 @@ type RuntimeOptions = {
   lineAttribute: string;
   columnAttribute: string;
   componentAttribute: string;
+  parentFileAttribute: string;
+  parentLineAttribute: string;
+  parentColumnAttribute: string;
+  parentComponentAttribute: string;
 };
 
 type TypeScriptModule = typeof import('typescript');
@@ -244,7 +248,8 @@ async function injectReviewSourceComponentHints(
   const insertions = getSourceComponentInsertions(
     ts,
     sourceFile,
-    options.componentAttribute
+    options.componentAttribute,
+    options.parentComponentAttribute
   );
   if (insertions.length === 0) return null;
 
@@ -269,7 +274,8 @@ function isJsxSourceFile(file: string, code: string) {
 function getSourceComponentInsertions(
   ts: TypeScriptModule,
   sourceFile: import('typescript').SourceFile,
-  componentAttribute: string
+  componentAttribute: string,
+  parentComponentAttribute: string
 ) {
   const insertions: SourceComponentInsertion[] = [];
 
@@ -287,6 +293,16 @@ function getSourceComponentInsertions(
       insertions.push({
         offset: node.tagName.end,
         value: ` ${componentAttribute}=${JSON.stringify(component)}`,
+      });
+    }
+    if (
+      component &&
+      isCustomJsxElement(ts, node, sourceFile) &&
+      !hasJsxAttribute(ts, node, parentComponentAttribute)
+    ) {
+      insertions.push({
+        offset: node.tagName.end,
+        value: ` ${parentComponentAttribute}=${JSON.stringify(component)}`,
       });
     }
 
@@ -325,6 +341,27 @@ function isIntrinsicJsxElement(
 
   const tagName = node.tagName.getText(sourceFile);
   return /^[a-z]/.test(tagName) || tagName.includes('-');
+}
+
+function isCustomJsxElement(
+  ts: TypeScriptModule,
+  node: import('typescript').Node,
+  sourceFile: import('typescript').SourceFile
+): node is import('typescript').JsxOpeningLikeElement {
+  if (!ts.isJsxOpeningElement(node) && !ts.isJsxSelfClosingElement(node)) {
+    return false;
+  }
+
+  const tagName = node.tagName.getText(sourceFile);
+  if (isReactRuntimeElementName(tagName)) return false;
+  return /^[A-Z]/.test(tagName);
+}
+
+function isReactRuntimeElementName(tagName: string) {
+  const name = tagName.startsWith('React.')
+    ? tagName.slice('React.'.length)
+    : tagName;
+  return name === 'Fragment' || name === 'StrictMode' || name === 'Profiler';
 }
 
 function hasJsxAttribute(
@@ -396,6 +433,10 @@ function createRuntimeOptions(
     lineAttribute: `${attributePrefix}-line`,
     columnAttribute: `${attributePrefix}-column`,
     componentAttribute: `${attributePrefix}-component`,
+    parentFileAttribute: `${attributePrefix}-parent-file`,
+    parentLineAttribute: `${attributePrefix}-parent-line`,
+    parentColumnAttribute: `${attributePrefix}-parent-column`,
+    parentComponentAttribute: `${attributePrefix}-parent-component`,
   };
 }
 
@@ -416,13 +457,17 @@ function createJsxDevRuntime(options: RuntimeOptions) {
 import { Fragment, jsxDEV as baseJsxDEV } from 'react/jsx-dev-runtime';
 
 const OPTIONS = ${JSON.stringify(options)};
+const sourceUsageStack = [];
+const sourceUsageWrapperCache = new WeakMap();
 
 export { Fragment };
 
 export function jsxDEV(type, props, key, isStaticChildren, source, self) {
+  const sourceUsage = getSourceUsage(type, props, source);
+  const nextType = sourceUsage ? getSourceUsageWrapper(type, sourceUsage) : type;
   return baseJsxDEV(
-    type,
-    injectSourceProps(type, props, source),
+    nextType,
+    injectSourceProps(type, props, source, sourceUsage),
     key,
     isStaticChildren,
     source,
@@ -430,14 +475,18 @@ export function jsxDEV(type, props, key, isStaticChildren, source, self) {
   );
 }
 
-function injectSourceProps(type, props, source) {
-  if (typeof type !== 'string') return props;
+function injectSourceProps(type, props, source, sourceUsage) {
   if (!source || typeof source.fileName !== 'string') return props;
 
   const sourceFile = getSourceFile(source.fileName);
   if (!sourceFile) return props;
 
   const nextProps = props ? { ...props } : {};
+  if (typeof type !== 'string') {
+    injectParentSourceProps(nextProps, sourceUsage);
+    return nextProps;
+  }
+
   if (nextProps[OPTIONS.fileAttribute] == null) {
     nextProps[OPTIONS.fileAttribute] = sourceFile;
   }
@@ -447,8 +496,98 @@ function injectSourceProps(type, props, source) {
   if (OPTIONS.column && source.columnNumber != null && nextProps[OPTIONS.columnAttribute] == null) {
     nextProps[OPTIONS.columnAttribute] = String(source.columnNumber);
   }
+  injectParentSourceProps(nextProps, getCurrentSourceUsage());
 
   return nextProps;
+}
+
+function getSourceUsage(type, props, source) {
+  if (!isSourceUsageComponentType(type)) return null;
+  if (!source || typeof source.fileName !== 'string') return null;
+
+  const sourceFile = getSourceFile(source.fileName);
+  if (!sourceFile) return null;
+
+  return {
+    file: sourceFile,
+    line: OPTIONS.line && source.lineNumber != null ? String(source.lineNumber) : '',
+    column: OPTIONS.column && source.columnNumber != null ? String(source.columnNumber) : '',
+    component: readSourceUsageComponent(props),
+  };
+}
+
+function isSourceUsageComponentType(type) {
+  return (
+    typeof type === 'function' &&
+    !isClassComponent(type)
+  );
+}
+
+function isClassComponent(type) {
+  return Boolean(type?.prototype?.isReactComponent);
+}
+
+function getSourceUsageWrapper(type, usage) {
+  let wrappers = sourceUsageWrapperCache.get(type);
+  if (!wrappers) {
+    wrappers = new Map();
+    sourceUsageWrapperCache.set(type, wrappers);
+  }
+
+  const key = getSourceUsageKey(usage);
+  const existing = wrappers.get(key);
+  if (existing) return existing;
+
+  const wrapped = function ReviewSourceUsageWrapper(props) {
+    sourceUsageStack.push(usage);
+    try {
+      return type(props);
+    } finally {
+      sourceUsageStack.pop();
+    }
+  };
+  wrapped.displayName = 'ReviewSourceUsage(' + getComponentDisplayName(type) + ')';
+  wrappers.set(key, wrapped);
+  return wrapped;
+}
+
+function getComponentDisplayName(type) {
+  return type.displayName || type.name || 'Component';
+}
+
+function getSourceUsageKey(usage) {
+  return [
+    usage.file,
+    usage.line,
+    usage.column,
+    usage.component,
+  ].join('|');
+}
+
+function getCurrentSourceUsage() {
+  return sourceUsageStack[sourceUsageStack.length - 1] || null;
+}
+
+function readSourceUsageComponent(props) {
+  const value = props?.[OPTIONS.parentComponentAttribute];
+  return typeof value === 'string' ? value : '';
+}
+
+function injectParentSourceProps(props, usage) {
+  if (!usage?.file) return;
+
+  if (props[OPTIONS.parentFileAttribute] == null) {
+    props[OPTIONS.parentFileAttribute] = usage.file;
+  }
+  if (usage.line && props[OPTIONS.parentLineAttribute] == null) {
+    props[OPTIONS.parentLineAttribute] = usage.line;
+  }
+  if (usage.column && props[OPTIONS.parentColumnAttribute] == null) {
+    props[OPTIONS.parentColumnAttribute] = usage.column;
+  }
+  if (usage.component && props[OPTIONS.parentComponentAttribute] == null) {
+    props[OPTIONS.parentComponentAttribute] = usage.component;
+  }
 }
 
 function getSourceFile(fileName) {

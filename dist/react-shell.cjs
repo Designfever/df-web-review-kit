@@ -167,8 +167,8 @@ var reviewShellBaseStyle = `
 	    --df-review-color-danger-soft: rgba(255, 143, 97, 0.12);
 	    --df-review-color-purple: #b395ff;
 	    --df-review-color-purple-soft: rgba(179, 149, 255, 0.16);
-	    --df-review-color-note: #f3b75f;
-	    --df-review-color-note-soft: rgba(243, 183, 95, 0.14);
+	    --df-review-color-warning: #f3b75f;
+	    --df-review-color-warning-soft: rgba(243, 183, 95, 0.14);
 	    --df-review-color-area: #63d7c7;
 	    --df-review-color-area-soft: rgba(99, 215, 199, 0.14);
 	    --df-review-color-side-rail: #111722;
@@ -225,8 +225,8 @@ var reviewShellBaseStyle = `
 	    --df-review-danger-soft: var(--df-review-color-danger-soft);
 	    --df-review-purple: var(--df-review-color-purple);
 	    --df-review-purple-soft: var(--df-review-color-purple-soft);
-	    --df-review-note: var(--df-review-color-note);
-	    --df-review-note-soft: var(--df-review-color-note-soft);
+	    --df-review-warning: var(--df-review-color-warning);
+	    --df-review-warning-soft: var(--df-review-color-warning-soft);
 	    --df-review-area: var(--df-review-color-area);
 	    --df-review-area-soft: var(--df-review-color-area-soft);
 	    --df-review-side-rail: var(--df-review-color-side-rail);
@@ -264,8 +264,8 @@ var reviewShellBaseStyle = `
 	    --df-review-color-danger-soft: rgba(185, 68, 24, 0.1);
 	    --df-review-color-purple: #6543b8;
 	    --df-review-color-purple-soft: rgba(101, 67, 184, 0.12);
-	    --df-review-color-note: #a76617;
-	    --df-review-color-note-soft: rgba(167, 102, 23, 0.12);
+	    --df-review-color-warning: #a76617;
+	    --df-review-color-warning-soft: rgba(167, 102, 23, 0.12);
 	    --df-review-color-area: #087f73;
 	    --df-review-color-area-soft: rgba(8, 127, 115, 0.12);
 	    --df-review-color-side-rail: #edf1f6;
@@ -1352,7 +1352,7 @@ var reviewShellModalStyle = `
 			    display: grid;
 			    grid-template-rows: auto minmax(0, 1fr);
 				    width: min(1040px, calc(100vw - 36px));
-				    max-height: min(900px, calc(100vh - 36px));
+				    max-height: min(760px, calc(100dvh - 40px));
 			    overflow: hidden;
 			    border: 1px solid var(--df-review-line);
 			    border-radius: var(--df-review-radius-lg);
@@ -1418,17 +1418,36 @@ var reviewShellModalStyle = `
 			    white-space: nowrap;
 			  }
 
-			  .df-review-prompt-header button {
+			  .df-review-prompt-header .df-review-modal-close {
 			    display: grid;
 			    place-items: center;
-			    width: 34px;
-			    min-width: 34px;
+			    width: 32px;
+			    min-width: 32px;
+          height: 32px;
 			    padding: 0;
+          border: 0;
+          border-radius: var(--df-review-radius-sm);
+          background: transparent;
+          box-shadow: none;
+          color: var(--df-review-muted);
 			    font-size: var(--df-review-font-size-md);
 			    font-weight: var(--df-review-font-weight-normal);
 			  }
 
-			  .df-review-prompt-header button svg {
+        .df-review-prompt-header .df-review-modal-close:hover,
+        .df-review-prompt-header .df-review-modal-close:focus-visible {
+          background: transparent;
+          box-shadow: none;
+          color: var(--df-review-text);
+          outline: 0;
+        }
+
+        .df-review-prompt-header .df-review-modal-close:focus-visible {
+          outline: 2px solid var(--df-review-focus-ring);
+          outline-offset: 2px;
+        }
+
+			  .df-review-prompt-header .df-review-modal-close svg {
 			    width: 15px;
 			    height: 15px;
 			    fill: none;
@@ -1443,6 +1462,7 @@ var reviewShellModalStyle = `
 			    gap: 14px;
 			    min-height: 0;
 			    overflow: auto;
+          overscroll-behavior: contain;
 			    padding: 16px;
 			  }
 
@@ -1544,92 +1564,93 @@ var reviewShellModalStyle = `
 			  }
 
 			  .df-review-about-dialog {
-			    grid-template-rows: minmax(0, 1fr);
-			    width: min(600px, calc(100vw - 36px));
+			    grid-template-rows: auto minmax(0, 1fr);
+			    width: min(560px, calc(100vw - 36px));
+          max-height: min(640px, calc(100dvh - 40px));
 			  }
 
-			  .df-review-about-close {
-			    position: absolute;
-			    top: 14px;
-			    right: 14px;
-			    z-index: 2;
-			    display: grid;
-			    place-items: center;
-			    width: 32px;
-			    height: 32px;
-			    border: 1px solid var(--df-review-line);
-			    border-radius: var(--df-review-radius-sm);
-			    background: var(--df-review-control);
-			    color: var(--df-review-text);
-			  }
-
-			  .df-review-about-close svg {
-			    width: 15px;
-			    height: 15px;
-			    fill: none;
-			    stroke: currentColor;
-			    stroke-linecap: round;
-			    stroke-linejoin: round;
-			    stroke-width: 2;
-			  }
+        .df-review-about-dialog .df-review-prompt-header {
+          padding-right: 12px;
+        }
 
 			  .df-review-about-body {
 			    display: grid;
 			    align-content: start;
-			    gap: 22px;
+			    gap: 12px;
 			    min-height: 0;
 			    overflow: auto;
-			    padding: 34px 32px;
+          overscroll-behavior: contain;
+			    padding: 14px;
 			  }
 
-			  .df-review-about-intro {
-			    display: grid;
-			    justify-items: start;
-			    gap: 8px;
-			  }
+        .df-review-shortcut-groups {
+          display: grid;
+          gap: 10px;
+        }
 
-			  .df-review-about-logo {
-			    display: grid;
-			    place-items: center;
-			    color: var(--df-review-text);
-			  }
+        .df-review-shortcut-group {
+          display: grid;
+          gap: 5px;
+          min-width: 0;
+        }
 
-			  .df-review-about-logo svg {
-			    width: auto;
-			    height: 26px;
-			    fill: currentColor;
-			  }
+        .df-review-shortcut-group > strong {
+          color: var(--df-review-text);
+          font-size: var(--df-review-font-size-xs);
+          font-weight: var(--df-review-font-weight-emphasis);
+          line-height: var(--df-review-line-height-tight);
+        }
 
-			  .df-review-about-intro strong {
-			    color: var(--df-review-text);
-			    font-size: var(--df-review-font-size-lg);
-			    font-weight: var(--df-review-font-weight-emphasis);
-			  }
+        .df-review-shortcut-list {
+          display: grid;
+          overflow: hidden;
+          border: 1px solid var(--df-review-line);
+          border-radius: var(--df-review-radius-sm);
+          background: var(--df-review-bg);
+        }
 
-			  .df-review-about-intro span {
-			    color: var(--df-review-muted);
-			    font-size: var(--df-review-font-size-sm);
-			    font-weight: var(--df-review-font-weight-normal);
-			  }
+        .df-review-shortcut-row {
+          display: grid;
+          grid-template-columns: minmax(112px, 0.38fr) minmax(0, 1fr);
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+          min-height: 28px;
+          padding: 5px 9px;
+          color: var(--df-review-muted);
+          font-size: var(--df-review-font-size-xs);
+          font-weight: var(--df-review-font-weight-normal);
+          line-height: 16px;
+        }
 
-			  .df-review-about-item {
-			    display: grid;
-			    gap: 5px;
-			  }
+        .df-review-shortcut-row + .df-review-shortcut-row {
+          border-top: 1px solid var(--df-review-line-soft);
+        }
 
-			  .df-review-about-item strong {
-			    color: var(--df-review-text);
-			    font-size: var(--df-review-font-size-sm);
-			    font-weight: var(--df-review-font-weight-emphasis);
-			  }
+        .df-review-shortcut-keys {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          min-width: 0;
+          flex-wrap: wrap;
+        }
 
-			  .df-review-about-item p {
-			    margin: 0;
-			    color: var(--df-review-muted);
-			    font-size: var(--df-review-font-size-sm);
-			    font-weight: var(--df-review-font-weight-normal);
-			    line-height: 1.6;
-			  }
+        .df-review-shortcut-keys kbd {
+          display: inline-flex;
+          align-items: center;
+          min-height: 18px;
+          border: 1px solid var(--df-review-line);
+          border-radius: var(--df-review-radius-xs);
+          padding: 0 5px;
+          color: var(--df-review-text);
+          background: var(--df-review-control);
+          box-shadow: var(--df-review-shadow-control);
+          font-family: var(--df-review-font-mono);
+          font-size: var(--df-review-font-size-2xs);
+          font-weight: var(--df-review-font-weight-normal);
+          line-height: 1;
+          white-space: nowrap;
+        }
 
 
 `;
@@ -1685,6 +1706,66 @@ var reviewShellToolbarStyle = `
   .df-review-mode {
     gap: 3px;
     padding: 3px;
+  }
+
+  [data-review-tooltip] {
+    position: relative;
+  }
+
+  [data-review-tooltip]::before {
+    position: absolute;
+    right: auto;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    z-index: 1200;
+    max-width: 220px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    padding: 5px 7px;
+    color: var(--df-review-text);
+    background: var(--df-review-panel);
+    box-shadow: var(--df-review-shadow-modal);
+    content: attr(data-review-tooltip);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: var(--df-review-font-weight-normal);
+    line-height: 1.2;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    text-overflow: ellipsis;
+    transform: translate(-50%, 2px);
+    transition: opacity 120ms ease, transform 120ms ease;
+    white-space: nowrap;
+  }
+
+  [data-review-tooltip]:hover::before,
+  [data-review-tooltip]:focus-visible::before {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  [data-review-tooltip][data-review-tooltip-placement='bottom']::before {
+    top: calc(100% + 8px);
+    bottom: auto;
+    transform: translate(-50%, -2px);
+  }
+
+  [data-review-tooltip][data-review-tooltip-placement='bottom']:hover::before,
+  [data-review-tooltip][data-review-tooltip-placement='bottom']:focus-visible::before {
+    transform: translate(-50%, 0);
+  }
+
+  [data-review-tooltip][data-review-tooltip-placement='left']::before {
+    top: 50%;
+    right: calc(100% + 8px);
+    bottom: auto;
+    left: auto;
+    transform: translate(2px, -50%);
+  }
+
+  [data-review-tooltip][data-review-tooltip-placement='left']:hover::before,
+  [data-review-tooltip][data-review-tooltip-placement='left']:focus-visible::before {
+    transform: translate(0, -50%);
   }
 
 		  .df-review-tool-divider,
@@ -2709,7 +2790,7 @@ var reviewShellQaPanelStyle = `
   }
 
   .df-review-item-scope.is-scope-desktop {
-    --df-review-scope: var(--df-review-note);
+    --df-review-scope: var(--df-review-warning);
     --df-review-scope-rgb: 243, 183, 95;
   }
 
@@ -2827,8 +2908,8 @@ var reviewShellQaPanelStyle = `
   .df-review-item-status-badge.is-status-review,
   .df-review-item-status-select.is-status-review {
     border-color: rgba(243, 183, 95, 0.34);
-    color: var(--df-review-note);
-    background: var(--df-review-note-soft);
+    color: var(--df-review-warning);
+    background: var(--df-review-warning-soft);
   }
 
   .df-review-item-status-badge.is-status-hold,
@@ -3989,7 +4070,7 @@ var reviewShellSourceInspectorStyle = `
   }
 
   .df-review-source-outline.is-pinned {
-    border-color: var(--df-review-note);
+    border-color: var(--df-review-warning);
     box-shadow:
       0 0 0 1px rgba(15, 18, 24, 0.58),
       0 0 0 5px rgba(243, 183, 95, 0.16);
@@ -4504,6 +4585,28 @@ var reviewShellSectionOutlineStyle = `
     color: var(--df-review-accent);
   }
 
+  .df-review-section-outline-meta-row.is-usage code {
+    color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-usage-link {
+    display: block;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    color: var(--df-review-accent);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .df-review-section-outline-usage-link:hover,
+  .df-review-section-outline-usage-link:focus-visible {
+    color: var(--df-review-text);
+    outline: 0;
+  }
+
   .df-review-section-outline-media-link {
     display: block;
     min-width: 0;
@@ -4646,11 +4749,11 @@ var reviewShellSectionOutlineStyle = `
 
   .df-review-section-outline-item.is-depth-3
     > .df-review-section-outline-children {
-    border-left-color: var(--df-review-note);
+    border-left-color: var(--df-review-warning);
   }
 
   .df-review-section-outline-item.is-depth-4 {
-    --df-review-section-outline-name-color: var(--df-review-note);
+    --df-review-section-outline-name-color: var(--df-review-warning);
   }
 
   .df-review-section-outline-item.is-depth-4
@@ -5113,24 +5216,31 @@ var __iconNode7 = [
 ];
 var Copy = createLucideIcon("copy", __iconNode7);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/database.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/corner-up-right.mjs
 var __iconNode8 = [
+  ["path", { d: "m15 14 5-5-5-5", key: "12vg1m" }],
+  ["path", { d: "M4 20v-7a4 4 0 0 1 4-4h12", key: "1lu4f8" }]
+];
+var CornerUpRight = createLucideIcon("corner-up-right", __iconNode8);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/database.mjs
+var __iconNode9 = [
   ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
   ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
   ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-var Database = createLucideIcon("database", __iconNode8);
+var Database = createLucideIcon("database", __iconNode9);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/external-link.mjs
-var __iconNode9 = [
+var __iconNode10 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "M10 14 21 3", key: "gplh6r" }],
   ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
 ];
-var ExternalLink = createLucideIcon("external-link", __iconNode9);
+var ExternalLink = createLucideIcon("external-link", __iconNode10);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye-off.mjs
-var __iconNode10 = [
+var __iconNode11 = [
   [
     "path",
     {
@@ -5148,10 +5258,10 @@ var __iconNode10 = [
   ],
   ["path", { d: "m2 2 20 20", key: "1ooewy" }]
 ];
-var EyeOff = createLucideIcon("eye-off", __iconNode10);
+var EyeOff = createLucideIcon("eye-off", __iconNode11);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye.mjs
-var __iconNode11 = [
+var __iconNode12 = [
   [
     "path",
     {
@@ -5161,24 +5271,15 @@ var __iconNode11 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Eye = createLucideIcon("eye", __iconNode11);
+var Eye = createLucideIcon("eye", __iconNode12);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
-var __iconNode12 = [
+var __iconNode13 = [
   ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
   ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
   ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
 ];
-var Image2 = createLucideIcon("image", __iconNode12);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/images.mjs
-var __iconNode13 = [
-  ["path", { d: "m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16", key: "9kzy35" }],
-  ["path", { d: "M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2", key: "1t0f0t" }],
-  ["circle", { cx: "13", cy: "7", r: "1", fill: "currentColor", key: "1obus6" }],
-  ["rect", { x: "8", y: "2", width: "14", height: "14", rx: "2", key: "1gvhby" }]
-];
-var Images = createLucideIcon("images", __iconNode13);
+var Image2 = createLucideIcon("image", __iconNode13);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
 var __iconNode14 = [
@@ -5197,30 +5298,40 @@ var __iconNode15 = [
 ];
 var Link2 = createLucideIcon("link-2", __iconNode15);
 
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-checks.mjs
 var __iconNode16 = [
+  ["path", { d: "M13 5h8", key: "a7qcls" }],
+  ["path", { d: "M13 12h8", key: "h98zly" }],
+  ["path", { d: "M13 19h8", key: "c3s6r1" }],
+  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
+  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }]
+];
+var ListChecks = createLucideIcon("list-checks", __iconNode16);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-filter.mjs
+var __iconNode17 = [
   ["path", { d: "M2 5h20", key: "1fs1ex" }],
   ["path", { d: "M6 12h12", key: "8npq4p" }],
   ["path", { d: "M9 19h6", key: "456am0" }]
 ];
-var ListFilter = createLucideIcon("list-filter", __iconNode16);
+var ListFilter = createLucideIcon("list-filter", __iconNode17);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/lock-open.mjs
-var __iconNode17 = [
+var __iconNode18 = [
   ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
   ["path", { d: "M7 11V7a5 5 0 0 1 9.9-1", key: "1mm8w8" }]
 ];
-var LockOpen = createLucideIcon("lock-open", __iconNode17);
+var LockOpen = createLucideIcon("lock-open", __iconNode18);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/lock.mjs
-var __iconNode18 = [
+var __iconNode19 = [
   ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
   ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
 ];
-var Lock = createLucideIcon("lock", __iconNode18);
+var Lock = createLucideIcon("lock", __iconNode19);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
-var __iconNode19 = [
+var __iconNode20 = [
   [
     "path",
     {
@@ -5231,27 +5342,27 @@ var __iconNode19 = [
   ["path", { d: "M15 5.764v15", key: "1pn4in" }],
   ["path", { d: "M9 3.236v15", key: "1uimfh" }]
 ];
-var Map2 = createLucideIcon("map", __iconNode19);
+var Map2 = createLucideIcon("map", __iconNode20);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
-var __iconNode20 = [
+var __iconNode21 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "m21 3-7 7", key: "1l2asr" }],
   ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
   ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
 ];
-var Maximize2 = createLucideIcon("maximize-2", __iconNode20);
+var Maximize2 = createLucideIcon("maximize-2", __iconNode21);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
-var __iconNode21 = [
+var __iconNode22 = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
   ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
 ];
-var Monitor = createLucideIcon("monitor", __iconNode21);
+var Monitor = createLucideIcon("monitor", __iconNode22);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/moon.mjs
-var __iconNode22 = [
+var __iconNode23 = [
   [
     "path",
     {
@@ -5260,18 +5371,28 @@ var __iconNode22 = [
     }
   ]
 ];
-var Moon = createLucideIcon("moon", __iconNode22);
+var Moon = createLucideIcon("moon", __iconNode23);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/move-vertical.mjs
-var __iconNode23 = [
+var __iconNode24 = [
   ["path", { d: "M12 2v20", key: "t6zp3m" }],
   ["path", { d: "m8 18 4 4 4-4", key: "bh5tu3" }],
   ["path", { d: "m8 6 4-4 4 4", key: "ybng9g" }]
 ];
-var MoveVertical = createLucideIcon("move-vertical", __iconNode23);
+var MoveVertical = createLucideIcon("move-vertical", __iconNode24);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/network.mjs
+var __iconNode25 = [
+  ["rect", { x: "16", y: "16", width: "6", height: "6", rx: "1", key: "4q2zg0" }],
+  ["rect", { x: "2", y: "16", width: "6", height: "6", rx: "1", key: "8cvhb9" }],
+  ["rect", { x: "9", y: "2", width: "6", height: "6", rx: "1", key: "1egb70" }],
+  ["path", { d: "M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3", key: "1jsf9p" }],
+  ["path", { d: "M12 12V8", key: "2874zd" }]
+];
+var Network = createLucideIcon("network", __iconNode25);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/pencil.mjs
-var __iconNode24 = [
+var __iconNode26 = [
   [
     "path",
     {
@@ -5281,32 +5402,32 @@ var __iconNode24 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-var Pencil = createLucideIcon("pencil", __iconNode24);
+var Pencil = createLucideIcon("pencil", __iconNode26);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/plus.mjs
-var __iconNode25 = [
+var __iconNode27 = [
   ["path", { d: "M5 12h14", key: "1ays0h" }],
   ["path", { d: "M12 5v14", key: "s699le" }]
 ];
-var Plus = createLucideIcon("plus", __iconNode25);
+var Plus = createLucideIcon("plus", __iconNode27);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
-var __iconNode26 = [
+var __iconNode28 = [
   ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
 ];
-var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode26);
+var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode28);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
-var __iconNode27 = [
+var __iconNode29 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode27);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode29);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
-var __iconNode28 = [
+var __iconNode30 = [
   [
     "path",
     {
@@ -5319,26 +5440,26 @@ var __iconNode28 = [
   ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
   ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
 ];
-var Ruler = createLucideIcon("ruler", __iconNode28);
+var Ruler = createLucideIcon("ruler", __iconNode30);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
-var __iconNode29 = [
+var __iconNode31 = [
   ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
   ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
   ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
   ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
 ];
-var Scan = createLucideIcon("scan", __iconNode29);
+var Scan = createLucideIcon("scan", __iconNode31);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/search.mjs
-var __iconNode30 = [
+var __iconNode32 = [
   ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-var Search = createLucideIcon("search", __iconNode30);
+var Search = createLucideIcon("search", __iconNode32);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
-var __iconNode31 = [
+var __iconNode33 = [
   [
     "path",
     {
@@ -5348,27 +5469,17 @@ var __iconNode31 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Settings = createLucideIcon("settings", __iconNode31);
+var Settings = createLucideIcon("settings", __iconNode33);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
-var __iconNode32 = [
+var __iconNode34 = [
   ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
   ["path", { d: "M12 18h.01", key: "mhygvu" }]
 ];
-var Smartphone = createLucideIcon("smartphone", __iconNode32);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-check-big.mjs
-var __iconNode33 = [
-  [
-    "path",
-    { d: "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344", key: "2acyp4" }
-  ],
-  ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
-];
-var SquareCheckBig = createLucideIcon("square-check-big", __iconNode33);
+var Smartphone = createLucideIcon("smartphone", __iconNode34);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-dashed.mjs
-var __iconNode34 = [
+var __iconNode35 = [
   ["path", { d: "M5 3a2 2 0 0 0-2 2", key: "y57alp" }],
   ["path", { d: "M19 3a2 2 0 0 1 2 2", key: "18rm91" }],
   ["path", { d: "M21 19a2 2 0 0 1-2 2", key: "1j7049" }],
@@ -5382,10 +5493,10 @@ var __iconNode34 = [
   ["path", { d: "M3 14v1", key: "vnatye" }],
   ["path", { d: "M21 14v1", key: "169vum" }]
 ];
-var SquareDashed = createLucideIcon("square-dashed", __iconNode34);
+var SquareDashed = createLucideIcon("square-dashed", __iconNode35);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode35 = [
+var __iconNode36 = [
   [
     "path",
     {
@@ -5395,20 +5506,7 @@ var __iconNode35 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode35);
-
-// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sticky-note.mjs
-var __iconNode36 = [
-  [
-    "path",
-    {
-      d: "M21 9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z",
-      key: "1dfntj"
-    }
-  ],
-  ["path", { d: "M15 3v5a1 1 0 0 0 1 1h5", key: "6s6qgf" }]
-];
-var StickyNote = createLucideIcon("sticky-note", __iconNode36);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode36);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sun.mjs
 var __iconNode37 = [
@@ -5804,72 +5902,121 @@ var getIsFigmaOverlayAvailable = (preset) => {
   return kind === "mobile" || kind === "wide";
 };
 
-// src/react-shell/prompt/modal.tsx
+// src/react-shell/review/modal.tsx
 var import_jsx_runtime2 = require("react/jsx-runtime");
-var ABOUT_SECTIONS = [
-  {
-    title: "What this is",
-    body: "df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool."
-  },
-  {
-    title: "How to setup",
-    body: "Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration."
-  },
-  {
-    title: "Figma token",
-    body: "Project owners can set FIGMA_TOKEN on the server. Reviewers who cannot change env can add a browser-local Figma token in Settings; it is stored as figma-token and used only as an image-store fallback."
-  },
-  {
-    title: "User ID",
-    body: "Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route."
-  },
-  {
-    title: "Remote",
-    body: "Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or \uB2F4\uB2F9 \uAC1C\uBC1C\uC790 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser."
-  }
-];
-var PromptModal = ({ onClose }) => {
+var ReviewModal = ({
+  ariaLabel,
+  bodyClassName,
+  children,
+  className,
+  description,
+  dialogClassName,
+  title,
+  titleId,
+  onClose
+}) => {
   return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
     "div",
     {
-      "aria-label": "Review help",
+      "aria-label": ariaLabel,
       "aria-modal": "true",
-      className: "df-review-prompt-modal",
+      className: className ?? "df-review-prompt-modal",
       role: "dialog",
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
           "button",
           {
-            "aria-label": "Close help",
+            "aria-label": `Close ${ariaLabel}`,
             className: "df-review-prompt-backdrop",
             type: "button",
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-prompt-dialog df-review-about-dialog", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-            "button",
-            {
-              "aria-label": "Close help",
-              className: "df-review-about-close",
-              type: "button",
-              onClick: onClose,
-              children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(X, { "aria-hidden": "true" })
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-about-body", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-about-intro", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "df-review-about-logo", "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(DfLogoIcon, {}) }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Review shell help" }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "Program overview and setup notes" })
-            ] }),
-            ABOUT_SECTIONS.map((section) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-about-item", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: section.title }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: section.body })
-            ] }, section.title))
-          ] })
-        ] })
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+          "div",
+          {
+            className: `df-review-prompt-dialog${dialogClassName ? ` ${dialogClassName}` : ""}`,
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "df-review-prompt-header", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { id: titleId, children: title }),
+                  description ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: description }) : null
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+                  "button",
+                  {
+                    "aria-label": `Close ${ariaLabel}`,
+                    className: "df-review-modal-close",
+                    type: "button",
+                    onClick: onClose,
+                    children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(X, { "aria-hidden": "true" })
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: bodyClassName ?? "df-review-prompt-body", children })
+            ]
+          }
+        )
       ]
+    }
+  );
+};
+
+// src/react-shell/prompt/modal.tsx
+var import_jsx_runtime3 = require("react/jsx-runtime");
+var REVIEW_KIT_VERSION = "0.7.3";
+var SHORTCUT_SECTIONS = [
+  {
+    title: "Panels",
+    items: [
+      { keys: ["Shift", "1"], label: "Figma images" },
+      { keys: ["Shift", "2"], label: "QA list" },
+      { keys: ["Shift", "3"], label: "Component list" }
+    ]
+  },
+  {
+    title: "Review modes",
+    items: [
+      { keys: ["Shift", "Q / \u3142"], label: "Toggle QA runtime" },
+      { keys: ["E / \u3137"], label: "Element QA" },
+      { keys: ["A / \u3141"], label: "Area QA" }
+    ]
+  },
+  {
+    title: "Overlays",
+    items: [
+      { keys: ["G / \u314E"], label: "Grid overlay" },
+      { keys: ["F / \u3139"], label: "Figma overlay" },
+      { keys: ["R / \u3131"], label: "Ruler" }
+    ]
+  },
+  {
+    title: "Source and cleanup",
+    items: [
+      { keys: ["Option"], label: "Trace source candidates" },
+      { keys: ["Option", "Click"], label: "Pin source candidates" },
+      { keys: ["Command"], label: "Hide QA markers while pressed" },
+      { keys: ["Esc"], label: "Cancel mode or close popup" }
+    ]
+  }
+];
+var PromptModal = ({ onClose }) => {
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+    ReviewModal,
+    {
+      ariaLabel: "Review help",
+      bodyClassName: "df-review-about-body",
+      description: `v${REVIEW_KIT_VERSION}`,
+      dialogClassName: "df-review-about-dialog",
+      title: "df-web-review-kit",
+      onClose,
+      children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "df-review-shortcut-groups", children: SHORTCUT_SECTIONS.map((section) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("section", { className: "df-review-shortcut-group", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { children: section.title }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "df-review-shortcut-list", children: section.items.map((item) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-shortcut-row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "df-review-shortcut-keys", children: item.keys.map((key) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("kbd", { children: key }, key)) }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: item.label })
+        ] }, item.label)) })
+      ] }, section.title)) })
     }
   );
 };
@@ -5980,83 +6127,56 @@ var getPromptLengthLabel = (value) => {
 };
 
 // src/react-shell/prompt/initial.modal.tsx
-var import_jsx_runtime3 = require("react/jsx-runtime");
+var import_jsx_runtime4 = require("react/jsx-runtime");
 var InitialPromptModal = ({
   initialPromptText,
   copiedPromptKey,
   onClose,
   onCopyPrompt
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
-    "div",
+  return /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+    ReviewModal,
     {
-      "aria-label": "Initial prompt",
-      "aria-modal": "true",
-      className: "df-review-prompt-modal",
-      role: "dialog",
-      children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-          "button",
-          {
-            "aria-label": "Close initial prompt",
-            className: "df-review-prompt-backdrop",
-            type: "button",
-            onClick: onClose
-          }
-        ),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-prompt-dialog df-review-prompt-dialog-narrow", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-prompt-header", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { children: "Initial Prompt" }),
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: "AI handoff script for coding agents" })
+      ariaLabel: "Initial prompt",
+      description: "AI handoff script for coding agents",
+      dialogClassName: "df-review-prompt-dialog-narrow",
+      title: "Initial Prompt",
+      onClose,
+      children: /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+        "section",
+        {
+          className: "df-review-prompt-block",
+          "aria-labelledby": "df-review-initial-prompt-title",
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-prompt-block-header", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("strong", { id: "df-review-initial-prompt-title", children: "QA handoff prompt" }),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: getPromptLengthLabel(initialPromptText) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+                "button",
+                {
+                  disabled: !initialPromptText,
+                  type: "button",
+                  onClick: () => onCopyPrompt(initialPromptText, "initial"),
+                  children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Copy, { "aria-hidden": "true" }),
+                    copiedPromptKey === "initial" ? "Copied" : "Copy"
+                  ]
+                }
+              )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-              "button",
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              "textarea",
               {
-                "aria-label": "Close initial prompt",
-                type: "button",
-                onClick: onClose,
-                children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(X, { "aria-hidden": "true" })
+                readOnly: true,
+                "aria-label": "Initial Prompt content",
+                value: initialPromptText || "Initial prompt is not configured."
               }
             )
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "df-review-prompt-body", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
-            "section",
-            {
-              className: "df-review-prompt-block",
-              "aria-labelledby": "df-review-initial-prompt-title",
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "df-review-prompt-block-header", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("strong", { id: "df-review-initial-prompt-title", children: "QA handoff prompt" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: getPromptLengthLabel(initialPromptText) })
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
-                    "button",
-                    {
-                      disabled: !initialPromptText,
-                      type: "button",
-                      onClick: () => onCopyPrompt(initialPromptText, "initial"),
-                      children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Copy, { "aria-hidden": "true" }),
-                        copiedPromptKey === "initial" ? "Copied" : "Copy"
-                      ]
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-                  "textarea",
-                  {
-                    readOnly: true,
-                    "aria-label": "Initial Prompt content",
-                    value: initialPromptText || "Initial prompt is not configured."
-                  }
-                )
-              ]
-            }
-          ) })
-        ] })
-      ]
+          ]
+        }
+      )
     }
   );
 };
@@ -6288,7 +6408,7 @@ var getSystemReviewTheme = () => {
 };
 
 // src/react-shell/review/settings.modal.tsx
-var import_jsx_runtime4 = require("react/jsx-runtime");
+var import_jsx_runtime5 = require("react/jsx-runtime");
 var getReviewThemeIcon = (theme) => {
   if (theme === "light") return Sun;
   if (theme === "system") return Monitor;
@@ -6310,7 +6430,7 @@ var ReviewSettingsModal = ({
   onToggleFigmaTokenGuide,
   onSave
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
     "div",
     {
       "aria-label": "Review settings",
@@ -6318,7 +6438,7 @@ var ReviewSettingsModal = ({
       className: "df-review-settings-modal",
       role: "dialog",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
           "button",
           {
             "aria-label": "Close settings",
@@ -6327,7 +6447,7 @@ var ReviewSettingsModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
           "form",
           {
             className: "df-review-settings-dialog",
@@ -6336,10 +6456,10 @@ var ReviewSettingsModal = ({
               onSave(figmaTokenDraft, reviewUserIdDraft, reviewThemeDraft);
             },
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-header", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-title", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("strong", { children: "Settings" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-settings-header", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-settings-title", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: "Settings" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { children: [
                     FIGMA_TOKEN_STORAGE_KEY,
                     " / ",
                     REVIEW_USER_ID_STORAGE_KEY,
@@ -6348,14 +6468,14 @@ var ReviewSettingsModal = ({
                     REVIEW_THEME_STORAGE_KEY
                   ] })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" }) })
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" }) })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-body", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-row", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "Theme" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "df-review-settings-theme-options", children: REVIEW_THEME_OPTIONS.map((option) => {
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-settings-body", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-settings-row", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: "Theme" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-settings-theme-options", children: REVIEW_THEME_OPTIONS.map((option) => {
                     const ThemeIcon = getReviewThemeIcon(option.value);
-                    return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+                    return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
                       "button",
                       {
                         "aria-pressed": reviewThemeDraft === option.value,
@@ -6368,18 +6488,18 @@ var ReviewSettingsModal = ({
                           onClearStatus();
                         },
                         children: [
-                          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(ThemeIcon, { "aria-hidden": "true" }),
-                          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: option.label })
+                          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(ThemeIcon, { "aria-hidden": "true" }),
+                          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: option.label })
                         ]
                       },
                       option.value
                     );
                   }) })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-label-row", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-settings-label-row", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("label", { htmlFor: "df-review-figma-token", children: "Figma token" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                       "button",
                       {
                         "aria-controls": FIGMA_TOKEN_GUIDE_ID,
@@ -6388,12 +6508,12 @@ var ReviewSettingsModal = ({
                         className: `df-review-settings-help-button${isFigmaTokenGuideOpen ? " is-active" : ""}`,
                         type: "button",
                         onClick: onToggleFigmaTokenGuide,
-                        children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(CircleQuestionMark, { "aria-hidden": "true" })
+                        children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(CircleQuestionMark, { "aria-hidden": "true" })
                       }
                     )
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-token-input", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-settings-token-input", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                       "input",
                       {
                         id: "df-review-figma-token",
@@ -6416,34 +6536,34 @@ var ReviewSettingsModal = ({
                         }
                       }
                     ),
-                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                       "button",
                       {
                         "aria-label": isFigmaTokenVisible ? "Hide Figma token" : "Show Figma token",
                         className: "df-review-settings-token-toggle",
                         type: "button",
                         onClick: onToggleFigmaTokenVisible,
-                        children: isFigmaTokenVisible ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(EyeOff, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Eye, { "aria-hidden": "true" })
+                        children: isFigmaTokenVisible ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(EyeOff, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(Eye, { "aria-hidden": "true" })
                       }
                     )
                   ] }),
-                  isFigmaTokenGuideOpen && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                  isFigmaTokenGuideOpen && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                     "div",
                     {
                       className: "df-review-settings-guide",
                       id: FIGMA_TOKEN_GUIDE_ID,
-                      children: /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("ol", { children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("li", { children: "Figma file browser\uC5D0\uC11C account menu\uB97C \uC5F4\uACE0 Settings\uB85C \uC774\uB3D9" }),
-                        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("li", { children: "Security \uD0ED\uC758 Personal access tokens\uB85C \uC774\uB3D9" }),
-                        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("li", { children: "Generate new token\uC5D0\uC11C \uC774\uB984\uACFC scope\uB97C \uC815\uD55C \uB4A4 \uC0DD\uC131" }),
-                        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("li", { children: "\uC0DD\uC131\uB41C token\uC744 \uBCF5\uC0AC\uD574\uC11C \uC5EC\uAE30\uC5D0 \uBD99\uC5EC\uB123\uAE30" })
+                      children: /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("ol", { children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("li", { children: "Figma file browser\uC5D0\uC11C account menu\uB97C \uC5F4\uACE0 Settings\uB85C \uC774\uB3D9" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("li", { children: "Security \uD0ED\uC758 Personal access tokens\uB85C \uC774\uB3D9" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("li", { children: "Generate new token\uC5D0\uC11C \uC774\uB984\uACFC scope\uB97C \uC815\uD55C \uB4A4 \uC0DD\uC131" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("li", { children: "\uC0DD\uC131\uB41C token\uC744 \uBCF5\uC0AC\uD574\uC11C \uC5EC\uAE30\uC5D0 \uBD99\uC5EC\uB123\uAE30" })
                       ] })
                     }
                   )
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "User ID" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: "User ID" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                     "input",
                     {
                       "aria-label": "Review user ID",
@@ -6458,9 +6578,9 @@ var ReviewSettingsModal = ({
                     }
                   ) })
                 ] }),
-                figmaSettingsStatus && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "df-review-settings-status", children: figmaSettingsStatus }),
-                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "df-review-settings-actions", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                figmaSettingsStatus && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("p", { className: "df-review-settings-status", children: figmaSettingsStatus }),
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-settings-actions", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                     "button",
                     {
                       type: "button",
@@ -6468,9 +6588,9 @@ var ReviewSettingsModal = ({
                       children: "Clear"
                     }
                   ),
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", {}),
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("button", { type: "button", onClick: onClose, children: "Cancel" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("button", { type: "submit", children: "Save" })
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", {}),
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("button", { type: "button", onClick: onClose, children: "Cancel" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("button", { type: "submit", children: "Save" })
                 ] })
               ] })
             ]
@@ -6733,7 +6853,7 @@ function sitemapNodeMatchesSearch(node, searchQuery, getPageTarget) {
 }
 
 // src/react-shell/sitemap/modal.tsx
-var import_jsx_runtime5 = require("react/jsx-runtime");
+var import_jsx_runtime6 = require("react/jsx-runtime");
 var getNextSortDirection = (current, key) => {
   if (current.key !== key) return key === "page" ? "asc" : "desc";
   return current.direction === "desc" ? "asc" : "desc";
@@ -6824,7 +6944,7 @@ var SitemapModal = ({
       return nextHrefs;
     });
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
     "div",
     {
       "aria-label": "Sitemap",
@@ -6832,7 +6952,7 @@ var SitemapModal = ({
       className: "df-review-sitemap-modal",
       role: "dialog",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
           "button",
           {
             "aria-label": "Close sitemap",
@@ -6841,11 +6961,11 @@ var SitemapModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-sitemap-dialog", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-sitemap-header", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: "Sitemap" }),
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-sitemap-dialog", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-sitemap-header", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { children: "Sitemap" }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { children: [
                 pages.length,
                 " pages \xB7 ",
                 allQaCount.status.todo,
@@ -6857,12 +6977,12 @@ var SitemapModal = ({
                 " hold"
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("button", { "aria-label": "Close sitemap", type: "button", onClick: onClose, children: "x" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-sitemap-controls", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("label", { className: "df-review-sitemap-search", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(Search, { "aria-hidden": "true" }),
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-sitemap-controls", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("label", { className: "df-review-sitemap-search", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Search, { "aria-hidden": "true" }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 "input",
                 {
                   "aria-label": "Search sitemap",
@@ -6874,20 +6994,20 @@ var SitemapModal = ({
                 }
               )
             ] }),
-            trimmedSearchQuery && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+            trimmedSearchQuery && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
               "button",
               {
                 "aria-label": "Clear sitemap search",
                 className: "df-review-sitemap-search-clear",
                 type: "button",
                 onClick: () => setSearchQuery(""),
-                children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(X, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(X, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-search-count", children: trimmedSearchQuery ? `${matchingPageCount} matches` : `${pages.length} pages` })
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "df-review-sitemap-search-count", children: trimmedSearchQuery ? `${matchingPageCount} matches` : `${pages.length} pages` })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "df-review-sitemap-list", style: gridStyle, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "df-review-sitemap-list", style: gridStyle, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "df-review-sitemap-table-head", role: "row", children: sortHeaders.map((header) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
               "button",
               {
                 "aria-label": `Sort sitemap by ${header.title ?? header.label}`,
@@ -6900,7 +7020,7 @@ var SitemapModal = ({
                 type: "button",
                 onClick: () => setSortKey(header.key),
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                     "span",
                     {
                       "aria-hidden": "true",
@@ -6908,7 +7028,7 @@ var SitemapModal = ({
                       children: getSortIndicator(sort, header.key)
                     }
                   ),
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-sort-label", children: header.label })
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "df-review-sitemap-sort-label", children: header.label })
                 ]
               },
               header.key
@@ -6923,7 +7043,7 @@ var SitemapModal = ({
                 row.isActive ? "is-active" : "",
                 row.isPage ? "is-clickable" : ""
               ].filter(Boolean).join(" ");
-              const rowContent = /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+              const rowContent = /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 SitemapRowContent,
                 {
                   depth: row.depth,
@@ -6936,7 +7056,7 @@ var SitemapModal = ({
                   onToggleFolder: () => toggleFolder(row.href)
                 }
               );
-              return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+              return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 "div",
                 {
                   "aria-label": row.isPage ? `${row.href} / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online` : `${row.href} group / ${row.qaCount.status.todo} todo / ${row.qaCount.status.review} review / ${row.qaCount.status.hold} hold / ${row.users.length} online`,
@@ -6955,15 +7075,15 @@ var SitemapModal = ({
                 row.href
               );
             }),
-            sitemapRows.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "df-review-sitemap-empty", role: "status", children: "No matching pages" }),
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+            sitemapRows.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "df-review-sitemap-empty", role: "status", children: "No matching pages" }),
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
               "button",
               {
                 "aria-label": `All QA / ${allQaCount.status.todo} todo / ${allQaCount.status.review} review / ${allQaCount.status.hold} hold`,
                 className: `df-review-sitemap-row is-summary${isAllQaVisible ? " is-active" : ""}`,
                 type: "button",
                 onClick: onSelectAllQa,
-                children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                   SitemapRowContent,
                   {
                     depth: 0,
@@ -6992,14 +7112,14 @@ var SitemapRowContent = ({
   qaCount,
   users,
   onToggleFolder
-}) => /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(import_jsx_runtime6.Fragment, { children: [
+  /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
     "span",
     {
       className: "df-review-sitemap-path",
       style: { "--df-review-sitemap-depth": depth },
       children: [
-        hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+        hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
           "button",
           {
             "aria-expanded": isExpanded,
@@ -7010,17 +7130,17 @@ var SitemapRowContent = ({
               event.stopPropagation();
               onToggleFolder?.();
             },
-            children: isExpanded ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(ChevronDown, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(ChevronRight, { "aria-hidden": "true" })
+            children: isExpanded ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ChevronDown, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ChevronRight, { "aria-hidden": "true" })
           }
-        ) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-tree-spacer", "aria-hidden": "true" }),
-        isPage ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-page-label", children: label }) : /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-label", children: label })
+        ) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "df-review-sitemap-tree-spacer", "aria-hidden": "true" }),
+        isPage ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "df-review-sitemap-page-label", children: label }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "df-review-sitemap-label", children: label })
       ]
     }
   ),
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: getCountCellClassName("todo", qaCount.status.todo), children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { children: qaCount.status.todo }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: getCountCellClassName("review", qaCount.status.review), children: qaCount.status.review }),
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: getCountCellClassName("hold", qaCount.status.hold), children: qaCount.status.hold }),
-  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: getCountCellClassName("todo", qaCount.status.todo), children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { children: qaCount.status.todo }) }),
+  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: getCountCellClassName("review", qaCount.status.review), children: qaCount.status.review }),
+  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: getCountCellClassName("hold", qaCount.status.hold), children: qaCount.status.hold }),
+  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "df-review-sitemap-cell is-online", children: users.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "df-review-sitemap-users", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
     "span",
     {
       className: "df-review-sitemap-user",
@@ -7058,20 +7178,20 @@ function normalizeFigmaNodeValue(value) {
 }
 
 // src/react-shell/figma/figma-mark-icon.tsx
-var import_jsx_runtime6 = require("react/jsx-runtime");
+var import_jsx_runtime7 = require("react/jsx-runtime");
 function FigmaMarkIcon() {
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
     "svg",
     {
       "aria-hidden": "true",
       className: "df-review-figma-mark-icon",
       viewBox: "0 0 24 24",
-      children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
+      children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
     }
   );
 }
 function FigmaRailIcon() {
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
     "svg",
     {
       "aria-hidden": "true",
@@ -7082,11 +7202,11 @@ function FigmaRailIcon() {
       strokeLinejoin: "round",
       viewBox: "0 0 24 24",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { d: "M12 8H8.5a3 3 0 1 1 0-6H12v6Z" }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { d: "M12 14H8.5a3 3 0 1 1 0-6H12v6Z" }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { d: "M12 17.5A3.5 3.5 0 1 1 8.5 14H12v3.5Z" }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { d: "M12 2h3.5a3 3 0 1 1 0 6H12V2Z" }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("circle", { cx: "15.5", cy: "11", r: "3" })
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("path", { d: "M12 8H8.5a3 3 0 1 1 0-6H12v6Z" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("path", { d: "M12 14H8.5a3 3 0 1 1 0-6H12v6Z" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("path", { d: "M12 17.5A3.5 3.5 0 1 1 8.5 14H12v3.5Z" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("path", { d: "M12 2h3.5a3 3 0 1 1 0 6H12V2Z" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("circle", { cx: "15.5", cy: "11", r: "3" })
       ]
     }
   );
@@ -7907,7 +8027,7 @@ function formatFigmaImageDate(value) {
 }
 
 // src/react-shell/figma/layer-state-buttons.tsx
-var import_jsx_runtime7 = require("react/jsx-runtime");
+var import_jsx_runtime8 = require("react/jsx-runtime");
 var FigmaImageLayerStateButtons = ({
   imageLabel,
   overlayState,
@@ -7921,56 +8041,59 @@ var FigmaImageLayerStateButtons = ({
     onSelect?.();
     action();
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
     "div",
     {
       "aria-label": `${imageLabel} overlay state`,
       className: "df-review-figma-image-layer-state",
       title,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
           "button",
           {
             "aria-label": overlayState.isVisible ? `Hide ${imageLabel} overlay` : `Show ${imageLabel} overlay`,
             "aria-pressed": overlayState.isVisible,
             className: `df-review-figma-image-state-button${overlayState.isVisible ? " is-active" : ""}`,
+            "data-review-tooltip": overlayState.isVisible ? "Hide overlay" : "Show overlay",
             title: overlayState.isVisible ? "Hide overlay" : "Show overlay",
             type: "button",
             onClick: (event) => {
               event.stopPropagation();
               handleAction(onToggleVisible);
             },
-            children: overlayState.isVisible ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(EyeOff, { "aria-hidden": "true" })
+            children: overlayState.isVisible ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(EyeOff, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
           "button",
           {
             "aria-label": overlayState.isLocked ? `Unlock ${imageLabel} overlay` : `Lock ${imageLabel} overlay`,
             "aria-pressed": overlayState.isLocked,
             className: `df-review-figma-image-state-button${overlayState.isLocked ? " is-active" : ""}`,
+            "data-review-tooltip": overlayState.isLocked ? "Unlock" : "Lock",
             title: overlayState.isLocked ? "Unlock" : "Lock",
             type: "button",
             onClick: (event) => {
               event.stopPropagation();
               handleAction(onToggleLocked);
             },
-            children: overlayState.isLocked ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Lock, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(LockOpen, { "aria-hidden": "true" })
+            children: overlayState.isLocked ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Lock, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(LockOpen, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
           "button",
           {
             "aria-label": overlayState.mode === "invert" ? `Disable ${imageLabel} invert` : `Enable ${imageLabel} invert`,
             "aria-pressed": overlayState.mode === "invert",
             className: `df-review-figma-image-state-button${overlayState.mode === "invert" ? " is-active" : ""}`,
+            "data-review-tooltip": "Invert",
             title: "Invert",
             type: "button",
             onClick: (event) => {
               event.stopPropagation();
               handleAction(onToggleMode);
             },
-            children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Contrast, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Contrast, { "aria-hidden": "true" })
           }
         )
       ]
@@ -7979,8 +8102,8 @@ var FigmaImageLayerStateButtons = ({
 };
 
 // src/react-shell/review/spinner.tsx
-var import_jsx_runtime8 = require("react/jsx-runtime");
-var ReviewSpinner = ({ className, label }) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+var import_jsx_runtime9 = require("react/jsx-runtime");
+var ReviewSpinner = ({ className, label }) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
   "span",
   {
     "aria-hidden": label ? void 0 : true,
@@ -7991,7 +8114,7 @@ var ReviewSpinner = ({ className, label }) => /* @__PURE__ */ (0, import_jsx_run
 );
 
 // src/react-shell/figma/images.panel.tsx
-var import_jsx_runtime9 = require("react/jsx-runtime");
+var import_jsx_runtime10 = require("react/jsx-runtime");
 var FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS = 6;
 var FigmaImagesPanel = ({
   error,
@@ -8089,7 +8212,7 @@ var FigmaImagesPanel = ({
   const updateSelectedImageOpacityFromMouse = (event) => {
     updateSelectedImageOpacityFromClientX(event.clientX, event.currentTarget);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
     "aside",
     {
       className: "df-review-figma-images-panel",
@@ -8103,7 +8226,7 @@ var FigmaImagesPanel = ({
         finishEditingImageLabel(editingImage.id, editingImage.label ?? "");
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
           "form",
           {
             className: "df-review-figma-image-form",
@@ -8115,23 +8238,24 @@ var FigmaImagesPanel = ({
               });
             },
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-figma-images-header", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "df-review-figma-images-title", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("strong", { children: "Figma" }) }),
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-figma-images-header", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "df-review-figma-images-title", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { children: "Figma" }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                   "button",
                   {
                     "aria-label": "Refresh Figma images",
                     className: "df-review-figma-image-header-button",
+                    "data-review-tooltip": "Refresh Figma images",
                     disabled: isLoading || isMutating,
                     title: "Refresh",
                     type: "button",
                     onClick: () => void onRefreshImages(),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(RefreshCw, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(RefreshCw, { "aria-hidden": "true" })
                   }
                 )
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-figma-image-url-row", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-figma-image-url-row", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                   "input",
                   {
                     "aria-label": "Figma URL",
@@ -8143,28 +8267,29 @@ var FigmaImagesPanel = ({
                     onChange: (event) => setFigmaUrlDraft(event.currentTarget.value)
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                   "button",
                   {
                     "aria-label": "Add Figma image",
+                    "data-review-tooltip": "Add Figma image",
                     disabled: isMutating || figmaUrlDraft.trim().length === 0,
                     type: "submit",
-                    children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Plus, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(Plus, { "aria-hidden": "true" })
                   }
                 )
               ] })
             ]
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
           "div",
           {
             "aria-label": "Selected Figma image layer controls",
             className: "df-review-figma-image-selected-controls",
-            children: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-figma-image-selected-numbers", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("label", { className: "df-review-figma-image-opacity-control", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "Opacity" }),
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+            children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-figma-image-selected-numbers", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("label", { className: "df-review-figma-image-opacity-control", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "Opacity" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                   "div",
                   {
                     className: "df-review-figma-image-opacity-slider",
@@ -8201,7 +8326,7 @@ var FigmaImagesPanel = ({
                     },
                     onMouseUp: updateSelectedImageOpacityFromMouse,
                     onClick: updateSelectedImageOpacityFromMouse,
-                    children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                    children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                       "input",
                       {
                         "aria-label": `${selectedImageLabel} overlay opacity`,
@@ -8220,11 +8345,11 @@ var FigmaImagesPanel = ({
                     )
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("strong", { children: selectedOpacityPercent })
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { children: selectedOpacityPercent })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("label", { className: "df-review-figma-image-number-control", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(MoveVertical, { "aria-hidden": "true" }),
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("label", { className: "df-review-figma-image-number-control", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(MoveVertical, { "aria-hidden": "true" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                   "input",
                   {
                     "aria-label": `${selectedImageLabel} overlay Y offset`,
@@ -8256,51 +8381,53 @@ var FigmaImagesPanel = ({
                   }
                 )
               ] }),
-              selectedImage ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              selectedImage ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                 "button",
                 {
                   "aria-label": `Preview ${selectedImageLabel} Figma image`,
                   className: "df-review-figma-image-selected-link",
+                  "data-review-tooltip": "Preview Figma image",
                   title: "Preview Figma image",
                   type: "button",
                   onClick: () => setPreviewImageId(selectedImage.id),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(ExternalLink, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(ExternalLink, { "aria-hidden": "true" })
                 }
-              ) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              ) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                 "button",
                 {
                   "aria-label": "Open Figma node",
                   className: "df-review-figma-image-selected-link",
+                  "data-review-tooltip": "Open Figma node",
                   disabled: true,
                   title: "Open Figma node",
                   type: "button",
-                  children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(ExternalLink, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(ExternalLink, { "aria-hidden": "true" })
                 }
               )
             ] })
           }
         ),
-        statusText && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+        statusText && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
           "p",
           {
             className: `df-review-figma-image-status${error ? " is-error" : ""}`,
             children: statusText
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-figma-image-list", children: [
-          progressText && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-figma-image-list", children: [
+          progressText && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
             "div",
             {
               "aria-live": "polite",
               className: "df-review-figma-image-card is-status",
               role: "status",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(ReviewSpinner, { className: "df-review-figma-image-spinner" }),
-                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "df-review-figma-image-card-main", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("strong", { children: progressText }) })
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(ReviewSpinner, { className: "df-review-figma-image-spinner" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "df-review-figma-image-card-main", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { children: progressText }) })
               ]
             }
           ),
-          images.length === 0 && !isLoading && !isMutating && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "df-review-empty", children: "No Figma images on this viewport." }),
+          images.length === 0 && !isLoading && !isMutating && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "df-review-empty", children: "No Figma images on this viewport." }),
           images.map((image, index) => {
             const imageLabel = getFigmaImageLabel(image, index);
             const overlayState = imageOverlayStates[image.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE;
@@ -8308,7 +8435,7 @@ var FigmaImagesPanel = ({
             const isDropTarget = dragOverImageId === image.id && draggingImageId !== image.id;
             const isDropBefore = isDropTarget && draggingImageIndex > index;
             const isDropAfter = isDropTarget && draggingImageIndex >= 0 && draggingImageIndex < index;
-            return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+            return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
               "article",
               {
                 "data-figma-image-id": image.id,
@@ -8374,7 +8501,7 @@ var FigmaImagesPanel = ({
                   void onReorderImages(nextImageIds);
                 },
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                     FigmaImageLayerStateButtons,
                     {
                       imageLabel,
@@ -8386,8 +8513,8 @@ var FigmaImagesPanel = ({
                       onToggleVisible: () => onToggleImageOverlayVisible(image.id)
                     }
                   ),
-                  /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-figma-image-card-main", children: [
-                    editingImageId === image.id ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-figma-image-card-main", children: [
+                    editingImageId === image.id ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                       "input",
                       {
                         "aria-label": "Selected Figma image label",
@@ -8431,15 +8558,16 @@ var FigmaImagesPanel = ({
                           }
                         }
                       }
-                    ) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("strong", { children: imageLabel }),
-                    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("small", { children: formatFigmaImageDate(image.updatedAt) })
+                    ) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { children: imageLabel }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("small", { children: formatFigmaImageDate(image.updatedAt) })
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-figma-image-card-actions", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-figma-image-card-actions", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                       "button",
                       {
                         "aria-label": `Edit ${imageLabel} label`,
                         className: "df-review-figma-image-icon-button",
+                        "data-review-tooltip": "Edit label",
                         disabled: isMutating,
                         title: "Edit label",
                         type: "button",
@@ -8452,21 +8580,22 @@ var FigmaImagesPanel = ({
                           setEditingImageId(image.id);
                           setEditingLabelDraft(image.label ?? "");
                         },
-                        children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Pencil, { "aria-hidden": "true" })
+                        children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(Pencil, { "aria-hidden": "true" })
                       }
                     ),
-                    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                       "button",
                       {
                         "aria-label": "Delete Figma image",
                         className: "df-review-figma-image-icon-button is-danger",
+                        "data-review-tooltip": "Delete Figma image",
                         disabled: isMutating,
                         type: "button",
                         onClick: (event) => {
                           event.stopPropagation();
                           void onDeleteImage(image.id);
                         },
-                        children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Trash2, { "aria-hidden": "true" })
+                        children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(Trash2, { "aria-hidden": "true" })
                       }
                     )
                   ] })
@@ -8476,7 +8605,7 @@ var FigmaImagesPanel = ({
             );
           })
         ] }),
-        previewImage && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+        previewImage && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
           FigmaImagePreviewModal,
           {
             image: previewImage,
@@ -8493,7 +8622,7 @@ var FigmaImagePreviewModal = ({
   label,
   onClose
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
     "div",
     {
       "aria-label": `${label} Figma image preview`,
@@ -8501,7 +8630,7 @@ var FigmaImagePreviewModal = ({
       className: "df-review-prompt-modal",
       role: "dialog",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
           "button",
           {
             "aria-label": "Close Figma image preview",
@@ -8510,9 +8639,9 @@ var FigmaImagePreviewModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-prompt-dialog df-review-figma-image-preview-dialog", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "df-review-figma-image-preview-header", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-prompt-dialog df-review-figma-image-preview-dialog", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-figma-image-preview-header", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
               "input",
               {
                 "aria-label": "Figma URL",
@@ -8521,7 +8650,7 @@ var FigmaImagePreviewModal = ({
                 value: image.figmaUrl
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
               "a",
               {
                 "aria-label": `Open ${label} Figma node`,
@@ -8530,23 +8659,23 @@ var FigmaImagePreviewModal = ({
                 rel: "noreferrer",
                 target: "_blank",
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "Open Figma" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(ExternalLink, { "aria-hidden": "true" })
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "Open Figma" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(ExternalLink, { "aria-hidden": "true" })
                 ]
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
               "button",
               {
                 "aria-label": "Close Figma image preview",
                 className: "df-review-figma-image-preview-close",
                 type: "button",
                 onClick: onClose,
-                children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(X, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(X, { "aria-hidden": "true" })
               }
             )
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "df-review-figma-image-preview-scroll", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("img", { alt: label, src: image.imageUrl }) })
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "df-review-figma-image-preview-scroll", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("img", { alt: label, src: image.imageUrl }) })
         ] })
       ]
     }
@@ -8555,7 +8684,7 @@ var FigmaImagePreviewModal = ({
 
 // src/react-shell/qa/item.edit.modal.tsx
 var import_react8 = require("react");
-var import_jsx_runtime10 = require("react/jsx-runtime");
+var import_jsx_runtime11 = require("react/jsx-runtime");
 var QaItemEditModal = ({
   fields,
   item,
@@ -8593,7 +8722,7 @@ var QaItemEditModal = ({
       setIsSaving(false);
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
     "div",
     {
       "aria-modal": "true",
@@ -8601,7 +8730,7 @@ var QaItemEditModal = ({
       role: "dialog",
       "aria-labelledby": "df-review-edit-title",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
           "button",
           {
             "aria-label": "Close edit dialog",
@@ -8610,7 +8739,7 @@ var QaItemEditModal = ({
             onClick: onClose
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
           "form",
           {
             className: "df-review-edit-dialog",
@@ -8619,12 +8748,12 @@ var QaItemEditModal = ({
               void saveDetails();
             },
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("header", { className: "df-review-settings-header", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-settings-title", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { id: "df-review-edit-title", children: "Edit QA" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: fields.title ? "Update the title and comment." : "Update the comment." })
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("header", { className: "df-review-settings-header", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "df-review-settings-title", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("strong", { id: "df-review-edit-title", children: "Edit QA" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: fields.title ? "Update the title and comment." : "Update the comment." })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
                   "button",
                   {
                     "aria-label": "Close edit dialog",
@@ -8634,10 +8763,10 @@ var QaItemEditModal = ({
                   }
                 ) })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "df-review-settings-body df-review-edit-body", children: [
-                fields.title && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "Title" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "df-review-settings-body df-review-edit-body", children: [
+                fields.title && /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Title" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "df-review-settings-text-input", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
                     "input",
                     {
                       autoFocus: true,
@@ -8655,9 +8784,9 @@ var QaItemEditModal = ({
                     }
                   ) })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("label", { className: "df-review-settings-field", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "Comment" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "df-review-settings-text-input df-review-edit-textarea", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("label", { className: "df-review-settings-field", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Comment" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "df-review-settings-text-input df-review-edit-textarea", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
                     "textarea",
                     {
                       autoFocus: !fields.title,
@@ -8679,12 +8808,12 @@ var QaItemEditModal = ({
                     }
                   ) })
                 ] }),
-                error && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "df-review-edit-error", children: error }),
-                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("footer", { className: "df-review-settings-actions df-review-edit-actions", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", {}),
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("button", { disabled: isSaving, type: "button", onClick: onClose, children: "Cancel" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("button", { disabled: isSaving, type: "submit", children: [
-                    isSaving && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "df-review-spinner", "aria-hidden": "true" }),
+                error && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "df-review-edit-error", children: error }),
+                /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("footer", { className: "df-review-settings-actions df-review-edit-actions", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", {}),
+                  /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("button", { disabled: isSaving, type: "button", onClick: onClose, children: "Cancel" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("button", { disabled: isSaving, type: "submit", children: [
+                    isSaving && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "df-review-spinner", "aria-hidden": "true" }),
                     isSaving ? "Saving..." : "Save"
                   ] })
                 ] })
@@ -8698,7 +8827,7 @@ var QaItemEditModal = ({
 };
 
 // src/react-shell/qa/item.assignee.actions.tsx
-var import_jsx_runtime11 = require("react/jsx-runtime");
+var import_jsx_runtime12 = require("react/jsx-runtime");
 var getAssigneeLabel = (item, assigneeOptions) => item.assigneeName || assigneeOptions.find(
   (assigneeOption) => assigneeOption.value === item.assigneeId
 )?.label || item.assigneeId || "";
@@ -8716,12 +8845,12 @@ var QaItemAssigneeActions = ({
     (assigneeOption) => assigneeOption.value === assigneeId
   );
   if (!canUpdateAssignee && !currentLabel) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
     "div",
     {
       className: "df-review-item-assignee-actions",
       onClick: (event) => event.stopPropagation(),
-      children: canUpdateAssignee ? /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+      children: canUpdateAssignee ? /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
         "select",
         {
           "aria-label": `QA ${assigneeTitle}`,
@@ -8730,18 +8859,18 @@ var QaItemAssigneeActions = ({
           value: assigneeId,
           onChange: (event) => void onChangeItemAssignee(item, event.currentTarget.value || null),
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("option", { value: "", children: assigneeTitle }),
-            hasUnknownAssignee && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("option", { value: assigneeId, children: currentLabel }),
-            assigneeOptions.map((assigneeOption) => /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("option", { value: assigneeOption.value, children: assigneeOption.label }, assigneeOption.value))
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("option", { value: "", children: assigneeTitle }),
+            hasUnknownAssignee && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("option", { value: assigneeId, children: currentLabel }),
+            assigneeOptions.map((assigneeOption) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("option", { value: assigneeOption.value, children: assigneeOption.label }, assigneeOption.value))
           ]
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "df-review-item-assignee-badge", children: currentLabel })
+      ) : /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "df-review-item-assignee-badge", children: currentLabel })
     }
   );
 };
 
 // src/react-shell/qa/item.external.links.tsx
-var import_jsx_runtime12 = require("react/jsx-runtime");
+var import_jsx_runtime13 = require("react/jsx-runtime");
 var normalizeExternalLink = (link) => {
   const label = typeof link.label === "string" ? link.label.trim() : "";
   const url = typeof link.url === "string" ? link.url.trim() : "";
@@ -8776,7 +8905,7 @@ var getReviewItemExternalLinks = (item) => {
 var QaItemExternalLinks = ({ item }) => {
   const links = getReviewItemExternalLinks(item);
   if (links.length === 0) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
     "div",
     {
       "aria-label": "External QA links",
@@ -8784,7 +8913,7 @@ var QaItemExternalLinks = ({ item }) => {
       onClick: (event) => event.stopPropagation(),
       children: links.map((link, index) => {
         const title = link.title || `Open ${link.label}`;
-        return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+        return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
           "a",
           {
             "aria-label": title,
@@ -8796,8 +8925,8 @@ var QaItemExternalLinks = ({ item }) => {
             target: "_blank",
             title,
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(ExternalLink, { "aria-hidden": "true" }),
-              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: link.label })
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(ExternalLink, { "aria-hidden": "true" }),
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: link.label })
             ]
           },
           `${link.url}:${index}`
@@ -8808,7 +8937,7 @@ var QaItemExternalLinks = ({ item }) => {
 };
 
 // src/react-shell/qa/item.remote.actions.tsx
-var import_jsx_runtime13 = require("react/jsx-runtime");
+var import_jsx_runtime14 = require("react/jsx-runtime");
 var QaItemRemoteActions = ({
   isRemoteSource,
   isSubmitted,
@@ -8824,13 +8953,13 @@ var QaItemRemoteActions = ({
   const canCopyRemoteIssuePath = !isRemoteSource && Boolean(item.externalIssueUrl);
   const hasRemoteActions = canSubmitToRemote || canCopyRemoteIssuePath;
   if (!hasRemoteActions) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
     "div",
     {
       className: "df-review-item-remote-actions",
       onClick: (event) => event.stopPropagation(),
       children: [
-        canSubmitToRemote && remoteAdapterEntry && /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+        canSubmitToRemote && remoteAdapterEntry && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
           "button",
           {
             "aria-label": "Submit to remote",
@@ -8839,12 +8968,12 @@ var QaItemRemoteActions = ({
             type: "button",
             onClick: () => void onSubmitItem(numberedItem),
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(Upload, { "aria-hidden": "true" }),
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: isSubmitted ? "Submitted" : isSubmitting ? "Submitting" : "Submit" })
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(Upload, { "aria-hidden": "true" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: isSubmitted ? "Submitted" : isSubmitting ? "Submitting" : "Submit" })
             ]
           }
         ),
-        canCopyRemoteIssuePath && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+        canCopyRemoteIssuePath && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
           "button",
           {
             "aria-label": isRemoteIssueCopied ? "Copied remote QA path" : "Copy remote QA path",
@@ -8852,7 +8981,7 @@ var QaItemRemoteActions = ({
             title: isRemoteIssueCopied ? "Copied remote QA path" : "Copy remote QA path",
             type: "button",
             onClick: () => void onCopyRemoteIssuePath(item),
-            children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(Copy, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(Copy, { "aria-hidden": "true" })
           }
         )
       ]
@@ -8878,7 +9007,7 @@ function matchesReviewItemStatus(itemStatus, queryStatus) {
 }
 
 // src/react-shell/qa/item.status.actions.tsx
-var import_jsx_runtime14 = require("react/jsx-runtime");
+var import_jsx_runtime15 = require("react/jsx-runtime");
 var getStatusOption = (status, statusOptions) => {
   const normalizedStatus = normalizeReviewItemStatus(status);
   return statusOptions.find((statusOption) => statusOption.value === status) ?? statusOptions.find(
@@ -8897,12 +9026,12 @@ var QaItemStatusActions = ({
   const statusClassName = `is-status-${normalizeReviewItemStatus(
     currentStatusOption.value
   )}`;
-  return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
     "div",
     {
       className: "df-review-item-status-actions",
       onClick: (event) => event.stopPropagation(),
-      children: canUpdateStatus ? /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      children: canUpdateStatus ? /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
         "select",
         {
           "aria-label": "QA status",
@@ -8913,15 +9042,15 @@ var QaItemStatusActions = ({
             item,
             event.currentTarget.value
           ),
-          children: statusOptions.map((statusOption) => /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
+          children: statusOptions.map((statusOption) => /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("option", { value: statusOption.value, children: statusOption.label }, statusOption.value))
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: `df-review-item-status-badge ${statusClassName}`, children: currentStatusOption.label })
+      ) : /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: `df-review-item-status-badge ${statusClassName}`, children: currentStatusOption.label })
     }
   );
 };
 
 // src/react-shell/anchor.restore.ts
-var isAnchorRestorableReviewItem = (item) => item.scope === "dom" || item.kind === "note" && Boolean(item.anchor && item.selection);
+var isAnchorRestorableReviewItem = (item) => item.kind === "dom" || item.scope === "dom";
 var queryReviewItemAnchorElement = (targetDocument, item) => {
   const anchor = item.anchor;
   if (!anchor || !isAnchorRestorableReviewItem(item)) return void 0;
@@ -9059,25 +9188,24 @@ var isScrollableReviewAnchorElement = (element) => {
 };
 
 // src/react-shell/review/item.icons.tsx
-var import_jsx_runtime15 = require("react/jsx-runtime");
+var import_jsx_runtime16 = require("react/jsx-runtime");
 var ReviewScopeIcon = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Monitor, { "aria-hidden": "true" });
+  if (scope === "mobile") return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Monitor, { "aria-hidden": "true" });
 };
 var getReviewItemMode = (item) => isAnchorRestorableReviewItem(item) ? "dom" : item.kind;
 var ReviewItemModeIcon = ({
   mode
 }) => {
-  if (mode === "area") return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Scan, { "aria-hidden": "true" });
-  if (mode === "dom") return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(StickyNote, { "aria-hidden": "true" });
+  if (mode === "area") return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Scan, { "aria-hidden": "true" });
+  return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(SquareMousePointer, { "aria-hidden": "true" });
 };
 
 // src/react-shell/qa/item.card.tsx
-var import_jsx_runtime16 = require("react/jsx-runtime");
+var import_jsx_runtime17 = require("react/jsx-runtime");
 var formatItemCardDate = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -9094,7 +9222,7 @@ var QaItemAttachments = ({
 }) => {
   const imageAttachments = attachments.filter(isImageAttachment);
   if (imageAttachments.length === 0) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "df-review-item-attachments", children: imageAttachments.map((attachment, index) => /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-item-attachments", children: imageAttachments.map((attachment, index) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
     "a",
     {
       className: "df-review-item-attachment",
@@ -9103,7 +9231,7 @@ var QaItemAttachments = ({
       target: "_blank",
       title: attachment.name,
       onClick: (event) => event.stopPropagation(),
-      children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+      children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
         "img",
         {
           alt: attachment.name,
@@ -9163,7 +9291,7 @@ var QaItemCard = ({
   const canEditItem = activeAdapterEntry.canUpdate && !isSubmitting && !isMutating;
   const itemTitle = fields.title ? item.title?.trim() : "";
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor].filter(Boolean).join(" | ");
-  return /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
     "article",
     {
       "aria-busy": isMutating ? "true" : "false",
@@ -9176,14 +9304,15 @@ var QaItemCard = ({
         onRestoreReviewItem(item);
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "df-review-item-header", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "df-review-item-main", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { className: "df-review-item-badges", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-item-header", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-item-main", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-item-badges", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
                 "button",
                 {
                   "aria-label": isLabelCopied ? "Copied QA number" : "Copy QA number",
                   className: `df-review-item-id${isLabelCopied ? " is-copied" : ""}`,
+                  "data-review-tooltip": isLabelCopied ? "Copied QA number" : "Copy QA number",
                   title: isLabelCopied ? "Copied QA number" : "Copy QA number",
                   type: "button",
                   onClick: (event) => {
@@ -9193,93 +9322,97 @@ var QaItemCard = ({
                   children: numberedItem.displayLabel
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
                 "span",
                 {
                   className: `df-review-item-scope is-scope-${numberedItem.scope}`,
                   children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(ReviewScopeIcon, { scope: numberedItem.scope }),
+                    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(ReviewScopeIcon, { scope: numberedItem.scope }),
                     numberedItem.label
                   ]
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { className: `df-review-item-mode is-mode-${itemMode}`, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(ReviewItemModeIcon, { mode: itemMode }),
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: `df-review-item-mode is-mode-${itemMode}`, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(ReviewItemModeIcon, { mode: itemMode }),
                 itemMode
               ] })
             ] }),
-            itemTitle && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("strong", { className: "df-review-item-title", children: itemTitle }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+            itemTitle && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { className: "df-review-item-title", children: itemTitle }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
               "p",
               {
                 className: `df-review-item-comment${itemTitle ? "" : " is-primary"}`,
                 children: itemComment
               }
             ),
-            item.attachments && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(QaItemAttachments, { attachments: item.attachments }),
-            !isRemoteSource && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(QaItemExternalLinks, { item }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("small", { className: "df-review-item-meta", children: itemMeta }),
-            isMutating && /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("small", { className: "df-review-item-saving", "aria-live": "polite", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "df-review-spinner", "aria-hidden": "true" }),
+            item.attachments && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(QaItemAttachments, { attachments: item.attachments }),
+            !isRemoteSource && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(QaItemExternalLinks, { item }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("small", { className: "df-review-item-meta", children: itemMeta }),
+            isMutating && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("small", { className: "df-review-item-saving", "aria-live": "polite", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "df-review-spinner", "aria-hidden": "true" }),
               "Saving QA..."
             ] }),
-            item.submitError && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("small", { className: "df-review-item-error", children: item.submitError })
+            item.submitError && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("small", { className: "df-review-item-error", children: item.submitError })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
             "div",
             {
               className: "df-review-item-header-actions",
               onClick: (event) => event.stopPropagation(),
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
                   "button",
                   {
                     "aria-label": isOverlayVisible ? "Hide QA overlay" : "Show QA overlay",
                     className: `df-review-item-visibility${isOverlayVisible ? " is-visible" : " is-hidden"}`,
+                    "data-review-tooltip": isOverlayVisible ? "Hide QA overlay" : "Show QA overlay",
                     type: "button",
                     onClick: () => onToggleItemOverlayVisibility(item.id),
-                    children: isOverlayVisible ? /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(EyeOff, { "aria-hidden": "true" })
+                    children: isOverlayVisible ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Eye, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(EyeOff, { "aria-hidden": "true" })
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
                   "button",
                   {
                     "aria-label": isLinkCopied ? "Copied QA link" : "Copy QA link",
                     className: `df-review-item-link-copy${isLinkCopied ? " is-copied" : ""}`,
+                    "data-review-tooltip": isLinkCopied ? "Copied QA link" : "Copy QA link",
                     title: isLinkCopied ? "Copied QA link" : "Copy QA link",
                     type: "button",
                     onClick: () => onCopyItemLink(numberedItem),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Link2, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Link2, { "aria-hidden": "true" })
                   }
                 ),
-                canEditItem && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+                canEditItem && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
                   "button",
                   {
                     "aria-label": "Edit QA",
                     className: "df-review-item-edit",
+                    "data-review-tooltip": "Edit QA",
                     title: "Edit QA",
                     type: "button",
                     onClick: () => onEditItem(item),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Pencil, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Pencil, { "aria-hidden": "true" })
                   }
                 ),
-                canRemoveItem && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+                canRemoveItem && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
                   "button",
                   {
                     "aria-label": "Delete QA",
                     className: "df-review-item-delete",
+                    "data-review-tooltip": "Delete QA",
                     type: "button",
                     onClick: () => void onRemoveItem(item),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(X, { "aria-hidden": "true" })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(X, { "aria-hidden": "true" })
                   }
                 )
               ]
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "df-review-item-actions", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "df-review-item-workflow-actions", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-item-actions", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-item-workflow-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
               QaItemStatusActions,
               {
                 canUpdateStatus,
@@ -9289,7 +9422,7 @@ var QaItemCard = ({
                 onChangeItemStatus
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
               QaItemAssigneeActions,
               {
                 assigneeOptions: activeAdapterEntry.assigneeOptions,
@@ -9301,25 +9434,26 @@ var QaItemCard = ({
               }
             )
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
             "div",
             {
               className: "df-review-item-prompt-actions",
               onClick: (event) => event.stopPropagation(),
-              children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+              children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
                 "button",
                 {
                   "aria-label": isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
                   className: `df-review-item-action-button df-review-item-prompt-copy${isPromptCopied ? " is-copied" : ""}`,
+                  "data-review-tooltip": isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
                   title: isPromptCopied ? "Copied QA prompt" : "Copy QA prompt",
                   type: "button",
                   onClick: () => onCopyItemPrompt(numberedItem),
-                  children: isPromptCopied ? /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Copy, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(Bot, { "aria-hidden": "true" })
+                  children: isPromptCopied ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Copy, { "aria-hidden": "true" }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Bot, { "aria-hidden": "true" })
                 }
               )
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
             QaItemRemoteActions,
             {
               isRemoteSource,
@@ -9340,7 +9474,7 @@ var QaItemCard = ({
 };
 
 // src/react-shell/qa/panel.header.tsx
-var import_jsx_runtime17 = require("react/jsx-runtime");
+var import_jsx_runtime18 = require("react/jsx-runtime");
 var QaPanelHeader = ({
   activeItemCount,
   activeRemainingItemCount,
@@ -9364,11 +9498,11 @@ var QaPanelHeader = ({
   const statusFilterOptions = getStatusFilterOptions(statusOptions);
   const hasActiveFilter = qaFilter !== "all" || qaStatusFilter !== "all";
   const displayLabel = getQaSourceDisplayLabel(label);
-  return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-list-header", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-list-title", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "df-review-list-meta", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: isAllQaVisible ? `${displayLabel} QA \xB7 All pages` : `${displayLabel} QA` }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-list-header", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-list-title", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("span", { className: "df-review-list-meta", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { children: isAllQaVisible ? `${displayLabel} QA \xB7 All pages` : `${displayLabel} QA` }),
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
           "strong",
           {
             title: `${activeRemainingItemCount} remaining of ${activeItemCount}`,
@@ -9376,10 +9510,10 @@ var QaPanelHeader = ({
           }
         )
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
+      /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "df-review-filter-tabs", "aria-label": "QA filters", children: REVIEW_QA_FILTERS.map((filter) => {
         const count = qaFilterCounts.get(filter.key) ?? 0;
         const isActive = qaFilter === filter.key;
-        return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
           "button",
           {
             "aria-label": `${filter.label} QA (${count})`,
@@ -9387,25 +9521,25 @@ var QaPanelHeader = ({
             className: `df-review-filter-tab${isActive ? " is-active" : ""}`,
             type: "button",
             onClick: () => onQaFilterChange(filter.key),
-            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(ListFilter, { "aria-hidden": "true" }) })
+            children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "df-review-filter-icon", children: filter.scope ? /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ReviewScopeIcon, { scope: filter.scope }) : /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ListFilter, { "aria-hidden": "true" }) })
           },
           filter.key
         );
       }) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-list-toolbar", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "df-review-list-controls", children: [
-        showSourceSelect && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-list-toolbar", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "df-review-list-controls", children: [
+        showSourceSelect && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
           "select",
           {
             "aria-label": "QA source",
             className: "df-review-source-select",
             value: source,
             onChange: (event) => onChangeReviewSource(event.currentTarget.value),
-            children: sourceEntries.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("option", { value: entry.label, children: entry.label }, entry.label))
+            children: sourceEntries.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("option", { value: entry.label, children: entry.label }, entry.label))
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
           "button",
           {
             "aria-label": "Refresh QA",
@@ -9414,11 +9548,11 @@ var QaPanelHeader = ({
             disabled: isLoading,
             type: "button",
             onClick: () => void onRefreshReviewData(),
-            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(RefreshCw, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(RefreshCw, { "aria-hidden": "true" })
           }
         )
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
         "select",
         {
           "aria-label": "QA status filter",
@@ -9428,8 +9562,8 @@ var QaPanelHeader = ({
             event.currentTarget.value
           ),
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
-            statusFilterOptions.map((statusOption) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("option", { value: "all", children: `All status (${qaStatusFilterCounts.get("all") ?? 0})` }),
+            statusFilterOptions.map((statusOption) => /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("option", { value: statusOption.value, children: `${statusOption.label} (${qaStatusFilterCounts.get(statusOption.value) ?? 0})` }, statusOption.value))
           ]
         }
       )
@@ -9453,7 +9587,7 @@ function getStatusFilterOptions(statusOptions) {
 }
 
 // src/react-shell/qa/panel.tsx
-var import_jsx_runtime18 = require("react/jsx-runtime");
+var import_jsx_runtime19 = require("react/jsx-runtime");
 var ReviewQaPanel = ({
   activeAdapterEntry,
   activeItems,
@@ -9497,9 +9631,9 @@ var ReviewQaPanel = ({
   onToggleItemOverlayVisibility
 }) => {
   const emptyMessage = isAllQaVisible ? `No ${activeAdapterEntry.label} QA.` : isRemoteSource ? `No ${activeAdapterEntry.label} QA on this page.` : "No QA on this page.";
-  return /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "df-review-panel-body", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("section", { className: "df-review-item-list", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("aside", { className: "df-review-qa-panel", "aria-hidden": !isListVisible, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: "df-review-panel-body", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("section", { className: "df-review-item-list", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
         QaPanelHeader,
         {
           activeItemCount: activeItems.length,
@@ -9522,7 +9656,7 @@ var ReviewQaPanel = ({
           onRefreshReviewData
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
         "div",
         {
           className: "df-review-list-scroll",
@@ -9532,20 +9666,20 @@ var ReviewQaPanel = ({
             }
           },
           children: [
-            activeItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
+            activeItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
               "p",
               {
                 className: `df-review-empty${isLoading ? " is-loading" : ""}`,
                 children: [
-                  isLoading && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "df-review-spinner", "aria-hidden": "true" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { children: isLoading ? `Loading ${activeAdapterEntry.label} QA...` : emptyMessage })
+                  isLoading && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: "df-review-spinner", "aria-hidden": "true" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { children: isLoading ? `Loading ${activeAdapterEntry.label} QA...` : emptyMessage })
                 ]
               }
             ),
-            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("p", { className: "df-review-empty", children: "No QA in this filter." }),
+            activeItems.length > 0 && filteredNumberedActiveItems.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("p", { className: "df-review-empty", children: "No QA in this filter." }),
             filteredNumberedActiveItems.map((numberedItem) => {
               const { item } = numberedItem;
-              return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+              return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
                 QaItemCard,
                 {
                   activeAdapterEntry,
@@ -9580,16 +9714,16 @@ var ReviewQaPanel = ({
         }
       )
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "df-review-qa-draft-host" })
+    /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: "df-review-qa-draft-host" })
   ] });
 };
 
 // src/react-shell/presence/overlay.tsx
 var import_react9 = require("react");
-var import_jsx_runtime19 = require("react/jsx-runtime");
+var import_jsx_runtime20 = require("react/jsx-runtime");
 var getPresenceName = (user) => user.displayName || user.userId;
-var PresenceUserIcon = () => /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
-  /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+var PresenceUserIcon = () => /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
+  /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
     "circle",
     {
       cx: "15",
@@ -9600,8 +9734,8 @@ var PresenceUserIcon = () => /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("svg
       strokeWidth: "2.6"
     }
   ),
-  /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
-  /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+  /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
+  /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
     "path",
     {
       d: "M7.8 22.1c.9-4.1 3.4-6.1 7.2-6.1s6.3 2 7.2 6.1c-1.7 1.5-4.1 2.4-7.2 2.4s-5.5-.9-7.2-2.4z",
@@ -9616,13 +9750,13 @@ var PresenceOverlay = ({
 }) => {
   const [isExpanded, setIsExpanded] = (0, import_react9.useState)(false);
   if (users.length === 0) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
     "div",
     {
       "aria-label": `Review presence, ${users.length} online`,
       className: `df-review-presence-overlay${isExpanded ? " is-expanded" : ""}`,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
           "button",
           {
             "aria-label": `Show online reviewers, ${users.length} online`,
@@ -9631,12 +9765,12 @@ var PresenceOverlay = ({
             type: "button",
             onClick: () => setIsExpanded((current) => !current),
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(PresenceUserIcon, {}),
-              /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: "df-review-presence-badge", children: users.length })
+              /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(PresenceUserIcon, {}),
+              /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: "df-review-presence-badge", children: users.length })
             ]
           }
         ),
-        isExpanded && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+        isExpanded && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
           "span",
           {
             className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
@@ -9645,7 +9779,7 @@ var PresenceOverlay = ({
               "--df-review-presence-color": user.color
             },
             title: getPresenceName(user),
-            children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { children: getPresenceName(user) })
+            children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { children: getPresenceName(user) })
           },
           user.sessionId
         )) })
@@ -9692,6 +9826,20 @@ function getSourceHintFromElement(element) {
     column: getSourceAttribute(element, "data-wrk-source-column"),
     sectionId: getSourceAttribute(element, "data-section-id"),
     sectionIndex: getSourceAttribute(element, "data-section-index")
+  };
+  return Object.values(source).some(Boolean) ? source : void 0;
+}
+function getParentSourceHintFromElement(element) {
+  const source = {
+    component: getSourceAttribute(
+      element,
+      "data-wrk-source-parent-component"
+    ),
+    file: getSourceAttribute(element, "data-wrk-source-parent-file"),
+    line: getSourceAttribute(element, "data-wrk-source-parent-line"),
+    column: getSourceAttribute(element, "data-wrk-source-parent-column"),
+    sectionId: void 0,
+    sectionIndex: void 0
   };
   return Object.values(source).some(Boolean) ? source : void 0;
 }
@@ -10163,8 +10311,38 @@ function getSectionOutlineMetadata(element, label, source) {
     ) : void 0,
     fontLabel: textElement ? getFontLabel(textElement) : void 0,
     mediaItems: getPlacerMediaItems(element, label, source?.file),
-    classNames: getElementClassNames(element)
+    classNames: getElementClassNames(element),
+    usage: getSectionOutlineUsageMetadata(element, source)
   };
+}
+function getSectionOutlineUsageMetadata(element, source) {
+  const usage = getElementParentSourceHint(element);
+  if (!usage?.file || isSameSourceLocation(source, usage)) return void 0;
+  return {
+    source: usage,
+    label: usage.component?.trim() || getComponentNameFromSourceFile(usage.file) || "Parent",
+    filePath: getDisplaySourcePath(usage.file) ?? usage.file,
+    positionLabel: getSourcePositionLabel(usage)
+  };
+}
+function getElementParentSourceHint(element) {
+  const direct = getParentSourceHintFromElement(element);
+  if (direct?.file) return direct;
+  const descendant = element.querySelector("[data-wrk-source-parent-file]");
+  return descendant ? getParentSourceHintFromElement(descendant) : void 0;
+}
+function isSameSourceLocation(source, usage) {
+  return getSourceFileCompareKey(source?.file) === getSourceFileCompareKey(usage.file) && normalizeSourcePosition(source?.line) === normalizeSourcePosition(usage.line) && normalizeSourcePosition(source?.column) === normalizeSourcePosition(usage.column);
+}
+function getSourcePositionLabel(source) {
+  const line = normalizeSourcePosition(source.line);
+  const column = normalizeSourcePosition(source.column);
+  if (!line) return "";
+  return `${line}:${column || 1}`;
+}
+function normalizeSourcePosition(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? String(parsed) : "";
 }
 function getSectionOutlineRect(element) {
   const rect = element.getBoundingClientRect();
@@ -10470,7 +10648,7 @@ function setDocumentScrollInstantly2(environment, position) {
 // src/react-shell/review/shell.helpers.ts
 var getReviewModeWriteMode = (mode) => {
   if (mode === "element") return "dom";
-  if (mode === "note" || mode === "area") return mode;
+  if (mode === "area") return mode;
   return null;
 };
 var waitForFrame = (targetWindow) => new Promise((resolve) => {
@@ -10577,7 +10755,10 @@ var matchesSectionOutlineFilter = (entry, terms) => {
     entry.metadata.textValue,
     entry.metadata.fontLabel,
     entry.metadata.mediaItems?.map((mediaItem) => `${mediaItem.variant} ${mediaItem.type} ${mediaItem.url}`).join(" "),
-    entry.metadata.classNames?.join(" ")
+    entry.metadata.classNames?.join(" "),
+    entry.metadata.usage?.label,
+    entry.metadata.usage?.filePath,
+    entry.metadata.usage?.positionLabel
   ].filter(Boolean).join(" ").toLowerCase();
   return terms.every((term) => text.includes(term));
 };
@@ -10593,7 +10774,7 @@ var filterSectionOutlineEntries = (entries, terms) => {
 };
 
 // src/react-shell/review/section.outline.panel.tsx
-var import_jsx_runtime20 = require("react/jsx-runtime");
+var import_jsx_runtime21 = require("react/jsx-runtime");
 var SectionOutlinePanel = ({
   isPanelVisible,
   isFiltering,
@@ -10614,6 +10795,7 @@ var SectionOutlinePanel = ({
   onScrollToSection,
   onOpenData,
   onOpenSource,
+  onOpenUsageSource,
   onStartDomReview,
   onHoverElement,
   onClearHover
@@ -10625,9 +10807,9 @@ var SectionOutlinePanel = ({
     const rect = getLiveSectionOutlineRect(entry);
     if (isBoxMetaVisible) {
       rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("b", { children: "box" }),
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("code", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("b", { children: "box" }),
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("code", { children: [
             "top ",
             rect.top,
             " / left ",
@@ -10643,13 +10825,13 @@ var SectionOutlinePanel = ({
     }
     if (metadata.textValue) {
       rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(
           "span",
           {
             className: "df-review-section-outline-meta-row is-text",
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("b", { children: "text" }),
-              /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("code", { children: metadata.textValue })
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("b", { children: "text" }),
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("code", { children: metadata.textValue })
             ]
           },
           "text"
@@ -10658,9 +10840,9 @@ var SectionOutlinePanel = ({
     }
     if (isFontMetaVisible && metadata.fontLabel) {
       rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("b", { children: "font" }),
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("code", { children: metadata.fontLabel })
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("b", { children: "font" }),
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("code", { children: metadata.fontLabel })
         ] }, "font")
       );
     }
@@ -10669,13 +10851,13 @@ var SectionOutlinePanel = ({
         const mediaKey = `${mediaItem.variant}:${mediaItem.type}:${mediaItem.url}`;
         const mediaLabel = mediaItem.variant === "media" ? mediaItem.type : mediaItem.variant;
         rows.push(
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(
             "span",
             {
               className: "df-review-section-outline-meta-row is-media",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("b", { children: mediaLabel }),
-                /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("b", { children: mediaLabel }),
+                /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                   "a",
                   {
                     className: "df-review-section-outline-media-link",
@@ -10683,7 +10865,7 @@ var SectionOutlinePanel = ({
                     rel: "noopener noreferrer",
                     target: "_blank",
                     title: `${mediaLabel} ${mediaItem.type}`,
-                    children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("code", { children: mediaItem.url })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("code", { children: mediaItem.url })
                   }
                 )
               ]
@@ -10695,14 +10877,44 @@ var SectionOutlinePanel = ({
     }
     if (isClassMetaVisible && metadata.classNames?.length) {
       rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("span", { className: "df-review-section-outline-meta-row is-class", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("b", { children: "class" }),
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("code", { children: className }, className)) })
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("span", { className: "df-review-section-outline-meta-row is-class", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("b", { children: "class" }),
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("code", { children: className }, className)) })
         ] }, "class")
       );
     }
+    if (metadata.usage) {
+      const usagePosition = metadata.usage.positionLabel ? `:${metadata.usage.positionLabel}` : "";
+      rows.push(
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(
+          "span",
+          {
+            className: "df-review-section-outline-meta-row is-usage",
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("b", { children: "used in" }),
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
+                "button",
+                {
+                  className: "df-review-section-outline-usage-link",
+                  type: "button",
+                  title: `Open ${metadata.usage.label} usage`,
+                  onClick: () => onOpenUsageSource(entry),
+                  children: /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("code", { children: [
+                    metadata.usage.label,
+                    " \xB7 ",
+                    metadata.usage.filePath,
+                    usagePosition
+                  ] })
+                }
+              )
+            ]
+          },
+          "usage"
+        )
+      );
+    }
     if (rows.length === 0) return null;
-    return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
       "div",
       {
         className: "df-review-section-outline-meta",
@@ -10716,12 +10928,12 @@ var SectionOutlinePanel = ({
     const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
     const liveRect = getLiveSectionOutlineRect(entry);
     const isZeroArea = liveRect.width <= 0 || liveRect.height <= 0;
-    return /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(
       "div",
       {
         className: `df-review-section-outline-item is-depth-${entry.depth}`,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(
             "div",
             {
               className: "df-review-section-outline-entry-body",
@@ -10737,30 +10949,31 @@ var SectionOutlinePanel = ({
               onPointerEnter: () => onHoverElement(entry.element),
               onPointerLeave: onClearHover,
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
+                /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(
                   "div",
                   {
                     className: "df-review-section-outline-row",
                     style: { paddingLeft: "6px" },
                     children: [
-                      hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+                      hasChildren ? /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                         "button",
                         {
                           "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
                           "aria-expanded": !isCollapsed,
                           className: `df-review-section-outline-toggle${isCollapsed ? " is-collapsed" : ""}`,
+                          "data-review-tooltip": isCollapsed ? "Expand" : "Collapse",
                           type: "button",
                           onClick: () => onToggleEntry(entry.id),
-                          children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(ChevronDown, { "aria-hidden": "true" })
+                          children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(ChevronDown, { "aria-hidden": "true" })
                         }
-                      ) : /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+                      ) : /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                         "span",
                         {
                           "aria-hidden": "true",
                           className: "df-review-section-outline-toggle is-placeholder"
                         }
                       ),
-                      /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
+                      /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(
                         "button",
                         {
                           className: "df-review-section-outline-name",
@@ -10768,37 +10981,52 @@ var SectionOutlinePanel = ({
                           type: "button",
                           onClick: () => onScrollToSection(entry),
                           children: [
-                            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { children: entry.label }),
-                            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("small", { children: entry.filePath })
+                            /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("span", { children: entry.label }),
+                            /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("small", { children: entry.filePath })
                           ]
                         }
                       ),
-                      /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("span", { className: "df-review-section-outline-links", children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+                      /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("span", { className: "df-review-section-outline-links", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                           "button",
                           {
                             "aria-label": `Open ${entry.label} data`,
                             className: "df-review-section-outline-link",
+                            "data-review-tooltip": "Open data",
                             title: "Open data",
                             type: "button",
                             disabled: !entry.data?.file,
                             onClick: () => onOpenData(entry),
-                            children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Database, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Database, { "aria-hidden": "true" })
                           }
                         ),
-                        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+                        /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                           "button",
                           {
                             "aria-label": `Open ${entry.label} source`,
                             className: "df-review-section-outline-link",
+                            "data-review-tooltip": "Open source",
                             title: "Open source",
                             type: "button",
                             disabled: !entry.source?.file,
                             onClick: () => onOpenSource(entry),
-                            children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(CodeXml, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(CodeXml, { "aria-hidden": "true" })
                           }
                         ),
-                        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+                        /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
+                          "button",
+                          {
+                            "aria-label": `Open ${entry.label} usage`,
+                            className: "df-review-section-outline-link",
+                            "data-review-tooltip": "Open parent usage",
+                            title: "Open parent usage",
+                            type: "button",
+                            disabled: !entry.metadata.usage?.source.file,
+                            onClick: () => onOpenUsageSource(entry),
+                            children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(CornerUpRight, { "aria-hidden": "true" })
+                          }
+                        ),
+                        /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                           "span",
                           {
                             "aria-hidden": "true",
@@ -10806,16 +11034,17 @@ var SectionOutlinePanel = ({
                             children: "|"
                           }
                         ),
-                        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+                        /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                           "button",
                           {
                             "aria-label": `Start DOM QA for ${entry.label}`,
                             className: "df-review-section-outline-link is-dom-select",
+                            "data-review-tooltip": isZeroArea ? "No visible area" : "DOM select",
                             title: isZeroArea ? "No visible area" : "DOM select",
                             type: "button",
                             disabled: !canWriteDom || isZeroArea,
                             onClick: () => onStartDomReview(entry),
-                            children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(SquareMousePointer, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(SquareMousePointer, { "aria-hidden": "true" })
                           }
                         )
                       ] })
@@ -10826,78 +11055,82 @@ var SectionOutlinePanel = ({
               ]
             }
           ),
-          hasChildren && !isCollapsed && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: "df-review-section-outline-children", children: entry.children.map(renderEntry) })
+          hasChildren && !isCollapsed && /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("div", { className: "df-review-section-outline-children", children: entry.children.map(renderEntry) })
         ]
       },
       entry.id
     );
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
     "aside",
     {
       className: "df-review-source-tree-panel",
       "aria-hidden": !isPanelVisible,
-      children: /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: "df-review-section-outline-head", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: "df-review-section-outline-summary", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("span", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("strong", { children: "Component" }),
-              /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("small", { children: isFiltering ? `${filteredCount} / ${totalCount} results` : `${rootCount} ${rootCount === 1 ? "root" : "roots"}` })
+      children: /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("div", { className: "df-review-section-outline-head", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("div", { className: "df-review-section-outline-summary", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("strong", { children: "Component" }),
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("small", { children: isFiltering ? `${filteredCount} / ${totalCount} results` : `${rootCount} ${rootCount === 1 ? "root" : "roots"}` })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: "df-review-section-outline-meta-controls", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("div", { className: "df-review-section-outline-meta-controls", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                 "button",
                 {
                   "aria-label": "Toggle source tree box metadata",
                   "aria-pressed": isBoxMetaVisible,
                   className: `df-review-section-outline-meta-toggle${isBoxMetaVisible ? " is-active" : ""}`,
+                  "data-review-tooltip": "Box metrics",
                   title: "top / left / width / height",
                   type: "button",
                   onClick: () => onToggleMeta("box"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(SquareDashed, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(SquareDashed, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                 "button",
                 {
                   "aria-label": "Toggle source tree font metadata",
                   "aria-pressed": isFontMetaVisible,
                   className: `df-review-section-outline-meta-toggle${isFontMetaVisible ? " is-active" : ""}`,
+                  "data-review-tooltip": "Font metadata",
                   title: "font size / weight",
                   type: "button",
                   onClick: () => onToggleMeta("font"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Type, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Type, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                 "button",
                 {
                   "aria-label": "Toggle source tree media metadata",
                   "aria-pressed": isMediaMetaVisible,
                   className: `df-review-section-outline-meta-toggle${isMediaMetaVisible ? " is-active" : ""}`,
+                  "data-review-tooltip": "Media URLs",
                   title: "media urls",
                   type: "button",
                   onClick: () => onToggleMeta("media"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Image2, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Image2, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
                 "button",
                 {
                   "aria-label": "Toggle source tree class metadata",
                   "aria-pressed": isClassMetaVisible,
                   className: `df-review-section-outline-meta-toggle${isClassMetaVisible ? " is-active" : ""}`,
+                  "data-review-tooltip": "Class names",
                   title: "class names",
                   type: "button",
                   onClick: () => onToggleMeta("className"),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(CodeXml, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(CodeXml, { "aria-hidden": "true" })
                 }
               )
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: "df-review-section-outline-filter", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Search, { "aria-hidden": "true" }),
-            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("div", { className: "df-review-section-outline-filter", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Search, { "aria-hidden": "true" }),
+            /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
               "input",
               {
                 "aria-label": "Filter source tree",
@@ -10910,7 +11143,7 @@ var SectionOutlinePanel = ({
                 onChange: (event) => onFilterChange(event.currentTarget.value)
               }
             ),
-            filter && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+            filter && /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
               "button",
               {
                 "aria-label": "Clear source tree filter",
@@ -10918,12 +11151,12 @@ var SectionOutlinePanel = ({
                 type: "button",
                 onMouseDown: (event) => event.preventDefault(),
                 onClick: () => onFilterChange(""),
-                children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(X, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(X, { "aria-hidden": "true" })
               }
             )
           ] })
         ] }),
-        entries.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: "df-review-section-outline-list", children: entries.map(renderEntry) }) : /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: "df-review-section-outline-empty", children: isFiltering ? "No source matches" : "No sections found" })
+        entries.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("div", { className: "df-review-section-outline-list", children: entries.map(renderEntry) }) : /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("div", { className: "df-review-section-outline-empty", children: isFiltering ? "No source matches" : "No sections found" })
       ] })
     }
   );
@@ -11000,7 +11233,7 @@ function createSourceShortcutStyle(optionAttribute, fontOverlayAttribute) {
 }
 
 // src/react-shell/review/source.inspector.overlay.tsx
-var import_jsx_runtime21 = require("react/jsx-runtime");
+var import_jsx_runtime22 = require("react/jsx-runtime");
 var SourceInspectorOverlay = ({
   state,
   interactionRef,
@@ -11008,8 +11241,8 @@ var SourceInspectorOverlay = ({
   onOpenCandidate
 }) => {
   if (!state) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(import_jsx_runtime21.Fragment, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)(import_jsx_runtime22.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
       "div",
       {
         className: `df-review-source-outline${state.isPinned ? " is-pinned" : ""}`,
@@ -11021,7 +11254,7 @@ var SourceInspectorOverlay = ({
         }
       }
     ),
-    state.candidates.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)(
+    state.candidates.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)(
       "div",
       {
         className: `df-review-source-popover${state.isPinned ? " is-pinned" : ""}`,
@@ -11042,7 +11275,7 @@ var SourceInspectorOverlay = ({
         },
         onClick: (event) => event.stopPropagation(),
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
             "button",
             {
               "aria-label": "Close source candidates",
@@ -11051,7 +11284,7 @@ var SourceInspectorOverlay = ({
               children: "\xD7"
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
             "button",
             {
               className: `df-review-source-candidate is-${candidate.kind}`,
@@ -11061,10 +11294,10 @@ var SourceInspectorOverlay = ({
                 event.stopPropagation();
                 onOpenCandidate(candidate);
               },
-              children: /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("span", { className: "df-review-source-candidate-main", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("strong", { children: candidate.label }),
-                /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("span", { children: candidate.filePath }),
-                /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("small", { children: [candidate.positionLabel || "-:-", candidate.detail].filter(Boolean).join(" \xB7 ") })
+              children: /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("span", { className: "df-review-source-candidate-main", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("strong", { children: candidate.label }),
+                /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { children: candidate.filePath }),
+                /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("small", { children: [candidate.positionLabel || "-:-", candidate.detail].filter(Boolean).join(" \xB7 ") })
               ] })
             },
             candidate.id
@@ -11076,7 +11309,7 @@ var SourceInspectorOverlay = ({
 };
 
 // src/react-shell/review/mode.toolbar.tsx
-var import_jsx_runtime22 = require("react/jsx-runtime");
+var import_jsx_runtime23 = require("react/jsx-runtime");
 var ReviewModeToolbar = ({
   canWriteArea,
   canWriteDom,
@@ -11084,33 +11317,35 @@ var ReviewModeToolbar = ({
   onSetReviewMode
 }) => {
   if (!canWriteDom && !canWriteArea) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
-    canWriteDom && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime23.jsxs)("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
+    canWriteDom && /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(
       "button",
       {
         "aria-label": "Element",
         className: `df-review-mode-button is-element${mode === "element" ? " is-active" : ""}`,
+        "data-review-tooltip": "Element QA",
         type: "button",
         onClick: () => onSetReviewMode("element"),
-        children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(SquareMousePointer, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(SquareMousePointer, { "aria-hidden": "true" })
       }
     ),
-    canWriteDom && canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
-    canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+    canWriteDom && canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime23.jsx)("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
+    canWriteArea && /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(
       "button",
       {
         "aria-label": "Area",
         className: `df-review-mode-button is-area${mode === "area" ? " is-active" : ""}`,
+        "data-review-tooltip": "Area QA",
         type: "button",
         onClick: () => onSetReviewMode("area"),
-        children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Scan, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(Scan, { "aria-hidden": "true" })
       }
     )
   ] });
 };
 
 // src/react-shell/ruler/gutters.tsx
-var import_jsx_runtime23 = require("react/jsx-runtime");
+var import_jsx_runtime24 = require("react/jsx-runtime");
 var RulerGutters = ({
   rulerHover,
   rulerScaleX,
@@ -11118,9 +11353,9 @@ var RulerGutters = ({
   rulerUnit,
   size
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime23.jsxs)(import_jsx_runtime23.Fragment, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime23.jsx)("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
-    /* @__PURE__ */ (0, import_jsx_runtime23.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime24.jsxs)(import_jsx_runtime24.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime24.jsx)("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
+    /* @__PURE__ */ (0, import_jsx_runtime24.jsxs)(
       "div",
       {
         className: "df-review-ruler-gutter is-x",
@@ -11128,15 +11363,15 @@ var RulerGutters = ({
           "--df-review-ruler-step-x": `${rulerScaleX * 20}px`
         },
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime23.jsxs)("div", { className: "df-review-ruler-frame-label", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime23.jsx)("strong", { children: size.label }),
-            /* @__PURE__ */ (0, import_jsx_runtime23.jsxs)("span", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime24.jsxs)("div", { className: "df-review-ruler-frame-label", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime24.jsx)("strong", { children: size.label }),
+            /* @__PURE__ */ (0, import_jsx_runtime24.jsxs)("span", { children: [
               size.designWidth,
               size.designHeight ? `x${size.designHeight}` : "",
               rulerUnit
             ] })
           ] }),
-          rulerHover && /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(
+          rulerHover && /* @__PURE__ */ (0, import_jsx_runtime24.jsx)(
             "div",
             {
               className: "df-review-ruler-coord is-x",
@@ -11147,14 +11382,14 @@ var RulerGutters = ({
         ]
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime24.jsx)(
       "div",
       {
         className: "df-review-ruler-gutter is-y",
         style: {
           "--df-review-ruler-step-y": `${rulerScaleY * 20}px`
         },
-        children: rulerHover && /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(
+        children: rulerHover && /* @__PURE__ */ (0, import_jsx_runtime24.jsx)(
           "div",
           {
             className: "df-review-ruler-coord is-y",
@@ -11168,7 +11403,7 @@ var RulerGutters = ({
 };
 
 // src/react-shell/ruler/overlay.tsx
-var import_jsx_runtime24 = require("react/jsx-runtime");
+var import_jsx_runtime25 = require("react/jsx-runtime");
 var RulerOverlay = ({
   iframeRef,
   isRulerDragging,
@@ -11178,7 +11413,7 @@ var RulerOverlay = ({
   rulerOverlayRef,
   size
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime24.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(
     "div",
     {
       ref: rulerOverlayRef,
@@ -11192,8 +11427,8 @@ var RulerOverlay = ({
         );
       },
       children: [
-        rulerHover && /* @__PURE__ */ (0, import_jsx_runtime24.jsxs)(import_jsx_runtime24.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime24.jsx)(
+        rulerHover && /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(import_jsx_runtime25.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(
             "div",
             {
               className: "df-review-ruler-guide is-x",
@@ -11201,7 +11436,7 @@ var RulerOverlay = ({
               style: { top: `${rulerHover.y}px` }
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime24.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(
             "div",
             {
               className: "df-review-ruler-guide is-y",
@@ -11210,8 +11445,8 @@ var RulerOverlay = ({
             }
           )
         ] }),
-        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ (0, import_jsx_runtime24.jsxs)(import_jsx_runtime24.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime24.jsx)(
+        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(import_jsx_runtime25.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(
             "div",
             {
               className: "df-review-ruler-selection",
@@ -11224,7 +11459,7 @@ var RulerOverlay = ({
               }
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime24.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(
             "div",
             {
               className: "df-review-ruler-label",
@@ -11249,6 +11484,163 @@ var RulerOverlay = ({
 
 // src/react-shell/target/figma.image.overlay.ts
 var import_react10 = require("react");
+
+// src/react-shell/target/target.ts
+var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
+var FIGMA_POINTER_LOCK_STYLE_ID = "df-review-figma-pointer-lock";
+var FIGMA_SOURCE_SELECT_POINTER_LOCK_STYLE_ID = "df-review-source-select-figma-pointer-lock";
+var TARGET_OVERLAY_STACKING_STYLE_ID = "df-review-target-overlay-stacking";
+var TARGET_FIGMA_IMAGE_LAYER_Z_INDEX = 2147483e3;
+var TARGET_GRID_LAYER_Z_INDEX = 2147483100;
+var FIGMA_POINTER_LOCK_STYLE_TEXT = [
+  "#df-review-figma-image-target-root,",
+  "#df-review-figma-image-target-root *,",
+  ".df-review-figma-image-target-overlay,",
+  ".df-review-figma-image-target-overlay *,",
+  ".helper-figma-root,",
+  ".helper-figma-root *,",
+  ".helper-figma-loading-backdrop,",
+  ".helper-figma-loading-backdrop * {",
+  "pointer-events: none !important;",
+  "}"
+].join("\n");
+var TARGET_OVERLAY_STACKING_STYLE_TEXT = [
+  ":root {",
+  `  --df-review-target-figma-layer-z: ${TARGET_FIGMA_IMAGE_LAYER_Z_INDEX};`,
+  `  --df-review-target-grid-layer-z: ${TARGET_GRID_LAYER_Z_INDEX};`,
+  "}",
+  "",
+  "#df-review-figma-image-target-root,",
+  ".helper-figma-root,",
+  ".helper-figma-loading-backdrop {",
+  "  z-index: var(--df-review-target-figma-layer-z) !important;",
+  "}",
+  "",
+  "body.is-help .helper,",
+  ".helper.onShow,",
+  "#df-review-grid-overlay,",
+  ".df-review-grid-overlay,",
+  "[data-df-review-grid-overlay] {",
+  "  z-index: var(--df-review-target-grid-layer-z) !important;",
+  "}",
+  "",
+  "body.is-help .helper.onShow ~ main section::before,",
+  ".helper.onShow ~ main section::before {",
+  "  z-index: var(--df-review-target-grid-layer-z) !important;",
+  "}"
+].join("\n");
+var setTargetScrollbarHidden = (targetDocument, hidden) => {
+  if (!targetDocument) return;
+  const existing = targetDocument.getElementById(HIDE_SCROLLBAR_STYLE_ID);
+  if (hidden) {
+    if (existing) return;
+    const style = targetDocument.createElement("style");
+    style.id = HIDE_SCROLLBAR_STYLE_ID;
+    style.textContent = "html{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}";
+    targetDocument.head?.appendChild(style);
+  } else {
+    existing?.remove();
+  }
+};
+var setTargetFigmaPointerLockStyle = (targetDocument, styleId, locked) => {
+  if (!targetDocument) return;
+  const existing = targetDocument.getElementById(styleId);
+  if (locked) {
+    if (existing) return;
+    const style = targetDocument.createElement("style");
+    style.id = styleId;
+    style.textContent = FIGMA_POINTER_LOCK_STYLE_TEXT;
+    targetDocument.head?.appendChild(style);
+  } else {
+    existing?.remove();
+  }
+};
+var ensureTargetOverlayStackingStyle = (targetDocument) => {
+  if (!targetDocument) return;
+  const existing = targetDocument.getElementById(
+    TARGET_OVERLAY_STACKING_STYLE_ID
+  );
+  if (existing) {
+    if (existing.textContent !== TARGET_OVERLAY_STACKING_STYLE_TEXT) {
+      existing.textContent = TARGET_OVERLAY_STACKING_STYLE_TEXT;
+    }
+    return;
+  }
+  const style = targetDocument.createElement("style");
+  style.id = TARGET_OVERLAY_STACKING_STYLE_ID;
+  style.textContent = TARGET_OVERLAY_STACKING_STYLE_TEXT;
+  targetDocument.head?.appendChild(style);
+};
+var setTargetFigmaOverlayLocked = (targetDocument, locked) => {
+  setTargetFigmaPointerLockStyle(
+    targetDocument,
+    FIGMA_POINTER_LOCK_STYLE_ID,
+    locked
+  );
+};
+var setTargetFigmaSourceSelectLocked = (targetDocument, locked) => {
+  setTargetFigmaPointerLockStyle(
+    targetDocument,
+    FIGMA_SOURCE_SELECT_POINTER_LOCK_STYLE_ID,
+    locked
+  );
+};
+var isEditableEventTarget = (event) => {
+  const path = event.composedPath?.() ?? [];
+  const element = path[0] ?? event.target;
+  if (!element || typeof element.tagName !== "string") return false;
+  const tag = element.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || element.isContentEditable === true;
+};
+var TRUE_STORAGE_VALUES = /* @__PURE__ */ new Set([
+  "1",
+  "true",
+  "on",
+  "show",
+  "shown",
+  "visible",
+  "enabled",
+  "yes"
+]);
+var OVERLAY_STORAGE_KEYS = {
+  grid: ["isHelp", "df-review-grid-overlay", "dfReviewGridOverlay"],
+  figma: ["isFigmaHelp", "df-review-figma-overlay", "dfReviewFigmaOverlay"]
+};
+var isStoredOverlayEnabled = (value) => TRUE_STORAGE_VALUES.has(value?.trim().toLowerCase() ?? "");
+var getCookieValue = (targetDocument, name) => {
+  const cookies = targetDocument?.cookie ? targetDocument.cookie.split(";") : [];
+  const prefix = `${name}=`;
+  const match = cookies.map((cookie) => cookie.trim()).find((cookie) => cookie.startsWith(prefix));
+  return match ? decodeURIComponent(match.slice(prefix.length)) : null;
+};
+var getStorageValue = (storage, key) => {
+  try {
+    return storage?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+};
+var getStoredOverlayState = (targetDocument, overlay) => {
+  const targetWindow = targetDocument?.defaultView;
+  return OVERLAY_STORAGE_KEYS[overlay].some((key) => {
+    if (isStoredOverlayEnabled(getCookieValue(targetDocument, key))) {
+      return true;
+    }
+    return isStoredOverlayEnabled(getStorageValue(targetWindow?.localStorage, key)) || isStoredOverlayEnabled(getStorageValue(targetWindow?.sessionStorage, key));
+  });
+};
+var getTargetOverlayState = (targetDocument) => ({
+  grid: Boolean(
+    targetDocument?.body?.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow") || getStoredOverlayState(targetDocument, "grid")
+  ),
+  figma: Boolean(
+    targetDocument?.querySelector(
+      ".helper-figma-root, .helper-figma-loading-backdrop"
+    ) || getStoredOverlayState(targetDocument, "figma")
+  )
+});
+
+// src/react-shell/target/figma.image.overlay.ts
 var TARGET_FIGMA_IMAGE_ROOT_ID = "df-review-figma-image-target-root";
 var TARGET_FIGMA_IMAGE_STYLE_ID = "df-review-figma-image-target-style";
 var TARGET_FIGMA_IMAGE_ID_ATTRIBUTE = "data-df-review-figma-image-id";
@@ -11334,6 +11726,7 @@ function renderTargetFigmaImageOverlays({
   }
   const isMobileViewport = getViewportPresetKind(size) === "mobile";
   const fixedOverlayWidth = getTargetFigmaImageFixedWidth(size);
+  ensureTargetOverlayStackingStyle(targetDocument);
   const root = ensureTargetFigmaImageRoot(targetDocument);
   const existingElements = new Map(
     Array.from(
@@ -11461,7 +11854,7 @@ function ensureTargetFigmaImageStyle(targetDocument) {
       position: absolute;
       left: 0;
       top: 0;
-      z-index: 2147483000;
+      z-index: ${TARGET_FIGMA_IMAGE_LAYER_Z_INDEX};
       width: 100%;
       height: 0;
       overflow: visible;
@@ -11522,7 +11915,7 @@ function normalizeTargetFigmaImageOffsetY(value) {
 }
 
 // src/react-shell/target/frame.tsx
-var import_jsx_runtime25 = require("react/jsx-runtime");
+var import_jsx_runtime26 = require("react/jsx-runtime");
 var ReviewTargetFrame = ({
   canWriteArea,
   canWriteDom,
@@ -11559,13 +11952,13 @@ var ReviewTargetFrame = ({
     syncTargetFigmaImageOverlays();
     window.requestAnimationFrame(syncTargetFigmaImageOverlays);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime25.jsx)("main", { className: "df-review-stage", children: /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)("div", { className: "df-review-frame", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime25.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime25.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime25.jsx)("div", { className: "df-review-target-stack", children: /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)("main", { className: "df-review-stage", children: /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)("div", { className: "df-review-frame", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime26.jsx)("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)("div", { className: "df-review-target-stack", children: /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(
       "div",
       {
         className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
         children: [
-          showRuler && /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(
+          showRuler && /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
             RulerGutters,
             {
               rulerHover,
@@ -11575,7 +11968,7 @@ var ReviewTargetFrame = ({
               size
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(
             "div",
             {
               className: "df-review-device",
@@ -11586,7 +11979,7 @@ var ReviewTargetFrame = ({
                 minHeight: `${size.height}px`
               },
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
                   "iframe",
                   {
                     ref: iframeRef,
@@ -11598,7 +11991,7 @@ var ReviewTargetFrame = ({
                   },
                   targetSrc
                 ),
-                showRuler && /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(
+                showRuler && /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
                   RulerOverlay,
                   {
                     iframeRef,
@@ -11616,7 +12009,7 @@ var ReviewTargetFrame = ({
         ]
       }
     ) }) }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime25.jsx)("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime26.jsx)("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
       ReviewModeToolbar,
       {
         canWriteArea,
@@ -11628,130 +12021,19 @@ var ReviewTargetFrame = ({
   ] }) });
 };
 
-// src/react-shell/target/target.ts
-var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
-var FIGMA_POINTER_LOCK_STYLE_ID = "df-review-figma-pointer-lock";
-var FIGMA_SOURCE_SELECT_POINTER_LOCK_STYLE_ID = "df-review-source-select-figma-pointer-lock";
-var FIGMA_POINTER_LOCK_STYLE_TEXT = [
-  "#df-review-figma-image-target-root,",
-  "#df-review-figma-image-target-root *,",
-  ".df-review-figma-image-target-overlay,",
-  ".df-review-figma-image-target-overlay *,",
-  ".helper-figma-root,",
-  ".helper-figma-root *,",
-  ".helper-figma-loading-backdrop,",
-  ".helper-figma-loading-backdrop * {",
-  "pointer-events: none !important;",
-  "}"
-].join("\n");
-var setTargetScrollbarHidden = (targetDocument, hidden) => {
-  if (!targetDocument) return;
-  const existing = targetDocument.getElementById(HIDE_SCROLLBAR_STYLE_ID);
-  if (hidden) {
-    if (existing) return;
-    const style = targetDocument.createElement("style");
-    style.id = HIDE_SCROLLBAR_STYLE_ID;
-    style.textContent = "html{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}";
-    targetDocument.head?.appendChild(style);
-  } else {
-    existing?.remove();
-  }
-};
-var setTargetFigmaPointerLockStyle = (targetDocument, styleId, locked) => {
-  if (!targetDocument) return;
-  const existing = targetDocument.getElementById(styleId);
-  if (locked) {
-    if (existing) return;
-    const style = targetDocument.createElement("style");
-    style.id = styleId;
-    style.textContent = FIGMA_POINTER_LOCK_STYLE_TEXT;
-    targetDocument.head?.appendChild(style);
-  } else {
-    existing?.remove();
-  }
-};
-var setTargetFigmaOverlayLocked = (targetDocument, locked) => {
-  setTargetFigmaPointerLockStyle(
-    targetDocument,
-    FIGMA_POINTER_LOCK_STYLE_ID,
-    locked
-  );
-};
-var setTargetFigmaSourceSelectLocked = (targetDocument, locked) => {
-  setTargetFigmaPointerLockStyle(
-    targetDocument,
-    FIGMA_SOURCE_SELECT_POINTER_LOCK_STYLE_ID,
-    locked
-  );
-};
-var isEditableEventTarget = (event) => {
-  const path = event.composedPath?.() ?? [];
-  const element = path[0] ?? event.target;
-  if (!element || typeof element.tagName !== "string") return false;
-  const tag = element.tagName;
-  return tag === "INPUT" || tag === "TEXTAREA" || element.isContentEditable === true;
-};
-var TRUE_STORAGE_VALUES = /* @__PURE__ */ new Set([
-  "1",
-  "true",
-  "on",
-  "show",
-  "shown",
-  "visible",
-  "enabled",
-  "yes"
-]);
-var OVERLAY_STORAGE_KEYS = {
-  grid: ["isHelp", "df-review-grid-overlay", "dfReviewGridOverlay"],
-  figma: ["isFigmaHelp", "df-review-figma-overlay", "dfReviewFigmaOverlay"]
-};
-var isStoredOverlayEnabled = (value) => TRUE_STORAGE_VALUES.has(value?.trim().toLowerCase() ?? "");
-var getCookieValue = (targetDocument, name) => {
-  const cookies = targetDocument?.cookie ? targetDocument.cookie.split(";") : [];
-  const prefix = `${name}=`;
-  const match = cookies.map((cookie) => cookie.trim()).find((cookie) => cookie.startsWith(prefix));
-  return match ? decodeURIComponent(match.slice(prefix.length)) : null;
-};
-var getStorageValue = (storage, key) => {
-  try {
-    return storage?.getItem(key) ?? null;
-  } catch {
-    return null;
-  }
-};
-var getStoredOverlayState = (targetDocument, overlay) => {
-  const targetWindow = targetDocument?.defaultView;
-  return OVERLAY_STORAGE_KEYS[overlay].some((key) => {
-    if (isStoredOverlayEnabled(getCookieValue(targetDocument, key))) {
-      return true;
-    }
-    return isStoredOverlayEnabled(getStorageValue(targetWindow?.localStorage, key)) || isStoredOverlayEnabled(getStorageValue(targetWindow?.sessionStorage, key));
-  });
-};
-var getTargetOverlayState = (targetDocument) => ({
-  grid: Boolean(
-    targetDocument?.body?.classList.contains("is-help") || targetDocument?.querySelector(".helper.onShow") || getStoredOverlayState(targetDocument, "grid")
-  ),
-  figma: Boolean(
-    targetDocument?.querySelector(
-      ".helper-figma-root, .helper-figma-loading-backdrop"
-    ) || getStoredOverlayState(targetDocument, "figma")
-  )
-});
-
 // src/react-shell/topbar.tsx
-var import_jsx_runtime26 = require("react/jsx-runtime");
+var import_jsx_runtime27 = require("react/jsx-runtime");
 var ReviewScopeIcon2 = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Monitor, { "aria-hidden": "true" });
+  if (scope === "mobile") return /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Monitor, { "aria-hidden": "true" });
 };
 var ViewportPresetIcon = ({
   preset
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
+  return /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
 };
 var getPresetSelectValue = (preset) => `${preset.label}:${preset.width}x${preset.height}`;
 function getTargetOpenHref(targetSrc) {
@@ -11788,8 +12070,8 @@ var ReviewTopbar = ({
     );
     if (nextPreset) onSizeChange(nextPreset);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)("header", { className: "df-review-topbar", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)("header", { className: "df-review-topbar", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(
       "form",
       {
         className: "df-review-address",
@@ -11798,17 +12080,19 @@ var ReviewTopbar = ({
           onApplyTarget();
         },
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
             "button",
             {
               "aria-label": "Open sitemap",
               className: "df-review-sitemap-button",
+              "data-review-tooltip": "Open sitemap",
+              "data-review-tooltip-placement": "bottom",
               type: "button",
               onClick: onOpenSitemap,
-              children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Map2, { "aria-hidden": "true" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Map2, { "aria-hidden": "true" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
             "input",
             {
               "aria-label": "Path",
@@ -11816,61 +12100,67 @@ var ReviewTopbar = ({
               onChange: (event) => onDraftTargetChange(event.target.value)
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)("div", { className: "df-review-address-actions", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)("div", { className: "df-review-address-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
               "button",
               {
                 "aria-label": "Refresh target",
                 className: "df-review-address-icon-button",
+                "data-review-tooltip": "Refresh target",
+                "data-review-tooltip-placement": "bottom",
                 title: "Refresh target",
                 type: "submit",
-                children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(RefreshCw, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(RefreshCw, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
               "button",
               {
                 "aria-label": copyLabel,
                 className: "df-review-address-icon-button",
+                "data-review-tooltip": copyLabel,
+                "data-review-tooltip-placement": "bottom",
                 title: copyLabel,
                 type: "button",
                 onClick: onCopyCurrentUrl,
-                children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Copy, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Copy, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
               "a",
               {
                 "aria-label": "Open target page",
                 className: "df-review-address-icon-button",
+                "data-review-tooltip": "Open target page",
+                "data-review-tooltip-placement": "bottom",
                 href: targetHref,
                 rel: "noreferrer",
                 target: "_blank",
                 title: "Open target page",
-                children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(ExternalLink, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(ExternalLink, { "aria-hidden": "true" })
               }
             )
           ] })
         ]
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)("div", { className: "df-review-tools", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)("div", { className: "df-review-tool-controls", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime26.jsx)("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(
+    /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)("div", { className: "df-review-tools", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)("div", { className: "df-review-tool-controls", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(
           "button",
           {
             className: preset.label === size.label ? "is-active" : "",
             type: "button",
             onClick: () => onSizeChange(preset),
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(ViewportPresetIcon, { preset }),
-              /* @__PURE__ */ (0, import_jsx_runtime26.jsx)("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)("strong", { children: preset.label }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime26.jsx)("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
+              /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(ViewportPresetIcon, { preset }),
+              /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("strong", { children: preset.label }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
             ]
           },
           preset.label
         )) }),
-        /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
           "select",
           {
             "aria-label": "Viewport preset",
@@ -11880,7 +12170,7 @@ var ReviewTopbar = ({
             children: viewportPresets.map((preset) => {
               const scope = getViewportPresetKind(preset);
               const count = presetScopeCounts.get(scope) ?? 0;
-              return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+              return /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
                 "option",
                 {
                   value: getPresetSelectValue(preset),
@@ -11891,44 +12181,50 @@ var ReviewTopbar = ({
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime26.jsx)("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)("span", { className: "df-review-active-size", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+        /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)("span", { className: "df-review-active-size", children: [
           size.width,
           "x",
           size.height
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
-        isRulerAvailable && /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
+        isRulerAvailable && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
           "button",
           {
             "aria-label": "Toggle ruler",
             className: `df-review-overlay-button is-ruler${isRulerVisible ? " is-active" : ""}`,
+            "data-review-tooltip": "Toggle ruler",
+            "data-review-tooltip-placement": "bottom",
             type: "button",
             onClick: onToggleRuler,
-            children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Ruler, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Ruler, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
           "button",
           {
             "aria-label": "Toggle grid overlay",
             className: `df-review-overlay-button is-grid${targetOverlayState.grid ? " is-active" : ""}`,
+            "data-review-tooltip": "Toggle grid overlay",
+            "data-review-tooltip-placement": "bottom",
             type: "button",
             onClick: () => onToggleTargetOverlay("grid"),
-            children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(LayoutGrid, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(LayoutGrid, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
           "button",
           {
             "aria-disabled": !isFigmaOverlayAvailable,
             "aria-label": isFigmaOverlayAvailable ? isFigmaOverlayActive ? "Hide Figma overlays" : "Show Figma overlays" : figmaOverlayUnavailableMessage,
             className: `df-review-overlay-button is-figma${isFigmaOverlayActive ? " is-active" : ""}${isFigmaOverlayAvailable ? "" : " is-disabled"}`,
+            "data-review-tooltip": isFigmaOverlayAvailable ? isFigmaOverlayActive ? "Hide Figma overlays" : "Show Figma overlays" : figmaOverlayUnavailableMessage,
+            "data-review-tooltip-placement": "bottom",
             disabled: !isFigmaOverlayAvailable,
             type: "button",
             onClick: onToggleFigmaOverlay,
-            children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(FigmaMarkIcon, {})
+            children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(FigmaMarkIcon, {})
           }
         )
       ] })
@@ -12225,8 +12521,8 @@ function localAdapter(options = {}) {
 function normalizeStoredReviewItem(value) {
   if (!value || typeof value !== "object") return void 0;
   const raw = value;
-  const kind = raw.kind === "text" ? "note" : raw.kind === "capture" ? "area" : raw.kind;
-  if (kind !== "note" && kind !== "area") return void 0;
+  const kind = raw.kind === "capture" ? "area" : raw.kind;
+  if (kind !== "dom" && kind !== "area") return void 0;
   const { screenshot: _screenshot, reviewNumber: _reviewNumber, ...item } = raw;
   if (kind === raw.kind && _screenshot === void 0 && _reviewNumber === void 0) {
     return raw;
@@ -12253,11 +12549,6 @@ var SEMANTIC_ANCHOR_ATTRIBUTES = [
   "name",
   "href"
 ];
-function getDomAnchor(selection, configuredAttribute = "data-qa-id", environment) {
-  const x = selection.left + selection.width / 2;
-  const y = selection.top + selection.height / 2;
-  return getDomAnchorFromPoint({ x, y }, configuredAttribute, environment);
-}
 function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", environment) {
   const target = environment.document.elementFromPoint(point.x, point.y);
   if (!target) return void 0;
@@ -12807,6 +13098,34 @@ function createId() {
 }
 
 // src/core/hotkey.ts
+var HOTKEY_KEY_ALIASES = {
+  q: ["\u3142", "\u3143"],
+  w: ["\u3148", "\u3149"],
+  e: ["\u3137", "\u3138"],
+  r: ["\u3131", "\u3132"],
+  t: ["\u3145", "\u3146"],
+  y: ["\u315B"],
+  u: ["\u3155"],
+  i: ["\u3151"],
+  o: ["\u3150", "\u3152"],
+  p: ["\u3154", "\u3156"],
+  a: ["\u3141"],
+  s: ["\u3134"],
+  d: ["\u3147"],
+  f: ["\u3139"],
+  g: ["\u314E"],
+  h: ["\u3157"],
+  j: ["\u3153"],
+  k: ["\u314F"],
+  l: ["\u3163"],
+  z: ["\u314B"],
+  x: ["\u314C"],
+  c: ["\u314A"],
+  v: ["\u314D"],
+  b: ["\u3160"],
+  n: ["\u315C"],
+  m: ["\u3161"]
+};
 function isHotkey(event, hotkey) {
   const parts = hotkey.split("+").map((part) => part.trim().toLowerCase()).filter(Boolean);
   const key = parts.find(
@@ -12823,14 +13142,14 @@ function isHotkey(event, hotkey) {
   }
   return isHotkeyKey(event, key);
 }
+function getHotkeyActionKey(event, keys) {
+  return keys.find((key) => isHotkeyKey(event, key));
+}
 function isHotkeyKey(event, key) {
   const normalizedKey = key.toLowerCase();
   if (event.key.toLowerCase() === normalizedKey) return true;
   if (getHotkeyCode(normalizedKey) === event.code) return true;
-  const aliases = {
-    q: ["\u3142", "\u3143"]
-  };
-  return aliases[normalizedKey]?.includes(event.key) ?? false;
+  return HOTKEY_KEY_ALIASES[normalizedKey]?.includes(event.key) ?? false;
 }
 function getHotkeyCode(key) {
   if (/^[a-z]$/.test(key)) return `Key${key.toUpperCase()}`;
@@ -13009,19 +13328,11 @@ function getItemHighlightSelection(item, environment) {
       environment
     );
   }
-  return getVisibleHighlightSelection(
-    [
-      getAnchorHighlightSelection(item, environment),
-      getBoundSelection(item, environment),
-      getPointHighlightSelection(item, environment)
-    ],
-    environment
-  );
+  return void 0;
 }
 function getReviewItemHighlightMode(item) {
   if (isDomReviewItem(item)) return "dom";
-  if (item.kind === "area") return "area";
-  return "note";
+  return "area";
 }
 function getItemMarker(item) {
   if (item.marker) return item.marker;
@@ -13120,7 +13431,7 @@ function getVisibleHighlightSelection(candidates, environment) {
   );
 }
 function isDomReviewItem(item) {
-  return item.scope === "dom" || item.kind === "note" && Boolean(item.anchor && getItemSelection(item));
+  return item.kind === "dom" || item.scope === "dom";
 }
 
 // src/core/draft.attachments.ts
@@ -13806,89 +14117,6 @@ function createStyleElement() {
       border-style: dashed;
     }
 
-    .dfwr-bound-marker.is-note-callout,
-    .dfwr-bound-marker.is-note-callout.is-highlighted {
-      --dfwr-scope: #7cc7ff;
-      --dfwr-scope-rgb: 124, 199, 255;
-      min-width: 0;
-      width: 0;
-      height: 0;
-      padding: 0;
-      transform: none;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-      color: var(--dfwr-scope);
-      animation: none;
-      overflow: visible;
-    }
-
-    .dfwr-bound-marker.is-note-callout::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 8px;
-      height: 8px;
-      transform: translate(-50%, -50%);
-      border: 2px solid #111820;
-      border-radius: var(--df-review-radius-pill);
-      background: var(--dfwr-scope);
-      box-shadow:
-        0 0 0 3px rgba(var(--dfwr-scope-rgb), 0.22),
-        0 6px 16px rgba(0, 0, 0, 0.28);
-    }
-
-    .dfwr-bound-marker.is-note-callout.is-highlighted::before {
-      animation: dfwr-note-dot-pulse 1000ms ease-in-out infinite;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 31px;
-      height: 2px;
-      transform: rotate(-42deg);
-      transform-origin: left center;
-      border-radius: var(--df-review-radius-pill);
-      background: currentColor;
-      opacity: 1;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon::before,
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon::after {
-      display: none;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-number {
-      position: absolute;
-      left: 24px;
-      top: -41px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 28px;
-      height: 20px;
-      padding: 0 7px;
-      border: 1px solid var(--dfwr-scope);
-      border-radius: 4px;
-      background: var(--dfwr-scope);
-      box-shadow:
-        0 0 0 3px rgba(var(--dfwr-scope-rgb), 0.18),
-        0 8px 18px rgba(0, 0, 0, 0.28);
-      color: #111820;
-      text-align: center;
-      line-height: 1;
-      white-space: nowrap;
-    }
-
-    .dfwr-bound-marker.is-note-callout.is-highlighted .dfwr-bound-marker-icon,
-    .dfwr-bound-marker.is-note-callout.is-highlighted .dfwr-bound-marker-number {
-      animation: dfwr-selected-blink 1000ms ease-in-out infinite;
-    }
-
     .dfwr-area-preview-layer .dfwr-bound-marker {
       border-color: #63d7c7;
       background: var(--df-review-color-panel);
@@ -13959,14 +14187,14 @@ function createStyleElement() {
       line-height: 1;
     }
 
-    .dfwr-note-draft {
+    .dfwr-dom-draft {
       position: fixed;
       inset: 0;
       z-index: 4;
       pointer-events: none;
     }
 
-    .dfwr-note-pin {
+    .dfwr-dom-pin {
       appearance: none;
       position: fixed;
       z-index: 5;
@@ -13984,11 +14212,11 @@ function createStyleElement() {
       pointer-events: auto;
     }
 
-    .dfwr-note-pin:active {
+    .dfwr-dom-pin:active {
       cursor: grabbing;
     }
 
-    .dfwr-note-popover {
+    .dfwr-dom-popover {
       position: fixed;
       z-index: 4;
       width: min(320px, calc(100vw - 24px));
@@ -14001,14 +14229,14 @@ function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
-    .dfwr-note-popover.is-composer,
+    .dfwr-dom-popover.is-composer,
     .dfwr-area-draft.is-composer {
       max-height: min(360px, calc(100vh - 32px));
       overflow: auto;
       border-color: rgba(99, 215, 199, 0.56);
     }
 
-    .dfwr-shell.is-docked-composer .dfwr-note-popover.is-docked-composer,
+    .dfwr-shell.is-docked-composer .dfwr-dom-popover.is-docked-composer,
     .dfwr-shell.is-docked-composer .dfwr-area-draft.is-docked-composer {
       position: relative;
       left: auto;
@@ -14022,7 +14250,7 @@ function createStyleElement() {
       min-height: 184px;
     }
 
-    .dfwr-note-popover.is-dragging,
+    .dfwr-dom-popover.is-dragging,
     .dfwr-area-draft.is-dragging {
       user-select: none;
     }
@@ -14066,7 +14294,7 @@ function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
-    .dfwr-note-popover .dfwr-actions {
+    .dfwr-dom-popover .dfwr-actions {
       padding: 0;
     }
 
@@ -14112,14 +14340,6 @@ function createStyleElement() {
     .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle svg {
       width: 18px;
       height: 18px;
-    }
-
-    .dfwr-note-actions {
-      justify-content: flex-end;
-    }
-
-    .dfwr-note-actions .dfwr-button:first-child {
-      margin-right: auto;
     }
 
     .dfwr-area-draft .dfwr-actions {
@@ -14517,18 +14737,6 @@ function createStyleElement() {
       }
     }
 
-    @keyframes dfwr-note-dot-pulse {
-      0% {
-        transform: translate(-50%, -50%) scale(0.88);
-      }
-      45% {
-        transform: translate(-50%, -50%) scale(1.3);
-      }
-      100% {
-        transform: translate(-50%, -50%) scale(1);
-      }
-    }
-
     @keyframes dfwr-selected-blink {
       0%,
       100% {
@@ -14578,7 +14786,7 @@ function createStyleElement() {
 }
 
 // src/core/review/format.ts
-function formatNoteDraftMeta(draft) {
+function formatDomDraftMeta(draft) {
   const parts = [
     `viewport ${formatSize(draft.viewport)}`,
     `point ${formatPoint(draft.marker.viewport)}`
@@ -14660,12 +14868,12 @@ var WebReviewKitView = class {
   render(shadow, hiddenItemsStyle) {
     const state = this.state;
     this.draftPreview.sync(
-      state.isOpen && state.mode === "element" ? state.noteDraft : void 0
+      state.isOpen && state.mode === "element" ? state.domDraft : void 0
     );
     shadow.replaceChildren();
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
-    const hasDismissableDraft = Boolean(state.noteDraft || state.areaDraft);
+    const hasDismissableDraft = Boolean(state.domDraft || state.areaDraft);
     const shouldDockComposer = this.config.options.ui?.panel === false && hasDismissableDraft && Boolean(this.getShellComposerHost());
     let dockedComposer;
     const shell = document.createElement("div");
@@ -14692,17 +14900,15 @@ var WebReviewKitView = class {
     if (state.isOpen && hasDismissableDraft && !shouldDockComposer) {
       shell.append(this.createDraftCancelLayer());
     }
-    if (state.isOpen && (state.mode === "note" || state.mode === "element")) {
-      if (state.noteDraft) {
-        const noteDraft = this.createNotePopover(state.noteDraft, {
+    if (state.isOpen && state.mode === "element") {
+      if (state.domDraft) {
+        const domDraft = this.createDomPopover(state.domDraft, {
           dockComposer: shouldDockComposer
         });
-        shell.append(noteDraft.layer);
-        dockedComposer = noteDraft.composer;
+        shell.append(domDraft.layer);
+        dockedComposer = domDraft.composer;
       } else {
-        shell.append(
-          state.mode === "element" ? this.createElementLayer() : this.createNoteLayer()
-        );
+        shell.append(this.createElementLayer());
       }
     }
     if (state.isOpen && state.mode === "area" && !state.areaDraft && !state.isSelectingArea) {
@@ -15041,14 +15247,14 @@ ${adjustment}` : adjustment;
         );
         return;
       }
-      const noteDraft = this.state.noteDraft ?? draft;
+      const domDraft = this.state.domDraft ?? draft;
       const nextDraft = {
-        ...noteDraft,
+        ...domDraft,
         comment: options.textarea.value
       };
-      this.config.actions.setNoteDraft(nextDraft);
-      void this.config.actions.captureNoteDraft(
-        this.getCaptureNoteDraft(nextDraft, options.isElementDraft)
+      this.config.actions.setDomDraft(nextDraft);
+      void this.config.actions.captureDomDraft(
+        this.getCaptureDomDraft(nextDraft, options.isElementDraft)
       );
     });
     return button;
@@ -15060,7 +15266,7 @@ ${adjustment}` : adjustment;
       selection: draft.selection
     };
   }
-  getCaptureNoteDraft(draft, isElementDraft) {
+  getCaptureDomDraft(draft, isElementDraft) {
     if (!isElementDraft) {
       return {
         viewport: draft.viewport,
@@ -15113,12 +15319,6 @@ ${adjustment}` : adjustment;
     const toolbar = document.createElement("div");
     toolbar.className = "dfwr-toolbar";
     toolbar.append(
-      this.createToolbarButton("Note", this.state.mode === "note", () => {
-        const mode = this.state.mode;
-        this.config.actions.setModeState(mode === "note" ? "idle" : "note");
-        this.config.actions.clearDrafts();
-        this.config.actions.render();
-      }),
       this.createToolbarButton("Element", this.state.mode === "element", () => {
         const mode = this.state.mode;
         this.config.actions.setModeState(
@@ -15158,30 +15358,30 @@ ${adjustment}` : adjustment;
     if (state.mode === "idle") {
       const empty = document.createElement("p");
       empty.className = "dfwr-empty";
-      empty.textContent = "Add a note or mark an area.";
+      empty.textContent = "Select an element or mark an area.";
       body.append(empty);
       return body;
     }
-    if (state.mode === "note" || state.mode === "element") {
-      body.append(this.createNoteBody());
+    if (state.mode === "element") {
+      body.append(this.createDomBody());
       return body;
     }
     body.append(this.createAreaForm());
     return body;
   }
-  createNoteBody() {
+  createDomBody() {
     const empty = document.createElement("p");
     empty.className = "dfwr-empty";
-    empty.textContent = this.state.noteDraft ? "Write the note in the page box." : this.state.mode === "element" ? "Click an element to add QA." : "Click on the page to place a note.";
+    empty.textContent = this.state.domDraft ? "Write the QA in the page box." : "Click an element to add QA.";
     return empty;
   }
-  // Builds the note draft layer: the on-page marker/highlight plus its composer
+  // Builds the DOM draft layer: the on-page marker/highlight plus its composer
   // popover. When dockComposer is set the composer renders into the side panel
   // instead of floating next to the marker (used for the docked review mode).
-  createNotePopover(draft, options = {}) {
+  createDomPopover(draft, options = {}) {
     const environment = this.config.getEnvironment();
     const group = document.createElement("div");
-    group.className = "dfwr-note-draft";
+    group.className = "dfwr-dom-draft";
     if (!environment) return { layer: group, composer: void 0 };
     const isElementDraft = this.state.mode === "element" && Boolean(draft.selection);
     const hostPoint = toHostPoint(
@@ -15199,15 +15399,15 @@ ${adjustment}` : adjustment;
       group.append(selectionHighlight);
     }
     const pin = document.createElement("button");
-    pin.className = "dfwr-note-pin";
+    pin.className = "dfwr-dom-pin";
     pin.type = "button";
-    pin.setAttribute("aria-label", "Move note point");
+    pin.setAttribute("aria-label", "Move DOM point");
     pin.style.left = `${hostPoint.x}px`;
     pin.style.top = `${hostPoint.y}px`;
     const popover = document.createElement("div");
     const position = getPopoverPosition(hostPoint, environment);
     popover.className = [
-      "dfwr-note-popover",
+      "dfwr-dom-popover",
       isElementDraft ? "is-composer" : "",
       options.dockComposer ? "is-docked-composer" : ""
     ].filter(Boolean).join(" ");
@@ -15239,13 +15439,13 @@ ${adjustment}` : adjustment;
     const meta = isElementDraft ? void 0 : document.createElement("div");
     if (meta) {
       meta.className = "dfwr-item-date";
-      meta.textContent = formatNoteDraftMeta(draft);
+      meta.textContent = formatDomDraftMeta(draft);
     }
     const titleInput = this.isTitleFieldEnabled() ? this.createDraftTitleInput(draft.title, (title) => {
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
-      this.config.actions.setNoteDraft({
-        ...noteDraft,
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
+      this.config.actions.setDomDraft({
+        ...domDraft,
         title
       });
     }) : void 0;
@@ -15255,27 +15455,27 @@ ${adjustment}` : adjustment;
     textarea.rows = 4;
     textarea.value = draft.comment ?? "";
     textarea.addEventListener("input", () => {
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
-      this.config.actions.setNoteDraft({
-        ...noteDraft,
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
+      this.config.actions.setDomDraft({
+        ...domDraft,
         comment: textarea.value
       });
     });
     attachDraftImagePasteQueue(textarea, {
-      getAttachments: () => this.state.noteDraft?.attachments ?? draft.attachments,
+      getAttachments: () => this.state.domDraft?.attachments ?? draft.attachments,
       onAttachmentsChange: (attachments) => {
-        const noteDraft = this.state.noteDraft ?? draft;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           comment: textarea.value,
           attachments
         });
       },
       onCommentChange: (comment) => {
-        const noteDraft = this.state.noteDraft ?? draft;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           comment
         });
       },
@@ -15285,17 +15485,17 @@ ${adjustment}` : adjustment;
       draft.assigneeId,
       draft.assigneeName,
       (assigneeId, assigneeName) => {
-        const noteDraft = this.state.noteDraft;
-        if (!noteDraft) return;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft;
+        if (!domDraft) return;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           assigneeId,
           assigneeName
         });
       }
     );
     const saveDraft = () => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
       const comment = fields.comment;
       const hasAttachments = Boolean(currentDraft.attachments?.length);
@@ -15303,7 +15503,7 @@ ${adjustment}` : adjustment;
         return;
       }
       void this.config.actions.createItem({
-        kind: "note",
+        kind: "dom",
         title: fields.title,
         comment: this.withDraftAdjustmentComment(comment, currentDraft),
         assigneeId: fields.assigneeId,
@@ -15326,12 +15526,12 @@ ${adjustment}` : adjustment;
     const leadingActions = [
       adjustmentControls?.actionButton,
       this.createDraftCaptureButton(draft, {
-        kind: "note",
+        kind: "dom",
         isElementDraft,
         textarea
       })
     ].filter((element) => Boolean(element));
-    const actions = this.createFormActions("Save note", saveDraft, {
+    const actions = this.createFormActions("Save DOM QA", saveDraft, {
       leading: leadingActions.length > 0 ? leadingActions : void 0
     });
     const error = this.createDraftError();
@@ -15339,13 +15539,13 @@ ${adjustment}` : adjustment;
       document,
       draft.attachments,
       (attachmentId) => {
-        const noteDraft = this.state.noteDraft ?? draft;
+        const domDraft = this.state.domDraft ?? draft;
         const attachments = removeDraftAttachment(
-          noteDraft.attachments,
+          domDraft.attachments,
           attachmentId
         );
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        this.config.actions.setDomDraft({
+          ...domDraft,
           comment: textarea.value,
           attachments: attachments.length > 0 ? attachments : void 0
         });
@@ -15373,9 +15573,9 @@ ${adjustment}` : adjustment;
     }
     if (dragHandle) {
       this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
-        const noteDraft = this.state.noteDraft ?? draft;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           composerPosition,
           comment: textarea.value
         });
@@ -15534,9 +15734,9 @@ ${adjustment}` : adjustment;
       });
     };
     const updateDraft = (updater) => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       const nextDraft = updater(currentDraft);
-      this.config.actions.setNoteDraft({
+      this.config.actions.setDomDraft({
         ...nextDraft,
         comment: textarea.value
       });
@@ -15555,7 +15755,7 @@ ${adjustment}` : adjustment;
       adjust.focus();
     });
     popover.addEventListener("keydown", (event) => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       if (currentDraft.adjustment?.isActive !== true) return;
       const keyDelta = this.getAdjustmentKeyDelta(event);
       if (!keyDelta) return;
@@ -15990,8 +16190,7 @@ ${adjustment}` : adjustment;
         return;
       }
       const isHighlighted = item.id === this.state.highlightedItemId;
-      const highlightMode = getReviewItemHighlightMode(item);
-      if (highlightMode !== "note" && (!this.state.highlightedItemId || isHighlighted)) {
+      if (!this.state.highlightedItemId || isHighlighted) {
         const selection = getItemHighlightSelection(item, environment);
         if (selection) {
           layer.append(
@@ -16018,8 +16217,7 @@ ${adjustment}` : adjustment;
         displayLabel,
         scope,
         point.isBound,
-        isHighlighted,
-        highlightMode === "note" ? "note" : "default"
+        isHighlighted
       );
       marker.title = `${displayLabel} / ${item.comment}
 ${formatItemMeta(item)}`;
@@ -16064,12 +16262,10 @@ ${formatItemMeta(item)}`;
     highlight.style.height = `${rect.height}px`;
     return highlight;
   }
-  createMarkerElement(itemId, hostPoint, label, scope, isBound, isHighlighted, variant = "default") {
-    const isNoteCallout = variant === "note";
+  createMarkerElement(itemId, hostPoint, label, scope, isBound, isHighlighted) {
     const marker = document.createElement("div");
     marker.className = [
       "dfwr-bound-marker",
-      isNoteCallout ? "is-note-callout" : "",
       `is-scope-${scope}`,
       isBound ? "is-bound" : "is-fallback",
       isHighlighted ? "is-highlighted" : ""
@@ -16103,19 +16299,19 @@ ${formatItemMeta(item)}`;
         popover.style.left = `${position.left}px`;
         popover.style.top = `${position.top}px`;
       }
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
       const nextDraft = {
-        ...noteDraft,
+        ...domDraft,
         marker: {
-          ...noteDraft.marker,
+          ...domDraft.marker,
           viewport: roundPoint(nextPoint)
         },
         comment: textarea.value
       };
-      this.config.actions.setNoteDraft(nextDraft);
+      this.config.actions.setDomDraft(nextDraft);
       if (meta) {
-        meta.textContent = formatNoteDraftMeta(nextDraft);
+        meta.textContent = formatDomDraftMeta(nextDraft);
       }
     };
     pin.addEventListener("pointerdown", (event) => {
@@ -16143,31 +16339,15 @@ ${formatItemMeta(item)}`;
         event,
         this.config.getEnvironment()
       );
-      const currentDraft = this.state.noteDraft;
+      const currentDraft = this.state.domDraft;
       const fields = {
         title: currentDraft?.title,
         comment: textarea.value,
         assigneeId: currentDraft?.assigneeId,
         assigneeName: currentDraft?.assigneeName
       };
-      void (this.state.mode === "element" ? this.config.actions.bindElementDraftToPoint(nextPoint, fields) : this.config.actions.bindNoteDraftToPoint(nextPoint, fields));
+      void this.config.actions.bindElementDraftToPoint(nextPoint, fields);
     });
-  }
-  createNoteLayer() {
-    const layer = document.createElement("div");
-    layer.className = "dfwr-text-layer";
-    const environment = this.config.getEnvironment();
-    if (environment) {
-      placeLayerOverTarget(layer, environment);
-    }
-    layer.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      void this.config.actions.bindNoteDraftToPoint(
-        toTargetPointFromHostEvent(event, this.config.getEnvironment())
-      );
-    });
-    return layer;
   }
   createElementLayer() {
     const layer = document.createElement("div");
@@ -16395,7 +16575,7 @@ var WebReviewKitApp = class {
         isOpen: this.isOpen,
         mode: this.mode,
         items: this.items,
-        noteDraft: this.noteDraft,
+        domDraft: this.domDraft,
         areaDraft: this.areaDraft,
         draftError: this.draftError,
         isCreatingItem: this.isCreatingItem,
@@ -16412,8 +16592,8 @@ var WebReviewKitApp = class {
         removeItem: (itemId) => this.adapter.remove(itemId),
         setModeState: (mode) => this.setModeState(mode),
         clearDrafts: () => this.clearDrafts(),
-        setNoteDraft: (draft) => {
-          this.noteDraft = draft;
+        setDomDraft: (draft) => {
+          this.domDraft = draft;
           this.draftError = "";
         },
         setAreaDraft: (draft) => {
@@ -16424,9 +16604,8 @@ var WebReviewKitApp = class {
           this.isSelectingArea = isSelectingArea;
         },
         createItem: (input) => this.createItem(input),
-        captureNoteDraft: (input) => this.captureNoteDraft(input),
+        captureDomDraft: (input) => this.captureDomDraft(input),
         captureAreaDraft: (input) => this.captureAreaDraft(input),
-        bindNoteDraftToPoint: (point, fields) => this.bindNoteDraftToPoint(point, fields),
         bindElementDraftToPoint: (point, fields) => this.bindElementDraftToPoint(point, fields),
         createAreaDraft: (selection) => this.createAreaDraft(selection)
       }
@@ -16518,9 +16697,9 @@ var WebReviewKitApp = class {
     this.updateHiddenItemsStyle();
   }
   clearDrafts() {
-    this.revokeDraftAttachmentPreviews(this.noteDraft);
+    this.revokeDraftAttachmentPreviews(this.domDraft);
     this.revokeDraftAttachmentPreviews(this.areaDraft);
-    this.noteDraft = void 0;
+    this.domDraft = void 0;
     this.areaDraft = void 0;
     this.draftError = "";
   }
@@ -16566,7 +16745,7 @@ var WebReviewKitApp = class {
     this.options.onModeChange?.(mode);
   }
   cancelMode() {
-    if (this.mode === "idle" && !this.noteDraft && !this.areaDraft && !this.isSelectingArea) {
+    if (this.mode === "idle" && !this.domDraft && !this.areaDraft && !this.isSelectingArea) {
       return false;
     }
     this.setModeState("idle");
@@ -16576,7 +16755,7 @@ var WebReviewKitApp = class {
     return true;
   }
   isDraftComposerFocused() {
-    if (!this.noteDraft && !this.areaDraft) return false;
+    if (!this.domDraft && !this.areaDraft) return false;
     const composerHost = this.getEnvironment()?.composerHost;
     const activeElement = composerHost?.ownerDocument.activeElement;
     return Boolean(
@@ -16651,32 +16830,6 @@ var WebReviewKitApp = class {
     if (!this.shadow) return;
     this.view.render(this.shadow, this.createHiddenItemsStyleElement());
   }
-  async bindNoteDraftToPoint(point, fields = {}) {
-    const environment = this.getEnvironment();
-    if (!environment) return;
-    const viewport = getViewportSize(environment);
-    const nextPoint = clampPoint(point, environment);
-    const draft = await this.withOverlayHidden(() => {
-      const selection = getPointSelection(nextPoint);
-      const anchor = getDomAnchor(
-        selection,
-        this.options.anchors?.attribute,
-        environment
-      );
-      const marker = {
-        viewport: roundPoint(nextPoint),
-        relative: anchor ? getRelativePoint(nextPoint, anchor, environment) : void 0
-      };
-      return {
-        viewport,
-        anchor,
-        marker,
-        ...fields
-      };
-    });
-    this.noteDraft = draft;
-    this.render();
-  }
   async bindElementDraftToPoint(point, fields = {}) {
     const environment = this.getEnvironment();
     if (!environment) return;
@@ -16725,7 +16878,7 @@ var WebReviewKitApp = class {
         previewElement
       };
     });
-    this.noteDraft = draft;
+    this.domDraft = draft;
     this.render();
   }
   async bindElementDraftToElement(element, fields = {}) {
@@ -16766,7 +16919,7 @@ var WebReviewKitApp = class {
       };
     });
     if (!draft) return;
-    this.noteDraft = draft;
+    this.domDraft = draft;
     this.render();
   }
   async createAreaDraft(selection) {
@@ -16809,10 +16962,10 @@ var WebReviewKitApp = class {
       this.root.style.display = previousDisplay;
     }
   }
-  async captureNoteDraft(input) {
+  async captureDomDraft(input) {
     if (this.isCapturingViewport) return;
     const environment = this.getEnvironment();
-    const draft = this.noteDraft;
+    const draft = this.domDraft;
     if (!draft) return;
     if (!environment?.captureViewport) {
       this.draftError = "Viewport capture helper is not available.";
@@ -16830,8 +16983,8 @@ var WebReviewKitApp = class {
     try {
       const result = await environment.captureViewport(captureInput);
       const attachment = this.createCaptureDraftAttachment(result, captureInput);
-      const currentDraft = this.noteDraft ?? draft;
-      this.noteDraft = {
+      const currentDraft = this.domDraft ?? draft;
+      this.domDraft = {
         ...currentDraft,
         attachments: [...currentDraft.attachments ?? [], attachment]
       };
@@ -17878,9 +18031,9 @@ var useReviewTargetOverlay = ({
     refreshTimersRef.current = [];
   }, []);
   const updateTargetOverlayState = (0, import_react13.useCallback)(() => {
-    const state = getTargetOverlayState(
-      iframeRef.current?.contentDocument ?? void 0
-    );
+    const targetDocument = iframeRef.current?.contentDocument ?? void 0;
+    ensureTargetOverlayStackingStyle(targetDocument);
+    const state = getTargetOverlayState(targetDocument);
     onTargetOverlayStateChange(state);
     return state;
   }, [iframeRef, onTargetOverlayStateChange]);
@@ -17895,6 +18048,9 @@ var useReviewTargetOverlay = ({
     (overlay) => {
       const targetWindow = iframeRef.current?.contentWindow;
       if (!targetWindow) return false;
+      ensureTargetOverlayStackingStyle(
+        iframeRef.current?.contentDocument ?? void 0
+      );
       const code = overlay === "grid" ? "KeyG" : "KeyF";
       targetWindow.dispatchEvent(
         new KeyboardEvent("keydown", {
@@ -19285,6 +19441,7 @@ var useReviewShellData = ({
 // src/react-shell/hooks/use.review.shell.hotkeys.ts
 var import_react22 = require("react");
 var useReviewShellHotkeys = ({
+  isRailHotkeyBlocked,
   isFigmaSettingsOpen,
   isInitialPromptOpen,
   isRulerAvailable,
@@ -19297,6 +19454,9 @@ var useReviewShellHotkeys = ({
   onCloseRuler,
   onCloseSitemap,
   onSetReviewMode,
+  onToggleComponentListPanel,
+  onToggleFigmaImagesPanel,
+  onToggleQaPanel,
   onToggleRuler,
   onToggleTargetOverlay
 }) => {
@@ -19356,11 +19516,11 @@ var useReviewShellHotkeys = ({
         },
         g: () => onToggleTargetOverlay("grid"),
         f: () => onToggleTargetOverlay("figma"),
-        n: () => onSetReviewMode("note"),
         e: () => onSetReviewMode("element"),
         a: () => onSetReviewMode("area")
       };
-      const action = actions[event.key.toLowerCase()];
+      const actionKey = getHotkeyActionKey(event, Object.keys(actions));
+      const action = actionKey ? actions[actionKey] : void 0;
       if (!action) return;
       event.preventDefault();
       action();
@@ -19373,13 +19533,35 @@ var useReviewShellHotkeys = ({
     onToggleRuler,
     onToggleTargetOverlay
   ]);
+  (0, import_react22.useEffect)(() => {
+    const handleRailHotkey = (event) => {
+      if (isRailHotkeyBlocked || isEditableEventTarget(event)) return;
+      const actions = [
+        { hotkey: "Shift+1", run: onToggleFigmaImagesPanel },
+        { hotkey: "Shift+2", run: onToggleQaPanel },
+        { hotkey: "Shift+3", run: onToggleComponentListPanel }
+      ];
+      const action = actions.find(({ hotkey }) => isHotkey(event, hotkey));
+      if (!action) return;
+      event.preventDefault();
+      event.stopPropagation();
+      action.run();
+    };
+    window.addEventListener("keydown", handleRailHotkey);
+    return () => window.removeEventListener("keydown", handleRailHotkey);
+  }, [
+    isRailHotkeyBlocked,
+    onToggleComponentListPanel,
+    onToggleFigmaImagesPanel,
+    onToggleQaPanel
+  ]);
 };
 
 // src/react-shell/hooks/use.review.shell.state.ts
 var import_react23 = require("react");
 
 // src/react-shell/adapters.ts
-var ALL_REVIEW_WRITE_MODES = ["dom", "note", "area"];
+var ALL_REVIEW_WRITE_MODES = ["dom", "area"];
 var DEFAULT_ASSIGNEE_TITLE = "Assignee";
 function normalizeReviewShellAdapters(adapters) {
   if (Array.isArray(adapters)) {
@@ -19945,11 +20127,13 @@ var removeReviewItem = async ({
 };
 
 // src/react-shell/review/shell.tsx
-var import_jsx_runtime27 = require("react/jsx-runtime");
+var import_jsx_runtime28 = require("react/jsx-runtime");
 var SOURCE_PANEL_MAX_WIDTH = 440;
 var SOURCE_PANEL_MIN_WIDTH = 240;
 var SOURCE_PANEL_MAX_HEIGHT = 260;
 var SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
+var isCommandModifierKeyEvent = (event) => event.key === "Meta" || event.code === "MetaLeft" || event.code === "MetaRight";
+var isCommandKeyDownEvent = (event) => isCommandModifierKeyEvent(event) || event.metaKey;
 var ReviewShell = ({
   projectId,
   pages,
@@ -20171,6 +20355,51 @@ var ReviewShell = ({
   const [mutatingItemIds, setMutatingItemIds] = (0, import_react24.useState)(
     () => /* @__PURE__ */ new Set()
   );
+  const [isCommandKeyPressed, setIsCommandKeyPressed] = (0, import_react24.useState)(false);
+  const effectiveHiddenOverlayItemIdList = (0, import_react24.useMemo)(() => {
+    if (!isCommandKeyPressed) return hiddenOverlayItemIdList;
+    const itemIds = new Set(hiddenOverlayItemIdList);
+    activeItems.forEach((item) => itemIds.add(item.id));
+    return Array.from(itemIds);
+  }, [activeItems, hiddenOverlayItemIdList, isCommandKeyPressed]);
+  (0, import_react24.useEffect)(() => {
+    const targetDocument = iframeRef.current?.contentDocument;
+    const targetWindow = iframeRef.current?.contentWindow;
+    const setCommandKeyPressed = (pressed) => {
+      setIsCommandKeyPressed(
+        (current) => current === pressed ? current : pressed
+      );
+    };
+    const handleKeyDown = (event) => {
+      if (isCommandKeyDownEvent(event)) setCommandKeyPressed(true);
+    };
+    const handleKeyUp = (event) => {
+      if (isCommandModifierKeyEvent(event) || !event.metaKey) {
+        setCommandKeyPressed(false);
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") setCommandKeyPressed(false);
+    };
+    const clearCommandKeyPressed = () => setCommandKeyPressed(false);
+    window.addEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("keyup", handleKeyUp, true);
+    window.addEventListener("blur", clearCommandKeyPressed);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    targetDocument?.addEventListener("keydown", handleKeyDown, true);
+    targetDocument?.addEventListener("keyup", handleKeyUp, true);
+    targetWindow?.addEventListener("blur", clearCommandKeyPressed);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("keyup", handleKeyUp, true);
+      window.removeEventListener("blur", clearCommandKeyPressed);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      targetDocument?.removeEventListener("keydown", handleKeyDown, true);
+      targetDocument?.removeEventListener("keyup", handleKeyUp, true);
+      targetWindow?.removeEventListener("blur", clearCommandKeyPressed);
+      clearCommandKeyPressed();
+    };
+  }, [iframeRef, targetFrameLoadVersion, targetSrc]);
   const {
     addImage: addFigmaImage,
     deleteImage: deleteFigmaImage,
@@ -20343,7 +20572,7 @@ var ReviewShell = ({
     cleanupTargetRef,
     controllerRef,
     frameScrollRef,
-    hiddenOverlayItemIdList,
+    hiddenOverlayItemIdList: effectiveHiddenOverlayItemIdList,
     hiddenOverlayItemIdListRef,
     iframeRef,
     isFigmaOverlayAvailable,
@@ -20494,22 +20723,6 @@ var ReviewShell = ({
     }
     setControllerReviewMode(nextMode);
   };
-  useReviewShellHotkeys({
-    isFigmaSettingsOpen,
-    isInitialPromptOpen,
-    isRulerAvailable,
-    isRulerVisible,
-    isSitemapOpen,
-    mode,
-    onCancelReviewMode: cancelReviewMode,
-    onCloseFigmaSettings: closeFigmaSettings,
-    onCloseInitialPrompt: closePromptModal,
-    onCloseRuler: closeRuler,
-    onCloseSitemap: closeSitemap,
-    onSetReviewMode: setReviewMode,
-    onToggleRuler: toggleRuler,
-    onToggleTargetOverlay: toggleTargetOverlay
-  });
   const copyCurrentUrl = () => copyCurrentReviewUrl({
     onCopyLabelChange: setCopyLabel
   });
@@ -20819,6 +21032,26 @@ var ReviewShell = ({
     setIsListVisible,
     sidePanel
   ]);
+  useReviewShellHotkeys({
+    isRailHotkeyBlocked: isFigmaSettingsOpen || isInitialPromptOpen || isInitialPromptScriptOpen || isSitemapOpen || Boolean(editingItem),
+    isFigmaSettingsOpen,
+    isInitialPromptOpen,
+    isRulerAvailable,
+    isRulerVisible,
+    isSitemapOpen,
+    mode,
+    onCancelReviewMode: cancelReviewMode,
+    onCloseFigmaSettings: closeFigmaSettings,
+    onCloseInitialPrompt: closePromptModal,
+    onCloseRuler: closeRuler,
+    onCloseSitemap: closeSitemap,
+    onSetReviewMode: setReviewMode,
+    onToggleComponentListPanel: toggleSourceTreePanel,
+    onToggleFigmaImagesPanel: toggleFigmaImagesPanel,
+    onToggleQaPanel: toggleQaPanel,
+    onToggleRuler: toggleRuler,
+    onToggleTargetOverlay: toggleTargetOverlay
+  });
   const toggleSectionOutlineEntry = (0, import_react24.useCallback)((entryId) => {
     setCollapsedSectionOutlineIds((current) => {
       const next = new Set(current);
@@ -20845,6 +21078,16 @@ var ReviewShell = ({
         omitPosition: true
       });
       showToast(didOpen ? "Source opened" : "Source root required");
+    },
+    [showToast, sourceOpenOptions]
+  );
+  const openSectionUsageSource = (0, import_react24.useCallback)(
+    (entry) => {
+      const didOpen = openSourceInEditor(
+        entry.metadata.usage?.source,
+        sourceOpenOptions
+      );
+      showToast(didOpen ? "Usage opened" : "Usage source not found");
     },
     [showToast, sourceOpenOptions]
   );
@@ -21299,12 +21542,12 @@ var ReviewShell = ({
     imageOverlayStates: figmaImageOverlayStates,
     images: figmaImageList
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(
     "div",
     {
       className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
           ReviewTopbar,
           {
             draftTarget,
@@ -21328,7 +21571,7 @@ var ReviewShell = ({
             onToggleTargetOverlay: toggleTargetOverlay
           }
         ),
-        isSitemapOpen && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        isSitemapOpen && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
           SitemapModal,
           {
             pages,
@@ -21343,7 +21586,7 @@ var ReviewShell = ({
             onSelectPage: selectPage
           }
         ),
-        isFigmaSettingsOpen && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        isFigmaSettingsOpen && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
           ReviewSettingsModal,
           {
             figmaTokenDraft,
@@ -21362,8 +21605,8 @@ var ReviewShell = ({
             onSave: saveReviewSettings
           }
         ),
-        isInitialPromptOpen && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(PromptModal, { onClose: closePromptModal }),
-        isInitialPromptScriptOpen && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        isInitialPromptOpen && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(PromptModal, { onClose: closePromptModal }),
+        isInitialPromptScriptOpen && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
           InitialPromptModal,
           {
             initialPromptText,
@@ -21372,7 +21615,7 @@ var ReviewShell = ({
             onCopyPrompt: (text, key) => void copyPrompt(text, key)
           }
         ),
-        editingItem && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        editingItem && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
           QaItemEditModal,
           {
             fields: activeAdapterEntry.fields,
@@ -21381,92 +21624,104 @@ var ReviewShell = ({
             onSave: saveItemDetails
           }
         ),
-        toastMessage && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
-        /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)("div", { className: "df-review-side-rail", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
-            "button",
-            {
-              "aria-label": isQaPanelVisible ? "Hide QA list" : "Show QA list",
-              "aria-pressed": isQaPanelVisible,
-              className: `df-review-side-toggle${isQaPanelVisible ? " is-active" : ""}`,
-              type: "button",
-              onClick: toggleQaPanel,
-              title: "QA",
-              children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(SquareCheckBig, {}) })
-            }
-          ),
-          isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
-            "button",
-            {
-              "aria-controls": "df-review-section-outline",
-              "aria-label": isSourceTreePanelVisible ? "Hide source tree" : "Show source tree",
-              "aria-pressed": isSourceTreePanelVisible,
-              className: `df-review-side-toggle${isSourceTreePanelVisible ? " is-active" : ""}`,
-              type: "button",
-              onClick: toggleSourceTreePanel,
-              title: "Source Tree",
-              children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Images, {}) })
-            }
-          ),
-          isFigmaImageManagementEnabled && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        toastMessage && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
+        /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "df-review-side-rail", children: [
+          isFigmaImageManagementEnabled && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
             "button",
             {
               "aria-label": isFigmaImagesPanelVisible ? "Hide Figma images" : "Show Figma images",
               "aria-pressed": isFigmaImagesPanelVisible,
               className: `df-review-side-toggle${isFigmaImagesPanelVisible ? " is-active" : ""}`,
+              "data-review-tooltip": "Figma Images",
+              "data-review-tooltip-placement": "left",
               type: "button",
               onClick: toggleFigmaImagesPanel,
               title: "Figma Images",
-              children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(FigmaRailIcon, {}) })
+              children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(FigmaRailIcon, {}) })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)("div", { className: "df-review-side-actions", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
+            "button",
+            {
+              "aria-label": isQaPanelVisible ? "Hide QA list" : "Show QA list",
+              "aria-pressed": isQaPanelVisible,
+              className: `df-review-side-toggle${isQaPanelVisible ? " is-active" : ""}`,
+              "data-review-tooltip": "QA",
+              "data-review-tooltip-placement": "left",
+              type: "button",
+              onClick: toggleQaPanel,
+              title: "QA",
+              children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(ListChecks, {}) })
+            }
+          ),
+          isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
+            "button",
+            {
+              "aria-controls": "df-review-section-outline",
+              "aria-label": isSourceTreePanelVisible ? "Hide component list" : "Show component list",
+              "aria-pressed": isSourceTreePanelVisible,
+              className: `df-review-side-toggle${isSourceTreePanelVisible ? " is-active" : ""}`,
+              "data-review-tooltip": "Component List",
+              "data-review-tooltip-placement": "left",
+              type: "button",
+              onClick: toggleSourceTreePanel,
+              title: "Component List",
+              children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Network, {}) })
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "df-review-side-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
               "button",
               {
                 "aria-label": "Open initial prompt",
                 className: "df-review-side-toggle",
+                "data-review-tooltip": "Initial prompt",
+                "data-review-tooltip-placement": "left",
                 type: "button",
                 onClick: () => setIsInitialPromptScriptOpen(true),
                 title: "Initial prompt",
-                children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Bot, {}) })
+                children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Bot, {}) })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
               "button",
               {
                 "aria-label": "Open settings",
                 className: "df-review-side-toggle",
+                "data-review-tooltip": "Settings",
+                "data-review-tooltip-placement": "left",
                 type: "button",
                 onClick: openFigmaSettings,
                 title: "Settings",
-                children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Settings, {}) })
+                children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Settings, {}) })
               }
             ),
-            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+            currentPagePresenceUsers.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
               PresenceOverlay,
               {
                 presenceSessionId,
                 users: currentPagePresenceUsers
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("span", { className: "df-review-side-divider", "aria-hidden": "true" }),
-            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("span", { className: "df-review-side-divider", "aria-hidden": "true" }),
+            /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
               "button",
               {
                 "aria-label": "Open about",
                 className: "df-review-side-toggle",
+                "data-review-tooltip": "About",
+                "data-review-tooltip-placement": "left",
                 type: "button",
                 onClick: () => {
                   setIsInitialPromptOpen(true);
                 },
                 title: "About",
-                children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(DfLogoIcon, {}) })
+                children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(DfLogoIcon, {}) })
               }
             )
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
           ReviewQaPanel,
           {
             activeAdapterEntry,
@@ -21511,7 +21766,7 @@ var ReviewShell = ({
             onToggleItemOverlayVisibility: toggleItemOverlayVisibility
           }
         ),
-        isFigmaImageManagementEnabled && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        isFigmaImageManagementEnabled && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
           FigmaImagesPanel,
           {
             error: figmaImageError,
@@ -21534,7 +21789,7 @@ var ReviewShell = ({
             onUpdateImage: updateFigmaImage
           }
         ),
-        isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        isSourceInspectorEnabled && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
           SectionOutlinePanel,
           {
             isPanelVisible: isSourceTreePanelVisible,
@@ -21556,12 +21811,13 @@ var ReviewShell = ({
             onScrollToSection: scrollToSection,
             onOpenData: openSectionData,
             onOpenSource: openSectionSource,
+            onOpenUsageSource: openSectionUsageSource,
             onStartDomReview: startSectionDomReview,
             onHoverElement: showSourceOutlineForElement,
             onClearHover: clearSourceOutlineHover
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
           ReviewTargetFrame,
           {
             canWriteArea,
@@ -21587,7 +21843,7 @@ var ReviewShell = ({
             onSetReviewMode: setReviewMode
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
           SourceInspectorOverlay,
           {
             state: sourceInspectorState,
@@ -21614,7 +21870,7 @@ function getUrlPathWithoutOrigin(value) {
 // src/react-shell/figma/dev-overlay.tsx
 var import_react25 = __toESM(require("react"), 1);
 var import_client = require("react-dom/client");
-var import_jsx_runtime28 = require("react/jsx-runtime");
+var import_jsx_runtime29 = require("react/jsx-runtime");
 var FIGMA_DEV_OVERLAY_ROOT_ID = "df-review-figma-dev-overlay-root";
 var FIGMA_DEV_OVERLAY_MOUNT_ID = "df-review-figma-dev-overlay-mount";
 var mountFigmaDevOverlay = (options) => {
@@ -21635,7 +21891,7 @@ var mountFigmaDevOverlay = (options) => {
   document.body.appendChild(host);
   const root = (0, import_client.createRoot)(mountNode);
   root.render(
-    /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(import_react25.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(FigmaDevOverlayWidget, { ...options }) })
+    /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(import_react25.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(FigmaDevOverlayWidget, { ...options }) })
   );
   return {
     destroy() {
@@ -21726,7 +21982,7 @@ var FigmaDevOverlayWidget = ({
   );
   (0, import_react25.useEffect)(() => {
     const handleKeyDown = (event) => {
-      if (!event.shiftKey || event.metaKey || event.ctrlKey || event.altKey || event.code !== "KeyF" && event.key.toLowerCase() !== "f" || isEditableFigmaDevOverlayEventTarget(event)) {
+      if (!isHotkey(event, "Shift+F") || isEditableFigmaDevOverlayEventTarget(event)) {
         return;
       }
       event.preventDefault();
@@ -21748,21 +22004,21 @@ var FigmaDevOverlayWidget = ({
       setImageOverlayOpacity(selectedImage.id, opacityPercent / 100);
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(
     "aside",
     {
       "aria-label": "Figma overlay",
       className: `df-review-figma-dev-widget${isPanelOpen ? " is-open" : ""}${isAnyImageOverlayVisible ? " is-active" : ""}`,
       children: [
-        isPanelOpen && /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "df-review-figma-dev-panel", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "df-review-figma-dev-panel-header", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("strong", { children: "Figma" }),
-            /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("span", { children: matchedViewportMatch ? `${matchedViewportMatch.label} \xB7 ${matchedViewportMatch.rangeLabel}` : `${viewport.width}px` })
+        isPanelOpen && /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)("div", { className: "df-review-figma-dev-panel", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)("div", { className: "df-review-figma-dev-panel-header", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("strong", { children: "Figma" }),
+            /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("span", { children: matchedViewportMatch ? `${matchedViewportMatch.label} \xB7 ${matchedViewportMatch.rangeLabel}` : `${viewport.width}px` })
           ] }),
-          selectedImage && /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "df-review-figma-dev-selected-controls", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("label", { className: "df-review-figma-dev-opacity-control", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("span", { children: "Opacity" }),
-              /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
+          selectedImage && /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)("div", { className: "df-review-figma-dev-selected-controls", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)("label", { className: "df-review-figma-dev-opacity-control", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("span", { children: "Opacity" }),
+              /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(
                 "input",
                 {
                   "aria-label": `${selectedImageLabel} overlay opacity`,
@@ -21775,11 +22031,11 @@ var FigmaDevOverlayWidget = ({
                   onInput: (event) => updateSelectedImageOpacity(event.currentTarget.value)
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("strong", { children: selectedOpacityPercent })
+              /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("strong", { children: selectedOpacityPercent })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("label", { className: "df-review-figma-dev-y-control", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(MoveVertical, { "aria-hidden": "true" }),
-              /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)("label", { className: "df-review-figma-dev-y-control", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(MoveVertical, { "aria-hidden": "true" }),
+              /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(
                 "input",
                 {
                   "aria-label": `${selectedImageLabel} overlay Y offset`,
@@ -21809,14 +22065,14 @@ var FigmaDevOverlayWidget = ({
               )
             ] })
           ] }),
-          error && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("p", { className: "df-review-figma-dev-status", children: error }),
-          !matchedViewport ? /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("p", { className: "df-review-figma-dev-empty", children: [
+          error && /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("p", { className: "df-review-figma-dev-status", children: error }),
+          !matchedViewport ? /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)("p", { className: "df-review-figma-dev-empty", children: [
             "No Figma layers for this viewport.",
             viewportBoundaries ? ` Mobile ${viewportBoundaries.mobileRangeLabel} / Full width ${viewportBoundaries.fullWidthRangeLabel}` : ""
-          ] }) : isLoading ? /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("p", { className: "df-review-figma-dev-status", children: "Loading..." }) : images.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("p", { className: "df-review-figma-dev-empty", children: "No Figma layers for this viewport." }) : /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("div", { className: "df-review-figma-dev-list", children: images.map((image, index) => {
+          ] }) : isLoading ? /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("p", { className: "df-review-figma-dev-status", children: "Loading..." }) : images.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("p", { className: "df-review-figma-dev-empty", children: "No Figma layers for this viewport." }) : /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("div", { className: "df-review-figma-dev-list", children: images.map((image, index) => {
             const imageLabel = getFigmaImageLabel(image, index);
             const overlayState = imageOverlayStates[image.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE;
-            return /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(
+            return /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(
               "article",
               {
                 className: `df-review-figma-dev-row${image.id === selectedImageId ? " is-active" : ""}`,
@@ -21829,7 +22085,7 @@ var FigmaDevOverlayWidget = ({
                   setSelectedImageId(image.id);
                 },
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
+                  /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(
                     FigmaImageLayerStateButtons,
                     {
                       imageLabel,
@@ -21841,9 +22097,9 @@ var FigmaDevOverlayWidget = ({
                       onToggleVisible: () => toggleImageOverlayVisible(image.id)
                     }
                   ),
-                  /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("span", { className: "df-review-figma-dev-row-main", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("strong", { children: imageLabel }),
-                    /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("small", { children: formatFigmaImageDate(image.updatedAt) })
+                  /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)("span", { className: "df-review-figma-dev-row-main", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("strong", { children: imageLabel }),
+                    /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("small", { children: formatFigmaImageDate(image.updatedAt) })
                   ] })
                 ]
               },
@@ -21851,7 +22107,7 @@ var FigmaDevOverlayWidget = ({
             );
           }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("div", { className: "df-review-figma-dev-bar", children: /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("div", { className: "df-review-figma-dev-bar", children: /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(
           "button",
           {
             "aria-expanded": isPanelOpen,
@@ -21861,8 +22117,8 @@ var FigmaDevOverlayWidget = ({
             type: "button",
             onClick: () => setIsPanelOpen((isOpen) => !isOpen),
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(FigmaMarkIcon, {}),
-              /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("span", { className: "df-review-figma-dev-button-count", children: images.length })
+              /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(FigmaMarkIcon, {}),
+              /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("span", { className: "df-review-figma-dev-button-count", children: images.length })
             ]
           }
         ) })
@@ -22453,7 +22709,7 @@ var createSupabasePresenceAdapter = ({
 });
 
 // src/react-shell.tsx
-var import_jsx_runtime29 = require("react/jsx-runtime");
+var import_jsx_runtime30 = require("react/jsx-runtime");
 var mountReviewShell = (options) => {
   if (typeof document === "undefined" || !document.head) return;
   const { rootId = "root", ...shellProps } = options;
@@ -22464,7 +22720,7 @@ var mountReviewShell = (options) => {
   root.style.height = "100%";
   root.style.margin = "0";
   (0, import_client2.createRoot)(root).render(
-    /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(import_react26.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(ReviewShell, { ...shellProps }) })
+    /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(import_react26.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(ReviewShell, { ...shellProps }) })
   );
 };
 // Annotate the CommonJS export names for ESM import in node:
@@ -22496,14 +22752,15 @@ lucide-react/dist/esm/icons/circle-question-mark.mjs:
 lucide-react/dist/esm/icons/code-xml.mjs:
 lucide-react/dist/esm/icons/contrast.mjs:
 lucide-react/dist/esm/icons/copy.mjs:
+lucide-react/dist/esm/icons/corner-up-right.mjs:
 lucide-react/dist/esm/icons/database.mjs:
 lucide-react/dist/esm/icons/external-link.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
 lucide-react/dist/esm/icons/eye.mjs:
 lucide-react/dist/esm/icons/image.mjs:
-lucide-react/dist/esm/icons/images.mjs:
 lucide-react/dist/esm/icons/layout-grid.mjs:
 lucide-react/dist/esm/icons/link-2.mjs:
+lucide-react/dist/esm/icons/list-checks.mjs:
 lucide-react/dist/esm/icons/list-filter.mjs:
 lucide-react/dist/esm/icons/lock-open.mjs:
 lucide-react/dist/esm/icons/lock.mjs:
@@ -22512,6 +22769,7 @@ lucide-react/dist/esm/icons/maximize-2.mjs:
 lucide-react/dist/esm/icons/monitor.mjs:
 lucide-react/dist/esm/icons/moon.mjs:
 lucide-react/dist/esm/icons/move-vertical.mjs:
+lucide-react/dist/esm/icons/network.mjs:
 lucide-react/dist/esm/icons/pencil.mjs:
 lucide-react/dist/esm/icons/plus.mjs:
 lucide-react/dist/esm/icons/rectangle-horizontal.mjs:
@@ -22521,10 +22779,8 @@ lucide-react/dist/esm/icons/scan.mjs:
 lucide-react/dist/esm/icons/search.mjs:
 lucide-react/dist/esm/icons/settings.mjs:
 lucide-react/dist/esm/icons/smartphone.mjs:
-lucide-react/dist/esm/icons/square-check-big.mjs:
 lucide-react/dist/esm/icons/square-dashed.mjs:
 lucide-react/dist/esm/icons/square-mouse-pointer.mjs:
-lucide-react/dist/esm/icons/sticky-note.mjs:
 lucide-react/dist/esm/icons/sun.mjs:
 lucide-react/dist/esm/icons/trash-2.mjs:
 lucide-react/dist/esm/icons/type.mjs:

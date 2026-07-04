@@ -21,11 +21,16 @@ Expected behavior:
   - `.helper.onShow`
 
 The review shell uses those signals to keep the toolbar button state in sync.
+It also injects a small stacking-order safeguard so recognized grid/helper
+layers render above host Figma helpers and package-managed Figma image overlays.
 
 ## Notes
 
 - The package does not prescribe the grid design.
 - The grid overlay is not persisted as QA data.
+- Recognized grid roots are `.helper.onShow`, `body.is-help .helper`,
+  `#df-review-grid-overlay`, `.df-review-grid-overlay`, and
+  `[data-df-review-grid-overlay]`.
 - Use project-specific CSS/helper code in the host page when the grid differs by brand or design system.
 
 ## Troubleshooting

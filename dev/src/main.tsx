@@ -167,10 +167,17 @@ function readStoredReviewItems(): ReviewItem[] {
 
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.filter(isStoredReviewItem) : [];
   } catch {
     return [];
   }
+}
+
+function isStoredReviewItem(value: unknown): value is ReviewItem {
+  if (!value || typeof value !== 'object') return false;
+
+  const item = value as { kind?: unknown };
+  return item.kind === 'dom' || item.kind === 'area';
 }
 
 function createDevExternalLinksFixtureItem(): ReviewItem {
@@ -183,7 +190,7 @@ function createDevExternalLinksFixtureItem(): ReviewItem {
     pageUrl: `${window.location.origin}/`,
     normalizedPath: '/',
     scope: 'mobile',
-    kind: 'note',
+    kind: 'dom',
     title: 'externalLinks adapter example',
     comment:
       'dev:review adapter fixture. 외부 연동 adapter가 externalLinks 배열을 내려주면 QA 본문 아래에 버튼 row로 렌더링된다.',

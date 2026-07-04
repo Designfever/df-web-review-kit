@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
-import { getTargetOverlayState } from '../target/target';
+import {
+  ensureTargetOverlayStackingStyle,
+  getTargetOverlayState,
+} from '../target/target';
 import type {
   TargetOverlayKey,
   TargetOverlayState,
@@ -28,9 +31,9 @@ export const useReviewTargetOverlay = ({
   }, []);
 
   const updateTargetOverlayState = useCallback(() => {
-    const state = getTargetOverlayState(
-      iframeRef.current?.contentDocument ?? undefined
-    );
+    const targetDocument = iframeRef.current?.contentDocument ?? undefined;
+    ensureTargetOverlayStackingStyle(targetDocument);
+    const state = getTargetOverlayState(targetDocument);
     onTargetOverlayStateChange(state);
     return state;
   }, [iframeRef, onTargetOverlayStateChange]);
@@ -47,6 +50,10 @@ export const useReviewTargetOverlay = ({
     (overlay: TargetOverlayKey) => {
       const targetWindow = iframeRef.current?.contentWindow;
       if (!targetWindow) return false;
+
+      ensureTargetOverlayStackingStyle(
+        iframeRef.current?.contentDocument ?? undefined
+      );
 
       const code = overlay === 'grid' ? 'KeyG' : 'KeyF';
       targetWindow.dispatchEvent(

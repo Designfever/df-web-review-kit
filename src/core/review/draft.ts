@@ -43,8 +43,8 @@ export interface AreaDraft extends ReviewDraftComposer {
   attachments?: ReviewDraftAttachment[];
 }
 
-/** In-progress note or DOM item before it is persisted through the adapter. */
-export interface NoteDraft extends ReviewDraftComposer {
+/** In-progress DOM item before it is persisted through the adapter. */
+export interface DomDraft extends ReviewDraftComposer {
   viewport: ViewportSize;
   anchor?: DomAnchor;
   marker: ReviewMarker;

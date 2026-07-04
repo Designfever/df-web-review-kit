@@ -3,6 +3,10 @@ import type { ReviewFigmaImage } from '../../figma/image.types';
 import type { ReviewFigmaImageOverlayItemState } from '../figma/image.overlay.controller';
 import type { ReviewShellViewportPreset } from '../types';
 import { getViewportPresetKind } from '../viewport';
+import {
+  ensureTargetOverlayStackingStyle,
+  TARGET_FIGMA_IMAGE_LAYER_Z_INDEX,
+} from './target';
 
 const TARGET_FIGMA_IMAGE_ROOT_ID = 'df-review-figma-image-target-root';
 const TARGET_FIGMA_IMAGE_STYLE_ID = 'df-review-figma-image-target-style';
@@ -139,6 +143,7 @@ export function renderTargetFigmaImageOverlays({
 
   const isMobileViewport = getViewportPresetKind(size) === 'mobile';
   const fixedOverlayWidth = getTargetFigmaImageFixedWidth(size);
+  ensureTargetOverlayStackingStyle(targetDocument);
   const root = ensureTargetFigmaImageRoot(targetDocument);
   const existingElements = new Map(
     Array.from(
@@ -290,7 +295,7 @@ function ensureTargetFigmaImageStyle(targetDocument: Document) {
       position: absolute;
       left: 0;
       top: 0;
-      z-index: 2147483000;
+      z-index: ${TARGET_FIGMA_IMAGE_LAYER_Z_INDEX};
       width: 100%;
       height: 0;
       overflow: visible;

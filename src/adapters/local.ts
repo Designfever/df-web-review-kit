@@ -105,12 +105,9 @@ function normalizeStoredReviewItem(value: unknown): ReviewItem | undefined {
     reviewNumber?: unknown;
     screenshot?: unknown;
   };
-  const kind =
-    raw.kind === 'text' ? 'note' :
-    raw.kind === 'capture' ? 'area' :
-    raw.kind;
+  const kind = raw.kind === 'capture' ? 'area' : raw.kind;
 
-  if (kind !== 'note' && kind !== 'area') return undefined;
+  if (kind !== 'dom' && kind !== 'area') return undefined;
 
   const { screenshot: _screenshot, reviewNumber: _reviewNumber, ...item } = raw;
 

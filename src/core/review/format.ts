@@ -6,11 +6,11 @@ import type {
   ViewportSize,
 } from '../../types';
 import { getAnchorCandidates } from '../dom.anchor';
-import type { NoteDraft } from './draft';
+import type { DomDraft } from './draft';
 import { getItemMarker, getItemSelection } from './item';
 
-/** Formats note draft metadata for compact debug display in the overlay UI. */
-export function formatNoteDraftMeta(draft: NoteDraft) {
+/** Formats DOM draft metadata for compact debug display in the overlay UI. */
+export function formatDomDraftMeta(draft: DomDraft) {
   const parts = [
     `viewport ${formatSize(draft.viewport)}`,
     `point ${formatPoint(draft.marker.viewport)}`,

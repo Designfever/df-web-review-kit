@@ -228,6 +228,7 @@ export const FigmaImagesPanel = ({
           <button
             aria-label="Refresh Figma images"
             className="df-review-figma-image-header-button"
+            data-review-tooltip="Refresh Figma images"
             disabled={isLoading || isMutating}
             title="Refresh"
             type="button"
@@ -248,6 +249,7 @@ export const FigmaImagesPanel = ({
           />
           <button
             aria-label="Add Figma image"
+            data-review-tooltip="Add Figma image"
             disabled={isMutating || figmaUrlDraft.trim().length === 0}
             type="submit"
           >
@@ -359,6 +361,7 @@ export const FigmaImagesPanel = ({
             <button
               aria-label={`Preview ${selectedImageLabel} Figma image`}
               className="df-review-figma-image-selected-link"
+              data-review-tooltip="Preview Figma image"
               title="Preview Figma image"
               type="button"
               onClick={() => setPreviewImageId(selectedImage.id)}
@@ -369,6 +372,7 @@ export const FigmaImagesPanel = ({
             <button
               aria-label="Open Figma node"
               className="df-review-figma-image-selected-link"
+              data-review-tooltip="Open Figma node"
               disabled
               title="Open Figma node"
               type="button"
@@ -577,6 +581,7 @@ export const FigmaImagesPanel = ({
                 <button
                   aria-label={`Edit ${imageLabel} label`}
                   className="df-review-figma-image-icon-button"
+                  data-review-tooltip="Edit label"
                   disabled={isMutating}
                   title="Edit label"
                   type="button"
@@ -595,6 +600,7 @@ export const FigmaImagesPanel = ({
                 <button
                   aria-label="Delete Figma image"
                   className="df-review-figma-image-icon-button is-danger"
+                  data-review-tooltip="Delete Figma image"
                   disabled={isMutating}
                   type="button"
                   onClick={(event) => {

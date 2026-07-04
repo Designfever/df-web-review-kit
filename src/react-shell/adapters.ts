@@ -17,7 +17,7 @@ import type {
   ReviewShellWriteMode,
 } from './types';
 
-const ALL_REVIEW_WRITE_MODES: ReviewShellWriteMode[] = ['dom', 'note', 'area'];
+const ALL_REVIEW_WRITE_MODES: ReviewShellWriteMode[] = ['dom', 'area'];
 const DEFAULT_ASSIGNEE_TITLE = 'Assignee';
 
 export type NormalizedReviewShellAdapter = {

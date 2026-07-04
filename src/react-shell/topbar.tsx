@@ -111,6 +111,8 @@ export const ReviewTopbar = ({
         <button
           aria-label="Open sitemap"
           className="df-review-sitemap-button"
+          data-review-tooltip="Open sitemap"
+          data-review-tooltip-placement="bottom"
           type="button"
           onClick={onOpenSitemap}
         >
@@ -125,6 +127,8 @@ export const ReviewTopbar = ({
           <button
             aria-label="Refresh target"
             className="df-review-address-icon-button"
+            data-review-tooltip="Refresh target"
+            data-review-tooltip-placement="bottom"
             title="Refresh target"
             type="submit"
           >
@@ -133,6 +137,8 @@ export const ReviewTopbar = ({
           <button
             aria-label={copyLabel}
             className="df-review-address-icon-button"
+            data-review-tooltip={copyLabel}
+            data-review-tooltip-placement="bottom"
             title={copyLabel}
             type="button"
             onClick={onCopyCurrentUrl}
@@ -142,6 +148,8 @@ export const ReviewTopbar = ({
           <a
             aria-label="Open target page"
             className="df-review-address-icon-button"
+            data-review-tooltip="Open target page"
+            data-review-tooltip-placement="bottom"
             href={targetHref}
             rel="noreferrer"
             target="_blank"
@@ -209,6 +217,8 @@ export const ReviewTopbar = ({
               className={`df-review-overlay-button is-ruler${
                 isRulerVisible ? ' is-active' : ''
               }`}
+              data-review-tooltip="Toggle ruler"
+              data-review-tooltip-placement="bottom"
               type="button"
               onClick={onToggleRuler}
             >
@@ -220,6 +230,8 @@ export const ReviewTopbar = ({
             className={`df-review-overlay-button is-grid${
               targetOverlayState.grid ? ' is-active' : ''
             }`}
+            data-review-tooltip="Toggle grid overlay"
+            data-review-tooltip-placement="bottom"
             type="button"
             onClick={() => onToggleTargetOverlay('grid')}
           >
@@ -237,6 +249,14 @@ export const ReviewTopbar = ({
             className={`df-review-overlay-button is-figma${
               isFigmaOverlayActive ? ' is-active' : ''
             }${isFigmaOverlayAvailable ? '' : ' is-disabled'}`}
+            data-review-tooltip={
+              isFigmaOverlayAvailable
+                ? isFigmaOverlayActive
+                  ? 'Hide Figma overlays'
+                  : 'Show Figma overlays'
+                : figmaOverlayUnavailableMessage
+            }
+            data-review-tooltip-placement="bottom"
             disabled={!isFigmaOverlayAvailable}
             type="button"
             onClick={onToggleFigmaOverlay}

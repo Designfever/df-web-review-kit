@@ -1,4 +1,5 @@
-import { Copy as CopyIcon, X as XIcon } from 'lucide-react';
+import { Copy as CopyIcon } from 'lucide-react';
+import { ReviewModal } from '../review/modal';
 import { getPromptLengthLabel } from './prompt';
 
 interface InitialPromptModalProps {
@@ -15,61 +16,39 @@ export const InitialPromptModal = ({
   onCopyPrompt,
 }: InitialPromptModalProps) => {
   return (
-    <div
-      aria-label="Initial prompt"
-      aria-modal="true"
-      className="df-review-prompt-modal"
-      role="dialog"
+    <ReviewModal
+      ariaLabel="Initial prompt"
+      description="AI handoff script for coding agents"
+      dialogClassName="df-review-prompt-dialog-narrow"
+      title="Initial Prompt"
+      onClose={onClose}
     >
-      <button
-        aria-label="Close initial prompt"
-        className="df-review-prompt-backdrop"
-        type="button"
-        onClick={onClose}
-      />
-      <div className="df-review-prompt-dialog df-review-prompt-dialog-narrow">
-        <div className="df-review-prompt-header">
+      <section
+        className="df-review-prompt-block"
+        aria-labelledby="df-review-initial-prompt-title"
+      >
+        <div className="df-review-prompt-block-header">
           <div>
-            <strong>Initial Prompt</strong>
-            <span>AI handoff script for coding agents</span>
+            <strong id="df-review-initial-prompt-title">
+              QA handoff prompt
+            </strong>
+            <span>{getPromptLengthLabel(initialPromptText)}</span>
           </div>
           <button
-            aria-label="Close initial prompt"
+            disabled={!initialPromptText}
             type="button"
-            onClick={onClose}
+            onClick={() => onCopyPrompt(initialPromptText, 'initial')}
           >
-            <XIcon aria-hidden="true" />
+            <CopyIcon aria-hidden="true" />
+            {copiedPromptKey === 'initial' ? 'Copied' : 'Copy'}
           </button>
         </div>
-        <div className="df-review-prompt-body">
-          <section
-            className="df-review-prompt-block"
-            aria-labelledby="df-review-initial-prompt-title"
-          >
-            <div className="df-review-prompt-block-header">
-              <div>
-                <strong id="df-review-initial-prompt-title">
-                  QA handoff prompt
-                </strong>
-                <span>{getPromptLengthLabel(initialPromptText)}</span>
-              </div>
-              <button
-                disabled={!initialPromptText}
-                type="button"
-                onClick={() => onCopyPrompt(initialPromptText, 'initial')}
-              >
-                <CopyIcon aria-hidden="true" />
-                {copiedPromptKey === 'initial' ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-            <textarea
-              readOnly
-              aria-label="Initial Prompt content"
-              value={initialPromptText || 'Initial prompt is not configured.'}
-            />
-          </section>
-        </div>
-      </div>
-    </div>
+        <textarea
+          readOnly
+          aria-label="Initial Prompt content"
+          value={initialPromptText || 'Initial prompt is not configured.'}
+        />
+      </section>
+    </ReviewModal>
   );
 };

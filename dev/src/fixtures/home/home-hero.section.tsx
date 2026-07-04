@@ -7,7 +7,7 @@ export function HomeHeroSection() {
         <p className="dev-eyebrow">Local fixture</p>
         <h1>Review shell smoke target</h1>
         <p>
-          Use this page to create note, area, and DOM marker review items without a host project.
+          Use this page to create area and DOM marker review items without a host project.
         </p>
       </div>
       <HomeActionList />

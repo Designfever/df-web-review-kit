@@ -8,7 +8,7 @@ export const getReviewModeWriteMode = (
   mode: ReviewMode
 ): ReviewShellWriteMode | null => {
   if (mode === 'element') return 'dom';
-  if (mode === 'note' || mode === 'area') return mode;
+  if (mode === 'area') return mode;
   return null;
 };
 
@@ -171,6 +171,9 @@ const matchesSectionOutlineFilter = (
       ?.map((mediaItem) => `${mediaItem.variant} ${mediaItem.type} ${mediaItem.url}`)
       .join(' '),
     entry.metadata.classNames?.join(' '),
+    entry.metadata.usage?.label,
+    entry.metadata.usage?.filePath,
+    entry.metadata.usage?.positionLabel,
   ]
     .filter(Boolean)
     .join(' ')

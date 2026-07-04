@@ -1,3 +1,32 @@
+const HOTKEY_KEY_ALIASES: Record<string, string[]> = {
+  q: ['ㅂ', 'ㅃ'],
+  w: ['ㅈ', 'ㅉ'],
+  e: ['ㄷ', 'ㄸ'],
+  r: ['ㄱ', 'ㄲ'],
+  t: ['ㅅ', 'ㅆ'],
+  y: ['ㅛ'],
+  u: ['ㅕ'],
+  i: ['ㅑ'],
+  o: ['ㅐ', 'ㅒ'],
+  p: ['ㅔ', 'ㅖ'],
+  a: ['ㅁ'],
+  s: ['ㄴ'],
+  d: ['ㅇ'],
+  f: ['ㄹ'],
+  g: ['ㅎ'],
+  h: ['ㅗ'],
+  j: ['ㅓ'],
+  k: ['ㅏ'],
+  l: ['ㅣ'],
+  z: ['ㅋ'],
+  x: ['ㅌ'],
+  c: ['ㅊ'],
+  v: ['ㅍ'],
+  b: ['ㅠ'],
+  n: ['ㅜ'],
+  m: ['ㅡ'],
+};
+
 /** Matches configured hotkeys while supporting common Korean keyboard aliases. */
 export function isHotkey(event: KeyboardEvent, hotkey: string) {
   const parts = hotkey
@@ -23,18 +52,21 @@ export function isHotkey(event: KeyboardEvent, hotkey: string) {
   return isHotkeyKey(event, key);
 }
 
-function isHotkeyKey(event: KeyboardEvent, key: string) {
+export function getHotkeyActionKey(
+  event: KeyboardEvent,
+  keys: readonly string[]
+) {
+  return keys.find((key) => isHotkeyKey(event, key));
+}
+
+export function isHotkeyKey(event: KeyboardEvent, key: string) {
   const normalizedKey = key.toLowerCase();
 
   if (event.key.toLowerCase() === normalizedKey) return true;
 
   if (getHotkeyCode(normalizedKey) === event.code) return true;
 
-  const aliases: Record<string, string[]> = {
-    q: ['ㅂ', 'ㅃ'],
-  };
-
-  return aliases[normalizedKey]?.includes(event.key) ?? false;
+  return HOTKEY_KEY_ALIASES[normalizedKey]?.includes(event.key) ?? false;
 }
 
 function getHotkeyCode(key: string) {

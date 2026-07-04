@@ -518,7 +518,7 @@ export const reviewShellQaPanelStyle = `
   }
 
   .df-review-item-scope.is-scope-desktop {
-    --df-review-scope: var(--df-review-note);
+    --df-review-scope: var(--df-review-warning);
     --df-review-scope-rgb: 243, 183, 95;
   }
 
@@ -636,8 +636,8 @@ export const reviewShellQaPanelStyle = `
   .df-review-item-status-badge.is-status-review,
   .df-review-item-status-select.is-status-review {
     border-color: rgba(243, 183, 95, 0.34);
-    color: var(--df-review-note);
-    background: var(--df-review-note-soft);
+    color: var(--df-review-warning);
+    background: var(--df-review-warning-soft);
   }
 
   .df-review-item-status-badge.is-status-hold,

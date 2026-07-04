@@ -236,9 +236,9 @@ export default defineConfig({
 });
 ```
 
-Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, and `data-wrk-source-column`. When TypeScript is available in the host toolchain, the source locator parses TSX/JSX and also adds `data-wrk-source-component` to intrinsic JSX nodes. Data locator injects `__wrkDataFile` and `__wrkDataLine` props into page data section objects so the shell can expose matching `data-wrk-data-*` hints when host components forward those props to section wrappers.
+Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, and `data-wrk-source-column`. When TypeScript is available in the host toolchain, the source locator parses TSX/JSX and also adds `data-wrk-source-component` to intrinsic JSX nodes. For function component render paths, it records the parent JSX call site as `data-wrk-source-parent-*` hints so Source Tree can open the file that used the component. Data locator injects `__wrkDataFile` and `__wrkDataLine` props into page data section objects so the shell can expose matching `data-wrk-data-*` hints when host components forward those props to section wrappers.
 
-In the review shell, hold `Option` over the target iframe to show source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose which file to open. The side rail Source Tree panel lists section/source/data candidates and can scroll to a section or open its source/data file. It can also show live box metrics, text/font metadata, media URLs, and class tags for each node. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
+In the review shell, hold `Option` over the target iframe to show source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose which file to open. The side rail Source Tree panel lists section/source/data candidates and can scroll to a section or open its source/data file. When parent usage hints exist, each row shows `used in` with the parent component and call-site file/position, plus an action to open that usage source. It can also show live box metrics, text/font metadata, media URLs, and class tags for each node. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
 
 Source opening reads these optional host env values from `.env.local`:
 
@@ -352,7 +352,7 @@ Open `http://127.0.0.1:5177/review/`.
 
 Fixture pages:
 
-- `/`: note, area, and DOM marker creation
+- `/`: area and DOM marker creation
 - `/components/`: controls and panel spacing
 - `/long-form/`: scroll and anchor restore
 
@@ -362,6 +362,7 @@ Package repo:
 
 ```bash
 pnpm typecheck
+pnpm test
 pnpm build
 pnpm typecheck:dev
 pnpm build:dev
@@ -377,6 +378,6 @@ pnpm build
 Manual smoke:
 
 1. Open `/review`.
-2. Create local note, DOM marker, and area marker.
+2. Create local DOM marker and area marker.
 3. If Supabase is enabled, submit a local item to remote.
 4. Confirm local draft removal, remote list display, status update, delete, and deep-link restore.

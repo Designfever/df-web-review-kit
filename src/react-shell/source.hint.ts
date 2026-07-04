@@ -63,6 +63,24 @@ export function getSourceHintFromElement(
   return Object.values(source).some(Boolean) ? source : undefined;
 }
 
+export function getParentSourceHintFromElement(
+  element: Element
+): DomSourceHint | undefined {
+  const source: DomSourceHint = {
+    component: getSourceAttribute(
+      element,
+      'data-wrk-source-parent-component'
+    ),
+    file: getSourceAttribute(element, 'data-wrk-source-parent-file'),
+    line: getSourceAttribute(element, 'data-wrk-source-parent-line'),
+    column: getSourceAttribute(element, 'data-wrk-source-parent-column'),
+    sectionId: undefined,
+    sectionIndex: undefined,
+  };
+
+  return Object.values(source).some(Boolean) ? source : undefined;
+}
+
 export function getComponentNameFromSourceFile(file: string | undefined) {
   const normalizedFile = file?.trim().replace(/\\/g, '/');
   if (!normalizedFile) return undefined;

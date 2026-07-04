@@ -1,8 +1,8 @@
-type ReviewItemKind = 'note' | 'area';
+type ReviewItemKind = 'dom' | 'area';
 type ReviewItemScope = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'dom';
 type ReviewWorkflowStatus = 'todo' | 'doing' | 'review' | 'hold' | 'done';
 type ReviewItemStatus = 'open' | 'resolved' | ReviewWorkflowStatus;
-type ReviewMode = 'idle' | 'note' | 'element' | 'area';
+type ReviewMode = 'idle' | 'element' | 'area';
 type ReviewSource = 'local' | 'supabase' | (string & {});
 type ReviewSubmitStatus = 'idle' | 'submitting' | 'submitted' | 'failed';
 type ReviewViewportScope = Exclude<ReviewItemScope, 'dom'>;

@@ -1,77 +1,76 @@
-import { X as XIcon } from 'lucide-react';
-import { DfLogoIcon } from '../review/df.logo';
+import { ReviewModal } from '../review/modal';
 
 interface PromptModalProps {
   onClose: () => void;
 }
 
-const ABOUT_SECTIONS = [
+const REVIEW_KIT_VERSION = '0.7.3';
+
+const SHORTCUT_SECTIONS = [
   {
-    title: 'What this is',
-    body:
-      'df-web-review-kit is a project-embedded review shell. It mounts a /review page, opens real host pages in an iframe, and lets reviewers create QA notes, area markers, and DOM markers against the actual implementation instead of a separate screenshot tool.',
+    title: 'Panels',
+    items: [
+      { keys: ['Shift', '1'], label: 'Figma images' },
+      { keys: ['Shift', '2'], label: 'QA list' },
+      { keys: ['Shift', '3'], label: 'Component list' },
+    ],
   },
   {
-    title: 'How to setup',
-    body:
-      'Install the package, mount the review route in the host project, and choose the storage adapters for that project. Local drafts work by default; shared remote QA and realtime presence depend on the host project configuration.',
+    title: 'Review modes',
+    items: [
+      { keys: ['Shift', 'Q / ㅂ'], label: 'Toggle QA runtime' },
+      { keys: ['E / ㄷ'], label: 'Element QA' },
+      { keys: ['A / ㅁ'], label: 'Area QA' },
+    ],
   },
   {
-    title: 'Figma token',
-    body:
-      'Project owners can set FIGMA_TOKEN on the server. Reviewers who cannot change env can add a browser-local Figma token in Settings; it is stored as figma-token and used only as an image-store fallback.',
+    title: 'Overlays',
+    items: [
+      { keys: ['G / ㅎ'], label: 'Grid overlay' },
+      { keys: ['F / ㄹ'], label: 'Figma overlay' },
+      { keys: ['R / ㄱ'], label: 'Ruler' },
+    ],
   },
   {
-    title: 'User ID',
-    body:
-      'Set your User ID in Settings before reviewing. It is used for presence, online user pills, and author context so teammates can tell who is looking at the same project or route.',
-  },
-  {
-    title: 'Remote',
-    body:
-      'Remote QA is optional and project-specific. If you need shared canonical items, Supabase, or realtime presence, ask the project owner or 담당 개발자 which remote adapter and browser-safe env values are connected. Never put service_role or operator secrets in the browser.',
+    title: 'Source and cleanup',
+    items: [
+      { keys: ['Option'], label: 'Trace source candidates' },
+      { keys: ['Option', 'Click'], label: 'Pin source candidates' },
+      { keys: ['Command'], label: 'Hide QA markers while pressed' },
+      { keys: ['Esc'], label: 'Cancel mode or close popup' },
+    ],
   },
 ];
 
 export const PromptModal = ({ onClose }: PromptModalProps) => {
   return (
-    <div
-      aria-label="Review help"
-      aria-modal="true"
-      className="df-review-prompt-modal"
-      role="dialog"
+    <ReviewModal
+      ariaLabel="Review help"
+      bodyClassName="df-review-about-body"
+      description={`v${REVIEW_KIT_VERSION}`}
+      dialogClassName="df-review-about-dialog"
+      title="df-web-review-kit"
+      onClose={onClose}
     >
-      <button
-        aria-label="Close help"
-        className="df-review-prompt-backdrop"
-        type="button"
-        onClick={onClose}
-      />
-      <div className="df-review-prompt-dialog df-review-about-dialog">
-        <button
-          aria-label="Close help"
-          className="df-review-about-close"
-          type="button"
-          onClick={onClose}
-        >
-          <XIcon aria-hidden="true" />
-        </button>
-        <div className="df-review-about-body">
-          <div className="df-review-about-intro">
-            <span className="df-review-about-logo" aria-hidden="true">
-              <DfLogoIcon />
-            </span>
-            <strong>Review shell help</strong>
-            <span>Program overview and setup notes</span>
-          </div>
-          {ABOUT_SECTIONS.map((section) => (
-            <div className="df-review-about-item" key={section.title}>
-              <strong>{section.title}</strong>
-              <p>{section.body}</p>
+      <div className="df-review-shortcut-groups">
+        {SHORTCUT_SECTIONS.map((section) => (
+          <section className="df-review-shortcut-group" key={section.title}>
+            <strong>{section.title}</strong>
+            <div className="df-review-shortcut-list">
+              {section.items.map((item) => (
+                <div className="df-review-shortcut-row" key={item.label}>
+                  <span className="df-review-shortcut-keys">
+                    {item.keys.map((key) => (
+                      <kbd key={key}>{key}</kbd>
+                    ))}
+                  </span>
+                  <span>{item.label}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </section>
+        ))}
       </div>
-    </div>
+    </ReviewModal>
   );
 };

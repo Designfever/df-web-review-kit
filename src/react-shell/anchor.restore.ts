@@ -1,8 +1,7 @@
 import type { ReviewItem } from '../types';
 
 export const isAnchorRestorableReviewItem = (item: ReviewItem) =>
-  item.scope === 'dom' ||
-  (item.kind === 'note' && Boolean(item.anchor && item.selection));
+  item.kind === 'dom' || item.scope === 'dom';
 
 export const queryReviewItemAnchorElement = (
   targetDocument: Document,

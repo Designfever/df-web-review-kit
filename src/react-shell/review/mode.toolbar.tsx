@@ -27,6 +27,7 @@ export const ReviewModeToolbar = ({
           className={`df-review-mode-button is-element${
             mode === 'element' ? ' is-active' : ''
           }`}
+          data-review-tooltip="Element QA"
           type="button"
           onClick={() => onSetReviewMode('element')}
         >
@@ -44,6 +45,7 @@ export const ReviewModeToolbar = ({
           className={`df-review-mode-button is-area${
             mode === 'area' ? ' is-active' : ''
           }`}
+          data-review-tooltip="Area QA"
           type="button"
           onClick={() => onSetReviewMode('area')}
         >

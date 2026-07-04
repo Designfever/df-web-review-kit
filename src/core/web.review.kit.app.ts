@@ -16,7 +16,6 @@ import type {
 } from '../types';
 import {
   cssEscape,
-  getDomAnchor,
   getDomAnchorFromElement,
   getDomAnchorFromPoint,
   getElementViewportSelection,
@@ -46,7 +45,7 @@ import { getReviewViewportScope } from './review/scope';
 import { createSelectionCenterMarker } from './review/item';
 import type {
   AreaDraft,
-  NoteDraft,
+  DomDraft,
   ReviewDraftAttachment,
   ReviewDraftPreviewElement,
 } from './review/draft';
@@ -121,7 +120,7 @@ class WebReviewKitApp {
   private isOpen = false;
   private mode: ReviewMode = 'idle';
   private items: ReviewItem[] = [];
-  private noteDraft?: NoteDraft;
+  private domDraft?: DomDraft;
   private areaDraft?: AreaDraft;
   private draftError = '';
   private isCreatingItem = false;
@@ -140,7 +139,7 @@ class WebReviewKitApp {
         isOpen: this.isOpen,
         mode: this.mode,
         items: this.items,
-        noteDraft: this.noteDraft,
+        domDraft: this.domDraft,
         areaDraft: this.areaDraft,
         draftError: this.draftError,
         isCreatingItem: this.isCreatingItem,
@@ -157,8 +156,8 @@ class WebReviewKitApp {
         removeItem: (itemId) => this.adapter.remove(itemId),
         setModeState: (mode) => this.setModeState(mode),
         clearDrafts: () => this.clearDrafts(),
-        setNoteDraft: (draft) => {
-          this.noteDraft = draft;
+        setDomDraft: (draft) => {
+          this.domDraft = draft;
           this.draftError = '';
         },
         setAreaDraft: (draft) => {
@@ -169,10 +168,8 @@ class WebReviewKitApp {
           this.isSelectingArea = isSelectingArea;
         },
         createItem: (input) => this.createItem(input),
-        captureNoteDraft: (input) => this.captureNoteDraft(input),
+        captureDomDraft: (input) => this.captureDomDraft(input),
         captureAreaDraft: (input) => this.captureAreaDraft(input),
-        bindNoteDraftToPoint: (point, fields) =>
-          this.bindNoteDraftToPoint(point, fields),
         bindElementDraftToPoint: (point, fields) =>
           this.bindElementDraftToPoint(point, fields),
         createAreaDraft: (selection) => this.createAreaDraft(selection),
@@ -287,14 +284,14 @@ class WebReviewKitApp {
   }
 
   private clearDrafts() {
-    this.revokeDraftAttachmentPreviews(this.noteDraft);
+    this.revokeDraftAttachmentPreviews(this.domDraft);
     this.revokeDraftAttachmentPreviews(this.areaDraft);
-    this.noteDraft = undefined;
+    this.domDraft = undefined;
     this.areaDraft = undefined;
     this.draftError = '';
   }
 
-  private revokeDraftAttachmentPreviews(draft?: NoteDraft | AreaDraft) {
+  private revokeDraftAttachmentPreviews(draft?: DomDraft | AreaDraft) {
     draft?.attachments?.forEach((attachment) => {
       if (attachment.previewUrl) {
         URL.revokeObjectURL(attachment.previewUrl);
@@ -352,7 +349,7 @@ class WebReviewKitApp {
   private cancelMode() {
     if (
       this.mode === 'idle' &&
-      !this.noteDraft &&
+      !this.domDraft &&
       !this.areaDraft &&
       !this.isSelectingArea
     ) {
@@ -391,7 +388,7 @@ class WebReviewKitApp {
   };
 
   private isDraftComposerFocused() {
-    if (!this.noteDraft && !this.areaDraft) return false;
+    if (!this.domDraft && !this.areaDraft) return false;
     const composerHost = this.getEnvironment()?.composerHost;
     const activeElement = composerHost?.ownerDocument.activeElement;
     return Boolean(
@@ -480,42 +477,6 @@ class WebReviewKitApp {
     this.view.render(this.shadow, this.createHiddenItemsStyleElement());
   }
 
-  private async bindNoteDraftToPoint(
-    point: ReviewPoint,
-    fields: DraftItemFields = {}
-  ) {
-    const environment = this.getEnvironment();
-    if (!environment) return;
-
-    const viewport = getViewportSize(environment);
-    const nextPoint = clampPoint(point, environment);
-
-    const draft = await this.withOverlayHidden(() => {
-      const selection = getPointSelection(nextPoint);
-      const anchor = getDomAnchor(
-        selection,
-        this.options.anchors?.attribute,
-        environment
-      );
-      const marker: ReviewMarker = {
-        viewport: roundPoint(nextPoint),
-        relative: anchor
-          ? getRelativePoint(nextPoint, anchor, environment)
-          : undefined,
-      };
-
-      return {
-        viewport,
-        anchor,
-        marker,
-        ...fields,
-      };
-    });
-
-    this.noteDraft = draft;
-    this.render();
-  }
-
   private async bindElementDraftToPoint(
     point: ReviewPoint,
     fields: DraftItemFields = {}
@@ -586,7 +547,7 @@ class WebReviewKitApp {
       };
     });
 
-    this.noteDraft = draft;
+    this.domDraft = draft;
     this.render();
   }
 
@@ -642,7 +603,7 @@ class WebReviewKitApp {
 
     if (!draft) return;
 
-    this.noteDraft = draft;
+    this.domDraft = draft;
     this.render();
   }
 
@@ -694,11 +655,11 @@ class WebReviewKitApp {
     }
   }
 
-  private async captureNoteDraft(input: CaptureDraftInput) {
+  private async captureDomDraft(input: CaptureDraftInput) {
     if (this.isCapturingViewport) return;
 
     const environment = this.getEnvironment();
-    const draft = this.noteDraft;
+    const draft = this.domDraft;
     if (!draft) return;
     if (!environment?.captureViewport) {
       this.draftError = 'Viewport capture helper is not available.';
@@ -718,8 +679,8 @@ class WebReviewKitApp {
     try {
       const result = await environment.captureViewport(captureInput);
       const attachment = this.createCaptureDraftAttachment(result, captureInput);
-      const currentDraft = this.noteDraft ?? draft;
-      this.noteDraft = {
+      const currentDraft = this.domDraft ?? draft;
+      this.domDraft = {
         ...currentDraft,
         attachments: [...(currentDraft.attachments ?? []), attachment],
       };

@@ -1,8 +1,8 @@
-export type ReviewItemKind = 'note' | 'area';
+export type ReviewItemKind = 'dom' | 'area';
 export type ReviewItemScope = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'dom';
 export type ReviewWorkflowStatus = 'todo' | 'doing' | 'review' | 'hold' | 'done';
 export type ReviewItemStatus = 'open' | 'resolved' | ReviewWorkflowStatus;
-export type ReviewMode = 'idle' | 'note' | 'element' | 'area';
+export type ReviewMode = 'idle' | 'element' | 'area';
 export type ReviewSource = 'local' | 'supabase' | (string & {});
 export type ReviewSubmitStatus =
   | 'idle'

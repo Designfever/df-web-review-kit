@@ -2,12 +2,12 @@ import type { ReviewEnvironment } from './geometry';
 import { toViewportSelection } from './geometry';
 import { resolveAnchorElement } from './dom.anchor';
 import type { DraftAdjustmentMetrics } from './draft.metrics';
-import type { NoteDraft, ReviewDraftPreviewElement } from './review/draft';
+import type { DomDraft, ReviewDraftPreviewElement } from './review/draft';
 
 interface DraftPreviewControllerConfig {
   getEnvironment: () => ReviewEnvironment | undefined;
-  getMetrics: (draft: NoteDraft) => DraftAdjustmentMetrics;
-  hasAdjustment: (draft: NoteDraft) => boolean;
+  getMetrics: (draft: DomDraft) => DraftAdjustmentMetrics;
+  hasAdjustment: (draft: DomDraft) => boolean;
 }
 
 interface DraftPreviewSnapshot {
@@ -30,7 +30,7 @@ export class DraftPreviewController {
     this.snapshot = undefined;
   }
 
-  sync(draft?: NoteDraft) {
+  sync(draft?: DomDraft) {
     const environment = this.config.getEnvironment();
     if (!draft || !environment || !this.config.hasAdjustment(draft)) {
       this.clear();
@@ -76,7 +76,7 @@ export class DraftPreviewController {
   }
 
   private getStyleableDraftElement(
-    draft: NoteDraft,
+    draft: DomDraft,
     environment: ReviewEnvironment
   ): ReviewDraftPreviewElement | undefined {
     if (

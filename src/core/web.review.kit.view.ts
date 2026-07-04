@@ -36,10 +36,10 @@ import { DraftPreviewController } from './draft.preview';
 import { createStyleElement } from './overlay.style';
 import type {
   AreaDraft,
-  NoteDraft,
+  DomDraft,
   ReviewDraftAttachment,
 } from './review/draft';
-import { formatItemMeta, formatNoteDraftMeta } from './review/format';
+import { formatItemMeta, formatDomDraftMeta } from './review/format';
 import {
   getBoundMarkerPoint,
   getItemHighlightSelection,
@@ -79,7 +79,7 @@ interface WebReviewKitViewState {
   isOpen: boolean;
   mode: ReviewMode;
   items: ReviewItem[];
-  noteDraft?: NoteDraft;
+  domDraft?: DomDraft;
   areaDraft?: AreaDraft;
   draftError?: string;
   isCreatingItem: boolean;
@@ -96,19 +96,15 @@ interface WebReviewKitViewActions {
   removeItem: (itemId: string) => Promise<void>;
   setModeState: (mode: ReviewMode) => void;
   clearDrafts: () => void;
-  setNoteDraft: (draft?: NoteDraft) => void;
+  setDomDraft: (draft?: DomDraft) => void;
   setAreaDraft: (draft?: AreaDraft) => void;
   setSelectingArea: (isSelectingArea: boolean) => void;
   createItem: (input: CreateReviewItemInput) => Promise<void>;
-  captureNoteDraft: (
-    input: Pick<AreaDraft, 'marker' | 'selection' | 'viewport'>
+  captureDomDraft: (
+    input: Pick<DomDraft, 'marker' | 'selection' | 'viewport'>
   ) => Promise<void>;
   captureAreaDraft: (
     input: Pick<AreaDraft, 'marker' | 'selection' | 'viewport'>
-  ) => Promise<void>;
-  bindNoteDraftToPoint: (
-    point: ReviewPoint,
-    fields?: DraftItemFields
   ) => Promise<void>;
   bindElementDraftToPoint: (
     point: ReviewPoint,
@@ -145,14 +141,14 @@ export class WebReviewKitView {
   render(shadow: ShadowRoot, hiddenItemsStyle: HTMLStyleElement) {
     const state = this.state;
     this.draftPreview.sync(
-      state.isOpen && state.mode === 'element' ? state.noteDraft : undefined
+      state.isOpen && state.mode === 'element' ? state.domDraft : undefined
     );
 
     shadow.replaceChildren();
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
 
-    const hasDismissableDraft = Boolean(state.noteDraft || state.areaDraft);
+    const hasDismissableDraft = Boolean(state.domDraft || state.areaDraft);
     const shouldDockComposer =
       this.config.options.ui?.panel === false &&
       hasDismissableDraft &&
@@ -190,19 +186,15 @@ export class WebReviewKitView {
       shell.append(this.createDraftCancelLayer());
     }
 
-    if (state.isOpen && (state.mode === 'note' || state.mode === 'element')) {
-      if (state.noteDraft) {
-        const noteDraft = this.createNotePopover(state.noteDraft, {
+    if (state.isOpen && state.mode === 'element') {
+      if (state.domDraft) {
+        const domDraft = this.createDomPopover(state.domDraft, {
           dockComposer: shouldDockComposer,
         });
-        shell.append(noteDraft.layer);
-        dockedComposer = noteDraft.composer;
+        shell.append(domDraft.layer);
+        dockedComposer = domDraft.composer;
       } else {
-        shell.append(
-          state.mode === 'element'
-            ? this.createElementLayer()
-            : this.createNoteLayer()
-        );
+        shell.append(this.createElementLayer());
       }
     }
 
@@ -312,21 +304,21 @@ export class WebReviewKitView {
     return this.config.options.viewports?.presets;
   }
 
-  private getDraftAdjustmentMetrics(draft: NoteDraft) {
+  private getDraftAdjustmentMetrics(draft: DomDraft) {
     return draftMetrics.getDraftAdjustmentMetrics(draft, this.viewportPresets);
   }
 
-  private hasDraftAdjustment(draft: NoteDraft) {
+  private hasDraftAdjustment(draft: DomDraft) {
     return draftMetrics.hasDraftAdjustment(draft, this.viewportPresets);
   }
 
-  private getAdjustedDraftPoint(point: ReviewPoint, draft: NoteDraft) {
+  private getAdjustedDraftPoint(point: ReviewPoint, draft: DomDraft) {
     return draftMetrics.getAdjustedDraftPoint(point, draft, this.viewportPresets);
   }
 
   private getAdjustedDraftSelection(
     selection: ViewportSelection,
-    draft: NoteDraft
+    draft: DomDraft
   ) {
     return draftMetrics.getAdjustedDraftSelection(
       selection,
@@ -503,7 +495,7 @@ export class WebReviewKitView {
     return toViewportSelection(draft.selection.viewport);
   }
 
-  private getDraftAdjustmentMetricLines(draft: NoteDraft) {
+  private getDraftAdjustmentMetricLines(draft: DomDraft) {
     const metrics = this.getDraftAdjustmentMetrics(draft);
     return [
       `x ${this.formatSignedPx(metrics.x)} / y ${this.formatSignedPx(
@@ -513,7 +505,7 @@ export class WebReviewKitView {
     ];
   }
 
-  private withDraftAdjustmentComment(comment: string, draft: NoteDraft) {
+  private withDraftAdjustmentComment(comment: string, draft: DomDraft) {
     if (!this.hasDraftAdjustment(draft)) return comment;
 
     const trimmedComment = comment.trim();
@@ -624,10 +616,10 @@ export class WebReviewKitView {
   }
 
   private createDraftCaptureButton(
-    draft: NoteDraft | AreaDraft,
+    draft: DomDraft | AreaDraft,
     options:
       | {
-          kind: 'note';
+          kind: 'dom';
           isElementDraft: boolean;
           textarea: HTMLTextAreaElement;
         }
@@ -671,14 +663,14 @@ export class WebReviewKitView {
         return;
       }
 
-      const noteDraft = this.state.noteDraft ?? (draft as NoteDraft);
+      const domDraft = this.state.domDraft ?? (draft as DomDraft);
       const nextDraft = {
-        ...noteDraft,
+        ...domDraft,
         comment: options.textarea.value,
       };
-      this.config.actions.setNoteDraft(nextDraft);
-      void this.config.actions.captureNoteDraft(
-        this.getCaptureNoteDraft(nextDraft, options.isElementDraft)
+      this.config.actions.setDomDraft(nextDraft);
+      void this.config.actions.captureDomDraft(
+        this.getCaptureDomDraft(nextDraft, options.isElementDraft)
       );
     });
 
@@ -693,7 +685,7 @@ export class WebReviewKitView {
     };
   }
 
-  private getCaptureNoteDraft(draft: NoteDraft, isElementDraft: boolean) {
+  private getCaptureDomDraft(draft: DomDraft, isElementDraft: boolean) {
     if (!isElementDraft) {
       return {
         viewport: draft.viewport,
@@ -758,12 +750,6 @@ export class WebReviewKitView {
     toolbar.className = 'dfwr-toolbar';
 
     toolbar.append(
-      this.createToolbarButton('Note', this.state.mode === 'note', () => {
-        const mode = this.state.mode;
-        this.config.actions.setModeState(mode === 'note' ? 'idle' : 'note');
-        this.config.actions.clearDrafts();
-        this.config.actions.render();
-      }),
       this.createToolbarButton('Element', this.state.mode === 'element', () => {
         const mode = this.state.mode;
         this.config.actions.setModeState(
@@ -811,13 +797,13 @@ export class WebReviewKitView {
     if (state.mode === 'idle') {
       const empty = document.createElement('p');
       empty.className = 'dfwr-empty';
-      empty.textContent = 'Add a note or mark an area.';
+      empty.textContent = 'Select an element or mark an area.';
       body.append(empty);
       return body;
     }
 
-    if (state.mode === 'note' || state.mode === 'element') {
-      body.append(this.createNoteBody());
+    if (state.mode === 'element') {
+      body.append(this.createDomBody());
       return body;
     }
 
@@ -825,27 +811,25 @@ export class WebReviewKitView {
     return body;
   }
 
-  private createNoteBody() {
+  private createDomBody() {
     const empty = document.createElement('p');
     empty.className = 'dfwr-empty';
-    empty.textContent = this.state.noteDraft
-      ? 'Write the note in the page box.'
-      : this.state.mode === 'element'
-        ? 'Click an element to add QA.'
-        : 'Click on the page to place a note.';
+    empty.textContent = this.state.domDraft
+      ? 'Write the QA in the page box.'
+      : 'Click an element to add QA.';
     return empty;
   }
 
-  // Builds the note draft layer: the on-page marker/highlight plus its composer
+  // Builds the DOM draft layer: the on-page marker/highlight plus its composer
   // popover. When dockComposer is set the composer renders into the side panel
   // instead of floating next to the marker (used for the docked review mode).
-  private createNotePopover(
-    draft: NoteDraft,
+  private createDomPopover(
+    draft: DomDraft,
     options: { dockComposer?: boolean } = {}
   ) {
     const environment = this.config.getEnvironment();
     const group = document.createElement('div');
-    group.className = 'dfwr-note-draft';
+    group.className = 'dfwr-dom-draft';
     if (!environment) return { layer: group, composer: undefined };
 
     const isElementDraft =
@@ -871,9 +855,9 @@ export class WebReviewKitView {
     }
 
     const pin = document.createElement('button');
-    pin.className = 'dfwr-note-pin';
+    pin.className = 'dfwr-dom-pin';
     pin.type = 'button';
-    pin.setAttribute('aria-label', 'Move note point');
+    pin.setAttribute('aria-label', 'Move DOM point');
     pin.style.left = `${hostPoint.x}px`;
     pin.style.top = `${hostPoint.y}px`;
 
@@ -881,7 +865,7 @@ export class WebReviewKitView {
     const position = getPopoverPosition(hostPoint, environment);
 
     popover.className = [
-      'dfwr-note-popover',
+      'dfwr-dom-popover',
       isElementDraft ? 'is-composer' : '',
       options.dockComposer ? 'is-docked-composer' : '',
     ]
@@ -920,15 +904,15 @@ export class WebReviewKitView {
       isElementDraft ? undefined : document.createElement('div');
     if (meta) {
       meta.className = 'dfwr-item-date';
-      meta.textContent = formatNoteDraftMeta(draft);
+      meta.textContent = formatDomDraftMeta(draft);
     }
 
     const titleInput = this.isTitleFieldEnabled()
       ? this.createDraftTitleInput(draft.title, (title) => {
-          const noteDraft = this.state.noteDraft;
-          if (!noteDraft) return;
-          this.config.actions.setNoteDraft({
-            ...noteDraft,
+          const domDraft = this.state.domDraft;
+          if (!domDraft) return;
+          this.config.actions.setDomDraft({
+            ...domDraft,
             title,
           });
         })
@@ -940,28 +924,28 @@ export class WebReviewKitView {
     textarea.rows = 4;
     textarea.value = draft.comment ?? '';
     textarea.addEventListener('input', () => {
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
-      this.config.actions.setNoteDraft({
-        ...noteDraft,
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
+      this.config.actions.setDomDraft({
+        ...domDraft,
         comment: textarea.value,
       });
     });
     attachDraftImagePasteQueue(textarea, {
       getAttachments: () =>
-        this.state.noteDraft?.attachments ?? draft.attachments,
+        this.state.domDraft?.attachments ?? draft.attachments,
       onAttachmentsChange: (attachments) => {
-        const noteDraft = this.state.noteDraft ?? draft;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           comment: textarea.value,
           attachments,
         });
       },
       onCommentChange: (comment) => {
-        const noteDraft = this.state.noteDraft ?? draft;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           comment,
         });
       },
@@ -972,10 +956,10 @@ export class WebReviewKitView {
       draft.assigneeId,
       draft.assigneeName,
       (assigneeId, assigneeName) => {
-        const noteDraft = this.state.noteDraft;
-        if (!noteDraft) return;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft;
+        if (!domDraft) return;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           assigneeId,
           assigneeName,
         });
@@ -983,7 +967,7 @@ export class WebReviewKitView {
     );
 
     const saveDraft = () => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
       const comment = fields.comment;
       const hasAttachments = Boolean(currentDraft.attachments?.length);
@@ -995,7 +979,7 @@ export class WebReviewKitView {
         return;
       }
       void this.config.actions.createItem({
-        kind: 'note',
+        kind: 'dom',
         title: fields.title,
         comment: this.withDraftAdjustmentComment(comment, currentDraft),
         assigneeId: fields.assigneeId,
@@ -1022,13 +1006,13 @@ export class WebReviewKitView {
     const leadingActions = [
       adjustmentControls?.actionButton,
       this.createDraftCaptureButton(draft, {
-        kind: 'note',
+        kind: 'dom',
         isElementDraft,
         textarea,
       }),
     ].filter((element): element is HTMLButtonElement => Boolean(element));
 
-    const actions = this.createFormActions('Save note', saveDraft, {
+    const actions = this.createFormActions('Save DOM QA', saveDraft, {
       leading: leadingActions.length > 0 ? leadingActions : undefined,
     });
     const error = this.createDraftError();
@@ -1036,13 +1020,13 @@ export class WebReviewKitView {
       document,
       draft.attachments,
       (attachmentId) => {
-        const noteDraft = this.state.noteDraft ?? draft;
+        const domDraft = this.state.domDraft ?? draft;
         const attachments = removeDraftAttachment(
-          noteDraft.attachments,
+          domDraft.attachments,
           attachmentId
         );
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        this.config.actions.setDomDraft({
+          ...domDraft,
           comment: textarea.value,
           attachments: attachments.length > 0 ? attachments : undefined,
         });
@@ -1075,9 +1059,9 @@ export class WebReviewKitView {
 
     if (dragHandle) {
       this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
-        const noteDraft = this.state.noteDraft ?? draft;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           composerPosition,
           comment: textarea.value,
         });
@@ -1227,7 +1211,7 @@ export class WebReviewKitView {
     textarea,
     dockToggle,
   }: {
-    draft: NoteDraft;
+    draft: DomDraft;
     pin: HTMLButtonElement;
     popover: HTMLDivElement;
     selectionHighlight?: HTMLDivElement;
@@ -1255,7 +1239,7 @@ export class WebReviewKitView {
     const scaleStatus = document.createElement('div');
     scaleStatus.className = 'dfwr-adjust-status';
 
-    const syncControls = (nextDraft: NoteDraft) => {
+    const syncControls = (nextDraft: DomDraft) => {
       const isActive = nextDraft.adjustment?.isActive === true;
       panel.classList.toggle('is-active', isActive);
       adjust.classList.toggle('is-active', isActive);
@@ -1280,10 +1264,10 @@ export class WebReviewKitView {
       });
     };
 
-    const updateDraft = (updater: (current: NoteDraft) => NoteDraft) => {
-      const currentDraft = this.state.noteDraft ?? draft;
+    const updateDraft = (updater: (current: DomDraft) => DomDraft) => {
+      const currentDraft = this.state.domDraft ?? draft;
       const nextDraft = updater(currentDraft);
-      this.config.actions.setNoteDraft({
+      this.config.actions.setDomDraft({
         ...nextDraft,
         comment: textarea.value,
       });
@@ -1304,7 +1288,7 @@ export class WebReviewKitView {
     });
 
     popover.addEventListener('keydown', (event) => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       if (currentDraft.adjustment?.isActive !== true) return;
 
       const keyDelta = this.getAdjustmentKeyDelta(event);
@@ -1356,7 +1340,7 @@ export class WebReviewKitView {
     pin,
     selectionHighlight,
   }: {
-    draft: NoteDraft;
+    draft: DomDraft;
     pin: HTMLButtonElement;
     selectionHighlight?: HTMLDivElement;
   }) {
@@ -1827,11 +1811,7 @@ export class WebReviewKitView {
       }
 
       const isHighlighted = item.id === this.state.highlightedItemId;
-      const highlightMode = getReviewItemHighlightMode(item);
-      if (
-        highlightMode !== 'note' &&
-        (!this.state.highlightedItemId || isHighlighted)
-      ) {
+      if (!this.state.highlightedItemId || isHighlighted) {
         const selection = getItemHighlightSelection(item, environment);
         if (selection) {
           layer.append(
@@ -1860,8 +1840,7 @@ export class WebReviewKitView {
         displayLabel,
         scope,
         point.isBound,
-        isHighlighted,
-        highlightMode === 'note' ? 'note' : 'default'
+        isHighlighted
       );
       marker.title = `${displayLabel} / ${item.comment}\n${formatItemMeta(item)}`;
       layer.append(marker);
@@ -1934,14 +1913,11 @@ export class WebReviewKitView {
     label: string,
     scope: ReviewItemScope,
     isBound: boolean,
-    isHighlighted: boolean,
-    variant: 'default' | 'note' = 'default'
+    isHighlighted: boolean
   ) {
-    const isNoteCallout = variant === 'note';
     const marker = document.createElement('div');
     marker.className = [
       'dfwr-bound-marker',
-      isNoteCallout ? 'is-note-callout' : '',
       `is-scope-${scope}`,
       isBound ? 'is-bound' : 'is-fallback',
       isHighlighted ? 'is-highlighted' : '',
@@ -1989,20 +1965,20 @@ export class WebReviewKitView {
         popover.style.top = `${position.top}px`;
       }
 
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
 
       const nextDraft = {
-        ...noteDraft,
+        ...domDraft,
         marker: {
-          ...noteDraft.marker,
+          ...domDraft.marker,
           viewport: roundPoint(nextPoint),
         },
         comment: textarea.value,
       };
-      this.config.actions.setNoteDraft(nextDraft);
+      this.config.actions.setDomDraft(nextDraft);
       if (meta) {
-        meta.textContent = formatNoteDraftMeta(nextDraft);
+        meta.textContent = formatDomDraftMeta(nextDraft);
       }
     };
 
@@ -2037,37 +2013,15 @@ export class WebReviewKitView {
         event,
         this.config.getEnvironment()
       );
-      const currentDraft = this.state.noteDraft;
+      const currentDraft = this.state.domDraft;
       const fields = {
         title: currentDraft?.title,
         comment: textarea.value,
         assigneeId: currentDraft?.assigneeId,
         assigneeName: currentDraft?.assigneeName,
       };
-      void (this.state.mode === 'element'
-        ? this.config.actions.bindElementDraftToPoint(nextPoint, fields)
-        : this.config.actions.bindNoteDraftToPoint(nextPoint, fields));
+      void this.config.actions.bindElementDraftToPoint(nextPoint, fields);
     });
-  }
-
-  private createNoteLayer() {
-    const layer = document.createElement('div');
-    layer.className = 'dfwr-text-layer';
-    const environment = this.config.getEnvironment();
-
-    if (environment) {
-      placeLayerOverTarget(layer, environment);
-    }
-
-    layer.addEventListener('pointerdown', (event) => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      void this.config.actions.bindNoteDraftToPoint(
-        toTargetPointFromHostEvent(event, this.config.getEnvironment())
-      );
-    });
-
-    return layer;
   }
 
   private createElementLayer() {

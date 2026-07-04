@@ -1,4 +1,4 @@
-import { f as ReviewItemScope, z as ReviewSource, v as ReviewMode, W as WebReviewKitAdapter, F as ReviewFieldsConfig, a as ReviewItemStatus, k as ReviewAssigneeOption, e as ReviewItem, x as ReviewRulerConfig } from './types-DH4q2_nz.js';
+import { f as ReviewItemScope, z as ReviewSource, v as ReviewMode, W as WebReviewKitAdapter, F as ReviewFieldsConfig, a as ReviewItemStatus, k as ReviewAssigneeOption, e as ReviewItem, x as ReviewRulerConfig } from './types-DHU1jtXD.js';
 import { R as ReviewFigmaImageStore, a as ReviewFigmaImageFormat } from './image.types-BmzkFSPX.js';
 import * as react from 'react';
 
@@ -44,7 +44,7 @@ type ReviewShellStatusOption = {
     label: string;
 };
 type ReviewShellAssigneeOption = ReviewAssigneeOption;
-type ReviewShellWriteMode = 'dom' | 'note' | 'area';
+type ReviewShellWriteMode = 'dom' | 'area';
 type ReviewShellUpdateStatusInput = {
     id: string;
     item: ReviewItem;

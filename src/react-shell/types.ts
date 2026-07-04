@@ -65,7 +65,7 @@ export type ReviewShellStatusOption = {
 
 export type ReviewShellAssigneeOption = ReviewAssigneeOption;
 
-export type ReviewShellWriteMode = 'dom' | 'note' | 'area';
+export type ReviewShellWriteMode = 'dom' | 'area';
 
 export type ReviewShellUpdateStatusInput = {
   id: string;

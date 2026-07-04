@@ -17,7 +17,7 @@ React shell
 
 Core runtime
   -> mounts a shadow DOM overlay
-  -> handles note/area/DOM selection
+  -> handles area/DOM selection
   -> creates markers and highlights over the target viewport
   -> persists ReviewItem records through the configured adapter
 ```
@@ -33,7 +33,7 @@ createWebReviewKit({
 });
 ```
 
-`ui.panel: false` means the React shell owns the side panel and toolbar. Core still owns target overlays such as note pins, area selection boxes, DOM hover outlines, saved item markers, and highlights.
+`ui.panel: false` means the React shell owns the side panel and toolbar. Core still owns target overlays such as area selection boxes, DOM hover outlines, saved item markers, and highlights.
 
 When the React shell provides a composer host, core docks DOM/area draft composer UI into the QA panel instead of rendering it as a floating target overlay. Core still owns draft creation, anchor capture, geometry, and adapter submission; React shell only provides the stable panel host.
 

@@ -107,7 +107,7 @@ export function createRemoteReviewAdapter(
  *
  * label becomes the URL source, for example /review?source=remote.
  * create controls whether the shell can write to this adapter.
- * canWrite can be true or limited to ['dom', 'note', 'area'].
+ * canWrite can be true or limited to ['dom', 'area'].
  * update enables title/comment edits in the QA panel.
  * fields enables optional UI fields such as title. Omit title to keep comment-only UI.
  * updateStatus drives the status buttons in the QA panel.

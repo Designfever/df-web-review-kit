@@ -3,7 +3,7 @@
 // Each function takes the viewport presets explicitly instead of reading config,
 // which keeps them side-effect free and unit-testable.
 import type { ReviewPoint, ReviewViewportPreset, ViewportSize } from '../types';
-import type { NoteDraft } from './review/draft';
+import type { DomDraft } from './review/draft';
 import { toViewportSelection, type ViewportSelection } from './geometry';
 import { findReviewViewportPreset } from './review/scope';
 
@@ -37,7 +37,7 @@ export function getDraftViewportScale(
 
 // Resolves the raw adjustment (design-space x/y/scale) into CSS-space deltas.
 export function getDraftAdjustmentMetrics(
-  draft: NoteDraft,
+  draft: DomDraft,
   presets?: ReviewViewportPreset[]
 ): DraftAdjustmentMetrics {
   const adjustment = draft.adjustment;
@@ -76,7 +76,7 @@ export function getDraftAdjustmentMetrics(
 }
 
 export function hasDraftAdjustment(
-  draft: NoteDraft,
+  draft: DomDraft,
   presets?: ReviewViewportPreset[]
 ) {
   const metrics = getDraftAdjustmentMetrics(draft, presets);
@@ -85,7 +85,7 @@ export function hasDraftAdjustment(
 
 export function getAdjustedDraftPoint(
   point: ReviewPoint,
-  draft: NoteDraft,
+  draft: DomDraft,
   presets?: ReviewViewportPreset[]
 ) {
   const metrics = getDraftAdjustmentMetrics(draft, presets);
@@ -97,7 +97,7 @@ export function getAdjustedDraftPoint(
 
 export function getAdjustedDraftSelection(
   selection: ViewportSelection,
-  draft: NoteDraft,
+  draft: DomDraft,
   presets?: ReviewViewportPreset[]
 ) {
   const metrics = getDraftAdjustmentMetrics(draft, presets);

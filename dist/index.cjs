@@ -157,8 +157,8 @@ function localAdapter(options = {}) {
 function normalizeStoredReviewItem(value) {
   if (!value || typeof value !== "object") return void 0;
   const raw = value;
-  const kind = raw.kind === "text" ? "note" : raw.kind === "capture" ? "area" : raw.kind;
-  if (kind !== "note" && kind !== "area") return void 0;
+  const kind = raw.kind === "capture" ? "area" : raw.kind;
+  if (kind !== "dom" && kind !== "area") return void 0;
   const { screenshot: _screenshot, reviewNumber: _reviewNumber, ...item } = raw;
   if (kind === raw.kind && _screenshot === void 0 && _reviewNumber === void 0) {
     return raw;
@@ -333,6 +333,8 @@ function rowToReviewItem(row, options) {
   const routeKey = row.route_key || item.routeKey || item.normalizedPath || "/";
   const viewport = item.viewport ?? { width: 390, height: 720 };
   const now = (/* @__PURE__ */ new Date()).toISOString();
+  const kind = normalizeReviewItemKind(item);
+  if (!kind) return null;
   return {
     ...item,
     id: row.id,
@@ -341,7 +343,7 @@ function rowToReviewItem(row, options) {
     routeKey,
     pageUrl: item.pageUrl || toAbsoluteReviewUrl(routeKey),
     normalizedPath: item.normalizedPath || routeKey,
-    kind: item.kind === "area" ? "area" : "note",
+    kind,
     comment: item.comment || "",
     status,
     viewport,
@@ -357,6 +359,10 @@ function rowToReviewItem(row, options) {
     createdAt: item.createdAt ?? row.created_at ?? now,
     updatedAt: row.updated_at ?? item.updatedAt ?? now
   };
+}
+function normalizeReviewItemKind(item) {
+  if (item.kind === "area" || item.kind === "dom") return item.kind;
+  return null;
 }
 async function unwrapResponse(request, label) {
   const { data, error } = await request;
@@ -1389,11 +1395,6 @@ var SEMANTIC_ANCHOR_ATTRIBUTES = [
   "name",
   "href"
 ];
-function getDomAnchor(selection, configuredAttribute = "data-qa-id", environment) {
-  const x = selection.left + selection.width / 2;
-  const y = selection.top + selection.height / 2;
-  return getDomAnchorFromPoint({ x, y }, configuredAttribute, environment);
-}
 function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", environment) {
   const target = environment.document.elementFromPoint(point.x, point.y);
   if (!target) return void 0;
@@ -1943,6 +1944,34 @@ function createId() {
 }
 
 // src/core/hotkey.ts
+var HOTKEY_KEY_ALIASES = {
+  q: ["\u3142", "\u3143"],
+  w: ["\u3148", "\u3149"],
+  e: ["\u3137", "\u3138"],
+  r: ["\u3131", "\u3132"],
+  t: ["\u3145", "\u3146"],
+  y: ["\u315B"],
+  u: ["\u3155"],
+  i: ["\u3151"],
+  o: ["\u3150", "\u3152"],
+  p: ["\u3154", "\u3156"],
+  a: ["\u3141"],
+  s: ["\u3134"],
+  d: ["\u3147"],
+  f: ["\u3139"],
+  g: ["\u314E"],
+  h: ["\u3157"],
+  j: ["\u3153"],
+  k: ["\u314F"],
+  l: ["\u3163"],
+  z: ["\u314B"],
+  x: ["\u314C"],
+  c: ["\u314A"],
+  v: ["\u314D"],
+  b: ["\u3160"],
+  n: ["\u315C"],
+  m: ["\u3161"]
+};
 function isHotkey(event, hotkey) {
   const parts = hotkey.split("+").map((part) => part.trim().toLowerCase()).filter(Boolean);
   const key = parts.find(
@@ -1963,10 +1992,7 @@ function isHotkeyKey(event, key) {
   const normalizedKey = key.toLowerCase();
   if (event.key.toLowerCase() === normalizedKey) return true;
   if (getHotkeyCode(normalizedKey) === event.code) return true;
-  const aliases = {
-    q: ["\u3142", "\u3143"]
-  };
-  return aliases[normalizedKey]?.includes(event.key) ?? false;
+  return HOTKEY_KEY_ALIASES[normalizedKey]?.includes(event.key) ?? false;
 }
 function getHotkeyCode(key) {
   if (/^[a-z]$/.test(key)) return `Key${key.toUpperCase()}`;
@@ -2145,19 +2171,11 @@ function getItemHighlightSelection(item, environment) {
       environment
     );
   }
-  return getVisibleHighlightSelection(
-    [
-      getAnchorHighlightSelection(item, environment),
-      getBoundSelection(item, environment),
-      getPointHighlightSelection(item, environment)
-    ],
-    environment
-  );
+  return void 0;
 }
 function getReviewItemHighlightMode(item) {
   if (isDomReviewItem(item)) return "dom";
-  if (item.kind === "area") return "area";
-  return "note";
+  return "area";
 }
 function getItemMarker(item) {
   if (item.marker) return item.marker;
@@ -2256,7 +2274,7 @@ function getVisibleHighlightSelection(candidates, environment) {
   );
 }
 function isDomReviewItem(item) {
-  return item.scope === "dom" || item.kind === "note" && Boolean(item.anchor && getItemSelection(item));
+  return item.kind === "dom" || item.scope === "dom";
 }
 
 // src/core/scroll.ts
@@ -2997,89 +3015,6 @@ function createStyleElement() {
       border-style: dashed;
     }
 
-    .dfwr-bound-marker.is-note-callout,
-    .dfwr-bound-marker.is-note-callout.is-highlighted {
-      --dfwr-scope: #7cc7ff;
-      --dfwr-scope-rgb: 124, 199, 255;
-      min-width: 0;
-      width: 0;
-      height: 0;
-      padding: 0;
-      transform: none;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-      color: var(--dfwr-scope);
-      animation: none;
-      overflow: visible;
-    }
-
-    .dfwr-bound-marker.is-note-callout::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 8px;
-      height: 8px;
-      transform: translate(-50%, -50%);
-      border: 2px solid #111820;
-      border-radius: var(--df-review-radius-pill);
-      background: var(--dfwr-scope);
-      box-shadow:
-        0 0 0 3px rgba(var(--dfwr-scope-rgb), 0.22),
-        0 6px 16px rgba(0, 0, 0, 0.28);
-    }
-
-    .dfwr-bound-marker.is-note-callout.is-highlighted::before {
-      animation: dfwr-note-dot-pulse 1000ms ease-in-out infinite;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 31px;
-      height: 2px;
-      transform: rotate(-42deg);
-      transform-origin: left center;
-      border-radius: var(--df-review-radius-pill);
-      background: currentColor;
-      opacity: 1;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon::before,
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon::after {
-      display: none;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-number {
-      position: absolute;
-      left: 24px;
-      top: -41px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 28px;
-      height: 20px;
-      padding: 0 7px;
-      border: 1px solid var(--dfwr-scope);
-      border-radius: 4px;
-      background: var(--dfwr-scope);
-      box-shadow:
-        0 0 0 3px rgba(var(--dfwr-scope-rgb), 0.18),
-        0 8px 18px rgba(0, 0, 0, 0.28);
-      color: #111820;
-      text-align: center;
-      line-height: 1;
-      white-space: nowrap;
-    }
-
-    .dfwr-bound-marker.is-note-callout.is-highlighted .dfwr-bound-marker-icon,
-    .dfwr-bound-marker.is-note-callout.is-highlighted .dfwr-bound-marker-number {
-      animation: dfwr-selected-blink 1000ms ease-in-out infinite;
-    }
-
     .dfwr-area-preview-layer .dfwr-bound-marker {
       border-color: #63d7c7;
       background: var(--df-review-color-panel);
@@ -3150,14 +3085,14 @@ function createStyleElement() {
       line-height: 1;
     }
 
-    .dfwr-note-draft {
+    .dfwr-dom-draft {
       position: fixed;
       inset: 0;
       z-index: 4;
       pointer-events: none;
     }
 
-    .dfwr-note-pin {
+    .dfwr-dom-pin {
       appearance: none;
       position: fixed;
       z-index: 5;
@@ -3175,11 +3110,11 @@ function createStyleElement() {
       pointer-events: auto;
     }
 
-    .dfwr-note-pin:active {
+    .dfwr-dom-pin:active {
       cursor: grabbing;
     }
 
-    .dfwr-note-popover {
+    .dfwr-dom-popover {
       position: fixed;
       z-index: 4;
       width: min(320px, calc(100vw - 24px));
@@ -3192,14 +3127,14 @@ function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
-    .dfwr-note-popover.is-composer,
+    .dfwr-dom-popover.is-composer,
     .dfwr-area-draft.is-composer {
       max-height: min(360px, calc(100vh - 32px));
       overflow: auto;
       border-color: rgba(99, 215, 199, 0.56);
     }
 
-    .dfwr-shell.is-docked-composer .dfwr-note-popover.is-docked-composer,
+    .dfwr-shell.is-docked-composer .dfwr-dom-popover.is-docked-composer,
     .dfwr-shell.is-docked-composer .dfwr-area-draft.is-docked-composer {
       position: relative;
       left: auto;
@@ -3213,7 +3148,7 @@ function createStyleElement() {
       min-height: 184px;
     }
 
-    .dfwr-note-popover.is-dragging,
+    .dfwr-dom-popover.is-dragging,
     .dfwr-area-draft.is-dragging {
       user-select: none;
     }
@@ -3257,7 +3192,7 @@ function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
-    .dfwr-note-popover .dfwr-actions {
+    .dfwr-dom-popover .dfwr-actions {
       padding: 0;
     }
 
@@ -3303,14 +3238,6 @@ function createStyleElement() {
     .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-adjust-toggle svg {
       width: 18px;
       height: 18px;
-    }
-
-    .dfwr-note-actions {
-      justify-content: flex-end;
-    }
-
-    .dfwr-note-actions .dfwr-button:first-child {
-      margin-right: auto;
     }
 
     .dfwr-area-draft .dfwr-actions {
@@ -3708,18 +3635,6 @@ function createStyleElement() {
       }
     }
 
-    @keyframes dfwr-note-dot-pulse {
-      0% {
-        transform: translate(-50%, -50%) scale(0.88);
-      }
-      45% {
-        transform: translate(-50%, -50%) scale(1.3);
-      }
-      100% {
-        transform: translate(-50%, -50%) scale(1);
-      }
-    }
-
     @keyframes dfwr-selected-blink {
       0%,
       100% {
@@ -3769,7 +3684,7 @@ function createStyleElement() {
 }
 
 // src/core/review/format.ts
-function formatNoteDraftMeta(draft) {
+function formatDomDraftMeta(draft) {
   const parts = [
     `viewport ${formatSize(draft.viewport)}`,
     `point ${formatPoint(draft.marker.viewport)}`
@@ -3851,12 +3766,12 @@ var WebReviewKitView = class {
   render(shadow, hiddenItemsStyle) {
     const state = this.state;
     this.draftPreview.sync(
-      state.isOpen && state.mode === "element" ? state.noteDraft : void 0
+      state.isOpen && state.mode === "element" ? state.domDraft : void 0
     );
     shadow.replaceChildren();
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
-    const hasDismissableDraft = Boolean(state.noteDraft || state.areaDraft);
+    const hasDismissableDraft = Boolean(state.domDraft || state.areaDraft);
     const shouldDockComposer = this.config.options.ui?.panel === false && hasDismissableDraft && Boolean(this.getShellComposerHost());
     let dockedComposer;
     const shell = document.createElement("div");
@@ -3883,17 +3798,15 @@ var WebReviewKitView = class {
     if (state.isOpen && hasDismissableDraft && !shouldDockComposer) {
       shell.append(this.createDraftCancelLayer());
     }
-    if (state.isOpen && (state.mode === "note" || state.mode === "element")) {
-      if (state.noteDraft) {
-        const noteDraft = this.createNotePopover(state.noteDraft, {
+    if (state.isOpen && state.mode === "element") {
+      if (state.domDraft) {
+        const domDraft = this.createDomPopover(state.domDraft, {
           dockComposer: shouldDockComposer
         });
-        shell.append(noteDraft.layer);
-        dockedComposer = noteDraft.composer;
+        shell.append(domDraft.layer);
+        dockedComposer = domDraft.composer;
       } else {
-        shell.append(
-          state.mode === "element" ? this.createElementLayer() : this.createNoteLayer()
-        );
+        shell.append(this.createElementLayer());
       }
     }
     if (state.isOpen && state.mode === "area" && !state.areaDraft && !state.isSelectingArea) {
@@ -4232,14 +4145,14 @@ ${adjustment}` : adjustment;
         );
         return;
       }
-      const noteDraft = this.state.noteDraft ?? draft;
+      const domDraft = this.state.domDraft ?? draft;
       const nextDraft = {
-        ...noteDraft,
+        ...domDraft,
         comment: options.textarea.value
       };
-      this.config.actions.setNoteDraft(nextDraft);
-      void this.config.actions.captureNoteDraft(
-        this.getCaptureNoteDraft(nextDraft, options.isElementDraft)
+      this.config.actions.setDomDraft(nextDraft);
+      void this.config.actions.captureDomDraft(
+        this.getCaptureDomDraft(nextDraft, options.isElementDraft)
       );
     });
     return button;
@@ -4251,7 +4164,7 @@ ${adjustment}` : adjustment;
       selection: draft.selection
     };
   }
-  getCaptureNoteDraft(draft, isElementDraft) {
+  getCaptureDomDraft(draft, isElementDraft) {
     if (!isElementDraft) {
       return {
         viewport: draft.viewport,
@@ -4304,12 +4217,6 @@ ${adjustment}` : adjustment;
     const toolbar = document.createElement("div");
     toolbar.className = "dfwr-toolbar";
     toolbar.append(
-      this.createToolbarButton("Note", this.state.mode === "note", () => {
-        const mode = this.state.mode;
-        this.config.actions.setModeState(mode === "note" ? "idle" : "note");
-        this.config.actions.clearDrafts();
-        this.config.actions.render();
-      }),
       this.createToolbarButton("Element", this.state.mode === "element", () => {
         const mode = this.state.mode;
         this.config.actions.setModeState(
@@ -4349,30 +4256,30 @@ ${adjustment}` : adjustment;
     if (state.mode === "idle") {
       const empty = document.createElement("p");
       empty.className = "dfwr-empty";
-      empty.textContent = "Add a note or mark an area.";
+      empty.textContent = "Select an element or mark an area.";
       body.append(empty);
       return body;
     }
-    if (state.mode === "note" || state.mode === "element") {
-      body.append(this.createNoteBody());
+    if (state.mode === "element") {
+      body.append(this.createDomBody());
       return body;
     }
     body.append(this.createAreaForm());
     return body;
   }
-  createNoteBody() {
+  createDomBody() {
     const empty = document.createElement("p");
     empty.className = "dfwr-empty";
-    empty.textContent = this.state.noteDraft ? "Write the note in the page box." : this.state.mode === "element" ? "Click an element to add QA." : "Click on the page to place a note.";
+    empty.textContent = this.state.domDraft ? "Write the QA in the page box." : "Click an element to add QA.";
     return empty;
   }
-  // Builds the note draft layer: the on-page marker/highlight plus its composer
+  // Builds the DOM draft layer: the on-page marker/highlight plus its composer
   // popover. When dockComposer is set the composer renders into the side panel
   // instead of floating next to the marker (used for the docked review mode).
-  createNotePopover(draft, options = {}) {
+  createDomPopover(draft, options = {}) {
     const environment = this.config.getEnvironment();
     const group = document.createElement("div");
-    group.className = "dfwr-note-draft";
+    group.className = "dfwr-dom-draft";
     if (!environment) return { layer: group, composer: void 0 };
     const isElementDraft = this.state.mode === "element" && Boolean(draft.selection);
     const hostPoint = toHostPoint(
@@ -4390,15 +4297,15 @@ ${adjustment}` : adjustment;
       group.append(selectionHighlight);
     }
     const pin = document.createElement("button");
-    pin.className = "dfwr-note-pin";
+    pin.className = "dfwr-dom-pin";
     pin.type = "button";
-    pin.setAttribute("aria-label", "Move note point");
+    pin.setAttribute("aria-label", "Move DOM point");
     pin.style.left = `${hostPoint.x}px`;
     pin.style.top = `${hostPoint.y}px`;
     const popover = document.createElement("div");
     const position = getPopoverPosition(hostPoint, environment);
     popover.className = [
-      "dfwr-note-popover",
+      "dfwr-dom-popover",
       isElementDraft ? "is-composer" : "",
       options.dockComposer ? "is-docked-composer" : ""
     ].filter(Boolean).join(" ");
@@ -4430,13 +4337,13 @@ ${adjustment}` : adjustment;
     const meta = isElementDraft ? void 0 : document.createElement("div");
     if (meta) {
       meta.className = "dfwr-item-date";
-      meta.textContent = formatNoteDraftMeta(draft);
+      meta.textContent = formatDomDraftMeta(draft);
     }
     const titleInput = this.isTitleFieldEnabled() ? this.createDraftTitleInput(draft.title, (title) => {
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
-      this.config.actions.setNoteDraft({
-        ...noteDraft,
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
+      this.config.actions.setDomDraft({
+        ...domDraft,
         title
       });
     }) : void 0;
@@ -4446,27 +4353,27 @@ ${adjustment}` : adjustment;
     textarea.rows = 4;
     textarea.value = draft.comment ?? "";
     textarea.addEventListener("input", () => {
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
-      this.config.actions.setNoteDraft({
-        ...noteDraft,
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
+      this.config.actions.setDomDraft({
+        ...domDraft,
         comment: textarea.value
       });
     });
     attachDraftImagePasteQueue(textarea, {
-      getAttachments: () => this.state.noteDraft?.attachments ?? draft.attachments,
+      getAttachments: () => this.state.domDraft?.attachments ?? draft.attachments,
       onAttachmentsChange: (attachments) => {
-        const noteDraft = this.state.noteDraft ?? draft;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           comment: textarea.value,
           attachments
         });
       },
       onCommentChange: (comment) => {
-        const noteDraft = this.state.noteDraft ?? draft;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           comment
         });
       },
@@ -4476,17 +4383,17 @@ ${adjustment}` : adjustment;
       draft.assigneeId,
       draft.assigneeName,
       (assigneeId, assigneeName) => {
-        const noteDraft = this.state.noteDraft;
-        if (!noteDraft) return;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft;
+        if (!domDraft) return;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           assigneeId,
           assigneeName
         });
       }
     );
     const saveDraft = () => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
       const comment = fields.comment;
       const hasAttachments = Boolean(currentDraft.attachments?.length);
@@ -4494,7 +4401,7 @@ ${adjustment}` : adjustment;
         return;
       }
       void this.config.actions.createItem({
-        kind: "note",
+        kind: "dom",
         title: fields.title,
         comment: this.withDraftAdjustmentComment(comment, currentDraft),
         assigneeId: fields.assigneeId,
@@ -4517,12 +4424,12 @@ ${adjustment}` : adjustment;
     const leadingActions = [
       adjustmentControls?.actionButton,
       this.createDraftCaptureButton(draft, {
-        kind: "note",
+        kind: "dom",
         isElementDraft,
         textarea
       })
     ].filter((element) => Boolean(element));
-    const actions = this.createFormActions("Save note", saveDraft, {
+    const actions = this.createFormActions("Save DOM QA", saveDraft, {
       leading: leadingActions.length > 0 ? leadingActions : void 0
     });
     const error = this.createDraftError();
@@ -4530,13 +4437,13 @@ ${adjustment}` : adjustment;
       document,
       draft.attachments,
       (attachmentId) => {
-        const noteDraft = this.state.noteDraft ?? draft;
+        const domDraft = this.state.domDraft ?? draft;
         const attachments = removeDraftAttachment(
-          noteDraft.attachments,
+          domDraft.attachments,
           attachmentId
         );
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        this.config.actions.setDomDraft({
+          ...domDraft,
           comment: textarea.value,
           attachments: attachments.length > 0 ? attachments : void 0
         });
@@ -4564,9 +4471,9 @@ ${adjustment}` : adjustment;
     }
     if (dragHandle) {
       this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
-        const noteDraft = this.state.noteDraft ?? draft;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           composerPosition,
           comment: textarea.value
         });
@@ -4725,9 +4632,9 @@ ${adjustment}` : adjustment;
       });
     };
     const updateDraft = (updater) => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       const nextDraft = updater(currentDraft);
-      this.config.actions.setNoteDraft({
+      this.config.actions.setDomDraft({
         ...nextDraft,
         comment: textarea.value
       });
@@ -4746,7 +4653,7 @@ ${adjustment}` : adjustment;
       adjust.focus();
     });
     popover.addEventListener("keydown", (event) => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       if (currentDraft.adjustment?.isActive !== true) return;
       const keyDelta = this.getAdjustmentKeyDelta(event);
       if (!keyDelta) return;
@@ -5181,8 +5088,7 @@ ${adjustment}` : adjustment;
         return;
       }
       const isHighlighted = item.id === this.state.highlightedItemId;
-      const highlightMode = getReviewItemHighlightMode(item);
-      if (highlightMode !== "note" && (!this.state.highlightedItemId || isHighlighted)) {
+      if (!this.state.highlightedItemId || isHighlighted) {
         const selection = getItemHighlightSelection(item, environment);
         if (selection) {
           layer.append(
@@ -5209,8 +5115,7 @@ ${adjustment}` : adjustment;
         displayLabel,
         scope,
         point.isBound,
-        isHighlighted,
-        highlightMode === "note" ? "note" : "default"
+        isHighlighted
       );
       marker.title = `${displayLabel} / ${item.comment}
 ${formatItemMeta(item)}`;
@@ -5255,12 +5160,10 @@ ${formatItemMeta(item)}`;
     highlight.style.height = `${rect.height}px`;
     return highlight;
   }
-  createMarkerElement(itemId, hostPoint, label, scope, isBound, isHighlighted, variant = "default") {
-    const isNoteCallout = variant === "note";
+  createMarkerElement(itemId, hostPoint, label, scope, isBound, isHighlighted) {
     const marker = document.createElement("div");
     marker.className = [
       "dfwr-bound-marker",
-      isNoteCallout ? "is-note-callout" : "",
       `is-scope-${scope}`,
       isBound ? "is-bound" : "is-fallback",
       isHighlighted ? "is-highlighted" : ""
@@ -5294,19 +5197,19 @@ ${formatItemMeta(item)}`;
         popover.style.left = `${position.left}px`;
         popover.style.top = `${position.top}px`;
       }
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
       const nextDraft = {
-        ...noteDraft,
+        ...domDraft,
         marker: {
-          ...noteDraft.marker,
+          ...domDraft.marker,
           viewport: roundPoint(nextPoint)
         },
         comment: textarea.value
       };
-      this.config.actions.setNoteDraft(nextDraft);
+      this.config.actions.setDomDraft(nextDraft);
       if (meta) {
-        meta.textContent = formatNoteDraftMeta(nextDraft);
+        meta.textContent = formatDomDraftMeta(nextDraft);
       }
     };
     pin.addEventListener("pointerdown", (event) => {
@@ -5334,31 +5237,15 @@ ${formatItemMeta(item)}`;
         event,
         this.config.getEnvironment()
       );
-      const currentDraft = this.state.noteDraft;
+      const currentDraft = this.state.domDraft;
       const fields = {
         title: currentDraft?.title,
         comment: textarea.value,
         assigneeId: currentDraft?.assigneeId,
         assigneeName: currentDraft?.assigneeName
       };
-      void (this.state.mode === "element" ? this.config.actions.bindElementDraftToPoint(nextPoint, fields) : this.config.actions.bindNoteDraftToPoint(nextPoint, fields));
+      void this.config.actions.bindElementDraftToPoint(nextPoint, fields);
     });
-  }
-  createNoteLayer() {
-    const layer = document.createElement("div");
-    layer.className = "dfwr-text-layer";
-    const environment = this.config.getEnvironment();
-    if (environment) {
-      placeLayerOverTarget(layer, environment);
-    }
-    layer.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      void this.config.actions.bindNoteDraftToPoint(
-        toTargetPointFromHostEvent(event, this.config.getEnvironment())
-      );
-    });
-    return layer;
   }
   createElementLayer() {
     const layer = document.createElement("div");
@@ -5586,7 +5473,7 @@ var WebReviewKitApp = class {
         isOpen: this.isOpen,
         mode: this.mode,
         items: this.items,
-        noteDraft: this.noteDraft,
+        domDraft: this.domDraft,
         areaDraft: this.areaDraft,
         draftError: this.draftError,
         isCreatingItem: this.isCreatingItem,
@@ -5603,8 +5490,8 @@ var WebReviewKitApp = class {
         removeItem: (itemId) => this.adapter.remove(itemId),
         setModeState: (mode) => this.setModeState(mode),
         clearDrafts: () => this.clearDrafts(),
-        setNoteDraft: (draft) => {
-          this.noteDraft = draft;
+        setDomDraft: (draft) => {
+          this.domDraft = draft;
           this.draftError = "";
         },
         setAreaDraft: (draft) => {
@@ -5615,9 +5502,8 @@ var WebReviewKitApp = class {
           this.isSelectingArea = isSelectingArea;
         },
         createItem: (input) => this.createItem(input),
-        captureNoteDraft: (input) => this.captureNoteDraft(input),
+        captureDomDraft: (input) => this.captureDomDraft(input),
         captureAreaDraft: (input) => this.captureAreaDraft(input),
-        bindNoteDraftToPoint: (point, fields) => this.bindNoteDraftToPoint(point, fields),
         bindElementDraftToPoint: (point, fields) => this.bindElementDraftToPoint(point, fields),
         createAreaDraft: (selection) => this.createAreaDraft(selection)
       }
@@ -5709,9 +5595,9 @@ var WebReviewKitApp = class {
     this.updateHiddenItemsStyle();
   }
   clearDrafts() {
-    this.revokeDraftAttachmentPreviews(this.noteDraft);
+    this.revokeDraftAttachmentPreviews(this.domDraft);
     this.revokeDraftAttachmentPreviews(this.areaDraft);
-    this.noteDraft = void 0;
+    this.domDraft = void 0;
     this.areaDraft = void 0;
     this.draftError = "";
   }
@@ -5757,7 +5643,7 @@ var WebReviewKitApp = class {
     this.options.onModeChange?.(mode);
   }
   cancelMode() {
-    if (this.mode === "idle" && !this.noteDraft && !this.areaDraft && !this.isSelectingArea) {
+    if (this.mode === "idle" && !this.domDraft && !this.areaDraft && !this.isSelectingArea) {
       return false;
     }
     this.setModeState("idle");
@@ -5767,7 +5653,7 @@ var WebReviewKitApp = class {
     return true;
   }
   isDraftComposerFocused() {
-    if (!this.noteDraft && !this.areaDraft) return false;
+    if (!this.domDraft && !this.areaDraft) return false;
     const composerHost = this.getEnvironment()?.composerHost;
     const activeElement = composerHost?.ownerDocument.activeElement;
     return Boolean(
@@ -5842,32 +5728,6 @@ var WebReviewKitApp = class {
     if (!this.shadow) return;
     this.view.render(this.shadow, this.createHiddenItemsStyleElement());
   }
-  async bindNoteDraftToPoint(point, fields = {}) {
-    const environment = this.getEnvironment();
-    if (!environment) return;
-    const viewport = getViewportSize(environment);
-    const nextPoint = clampPoint(point, environment);
-    const draft = await this.withOverlayHidden(() => {
-      const selection = getPointSelection(nextPoint);
-      const anchor = getDomAnchor(
-        selection,
-        this.options.anchors?.attribute,
-        environment
-      );
-      const marker = {
-        viewport: roundPoint(nextPoint),
-        relative: anchor ? getRelativePoint(nextPoint, anchor, environment) : void 0
-      };
-      return {
-        viewport,
-        anchor,
-        marker,
-        ...fields
-      };
-    });
-    this.noteDraft = draft;
-    this.render();
-  }
   async bindElementDraftToPoint(point, fields = {}) {
     const environment = this.getEnvironment();
     if (!environment) return;
@@ -5916,7 +5776,7 @@ var WebReviewKitApp = class {
         previewElement
       };
     });
-    this.noteDraft = draft;
+    this.domDraft = draft;
     this.render();
   }
   async bindElementDraftToElement(element, fields = {}) {
@@ -5957,7 +5817,7 @@ var WebReviewKitApp = class {
       };
     });
     if (!draft) return;
-    this.noteDraft = draft;
+    this.domDraft = draft;
     this.render();
   }
   async createAreaDraft(selection) {
@@ -6000,10 +5860,10 @@ var WebReviewKitApp = class {
       this.root.style.display = previousDisplay;
     }
   }
-  async captureNoteDraft(input) {
+  async captureDomDraft(input) {
     if (this.isCapturingViewport) return;
     const environment = this.getEnvironment();
-    const draft = this.noteDraft;
+    const draft = this.domDraft;
     if (!draft) return;
     if (!environment?.captureViewport) {
       this.draftError = "Viewport capture helper is not available.";
@@ -6021,8 +5881,8 @@ var WebReviewKitApp = class {
     try {
       const result = await environment.captureViewport(captureInput);
       const attachment = this.createCaptureDraftAttachment(result, captureInput);
-      const currentDraft = this.noteDraft ?? draft;
-      this.noteDraft = {
+      const currentDraft = this.domDraft ?? draft;
+      this.domDraft = {
         ...currentDraft,
         attachments: [...currentDraft.attachments ?? [], attachment]
       };

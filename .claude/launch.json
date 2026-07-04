@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev-review",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:review"],
+      "port": 5177
+    }
+  ]
+}

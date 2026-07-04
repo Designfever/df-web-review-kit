@@ -124,6 +124,7 @@ React shell should call the core controller instead of duplicating target overla
 
 - `hooks/use.review.shell.state.ts`: global shell state — target, size, source, mode, refs.
 - `hooks/use.review.shell.data.ts`: item list, filters, counts, and derived view data.
+- `hooks/use.review.side.panel.ts`: side panel selection, visibility, availability fallback, and browser-local persistence.
 - `hooks/use.review.controller.ts`: core runtime wiring (init/reload/restore/mode).
 - `hooks/use.review.item.actions.ts`: QA item mutations (status/assignee/edit/submit/remove) and prompt/link copy actions, with per-item mutation tracking.
 - `hooks/use.review.source.inspector.ts`: source inspector panel state and the Alt(Option) source-select shortcut bound into the target iframe.

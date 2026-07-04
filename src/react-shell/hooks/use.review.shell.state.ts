@@ -16,10 +16,6 @@ import {
   getInitialSource,
   getInitialTarget,
 } from '../route';
-import {
-  getInitialReviewSidePanel,
-  getStoredReviewSidePanelVisible,
-} from '../settings';
 import type {
   ReviewShellAdapters,
   ReviewShellViewportPreset,
@@ -58,7 +54,6 @@ export const useReviewShellState = ({
   const sourceEntries = normalizedAdapters.sources;
   const defaultSource = sourceEntries[0]?.label ?? 'local';
   const initialItemId = getInitialItemId();
-  const initialSidePanel = getInitialReviewSidePanel();
   const [source, setSource] = useState<ReviewSource>(() => {
     const initialSource = getInitialSource(remoteAdapterEntry?.label);
     return sourceEntries.some((entry) => entry.label === initialSource)
@@ -103,11 +98,6 @@ export const useReviewShellState = ({
       figma: false,
     });
   const [selectedItemId, setSelectedItemId] = useState(initialItemId);
-  const [isListVisible, setIsListVisible] = useState(
-    () =>
-      Boolean(initialItemId || initialSidePanel) ||
-      getStoredReviewSidePanelVisible()
-  );
   const [isSitemapOpen, setIsSitemapOpen] = useState(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState(false);
   const [copyLabel, setCopyLabel] = useState('Copy URL');
@@ -133,7 +123,6 @@ export const useReviewShellState = ({
     iframeRef,
     isFigmaOverlayAvailable,
     isInitialPromptOpen,
-    isListVisible,
     isRemoteSource,
     isSitemapOpen,
     localAdapterEntry,
@@ -149,7 +138,6 @@ export const useReviewShellState = ({
     setCopyLabel,
     setDraftTarget,
     setIsInitialPromptOpen,
-    setIsListVisible,
     setIsSitemapOpen,
     setMode,
     setSelectedItemId,

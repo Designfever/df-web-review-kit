@@ -4,6 +4,7 @@
 // 분리된 훅 지도:
 // - use.review.shell.state      셸 전역 상태 (target/size/source/mode 등)
 // - use.review.shell.data       아이템 목록/필터/카운트 파생 데이터
+// - use.review.side.panel       사이드 패널 선택/열림 상태
 // - use.review.command.key      ⌘ 누르는 동안 오버레이 숨김
 // - use.review.source.inspector 소스 인스펙터 + Alt 단축키 바인딩
 // - use.review.section.outline  Source Tree(컴포넌트 아웃라인) 패널
@@ -79,17 +80,11 @@ import { useReviewRuler } from '../hooks/use.review.ruler';
 import { useReviewFigmaImages } from '../hooks/use.review.figma.images';
 import { useReviewSectionOutline } from '../hooks/use.review.section.outline';
 import { useReviewSettings } from '../hooks/use.review.settings';
+import { useReviewSidePanel } from '../hooks/use.review.side.panel';
 import { useReviewShellData } from '../hooks/use.review.shell.data';
 import { useReviewShellHotkeys } from '../hooks/use.review.shell.hotkeys';
 import { useReviewShellState } from '../hooks/use.review.shell.state';
 import { useReviewSourceInspector } from '../hooks/use.review.source.inspector';
-import {
-  getInitialReviewSidePanel,
-  getStoredReviewSidePanel,
-  writeStoredReviewSidePanel,
-  writeStoredReviewSidePanelVisible,
-  type StoredReviewSidePanel,
-} from '../settings';
 import {
   copyCurrentReviewUrl,
   refreshReviewItems,
@@ -97,8 +92,6 @@ import {
   refreshReviewData as refreshReviewDataAction,
 } from './shell.actions';
 import { getReviewModeWriteMode } from './shell.helpers';
-
-type ReviewSidePanel = StoredReviewSidePanel;
 
 export const ReviewShell = ({
   projectId,
@@ -130,7 +123,6 @@ export const ReviewShell = ({
     iframeRef,
     isFigmaOverlayAvailable: isViewportFigmaOverlayAvailable,
     isInitialPromptOpen,
-    isListVisible,
     isRemoteSource,
     isSitemapOpen,
     localAdapterEntry,
@@ -146,7 +138,6 @@ export const ReviewShell = ({
     setCopyLabel,
     setDraftTarget,
     setIsInitialPromptOpen,
-    setIsListVisible,
     setIsSitemapOpen,
     setMode,
     setSelectedItemId,
@@ -208,13 +199,6 @@ export const ReviewShell = ({
   const isSourceTreeHoverOutlineEnabled =
     resolvedSourceInspector?.hoverOutline !== false;
 
-  // 사이드 패널 선택 상태. URL 로 특정 아이템이 지정되면 QA 패널을 우선한다.
-  const [sidePanel, setSidePanel] = useState<ReviewSidePanel>(() => {
-    const initialSidePanel = getInitialReviewSidePanel();
-    if (initialSidePanel) return initialSidePanel;
-    if (getInitialItemId()) return 'qa';
-    return isSourceInspectorEnabled ? getStoredReviewSidePanel() : 'qa';
-  });
   const figmaImageStore = useMemo(
     () => getReviewFigmaImageStore(figmaImages),
     [figmaImages]
@@ -222,32 +206,18 @@ export const ReviewShell = ({
   const isFigmaImageManagementEnabled = Boolean(figmaImageStore);
   const figmaImageFormat =
     figmaImages?.imageFormat ?? DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT;
-  const isQaPanelVisible = isListVisible && sidePanel === 'qa';
-  const isSourceTreePanelVisible =
-    isSourceInspectorEnabled && isListVisible && sidePanel === 'source';
-  const isFigmaImagesPanelVisible =
-    isFigmaImageManagementEnabled &&
-    isListVisible &&
-    sidePanel === 'figma-images';
-
-  // 기능이 비활성화되면 해당 패널에 머물 수 없으니 QA 로 되돌린다.
-  useEffect(() => {
-    if (isSourceInspectorEnabled || sidePanel !== 'source') return;
-    setSidePanel('qa');
-  }, [isSourceInspectorEnabled, sidePanel]);
-
-  useEffect(() => {
-    if (isFigmaImageManagementEnabled || sidePanel !== 'figma-images') return;
-    setSidePanel('qa');
-  }, [isFigmaImageManagementEnabled, sidePanel]);
-
-  useEffect(() => {
-    writeStoredReviewSidePanel(sidePanel);
-  }, [sidePanel]);
-
-  useEffect(() => {
-    writeStoredReviewSidePanelVisible(isListVisible);
-  }, [isListVisible]);
+  const {
+    isFigmaImagesPanelVisible,
+    isListVisible,
+    isQaPanelVisible,
+    isSourceTreePanelVisible,
+    openSidePanel,
+    sidePanel,
+    toggleSidePanel,
+  } = useReviewSidePanel({
+    isFigmaImageManagementEnabled,
+    isSourceInspectorEnabled,
+  });
 
   const {
     activeItems,
@@ -687,8 +657,7 @@ export const ReviewShell = ({
     closeRuler();
     if (writeMode && mode !== nextMode) {
       // 작성 모드 진입 시 QA 패널을 열어 draft 폼이 보이게 한다.
-      setSidePanel('qa');
-      setIsListVisible(true);
+      openSidePanel('qa');
     }
     setControllerReviewMode(nextMode);
   };
@@ -734,9 +703,8 @@ export const ReviewShell = ({
   });
 
   const showQaPanel = useCallback(() => {
-    setSidePanel('qa');
-    setIsListVisible(true);
-  }, [setIsListVisible]);
+    openSidePanel('qa');
+  }, [openSidePanel]);
 
   const {
     collapsedSectionOutlineIds,
@@ -774,44 +742,32 @@ export const ReviewShell = ({
   });
 
   const toggleQaPanel = useCallback(() => {
-    setSidePanel('qa');
-    setIsListVisible((current) => (sidePanel === 'qa' ? !current : true));
-  }, [setIsListVisible, sidePanel]);
+    toggleSidePanel('qa');
+  }, [toggleSidePanel]);
 
   const toggleSourceTreePanel = useCallback(() => {
     if (!isSourceInspectorEnabled) return;
 
-    if (sidePanel === 'source' && isListVisible) {
-      setIsListVisible(false);
-      return;
+    if (sidePanel !== 'source' || !isListVisible) {
+      refreshCurrentSectionOutline(true);
     }
 
-    setSidePanel('source');
-    refreshCurrentSectionOutline(true);
-    setIsListVisible(true);
+    toggleSidePanel('source');
   }, [
     isListVisible,
     isSourceInspectorEnabled,
     refreshCurrentSectionOutline,
-    setIsListVisible,
     sidePanel,
+    toggleSidePanel,
   ]);
 
   const toggleFigmaImagesPanel = useCallback(() => {
     if (!isFigmaImageManagementEnabled) return;
 
-    if (sidePanel === 'figma-images' && isListVisible) {
-      setIsListVisible(false);
-      return;
-    }
-
-    setSidePanel('figma-images');
-    setIsListVisible(true);
+    toggleSidePanel('figma-images');
   }, [
     isFigmaImageManagementEnabled,
-    isListVisible,
-    setIsListVisible,
-    sidePanel,
+    toggleSidePanel,
   ]);
 
   const {

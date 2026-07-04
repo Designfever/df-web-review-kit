@@ -36,6 +36,10 @@ export type SourceCandidate = {
 };
 
 type SourceCandidateContext = {
+  // dedupe key → 같은 소스에서 렌더된 요소 목록 (문서 순서).
+  // getSourceCandidates 호출 한 번 동안만 유효한 캐시. 후보마다 문서 전체를
+  // querySelectorAll 로 재스캔하면 큰 DOM 에서 클릭이 느려져서 kind 별 1회로 줄인다.
+  repeatIndexByKind: Map<SourceCandidate['kind'], Map<string, Element[]>>;
   sourceStack: SourceStackEntry[];
   targetElement: Element;
   targetQaElement: Element | null;
@@ -159,7 +163,7 @@ function createSourceCandidate(
   kind: SourceCandidate['kind'],
   context: SourceCandidateContext
 ): SourceCandidate {
-  const repeatInfo = getSourceRepeatInfo(element, source, kind);
+  const repeatInfo = getSourceRepeatInfo(element, source, kind, context);
   const scoring = getSourceConfidence({
     context,
     depth,
@@ -306,6 +310,7 @@ function createSourceCandidateContext(
   targetElement: Element
 ): SourceCandidateContext {
   return {
+    repeatIndexByKind: new Map(),
     sourceStack: getSourceStack(targetElement),
     targetElement,
     targetQaElement: targetElement.closest('[data-qa-id]'),
@@ -377,23 +382,21 @@ function getNormalizedElementText(element: Element) {
 function getSourceRepeatInfo(
   element: Element,
   source: DomSourceHint,
-  kind: SourceCandidate['kind']
+  kind: SourceCandidate['kind'],
+  context: SourceCandidateContext
 ): SourceRepeatInfo | null {
   const key = getSourceCandidateDedupeKey(source);
   if (!key) return null;
 
-  const selector =
-    kind === 'data' ? '[data-wrk-data-file]' : '[data-wrk-source-file], [data-file]';
-  const matches = Array.from(
-    element.ownerDocument.querySelectorAll(selector)
-  ).filter((candidate) => {
-    const candidateSource =
-      kind === 'data'
-        ? getDataHintFromElement(candidate)
-        : getSourceHintFromElement(candidate);
-    return candidateSource && getSourceCandidateDedupeKey(candidateSource) === key;
-  });
-  if (matches.length <= 1) return null;
+  // kind 별로 문서를 한 번만 스캔해 dedupe key → 요소 목록 인덱스를 만든다.
+  let repeatIndex = context.repeatIndexByKind.get(kind);
+  if (!repeatIndex) {
+    repeatIndex = buildSourceRepeatIndex(element.ownerDocument, kind);
+    context.repeatIndexByKind.set(kind, repeatIndex);
+  }
+
+  const matches = repeatIndex.get(key);
+  if (!matches || matches.length <= 1) return null;
 
   const index = matches.indexOf(element);
   if (index < 0) return null;
@@ -402,6 +405,35 @@ function getSourceRepeatInfo(
     count: matches.length,
     index: index + 1,
   };
+}
+
+function buildSourceRepeatIndex(
+  ownerDocument: Document,
+  kind: SourceCandidate['kind']
+) {
+  const selector =
+    kind === 'data' ? '[data-wrk-data-file]' : '[data-wrk-source-file], [data-file]';
+  const repeatIndex = new Map<string, Element[]>();
+
+  ownerDocument.querySelectorAll(selector).forEach((candidate) => {
+    const candidateSource =
+      kind === 'data'
+        ? getDataHintFromElement(candidate)
+        : getSourceHintFromElement(candidate);
+    const candidateKey = candidateSource
+      ? getSourceCandidateDedupeKey(candidateSource)
+      : '';
+    if (!candidateKey) return;
+
+    const elements = repeatIndex.get(candidateKey);
+    if (elements) {
+      elements.push(candidate);
+    } else {
+      repeatIndex.set(candidateKey, [candidate]);
+    }
+  });
+
+  return repeatIndex;
 }
 
 function normalizeSourceOpenOptions(

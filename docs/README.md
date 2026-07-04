@@ -24,7 +24,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 - `installation.md`: install the npm package, create the `/review` route, wire adapters, and run checks.
 - `../.env.sample`: copyable host project env template for local, Supabase, and source opening.
 - `adapters.md`: QA adapter and Figma image store responsibility boundary.
-- `testing.md`: Vitest adapter contract coverage and local verification commands.
+- `testing.md`: Vitest adapter contract and core pure-function unit coverage, plus local verification commands.
 - `adaptor.sample.ts`: copyable starting point for host-owned remote adapters.
 - `db-setup.md`: optional Supabase review item table/RPC/RLS/presence setup.
 - `architecture.md`: core/runtime, React shell, coordinate, anchor, and feature boundary notes.

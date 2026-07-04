@@ -2034,8 +2034,7 @@ var REVIEW_SCOPE_LABELS = {
   mobile: "Mobile",
   tablet: "Tablet",
   desktop: "Desktop",
-  wide: "Wide",
-  dom: "Element"
+  wide: "Wide"
 };
 var normalizeReviewItemScope = (value) => {
   if (value === "element") return "dom";
@@ -2081,7 +2080,6 @@ function getReviewItemScope(item, presets = DEFAULT_REVIEW_VIEWPORTS) {
 }
 function getReviewItemScopeLabel(item, presets = DEFAULT_REVIEW_VIEWPORTS) {
   const scope = getReviewItemScope(item, presets);
-  if (scope === "dom") return REVIEW_SCOPE_LABELS.dom;
   const preset = findReviewViewportPreset(item.viewport, presets);
   return preset.label || REVIEW_SCOPE_LABELS[scope];
 }
@@ -2311,124 +2309,6 @@ function setDocumentScrollInstantly(environment, position) {
     Math.max(0, Math.round(position.x)),
     Math.max(0, Math.round(position.y))
   );
-}
-
-// src/core/draft.attachments.ts
-function attachDraftImagePasteQueue(textarea, options) {
-  textarea.addEventListener("paste", (event) => {
-    const imageFiles = getClipboardImageFiles(event.clipboardData);
-    if (imageFiles.length === 0) return;
-    event.preventDefault();
-    const text = event.clipboardData?.getData("text/plain");
-    if (text) {
-      insertTextAtTextareaSelection(textarea, text);
-      options.onCommentChange(textarea.value);
-    }
-    const attachments = imageFiles.map(
-      (file, index) => createDraftImageAttachment(file, index)
-    );
-    options.onAttachmentsChange([
-      ...options.getAttachments() ?? [],
-      ...attachments
-    ]);
-    options.onPasteComplete();
-  });
-}
-function createDraftAttachmentQueue(ownerDocument, attachments, onRemove) {
-  if (!attachments?.length) return void 0;
-  const queue = ownerDocument.createElement("div");
-  queue.className = "dfwr-attachment-queue";
-  const label = ownerDocument.createElement("div");
-  label.className = "dfwr-attachment-label";
-  label.textContent = `Attachments (${attachments.length})`;
-  const list = ownerDocument.createElement("div");
-  list.className = "dfwr-attachment-list";
-  attachments.forEach((attachment) => {
-    const item = ownerDocument.createElement("div");
-    item.className = "dfwr-attachment-item";
-    const preview = createDraftAttachmentPreview(ownerDocument, attachment);
-    const name = ownerDocument.createElement("div");
-    name.className = "dfwr-attachment-name";
-    name.textContent = attachment.name;
-    name.title = attachment.name;
-    const remove = ownerDocument.createElement("button");
-    remove.className = "dfwr-attachment-remove";
-    remove.type = "button";
-    remove.textContent = "Remove";
-    remove.setAttribute("aria-label", `Remove ${attachment.name}`);
-    remove.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      onRemove(attachment.id);
-    });
-    item.append(preview, name, remove);
-    list.append(item);
-  });
-  queue.append(label, list);
-  return queue;
-}
-function removeDraftAttachment(attachments, attachmentId) {
-  if (!attachments?.length) return [];
-  const removed = attachments.find((attachment) => attachment.id === attachmentId);
-  if (removed?.previewUrl) {
-    URL.revokeObjectURL(removed.previewUrl);
-  }
-  return attachments.filter((attachment) => attachment.id !== attachmentId);
-}
-function getClipboardImageFiles(data) {
-  if (!data) return [];
-  const itemFiles = Array.from(data.items).filter((item) => item.kind === "file" && item.type.startsWith("image/")).map((item) => item.getAsFile()).filter((file) => Boolean(file));
-  if (itemFiles.length > 0) return itemFiles;
-  return Array.from(data.files).filter((file) => file.type.startsWith("image/"));
-}
-function createDraftImageAttachment(file, index) {
-  const mime = file.type || "image/png";
-  const name = file.name || `pasted-image-${Date.now()}-${index + 1}${getImageExtension(mime)}`;
-  return {
-    id: createDraftAttachmentId(),
-    file,
-    name,
-    mime,
-    size: file.size,
-    kind: "image",
-    previewUrl: URL.createObjectURL(file),
-    metadata: { source: "paste" }
-  };
-}
-function createDraftAttachmentId() {
-  return window.crypto?.randomUUID?.() ?? `draft-attachment-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-function getImageExtension(mime) {
-  if (mime === "image/jpeg") return ".jpg";
-  if (mime === "image/gif") return ".gif";
-  if (mime === "image/webp") return ".webp";
-  if (mime === "image/svg+xml") return ".svg";
-  return ".png";
-}
-function insertTextAtTextareaSelection(textarea, text) {
-  const start = textarea.selectionStart ?? textarea.value.length;
-  const end = textarea.selectionEnd ?? start;
-  textarea.value = [
-    textarea.value.slice(0, start),
-    text,
-    textarea.value.slice(end)
-  ].join("");
-  const nextSelection = start + text.length;
-  textarea.setSelectionRange(nextSelection, nextSelection);
-}
-function createDraftAttachmentPreview(ownerDocument, attachment) {
-  if (attachment.previewUrl && attachment.mime.startsWith("image/")) {
-    const image = ownerDocument.createElement("img");
-    image.className = "dfwr-attachment-thumb";
-    image.src = attachment.previewUrl;
-    image.alt = "";
-    image.decoding = "async";
-    return image;
-  }
-  const fallback = ownerDocument.createElement("div");
-  fallback.className = "dfwr-attachment-thumb is-file";
-  fallback.textContent = "IMG";
-  return fallback;
 }
 
 // src/core/draft.metrics.ts
@@ -3683,6 +3563,577 @@ function createStyleElement() {
   return style;
 }
 
+// src/core/draft.attachments.ts
+function attachDraftImagePasteQueue(textarea, options) {
+  textarea.addEventListener("paste", (event) => {
+    const imageFiles = getClipboardImageFiles(event.clipboardData);
+    if (imageFiles.length === 0) return;
+    event.preventDefault();
+    const text = event.clipboardData?.getData("text/plain");
+    if (text) {
+      insertTextAtTextareaSelection(textarea, text);
+      options.onCommentChange(textarea.value);
+    }
+    const attachments = imageFiles.map(
+      (file, index) => createDraftImageAttachment(file, index)
+    );
+    options.onAttachmentsChange([
+      ...options.getAttachments() ?? [],
+      ...attachments
+    ]);
+    options.onPasteComplete();
+  });
+}
+function createDraftAttachmentQueue(ownerDocument, attachments, onRemove) {
+  if (!attachments?.length) return void 0;
+  const queue = ownerDocument.createElement("div");
+  queue.className = "dfwr-attachment-queue";
+  const label = ownerDocument.createElement("div");
+  label.className = "dfwr-attachment-label";
+  label.textContent = `Attachments (${attachments.length})`;
+  const list = ownerDocument.createElement("div");
+  list.className = "dfwr-attachment-list";
+  attachments.forEach((attachment) => {
+    const item = ownerDocument.createElement("div");
+    item.className = "dfwr-attachment-item";
+    const preview = createDraftAttachmentPreview(ownerDocument, attachment);
+    const name = ownerDocument.createElement("div");
+    name.className = "dfwr-attachment-name";
+    name.textContent = attachment.name;
+    name.title = attachment.name;
+    const remove = ownerDocument.createElement("button");
+    remove.className = "dfwr-attachment-remove";
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.setAttribute("aria-label", `Remove ${attachment.name}`);
+    remove.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onRemove(attachment.id);
+    });
+    item.append(preview, name, remove);
+    list.append(item);
+  });
+  queue.append(label, list);
+  return queue;
+}
+function removeDraftAttachment(attachments, attachmentId) {
+  if (!attachments?.length) return [];
+  const removed = attachments.find((attachment) => attachment.id === attachmentId);
+  if (removed?.previewUrl) {
+    URL.revokeObjectURL(removed.previewUrl);
+  }
+  return attachments.filter((attachment) => attachment.id !== attachmentId);
+}
+function getClipboardImageFiles(data) {
+  if (!data) return [];
+  const itemFiles = Array.from(data.items).filter((item) => item.kind === "file" && item.type.startsWith("image/")).map((item) => item.getAsFile()).filter((file) => Boolean(file));
+  if (itemFiles.length > 0) return itemFiles;
+  return Array.from(data.files).filter((file) => file.type.startsWith("image/"));
+}
+function createDraftImageAttachment(file, index) {
+  const mime = file.type || "image/png";
+  const name = file.name || `pasted-image-${Date.now()}-${index + 1}${getImageExtension(mime)}`;
+  return {
+    id: createDraftAttachmentId(),
+    file,
+    name,
+    mime,
+    size: file.size,
+    kind: "image",
+    previewUrl: URL.createObjectURL(file),
+    metadata: { source: "paste" }
+  };
+}
+function createDraftAttachmentId() {
+  return window.crypto?.randomUUID?.() ?? `draft-attachment-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+function getImageExtension(mime) {
+  if (mime === "image/jpeg") return ".jpg";
+  if (mime === "image/gif") return ".gif";
+  if (mime === "image/webp") return ".webp";
+  if (mime === "image/svg+xml") return ".svg";
+  return ".png";
+}
+function insertTextAtTextareaSelection(textarea, text) {
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? start;
+  textarea.value = [
+    textarea.value.slice(0, start),
+    text,
+    textarea.value.slice(end)
+  ].join("");
+  const nextSelection = start + text.length;
+  textarea.setSelectionRange(nextSelection, nextSelection);
+}
+function createDraftAttachmentPreview(ownerDocument, attachment) {
+  if (attachment.previewUrl && attachment.mime.startsWith("image/")) {
+    const image = ownerDocument.createElement("img");
+    image.className = "dfwr-attachment-thumb";
+    image.src = attachment.previewUrl;
+    image.alt = "";
+    image.decoding = "async";
+    return image;
+  }
+  const fallback = ownerDocument.createElement("div");
+  fallback.className = "dfwr-attachment-thumb is-file";
+  fallback.textContent = "IMG";
+  return fallback;
+}
+
+// src/core/view/composer.position.ts
+var COMPOSER_MARGIN = 12;
+function getDraftComposerWidth(environment) {
+  const bounds = environment.overlayRect;
+  return Math.min(360, Math.max(240, bounds.width - COMPOSER_MARGIN * 2));
+}
+function getHostComposerBounds() {
+  const root = document.documentElement;
+  return {
+    left: 0,
+    top: 0,
+    width: root.clientWidth || window.innerWidth,
+    height: root.clientHeight || window.innerHeight
+  };
+}
+function getClampedComposerPosition(position, environment, size, bounds = environment.overlayRect) {
+  const width = size?.width ?? getDraftComposerWidth(environment);
+  const height = size?.height ?? 236;
+  return {
+    x: clamp(
+      position.x,
+      bounds.left + COMPOSER_MARGIN,
+      bounds.left + bounds.width - width - COMPOSER_MARGIN
+    ),
+    y: clamp(
+      position.y,
+      bounds.top + COMPOSER_MARGIN,
+      bounds.top + bounds.height - height - COMPOSER_MARGIN
+    )
+  };
+}
+function getInitialDraftComposerPosition(selection, environment, size) {
+  const bounds = getHostComposerBounds();
+  const gap = 20;
+  if (!selection) {
+    return getClampedComposerPosition(
+      {
+        x: environment.overlayRect.left + COMPOSER_MARGIN,
+        y: environment.overlayRect.top + COMPOSER_MARGIN
+      },
+      environment,
+      size,
+      bounds
+    );
+  }
+  const preferredX = selection.left + selection.width + gap;
+  const maxX = bounds.left + bounds.width - size.width - COMPOSER_MARGIN;
+  const x = preferredX <= maxX ? preferredX : selection.left - size.width - gap;
+  return getClampedComposerPosition(
+    {
+      x,
+      y: selection.top
+    },
+    environment,
+    size,
+    bounds
+  );
+}
+function getDraftComposerPosition({
+  selection,
+  environment,
+  composerPosition,
+  estimatedHeight
+}) {
+  const width = getDraftComposerWidth(environment);
+  if (composerPosition) {
+    const clamped = getClampedComposerPosition(
+      composerPosition,
+      environment,
+      { width, height: estimatedHeight },
+      getHostComposerBounds()
+    );
+    return { width, left: clamped.x, top: clamped.y };
+  }
+  const position = getInitialDraftComposerPosition(selection, environment, {
+    width,
+    height: estimatedHeight
+  });
+  return { width, left: position.x, top: position.y };
+}
+function attachDraftComposerDrag({
+  getEnvironment,
+  popover,
+  handle,
+  onMove
+}) {
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+  const movePopover = (event) => {
+    const environment = getEnvironment();
+    if (!environment) return;
+    const position = getClampedComposerPosition(
+      {
+        x: event.clientX - offsetX,
+        y: event.clientY - offsetY
+      },
+      environment,
+      {
+        width: popover.offsetWidth,
+        height: popover.offsetHeight
+      },
+      getHostComposerBounds()
+    );
+    popover.style.left = `${position.x}px`;
+    popover.style.top = `${position.y}px`;
+    onMove(position);
+  };
+  handle.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    const rect = popover.getBoundingClientRect();
+    offsetX = event.clientX - rect.left;
+    offsetY = event.clientY - rect.top;
+    isDragging = true;
+    event.preventDefault();
+    event.stopPropagation();
+    handle.setPointerCapture(event.pointerId);
+    popover.classList.add("is-dragging");
+  });
+  handle.addEventListener("pointermove", (event) => {
+    if (!isDragging || !handle.hasPointerCapture(event.pointerId)) return;
+    event.preventDefault();
+    movePopover(event);
+  });
+  const stopDrag = (event) => {
+    if (!isDragging || !handle.hasPointerCapture(event.pointerId)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    isDragging = false;
+    handle.releasePointerCapture(event.pointerId);
+    popover.classList.remove("is-dragging");
+    movePopover(event);
+  };
+  handle.addEventListener("pointerup", stopDrag);
+  handle.addEventListener("pointercancel", stopDrag);
+}
+
+// src/core/view/icons.ts
+function createIcon(paths) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2.4");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  paths.forEach((d) => {
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    svg.append(path);
+  });
+  return svg;
+}
+function setAdjustmentToggleIcon(button, isActive) {
+  const paths = isActive ? ["M20 6 9 17l-5-5"] : [
+    "M12 2v20",
+    "M2 12h20",
+    "m9 5 3-3 3 3",
+    "m9 19 3 3 3-3",
+    "m5 9-3 3 3 3",
+    "m19 9 3 3-3 3"
+  ];
+  button.replaceChildren(createIcon(paths));
+}
+function createSpinner(className) {
+  const spinner = document.createElement("span");
+  spinner.className = className;
+  spinner.setAttribute("aria-hidden", "true");
+  return spinner;
+}
+
+// src/core/view/draft.capture.ts
+function canCaptureViewport(config) {
+  return Boolean(config.getEnvironment()?.captureViewport);
+}
+function getCaptureAreaDraft(draft) {
+  return {
+    viewport: draft.viewport,
+    marker: draft.marker,
+    selection: draft.selection
+  };
+}
+function getCaptureDomDraft(config, draft, isElementDraft) {
+  if (!isElementDraft) {
+    return {
+      viewport: draft.viewport,
+      marker: draft.marker,
+      selection: draft.selection
+    };
+  }
+  const presets = config.options.viewports?.presets;
+  const marker = {
+    ...draft.marker,
+    viewport: roundPoint(
+      getAdjustedDraftPoint(draft.marker.viewport, draft, presets)
+    )
+  };
+  const selection = draft.selection ? {
+    ...draft.selection,
+    viewport: toPublicSelection(
+      getAdjustedDraftSelection(
+        toViewportSelection(draft.selection.viewport),
+        draft,
+        presets
+      )
+    )
+  } : void 0;
+  return {
+    viewport: draft.viewport,
+    marker,
+    selection
+  };
+}
+function createDraftCaptureButton(config, draft, options) {
+  const button = document.createElement("button");
+  const state = config.getState();
+  const isCapturing = state.isCapturingViewport;
+  const canCapture = canCaptureViewport(config);
+  button.className = "dfwr-button";
+  button.type = "button";
+  button.disabled = !canCapture || isCapturing || state.isCreatingItem;
+  button.setAttribute("aria-busy", isCapturing ? "true" : "false");
+  button.title = canCapture ? "Capture current viewport" : "Viewport capture helper is not available";
+  if (isCapturing) {
+    button.append(createSpinner("dfwr-spinner"), "Capturing...");
+  } else {
+    button.textContent = "Capture";
+  }
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const currentState = config.getState();
+    if (!canCaptureViewport(config) || currentState.isCapturingViewport) {
+      return;
+    }
+    if (options.kind === "area") {
+      const areaDraft = currentState.areaDraft ?? draft;
+      const nextDraft2 = {
+        ...areaDraft,
+        comment: options.textarea.value
+      };
+      config.actions.setAreaDraft(nextDraft2);
+      void config.actions.captureAreaDraft(getCaptureAreaDraft(nextDraft2));
+      return;
+    }
+    const domDraft = currentState.domDraft ?? draft;
+    const nextDraft = {
+      ...domDraft,
+      comment: options.textarea.value
+    };
+    config.actions.setDomDraft(nextDraft);
+    void config.actions.captureDomDraft(
+      getCaptureDomDraft(config, nextDraft, options.isElementDraft)
+    );
+  });
+  return button;
+}
+
+// src/core/view/draft.text.ts
+var DEFAULT_ADJUSTMENT_LABEL = "Responsive CSS px adjustments";
+function getAdjustmentLabel(options) {
+  return options.adjustmentLabel?.trim() || DEFAULT_ADJUSTMENT_LABEL;
+}
+function formatSignedPx(value) {
+  if (value === 0) return "+0px";
+  return `${value > 0 ? "+" : ""}${value}px`;
+}
+function formatRoundedPx(value) {
+  return `${Math.round(value)}px`;
+}
+function getSelectionMqMetrics(selection, viewport, presets) {
+  const { scale } = getDraftViewportScale(viewport, presets);
+  const ratio = scale > 0 ? 1 / scale : 1;
+  return {
+    x: selection.left * ratio,
+    y: selection.top * ratio,
+    width: selection.width * ratio,
+    height: selection.height * ratio
+  };
+}
+function getSelectionMetricLines(selection, viewport, presets) {
+  if (!selection) return ["area", "x none / y none", "w none / h none"];
+  const metrics = getSelectionMqMetrics(selection, viewport, presets);
+  return [
+    "area",
+    `x ${formatRoundedPx(metrics.x)} / y ${formatRoundedPx(metrics.y)}`,
+    `w ${formatRoundedPx(metrics.width)} / h ${formatRoundedPx(
+      metrics.height
+    )}`
+  ];
+}
+function getAreaDraftMetricSelection(draft) {
+  if (!draft.selection) return void 0;
+  return toViewportSelection(draft.selection.viewport);
+}
+function getDraftAdjustmentMetricLines(draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return [
+    `x ${formatSignedPx(metrics.x)} / y ${formatSignedPx(metrics.y)}`,
+    `scale ${formatSignedPx(metrics.scale)}`
+  ];
+}
+function withDraftAdjustmentComment(comment, draft, options) {
+  const presets = options.viewports?.presets;
+  if (!hasDraftAdjustment(draft, presets)) return comment;
+  const trimmedComment = comment.trim();
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  const adjustment = [
+    `${getAdjustmentLabel(options)}: x ${formatSignedPx(
+      metrics.x
+    )}, y ${formatSignedPx(metrics.y)}, scale ${formatSignedPx(
+      metrics.scale
+    )}`,
+    `(${metrics.presetLabel} viewport, ${Math.round(
+      metrics.viewportWidth
+    )}/design ${Math.round(metrics.designWidth)})`
+  ].join(" ");
+  return trimmedComment ? `${trimmedComment}
+${adjustment}` : adjustment;
+}
+
+// src/core/view/form.widgets.ts
+function getAssigneeOption(options, assigneeId) {
+  if (!assigneeId) return void 0;
+  return options.assigneeOptions?.find(
+    (option) => option.value === assigneeId
+  );
+}
+function getAssigneeName(options, assigneeId) {
+  return getAssigneeOption(options, assigneeId)?.label;
+}
+function isTitleFieldEnabled(options) {
+  return options.fields?.title === true;
+}
+function createDraftTitleInput(value, onInput) {
+  const input = document.createElement("input");
+  input.className = "dfwr-input";
+  input.placeholder = "Title";
+  input.type = "text";
+  input.value = value ?? "";
+  input.addEventListener("input", () => onInput(input.value));
+  return input;
+}
+function createDraftAssigneeSelect(options, value, fallbackLabel, onChange) {
+  const assigneeOptions = options.assigneeOptions ?? [];
+  if (assigneeOptions.length === 0) return void 0;
+  const assigneeTitle = options.assigneeTitle?.trim() || "Assignee";
+  const select = document.createElement("select");
+  select.className = "dfwr-select";
+  const emptyOption = document.createElement("option");
+  emptyOption.value = "";
+  emptyOption.textContent = assigneeTitle;
+  select.append(emptyOption);
+  const hasUnknownAssignee = Boolean(value) && !assigneeOptions.some((option) => option.value === value);
+  if (hasUnknownAssignee && value) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = fallbackLabel ?? value;
+    select.append(option);
+  }
+  assigneeOptions.forEach((assigneeOption) => {
+    const option = document.createElement("option");
+    option.value = assigneeOption.value;
+    option.textContent = assigneeOption.label;
+    select.append(option);
+  });
+  select.value = value ?? "";
+  select.addEventListener("change", () => {
+    onChange(select.value || null, getAssigneeName(options, select.value));
+  });
+  return select;
+}
+function getDraftFields(options, titleInput, textarea, assigneeSelect) {
+  const title = titleInput?.value.trim();
+  const comment = textarea.value.trim();
+  const assigneeId = assigneeSelect?.value.trim() || void 0;
+  return {
+    title: title || void 0,
+    comment,
+    assigneeId,
+    assigneeName: getAssigneeName(options, assigneeId)
+  };
+}
+function createFormActions({
+  saveLabel,
+  onSave,
+  onCancel,
+  isSaving,
+  beforeSave,
+  className,
+  leading
+}) {
+  const actions = document.createElement("div");
+  actions.className = ["dfwr-actions", className].filter(Boolean).join(" ");
+  const save = document.createElement("button");
+  save.className = "dfwr-button is-primary";
+  save.type = "button";
+  save.disabled = isSaving;
+  save.setAttribute("aria-busy", isSaving ? "true" : "false");
+  if (isSaving) {
+    save.append(createSpinner("dfwr-spinner"), "Saving...");
+  } else {
+    save.textContent = saveLabel;
+  }
+  save.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (save.disabled) return;
+    onSave();
+  });
+  const cancel = document.createElement("button");
+  cancel.className = "dfwr-button";
+  cancel.type = "button";
+  cancel.disabled = isSaving;
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", (event) => {
+    onCancel(event);
+  });
+  if (leading?.length) {
+    actions.classList.add("has-leading");
+    const leadingGroup = document.createElement("div");
+    leadingGroup.className = "dfwr-actions-leading";
+    leadingGroup.append(...leading);
+    const primary = document.createElement("div");
+    primary.className = "dfwr-actions-primary";
+    primary.append(save, cancel);
+    actions.append(leadingGroup, primary);
+    return actions;
+  }
+  if (beforeSave?.length || className) {
+    actions.append(cancel, ...beforeSave ?? [], save);
+    return actions;
+  }
+  actions.append(save, cancel);
+  return actions;
+}
+function createDraftError(message) {
+  if (!message) return void 0;
+  const error = document.createElement("p");
+  error.className = "dfwr-form-error";
+  error.setAttribute("role", "alert");
+  error.textContent = message;
+  return error;
+}
+function createDraftDragHandle(label) {
+  const handle = document.createElement("button");
+  handle.className = "dfwr-draft-drag-handle";
+  handle.type = "button";
+  handle.setAttribute("aria-label", label);
+  return handle;
+}
+
 // src/core/review/format.ts
 function formatDomDraftMeta(draft) {
   const parts = [
@@ -3748,21 +4199,1157 @@ function formatAnchorMeta(anchor) {
   return parts.join(" ");
 }
 
+// src/core/view/markers.ts
+function createMarkerElement(itemId, hostPoint, label, scope, isBound, isHighlighted) {
+  const marker = document.createElement("div");
+  marker.className = [
+    "dfwr-bound-marker",
+    `is-scope-${scope}`,
+    isBound ? "is-bound" : "is-fallback",
+    isHighlighted ? "is-highlighted" : ""
+  ].filter(Boolean).join(" ");
+  marker.style.left = `${hostPoint.x}px`;
+  marker.style.top = `${hostPoint.y}px`;
+  marker.dataset.scope = scope;
+  if (itemId) {
+    marker.dataset.reviewItemId = itemId;
+  }
+  const iconElement = document.createElement("span");
+  iconElement.className = "dfwr-bound-marker-icon";
+  iconElement.setAttribute("aria-hidden", "true");
+  const labelElement = document.createElement("span");
+  labelElement.className = "dfwr-bound-marker-number";
+  labelElement.textContent = label;
+  marker.append(iconElement, labelElement);
+  return marker;
+}
+function createSelectionHighlight(selection, environment, isDraft) {
+  const rect = toHostSelection(selection, environment);
+  const highlight = document.createElement("div");
+  highlight.className = `dfwr-selection-highlight${isDraft ? " is-draft" : ""}`;
+  highlight.style.left = `${rect.left}px`;
+  highlight.style.top = `${rect.top}px`;
+  highlight.style.width = `${rect.width}px`;
+  highlight.style.height = `${rect.height}px`;
+  return highlight;
+}
+function createItemHighlightElements(selection, environment, item, label, isBound, isHighlighted) {
+  const rect = toHostSelection(selection, environment);
+  const mode = getReviewItemHighlightMode(item);
+  const highlight = document.createElement("div");
+  highlight.className = [
+    "dfwr-item-target-highlight",
+    `is-mode-${mode}`,
+    isBound ? "is-bound" : "is-fallback",
+    isHighlighted ? "is-highlighted" : ""
+  ].filter(Boolean).join(" ");
+  highlight.style.left = `${rect.left}px`;
+  highlight.style.top = `${rect.top}px`;
+  highlight.style.width = `${rect.width}px`;
+  highlight.style.height = `${rect.height}px`;
+  highlight.dataset.reviewItemId = item.id;
+  const labelElement = document.createElement("div");
+  labelElement.className = [
+    "dfwr-item-target-label",
+    `is-mode-${mode}`,
+    isHighlighted ? "is-highlighted" : ""
+  ].filter(Boolean).join(" ");
+  labelElement.textContent = label;
+  labelElement.style.left = `${Math.max(4, rect.left)}px`;
+  labelElement.style.top = `${Math.max(4, rect.top - 24)}px`;
+  labelElement.dataset.reviewItemId = item.id;
+  return [highlight, labelElement];
+}
+function createMarkerLayer({
+  items,
+  highlightedItemId,
+  environment,
+  presets
+}) {
+  const layer = document.createElement("div");
+  layer.className = "dfwr-marker-layer";
+  if (!environment) return layer;
+  const currentScope = getReviewViewportScope(
+    getViewportSize(environment),
+    presets
+  );
+  getNumberedReviewItems(items, presets).forEach((numberedItem) => {
+    const { item, scope, displayLabel } = numberedItem;
+    if (!shouldShowMarkerForScope(scope, currentScope)) {
+      return;
+    }
+    const isHighlighted = item.id === highlightedItemId;
+    if (!highlightedItemId || isHighlighted) {
+      const selection = getItemHighlightSelection(item, environment);
+      if (selection) {
+        layer.append(
+          ...createItemHighlightElements(
+            selection.viewport,
+            environment,
+            item,
+            displayLabel,
+            selection.isBound,
+            isHighlighted
+          )
+        );
+        return;
+      }
+    }
+    const point = getBoundMarkerPoint(item, environment);
+    if (!point || !isPointInViewport(point.viewport, environment)) {
+      return;
+    }
+    const hostPoint = toHostPoint(point.viewport, environment);
+    const marker = createMarkerElement(
+      item.id,
+      hostPoint,
+      displayLabel,
+      scope,
+      point.isBound,
+      isHighlighted
+    );
+    marker.title = `${displayLabel} / ${item.comment}
+${formatItemMeta(item)}`;
+    layer.append(marker);
+  });
+  return layer;
+}
+
+// src/core/view/area.draft.ts
+function createAreaForm(context) {
+  const { config } = context;
+  const form = document.createElement("form");
+  form.className = "dfwr-form";
+  const areaDraft = config.getState().areaDraft;
+  if (!areaDraft) {
+    const empty = document.createElement("p");
+    empty.className = "dfwr-empty";
+    empty.textContent = "Drag on the page to select an area.";
+    form.append(empty);
+    return form;
+  }
+  form.append(createAreaMetricsPanel(context, areaDraft));
+  const titleInput = isTitleFieldEnabled(config.options) ? createDraftTitleInput(areaDraft.title, (title) => {
+    const draft = config.getState().areaDraft;
+    if (!draft) return;
+    config.actions.setAreaDraft({
+      ...draft,
+      title
+    });
+  }) : void 0;
+  const textarea = document.createElement("textarea");
+  textarea.className = "dfwr-textarea";
+  textarea.placeholder = "Area comment";
+  textarea.rows = 4;
+  textarea.value = areaDraft.comment ?? "";
+  textarea.addEventListener("input", () => {
+    const draft = config.getState().areaDraft;
+    if (!draft) return;
+    config.actions.setAreaDraft({
+      ...draft,
+      comment: textarea.value
+    });
+  });
+  attachDraftImagePasteQueue(textarea, {
+    getAttachments: () => config.getState().areaDraft?.attachments ?? areaDraft.attachments,
+    onAttachmentsChange: (attachments) => {
+      const draft = config.getState().areaDraft ?? areaDraft;
+      config.actions.setAreaDraft({
+        ...draft,
+        comment: textarea.value,
+        attachments
+      });
+    },
+    onCommentChange: (comment) => {
+      const draft = config.getState().areaDraft ?? areaDraft;
+      config.actions.setAreaDraft({
+        ...draft,
+        comment
+      });
+    },
+    onPasteComplete: () => config.actions.render()
+  });
+  const assigneeSelect = createDraftAssigneeSelect(
+    config.options,
+    areaDraft.assigneeId,
+    areaDraft.assigneeName,
+    (assigneeId, assigneeName) => {
+      const draft = config.getState().areaDraft;
+      if (!draft) return;
+      config.actions.setAreaDraft({
+        ...draft,
+        assigneeId,
+        assigneeName
+      });
+    }
+  );
+  const actions = createFormActions({
+    saveLabel: "Save area",
+    isSaving: config.getState().isCreatingItem,
+    onCancel: context.cancelDraft,
+    onSave: () => {
+      const draft = config.getState().areaDraft;
+      const fields = getDraftFields(
+        config.options,
+        titleInput,
+        textarea,
+        assigneeSelect
+      );
+      const comment = fields.comment;
+      if (!comment && !draft?.attachments?.length || !draft) return;
+      void config.actions.createItem({
+        kind: "area",
+        title: fields.title,
+        comment,
+        assigneeId: fields.assigneeId,
+        assigneeName: fields.assigneeName,
+        viewport: draft.viewport,
+        anchor: draft.anchor,
+        marker: draft.marker,
+        selection: draft.selection,
+        attachments: draft.attachments
+      });
+    },
+    leading: [
+      createDraftCaptureButton(config, areaDraft, {
+        kind: "area",
+        textarea
+      })
+    ]
+  });
+  const error = createDraftError(config.getState().draftError);
+  const attachmentQueue = createDraftAttachmentQueue(
+    document,
+    areaDraft.attachments,
+    (attachmentId) => {
+      const draft = config.getState().areaDraft ?? areaDraft;
+      const attachments = removeDraftAttachment(
+        draft.attachments,
+        attachmentId
+      );
+      config.actions.setAreaDraft({
+        ...draft,
+        comment: textarea.value,
+        attachments: attachments.length > 0 ? attachments : void 0
+      });
+      config.actions.render();
+    }
+  );
+  form.append(
+    ...titleInput ? [titleInput] : [],
+    textarea,
+    ...attachmentQueue ? [attachmentQueue] : [],
+    ...assigneeSelect ? [assigneeSelect] : [],
+    ...error ? [error] : [],
+    actions
+  );
+  return form;
+}
+function createAreaMetricsPanel(context, draft) {
+  const panel = document.createElement("div");
+  panel.className = "dfwr-adjust-panel is-area-metrics-panel";
+  const [labelLine, xyLine, sizeLine] = getSelectionMetricLines(
+    getAreaDraftMetricSelection(draft),
+    draft.viewport,
+    context.config.options.viewports?.presets
+  );
+  const help = document.createElement("div");
+  help.className = "dfwr-adjust-help";
+  help.textContent = labelLine;
+  const xyStatus = document.createElement("div");
+  xyStatus.className = "dfwr-adjust-status";
+  xyStatus.textContent = xyLine;
+  const sizeStatus = document.createElement("div");
+  sizeStatus.className = "dfwr-adjust-status";
+  sizeStatus.textContent = sizeLine;
+  panel.append(help, xyStatus, sizeStatus);
+  return panel;
+}
+function createAreaDraftOverlay(context, draft) {
+  const { config } = context;
+  const layer = document.createElement("div");
+  layer.className = "dfwr-area-preview-layer";
+  const environment = config.getEnvironment();
+  if (!environment || !draft.selection) return layer;
+  const selection = toViewportSelection(draft.selection.viewport);
+  layer.append(createSelectionHighlight(selection, environment, true));
+  if (draft.marker) {
+    const hostPoint = toHostPoint(draft.marker.viewport, environment);
+    layer.append(
+      createMarkerElement(
+        void 0,
+        hostPoint,
+        "\u2022",
+        getReviewViewportScope(
+          draft.viewport,
+          config.options.viewports?.presets
+        ),
+        true,
+        true
+      )
+    );
+  }
+  return layer;
+}
+function createAreaDraftPopover(context, draft, options = {}) {
+  const { config } = context;
+  const environment = config.getEnvironment();
+  const popover = document.createElement("div");
+  popover.className = [
+    "dfwr-area-draft",
+    "is-composer",
+    options.dockComposer ? "is-docked-composer" : ""
+  ].filter(Boolean).join(" ");
+  if (options.dockComposer) {
+    popover.style.width = "100%";
+  } else if (environment && draft.selection) {
+    const selection = toHostSelection(
+      toViewportSelection(draft.selection.viewport),
+      environment
+    );
+    const composer = getDraftComposerPosition({
+      selection,
+      environment,
+      composerPosition: draft.composerPosition,
+      estimatedHeight: 220
+    });
+    popover.style.left = `${composer.left}px`;
+    popover.style.top = `${composer.top}px`;
+    popover.style.width = `${composer.width}px`;
+    popover.style.right = "auto";
+  }
+  const dragHandle = options.dockComposer ? void 0 : createDraftDragHandle("Move area composer");
+  popover.append(
+    ...dragHandle ? [dragHandle] : [],
+    createAreaForm(context)
+  );
+  if (dragHandle) {
+    attachDraftComposerDrag({
+      getEnvironment: () => config.getEnvironment(),
+      popover,
+      handle: dragHandle,
+      onMove: (composerPosition) => {
+        const areaDraft = config.getState().areaDraft ?? draft;
+        config.actions.setAreaDraft({
+          ...areaDraft,
+          composerPosition
+        });
+      }
+    });
+  }
+  return popover;
+}
+
+// src/core/view/dom.draft.ts
+function createDomDraftLayer(context, draft, options = {}) {
+  const { config } = context;
+  const presets = config.options.viewports?.presets;
+  const environment = config.getEnvironment();
+  const group = document.createElement("div");
+  group.className = "dfwr-dom-draft";
+  if (!environment) return { layer: group, composer: void 0 };
+  const isElementDraft = config.getState().mode === "element" && Boolean(draft.selection);
+  const hostPoint = toHostPoint(
+    isElementDraft ? getAdjustedDraftPoint(draft.marker.viewport, draft, presets) : draft.marker.viewport,
+    environment
+  );
+  let selectionHighlight;
+  if (draft.selection) {
+    const selection = toViewportSelection(draft.selection.viewport);
+    selectionHighlight = createSelectionHighlight(
+      isElementDraft ? getAdjustedDraftSelection(selection, draft, presets) : selection,
+      environment,
+      true
+    );
+    group.append(selectionHighlight);
+  }
+  const pin = document.createElement("button");
+  pin.className = "dfwr-dom-pin";
+  pin.type = "button";
+  pin.setAttribute("aria-label", "Move DOM point");
+  pin.style.left = `${hostPoint.x}px`;
+  pin.style.top = `${hostPoint.y}px`;
+  const popover = document.createElement("div");
+  const position = getPopoverPosition(hostPoint, environment);
+  popover.className = [
+    "dfwr-dom-popover",
+    isElementDraft ? "is-composer" : "",
+    options.dockComposer ? "is-docked-composer" : ""
+  ].filter(Boolean).join(" ");
+  if (options.dockComposer) {
+    popover.style.width = "100%";
+  } else if (isElementDraft) {
+    const selection = draft.selection ? toHostSelection(
+      getAdjustedDraftSelection(
+        toViewportSelection(draft.selection.viewport),
+        draft,
+        presets
+      ),
+      environment
+    ) : void 0;
+    const composer = getDraftComposerPosition({
+      selection,
+      environment,
+      composerPosition: draft.composerPosition,
+      estimatedHeight: 252
+    });
+    popover.style.left = `${composer.left}px`;
+    popover.style.top = `${composer.top}px`;
+    popover.style.width = `${composer.width}px`;
+  } else {
+    popover.style.left = `${position.left}px`;
+    popover.style.top = `${position.top}px`;
+  }
+  const form = document.createElement("form");
+  form.className = "dfwr-form";
+  const meta = isElementDraft ? void 0 : document.createElement("div");
+  if (meta) {
+    meta.className = "dfwr-item-date";
+    meta.textContent = formatDomDraftMeta(draft);
+  }
+  const titleInput = isTitleFieldEnabled(config.options) ? createDraftTitleInput(draft.title, (title) => {
+    const domDraft = config.getState().domDraft;
+    if (!domDraft) return;
+    config.actions.setDomDraft({
+      ...domDraft,
+      title
+    });
+  }) : void 0;
+  const textarea = document.createElement("textarea");
+  textarea.className = "dfwr-textarea";
+  textarea.placeholder = "Review comment";
+  textarea.rows = 4;
+  textarea.value = draft.comment ?? "";
+  textarea.addEventListener("input", () => {
+    const domDraft = config.getState().domDraft;
+    if (!domDraft) return;
+    config.actions.setDomDraft({
+      ...domDraft,
+      comment: textarea.value
+    });
+  });
+  attachDraftImagePasteQueue(textarea, {
+    getAttachments: () => config.getState().domDraft?.attachments ?? draft.attachments,
+    onAttachmentsChange: (attachments) => {
+      const domDraft = config.getState().domDraft ?? draft;
+      config.actions.setDomDraft({
+        ...domDraft,
+        comment: textarea.value,
+        attachments
+      });
+    },
+    onCommentChange: (comment) => {
+      const domDraft = config.getState().domDraft ?? draft;
+      config.actions.setDomDraft({
+        ...domDraft,
+        comment
+      });
+    },
+    onPasteComplete: () => config.actions.render()
+  });
+  const assigneeSelect = createDraftAssigneeSelect(
+    config.options,
+    draft.assigneeId,
+    draft.assigneeName,
+    (assigneeId, assigneeName) => {
+      const domDraft = config.getState().domDraft;
+      if (!domDraft) return;
+      config.actions.setDomDraft({
+        ...domDraft,
+        assigneeId,
+        assigneeName
+      });
+    }
+  );
+  const saveDraft = () => {
+    const currentDraft = config.getState().domDraft ?? draft;
+    const fields = getDraftFields(
+      config.options,
+      titleInput,
+      textarea,
+      assigneeSelect
+    );
+    const comment = fields.comment;
+    const hasAttachments = Boolean(currentDraft.attachments?.length);
+    if (!comment && !hasDraftAdjustment(currentDraft, presets) && !hasAttachments) {
+      return;
+    }
+    void config.actions.createItem({
+      kind: "dom",
+      title: fields.title,
+      comment: withDraftAdjustmentComment(
+        comment,
+        currentDraft,
+        config.options
+      ),
+      assigneeId: fields.assigneeId,
+      assigneeName: fields.assigneeName,
+      viewport: currentDraft.viewport,
+      anchor: currentDraft.anchor,
+      marker: currentDraft.marker,
+      selection: currentDraft.selection,
+      attachments: currentDraft.attachments
+    });
+  };
+  const adjustmentControls = isElementDraft ? createAdjustmentControls(context, {
+    draft,
+    pin,
+    popover,
+    selectionHighlight,
+    textarea,
+    dockToggle: options.dockComposer
+  }) : void 0;
+  const leadingActions = [
+    adjustmentControls?.actionButton,
+    createDraftCaptureButton(config, draft, {
+      kind: "dom",
+      isElementDraft,
+      textarea
+    })
+  ].filter((element) => Boolean(element));
+  const actions = createFormActions({
+    saveLabel: "Save DOM QA",
+    isSaving: config.getState().isCreatingItem,
+    onSave: saveDraft,
+    onCancel: context.cancelDraft,
+    leading: leadingActions.length > 0 ? leadingActions : void 0
+  });
+  const error = createDraftError(config.getState().draftError);
+  const attachmentQueue = createDraftAttachmentQueue(
+    document,
+    draft.attachments,
+    (attachmentId) => {
+      const domDraft = config.getState().domDraft ?? draft;
+      const attachments = removeDraftAttachment(
+        domDraft.attachments,
+        attachmentId
+      );
+      config.actions.setDomDraft({
+        ...domDraft,
+        comment: textarea.value,
+        attachments: attachments.length > 0 ? attachments : void 0
+      });
+      config.actions.render();
+    }
+  );
+  form.append(
+    ...meta ? [meta] : [],
+    ...adjustmentControls ? [adjustmentControls.panel] : [],
+    ...titleInput ? [titleInput] : [],
+    textarea,
+    ...attachmentQueue ? [attachmentQueue] : [],
+    ...assigneeSelect ? [assigneeSelect] : [],
+    ...error ? [error] : [],
+    actions
+  );
+  const dragHandle = isElementDraft && !options.dockComposer ? createDraftDragHandle("Move DOM composer") : void 0;
+  popover.append(...dragHandle ? [dragHandle] : [], form);
+  group.append(pin);
+  if (!options.dockComposer) {
+    group.append(popover);
+  }
+  if (dragHandle) {
+    attachDraftComposerDrag({
+      getEnvironment: () => config.getEnvironment(),
+      popover,
+      handle: dragHandle,
+      onMove: (composerPosition) => {
+        const domDraft = config.getState().domDraft ?? draft;
+        config.actions.setDomDraft({
+          ...domDraft,
+          composerPosition,
+          comment: textarea.value
+        });
+      }
+    });
+  }
+  attachDraftPinDrag(context, {
+    pin,
+    popover: isElementDraft || options.dockComposer ? void 0 : popover,
+    meta,
+    textarea
+  });
+  if (!options.dockComposer) {
+    window.setTimeout(() => {
+      if (draft.adjustment?.isActive) {
+        adjustmentControls?.focusTarget.focus();
+        return;
+      }
+      textarea.focus();
+    }, 0);
+  }
+  return {
+    layer: group,
+    composer: options.dockComposer ? popover : void 0
+  };
+}
+function createAdjustmentControls(context, {
+  draft,
+  pin,
+  popover,
+  selectionHighlight,
+  textarea,
+  dockToggle
+}) {
+  const { config } = context;
+  const presets = config.options.viewports?.presets;
+  const panel = document.createElement("div");
+  panel.className = "dfwr-adjust-panel is-dom-adjust-panel";
+  const header = document.createElement("div");
+  header.className = "dfwr-adjust-panel-header";
+  const help = document.createElement("div");
+  help.className = "dfwr-adjust-help";
+  help.textContent = getAdjustmentLabel(config.options);
+  const adjust = document.createElement("button");
+  adjust.className = "dfwr-adjust-toggle";
+  adjust.type = "button";
+  adjust.title = "Adjust DOM element with keyboard arrows";
+  adjust.setAttribute("aria-label", "Adjust DOM element with keyboard arrows");
+  const xyStatus = document.createElement("div");
+  xyStatus.className = "dfwr-adjust-status";
+  const scaleStatus = document.createElement("div");
+  scaleStatus.className = "dfwr-adjust-status";
+  const syncControls = (nextDraft) => {
+    const isActive = nextDraft.adjustment?.isActive === true;
+    panel.classList.toggle("is-active", isActive);
+    adjust.classList.toggle("is-active", isActive);
+    adjust.setAttribute("aria-pressed", isActive ? "true" : "false");
+    setAdjustmentToggleIcon(adjust, isActive);
+    adjust.title = isActive ? "Finish DOM adjustment" : "Adjust DOM element with keyboard arrows";
+    adjust.setAttribute(
+      "aria-label",
+      isActive ? "Finish DOM adjustment" : "Adjust DOM element with keyboard arrows"
+    );
+    const [xyLine, scaleLine] = getDraftAdjustmentMetricLines(
+      nextDraft,
+      presets
+    );
+    xyStatus.textContent = xyLine;
+    scaleStatus.textContent = scaleLine;
+    syncDraftAdjustmentUi(context, {
+      draft: nextDraft,
+      pin,
+      selectionHighlight
+    });
+  };
+  const updateDraft = (updater) => {
+    const currentDraft = config.getState().domDraft ?? draft;
+    const nextDraft = updater(currentDraft);
+    config.actions.setDomDraft({
+      ...nextDraft,
+      comment: textarea.value
+    });
+    syncControls(nextDraft);
+  };
+  adjust.addEventListener("click", () => {
+    updateDraft((currentDraft) => ({
+      ...currentDraft,
+      adjustment: {
+        x: currentDraft.adjustment?.x ?? 0,
+        y: currentDraft.adjustment?.y ?? 0,
+        scale: currentDraft.adjustment?.scale ?? 0,
+        isActive: currentDraft.adjustment?.isActive !== true
+      }
+    }));
+    adjust.focus();
+  });
+  popover.addEventListener("keydown", (event) => {
+    const currentDraft = config.getState().domDraft ?? draft;
+    if (currentDraft.adjustment?.isActive !== true) return;
+    const keyDelta = getAdjustmentKeyDelta(event);
+    if (!keyDelta) return;
+    event.preventDefault();
+    event.stopPropagation();
+    updateDraft((activeDraft) => ({
+      ...activeDraft,
+      adjustment: {
+        x: (activeDraft.adjustment?.x ?? 0) + keyDelta.x,
+        y: (activeDraft.adjustment?.y ?? 0) + keyDelta.y,
+        scale: (activeDraft.adjustment?.scale ?? 0) + keyDelta.scale,
+        isActive: true
+      }
+    }));
+  });
+  header.append(help);
+  if (!dockToggle) {
+    header.append(adjust);
+  }
+  panel.append(header, xyStatus, scaleStatus);
+  syncControls(draft);
+  return {
+    panel,
+    focusTarget: adjust,
+    // 도킹 모드에서는 토글 버튼을 폼 액션 줄(leading)로 옮긴다.
+    actionButton: dockToggle ? adjust : void 0
+  };
+}
+function getAdjustmentKeyDelta(event) {
+  const step = event.shiftKey ? 10 : 1;
+  if (event.key === "ArrowLeft") return { x: -step, y: 0, scale: 0 };
+  if (event.key === "ArrowRight") return { x: step, y: 0, scale: 0 };
+  if (event.key === "ArrowUp") return { x: 0, y: -step, scale: 0 };
+  if (event.key === "ArrowDown") return { x: 0, y: step, scale: 0 };
+  if (event.key.toLowerCase() === "w") return { x: 0, y: 0, scale: step };
+  if (event.key.toLowerCase() === "s") return { x: 0, y: 0, scale: -step };
+  return void 0;
+}
+function syncDraftAdjustmentUi(context, {
+  draft,
+  pin,
+  selectionHighlight
+}) {
+  const { config } = context;
+  const presets = config.options.viewports?.presets;
+  const environment = config.getEnvironment();
+  if (!environment) return;
+  const hostPoint = toHostPoint(
+    getAdjustedDraftPoint(draft.marker.viewport, draft, presets),
+    environment
+  );
+  pin.style.left = `${hostPoint.x}px`;
+  pin.style.top = `${hostPoint.y}px`;
+  if (draft.selection && selectionHighlight) {
+    const rect = toHostSelection(
+      getAdjustedDraftSelection(
+        toViewportSelection(draft.selection.viewport),
+        draft,
+        presets
+      ),
+      environment
+    );
+    selectionHighlight.style.left = `${rect.left}px`;
+    selectionHighlight.style.top = `${rect.top}px`;
+    selectionHighlight.style.width = `${rect.width}px`;
+    selectionHighlight.style.height = `${rect.height}px`;
+  }
+  context.syncDraftPreview(draft);
+}
+function attachDraftPinDrag(context, {
+  pin,
+  popover,
+  meta,
+  textarea
+}) {
+  const { config } = context;
+  let isDragging = false;
+  const moveDraftUi = (hostPoint) => {
+    const environment = config.getEnvironment();
+    if (!environment) return;
+    const nextPoint = clampPoint(
+      toTargetPoint(hostPoint, environment),
+      environment
+    );
+    const nextHostPoint = toHostPoint(nextPoint, environment);
+    pin.style.left = `${nextHostPoint.x}px`;
+    pin.style.top = `${nextHostPoint.y}px`;
+    if (popover) {
+      const position = getPopoverPosition(nextHostPoint, environment);
+      popover.style.left = `${position.left}px`;
+      popover.style.top = `${position.top}px`;
+    }
+    const domDraft = config.getState().domDraft;
+    if (!domDraft) return;
+    const nextDraft = {
+      ...domDraft,
+      marker: {
+        ...domDraft.marker,
+        viewport: roundPoint(nextPoint)
+      },
+      comment: textarea.value
+    };
+    config.actions.setDomDraft(nextDraft);
+    if (meta) {
+      meta.textContent = formatDomDraftMeta(nextDraft);
+    }
+  };
+  pin.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    isDragging = true;
+    pin.setPointerCapture(event.pointerId);
+  });
+  pin.addEventListener("pointermove", (event) => {
+    if (!isDragging || !pin.hasPointerCapture(event.pointerId)) return;
+    event.preventDefault();
+    moveDraftUi({
+      x: event.clientX,
+      y: event.clientY
+    });
+  });
+  pin.addEventListener("pointerup", (event) => {
+    if (!isDragging || !pin.hasPointerCapture(event.pointerId)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    isDragging = false;
+    pin.releasePointerCapture(event.pointerId);
+    const nextPoint = toTargetPointFromHostEvent(
+      event,
+      config.getEnvironment()
+    );
+    const currentDraft = config.getState().domDraft;
+    const fields = {
+      title: currentDraft?.title,
+      comment: textarea.value,
+      assigneeId: currentDraft?.assigneeId,
+      assigneeName: currentDraft?.assigneeName
+    };
+    void config.actions.bindElementDraftToPoint(nextPoint, fields);
+  });
+}
+
+// src/core/view/panel.ts
+function createReviewPanel(config, renderAreaForm) {
+  const panel = document.createElement("div");
+  panel.className = "dfwr-panel";
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-label", "Web review kit");
+  panel.append(
+    createHeader(config),
+    createToolbar(config),
+    createBody(config, renderAreaForm),
+    createList(config)
+  );
+  return panel;
+}
+function createHeader(config) {
+  const header = document.createElement("div");
+  header.className = "dfwr-header";
+  const title = document.createElement("div");
+  title.className = "dfwr-title";
+  title.textContent = "Review Kit";
+  const meta = document.createElement("div");
+  meta.className = "dfwr-meta";
+  meta.textContent = getRouteKey(config.getEnvironment());
+  const titleGroup = document.createElement("div");
+  titleGroup.append(title, meta);
+  const close = document.createElement("button");
+  close.className = "dfwr-icon-button";
+  close.type = "button";
+  close.textContent = "x";
+  close.setAttribute("aria-label", "Close");
+  close.addEventListener("click", () => config.actions.close());
+  header.append(titleGroup, close);
+  return header;
+}
+function createToolbar(config) {
+  const state = config.getState();
+  const toolbar = document.createElement("div");
+  toolbar.className = "dfwr-toolbar";
+  const toggleMode = (target) => {
+    const mode = config.getState().mode;
+    config.actions.setModeState(mode === target ? "idle" : target);
+    config.actions.clearDrafts();
+    config.actions.render();
+  };
+  toolbar.append(
+    createToolbarButton(
+      "Element",
+      state.mode === "element",
+      () => toggleMode("element")
+    ),
+    createToolbarButton(
+      state.isSelectingArea ? "Selecting" : "Area",
+      state.mode === "area",
+      () => toggleMode("area")
+    ),
+    createToolbarButton("Refresh", false, () => {
+      void config.actions.reload();
+    })
+  );
+  return toolbar;
+}
+function createToolbarButton(label, active, onClick) {
+  const button = document.createElement("button");
+  button.className = `dfwr-button${active ? " is-active" : ""}`;
+  button.type = "button";
+  button.textContent = label;
+  button.addEventListener("click", onClick);
+  return button;
+}
+function createBody(config, renderAreaForm) {
+  const body = document.createElement("div");
+  body.className = "dfwr-body";
+  const state = config.getState();
+  if (state.mode === "idle") {
+    body.append(
+      createEmptyText("Select an element or mark an area.")
+    );
+    return body;
+  }
+  if (state.mode === "element") {
+    body.append(
+      createEmptyText(
+        state.domDraft ? "Write the QA in the page box." : "Click an element to add QA."
+      )
+    );
+    return body;
+  }
+  body.append(renderAreaForm());
+  return body;
+}
+function createEmptyText(text) {
+  const empty = document.createElement("p");
+  empty.className = "dfwr-empty";
+  empty.textContent = text;
+  return empty;
+}
+function createList(config) {
+  const section = document.createElement("div");
+  section.className = "dfwr-list";
+  const state = config.getState();
+  const heading = document.createElement("div");
+  heading.className = "dfwr-list-heading";
+  heading.textContent = `Review items (${state.items.length})`;
+  section.append(heading);
+  if (state.items.length === 0) {
+    section.append(createEmptyText("No review items on this page."));
+    return section;
+  }
+  for (const numberedItem of getNumberedReviewItems(
+    state.items,
+    config.options.viewports?.presets
+  )) {
+    section.append(createListItem(config, numberedItem));
+  }
+  return section;
+}
+function createListItem(config, numberedItem) {
+  const { item } = numberedItem;
+  const row = document.createElement("article");
+  row.className = "dfwr-item";
+  row.tabIndex = 0;
+  row.setAttribute("role", "button");
+  row.setAttribute(
+    "aria-label",
+    `Restore review item: ${item.title ?? item.comment}`
+  );
+  row.addEventListener("click", () => {
+    void config.actions.restoreItem(item);
+  });
+  row.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    void config.actions.restoreItem(item);
+  });
+  const body = document.createElement("div");
+  body.className = "dfwr-item-body";
+  const badges = document.createElement("div");
+  badges.className = "dfwr-item-badges";
+  const scope = document.createElement("div");
+  scope.className = `dfwr-item-scope is-scope-${numberedItem.scope}`;
+  scope.textContent = numberedItem.displayLabel;
+  const kind = document.createElement("div");
+  kind.className = "dfwr-item-kind";
+  kind.textContent = item.kind;
+  badges.append(scope, kind);
+  const title = isTitleFieldEnabled(config.options) ? item.title?.trim() : "";
+  const titleElement = title ? document.createElement("strong") : void 0;
+  if (title && titleElement) {
+    titleElement.className = "dfwr-item-title";
+    titleElement.textContent = title;
+  }
+  const comment = document.createElement("p");
+  comment.className = `dfwr-item-comment${title ? "" : " is-primary"}`;
+  comment.textContent = item.comment;
+  const date = document.createElement("time");
+  date.className = "dfwr-item-date";
+  date.dateTime = item.createdAt;
+  date.textContent = formatItemMeta(item);
+  body.append(badges, ...titleElement ? [titleElement] : [], comment, date);
+  const actions = document.createElement("div");
+  actions.className = "dfwr-item-actions";
+  actions.addEventListener("click", (event) => event.stopPropagation());
+  actions.addEventListener("keydown", (event) => event.stopPropagation());
+  const remove = document.createElement("button");
+  remove.className = "dfwr-icon-button";
+  remove.type = "button";
+  remove.textContent = "x";
+  remove.setAttribute("aria-label", "Delete");
+  remove.addEventListener("click", (event) => {
+    event.stopPropagation();
+    void config.actions.removeItem(item.id).then(() => config.actions.reload());
+  });
+  actions.append(remove);
+  row.append(body, actions);
+  return row;
+}
+
+// src/core/view/selection.layers.ts
+function createElementLayer(config) {
+  const layer = document.createElement("div");
+  layer.className = "dfwr-element-layer";
+  const environment = config.getEnvironment();
+  const hover = document.createElement("div");
+  hover.className = "dfwr-dom-hover";
+  hover.hidden = true;
+  layer.append(hover);
+  if (environment) {
+    placeLayerOverTarget(layer, environment);
+  }
+  const updateHover = (point) => {
+    const nextEnvironment = config.getEnvironment();
+    if (!nextEnvironment) return;
+    const anchor = getDomAnchorFromPoint(
+      clampPoint(point, nextEnvironment),
+      config.options.anchors?.attribute,
+      nextEnvironment
+    );
+    const selection = anchor ? getElementViewportSelection(anchor, nextEnvironment) : void 0;
+    if (!selection) {
+      hover.hidden = true;
+      return;
+    }
+    const rect = toHostSelection(selection, nextEnvironment);
+    hover.hidden = false;
+    hover.style.left = `${rect.left}px`;
+    hover.style.top = `${rect.top}px`;
+    hover.style.width = `${rect.width}px`;
+    hover.style.height = `${rect.height}px`;
+  };
+  layer.addEventListener("pointermove", (event) => {
+    updateHover(toTargetPointFromHostEvent(event, config.getEnvironment()));
+  });
+  layer.addEventListener("pointerleave", () => {
+    hover.hidden = true;
+  });
+  layer.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    void config.actions.bindElementDraftToPoint(
+      toTargetPointFromHostEvent(event, config.getEnvironment())
+    );
+  });
+  return layer;
+}
+function createAreaLayer(config) {
+  const layer = document.createElement("div");
+  layer.className = "dfwr-area-layer";
+  const environment = config.getEnvironment();
+  if (environment) {
+    placeLayerOverTarget(layer, environment);
+  }
+  const box = document.createElement("div");
+  box.className = "dfwr-area-box";
+  layer.append(box);
+  let startX = 0;
+  let startY = 0;
+  let selection;
+  let activePointerId;
+  let isDragging = false;
+  const ownerWindow = layer.ownerDocument.defaultView ?? window;
+  const updateBox = (event) => {
+    const nextEnvironment = config.getEnvironment();
+    const nextPoint = toTargetPointFromHostEvent(event, nextEnvironment);
+    const left = Math.min(startX, nextPoint.x);
+    const top = Math.min(startY, nextPoint.y);
+    const width = Math.abs(nextPoint.x - startX);
+    const height = Math.abs(nextPoint.y - startY);
+    const hostPoint = toHostPoint({ x: left, y: top }, nextEnvironment);
+    selection = { left, top, width, height };
+    box.style.left = `${hostPoint.x}px`;
+    box.style.top = `${hostPoint.y}px`;
+    box.style.width = `${width}px`;
+    box.style.height = `${height}px`;
+  };
+  const addDragListeners = () => {
+    ownerWindow.addEventListener("pointermove", handlePointerMove, true);
+    ownerWindow.addEventListener("pointerup", handlePointerUp, true);
+    ownerWindow.addEventListener("pointercancel", handlePointerCancel, true);
+  };
+  const removeDragListeners = () => {
+    ownerWindow.removeEventListener("pointermove", handlePointerMove, true);
+    ownerWindow.removeEventListener("pointerup", handlePointerUp, true);
+    ownerWindow.removeEventListener(
+      "pointercancel",
+      handlePointerCancel,
+      true
+    );
+  };
+  const releasePointerCapture = (event) => {
+    try {
+      if (layer.hasPointerCapture(event.pointerId)) {
+        layer.releasePointerCapture(event.pointerId);
+      }
+    } catch {
+    }
+  };
+  function isActivePointer(event) {
+    return isDragging && event.pointerId === activePointerId;
+  }
+  const finishAreaSelection = (event) => {
+    if (!isActivePointer(event)) return;
+    event.preventDefault();
+    updateBox(event);
+    releasePointerCapture(event);
+    removeDragListeners();
+    isDragging = false;
+    activePointerId = void 0;
+    if (!selection || selection.width < 8 || selection.height < 8) return;
+    config.actions.setSelectingArea(true);
+    config.actions.render();
+    void config.actions.createAreaDraft(selection);
+  };
+  function handlePointerMove(event) {
+    if (!isActivePointer(event)) return;
+    event.preventDefault();
+    updateBox(event);
+  }
+  const handlePointerUp = (event) => {
+    finishAreaSelection(event);
+  };
+  const handlePointerCancel = (event) => {
+    if (!isActivePointer(event)) return;
+    releasePointerCapture(event);
+    removeDragListeners();
+    isDragging = false;
+    activePointerId = void 0;
+  };
+  layer.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    activePointerId = event.pointerId;
+    isDragging = true;
+    try {
+      layer.setPointerCapture(event.pointerId);
+    } catch {
+    }
+    const startPoint = toTargetPointFromHostEvent(
+      event,
+      config.getEnvironment()
+    );
+    startX = startPoint.x;
+    startY = startPoint.y;
+    updateBox(event);
+    addDragListeners();
+  });
+  layer.addEventListener("pointermove", handlePointerMove);
+  layer.addEventListener("pointerup", handlePointerUp);
+  layer.addEventListener("pointercancel", handlePointerCancel);
+  return layer;
+}
+
 // src/core/web.review.kit.view.ts
-var DEFAULT_ADJUSTMENT_LABEL = "Responsive CSS px adjustments";
 var WebReviewKitView = class {
   constructor(config) {
     this.config = config;
+    const presets = () => this.config.options.viewports?.presets;
     this.draftPreview = new DraftPreviewController({
       getEnvironment: () => this.config.getEnvironment(),
-      getMetrics: (draft) => this.getDraftAdjustmentMetrics(draft),
-      hasAdjustment: (draft) => this.hasDraftAdjustment(draft)
+      getMetrics: (draft) => getDraftAdjustmentMetrics(draft, presets()),
+      hasAdjustment: (draft) => hasDraftAdjustment(draft, presets())
     });
+    this.draftContext = {
+      config: this.config,
+      cancelDraft: (event) => this.cancelDraft(event),
+      syncDraftPreview: (draft) => this.draftPreview.sync(draft)
+    };
   }
   clearDraftPreview() {
     this.draftPreview.clear();
     this.clearShellComposer();
   }
+  /** Rebuilds the entire shadow-root UI from the current state snapshot. */
   render(shadow, hiddenItemsStyle) {
     const state = this.state;
     this.draftPreview.sync(
@@ -3782,43 +5369,47 @@ var WebReviewKitView = class {
     ].filter(Boolean).join(" ");
     shell.setAttribute("aria-hidden", state.isOpen ? "false" : "true");
     if (this.config.options.ui?.panel !== false) {
-      const panel = document.createElement("div");
-      panel.className = "dfwr-panel";
-      panel.setAttribute("role", "dialog");
-      panel.setAttribute("aria-label", "Web review kit");
-      panel.append(
-        this.createHeader(),
-        this.createToolbar(),
-        this.createBody(),
-        this.createList()
+      shell.append(
+        createReviewPanel(
+          this.config,
+          () => createAreaForm(this.draftContext)
+        )
       );
-      shell.append(panel);
     }
-    shell.append(this.createMarkerLayer());
+    shell.append(
+      createMarkerLayer({
+        items: state.items,
+        highlightedItemId: state.highlightedItemId,
+        environment: this.config.getEnvironment(),
+        presets: this.config.options.viewports?.presets
+      })
+    );
     if (state.isOpen && hasDismissableDraft && !shouldDockComposer) {
       shell.append(this.createDraftCancelLayer());
     }
     if (state.isOpen && state.mode === "element") {
       if (state.domDraft) {
-        const domDraft = this.createDomPopover(state.domDraft, {
+        const domDraft = createDomDraftLayer(this.draftContext, state.domDraft, {
           dockComposer: shouldDockComposer
         });
         shell.append(domDraft.layer);
         dockedComposer = domDraft.composer;
       } else {
-        shell.append(this.createElementLayer());
+        shell.append(createElementLayer(this.config));
       }
     }
     if (state.isOpen && state.mode === "area" && !state.areaDraft && !state.isSelectingArea) {
-      shell.append(this.createAreaLayer());
+      shell.append(createAreaLayer(this.config));
     }
     if (state.isOpen && state.mode === "area" && state.areaDraft && this.config.options.ui?.panel === false) {
       if (state.areaDraft.selection) {
-        shell.append(this.createAreaDraftOverlay(state.areaDraft));
+        shell.append(createAreaDraftOverlay(this.draftContext, state.areaDraft));
       }
-      const areaComposer = this.createAreaDraftPopover(state.areaDraft, {
-        dockComposer: shouldDockComposer
-      });
+      const areaComposer = createAreaDraftPopover(
+        this.draftContext,
+        state.areaDraft,
+        { dockComposer: shouldDockComposer }
+      );
       if (shouldDockComposer) {
         dockedComposer = areaComposer;
       } else {
@@ -3836,6 +5427,7 @@ var WebReviewKitView = class {
     if (this.config.options.ui?.panel !== false) return void 0;
     return environment?.composerHost ?? void 0;
   }
+  /** Mounts the docked composer into the shell-provided host element. */
   renderShellComposer(composer) {
     const host = composer ? this.getShellComposerHost() : void 0;
     if (!host || !composer) {
@@ -3864,6 +5456,7 @@ var WebReviewKitView = class {
     }
     this.shellComposerHost = void 0;
   }
+  /** Full-screen click-away layer that cancels the active draft. */
   createDraftCancelLayer() {
     const layer = document.createElement("div");
     layer.className = "dfwr-draft-cancel-layer";
@@ -3882,1528 +5475,6 @@ var WebReviewKitView = class {
     this.config.actions.clearDrafts();
     this.config.actions.setSelectingArea(false);
     this.config.actions.render();
-  }
-  // Draft adjustment geometry lives in draft.metrics.ts; these thin wrappers
-  // supply the configured viewport presets so call sites stay unchanged.
-  get viewportPresets() {
-    return this.config.options.viewports?.presets;
-  }
-  getDraftAdjustmentMetrics(draft) {
-    return getDraftAdjustmentMetrics(draft, this.viewportPresets);
-  }
-  hasDraftAdjustment(draft) {
-    return hasDraftAdjustment(draft, this.viewportPresets);
-  }
-  getAdjustedDraftPoint(point, draft) {
-    return getAdjustedDraftPoint(point, draft, this.viewportPresets);
-  }
-  getAdjustedDraftSelection(selection, draft) {
-    return getAdjustedDraftSelection(
-      selection,
-      draft,
-      this.viewportPresets
-    );
-  }
-  getDraftViewportScale(viewport) {
-    return getDraftViewportScale(viewport, this.viewportPresets);
-  }
-  getDraftComposerWidth(environment) {
-    const bounds = environment.overlayRect;
-    const margin = 12;
-    return Math.min(360, Math.max(240, bounds.width - margin * 2));
-  }
-  getClampedComposerPosition(position, environment, size, bounds = environment.overlayRect) {
-    const margin = 12;
-    const width = size?.width ?? this.getDraftComposerWidth(environment);
-    const height = size?.height ?? 236;
-    return {
-      x: clamp(
-        position.x,
-        bounds.left + margin,
-        bounds.left + bounds.width - width - margin
-      ),
-      y: clamp(
-        position.y,
-        bounds.top + margin,
-        bounds.top + bounds.height - height - margin
-      )
-    };
-  }
-  getHostComposerBounds() {
-    const root = document.documentElement;
-    return {
-      left: 0,
-      top: 0,
-      width: root.clientWidth || window.innerWidth,
-      height: root.clientHeight || window.innerHeight
-    };
-  }
-  getInitialDraftComposerPosition(selection, environment, size) {
-    const bounds = this.getHostComposerBounds();
-    const margin = 12;
-    const gap = 20;
-    if (!selection) {
-      return this.getClampedComposerPosition(
-        {
-          x: environment.overlayRect.left + margin,
-          y: environment.overlayRect.top + margin
-        },
-        environment,
-        size,
-        bounds
-      );
-    }
-    const preferredX = selection.left + selection.width + gap;
-    const maxX = bounds.left + bounds.width - size.width - margin;
-    const x = preferredX <= maxX ? preferredX : selection.left - size.width - gap;
-    return this.getClampedComposerPosition(
-      {
-        x,
-        y: selection.top
-      },
-      environment,
-      size,
-      bounds
-    );
-  }
-  getDraftComposerPosition({
-    selection,
-    environment,
-    composerPosition,
-    estimatedHeight
-  }) {
-    const width = this.getDraftComposerWidth(environment);
-    if (composerPosition) {
-      const clamped = this.getClampedComposerPosition(
-        composerPosition,
-        environment,
-        { width, height: estimatedHeight },
-        this.getHostComposerBounds()
-      );
-      return { width, left: clamped.x, top: clamped.y };
-    }
-    const position = this.getInitialDraftComposerPosition(selection, environment, {
-      width,
-      height: estimatedHeight
-    });
-    return { width, left: position.x, top: position.y };
-  }
-  getSelectionMqMetrics(selection, viewport) {
-    const { scale } = this.getDraftViewportScale(viewport);
-    const ratio = scale > 0 ? 1 / scale : 1;
-    return {
-      x: selection.left * ratio,
-      y: selection.top * ratio,
-      width: selection.width * ratio,
-      height: selection.height * ratio
-    };
-  }
-  formatSignedPx(value) {
-    if (value === 0) return "+0px";
-    return `${value > 0 ? "+" : ""}${value}px`;
-  }
-  formatRoundedPx(value) {
-    return `${Math.round(value)}px`;
-  }
-  getAdjustmentLabel() {
-    return this.config.options.adjustmentLabel?.trim() || DEFAULT_ADJUSTMENT_LABEL;
-  }
-  getSelectionMetricLines(selection, viewport) {
-    if (!selection) return ["area", "x none / y none", "w none / h none"];
-    const metrics = this.getSelectionMqMetrics(selection, viewport);
-    return [
-      "area",
-      `x ${this.formatRoundedPx(metrics.x)} / y ${this.formatRoundedPx(
-        metrics.y
-      )}`,
-      `w ${this.formatRoundedPx(metrics.width)} / h ${this.formatRoundedPx(
-        metrics.height
-      )}`
-    ];
-  }
-  getAreaDraftMetricSelection(draft) {
-    if (!draft.selection) return void 0;
-    return toViewportSelection(draft.selection.viewport);
-  }
-  getDraftAdjustmentMetricLines(draft) {
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    return [
-      `x ${this.formatSignedPx(metrics.x)} / y ${this.formatSignedPx(
-        metrics.y
-      )}`,
-      `scale ${this.formatSignedPx(metrics.scale)}`
-    ];
-  }
-  withDraftAdjustmentComment(comment, draft) {
-    if (!this.hasDraftAdjustment(draft)) return comment;
-    const trimmedComment = comment.trim();
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    const adjustment = [
-      `${this.getAdjustmentLabel()}: x ${this.formatSignedPx(
-        metrics.x
-      )}, y ${this.formatSignedPx(metrics.y)}, scale ${this.formatSignedPx(
-        metrics.scale
-      )}`,
-      `(${metrics.presetLabel} viewport, ${Math.round(
-        metrics.viewportWidth
-      )}/design ${Math.round(metrics.designWidth)})`
-    ].join(" ");
-    return trimmedComment ? `${trimmedComment}
-${adjustment}` : adjustment;
-  }
-  getAssigneeOption(assigneeId) {
-    if (!assigneeId) return void 0;
-    return this.config.options.assigneeOptions?.find(
-      (option) => option.value === assigneeId
-    );
-  }
-  getAssigneeName(assigneeId) {
-    return this.getAssigneeOption(assigneeId)?.label;
-  }
-  createDraftTitleInput(value, onInput) {
-    const input = document.createElement("input");
-    input.className = "dfwr-input";
-    input.placeholder = "Title";
-    input.type = "text";
-    input.value = value ?? "";
-    input.addEventListener("input", () => onInput(input.value));
-    return input;
-  }
-  isTitleFieldEnabled() {
-    return this.config.options.fields?.title === true;
-  }
-  createDraftAssigneeSelect(value, fallbackLabel, onChange) {
-    const assigneeOptions = this.config.options.assigneeOptions ?? [];
-    if (assigneeOptions.length === 0) return void 0;
-    const assigneeTitle = this.config.options.assigneeTitle?.trim() || "Assignee";
-    const select = document.createElement("select");
-    select.className = "dfwr-select";
-    const emptyOption = document.createElement("option");
-    emptyOption.value = "";
-    emptyOption.textContent = assigneeTitle;
-    select.append(emptyOption);
-    const hasUnknownAssignee = Boolean(value) && !assigneeOptions.some((option) => option.value === value);
-    if (hasUnknownAssignee && value) {
-      const option = document.createElement("option");
-      option.value = value;
-      option.textContent = fallbackLabel ?? value;
-      select.append(option);
-    }
-    assigneeOptions.forEach((assigneeOption) => {
-      const option = document.createElement("option");
-      option.value = assigneeOption.value;
-      option.textContent = assigneeOption.label;
-      select.append(option);
-    });
-    select.value = value ?? "";
-    select.addEventListener("change", () => {
-      onChange(select.value || null, this.getAssigneeName(select.value));
-    });
-    return select;
-  }
-  getDraftFields(titleInput, textarea, assigneeSelect) {
-    const title = titleInput?.value.trim();
-    const comment = textarea.value.trim();
-    const assigneeId = assigneeSelect?.value.trim() || void 0;
-    return {
-      title: title || void 0,
-      comment,
-      assigneeId,
-      assigneeName: this.getAssigneeName(assigneeId)
-    };
-  }
-  canCaptureViewport() {
-    return Boolean(this.config.getEnvironment()?.captureViewport);
-  }
-  createDraftCaptureButton(draft, options) {
-    const button = document.createElement("button");
-    const isCapturing = this.state.isCapturingViewport;
-    const canCapture = this.canCaptureViewport();
-    button.className = "dfwr-button";
-    button.type = "button";
-    button.disabled = !canCapture || isCapturing || this.state.isCreatingItem;
-    button.setAttribute("aria-busy", isCapturing ? "true" : "false");
-    button.title = canCapture ? "Capture current viewport" : "Viewport capture helper is not available";
-    if (isCapturing) {
-      button.append(this.createSpinner("dfwr-spinner"), "Capturing...");
-    } else {
-      button.textContent = "Capture";
-    }
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      if (!this.canCaptureViewport() || this.state.isCapturingViewport) return;
-      if (options.kind === "area") {
-        const areaDraft = this.state.areaDraft ?? draft;
-        const nextDraft2 = {
-          ...areaDraft,
-          comment: options.textarea.value
-        };
-        this.config.actions.setAreaDraft(nextDraft2);
-        void this.config.actions.captureAreaDraft(
-          this.getCaptureAreaDraft(nextDraft2)
-        );
-        return;
-      }
-      const domDraft = this.state.domDraft ?? draft;
-      const nextDraft = {
-        ...domDraft,
-        comment: options.textarea.value
-      };
-      this.config.actions.setDomDraft(nextDraft);
-      void this.config.actions.captureDomDraft(
-        this.getCaptureDomDraft(nextDraft, options.isElementDraft)
-      );
-    });
-    return button;
-  }
-  getCaptureAreaDraft(draft) {
-    return {
-      viewport: draft.viewport,
-      marker: draft.marker,
-      selection: draft.selection
-    };
-  }
-  getCaptureDomDraft(draft, isElementDraft) {
-    if (!isElementDraft) {
-      return {
-        viewport: draft.viewport,
-        marker: draft.marker,
-        selection: draft.selection
-      };
-    }
-    const marker = {
-      ...draft.marker,
-      viewport: roundPoint(
-        this.getAdjustedDraftPoint(draft.marker.viewport, draft)
-      )
-    };
-    const selection = draft.selection ? {
-      ...draft.selection,
-      viewport: toPublicSelection(
-        this.getAdjustedDraftSelection(
-          toViewportSelection(draft.selection.viewport),
-          draft
-        )
-      )
-    } : void 0;
-    return {
-      viewport: draft.viewport,
-      marker,
-      selection
-    };
-  }
-  createHeader() {
-    const header = document.createElement("div");
-    header.className = "dfwr-header";
-    const title = document.createElement("div");
-    title.className = "dfwr-title";
-    title.textContent = "Review Kit";
-    const meta = document.createElement("div");
-    meta.className = "dfwr-meta";
-    meta.textContent = getRouteKey(this.config.getEnvironment());
-    const titleGroup = document.createElement("div");
-    titleGroup.append(title, meta);
-    const close = document.createElement("button");
-    close.className = "dfwr-icon-button";
-    close.type = "button";
-    close.textContent = "x";
-    close.setAttribute("aria-label", "Close");
-    close.addEventListener("click", () => this.config.actions.close());
-    header.append(titleGroup, close);
-    return header;
-  }
-  createToolbar() {
-    const toolbar = document.createElement("div");
-    toolbar.className = "dfwr-toolbar";
-    toolbar.append(
-      this.createToolbarButton("Element", this.state.mode === "element", () => {
-        const mode = this.state.mode;
-        this.config.actions.setModeState(
-          mode === "element" ? "idle" : "element"
-        );
-        this.config.actions.clearDrafts();
-        this.config.actions.render();
-      }),
-      this.createToolbarButton(
-        this.state.isSelectingArea ? "Selecting" : "Area",
-        this.state.mode === "area",
-        () => {
-          const mode = this.state.mode;
-          this.config.actions.setModeState(mode === "area" ? "idle" : "area");
-          this.config.actions.clearDrafts();
-          this.config.actions.render();
-        }
-      ),
-      this.createToolbarButton("Refresh", false, () => {
-        void this.config.actions.reload();
-      })
-    );
-    return toolbar;
-  }
-  createToolbarButton(label, active, onClick) {
-    const button = document.createElement("button");
-    button.className = `dfwr-button${active ? " is-active" : ""}`;
-    button.type = "button";
-    button.textContent = label;
-    button.addEventListener("click", onClick);
-    return button;
-  }
-  createBody() {
-    const body = document.createElement("div");
-    body.className = "dfwr-body";
-    const state = this.state;
-    if (state.mode === "idle") {
-      const empty = document.createElement("p");
-      empty.className = "dfwr-empty";
-      empty.textContent = "Select an element or mark an area.";
-      body.append(empty);
-      return body;
-    }
-    if (state.mode === "element") {
-      body.append(this.createDomBody());
-      return body;
-    }
-    body.append(this.createAreaForm());
-    return body;
-  }
-  createDomBody() {
-    const empty = document.createElement("p");
-    empty.className = "dfwr-empty";
-    empty.textContent = this.state.domDraft ? "Write the QA in the page box." : "Click an element to add QA.";
-    return empty;
-  }
-  // Builds the DOM draft layer: the on-page marker/highlight plus its composer
-  // popover. When dockComposer is set the composer renders into the side panel
-  // instead of floating next to the marker (used for the docked review mode).
-  createDomPopover(draft, options = {}) {
-    const environment = this.config.getEnvironment();
-    const group = document.createElement("div");
-    group.className = "dfwr-dom-draft";
-    if (!environment) return { layer: group, composer: void 0 };
-    const isElementDraft = this.state.mode === "element" && Boolean(draft.selection);
-    const hostPoint = toHostPoint(
-      isElementDraft ? this.getAdjustedDraftPoint(draft.marker.viewport, draft) : draft.marker.viewport,
-      environment
-    );
-    let selectionHighlight;
-    if (draft.selection) {
-      const selection = toViewportSelection(draft.selection.viewport);
-      selectionHighlight = this.createSelectionHighlight(
-        isElementDraft ? this.getAdjustedDraftSelection(selection, draft) : selection,
-        environment,
-        true
-      );
-      group.append(selectionHighlight);
-    }
-    const pin = document.createElement("button");
-    pin.className = "dfwr-dom-pin";
-    pin.type = "button";
-    pin.setAttribute("aria-label", "Move DOM point");
-    pin.style.left = `${hostPoint.x}px`;
-    pin.style.top = `${hostPoint.y}px`;
-    const popover = document.createElement("div");
-    const position = getPopoverPosition(hostPoint, environment);
-    popover.className = [
-      "dfwr-dom-popover",
-      isElementDraft ? "is-composer" : "",
-      options.dockComposer ? "is-docked-composer" : ""
-    ].filter(Boolean).join(" ");
-    if (options.dockComposer) {
-      popover.style.width = "100%";
-    } else if (isElementDraft) {
-      const selection = draft.selection ? toHostSelection(
-        this.getAdjustedDraftSelection(
-          toViewportSelection(draft.selection.viewport),
-          draft
-        ),
-        environment
-      ) : void 0;
-      const composer = this.getDraftComposerPosition({
-        selection,
-        environment,
-        composerPosition: draft.composerPosition,
-        estimatedHeight: 252
-      });
-      popover.style.left = `${composer.left}px`;
-      popover.style.top = `${composer.top}px`;
-      popover.style.width = `${composer.width}px`;
-    } else {
-      popover.style.left = `${position.left}px`;
-      popover.style.top = `${position.top}px`;
-    }
-    const form = document.createElement("form");
-    form.className = "dfwr-form";
-    const meta = isElementDraft ? void 0 : document.createElement("div");
-    if (meta) {
-      meta.className = "dfwr-item-date";
-      meta.textContent = formatDomDraftMeta(draft);
-    }
-    const titleInput = this.isTitleFieldEnabled() ? this.createDraftTitleInput(draft.title, (title) => {
-      const domDraft = this.state.domDraft;
-      if (!domDraft) return;
-      this.config.actions.setDomDraft({
-        ...domDraft,
-        title
-      });
-    }) : void 0;
-    const textarea = document.createElement("textarea");
-    textarea.className = "dfwr-textarea";
-    textarea.placeholder = "Review comment";
-    textarea.rows = 4;
-    textarea.value = draft.comment ?? "";
-    textarea.addEventListener("input", () => {
-      const domDraft = this.state.domDraft;
-      if (!domDraft) return;
-      this.config.actions.setDomDraft({
-        ...domDraft,
-        comment: textarea.value
-      });
-    });
-    attachDraftImagePasteQueue(textarea, {
-      getAttachments: () => this.state.domDraft?.attachments ?? draft.attachments,
-      onAttachmentsChange: (attachments) => {
-        const domDraft = this.state.domDraft ?? draft;
-        this.config.actions.setDomDraft({
-          ...domDraft,
-          comment: textarea.value,
-          attachments
-        });
-      },
-      onCommentChange: (comment) => {
-        const domDraft = this.state.domDraft ?? draft;
-        this.config.actions.setDomDraft({
-          ...domDraft,
-          comment
-        });
-      },
-      onPasteComplete: () => this.config.actions.render()
-    });
-    const assigneeSelect = this.createDraftAssigneeSelect(
-      draft.assigneeId,
-      draft.assigneeName,
-      (assigneeId, assigneeName) => {
-        const domDraft = this.state.domDraft;
-        if (!domDraft) return;
-        this.config.actions.setDomDraft({
-          ...domDraft,
-          assigneeId,
-          assigneeName
-        });
-      }
-    );
-    const saveDraft = () => {
-      const currentDraft = this.state.domDraft ?? draft;
-      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
-      const comment = fields.comment;
-      const hasAttachments = Boolean(currentDraft.attachments?.length);
-      if (!comment && !this.hasDraftAdjustment(currentDraft) && !hasAttachments) {
-        return;
-      }
-      void this.config.actions.createItem({
-        kind: "dom",
-        title: fields.title,
-        comment: this.withDraftAdjustmentComment(comment, currentDraft),
-        assigneeId: fields.assigneeId,
-        assigneeName: fields.assigneeName,
-        viewport: currentDraft.viewport,
-        anchor: currentDraft.anchor,
-        marker: currentDraft.marker,
-        selection: currentDraft.selection,
-        attachments: currentDraft.attachments
-      });
-    };
-    const adjustmentControls = isElementDraft ? this.createAdjustmentControls({
-      draft,
-      pin,
-      popover,
-      selectionHighlight,
-      textarea,
-      dockToggle: options.dockComposer
-    }) : void 0;
-    const leadingActions = [
-      adjustmentControls?.actionButton,
-      this.createDraftCaptureButton(draft, {
-        kind: "dom",
-        isElementDraft,
-        textarea
-      })
-    ].filter((element) => Boolean(element));
-    const actions = this.createFormActions("Save DOM QA", saveDraft, {
-      leading: leadingActions.length > 0 ? leadingActions : void 0
-    });
-    const error = this.createDraftError();
-    const attachmentQueue = createDraftAttachmentQueue(
-      document,
-      draft.attachments,
-      (attachmentId) => {
-        const domDraft = this.state.domDraft ?? draft;
-        const attachments = removeDraftAttachment(
-          domDraft.attachments,
-          attachmentId
-        );
-        this.config.actions.setDomDraft({
-          ...domDraft,
-          comment: textarea.value,
-          attachments: attachments.length > 0 ? attachments : void 0
-        });
-        this.config.actions.render();
-      }
-    );
-    form.append(
-      ...meta ? [meta] : [],
-      ...adjustmentControls ? [adjustmentControls.panel] : [],
-      ...titleInput ? [titleInput] : [],
-      textarea,
-      ...attachmentQueue ? [attachmentQueue] : [],
-      ...assigneeSelect ? [assigneeSelect] : [],
-      ...error ? [error] : [],
-      actions
-    );
-    const dragHandle = isElementDraft && !options.dockComposer ? this.createDraftDragHandle("Move DOM composer") : void 0;
-    popover.append(
-      ...dragHandle ? [dragHandle] : [],
-      form
-    );
-    group.append(pin);
-    if (!options.dockComposer) {
-      group.append(popover);
-    }
-    if (dragHandle) {
-      this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
-        const domDraft = this.state.domDraft ?? draft;
-        this.config.actions.setDomDraft({
-          ...domDraft,
-          composerPosition,
-          comment: textarea.value
-        });
-      });
-    }
-    this.attachDraftPinDrag(
-      pin,
-      isElementDraft || options.dockComposer ? void 0 : popover,
-      meta,
-      textarea
-    );
-    if (!options.dockComposer) {
-      window.setTimeout(() => {
-        if (draft.adjustment?.isActive) {
-          adjustmentControls?.focusTarget.focus();
-          return;
-        }
-        textarea.focus();
-      }, 0);
-    }
-    return {
-      layer: group,
-      composer: options.dockComposer ? popover : void 0
-    };
-  }
-  createDraftDragHandle(label) {
-    const handle = document.createElement("button");
-    handle.className = "dfwr-draft-drag-handle";
-    handle.type = "button";
-    handle.setAttribute("aria-label", label);
-    return handle;
-  }
-  createIcon(paths) {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("aria-hidden", "true");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "2.4");
-    svg.setAttribute("stroke-linecap", "round");
-    svg.setAttribute("stroke-linejoin", "round");
-    paths.forEach((d) => {
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", d);
-      svg.append(path);
-    });
-    return svg;
-  }
-  setAdjustmentToggleIcon(button, isActive) {
-    const paths = isActive ? ["M20 6 9 17l-5-5"] : [
-      "M12 2v20",
-      "M2 12h20",
-      "m9 5 3-3 3 3",
-      "m9 19 3 3 3-3",
-      "m5 9-3 3 3 3",
-      "m19 9 3 3-3 3"
-    ];
-    button.replaceChildren(this.createIcon(paths));
-  }
-  attachDraftComposerDrag(popover, handle, onMove) {
-    let isDragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
-    const movePopover = (event) => {
-      const environment = this.config.getEnvironment();
-      if (!environment) return;
-      const position = this.getClampedComposerPosition(
-        {
-          x: event.clientX - offsetX,
-          y: event.clientY - offsetY
-        },
-        environment,
-        {
-          width: popover.offsetWidth,
-          height: popover.offsetHeight
-        },
-        this.getHostComposerBounds()
-      );
-      popover.style.left = `${position.x}px`;
-      popover.style.top = `${position.y}px`;
-      onMove(position);
-    };
-    handle.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
-      const rect = popover.getBoundingClientRect();
-      offsetX = event.clientX - rect.left;
-      offsetY = event.clientY - rect.top;
-      isDragging = true;
-      event.preventDefault();
-      event.stopPropagation();
-      handle.setPointerCapture(event.pointerId);
-      popover.classList.add("is-dragging");
-    });
-    handle.addEventListener("pointermove", (event) => {
-      if (!isDragging || !handle.hasPointerCapture(event.pointerId)) return;
-      event.preventDefault();
-      movePopover(event);
-    });
-    const stopDrag = (event) => {
-      if (!isDragging || !handle.hasPointerCapture(event.pointerId)) return;
-      event.preventDefault();
-      event.stopPropagation();
-      isDragging = false;
-      handle.releasePointerCapture(event.pointerId);
-      popover.classList.remove("is-dragging");
-      movePopover(event);
-    };
-    handle.addEventListener("pointerup", stopDrag);
-    handle.addEventListener("pointercancel", stopDrag);
-  }
-  // Builds the element-adjustment controls (nudge the previewed element via
-  // arrow keys / buttons). Wires keyboard deltas to the draft transform and
-  // keeps the pin, popover, highlight and textarea in sync as the value changes.
-  createAdjustmentControls({
-    draft,
-    pin,
-    popover,
-    selectionHighlight,
-    textarea,
-    dockToggle
-  }) {
-    const panel = document.createElement("div");
-    panel.className = "dfwr-adjust-panel is-dom-adjust-panel";
-    const header = document.createElement("div");
-    header.className = "dfwr-adjust-panel-header";
-    const help = document.createElement("div");
-    help.className = "dfwr-adjust-help";
-    help.textContent = this.getAdjustmentLabel();
-    const adjust = document.createElement("button");
-    adjust.className = "dfwr-adjust-toggle";
-    adjust.type = "button";
-    adjust.title = "Adjust DOM element with keyboard arrows";
-    adjust.setAttribute("aria-label", "Adjust DOM element with keyboard arrows");
-    const xyStatus = document.createElement("div");
-    xyStatus.className = "dfwr-adjust-status";
-    const scaleStatus = document.createElement("div");
-    scaleStatus.className = "dfwr-adjust-status";
-    const syncControls = (nextDraft) => {
-      const isActive = nextDraft.adjustment?.isActive === true;
-      panel.classList.toggle("is-active", isActive);
-      adjust.classList.toggle("is-active", isActive);
-      adjust.setAttribute("aria-pressed", isActive ? "true" : "false");
-      this.setAdjustmentToggleIcon(adjust, isActive);
-      adjust.title = isActive ? "Finish DOM adjustment" : "Adjust DOM element with keyboard arrows";
-      adjust.setAttribute(
-        "aria-label",
-        isActive ? "Finish DOM adjustment" : "Adjust DOM element with keyboard arrows"
-      );
-      const [xyLine, scaleLine] = this.getDraftAdjustmentMetricLines(nextDraft);
-      xyStatus.textContent = xyLine;
-      scaleStatus.textContent = scaleLine;
-      this.syncDraftAdjustmentUi({
-        draft: nextDraft,
-        pin,
-        selectionHighlight
-      });
-    };
-    const updateDraft = (updater) => {
-      const currentDraft = this.state.domDraft ?? draft;
-      const nextDraft = updater(currentDraft);
-      this.config.actions.setDomDraft({
-        ...nextDraft,
-        comment: textarea.value
-      });
-      syncControls(nextDraft);
-    };
-    adjust.addEventListener("click", () => {
-      updateDraft((currentDraft) => ({
-        ...currentDraft,
-        adjustment: {
-          x: currentDraft.adjustment?.x ?? 0,
-          y: currentDraft.adjustment?.y ?? 0,
-          scale: currentDraft.adjustment?.scale ?? 0,
-          isActive: currentDraft.adjustment?.isActive !== true
-        }
-      }));
-      adjust.focus();
-    });
-    popover.addEventListener("keydown", (event) => {
-      const currentDraft = this.state.domDraft ?? draft;
-      if (currentDraft.adjustment?.isActive !== true) return;
-      const keyDelta = this.getAdjustmentKeyDelta(event);
-      if (!keyDelta) return;
-      event.preventDefault();
-      event.stopPropagation();
-      updateDraft((activeDraft) => ({
-        ...activeDraft,
-        adjustment: {
-          x: (activeDraft.adjustment?.x ?? 0) + keyDelta.x,
-          y: (activeDraft.adjustment?.y ?? 0) + keyDelta.y,
-          scale: (activeDraft.adjustment?.scale ?? 0) + keyDelta.scale,
-          isActive: true
-        }
-      }));
-    });
-    header.append(help);
-    if (!dockToggle) {
-      header.append(adjust);
-    }
-    panel.append(header, xyStatus, scaleStatus);
-    syncControls(draft);
-    return {
-      panel,
-      focusTarget: adjust,
-      actionButton: dockToggle ? adjust : void 0
-    };
-  }
-  getAdjustmentKeyDelta(event) {
-    const step = event.shiftKey ? 10 : 1;
-    if (event.key === "ArrowLeft") return { x: -step, y: 0, scale: 0 };
-    if (event.key === "ArrowRight") return { x: step, y: 0, scale: 0 };
-    if (event.key === "ArrowUp") return { x: 0, y: -step, scale: 0 };
-    if (event.key === "ArrowDown") return { x: 0, y: step, scale: 0 };
-    if (event.key.toLowerCase() === "w") return { x: 0, y: 0, scale: step };
-    if (event.key.toLowerCase() === "s") return { x: 0, y: 0, scale: -step };
-    return void 0;
-  }
-  syncDraftAdjustmentUi({
-    draft,
-    pin,
-    selectionHighlight
-  }) {
-    const environment = this.config.getEnvironment();
-    if (!environment) return;
-    const hostPoint = toHostPoint(
-      this.getAdjustedDraftPoint(draft.marker.viewport, draft),
-      environment
-    );
-    pin.style.left = `${hostPoint.x}px`;
-    pin.style.top = `${hostPoint.y}px`;
-    if (draft.selection && selectionHighlight) {
-      const rect = toHostSelection(
-        this.getAdjustedDraftSelection(
-          toViewportSelection(draft.selection.viewport),
-          draft
-        ),
-        environment
-      );
-      selectionHighlight.style.left = `${rect.left}px`;
-      selectionHighlight.style.top = `${rect.top}px`;
-      selectionHighlight.style.width = `${rect.width}px`;
-      selectionHighlight.style.height = `${rect.height}px`;
-    }
-    this.draftPreview.sync(draft);
-  }
-  createAreaForm() {
-    const form = document.createElement("form");
-    form.className = "dfwr-form";
-    const areaDraft = this.state.areaDraft;
-    if (!areaDraft) {
-      const empty = document.createElement("p");
-      empty.className = "dfwr-empty";
-      empty.textContent = "Drag on the page to select an area.";
-      form.append(empty);
-      return form;
-    }
-    form.append(this.createAreaMetricsPanel(areaDraft));
-    const titleInput = this.isTitleFieldEnabled() ? this.createDraftTitleInput(areaDraft.title, (title) => {
-      const draft = this.state.areaDraft;
-      if (!draft) return;
-      this.config.actions.setAreaDraft({
-        ...draft,
-        title
-      });
-    }) : void 0;
-    const textarea = document.createElement("textarea");
-    textarea.className = "dfwr-textarea";
-    textarea.placeholder = "Area comment";
-    textarea.rows = 4;
-    textarea.value = areaDraft.comment ?? "";
-    textarea.addEventListener("input", () => {
-      const draft = this.state.areaDraft;
-      if (!draft) return;
-      this.config.actions.setAreaDraft({
-        ...draft,
-        comment: textarea.value
-      });
-    });
-    attachDraftImagePasteQueue(textarea, {
-      getAttachments: () => this.state.areaDraft?.attachments ?? areaDraft.attachments,
-      onAttachmentsChange: (attachments) => {
-        const draft = this.state.areaDraft ?? areaDraft;
-        this.config.actions.setAreaDraft({
-          ...draft,
-          comment: textarea.value,
-          attachments
-        });
-      },
-      onCommentChange: (comment) => {
-        const draft = this.state.areaDraft ?? areaDraft;
-        this.config.actions.setAreaDraft({
-          ...draft,
-          comment
-        });
-      },
-      onPasteComplete: () => this.config.actions.render()
-    });
-    const assigneeSelect = this.createDraftAssigneeSelect(
-      areaDraft.assigneeId,
-      areaDraft.assigneeName,
-      (assigneeId, assigneeName) => {
-        const draft = this.state.areaDraft;
-        if (!draft) return;
-        this.config.actions.setAreaDraft({
-          ...draft,
-          assigneeId,
-          assigneeName
-        });
-      }
-    );
-    const actions = this.createFormActions(
-      "Save area",
-      () => {
-        const draft = this.state.areaDraft;
-        const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
-        const comment = fields.comment;
-        if (!comment && !draft?.attachments?.length || !draft) return;
-        void this.config.actions.createItem({
-          kind: "area",
-          title: fields.title,
-          comment,
-          assigneeId: fields.assigneeId,
-          assigneeName: fields.assigneeName,
-          viewport: draft.viewport,
-          anchor: draft.anchor,
-          marker: draft.marker,
-          selection: draft.selection,
-          attachments: draft.attachments
-        });
-      },
-      {
-        leading: [
-          this.createDraftCaptureButton(areaDraft, {
-            kind: "area",
-            textarea
-          })
-        ]
-      }
-    );
-    const error = this.createDraftError();
-    const attachmentQueue = createDraftAttachmentQueue(
-      document,
-      areaDraft.attachments,
-      (attachmentId) => {
-        const draft = this.state.areaDraft ?? areaDraft;
-        const attachments = removeDraftAttachment(
-          draft.attachments,
-          attachmentId
-        );
-        this.config.actions.setAreaDraft({
-          ...draft,
-          comment: textarea.value,
-          attachments: attachments.length > 0 ? attachments : void 0
-        });
-        this.config.actions.render();
-      }
-    );
-    form.append(
-      ...titleInput ? [titleInput] : [],
-      textarea,
-      ...attachmentQueue ? [attachmentQueue] : [],
-      ...assigneeSelect ? [assigneeSelect] : [],
-      ...error ? [error] : [],
-      actions
-    );
-    return form;
-  }
-  createAreaMetricsPanel(draft) {
-    const panel = document.createElement("div");
-    panel.className = "dfwr-adjust-panel is-area-metrics-panel";
-    const help = document.createElement("div");
-    help.className = "dfwr-adjust-help";
-    const [labelLine, xyLine, sizeLine] = this.getSelectionMetricLines(
-      this.getAreaDraftMetricSelection(draft),
-      draft.viewport
-    );
-    help.textContent = labelLine;
-    const xyStatus = document.createElement("div");
-    xyStatus.className = "dfwr-adjust-status";
-    xyStatus.textContent = xyLine;
-    const sizeStatus = document.createElement("div");
-    sizeStatus.className = "dfwr-adjust-status";
-    sizeStatus.textContent = sizeLine;
-    panel.append(help, xyStatus, sizeStatus);
-    return panel;
-  }
-  createAreaDraftOverlay(draft) {
-    const layer = document.createElement("div");
-    layer.className = "dfwr-area-preview-layer";
-    const environment = this.config.getEnvironment();
-    if (!environment || !draft.selection) return layer;
-    const selection = toViewportSelection(draft.selection.viewport);
-    layer.append(this.createSelectionHighlight(selection, environment, true));
-    if (draft.marker) {
-      const hostPoint = toHostPoint(draft.marker.viewport, environment);
-      layer.append(
-        this.createMarkerElement(
-          void 0,
-          hostPoint,
-          "\u2022",
-          getReviewViewportScope(
-            draft.viewport,
-            this.config.options.viewports?.presets
-          ),
-          true,
-          true
-        )
-      );
-    }
-    return layer;
-  }
-  createAreaDraftPopover(draft, options = {}) {
-    const environment = this.config.getEnvironment();
-    const popover = document.createElement("div");
-    popover.className = [
-      "dfwr-area-draft",
-      "is-composer",
-      options.dockComposer ? "is-docked-composer" : ""
-    ].filter(Boolean).join(" ");
-    if (options.dockComposer) {
-      popover.style.width = "100%";
-    } else if (environment && draft.selection) {
-      const selection = toHostSelection(
-        toViewportSelection(draft.selection.viewport),
-        environment
-      );
-      const composer = this.getDraftComposerPosition({
-        selection,
-        environment,
-        composerPosition: draft.composerPosition,
-        estimatedHeight: 220
-      });
-      popover.style.left = `${composer.left}px`;
-      popover.style.top = `${composer.top}px`;
-      popover.style.width = `${composer.width}px`;
-      popover.style.right = "auto";
-    }
-    const dragHandle = options.dockComposer ? void 0 : this.createDraftDragHandle("Move area composer");
-    popover.append(
-      ...dragHandle ? [dragHandle] : [],
-      this.createAreaForm()
-    );
-    if (dragHandle) {
-      this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
-        const areaDraft = this.state.areaDraft ?? draft;
-        this.config.actions.setAreaDraft({
-          ...areaDraft,
-          composerPosition
-        });
-      });
-    }
-    return popover;
-  }
-  createFormActions(saveLabel, onSave, options) {
-    const actions = document.createElement("div");
-    actions.className = ["dfwr-actions", options?.className].filter(Boolean).join(" ");
-    const isSaving = this.state.isCreatingItem;
-    const save = document.createElement("button");
-    save.className = "dfwr-button is-primary";
-    save.type = "button";
-    save.disabled = isSaving;
-    save.setAttribute("aria-busy", isSaving ? "true" : "false");
-    if (isSaving) {
-      save.append(this.createSpinner("dfwr-spinner"), "Saving...");
-    } else {
-      save.textContent = saveLabel;
-    }
-    save.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      if (this.state.isCreatingItem) return;
-      onSave();
-    });
-    const cancel = document.createElement("button");
-    cancel.className = "dfwr-button";
-    cancel.type = "button";
-    cancel.disabled = isSaving;
-    cancel.textContent = "Cancel";
-    cancel.addEventListener("click", (event) => {
-      this.cancelDraft(event);
-    });
-    if (options?.leading?.length) {
-      actions.classList.add("has-leading");
-      const leading = document.createElement("div");
-      leading.className = "dfwr-actions-leading";
-      leading.append(...options.leading);
-      const primary = document.createElement("div");
-      primary.className = "dfwr-actions-primary";
-      primary.append(save, cancel);
-      actions.append(leading, primary);
-      return actions;
-    }
-    if (options?.beforeSave?.length || options?.className) {
-      actions.append(cancel, ...options.beforeSave ?? [], save);
-      return actions;
-    }
-    actions.append(save, cancel);
-    return actions;
-  }
-  createSpinner(className) {
-    const spinner = document.createElement("span");
-    spinner.className = className;
-    spinner.setAttribute("aria-hidden", "true");
-    return spinner;
-  }
-  createDraftError() {
-    if (!this.state.draftError) return void 0;
-    const error = document.createElement("p");
-    error.className = "dfwr-form-error";
-    error.setAttribute("role", "alert");
-    error.textContent = this.state.draftError;
-    return error;
-  }
-  createList() {
-    const section = document.createElement("div");
-    section.className = "dfwr-list";
-    const state = this.state;
-    const heading = document.createElement("div");
-    heading.className = "dfwr-list-heading";
-    heading.textContent = `Review items (${state.items.length})`;
-    section.append(heading);
-    if (state.items.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "dfwr-empty";
-      empty.textContent = "No review items on this page.";
-      section.append(empty);
-      return section;
-    }
-    for (const numberedItem of getNumberedReviewItems(
-      state.items,
-      this.config.options.viewports?.presets
-    )) {
-      section.append(this.createListItem(numberedItem));
-    }
-    return section;
-  }
-  createListItem(numberedItem) {
-    const { item } = numberedItem;
-    const row = document.createElement("article");
-    row.className = "dfwr-item";
-    row.tabIndex = 0;
-    row.setAttribute("role", "button");
-    row.setAttribute(
-      "aria-label",
-      `Restore review item: ${item.title ?? item.comment}`
-    );
-    row.addEventListener("click", () => {
-      void this.config.actions.restoreItem(item);
-    });
-    row.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      void this.config.actions.restoreItem(item);
-    });
-    const body = document.createElement("div");
-    body.className = "dfwr-item-body";
-    const badges = document.createElement("div");
-    badges.className = "dfwr-item-badges";
-    const scope = document.createElement("div");
-    scope.className = `dfwr-item-scope is-scope-${numberedItem.scope}`;
-    scope.textContent = numberedItem.displayLabel;
-    const kind = document.createElement("div");
-    kind.className = "dfwr-item-kind";
-    kind.textContent = item.kind;
-    badges.append(scope, kind);
-    const title = this.isTitleFieldEnabled() ? item.title?.trim() : "";
-    const titleElement = title ? document.createElement("strong") : void 0;
-    if (title && titleElement) {
-      titleElement.className = "dfwr-item-title";
-      titleElement.textContent = title;
-    }
-    const comment = document.createElement("p");
-    comment.className = `dfwr-item-comment${title ? "" : " is-primary"}`;
-    comment.textContent = item.comment;
-    const date = document.createElement("time");
-    date.className = "dfwr-item-date";
-    date.dateTime = item.createdAt;
-    date.textContent = formatItemMeta(item);
-    body.append(badges, ...titleElement ? [titleElement] : [], comment, date);
-    const actions = document.createElement("div");
-    actions.className = "dfwr-item-actions";
-    actions.addEventListener("click", (event) => event.stopPropagation());
-    actions.addEventListener("keydown", (event) => event.stopPropagation());
-    const remove = document.createElement("button");
-    remove.className = "dfwr-icon-button";
-    remove.type = "button";
-    remove.textContent = "x";
-    remove.setAttribute("aria-label", "Delete");
-    remove.addEventListener("click", (event) => {
-      event.stopPropagation();
-      void this.config.actions.removeItem(item.id).then(() => this.config.actions.reload());
-    });
-    actions.append(remove);
-    row.append(body, actions);
-    return row;
-  }
-  createMarkerLayer() {
-    const layer = document.createElement("div");
-    layer.className = "dfwr-marker-layer";
-    const environment = this.config.getEnvironment();
-    if (!environment) return layer;
-    const currentScope = getReviewViewportScope(
-      getViewportSize(environment),
-      this.config.options.viewports?.presets
-    );
-    getNumberedReviewItems(
-      this.state.items,
-      this.config.options.viewports?.presets
-    ).forEach((numberedItem) => {
-      const { item, scope, displayLabel } = numberedItem;
-      if (!shouldShowMarkerForScope(scope, currentScope)) {
-        return;
-      }
-      const isHighlighted = item.id === this.state.highlightedItemId;
-      if (!this.state.highlightedItemId || isHighlighted) {
-        const selection = getItemHighlightSelection(item, environment);
-        if (selection) {
-          layer.append(
-            ...this.createItemHighlightElements(
-              selection.viewport,
-              environment,
-              item,
-              displayLabel,
-              selection.isBound,
-              isHighlighted
-            )
-          );
-          return;
-        }
-      }
-      const point = getBoundMarkerPoint(item, environment);
-      if (!point || !isPointInViewport(point.viewport, environment)) {
-        return;
-      }
-      const hostPoint = toHostPoint(point.viewport, environment);
-      const marker = this.createMarkerElement(
-        item.id,
-        hostPoint,
-        displayLabel,
-        scope,
-        point.isBound,
-        isHighlighted
-      );
-      marker.title = `${displayLabel} / ${item.comment}
-${formatItemMeta(item)}`;
-      layer.append(marker);
-    });
-    return layer;
-  }
-  createItemHighlightElements(selection, environment, item, label, isBound, isHighlighted) {
-    const rect = toHostSelection(selection, environment);
-    const mode = getReviewItemHighlightMode(item);
-    const highlight = document.createElement("div");
-    highlight.className = [
-      "dfwr-item-target-highlight",
-      `is-mode-${mode}`,
-      isBound ? "is-bound" : "is-fallback",
-      isHighlighted ? "is-highlighted" : ""
-    ].filter(Boolean).join(" ");
-    highlight.style.left = `${rect.left}px`;
-    highlight.style.top = `${rect.top}px`;
-    highlight.style.width = `${rect.width}px`;
-    highlight.style.height = `${rect.height}px`;
-    highlight.dataset.reviewItemId = item.id;
-    const labelElement = document.createElement("div");
-    labelElement.className = [
-      "dfwr-item-target-label",
-      `is-mode-${mode}`,
-      isHighlighted ? "is-highlighted" : ""
-    ].filter(Boolean).join(" ");
-    labelElement.textContent = label;
-    labelElement.style.left = `${Math.max(4, rect.left)}px`;
-    labelElement.style.top = `${Math.max(4, rect.top - 24)}px`;
-    labelElement.dataset.reviewItemId = item.id;
-    return [highlight, labelElement];
-  }
-  createSelectionHighlight(selection, environment, isDraft) {
-    const rect = toHostSelection(selection, environment);
-    const highlight = document.createElement("div");
-    highlight.className = `dfwr-selection-highlight${isDraft ? " is-draft" : ""}`;
-    highlight.style.left = `${rect.left}px`;
-    highlight.style.top = `${rect.top}px`;
-    highlight.style.width = `${rect.width}px`;
-    highlight.style.height = `${rect.height}px`;
-    return highlight;
-  }
-  createMarkerElement(itemId, hostPoint, label, scope, isBound, isHighlighted) {
-    const marker = document.createElement("div");
-    marker.className = [
-      "dfwr-bound-marker",
-      `is-scope-${scope}`,
-      isBound ? "is-bound" : "is-fallback",
-      isHighlighted ? "is-highlighted" : ""
-    ].filter(Boolean).join(" ");
-    marker.style.left = `${hostPoint.x}px`;
-    marker.style.top = `${hostPoint.y}px`;
-    marker.dataset.scope = scope;
-    if (itemId) {
-      marker.dataset.reviewItemId = itemId;
-    }
-    const iconElement = document.createElement("span");
-    iconElement.className = "dfwr-bound-marker-icon";
-    iconElement.setAttribute("aria-hidden", "true");
-    const labelElement = document.createElement("span");
-    labelElement.className = "dfwr-bound-marker-number";
-    labelElement.textContent = label;
-    marker.append(iconElement, labelElement);
-    return marker;
-  }
-  attachDraftPinDrag(pin, popover, meta, textarea) {
-    let isDragging = false;
-    const moveDraftUi = (hostPoint) => {
-      const environment = this.config.getEnvironment();
-      if (!environment) return;
-      const nextPoint = clampPoint(toTargetPoint(hostPoint, environment), environment);
-      const nextHostPoint = toHostPoint(nextPoint, environment);
-      pin.style.left = `${nextHostPoint.x}px`;
-      pin.style.top = `${nextHostPoint.y}px`;
-      if (popover) {
-        const position = getPopoverPosition(nextHostPoint, environment);
-        popover.style.left = `${position.left}px`;
-        popover.style.top = `${position.top}px`;
-      }
-      const domDraft = this.state.domDraft;
-      if (!domDraft) return;
-      const nextDraft = {
-        ...domDraft,
-        marker: {
-          ...domDraft.marker,
-          viewport: roundPoint(nextPoint)
-        },
-        comment: textarea.value
-      };
-      this.config.actions.setDomDraft(nextDraft);
-      if (meta) {
-        meta.textContent = formatDomDraftMeta(nextDraft);
-      }
-    };
-    pin.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      event.stopPropagation();
-      isDragging = true;
-      pin.setPointerCapture(event.pointerId);
-    });
-    pin.addEventListener("pointermove", (event) => {
-      if (!isDragging || !pin.hasPointerCapture(event.pointerId)) return;
-      event.preventDefault();
-      moveDraftUi({
-        x: event.clientX,
-        y: event.clientY
-      });
-    });
-    pin.addEventListener("pointerup", (event) => {
-      if (!isDragging || !pin.hasPointerCapture(event.pointerId)) return;
-      event.preventDefault();
-      event.stopPropagation();
-      isDragging = false;
-      pin.releasePointerCapture(event.pointerId);
-      const nextPoint = toTargetPointFromHostEvent(
-        event,
-        this.config.getEnvironment()
-      );
-      const currentDraft = this.state.domDraft;
-      const fields = {
-        title: currentDraft?.title,
-        comment: textarea.value,
-        assigneeId: currentDraft?.assigneeId,
-        assigneeName: currentDraft?.assigneeName
-      };
-      void this.config.actions.bindElementDraftToPoint(nextPoint, fields);
-    });
-  }
-  createElementLayer() {
-    const layer = document.createElement("div");
-    layer.className = "dfwr-element-layer";
-    const environment = this.config.getEnvironment();
-    const hover = document.createElement("div");
-    hover.className = "dfwr-dom-hover";
-    hover.hidden = true;
-    layer.append(hover);
-    if (environment) {
-      placeLayerOverTarget(layer, environment);
-    }
-    const updateHover = (point) => {
-      const nextEnvironment = this.config.getEnvironment();
-      if (!nextEnvironment) return;
-      const anchor = getDomAnchorFromPoint(
-        clampPoint(point, nextEnvironment),
-        this.config.options.anchors?.attribute,
-        nextEnvironment
-      );
-      const selection = anchor ? getElementViewportSelection(anchor, nextEnvironment) : void 0;
-      if (!selection) {
-        hover.hidden = true;
-        return;
-      }
-      const rect = toHostSelection(selection, nextEnvironment);
-      hover.hidden = false;
-      hover.style.left = `${rect.left}px`;
-      hover.style.top = `${rect.top}px`;
-      hover.style.width = `${rect.width}px`;
-      hover.style.height = `${rect.height}px`;
-    };
-    layer.addEventListener("pointermove", (event) => {
-      updateHover(toTargetPointFromHostEvent(event, this.config.getEnvironment()));
-    });
-    layer.addEventListener("pointerleave", () => {
-      hover.hidden = true;
-    });
-    layer.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      void this.config.actions.bindElementDraftToPoint(
-        toTargetPointFromHostEvent(event, this.config.getEnvironment())
-      );
-    });
-    return layer;
-  }
-  createAreaLayer() {
-    const layer = document.createElement("div");
-    layer.className = "dfwr-area-layer";
-    const environment = this.config.getEnvironment();
-    if (environment) {
-      placeLayerOverTarget(layer, environment);
-    }
-    const box = document.createElement("div");
-    box.className = "dfwr-area-box";
-    layer.append(box);
-    let startX = 0;
-    let startY = 0;
-    let selection;
-    let activePointerId;
-    let isDragging = false;
-    const ownerWindow = layer.ownerDocument.defaultView ?? window;
-    const updateBox = (event) => {
-      const nextEnvironment = this.config.getEnvironment();
-      const nextPoint = toTargetPointFromHostEvent(
-        event,
-        nextEnvironment
-      );
-      const left = Math.min(startX, nextPoint.x);
-      const top = Math.min(startY, nextPoint.y);
-      const width = Math.abs(nextPoint.x - startX);
-      const height = Math.abs(nextPoint.y - startY);
-      const hostPoint = toHostPoint(
-        { x: left, y: top },
-        nextEnvironment
-      );
-      selection = { left, top, width, height };
-      box.style.left = `${hostPoint.x}px`;
-      box.style.top = `${hostPoint.y}px`;
-      box.style.width = `${width}px`;
-      box.style.height = `${height}px`;
-    };
-    const addDragListeners = () => {
-      ownerWindow.addEventListener("pointermove", handlePointerMove, true);
-      ownerWindow.addEventListener("pointerup", handlePointerUp, true);
-      ownerWindow.addEventListener("pointercancel", handlePointerCancel, true);
-    };
-    const removeDragListeners = () => {
-      ownerWindow.removeEventListener("pointermove", handlePointerMove, true);
-      ownerWindow.removeEventListener("pointerup", handlePointerUp, true);
-      ownerWindow.removeEventListener(
-        "pointercancel",
-        handlePointerCancel,
-        true
-      );
-    };
-    const releasePointerCapture = (event) => {
-      try {
-        if (layer.hasPointerCapture(event.pointerId)) {
-          layer.releasePointerCapture(event.pointerId);
-        }
-      } catch {
-      }
-    };
-    function isActivePointer(event) {
-      return isDragging && event.pointerId === activePointerId;
-    }
-    const finishAreaSelection = (event) => {
-      if (!isActivePointer(event)) return;
-      event.preventDefault();
-      updateBox(event);
-      releasePointerCapture(event);
-      removeDragListeners();
-      isDragging = false;
-      activePointerId = void 0;
-      if (!selection || selection.width < 8 || selection.height < 8) return;
-      this.config.actions.setSelectingArea(true);
-      this.config.actions.render();
-      void this.config.actions.createAreaDraft(selection);
-    };
-    function handlePointerMove(event) {
-      if (!isActivePointer(event)) return;
-      event.preventDefault();
-      updateBox(event);
-    }
-    const handlePointerUp = (event) => {
-      finishAreaSelection(event);
-    };
-    const handlePointerCancel = (event) => {
-      if (!isActivePointer(event)) return;
-      releasePointerCapture(event);
-      removeDragListeners();
-      isDragging = false;
-      activePointerId = void 0;
-    };
-    layer.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      activePointerId = event.pointerId;
-      isDragging = true;
-      try {
-        layer.setPointerCapture(event.pointerId);
-      } catch {
-      }
-      const startPoint = toTargetPointFromHostEvent(
-        event,
-        this.config.getEnvironment()
-      );
-      startX = startPoint.x;
-      startY = startPoint.y;
-      updateBox(event);
-      addDragListeners();
-    });
-    layer.addEventListener("pointermove", handlePointerMove);
-    layer.addEventListener("pointerup", handlePointerUp);
-    layer.addEventListener("pointercancel", handlePointerCancel);
-    return layer;
   }
 };
 

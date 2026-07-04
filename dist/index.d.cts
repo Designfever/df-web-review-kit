@@ -116,8 +116,15 @@ declare const DEFAULT_REVIEW_VIEWPORTS: ReviewViewportPreset[];
 declare function findReviewViewportPreset(viewport: ViewportSize, presets?: ReviewViewportPreset[]): ReviewViewportPreset;
 /** Resolves a viewport size to the review scope used for item grouping. */
 declare function getReviewViewportScope(viewport: ViewportSize, presets?: ReviewViewportPreset[]): Exclude<ReviewItemScope, 'dom'>;
-/** Resolves an item's persisted scope, falling back to its captured viewport. */
-declare function getReviewItemScope(item: ReviewItem, presets?: ReviewViewportPreset[]): ReviewItemScope;
+/**
+ * Resolves an item's persisted scope, falling back to its captured viewport.
+ *
+ * 'dom'(구버전 'element') scope 는 의도적으로 뷰포트 scope 로 폴백한다.
+ * 마커 표시 조건이 `scope === currentScope`(현재 뷰포트 scope)라서 'dom' 을
+ * 그대로 반환하면 레거시 아이템의 마커가 어느 뷰포트에서도 보이지 않게 된다.
+ * 현재 코드는 'dom' scope 를 저장하지 않으므로 이 폴백은 레거시 데이터 전용이다.
+ */
+declare function getReviewItemScope(item: ReviewItem, presets?: ReviewViewportPreset[]): Exclude<ReviewItemScope, 'dom'>;
 /** Returns the display label for an item's resolved review scope. */
 declare function getReviewItemScopeLabel(item: ReviewItem, presets?: ReviewViewportPreset[]): string;
 /** Adds scope-aware display labels to review items without mutating them. */

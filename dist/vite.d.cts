@@ -10,6 +10,8 @@ interface ReviewFigmaImageStorePluginOptions extends ReviewFigmaServerTokenOptio
     dataFile?: string;
     assetDir?: string;
     assetEndpoint?: string;
+    /** JSON 요청 body 상한(byte). 기본 25MB. */
+    maxRequestBytes?: number;
     cacheAssets?: boolean;
     imageFormat?: ReviewFigmaImageFormat;
     renderFormat?: ReviewFigmaRenderFormat;

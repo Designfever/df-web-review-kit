@@ -26,6 +26,7 @@ import {
   normalizeOptionalText,
   readReviewFigmaImageStoreFile,
   reorderReviewFigmaImages,
+  runExclusiveReviewImageStoreTask,
   updateReviewFigmaImage,
   writeReviewFigmaImageStoreFile,
 } from './figma-image-store.image';
@@ -99,6 +100,8 @@ export async function handleReviewFigmaImageStoreRequest({
     return { status: 200, body: listImagesForTarget(data.images, target) };
   }
 
+  // mutation 분기들은 read-modify-write 전체를 락으로 감싼다.
+  // (동시 요청이 겹치면 나중 쓰기가 앞선 변경을 덮어써 유실됨)
   if (method === 'POST' && pathname === endpoint) {
     const input = parseAddImageInput(body);
     if (!input) return jsonError(400, 'valid add image input is required.');
@@ -106,20 +109,22 @@ export async function handleReviewFigmaImageStoreRequest({
       return jsonError(403, 'target project is not allowed.');
     }
 
-    const data = await readReviewFigmaImageStoreFile(dataFile);
-    const image = await createReviewFigmaImage({
-      assetDir,
-      assetEndpoint,
-      currentImages: data.images,
-      env,
-      input,
-      options,
-      requestToken,
-    });
-    data.images = [image, ...data.images];
-    await writeReviewFigmaImageStoreFile(dataFile, data);
+    return runExclusiveReviewImageStoreTask(dataFile, async () => {
+      const data = await readReviewFigmaImageStoreFile(dataFile);
+      const image = await createReviewFigmaImage({
+        assetDir,
+        assetEndpoint,
+        currentImages: data.images,
+        env,
+        input,
+        options,
+        requestToken,
+      });
+      data.images = [image, ...data.images];
+      await writeReviewFigmaImageStoreFile(dataFile, data);
 
-    return { status: 201, body: image };
+      return { status: 201, body: image };
+    });
   }
 
   if (method === 'PATCH' && pathname === `${endpoint}/reorder`) {
@@ -129,12 +134,14 @@ export async function handleReviewFigmaImageStoreRequest({
       return jsonError(403, 'target project is not allowed.');
     }
 
-    const data = await readReviewFigmaImageStoreFile(dataFile);
-    const images = reorderReviewFigmaImages(data.images, input);
-    data.images = images.allImages;
-    await writeReviewFigmaImageStoreFile(dataFile, data);
+    return runExclusiveReviewImageStoreTask(dataFile, async () => {
+      const data = await readReviewFigmaImageStoreFile(dataFile);
+      const images = reorderReviewFigmaImages(data.images, input);
+      data.images = images.allImages;
+      await writeReviewFigmaImageStoreFile(dataFile, data);
 
-    return { status: 200, body: images.targetImages };
+      return { status: 200, body: images.targetImages };
+    });
   }
 
   const id = getEndpointItemId(pathname, endpoint);
@@ -142,48 +149,143 @@ export async function handleReviewFigmaImageStoreRequest({
     const patch = parseUpdateImageInput(body);
     if (!patch) return jsonError(400, 'valid update patch is required.');
 
-    const data = await readReviewFigmaImageStoreFile(dataFile);
-    const result = updateReviewFigmaImage(data.images, id, patch);
-    if (!result) return jsonError(404, `Figma image not found: ${id}`);
-    if (!isAllowedProjectTarget(result.image.target, options.projectId)) {
-      return jsonError(403, 'target project is not allowed.');
-    }
+    return runExclusiveReviewImageStoreTask(dataFile, async () => {
+      const data = await readReviewFigmaImageStoreFile(dataFile);
+      const result = updateReviewFigmaImage(data.images, id, patch);
+      if (!result) return jsonError(404, `Figma image not found: ${id}`);
+      if (!isAllowedProjectTarget(result.image.target, options.projectId)) {
+        return jsonError(403, 'target project is not allowed.');
+      }
 
-    data.images = result.images;
-    await writeReviewFigmaImageStoreFile(dataFile, data);
+      data.images = result.images;
+      await writeReviewFigmaImageStoreFile(dataFile, data);
 
-    return { status: 200, body: result.image };
+      return { status: 200, body: result.image };
+    });
   }
 
   if (id && method === 'DELETE') {
-    const data = await readReviewFigmaImageStoreFile(dataFile);
-    const image = data.images.find((item) => item.id === id);
-    if (!image) return jsonError(404, `Figma image not found: ${id}`);
-    if (!isAllowedProjectTarget(image.target, options.projectId)) {
-      return jsonError(403, 'target project is not allowed.');
-    }
+    return runExclusiveReviewImageStoreTask(dataFile, async () => {
+      const data = await readReviewFigmaImageStoreFile(dataFile);
+      const image = data.images.find((item) => item.id === id);
+      if (!image) return jsonError(404, `Figma image not found: ${id}`);
+      if (!isAllowedProjectTarget(image.target, options.projectId)) {
+        return jsonError(403, 'target project is not allowed.');
+      }
 
-    data.images = data.images.filter((item) => item.id !== id);
-    await writeReviewFigmaImageStoreFile(dataFile, data);
-    await deleteReviewFigmaImageAsset(assetDir, image.storageKey);
+      data.images = data.images.filter((item) => item.id !== id);
+      await writeReviewFigmaImageStoreFile(dataFile, data);
+      await deleteReviewFigmaImageAsset(assetDir, image.storageKey);
 
-    return { status: 200, body: { ok: true } };
+      return { status: 200, body: { ok: true } };
+    });
   }
 
   return jsonError(405, 'method not allowed.');
 }
 
-export async function readJsonRequestBody(req: IncomingMessage) {
+// 첨부 이미지가 dataURL 로 JSON body 에 실려 오므로 넉넉하게 잡는다.
+export const DEFAULT_REVIEW_IMAGE_STORE_MAX_BODY_BYTES = 25 * 1024 * 1024;
+
+/** 4xx 로 내려보낼 요청 검증 실패. 미들웨어 catch 에서 status 를 그대로 쓴다. */
+export class ReviewImageStoreRequestError extends Error {
+  constructor(
+    readonly status: number,
+    message: string
+  ) {
+    super(message);
+    this.name = 'ReviewImageStoreRequestError';
+  }
+}
+
+export function isReviewImageStoreRequestError(
+  error: unknown
+): error is ReviewImageStoreRequestError {
+  return error instanceof ReviewImageStoreRequestError;
+}
+
+/**
+ * CSRF 방어: 브라우저 요청(Origin 헤더 존재)은 요청 Host 와 같은 origin 이거나
+ * loopback(localhost/127.0.0.1/::1)에서 온 것만 허용한다.
+ * - LAN IP(폰 테스트 등) 접속: Origin.host === Host 라서 통과한다.
+ * - curl/스크립트: Origin 헤더가 없으므로 통과한다. 악성 웹페이지는 브라우저가
+ *   Origin 을 강제로 붙이기 때문에 이 검사로 걸러진다.
+ */
+export function assertTrustedReviewImageStoreRequest(
+  req: Pick<IncomingMessage, 'headers'>
+) {
+  const origin = req.headers.origin;
+  if (!origin || typeof origin !== 'string') return;
+
+  let originUrl: URL;
+  try {
+    originUrl = new URL(origin);
+  } catch {
+    throw new ReviewImageStoreRequestError(
+      403,
+      'Cross-origin request is not allowed.'
+    );
+  }
+
+  const host = req.headers.host;
+  if (host && originUrl.host === host) return;
+  if (isLoopbackHostname(originUrl.hostname)) return;
+
+  throw new ReviewImageStoreRequestError(
+    403,
+    'Cross-origin request is not allowed.'
+  );
+}
+
+function isLoopbackHostname(hostname: string) {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === '[::1]'
+  );
+}
+
+export async function readJsonRequestBody(
+  req: IncomingMessage,
+  maxBytes = DEFAULT_REVIEW_IMAGE_STORE_MAX_BODY_BYTES
+) {
   if (req.method === 'GET' || req.method === 'DELETE') return null;
 
   const chunks: Buffer[] = [];
+  let totalBytes = 0;
   for await (const chunk of req) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+    const buffer = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
+    totalBytes += buffer.length;
+    if (totalBytes > maxBytes) {
+      throw new ReviewImageStoreRequestError(
+        413,
+        `Request body exceeds ${maxBytes} bytes.`
+      );
+    }
+    chunks.push(buffer);
   }
   const raw = Buffer.concat(chunks).toString('utf8').trim();
   if (!raw) return null;
 
-  return JSON.parse(raw);
+  // CSRF 방어: CORS preflight 없이 보낼 수 있는 text/plain 류 body 를 거부한다.
+  // 정상 클라이언트(image.store.ts)는 항상 application/json 을 보낸다.
+  const contentType = req.headers['content-type'];
+  if (
+    typeof contentType !== 'string' ||
+    !contentType.split(';')[0].trim().toLowerCase().endsWith('/json')
+  ) {
+    throw new ReviewImageStoreRequestError(
+      415,
+      'Request body must be application/json.'
+    );
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new ReviewImageStoreRequestError(400, 'Invalid JSON request body.');
+  }
 }
 
 export function sendJson(res: ServerResponse, status: number, body: unknown) {

@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type {
   ReviewFigmaImage,
@@ -38,6 +38,27 @@ export type ReviewFigmaImageStoreFile = {
   version: 1;
   images: ReviewFigmaImage[];
 };
+
+// dataFile 별 mutation 직렬화 큐.
+// 스토어 변경은 "파일 읽기 → 수정 → 통째로 쓰기"라서 두 요청이 겹치면
+// 나중 쓰기가 먼저 것을 덮어써 아이템이 유실된다. 같은 파일에 대한
+// mutation 을 프로미스 체인으로 순차 실행해 read-modify-write 를 원자화한다.
+const reviewImageStoreTaskQueues = new Map<string, Promise<unknown>>();
+
+export function runExclusiveReviewImageStoreTask<T>(
+  dataFile: string,
+  task: () => Promise<T>
+): Promise<T> {
+  const previous =
+    reviewImageStoreTaskQueues.get(dataFile) ?? Promise.resolve();
+  // 앞 작업의 실패 여부와 무관하게 다음 작업은 실행되어야 한다.
+  const result = previous.then(task, task);
+  reviewImageStoreTaskQueues.set(
+    dataFile,
+    result.catch(() => undefined)
+  );
+  return result;
+}
 
 function requireReviewFigmaRequestToken({
   enabled,
@@ -518,11 +539,20 @@ export async function writeReviewFigmaImageStoreFile(
   data: ReviewFigmaImageStoreFile
 ) {
   await mkdir(path.dirname(dataFile), { recursive: true });
+  // temp 파일에 쓰고 rename 으로 교체(원자적).
+  // writeFile 로 바로 덮어쓰면 truncate 이후 시점에 읽는 쪽이 잘린 JSON 을 본다.
+  const tempFile = `${dataFile}.${process.pid}.${Date.now()}.tmp`;
   await writeFile(
-    dataFile,
+    tempFile,
     `${JSON.stringify({ version: 1, images: data.images }, null, 2)}\n`,
     'utf8'
   );
+  try {
+    await rename(tempFile, dataFile);
+  } catch (error) {
+    await rm(tempFile, { force: true });
+    throw error;
+  }
 }
 
 function getNextImageOrder(

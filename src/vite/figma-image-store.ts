@@ -16,7 +16,9 @@ import {
   type ReviewFigmaRenderFormat,
 } from '../figma/render';
 import {
+  assertTrustedReviewImageStoreRequest,
   handleReviewFigmaImageStoreRequest,
+  isReviewImageStoreRequestError,
   normalizeEndpoint,
   readJsonRequestBody,
   sendJson,
@@ -31,6 +33,8 @@ export interface ReviewFigmaImageStorePluginOptions
   dataFile?: string;
   assetDir?: string;
   assetEndpoint?: string;
+  /** JSON 요청 body 상한(byte). 기본 25MB. */
+  maxRequestBytes?: number;
   cacheAssets?: boolean;
   imageFormat?: ReviewFigmaImageFormat;
   renderFormat?: ReviewFigmaRenderFormat;
@@ -178,6 +182,9 @@ export const reviewFigmaImageStore = (
         }
 
         try {
+          // dev 서버는 인증이 없으므로 최소한 교차 출처 브라우저 요청은 막는다.
+          assertTrustedReviewImageStoreRequest(req);
+
           const response = await handleReviewFigmaImageStoreRequest({
             dataFile,
             assetDir,
@@ -188,12 +195,16 @@ export const reviewFigmaImageStore = (
             pathname,
             requestUrl,
             method: req.method ?? 'GET',
-            body: await readJsonRequestBody(req),
+            body: await readJsonRequestBody(req, options.maxRequestBytes),
             requestToken: readRequestFigmaToken(req),
           });
 
           sendJson(res, response.status, response.body);
         } catch (error) {
+          if (isReviewImageStoreRequestError(error)) {
+            sendJson(res, error.status, { error: error.message });
+            return;
+          }
           sendJson(res, 500, {
             error:
               error instanceof Error

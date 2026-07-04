@@ -374,6 +374,16 @@ function compareReviewFigmaSnapshotImages(a, b) {
 // src/vite/figma-image-store.image.ts
 var import_promises = require("fs/promises");
 var import_node_path = __toESM(require("path"), 1);
+var reviewImageStoreTaskQueues = /* @__PURE__ */ new Map();
+function runExclusiveReviewImageStoreTask(dataFile, task) {
+  const previous = reviewImageStoreTaskQueues.get(dataFile) ?? Promise.resolve();
+  const result = previous.then(task, task);
+  reviewImageStoreTaskQueues.set(
+    dataFile,
+    result.catch(() => void 0)
+  );
+  return result;
+}
 function requireReviewFigmaRequestToken({
   enabled,
   env,
@@ -700,12 +710,19 @@ async function readReviewFigmaImageStoreFile(dataFile) {
 }
 async function writeReviewFigmaImageStoreFile(dataFile, data) {
   await (0, import_promises.mkdir)(import_node_path.default.dirname(dataFile), { recursive: true });
+  const tempFile = `${dataFile}.${process.pid}.${Date.now()}.tmp`;
   await (0, import_promises.writeFile)(
-    dataFile,
+    tempFile,
     `${JSON.stringify({ version: 1, images: data.images }, null, 2)}
 `,
     "utf8"
   );
+  try {
+    await (0, import_promises.rename)(tempFile, dataFile);
+  } catch (error) {
+    await (0, import_promises.rm)(tempFile, { force: true });
+    throw error;
+  }
 }
 function getNextImageOrder(images, target) {
   const targetImages = listImagesForTarget(images, target);
@@ -782,19 +799,21 @@ async function handleReviewFigmaImageStoreRequest({
     if (!isAllowedProjectTarget(input.target, options.projectId)) {
       return jsonError(403, "target project is not allowed.");
     }
-    const data = await readReviewFigmaImageStoreFile(dataFile);
-    const image = await createReviewFigmaImage({
-      assetDir,
-      assetEndpoint,
-      currentImages: data.images,
-      env,
-      input,
-      options,
-      requestToken
+    return runExclusiveReviewImageStoreTask(dataFile, async () => {
+      const data = await readReviewFigmaImageStoreFile(dataFile);
+      const image = await createReviewFigmaImage({
+        assetDir,
+        assetEndpoint,
+        currentImages: data.images,
+        env,
+        input,
+        options,
+        requestToken
+      });
+      data.images = [image, ...data.images];
+      await writeReviewFigmaImageStoreFile(dataFile, data);
+      return { status: 201, body: image };
     });
-    data.images = [image, ...data.images];
-    await writeReviewFigmaImageStoreFile(dataFile, data);
-    return { status: 201, body: image };
   }
   if (method === "PATCH" && pathname === `${endpoint}/reorder`) {
     const input = parseReorderImagesInput(body);
@@ -802,49 +821,109 @@ async function handleReviewFigmaImageStoreRequest({
     if (!isAllowedProjectTarget(input.target, options.projectId)) {
       return jsonError(403, "target project is not allowed.");
     }
-    const data = await readReviewFigmaImageStoreFile(dataFile);
-    const images = reorderReviewFigmaImages(data.images, input);
-    data.images = images.allImages;
-    await writeReviewFigmaImageStoreFile(dataFile, data);
-    return { status: 200, body: images.targetImages };
+    return runExclusiveReviewImageStoreTask(dataFile, async () => {
+      const data = await readReviewFigmaImageStoreFile(dataFile);
+      const images = reorderReviewFigmaImages(data.images, input);
+      data.images = images.allImages;
+      await writeReviewFigmaImageStoreFile(dataFile, data);
+      return { status: 200, body: images.targetImages };
+    });
   }
   const id = getEndpointItemId(pathname, endpoint);
   if (id && method === "PATCH") {
     const patch = parseUpdateImageInput(body);
     if (!patch) return jsonError(400, "valid update patch is required.");
-    const data = await readReviewFigmaImageStoreFile(dataFile);
-    const result = updateReviewFigmaImage(data.images, id, patch);
-    if (!result) return jsonError(404, `Figma image not found: ${id}`);
-    if (!isAllowedProjectTarget(result.image.target, options.projectId)) {
-      return jsonError(403, "target project is not allowed.");
-    }
-    data.images = result.images;
-    await writeReviewFigmaImageStoreFile(dataFile, data);
-    return { status: 200, body: result.image };
+    return runExclusiveReviewImageStoreTask(dataFile, async () => {
+      const data = await readReviewFigmaImageStoreFile(dataFile);
+      const result = updateReviewFigmaImage(data.images, id, patch);
+      if (!result) return jsonError(404, `Figma image not found: ${id}`);
+      if (!isAllowedProjectTarget(result.image.target, options.projectId)) {
+        return jsonError(403, "target project is not allowed.");
+      }
+      data.images = result.images;
+      await writeReviewFigmaImageStoreFile(dataFile, data);
+      return { status: 200, body: result.image };
+    });
   }
   if (id && method === "DELETE") {
-    const data = await readReviewFigmaImageStoreFile(dataFile);
-    const image = data.images.find((item) => item.id === id);
-    if (!image) return jsonError(404, `Figma image not found: ${id}`);
-    if (!isAllowedProjectTarget(image.target, options.projectId)) {
-      return jsonError(403, "target project is not allowed.");
-    }
-    data.images = data.images.filter((item) => item.id !== id);
-    await writeReviewFigmaImageStoreFile(dataFile, data);
-    await deleteReviewFigmaImageAsset(assetDir, image.storageKey);
-    return { status: 200, body: { ok: true } };
+    return runExclusiveReviewImageStoreTask(dataFile, async () => {
+      const data = await readReviewFigmaImageStoreFile(dataFile);
+      const image = data.images.find((item) => item.id === id);
+      if (!image) return jsonError(404, `Figma image not found: ${id}`);
+      if (!isAllowedProjectTarget(image.target, options.projectId)) {
+        return jsonError(403, "target project is not allowed.");
+      }
+      data.images = data.images.filter((item) => item.id !== id);
+      await writeReviewFigmaImageStoreFile(dataFile, data);
+      await deleteReviewFigmaImageAsset(assetDir, image.storageKey);
+      return { status: 200, body: { ok: true } };
+    });
   }
   return jsonError(405, "method not allowed.");
 }
-async function readJsonRequestBody(req) {
+var DEFAULT_REVIEW_IMAGE_STORE_MAX_BODY_BYTES = 25 * 1024 * 1024;
+var ReviewImageStoreRequestError = class extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+    this.name = "ReviewImageStoreRequestError";
+  }
+};
+function isReviewImageStoreRequestError(error) {
+  return error instanceof ReviewImageStoreRequestError;
+}
+function assertTrustedReviewImageStoreRequest(req) {
+  const origin = req.headers.origin;
+  if (!origin || typeof origin !== "string") return;
+  let originUrl;
+  try {
+    originUrl = new URL(origin);
+  } catch {
+    throw new ReviewImageStoreRequestError(
+      403,
+      "Cross-origin request is not allowed."
+    );
+  }
+  const host = req.headers.host;
+  if (host && originUrl.host === host) return;
+  if (isLoopbackHostname(originUrl.hostname)) return;
+  throw new ReviewImageStoreRequestError(
+    403,
+    "Cross-origin request is not allowed."
+  );
+}
+function isLoopbackHostname(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
+}
+async function readJsonRequestBody(req, maxBytes = DEFAULT_REVIEW_IMAGE_STORE_MAX_BODY_BYTES) {
   if (req.method === "GET" || req.method === "DELETE") return null;
   const chunks = [];
+  let totalBytes = 0;
   for await (const chunk of req) {
-    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    const buffer = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
+    totalBytes += buffer.length;
+    if (totalBytes > maxBytes) {
+      throw new ReviewImageStoreRequestError(
+        413,
+        `Request body exceeds ${maxBytes} bytes.`
+      );
+    }
+    chunks.push(buffer);
   }
   const raw = Buffer.concat(chunks).toString("utf8").trim();
   if (!raw) return null;
-  return JSON.parse(raw);
+  const contentType = req.headers["content-type"];
+  if (typeof contentType !== "string" || !contentType.split(";")[0].trim().toLowerCase().endsWith("/json")) {
+    throw new ReviewImageStoreRequestError(
+      415,
+      "Request body must be application/json."
+    );
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new ReviewImageStoreRequestError(400, "Invalid JSON request body.");
+  }
 }
 function sendJson(res, status, body) {
   res.statusCode = status;
@@ -1082,6 +1161,7 @@ var reviewFigmaImageStore = (options = {}) => {
           return;
         }
         try {
+          assertTrustedReviewImageStoreRequest(req);
           const response = await handleReviewFigmaImageStoreRequest({
             dataFile,
             assetDir,
@@ -1092,11 +1172,15 @@ var reviewFigmaImageStore = (options = {}) => {
             pathname,
             requestUrl,
             method: req.method ?? "GET",
-            body: await readJsonRequestBody(req),
+            body: await readJsonRequestBody(req, options.maxRequestBytes),
             requestToken: readRequestFigmaToken(req)
           });
           sendJson(res, response.status, response.body);
         } catch (error) {
+          if (isReviewImageStoreRequestError(error)) {
+            sendJson(res, error.status, { error: error.message });
+            return;
+          }
           sendJson(res, 500, {
             error: error instanceof Error ? error.message : "Figma image store request failed."
           });

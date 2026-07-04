@@ -5,6 +5,7 @@
 // - use.review.shell.state      셸 전역 상태 (target/size/source/mode 등)
 // - use.review.shell.data       아이템 목록/필터/카운트 파생 데이터
 // - use.review.side.panel       사이드 패널 선택/열림 상태
+// - use.review.target.navigation target/source/page 이동 액션
 // - use.review.command.key      ⌘ 누르는 동안 오버레이 숨김
 // - use.review.source.inspector 소스 인스펙터 + Alt 단축키 바인딩
 // - use.review.section.outline  Source Tree(컴포넌트 아웃라인) 패널
@@ -20,7 +21,6 @@ import {
 import type {
   ReviewItem,
   ReviewMode,
-  ReviewSource,
 } from '../../types';
 
 import type {
@@ -37,14 +37,9 @@ import {
   DEFAULT_REVIEW_PATH_PREFIX,
   getInitialItemId,
   getShellUrlForItem,
-  getTargetRouteKey,
-  normalizeTarget,
-  parseReviewAddressInput,
-  updateShellUrl,
 } from '../route';
 import {
   DEFAULT_REVIEW_VIEWPORT_PRESETS,
-  findViewportPreset,
 } from '../viewport';
 import {
   InitialPromptModal,
@@ -85,6 +80,7 @@ import { useReviewShellData } from '../hooks/use.review.shell.data';
 import { useReviewShellHotkeys } from '../hooks/use.review.shell.hotkeys';
 import { useReviewShellState } from '../hooks/use.review.shell.state';
 import { useReviewSourceInspector } from '../hooks/use.review.source.inspector';
+import { useReviewTargetNavigation } from '../hooks/use.review.target.navigation';
 import {
   copyCurrentReviewUrl,
   refreshReviewItems,
@@ -577,79 +573,35 @@ export const ReviewShell = ({
     };
   }, [isListVisible, size.height, size.width, syncTargetViewport, targetSrc]);
 
-  /** 주소창 입력(target[@source][ WxH][ #item]) 을 파싱해 이동한다. */
-  const applyTarget = async () => {
-    const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
-    const normalizedTarget = parsedInput.target;
-    const normalizedRoute = getTargetRouteKey(
-      normalizedTarget,
-      reviewPathPrefix
-    );
-    const nextSource =
-      parsedInput.source &&
-      sourceEntries.some((entry) => entry.label === parsedInput.source)
-        ? parsedInput.source
-        : source;
-    const nextSize =
-      parsedInput.width && parsedInput.height
-        ? findViewportPreset(
-            viewportPresets,
-            parsedInput.width,
-            parsedInput.height
-          )
-        : sizeRef.current;
-    const nextAdapter =
-      sourceEntries.find((entry) => entry.label === nextSource) ??
-      activeAdapterEntry;
-    const isCurrentTarget =
-      targetRef.current === normalizedTarget &&
-      source === nextSource &&
-      sizeRef.current.width === nextSize.width &&
-      sizeRef.current.height === nextSize.height;
-
-    if (parsedInput.itemId) {
-      const item = await nextAdapter.adapter.get(parsedInput.itemId);
-      if (item) {
-        setIsAllQaVisible(false);
-        setSource(nextSource);
-        restoreReviewItem(item);
-        return;
-      }
-    }
-
-    clearSelectedItem();
-    setIsAllQaVisible(false);
-    setSource(nextSource);
-    targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedRoute);
-    setDraftTarget(normalizedTarget);
-    setSize(nextSize);
-    setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, nextSize, nextSource);
-    // 같은 target 재입력은 새로고침으로 처리한다.
-    if (isCurrentTarget) reloadTargetFrame();
-  };
-
-  const selectPage = (href: string) => {
-    const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
-    const normalizedRoute = getTargetRouteKey(
-      normalizedTarget,
-      reviewPathPrefix
-    );
-    clearSelectedItem();
-    setIsAllQaVisible(false);
-    targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedRoute);
-    setDraftTarget(normalizedTarget);
-    setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, sizeRef.current, source);
-    setIsSitemapOpen(false);
-  };
-
-  const selectAllQa = () => {
-    setIsAllQaVisible(true);
-    setIsSitemapOpen(false);
-  };
+  const {
+    applyTarget,
+    changeReviewSource,
+    clearSelectedReviewItem,
+    getPageTarget,
+    selectAllQa,
+    selectPage,
+  } = useReviewTargetNavigation({
+    activeAdapterEntry,
+    draftTarget,
+    reviewPathPrefix,
+    sizeRef,
+    source,
+    sourceEntries,
+    targetRef,
+    viewportPresets,
+    onActiveRouteChange: setActiveRoute,
+    onAllQaVisibleChange: setIsAllQaVisible,
+    onCancelReviewMode: cancelReviewMode,
+    onClearItems: () => setItems([]),
+    onClearSelectedItem: clearSelectedItem,
+    onDraftTargetChange: setDraftTarget,
+    onReloadTargetFrame: reloadTargetFrame,
+    onRestoreReviewItem: restoreReviewItem,
+    onSitemapOpenChange: setIsSitemapOpen,
+    onSizeChange: setSize,
+    onSourceChange: setSource,
+    onTargetChange: setTarget,
+  });
 
   const setReviewMode = (nextMode: ReviewMode) => {
     const writeMode = getReviewModeWriteMode(nextMode);
@@ -851,21 +803,6 @@ export const ReviewShell = ({
     refreshCurrentSectionOutline,
   ]);
 
-  const clearSelectedReviewItem = useCallback(() => {
-    clearSelectedItem();
-    updateShellUrl(targetRef.current, sizeRef.current, source);
-  }, [clearSelectedItem, sizeRef, source, targetRef]);
-
-  const changeReviewSource = (nextSource: ReviewSource) => {
-    if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
-
-    cancelReviewMode();
-    clearSelectedItem();
-    setItems([]);
-    setSource(nextSource);
-    updateShellUrl(targetRef.current, sizeRef.current, nextSource);
-  };
-
   const figmaImageOverlays = createReviewTargetFigmaImageOverlays({
     imageOverlayStates: figmaImageOverlayStates,
     images: figmaImageList,
@@ -923,7 +860,7 @@ export const ReviewShell = ({
           isAllQaVisible={isAllQaVisible}
           pageQaCounts={pageQaCounts}
           pagePresenceUsers={pagePresenceUsers}
-          getPageTarget={(href) => normalizeTarget(href, reviewPathPrefix)}
+          getPageTarget={getPageTarget}
           onClose={() => setIsSitemapOpen(false)}
           onSelectAllQa={selectAllQa}
           onSelectPage={selectPage}

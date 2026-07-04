@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ChevronDown as ChevronDownIcon,
   Code2 as Code2Icon,
+  CornerUpRight as UsageIcon,
   Database as DatabaseIcon,
   Image as ImageIcon,
   Search as SearchIcon,
@@ -36,6 +37,7 @@ type SectionOutlinePanelProps = {
   onScrollToSection: (entry: SectionOutlineEntry) => void;
   onOpenData: (entry: SectionOutlineEntry) => void;
   onOpenSource: (entry: SectionOutlineEntry) => void;
+  onOpenUsageSource: (entry: SectionOutlineEntry) => void;
   onStartDomReview: (entry: SectionOutlineEntry) => void;
   onHoverElement: (element: Element) => void;
   onClearHover: () => void;
@@ -61,6 +63,7 @@ export const SectionOutlinePanel = ({
   onScrollToSection,
   onOpenData,
   onOpenSource,
+  onOpenUsageSource,
   onStartDomReview,
   onHoverElement,
   onClearHover,
@@ -142,6 +145,31 @@ export const SectionOutlinePanel = ({
       );
     }
 
+    if (metadata.usage) {
+      const usagePosition = metadata.usage.positionLabel
+        ? `:${metadata.usage.positionLabel}`
+        : '';
+      rows.push(
+        <span
+          className="df-review-section-outline-meta-row is-usage"
+          key="usage"
+        >
+          <b>used in</b>
+          <button
+            className="df-review-section-outline-usage-link"
+            type="button"
+            title={`Open ${metadata.usage.label} usage`}
+            onClick={() => onOpenUsageSource(entry)}
+          >
+            <code>
+              {metadata.usage.label} · {metadata.usage.filePath}
+              {usagePosition}
+            </code>
+          </button>
+        </span>
+      );
+    }
+
     if (rows.length === 0) return null;
 
     return (
@@ -197,6 +225,7 @@ export const SectionOutlinePanel = ({
                 className={`df-review-section-outline-toggle${
                   isCollapsed ? ' is-collapsed' : ''
                 }`}
+                data-review-tooltip={isCollapsed ? 'Expand' : 'Collapse'}
                 type="button"
                 onClick={() => onToggleEntry(entry.id)}
               >
@@ -221,6 +250,7 @@ export const SectionOutlinePanel = ({
               <button
                 aria-label={`Open ${entry.label} data`}
                 className="df-review-section-outline-link"
+                data-review-tooltip="Open data"
                 title="Open data"
                 type="button"
                 disabled={!entry.data?.file}
@@ -231,12 +261,24 @@ export const SectionOutlinePanel = ({
               <button
                 aria-label={`Open ${entry.label} source`}
                 className="df-review-section-outline-link"
+                data-review-tooltip="Open source"
                 title="Open source"
                 type="button"
                 disabled={!entry.source?.file}
                 onClick={() => onOpenSource(entry)}
               >
                 <Code2Icon aria-hidden="true" />
+              </button>
+              <button
+                aria-label={`Open ${entry.label} usage`}
+                className="df-review-section-outline-link"
+                data-review-tooltip="Open parent usage"
+                title="Open parent usage"
+                type="button"
+                disabled={!entry.metadata.usage?.source.file}
+                onClick={() => onOpenUsageSource(entry)}
+              >
+                <UsageIcon aria-hidden="true" />
               </button>
               <span
                 aria-hidden="true"
@@ -247,6 +289,7 @@ export const SectionOutlinePanel = ({
               <button
                 aria-label={`Start DOM QA for ${entry.label}`}
                 className="df-review-section-outline-link is-dom-select"
+                data-review-tooltip={isZeroArea ? 'No visible area' : 'DOM select'}
                 title={isZeroArea ? 'No visible area' : 'DOM select'}
                 type="button"
                 disabled={!canWriteDom || isZeroArea}
@@ -290,6 +333,7 @@ export const SectionOutlinePanel = ({
                 className={`df-review-section-outline-meta-toggle${
                   isBoxMetaVisible ? ' is-active' : ''
                 }`}
+                data-review-tooltip="Box metrics"
                 title="top / left / width / height"
                 type="button"
                 onClick={() => onToggleMeta('box')}
@@ -302,6 +346,7 @@ export const SectionOutlinePanel = ({
                 className={`df-review-section-outline-meta-toggle${
                   isFontMetaVisible ? ' is-active' : ''
                 }`}
+                data-review-tooltip="Font metadata"
                 title="font size / weight"
                 type="button"
                 onClick={() => onToggleMeta('font')}
@@ -314,6 +359,7 @@ export const SectionOutlinePanel = ({
                 className={`df-review-section-outline-meta-toggle${
                   isMediaMetaVisible ? ' is-active' : ''
                 }`}
+                data-review-tooltip="Media URLs"
                 title="media urls"
                 type="button"
                 onClick={() => onToggleMeta('media')}
@@ -326,6 +372,7 @@ export const SectionOutlinePanel = ({
                 className={`df-review-section-outline-meta-toggle${
                   isClassMetaVisible ? ' is-active' : ''
                 }`}
+                data-review-tooltip="Class names"
                 title="class names"
                 type="button"
                 onClick={() => onToggleMeta('className')}

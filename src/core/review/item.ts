@@ -22,7 +22,7 @@ import {
 } from '../geometry';
 
 /** Rendering mode used by marker and highlight overlays. */
-export type ReviewItemHighlightMode = 'note' | 'area' | 'dom';
+export type ReviewItemHighlightMode = 'area' | 'dom';
 
 /** Target-space highlight rectangle plus whether it was rebound to an anchor. */
 export interface ReviewItemHighlightSelection {
@@ -98,14 +98,7 @@ export function getItemHighlightSelection(
     );
   }
 
-  return getVisibleHighlightSelection(
-    [
-      getAnchorHighlightSelection(item, environment),
-      getBoundSelection(item, environment),
-      getPointHighlightSelection(item, environment),
-    ],
-    environment
-  );
+  return undefined;
 }
 
 /** Maps an item to its overlay visual treatment. */
@@ -113,8 +106,7 @@ export function getReviewItemHighlightMode(
   item: ReviewItem
 ): ReviewItemHighlightMode {
   if (isDomReviewItem(item)) return 'dom';
-  if (item.kind === 'area') return 'area';
-  return 'note';
+  return 'area';
 }
 
 /** Returns an explicit marker or derives one from the item's selection center. */
@@ -261,8 +253,5 @@ function getVisibleHighlightSelection(
 }
 
 function isDomReviewItem(item: ReviewItem) {
-  return (
-    item.scope === 'dom' ||
-    (item.kind === 'note' && Boolean(item.anchor && getItemSelection(item)))
-  );
+  return item.kind === 'dom' || item.scope === 'dom';
 }

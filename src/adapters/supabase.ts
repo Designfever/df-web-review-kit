@@ -1,6 +1,7 @@
 import { normalizeReviewItemStatus } from '../status';
 import type {
   ReviewItem,
+  ReviewItemKind,
   ReviewItemStatus,
   ReviewSource,
   SupabaseReviewAdapterOptions,
@@ -235,13 +236,17 @@ function rowToReviewItem(
 ): ReviewItem | null {
   if (!row.item || typeof row.item !== 'object') return null;
 
-  const item = row.item as Partial<ReviewItem>;
+  const item = row.item as Partial<Omit<ReviewItem, 'kind'>> & {
+    kind?: string;
+  };
   const status = normalizeReviewItemStatus(
     (row.status || item.status || 'todo') as ReviewItemStatus
   );
   const routeKey = row.route_key || item.routeKey || item.normalizedPath || '/';
   const viewport = item.viewport ?? { width: 390, height: 720 };
   const now = new Date().toISOString();
+  const kind = normalizeReviewItemKind(item);
+  if (!kind) return null;
 
   return {
     ...(item as ReviewItem),
@@ -251,7 +256,7 @@ function rowToReviewItem(
     routeKey,
     pageUrl: item.pageUrl || toAbsoluteReviewUrl(routeKey),
     normalizedPath: item.normalizedPath || routeKey,
-    kind: item.kind === 'area' ? 'area' : 'note',
+    kind,
     comment: item.comment || '',
     status,
     viewport,
@@ -269,6 +274,13 @@ function rowToReviewItem(
     createdAt: item.createdAt ?? row.created_at ?? now,
     updatedAt: row.updated_at ?? item.updatedAt ?? now,
   };
+}
+
+function normalizeReviewItemKind(
+  item: Partial<Omit<ReviewItem, 'kind'>> & { kind?: string }
+): ReviewItemKind | null {
+  if (item.kind === 'area' || item.kind === 'dom') return item.kind;
+  return null;
 }
 
 async function unwrapResponse<T>(

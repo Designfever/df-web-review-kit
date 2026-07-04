@@ -2,7 +2,7 @@
 
 `df-web-review-kit` has two integration surfaces that look similar but should stay separate:
 
-- QA adapter: persists review items such as note, area, DOM QA, status, title, and assignee.
+- QA adapter: persists review items such as DOM QA, area QA, status, title, and assignee.
 - Figma image store: persists Figma reference image metadata and cached image assets.
 
 Use `adapter` for both concepts in conversation only when the context is clear. In code/docs, prefer the explicit names `ReviewShellAdapter` and `ReviewFigmaImageStore`.
@@ -16,11 +16,11 @@ Use `adapter` for both concepts in conversation only when the context is clear. 
 | Public type | `ReviewShellAdapter`, `WebReviewKitAdapter` | `ReviewFigmaImageStore` |
 | Mount option | `mountReviewShell({ adapters })` | `mountReviewShell({ figmaImages: { store } })` |
 | Vite plugin | Not required | `reviewFigmaImageStore()` for dev/local cache |
-| Data | `ReviewItem` records | `ReviewFigmaImage` records and image assets |
-| Main actions | `get`, `list`, `create`, `update`, `remove` | `listImages`, `addImage`, `updateImage`, `reorderImages`, `deleteImage` |
+| Data | `ReviewItem` records and QA attachment metadata | `ReviewFigmaImage` records and image assets |
+| Main actions | `get`, `list`, `create`, `update`, `remove`, optional `uploadAttachment` | `listImages`, `addImage`, `updateImage`, `reorderImages`, `deleteImage` |
 | UI fields | `fields.title`, `statusOptions`, `assigneeOptions` | image label, order, opacity/layer controls |
 | Token/secrets | Host backend decides | `FIGMA_TOKEN` server env first, Settings `figma-token` request fallback |
-| Typical storage | localStorage, Supabase, df-sheet, custom QA API | `.df-review/figma-images.json`, `.df-review/figma-assets/`, future asset backend |
+| Typical storage | localStorage, Supabase, df-sheet, custom QA API, host-owned attachment bucket | `.df-review/figma-images.json`, `.df-review/figma-assets/`, future asset backend |
 
 ## QA Adapter
 
@@ -47,6 +47,7 @@ mountReviewShell({
       assigneeOptions,
       updateAssignee: ({ id, assigneeId, assigneeName }) =>
         dfSheet.updateAssignee(id, { assigneeId, assigneeName }),
+      uploadAttachment: (input) => dfSheet.uploadAttachment(input),
       remove: (id) => dfSheet.remove(id),
     },
   ],
@@ -56,10 +57,32 @@ mountReviewShell({
 Guidelines:
 
 - Keep backend-specific mapping inside the host adapter.
+- `ReviewItem.kind` is limited to `dom` and `area`. Point-only legacy `note` rows are ignored by the package adapters instead of being shown in the QA list.
 - `fields.title` only controls whether title UI appears. Omit it for comment-only QA.
+- Use `ReviewItem.externalLinks` for one or more external issue/sheet buttons. The shell renders them under the QA body and falls back to `externalIssueUrl` when the array is omitted.
+- Use `ReviewShellAdapter.uploadAttachment` for comment paste and iframe capture files. Iframe captures usually arrive as WebP and only fall back to SVG when raster capture is unavailable. It receives a browser `File | Blob` plus optional metadata and must return a `ReviewAttachment` with `url`, `name`, `mime`, `size`, and optional `metadata`.
 - `assigneeOptions` and `updateAssignee` are optional. If omitted, assignee UI should not become a required workflow.
 - `statusOptions` can be project-specific, but status remains a QA item field.
 - Slow remote adapters should return promises normally; the shell owns loading and pending UI.
+- Upload failures should reject with a useful message. If the backend can classify the failure, set `reason` to values such as `quota-exceeded`, `storage-full`, `unsupported-type`, `permission-denied`, or `upload-failed` so the UI can show a concrete reason instead of silently submitting without a URL.
+
+## Adapter Contract Tests
+
+This package uses Vitest for adapter-level regression coverage.
+
+```bash
+pnpm test
+```
+
+The current contract suite covers:
+
+- `create`, `list`, `get`, `update`, and `remove`
+- route, project, and status filtering
+- preserving `attachments`, `externalLinks`, assignee, and status fields
+- keeping `dom` and `area` as the only writable item kinds
+- filtering legacy `note` rows from local and Supabase adapter reads
+
+When adding a host-owned adapter, keep the same contract in mind even if the test lives in the host repo. Backend-specific ID generation, review number sequencing, issue links, or file upload details can differ, but the shell should still receive normalized `ReviewItem` records.
 
 ## Figma Image Store
 

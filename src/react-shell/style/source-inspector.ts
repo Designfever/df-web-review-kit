@@ -11,7 +11,7 @@ export const reviewShellSourceInspectorStyle = `
   }
 
   .df-review-source-outline.is-pinned {
-    border-color: var(--df-review-note);
+    border-color: var(--df-review-warning);
     box-shadow:
       0 0 0 1px rgba(15, 18, 24, 0.58),
       0 0 0 5px rgba(243, 183, 95, 0.16);

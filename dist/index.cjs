@@ -157,8 +157,8 @@ function localAdapter(options = {}) {
 function normalizeStoredReviewItem(value) {
   if (!value || typeof value !== "object") return void 0;
   const raw = value;
-  const kind = raw.kind === "text" ? "note" : raw.kind === "capture" ? "area" : raw.kind;
-  if (kind !== "note" && kind !== "area") return void 0;
+  const kind = raw.kind === "capture" ? "area" : raw.kind;
+  if (kind !== "dom" && kind !== "area") return void 0;
   const { screenshot: _screenshot, reviewNumber: _reviewNumber, ...item } = raw;
   if (kind === raw.kind && _screenshot === void 0 && _reviewNumber === void 0) {
     return raw;
@@ -333,6 +333,8 @@ function rowToReviewItem(row, options) {
   const routeKey = row.route_key || item.routeKey || item.normalizedPath || "/";
   const viewport = item.viewport ?? { width: 390, height: 720 };
   const now = (/* @__PURE__ */ new Date()).toISOString();
+  const kind = normalizeReviewItemKind(item);
+  if (!kind) return null;
   return {
     ...item,
     id: row.id,
@@ -341,7 +343,7 @@ function rowToReviewItem(row, options) {
     routeKey,
     pageUrl: item.pageUrl || toAbsoluteReviewUrl(routeKey),
     normalizedPath: item.normalizedPath || routeKey,
-    kind: item.kind === "area" ? "area" : "note",
+    kind,
     comment: item.comment || "",
     status,
     viewport,
@@ -357,6 +359,10 @@ function rowToReviewItem(row, options) {
     createdAt: item.createdAt ?? row.created_at ?? now,
     updatedAt: row.updated_at ?? item.updatedAt ?? now
   };
+}
+function normalizeReviewItemKind(item) {
+  if (item.kind === "area" || item.kind === "dom") return item.kind;
+  return null;
 }
 async function unwrapResponse(request, label) {
   const { data, error } = await request;
@@ -1389,11 +1395,6 @@ var SEMANTIC_ANCHOR_ATTRIBUTES = [
   "name",
   "href"
 ];
-function getDomAnchor(selection, configuredAttribute = "data-qa-id", environment) {
-  const x = selection.left + selection.width / 2;
-  const y = selection.top + selection.height / 2;
-  return getDomAnchorFromPoint({ x, y }, configuredAttribute, environment);
-}
 function getDomAnchorFromPoint(point, configuredAttribute = "data-qa-id", environment) {
   const target = environment.document.elementFromPoint(point.x, point.y);
   if (!target) return void 0;
@@ -1943,6 +1944,34 @@ function createId() {
 }
 
 // src/core/hotkey.ts
+var HOTKEY_KEY_ALIASES = {
+  q: ["\u3142", "\u3143"],
+  w: ["\u3148", "\u3149"],
+  e: ["\u3137", "\u3138"],
+  r: ["\u3131", "\u3132"],
+  t: ["\u3145", "\u3146"],
+  y: ["\u315B"],
+  u: ["\u3155"],
+  i: ["\u3151"],
+  o: ["\u3150", "\u3152"],
+  p: ["\u3154", "\u3156"],
+  a: ["\u3141"],
+  s: ["\u3134"],
+  d: ["\u3147"],
+  f: ["\u3139"],
+  g: ["\u314E"],
+  h: ["\u3157"],
+  j: ["\u3153"],
+  k: ["\u314F"],
+  l: ["\u3163"],
+  z: ["\u314B"],
+  x: ["\u314C"],
+  c: ["\u314A"],
+  v: ["\u314D"],
+  b: ["\u3160"],
+  n: ["\u315C"],
+  m: ["\u3161"]
+};
 function isHotkey(event, hotkey) {
   const parts = hotkey.split("+").map((part) => part.trim().toLowerCase()).filter(Boolean);
   const key = parts.find(
@@ -1963,10 +1992,7 @@ function isHotkeyKey(event, key) {
   const normalizedKey = key.toLowerCase();
   if (event.key.toLowerCase() === normalizedKey) return true;
   if (getHotkeyCode(normalizedKey) === event.code) return true;
-  const aliases = {
-    q: ["\u3142", "\u3143"]
-  };
-  return aliases[normalizedKey]?.includes(event.key) ?? false;
+  return HOTKEY_KEY_ALIASES[normalizedKey]?.includes(event.key) ?? false;
 }
 function getHotkeyCode(key) {
   if (/^[a-z]$/.test(key)) return `Key${key.toUpperCase()}`;
@@ -2145,19 +2171,11 @@ function getItemHighlightSelection(item, environment) {
       environment
     );
   }
-  return getVisibleHighlightSelection(
-    [
-      getAnchorHighlightSelection(item, environment),
-      getBoundSelection(item, environment),
-      getPointHighlightSelection(item, environment)
-    ],
-    environment
-  );
+  return void 0;
 }
 function getReviewItemHighlightMode(item) {
   if (isDomReviewItem(item)) return "dom";
-  if (item.kind === "area") return "area";
-  return "note";
+  return "area";
 }
 function getItemMarker(item) {
   if (item.marker) return item.marker;
@@ -2256,7 +2274,7 @@ function getVisibleHighlightSelection(candidates, environment) {
   );
 }
 function isDomReviewItem(item) {
-  return item.scope === "dom" || item.kind === "note" && Boolean(item.anchor && getItemSelection(item));
+  return item.kind === "dom" || item.scope === "dom";
 }
 
 // src/core/scroll.ts
@@ -2293,6 +2311,124 @@ function setDocumentScrollInstantly(environment, position) {
     Math.max(0, Math.round(position.x)),
     Math.max(0, Math.round(position.y))
   );
+}
+
+// src/core/draft.attachments.ts
+function attachDraftImagePasteQueue(textarea, options) {
+  textarea.addEventListener("paste", (event) => {
+    const imageFiles = getClipboardImageFiles(event.clipboardData);
+    if (imageFiles.length === 0) return;
+    event.preventDefault();
+    const text = event.clipboardData?.getData("text/plain");
+    if (text) {
+      insertTextAtTextareaSelection(textarea, text);
+      options.onCommentChange(textarea.value);
+    }
+    const attachments = imageFiles.map(
+      (file, index) => createDraftImageAttachment(file, index)
+    );
+    options.onAttachmentsChange([
+      ...options.getAttachments() ?? [],
+      ...attachments
+    ]);
+    options.onPasteComplete();
+  });
+}
+function createDraftAttachmentQueue(ownerDocument, attachments, onRemove) {
+  if (!attachments?.length) return void 0;
+  const queue = ownerDocument.createElement("div");
+  queue.className = "dfwr-attachment-queue";
+  const label = ownerDocument.createElement("div");
+  label.className = "dfwr-attachment-label";
+  label.textContent = `Attachments (${attachments.length})`;
+  const list = ownerDocument.createElement("div");
+  list.className = "dfwr-attachment-list";
+  attachments.forEach((attachment) => {
+    const item = ownerDocument.createElement("div");
+    item.className = "dfwr-attachment-item";
+    const preview = createDraftAttachmentPreview(ownerDocument, attachment);
+    const name = ownerDocument.createElement("div");
+    name.className = "dfwr-attachment-name";
+    name.textContent = attachment.name;
+    name.title = attachment.name;
+    const remove = ownerDocument.createElement("button");
+    remove.className = "dfwr-attachment-remove";
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.setAttribute("aria-label", `Remove ${attachment.name}`);
+    remove.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onRemove(attachment.id);
+    });
+    item.append(preview, name, remove);
+    list.append(item);
+  });
+  queue.append(label, list);
+  return queue;
+}
+function removeDraftAttachment(attachments, attachmentId) {
+  if (!attachments?.length) return [];
+  const removed = attachments.find((attachment) => attachment.id === attachmentId);
+  if (removed?.previewUrl) {
+    URL.revokeObjectURL(removed.previewUrl);
+  }
+  return attachments.filter((attachment) => attachment.id !== attachmentId);
+}
+function getClipboardImageFiles(data) {
+  if (!data) return [];
+  const itemFiles = Array.from(data.items).filter((item) => item.kind === "file" && item.type.startsWith("image/")).map((item) => item.getAsFile()).filter((file) => Boolean(file));
+  if (itemFiles.length > 0) return itemFiles;
+  return Array.from(data.files).filter((file) => file.type.startsWith("image/"));
+}
+function createDraftImageAttachment(file, index) {
+  const mime = file.type || "image/png";
+  const name = file.name || `pasted-image-${Date.now()}-${index + 1}${getImageExtension(mime)}`;
+  return {
+    id: createDraftAttachmentId(),
+    file,
+    name,
+    mime,
+    size: file.size,
+    kind: "image",
+    previewUrl: URL.createObjectURL(file),
+    metadata: { source: "paste" }
+  };
+}
+function createDraftAttachmentId() {
+  return window.crypto?.randomUUID?.() ?? `draft-attachment-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+function getImageExtension(mime) {
+  if (mime === "image/jpeg") return ".jpg";
+  if (mime === "image/gif") return ".gif";
+  if (mime === "image/webp") return ".webp";
+  if (mime === "image/svg+xml") return ".svg";
+  return ".png";
+}
+function insertTextAtTextareaSelection(textarea, text) {
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? start;
+  textarea.value = [
+    textarea.value.slice(0, start),
+    text,
+    textarea.value.slice(end)
+  ].join("");
+  const nextSelection = start + text.length;
+  textarea.setSelectionRange(nextSelection, nextSelection);
+}
+function createDraftAttachmentPreview(ownerDocument, attachment) {
+  if (attachment.previewUrl && attachment.mime.startsWith("image/")) {
+    const image = ownerDocument.createElement("img");
+    image.className = "dfwr-attachment-thumb";
+    image.src = attachment.previewUrl;
+    image.alt = "";
+    image.decoding = "async";
+    return image;
+  }
+  const fallback = ownerDocument.createElement("div");
+  fallback.className = "dfwr-attachment-thumb is-file";
+  fallback.textContent = "IMG";
+  return fallback;
 }
 
 // src/core/draft.metrics.ts
@@ -2351,6 +2487,117 @@ function getAdjustedDraftSelection(selection, draft, presets) {
     width: selection.width * metrics.scaleFactor,
     height: selection.height * metrics.scaleFactor
   };
+}
+
+// src/core/draft.preview.ts
+var DraftPreviewController = class {
+  constructor(config) {
+    this.config = config;
+  }
+  clear() {
+    if (!this.snapshot) return;
+    const { element, clone, visibility } = this.snapshot;
+    clone.remove();
+    element.style.visibility = visibility;
+    this.snapshot = void 0;
+  }
+  sync(draft) {
+    const environment = this.config.getEnvironment();
+    if (!draft || !environment || !this.config.hasAdjustment(draft)) {
+      this.clear();
+      return;
+    }
+    const element = this.getStyleableDraftElement(draft, environment);
+    if (!element) {
+      this.clear();
+      return;
+    }
+    if (this.snapshot?.element !== element) {
+      this.clear();
+    }
+    if (!this.snapshot) {
+      const computedStyle = environment.window.getComputedStyle(element);
+      const clone = element.cloneNode(true);
+      removeDuplicateIds(clone);
+      copyComputedStyle(element, clone, environment);
+      positionDraftPreviewClone(clone, element, computedStyle);
+      environment.document.body?.appendChild(clone);
+      this.snapshot = {
+        element,
+        clone,
+        visibility: element.style.visibility
+      };
+      element.style.visibility = "hidden";
+    }
+    const metrics = this.config.getMetrics(draft);
+    const translate = `translate(${toCssNumber(metrics.cssX)}px, ${toCssNumber(
+      metrics.cssY
+    )}px)`;
+    const scale = metrics.scaleFactor === 1 ? "" : `scale(${toCssNumber(metrics.scaleFactor)})`;
+    this.snapshot.clone.style.transform = [translate, scale].filter(Boolean).join(" ");
+  }
+  getStyleableDraftElement(draft, environment) {
+    if (draft.previewElement && draft.previewElement.ownerDocument === environment.document && "style" in draft.previewElement) {
+      return draft.previewElement;
+    }
+    if (!draft.anchor) return void 0;
+    const preferredSelection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
+    const element = resolveAnchorElement(
+      draft.anchor,
+      environment,
+      preferredSelection
+    )?.element;
+    if (!element) return void 0;
+    if ("style" in element) return element;
+    return void 0;
+  }
+};
+function positionDraftPreviewClone(clone, element, computedStyle) {
+  const rect = element.getBoundingClientRect();
+  clone.setAttribute("data-dfwr-adjust-preview", "true");
+  clone.setAttribute("aria-hidden", "true");
+  clone.style.position = "fixed";
+  clone.style.left = `${toCssNumber(rect.left)}px`;
+  clone.style.top = `${toCssNumber(rect.top)}px`;
+  clone.style.right = "auto";
+  clone.style.bottom = "auto";
+  clone.style.width = `${toCssNumber(rect.width)}px`;
+  clone.style.height = `${toCssNumber(rect.height)}px`;
+  clone.style.maxWidth = "none";
+  clone.style.maxHeight = "none";
+  clone.style.margin = "0";
+  clone.style.boxSizing = "border-box";
+  clone.style.display = getDraftPreviewDisplay(computedStyle.display);
+  clone.style.zIndex = "2147483646";
+  clone.style.pointerEvents = "none";
+  clone.style.transition = "none";
+  clone.style.willChange = "transform";
+  clone.style.transformOrigin = "top left";
+  clone.style.transform = "none";
+}
+function getDraftPreviewDisplay(display) {
+  if (display === "inline" || display === "contents") return "inline-block";
+  return display || "block";
+}
+function copyComputedStyle(element, clone, environment) {
+  const computedStyle = environment.window.getComputedStyle(element);
+  for (let index = 0; index < computedStyle.length; index += 1) {
+    const property = computedStyle.item(index);
+    clone.style.setProperty(
+      property,
+      computedStyle.getPropertyValue(property),
+      computedStyle.getPropertyPriority(property)
+    );
+  }
+}
+function removeDuplicateIds(element) {
+  element.removeAttribute("id");
+  element.querySelectorAll("[id]").forEach((child) => {
+    child.removeAttribute("id");
+  });
+}
+function toCssNumber(value) {
+  return Math.round(value * 1e3) / 1e3;
 }
 
 // src/core/typography.tokens.ts
@@ -2768,89 +3015,6 @@ function createStyleElement() {
       border-style: dashed;
     }
 
-    .dfwr-bound-marker.is-note-callout,
-    .dfwr-bound-marker.is-note-callout.is-highlighted {
-      --dfwr-scope: #7cc7ff;
-      --dfwr-scope-rgb: 124, 199, 255;
-      min-width: 0;
-      width: 0;
-      height: 0;
-      padding: 0;
-      transform: none;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-      color: var(--dfwr-scope);
-      animation: none;
-      overflow: visible;
-    }
-
-    .dfwr-bound-marker.is-note-callout::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 8px;
-      height: 8px;
-      transform: translate(-50%, -50%);
-      border: 2px solid #111820;
-      border-radius: var(--df-review-radius-pill);
-      background: var(--dfwr-scope);
-      box-shadow:
-        0 0 0 3px rgba(var(--dfwr-scope-rgb), 0.22),
-        0 6px 16px rgba(0, 0, 0, 0.28);
-    }
-
-    .dfwr-bound-marker.is-note-callout.is-highlighted::before {
-      animation: dfwr-note-dot-pulse 1000ms ease-in-out infinite;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 31px;
-      height: 2px;
-      transform: rotate(-42deg);
-      transform-origin: left center;
-      border-radius: var(--df-review-radius-pill);
-      background: currentColor;
-      opacity: 1;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon::before,
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon::after {
-      display: none;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-number {
-      position: absolute;
-      left: 24px;
-      top: -41px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 28px;
-      height: 20px;
-      padding: 0 7px;
-      border: 1px solid var(--dfwr-scope);
-      border-radius: 4px;
-      background: var(--dfwr-scope);
-      box-shadow:
-        0 0 0 3px rgba(var(--dfwr-scope-rgb), 0.18),
-        0 8px 18px rgba(0, 0, 0, 0.28);
-      color: #111820;
-      text-align: center;
-      line-height: 1;
-      white-space: nowrap;
-    }
-
-    .dfwr-bound-marker.is-note-callout.is-highlighted .dfwr-bound-marker-icon,
-    .dfwr-bound-marker.is-note-callout.is-highlighted .dfwr-bound-marker-number {
-      animation: dfwr-selected-blink 1000ms ease-in-out infinite;
-    }
-
     .dfwr-area-preview-layer .dfwr-bound-marker {
       border-color: #63d7c7;
       background: var(--df-review-color-panel);
@@ -2921,14 +3085,14 @@ function createStyleElement() {
       line-height: 1;
     }
 
-    .dfwr-note-draft {
+    .dfwr-dom-draft {
       position: fixed;
       inset: 0;
       z-index: 4;
       pointer-events: none;
     }
 
-    .dfwr-note-pin {
+    .dfwr-dom-pin {
       appearance: none;
       position: fixed;
       z-index: 5;
@@ -2946,11 +3110,11 @@ function createStyleElement() {
       pointer-events: auto;
     }
 
-    .dfwr-note-pin:active {
+    .dfwr-dom-pin:active {
       cursor: grabbing;
     }
 
-    .dfwr-note-popover {
+    .dfwr-dom-popover {
       position: fixed;
       z-index: 4;
       width: min(320px, calc(100vw - 24px));
@@ -2963,14 +3127,14 @@ function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
-    .dfwr-note-popover.is-composer,
+    .dfwr-dom-popover.is-composer,
     .dfwr-area-draft.is-composer {
       max-height: min(360px, calc(100vh - 32px));
       overflow: auto;
       border-color: rgba(99, 215, 199, 0.56);
     }
 
-    .dfwr-shell.is-docked-composer .dfwr-note-popover.is-docked-composer,
+    .dfwr-shell.is-docked-composer .dfwr-dom-popover.is-docked-composer,
     .dfwr-shell.is-docked-composer .dfwr-area-draft.is-docked-composer {
       position: relative;
       left: auto;
@@ -2984,7 +3148,7 @@ function createStyleElement() {
       min-height: 184px;
     }
 
-    .dfwr-note-popover.is-dragging,
+    .dfwr-dom-popover.is-dragging,
     .dfwr-area-draft.is-dragging {
       user-select: none;
     }
@@ -3028,7 +3192,7 @@ function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
-    .dfwr-note-popover .dfwr-actions {
+    .dfwr-dom-popover .dfwr-actions {
       padding: 0;
     }
 
@@ -3076,14 +3240,6 @@ function createStyleElement() {
       height: 18px;
     }
 
-    .dfwr-note-actions {
-      justify-content: flex-end;
-    }
-
-    .dfwr-note-actions .dfwr-button:first-child {
-      margin-right: auto;
-    }
-
     .dfwr-area-draft .dfwr-actions {
       padding: 0;
     }
@@ -3099,6 +3255,82 @@ function createStyleElement() {
       font-size: var(--df-review-font-size-sm);
       line-height: 1.4;
       overflow-wrap: anywhere;
+    }
+
+    .dfwr-attachment-queue {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .dfwr-attachment-label {
+      color: var(--df-review-color-text-muted);
+      font-size: var(--df-review-font-size-xs);
+      line-height: 1.35;
+    }
+
+    .dfwr-attachment-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dfwr-attachment-item {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--df-review-radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .dfwr-attachment-thumb {
+      display: block;
+      width: 42px;
+      height: 42px;
+      object-fit: cover;
+      border-radius: var(--df-review-radius-xs);
+      background: var(--df-review-color-panel-strong);
+    }
+
+    .dfwr-attachment-thumb.is-file {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--df-review-color-text-muted);
+      font-size: var(--df-review-font-size-xs);
+      font-weight: var(--df-review-font-weight-emphasis);
+    }
+
+    .dfwr-attachment-name {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--df-review-color-text);
+      font-size: var(--df-review-font-size-sm);
+      line-height: 1.35;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dfwr-attachment-remove {
+      appearance: none;
+      min-height: 28px;
+      padding: 0 8px;
+      border: 1px solid var(--df-review-color-border-strong);
+      border-radius: var(--df-review-radius-sm);
+      color: var(--df-review-color-text-muted);
+      background: var(--df-review-color-control);
+      cursor: pointer;
+      font: inherit;
+      font-size: var(--df-review-font-size-xs);
+      line-height: 1;
+    }
+
+    .dfwr-attachment-remove:hover {
+      color: var(--df-review-color-text);
+      background: var(--df-review-color-control-hover);
     }
 
     .dfwr-input,
@@ -3403,18 +3635,6 @@ function createStyleElement() {
       }
     }
 
-    @keyframes dfwr-note-dot-pulse {
-      0% {
-        transform: translate(-50%, -50%) scale(0.88);
-      }
-      45% {
-        transform: translate(-50%, -50%) scale(1.3);
-      }
-      100% {
-        transform: translate(-50%, -50%) scale(1);
-      }
-    }
-
     @keyframes dfwr-selected-blink {
       0%,
       100% {
@@ -3464,7 +3684,7 @@ function createStyleElement() {
 }
 
 // src/core/review/format.ts
-function formatNoteDraftMeta(draft) {
+function formatDomDraftMeta(draft) {
   const parts = [
     `viewport ${formatSize(draft.viewport)}`,
     `point ${formatPoint(draft.marker.viewport)}`
@@ -3533,20 +3753,25 @@ var DEFAULT_ADJUSTMENT_LABEL = "Responsive CSS px adjustments";
 var WebReviewKitView = class {
   constructor(config) {
     this.config = config;
+    this.draftPreview = new DraftPreviewController({
+      getEnvironment: () => this.config.getEnvironment(),
+      getMetrics: (draft) => this.getDraftAdjustmentMetrics(draft),
+      hasAdjustment: (draft) => this.hasDraftAdjustment(draft)
+    });
   }
   clearDraftPreview() {
-    this.restoreDraftPreview();
+    this.draftPreview.clear();
     this.clearShellComposer();
   }
   render(shadow, hiddenItemsStyle) {
     const state = this.state;
-    this.syncDraftPreview(
-      state.isOpen && state.mode === "element" ? state.noteDraft : void 0
+    this.draftPreview.sync(
+      state.isOpen && state.mode === "element" ? state.domDraft : void 0
     );
     shadow.replaceChildren();
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
-    const hasDismissableDraft = Boolean(state.noteDraft || state.areaDraft);
+    const hasDismissableDraft = Boolean(state.domDraft || state.areaDraft);
     const shouldDockComposer = this.config.options.ui?.panel === false && hasDismissableDraft && Boolean(this.getShellComposerHost());
     let dockedComposer;
     const shell = document.createElement("div");
@@ -3573,17 +3798,15 @@ var WebReviewKitView = class {
     if (state.isOpen && hasDismissableDraft && !shouldDockComposer) {
       shell.append(this.createDraftCancelLayer());
     }
-    if (state.isOpen && (state.mode === "note" || state.mode === "element")) {
-      if (state.noteDraft) {
-        const noteDraft = this.createNotePopover(state.noteDraft, {
+    if (state.isOpen && state.mode === "element") {
+      if (state.domDraft) {
+        const domDraft = this.createDomPopover(state.domDraft, {
           dockComposer: shouldDockComposer
         });
-        shell.append(noteDraft.layer);
-        dockedComposer = noteDraft.composer;
+        shell.append(domDraft.layer);
+        dockedComposer = domDraft.composer;
       } else {
-        shell.append(
-          state.mode === "element" ? this.createElementLayer() : this.createNoteLayer()
-        );
+        shell.append(this.createElementLayer());
       }
     }
     if (state.isOpen && state.mode === "area" && !state.areaDraft && !state.isSelectingArea) {
@@ -3889,109 +4112,86 @@ ${adjustment}` : adjustment;
       assigneeName: this.getAssigneeName(assigneeId)
     };
   }
-  getStyleableDraftElement(draft, environment) {
-    if (draft.previewElement && draft.previewElement.ownerDocument === environment.document && "style" in draft.previewElement) {
-      return draft.previewElement;
-    }
-    if (!draft.anchor) return void 0;
-    const preferredSelection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
-    const element = resolveAnchorElement(
-      draft.anchor,
-      environment,
-      preferredSelection
-    )?.element;
-    if (!element) return void 0;
-    if ("style" in element) return element;
-    return void 0;
+  canCaptureViewport() {
+    return Boolean(this.config.getEnvironment()?.captureViewport);
   }
-  syncDraftPreview(draft) {
-    const environment = this.config.getEnvironment();
-    if (!draft || !environment || !this.hasDraftAdjustment(draft)) {
-      this.restoreDraftPreview();
-      return;
+  createDraftCaptureButton(draft, options) {
+    const button = document.createElement("button");
+    const isCapturing = this.state.isCapturingViewport;
+    const canCapture = this.canCaptureViewport();
+    button.className = "dfwr-button";
+    button.type = "button";
+    button.disabled = !canCapture || isCapturing || this.state.isCreatingItem;
+    button.setAttribute("aria-busy", isCapturing ? "true" : "false");
+    button.title = canCapture ? "Capture current viewport" : "Viewport capture helper is not available";
+    if (isCapturing) {
+      button.append(this.createSpinner("dfwr-spinner"), "Capturing...");
+    } else {
+      button.textContent = "Capture";
     }
-    const element = this.getStyleableDraftElement(draft, environment);
-    if (!element) {
-      this.restoreDraftPreview();
-      return;
-    }
-    if (this.draftPreview?.element !== element) {
-      this.restoreDraftPreview();
-    }
-    if (!this.draftPreview) {
-      const computedStyle = environment.window.getComputedStyle(element);
-      const clone = element.cloneNode(true);
-      this.removeDuplicateIds(clone);
-      this.copyComputedStyle(element, clone, environment);
-      this.positionDraftPreviewClone(clone, element, computedStyle);
-      environment.document.body?.appendChild(clone);
-      this.draftPreview = {
-        element,
-        clone,
-        visibility: element.style.visibility
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!this.canCaptureViewport() || this.state.isCapturingViewport) return;
+      if (options.kind === "area") {
+        const areaDraft = this.state.areaDraft ?? draft;
+        const nextDraft2 = {
+          ...areaDraft,
+          comment: options.textarea.value
+        };
+        this.config.actions.setAreaDraft(nextDraft2);
+        void this.config.actions.captureAreaDraft(
+          this.getCaptureAreaDraft(nextDraft2)
+        );
+        return;
+      }
+      const domDraft = this.state.domDraft ?? draft;
+      const nextDraft = {
+        ...domDraft,
+        comment: options.textarea.value
       };
-      element.style.visibility = "hidden";
-    }
-    const metrics = this.getDraftAdjustmentMetrics(draft);
-    const translate = `translate(${this.toCssNumber(metrics.cssX)}px, ${this.toCssNumber(
-      metrics.cssY
-    )}px)`;
-    const scale = metrics.scaleFactor === 1 ? "" : `scale(${this.toCssNumber(metrics.scaleFactor)})`;
-    this.draftPreview.clone.style.transform = [translate, scale].filter(Boolean).join(" ");
-  }
-  restoreDraftPreview() {
-    if (!this.draftPreview) return;
-    const { element, clone, visibility } = this.draftPreview;
-    clone.remove();
-    element.style.visibility = visibility;
-    this.draftPreview = void 0;
-  }
-  positionDraftPreviewClone(clone, element, computedStyle) {
-    const rect = element.getBoundingClientRect();
-    clone.setAttribute("data-dfwr-adjust-preview", "true");
-    clone.setAttribute("aria-hidden", "true");
-    clone.style.position = "fixed";
-    clone.style.left = `${this.toCssNumber(rect.left)}px`;
-    clone.style.top = `${this.toCssNumber(rect.top)}px`;
-    clone.style.right = "auto";
-    clone.style.bottom = "auto";
-    clone.style.width = `${this.toCssNumber(rect.width)}px`;
-    clone.style.height = `${this.toCssNumber(rect.height)}px`;
-    clone.style.maxWidth = "none";
-    clone.style.maxHeight = "none";
-    clone.style.margin = "0";
-    clone.style.boxSizing = "border-box";
-    clone.style.display = this.getDraftPreviewDisplay(computedStyle.display);
-    clone.style.zIndex = "2147483646";
-    clone.style.pointerEvents = "none";
-    clone.style.transition = "none";
-    clone.style.willChange = "transform";
-    clone.style.transformOrigin = "top left";
-    clone.style.transform = "none";
-  }
-  getDraftPreviewDisplay(display) {
-    if (display === "inline" || display === "contents") return "inline-block";
-    return display || "block";
-  }
-  copyComputedStyle(element, clone, environment) {
-    const computedStyle = environment.window.getComputedStyle(element);
-    for (let index = 0; index < computedStyle.length; index += 1) {
-      const property = computedStyle.item(index);
-      clone.style.setProperty(
-        property,
-        computedStyle.getPropertyValue(property),
-        computedStyle.getPropertyPriority(property)
+      this.config.actions.setDomDraft(nextDraft);
+      void this.config.actions.captureDomDraft(
+        this.getCaptureDomDraft(nextDraft, options.isElementDraft)
       );
-    }
-  }
-  removeDuplicateIds(element) {
-    element.removeAttribute("id");
-    element.querySelectorAll("[id]").forEach((child) => {
-      child.removeAttribute("id");
     });
+    return button;
   }
-  toCssNumber(value) {
-    return Math.round(value * 1e3) / 1e3;
+  getCaptureAreaDraft(draft) {
+    return {
+      viewport: draft.viewport,
+      marker: draft.marker,
+      selection: draft.selection
+    };
+  }
+  getCaptureDomDraft(draft, isElementDraft) {
+    if (!isElementDraft) {
+      return {
+        viewport: draft.viewport,
+        marker: draft.marker,
+        selection: draft.selection
+      };
+    }
+    const marker = {
+      ...draft.marker,
+      viewport: roundPoint(
+        this.getAdjustedDraftPoint(draft.marker.viewport, draft)
+      )
+    };
+    const selection = draft.selection ? {
+      ...draft.selection,
+      viewport: toPublicSelection(
+        this.getAdjustedDraftSelection(
+          toViewportSelection(draft.selection.viewport),
+          draft
+        )
+      )
+    } : void 0;
+    return {
+      viewport: draft.viewport,
+      marker,
+      selection
+    };
   }
   createHeader() {
     const header = document.createElement("div");
@@ -4017,12 +4217,6 @@ ${adjustment}` : adjustment;
     const toolbar = document.createElement("div");
     toolbar.className = "dfwr-toolbar";
     toolbar.append(
-      this.createToolbarButton("Note", this.state.mode === "note", () => {
-        const mode = this.state.mode;
-        this.config.actions.setModeState(mode === "note" ? "idle" : "note");
-        this.config.actions.clearDrafts();
-        this.config.actions.render();
-      }),
       this.createToolbarButton("Element", this.state.mode === "element", () => {
         const mode = this.state.mode;
         this.config.actions.setModeState(
@@ -4062,30 +4256,30 @@ ${adjustment}` : adjustment;
     if (state.mode === "idle") {
       const empty = document.createElement("p");
       empty.className = "dfwr-empty";
-      empty.textContent = "Add a note or mark an area.";
+      empty.textContent = "Select an element or mark an area.";
       body.append(empty);
       return body;
     }
-    if (state.mode === "note" || state.mode === "element") {
-      body.append(this.createNoteBody());
+    if (state.mode === "element") {
+      body.append(this.createDomBody());
       return body;
     }
     body.append(this.createAreaForm());
     return body;
   }
-  createNoteBody() {
+  createDomBody() {
     const empty = document.createElement("p");
     empty.className = "dfwr-empty";
-    empty.textContent = this.state.noteDraft ? "Write the note in the page box." : this.state.mode === "element" ? "Click an element to add QA." : "Click on the page to place a note.";
+    empty.textContent = this.state.domDraft ? "Write the QA in the page box." : "Click an element to add QA.";
     return empty;
   }
-  // Builds the note draft layer: the on-page marker/highlight plus its composer
+  // Builds the DOM draft layer: the on-page marker/highlight plus its composer
   // popover. When dockComposer is set the composer renders into the side panel
   // instead of floating next to the marker (used for the docked review mode).
-  createNotePopover(draft, options = {}) {
+  createDomPopover(draft, options = {}) {
     const environment = this.config.getEnvironment();
     const group = document.createElement("div");
-    group.className = "dfwr-note-draft";
+    group.className = "dfwr-dom-draft";
     if (!environment) return { layer: group, composer: void 0 };
     const isElementDraft = this.state.mode === "element" && Boolean(draft.selection);
     const hostPoint = toHostPoint(
@@ -4103,15 +4297,15 @@ ${adjustment}` : adjustment;
       group.append(selectionHighlight);
     }
     const pin = document.createElement("button");
-    pin.className = "dfwr-note-pin";
+    pin.className = "dfwr-dom-pin";
     pin.type = "button";
-    pin.setAttribute("aria-label", "Move note point");
+    pin.setAttribute("aria-label", "Move DOM point");
     pin.style.left = `${hostPoint.x}px`;
     pin.style.top = `${hostPoint.y}px`;
     const popover = document.createElement("div");
     const position = getPopoverPosition(hostPoint, environment);
     popover.className = [
-      "dfwr-note-popover",
+      "dfwr-dom-popover",
       isElementDraft ? "is-composer" : "",
       options.dockComposer ? "is-docked-composer" : ""
     ].filter(Boolean).join(" ");
@@ -4143,13 +4337,13 @@ ${adjustment}` : adjustment;
     const meta = isElementDraft ? void 0 : document.createElement("div");
     if (meta) {
       meta.className = "dfwr-item-date";
-      meta.textContent = formatNoteDraftMeta(draft);
+      meta.textContent = formatDomDraftMeta(draft);
     }
     const titleInput = this.isTitleFieldEnabled() ? this.createDraftTitleInput(draft.title, (title) => {
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
-      this.config.actions.setNoteDraft({
-        ...noteDraft,
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
+      this.config.actions.setDomDraft({
+        ...domDraft,
         title
       });
     }) : void 0;
@@ -4159,33 +4353,55 @@ ${adjustment}` : adjustment;
     textarea.rows = 4;
     textarea.value = draft.comment ?? "";
     textarea.addEventListener("input", () => {
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
-      this.config.actions.setNoteDraft({
-        ...noteDraft,
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
+      this.config.actions.setDomDraft({
+        ...domDraft,
         comment: textarea.value
       });
+    });
+    attachDraftImagePasteQueue(textarea, {
+      getAttachments: () => this.state.domDraft?.attachments ?? draft.attachments,
+      onAttachmentsChange: (attachments) => {
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
+          comment: textarea.value,
+          attachments
+        });
+      },
+      onCommentChange: (comment) => {
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
+          comment
+        });
+      },
+      onPasteComplete: () => this.config.actions.render()
     });
     const assigneeSelect = this.createDraftAssigneeSelect(
       draft.assigneeId,
       draft.assigneeName,
       (assigneeId, assigneeName) => {
-        const noteDraft = this.state.noteDraft;
-        if (!noteDraft) return;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft;
+        if (!domDraft) return;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           assigneeId,
           assigneeName
         });
       }
     );
     const saveDraft = () => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
       const comment = fields.comment;
-      if (!comment && !this.hasDraftAdjustment(currentDraft)) return;
+      const hasAttachments = Boolean(currentDraft.attachments?.length);
+      if (!comment && !this.hasDraftAdjustment(currentDraft) && !hasAttachments) {
+        return;
+      }
       void this.config.actions.createItem({
-        kind: "note",
+        kind: "dom",
         title: fields.title,
         comment: this.withDraftAdjustmentComment(comment, currentDraft),
         assigneeId: fields.assigneeId,
@@ -4193,7 +4409,8 @@ ${adjustment}` : adjustment;
         viewport: currentDraft.viewport,
         anchor: currentDraft.anchor,
         marker: currentDraft.marker,
-        selection: currentDraft.selection
+        selection: currentDraft.selection,
+        attachments: currentDraft.attachments
       });
     };
     const adjustmentControls = isElementDraft ? this.createAdjustmentControls({
@@ -4204,15 +4421,41 @@ ${adjustment}` : adjustment;
       textarea,
       dockToggle: options.dockComposer
     }) : void 0;
-    const actions = this.createFormActions("Save note", saveDraft, {
-      leading: adjustmentControls?.actionButton ? [adjustmentControls.actionButton] : void 0
+    const leadingActions = [
+      adjustmentControls?.actionButton,
+      this.createDraftCaptureButton(draft, {
+        kind: "dom",
+        isElementDraft,
+        textarea
+      })
+    ].filter((element) => Boolean(element));
+    const actions = this.createFormActions("Save DOM QA", saveDraft, {
+      leading: leadingActions.length > 0 ? leadingActions : void 0
     });
     const error = this.createDraftError();
+    const attachmentQueue = createDraftAttachmentQueue(
+      document,
+      draft.attachments,
+      (attachmentId) => {
+        const domDraft = this.state.domDraft ?? draft;
+        const attachments = removeDraftAttachment(
+          domDraft.attachments,
+          attachmentId
+        );
+        this.config.actions.setDomDraft({
+          ...domDraft,
+          comment: textarea.value,
+          attachments: attachments.length > 0 ? attachments : void 0
+        });
+        this.config.actions.render();
+      }
+    );
     form.append(
       ...meta ? [meta] : [],
       ...adjustmentControls ? [adjustmentControls.panel] : [],
       ...titleInput ? [titleInput] : [],
       textarea,
+      ...attachmentQueue ? [attachmentQueue] : [],
       ...assigneeSelect ? [assigneeSelect] : [],
       ...error ? [error] : [],
       actions
@@ -4228,9 +4471,9 @@ ${adjustment}` : adjustment;
     }
     if (dragHandle) {
       this.attachDraftComposerDrag(popover, dragHandle, (composerPosition) => {
-        const noteDraft = this.state.noteDraft ?? draft;
-        this.config.actions.setNoteDraft({
-          ...noteDraft,
+        const domDraft = this.state.domDraft ?? draft;
+        this.config.actions.setDomDraft({
+          ...domDraft,
           composerPosition,
           comment: textarea.value
         });
@@ -4389,9 +4632,9 @@ ${adjustment}` : adjustment;
       });
     };
     const updateDraft = (updater) => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       const nextDraft = updater(currentDraft);
-      this.config.actions.setNoteDraft({
+      this.config.actions.setDomDraft({
         ...nextDraft,
         comment: textarea.value
       });
@@ -4410,7 +4653,7 @@ ${adjustment}` : adjustment;
       adjust.focus();
     });
     popover.addEventListener("keydown", (event) => {
-      const currentDraft = this.state.noteDraft ?? draft;
+      const currentDraft = this.state.domDraft ?? draft;
       if (currentDraft.adjustment?.isActive !== true) return;
       const keyDelta = this.getAdjustmentKeyDelta(event);
       if (!keyDelta) return;
@@ -4474,7 +4717,7 @@ ${adjustment}` : adjustment;
       selectionHighlight.style.width = `${rect.width}px`;
       selectionHighlight.style.height = `${rect.height}px`;
     }
-    this.syncDraftPreview(draft);
+    this.draftPreview.sync(draft);
   }
   createAreaForm() {
     const form = document.createElement("form");
@@ -4509,6 +4752,25 @@ ${adjustment}` : adjustment;
         comment: textarea.value
       });
     });
+    attachDraftImagePasteQueue(textarea, {
+      getAttachments: () => this.state.areaDraft?.attachments ?? areaDraft.attachments,
+      onAttachmentsChange: (attachments) => {
+        const draft = this.state.areaDraft ?? areaDraft;
+        this.config.actions.setAreaDraft({
+          ...draft,
+          comment: textarea.value,
+          attachments
+        });
+      },
+      onCommentChange: (comment) => {
+        const draft = this.state.areaDraft ?? areaDraft;
+        this.config.actions.setAreaDraft({
+          ...draft,
+          comment
+        });
+      },
+      onPasteComplete: () => this.config.actions.render()
+    });
     const assigneeSelect = this.createDraftAssigneeSelect(
       areaDraft.assigneeId,
       areaDraft.assigneeName,
@@ -4522,27 +4784,57 @@ ${adjustment}` : adjustment;
         });
       }
     );
-    const actions = this.createFormActions("Save area", () => {
-      const draft = this.state.areaDraft;
-      const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
-      const comment = fields.comment;
-      if (!comment || !draft) return;
-      void this.config.actions.createItem({
-        kind: "area",
-        title: fields.title,
-        comment,
-        assigneeId: fields.assigneeId,
-        assigneeName: fields.assigneeName,
-        viewport: draft.viewport,
-        anchor: draft.anchor,
-        marker: draft.marker,
-        selection: draft.selection
-      });
-    });
+    const actions = this.createFormActions(
+      "Save area",
+      () => {
+        const draft = this.state.areaDraft;
+        const fields = this.getDraftFields(titleInput, textarea, assigneeSelect);
+        const comment = fields.comment;
+        if (!comment && !draft?.attachments?.length || !draft) return;
+        void this.config.actions.createItem({
+          kind: "area",
+          title: fields.title,
+          comment,
+          assigneeId: fields.assigneeId,
+          assigneeName: fields.assigneeName,
+          viewport: draft.viewport,
+          anchor: draft.anchor,
+          marker: draft.marker,
+          selection: draft.selection,
+          attachments: draft.attachments
+        });
+      },
+      {
+        leading: [
+          this.createDraftCaptureButton(areaDraft, {
+            kind: "area",
+            textarea
+          })
+        ]
+      }
+    );
     const error = this.createDraftError();
+    const attachmentQueue = createDraftAttachmentQueue(
+      document,
+      areaDraft.attachments,
+      (attachmentId) => {
+        const draft = this.state.areaDraft ?? areaDraft;
+        const attachments = removeDraftAttachment(
+          draft.attachments,
+          attachmentId
+        );
+        this.config.actions.setAreaDraft({
+          ...draft,
+          comment: textarea.value,
+          attachments: attachments.length > 0 ? attachments : void 0
+        });
+        this.config.actions.render();
+      }
+    );
     form.append(
       ...titleInput ? [titleInput] : [],
       textarea,
+      ...attachmentQueue ? [attachmentQueue] : [],
       ...assigneeSelect ? [assigneeSelect] : [],
       ...error ? [error] : [],
       actions
@@ -4796,8 +5088,7 @@ ${adjustment}` : adjustment;
         return;
       }
       const isHighlighted = item.id === this.state.highlightedItemId;
-      const highlightMode = getReviewItemHighlightMode(item);
-      if (highlightMode !== "note" && (!this.state.highlightedItemId || isHighlighted)) {
+      if (!this.state.highlightedItemId || isHighlighted) {
         const selection = getItemHighlightSelection(item, environment);
         if (selection) {
           layer.append(
@@ -4824,8 +5115,7 @@ ${adjustment}` : adjustment;
         displayLabel,
         scope,
         point.isBound,
-        isHighlighted,
-        highlightMode === "note" ? "note" : "default"
+        isHighlighted
       );
       marker.title = `${displayLabel} / ${item.comment}
 ${formatItemMeta(item)}`;
@@ -4870,12 +5160,10 @@ ${formatItemMeta(item)}`;
     highlight.style.height = `${rect.height}px`;
     return highlight;
   }
-  createMarkerElement(itemId, hostPoint, label, scope, isBound, isHighlighted, variant = "default") {
-    const isNoteCallout = variant === "note";
+  createMarkerElement(itemId, hostPoint, label, scope, isBound, isHighlighted) {
     const marker = document.createElement("div");
     marker.className = [
       "dfwr-bound-marker",
-      isNoteCallout ? "is-note-callout" : "",
       `is-scope-${scope}`,
       isBound ? "is-bound" : "is-fallback",
       isHighlighted ? "is-highlighted" : ""
@@ -4909,19 +5197,19 @@ ${formatItemMeta(item)}`;
         popover.style.left = `${position.left}px`;
         popover.style.top = `${position.top}px`;
       }
-      const noteDraft = this.state.noteDraft;
-      if (!noteDraft) return;
+      const domDraft = this.state.domDraft;
+      if (!domDraft) return;
       const nextDraft = {
-        ...noteDraft,
+        ...domDraft,
         marker: {
-          ...noteDraft.marker,
+          ...domDraft.marker,
           viewport: roundPoint(nextPoint)
         },
         comment: textarea.value
       };
-      this.config.actions.setNoteDraft(nextDraft);
+      this.config.actions.setDomDraft(nextDraft);
       if (meta) {
-        meta.textContent = formatNoteDraftMeta(nextDraft);
+        meta.textContent = formatDomDraftMeta(nextDraft);
       }
     };
     pin.addEventListener("pointerdown", (event) => {
@@ -4949,31 +5237,15 @@ ${formatItemMeta(item)}`;
         event,
         this.config.getEnvironment()
       );
-      const currentDraft = this.state.noteDraft;
+      const currentDraft = this.state.domDraft;
       const fields = {
         title: currentDraft?.title,
         comment: textarea.value,
         assigneeId: currentDraft?.assigneeId,
         assigneeName: currentDraft?.assigneeName
       };
-      void (this.state.mode === "element" ? this.config.actions.bindElementDraftToPoint(nextPoint, fields) : this.config.actions.bindNoteDraftToPoint(nextPoint, fields));
+      void this.config.actions.bindElementDraftToPoint(nextPoint, fields);
     });
-  }
-  createNoteLayer() {
-    const layer = document.createElement("div");
-    layer.className = "dfwr-text-layer";
-    const environment = this.config.getEnvironment();
-    if (environment) {
-      placeLayerOverTarget(layer, environment);
-    }
-    layer.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      void this.config.actions.bindNoteDraftToPoint(
-        toTargetPointFromHostEvent(event, this.config.getEnvironment())
-      );
-    });
-    return layer;
   }
   createElementLayer() {
     const layer = document.createElement("div");
@@ -5172,6 +5444,7 @@ var WebReviewKitApp = class {
     this.items = [];
     this.draftError = "";
     this.isCreatingItem = false;
+    this.isCapturingViewport = false;
     this.isSelectingArea = false;
     this.handleKeyDown = (event) => {
       if (event.key === "Escape" && this.cancelMode()) {
@@ -5200,10 +5473,11 @@ var WebReviewKitApp = class {
         isOpen: this.isOpen,
         mode: this.mode,
         items: this.items,
-        noteDraft: this.noteDraft,
+        domDraft: this.domDraft,
         areaDraft: this.areaDraft,
         draftError: this.draftError,
         isCreatingItem: this.isCreatingItem,
+        isCapturingViewport: this.isCapturingViewport,
         isSelectingArea: this.isSelectingArea,
         highlightedItemId: this.highlightedItemId
       }),
@@ -5215,13 +5489,9 @@ var WebReviewKitApp = class {
         restoreItem: (item) => this.restoreItem(item),
         removeItem: (itemId) => this.adapter.remove(itemId),
         setModeState: (mode) => this.setModeState(mode),
-        clearDrafts: () => {
-          this.noteDraft = void 0;
-          this.areaDraft = void 0;
-          this.draftError = "";
-        },
-        setNoteDraft: (draft) => {
-          this.noteDraft = draft;
+        clearDrafts: () => this.clearDrafts(),
+        setDomDraft: (draft) => {
+          this.domDraft = draft;
           this.draftError = "";
         },
         setAreaDraft: (draft) => {
@@ -5232,7 +5502,8 @@ var WebReviewKitApp = class {
           this.isSelectingArea = isSelectingArea;
         },
         createItem: (input) => this.createItem(input),
-        bindNoteDraftToPoint: (point, fields) => this.bindNoteDraftToPoint(point, fields),
+        captureDomDraft: (input) => this.captureDomDraft(input),
+        captureAreaDraft: (input) => this.captureAreaDraft(input),
         bindElementDraftToPoint: (point, fields) => this.bindElementDraftToPoint(point, fields),
         createAreaDraft: (selection) => this.createAreaDraft(selection)
       }
@@ -5254,6 +5525,7 @@ var WebReviewKitApp = class {
   }
   destroy() {
     this.view.clearDraftPreview();
+    this.clearDrafts();
     document.removeEventListener("keydown", this.handleKeyDown, true);
     window.removeEventListener("scroll", this.handleViewportChange, true);
     window.removeEventListener("resize", this.handleViewportChange);
@@ -5273,8 +5545,7 @@ var WebReviewKitApp = class {
   close() {
     this.isOpen = false;
     this.setModeState("idle");
-    this.noteDraft = void 0;
-    this.areaDraft = void 0;
+    this.clearDrafts();
     this.isSelectingArea = false;
     this.render();
   }
@@ -5290,8 +5561,7 @@ var WebReviewKitApp = class {
       this.isOpen = true;
     }
     this.setModeState(this.mode === mode ? "idle" : mode);
-    this.noteDraft = void 0;
-    this.areaDraft = void 0;
+    this.clearDrafts();
     this.render();
   }
   async startElementReview(element, comment) {
@@ -5299,8 +5569,7 @@ var WebReviewKitApp = class {
       this.isOpen = true;
     }
     this.setModeState("element");
-    this.noteDraft = void 0;
-    this.areaDraft = void 0;
+    this.clearDrafts();
     this.isSelectingArea = false;
     await this.bindElementDraftToElement(element, { comment });
   }
@@ -5324,6 +5593,20 @@ var WebReviewKitApp = class {
   setHiddenItemIds(itemIds) {
     this.hiddenItemIds = itemIds ? new Set(itemIds) : void 0;
     this.updateHiddenItemsStyle();
+  }
+  clearDrafts() {
+    this.revokeDraftAttachmentPreviews(this.domDraft);
+    this.revokeDraftAttachmentPreviews(this.areaDraft);
+    this.domDraft = void 0;
+    this.areaDraft = void 0;
+    this.draftError = "";
+  }
+  revokeDraftAttachmentPreviews(draft) {
+    draft?.attachments?.forEach((attachment) => {
+      if (attachment.previewUrl) {
+        URL.revokeObjectURL(attachment.previewUrl);
+      }
+    });
   }
   clearHighlightedItem() {
     if (!this.highlightedItemId) return;
@@ -5360,18 +5643,17 @@ var WebReviewKitApp = class {
     this.options.onModeChange?.(mode);
   }
   cancelMode() {
-    if (this.mode === "idle" && !this.noteDraft && !this.areaDraft && !this.isSelectingArea) {
+    if (this.mode === "idle" && !this.domDraft && !this.areaDraft && !this.isSelectingArea) {
       return false;
     }
     this.setModeState("idle");
-    this.noteDraft = void 0;
-    this.areaDraft = void 0;
+    this.clearDrafts();
     this.isSelectingArea = false;
     this.render();
     return true;
   }
   isDraftComposerFocused() {
-    if (!this.noteDraft && !this.areaDraft) return false;
+    if (!this.domDraft && !this.areaDraft) return false;
     const composerHost = this.getEnvironment()?.composerHost;
     const activeElement = composerHost?.ownerDocument.activeElement;
     return Boolean(
@@ -5422,7 +5704,8 @@ var WebReviewKitApp = class {
           width: overlayRect.width,
           height: overlayRect.height
         },
-        composerHost
+        composerHost,
+        captureViewport: target.captureViewport
       };
     } catch {
       return void 0;
@@ -5444,32 +5727,6 @@ var WebReviewKitApp = class {
   render() {
     if (!this.shadow) return;
     this.view.render(this.shadow, this.createHiddenItemsStyleElement());
-  }
-  async bindNoteDraftToPoint(point, fields = {}) {
-    const environment = this.getEnvironment();
-    if (!environment) return;
-    const viewport = getViewportSize(environment);
-    const nextPoint = clampPoint(point, environment);
-    const draft = await this.withOverlayHidden(() => {
-      const selection = getPointSelection(nextPoint);
-      const anchor = getDomAnchor(
-        selection,
-        this.options.anchors?.attribute,
-        environment
-      );
-      const marker = {
-        viewport: roundPoint(nextPoint),
-        relative: anchor ? getRelativePoint(nextPoint, anchor, environment) : void 0
-      };
-      return {
-        viewport,
-        anchor,
-        marker,
-        ...fields
-      };
-    });
-    this.noteDraft = draft;
-    this.render();
   }
   async bindElementDraftToPoint(point, fields = {}) {
     const environment = this.getEnvironment();
@@ -5519,7 +5776,7 @@ var WebReviewKitApp = class {
         previewElement
       };
     });
-    this.noteDraft = draft;
+    this.domDraft = draft;
     this.render();
   }
   async bindElementDraftToElement(element, fields = {}) {
@@ -5560,7 +5817,7 @@ var WebReviewKitApp = class {
       };
     });
     if (!draft) return;
-    this.noteDraft = draft;
+    this.domDraft = draft;
     this.render();
   }
   async createAreaDraft(selection) {
@@ -5602,6 +5859,127 @@ var WebReviewKitApp = class {
     } finally {
       this.root.style.display = previousDisplay;
     }
+  }
+  async captureDomDraft(input) {
+    if (this.isCapturingViewport) return;
+    const environment = this.getEnvironment();
+    const draft = this.domDraft;
+    if (!draft) return;
+    if (!environment?.captureViewport) {
+      this.draftError = "Viewport capture helper is not available.";
+      this.render();
+      return;
+    }
+    const captureInput = this.createViewportCaptureInput(
+      environment,
+      input,
+      input.selection?.viewport
+    );
+    this.draftError = "";
+    this.isCapturingViewport = true;
+    this.render();
+    try {
+      const result = await environment.captureViewport(captureInput);
+      const attachment = this.createCaptureDraftAttachment(result, captureInput);
+      const currentDraft = this.domDraft ?? draft;
+      this.domDraft = {
+        ...currentDraft,
+        attachments: [...currentDraft.attachments ?? [], attachment]
+      };
+    } catch (error) {
+      this.draftError = this.getErrorMessage(
+        error,
+        "Failed to capture viewport."
+      );
+    } finally {
+      this.isCapturingViewport = false;
+      this.render();
+    }
+  }
+  async captureAreaDraft(input) {
+    if (this.isCapturingViewport) return;
+    const environment = this.getEnvironment();
+    const draft = this.areaDraft;
+    if (!draft) return;
+    if (!environment?.captureViewport) {
+      this.draftError = "Viewport capture helper is not available.";
+      this.render();
+      return;
+    }
+    const captureInput = this.createViewportCaptureInput(
+      environment,
+      input,
+      input.selection?.viewport
+    );
+    this.draftError = "";
+    this.isCapturingViewport = true;
+    this.render();
+    try {
+      const result = await environment.captureViewport(captureInput);
+      const attachment = this.createCaptureDraftAttachment(result, captureInput);
+      const currentDraft = this.areaDraft ?? draft;
+      this.areaDraft = {
+        ...currentDraft,
+        attachments: [...currentDraft.attachments ?? [], attachment]
+      };
+    } catch (error) {
+      this.draftError = this.getErrorMessage(
+        error,
+        "Failed to capture viewport."
+      );
+    } finally {
+      this.isCapturingViewport = false;
+      this.render();
+    }
+  }
+  createViewportCaptureInput(environment, draft, captureRegion) {
+    const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+    const viewport = draft.viewport ?? getViewportSize(environment);
+    const routeKey = getRouteKey(environment);
+    return {
+      routeKey,
+      pageUrl: getPageUrl(environment),
+      originalUrl: getOriginalUrl(environment),
+      viewport,
+      captureRegion,
+      devicePixelRatio: environment.window.devicePixelRatio || 1,
+      scroll: {
+        x: environment.window.scrollX,
+        y: environment.window.scrollY
+      },
+      marker: draft.marker,
+      selection: draft.selection,
+      timestamp
+    };
+  }
+  createCaptureDraftAttachment(result, input) {
+    const mime = result.mime || result.file.type || "image/png";
+    const name = result.name || `review-capture-${Date.now()}.png`;
+    return {
+      id: createId(),
+      file: result.file,
+      name,
+      mime,
+      size: result.file.size,
+      kind: "capture",
+      previewUrl: mime.startsWith("image/") ? URL.createObjectURL(result.file) : void 0,
+      metadata: {
+        ...result.metadata,
+        source: "viewport-capture",
+        target: "iframe",
+        routeKey: input.routeKey,
+        pageUrl: input.pageUrl,
+        originalUrl: input.originalUrl,
+        viewport: input.viewport,
+        scroll: input.scroll,
+        marker: input.marker,
+        selection: input.selection,
+        timestamp: input.timestamp,
+        devicePixelRatio: input.devicePixelRatio,
+        width: result.width,
+        height: result.height
+      }
+    };
   }
   async createItem(input) {
     const environment = this.getEnvironment();
@@ -5646,24 +6024,61 @@ var WebReviewKitApp = class {
     this.isCreatingItem = true;
     this.render();
     try {
-      const createdItem = await this.adapter.create(item);
+      const attachments = await this.uploadDraftAttachments(
+        input.attachments,
+        item
+      );
+      const itemWithAttachments = attachments.length > 0 ? { ...item, attachments } : item;
+      const createdItem = await this.adapter.create(itemWithAttachments);
       this.setModeState("idle");
-      this.noteDraft = void 0;
-      this.areaDraft = void 0;
+      this.clearDrafts();
       this.highlightItem(createdItem.id);
       await this.reload();
       await this.options.onCreateItem?.(createdItem);
     } catch (error) {
-      this.draftError = error instanceof Error ? error.message : "Failed to save QA.";
+      this.draftError = this.getCreateItemErrorMessage(
+        error,
+        Boolean(input.attachments?.length)
+      );
     } finally {
       this.isCreatingItem = false;
       this.render();
     }
   }
+  async uploadDraftAttachments(attachments, item) {
+    if (!attachments?.length) return [];
+    const uploadAttachment = this.adapter.uploadAttachment;
+    if (!uploadAttachment) {
+      throw new Error("Attachment upload adapter is not configured.");
+    }
+    return Promise.all(
+      attachments.map(
+        (attachment) => uploadAttachment({
+          file: attachment.file,
+          name: attachment.name,
+          mime: attachment.mime,
+          kind: attachment.kind,
+          item,
+          metadata: attachment.metadata
+        })
+      )
+    );
+  }
+  getCreateItemErrorMessage(error, wasUploadingAttachments) {
+    const message = this.getErrorMessage(error, "Failed to save QA.");
+    const reason = error && typeof error === "object" && "reason" in error && typeof error.reason === "string" ? ` (${error.reason})` : "";
+    return wasUploadingAttachments && reason ? `Attachment upload failed${reason}: ${message}` : message;
+  }
+  getErrorMessage(error, fallback) {
+    if (error instanceof Error) return error.message;
+    if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+      return error.message;
+    }
+    return fallback;
+  }
   async restoreItem(item) {
     this.setModeState("idle");
-    this.noteDraft = void 0;
-    this.areaDraft = void 0;
+    this.clearDrafts();
     if (this.options.onRestoreItem) {
       await this.options.onRestoreItem(item);
       return;

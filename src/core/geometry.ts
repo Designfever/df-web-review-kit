@@ -1,6 +1,8 @@
 import type {
   RelativeSelection,
   ReviewPoint,
+  ReviewViewportCaptureInput,
+  ReviewViewportCaptureResult,
   ViewportSize,
 } from '../types';
 
@@ -29,6 +31,9 @@ export interface ReviewEnvironment {
     height: number;
   };
   composerHost?: HTMLElement | null;
+  captureViewport?: (
+    input: ReviewViewportCaptureInput
+  ) => Promise<ReviewViewportCaptureResult>;
 }
 
 /** Returns true when two viewport rectangles overlap. */

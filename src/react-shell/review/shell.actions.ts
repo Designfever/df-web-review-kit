@@ -360,6 +360,7 @@ export const submitReviewItem = async ({
     await remoteAdapterEntry.adapter.create({
       ...item,
       reviewNumber: undefined,
+      externalLinks: undefined,
       externalIssueId: undefined,
       externalIssueUrl: undefined,
       submittedAt: undefined,

@@ -236,9 +236,9 @@ export default defineConfig({
 });
 ```
 
-Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, and `data-wrk-source-column`. Data locator also injects `__wrkDataFile` and `__wrkDataLine` props into page data section objects so the shell can expose matching `data-wrk-data-*` hints when host components forward those props to section wrappers.
+Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, and `data-wrk-source-column`. When TypeScript is available in the host toolchain, the source locator parses TSX/JSX and also adds `data-wrk-source-component` to intrinsic JSX nodes. For function component render paths, it records the parent JSX call site as `data-wrk-source-parent-*` hints so Source Tree can open the file that used the component. Data locator injects `__wrkDataFile` and `__wrkDataLine` props into page data section objects so the shell can expose matching `data-wrk-data-*` hints when host components forward those props to section wrappers.
 
-In the review shell, hold `Option` over the target iframe to show source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose which file to open. The side rail Source Tree panel lists section/source/data candidates and can scroll to a section or open its source/data file. It can also show live box metrics, text/font metadata, media URLs, and class tags for each node. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
+In the review shell, hold `Option` over the target iframe to show source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose which file to open. The side rail Source Tree panel lists section/source/data candidates and can scroll to a section or open its source/data file. When parent usage hints exist, each row shows `used in` with the parent component and call-site file/position, plus an action to open that usage source. It can also show live box metrics, text/font metadata, media URLs, and class tags for each node. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
 
 Source opening reads these optional host env values from `.env.local`:
 
@@ -268,7 +268,7 @@ mountReviewShell({
 });
 ```
 
-Set `sourceInspector.enabled` to `false` when source code opening should be unavailable. Use `sourceInspector.ignore` to hide infrastructure files from source candidates and the Source Tree. Use `sourceInspector.maxDepth` to cap Source Tree traversal depth. Set `sourceInspector.hoverOutline` to `false` to disable iframe target outlines while hovering Source Tree items. Set `sourceInspector.includePlacer` to `true` when primitive Placer nodes should appear in Source Tree. The `data-font` overlay still belongs to the target project markup and is not required for source opening.
+Set `sourceInspector.enabled` to `false` when source code opening should be unavailable. Use `sourceInspector.ignore` to hide infrastructure files from source candidates and the Source Tree. Use `sourceInspector.maxDepth` to cap Source Tree traversal depth. Set `sourceInspector.hoverOutline` to `false` to disable iframe target outlines while hovering Source Tree items. Set `sourceInspector.includePlacer` to `true` when primitive Placer nodes should appear in Source Tree or source candidate lists. The `data-font` overlay still belongs to the target project markup and is not required for source opening.
 
 Use this only in dev/review builds. Source paths are written into the browser DOM and can be persisted with QA items.
 
@@ -286,6 +286,20 @@ The sample explains the main interfaces:
 - `ReviewItemQuery`: filters used by page lists and sitemap counts.
 - `WebReviewKitAdapter`: core CRUD contract.
 - `ReviewShellAdapter`: React shell wiring for source labels, write modes, status updates, and delete actions.
+
+### External Links
+
+`ReviewItem.externalLinks` can carry multiple external issue/sheet links. Each link should include `label` and `url`, with optional `title` and `icon`.
+
+If `externalLinks` is omitted, the shell still falls back to `externalIssueUrl` and renders it as a single `Remote` action. Use `externalLinks` when a host needs separate sheet, issue, preview, or admin links for the same QA item.
+
+### Attachments and Capture
+
+`ReviewItem.attachments` stores uploaded QA attachment metadata. Use `ReviewShellAdapter.uploadAttachment` to upload pasted files or iframe captures before adding the returned `ReviewAttachment` to an item.
+
+The upload method receives a browser `File | Blob` plus optional `kind`, `name`, `mime`, `item`, and `metadata`, then returns `url`, `name`, `mime`, `size`, and optional storage metadata. If `uploadAttachment` is omitted and a draft contains attachments, submit fails with adapter feedback instead of silently dropping files.
+
+Iframe captures are emitted as WebP when the DOM renderer succeeds and fall back to SVG only when raster capture is unavailable. Capture is based on same-origin iframe DOM access; it works on `localhost` and same-origin review hosts and is not HTTPS-only.
 
 Private keys, admin credentials, canonical numbering, and permission checks should stay in your backend, not in browser code.
 
@@ -338,7 +352,7 @@ Open `http://127.0.0.1:5177/review/`.
 
 Fixture pages:
 
-- `/`: note, area, and DOM marker creation
+- `/`: area and DOM marker creation
 - `/components/`: controls and panel spacing
 - `/long-form/`: scroll and anchor restore
 
@@ -348,6 +362,7 @@ Package repo:
 
 ```bash
 pnpm typecheck
+pnpm test
 pnpm build
 pnpm typecheck:dev
 pnpm build:dev
@@ -363,6 +378,6 @@ pnpm build
 Manual smoke:
 
 1. Open `/review`.
-2. Create local note, DOM marker, and area marker.
+2. Create local DOM marker and area marker.
 3. If Supabase is enabled, submit a local item to remote.
 4. Confirm local draft removal, remote list display, status update, delete, and deep-link restore.

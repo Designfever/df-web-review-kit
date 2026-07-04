@@ -1,5 +1,6 @@
 import type {
   DomAnchor,
+  ReviewAttachmentKind,
   ReviewMarker,
   ReviewPoint,
   ReviewSelection,
@@ -18,6 +19,17 @@ interface ReviewDraftComposer {
   composerPosition?: ReviewPoint;
 }
 
+export interface ReviewDraftAttachment {
+  id: string;
+  file: File | Blob;
+  name: string;
+  mime: string;
+  size: number;
+  kind: ReviewAttachmentKind;
+  previewUrl?: string;
+  metadata?: Record<string, unknown>;
+}
+
 /** In-progress area item before it is persisted through the adapter. */
 export interface AreaDraft extends ReviewDraftComposer {
   viewport: ViewportSize;
@@ -28,10 +40,11 @@ export interface AreaDraft extends ReviewDraftComposer {
   comment?: string;
   assigneeId?: string | null;
   assigneeName?: string;
+  attachments?: ReviewDraftAttachment[];
 }
 
-/** In-progress note or DOM item before it is persisted through the adapter. */
-export interface NoteDraft extends ReviewDraftComposer {
+/** In-progress DOM item before it is persisted through the adapter. */
+export interface DomDraft extends ReviewDraftComposer {
   viewport: ViewportSize;
   anchor?: DomAnchor;
   marker: ReviewMarker;
@@ -42,4 +55,5 @@ export interface NoteDraft extends ReviewDraftComposer {
   assigneeName?: string;
   adjustment?: ReviewAdjustmentDraft;
   previewElement?: ReviewDraftPreviewElement;
+  attachments?: ReviewDraftAttachment[];
 }

@@ -7,8 +7,8 @@ import {
 } from 'react';
 import {
   Bot as BotIcon,
-  Images as ComponentTreeIcon,
-  SquareCheckBig as QaListIcon,
+  ListChecks as QaListIcon,
+  Network as ComponentTreeIcon,
   Settings as SettingsIcon,
 } from 'lucide-react';
 import { DfLogoIcon } from './df.logo';
@@ -85,7 +85,10 @@ import {
 } from './source.inspector.overlay';
 import { ReviewTargetFrame } from '../target/frame';
 import { createReviewTargetFigmaImageOverlays } from '../target/figma.image.overlay';
-import { setTargetFigmaOverlayLocked } from '../target/target';
+import {
+  setTargetFigmaOverlayLocked,
+  setTargetFigmaSourceSelectLocked,
+} from '../target/target';
 import { ReviewTopbar } from '../topbar';
 import { useReviewController } from '../hooks/use.review.controller';
 import { useReviewPresence } from '../hooks/use.review.presence';
@@ -138,6 +141,14 @@ const SOURCE_PANEL_MAX_WIDTH = 440;
 const SOURCE_PANEL_MIN_WIDTH = 240;
 const SOURCE_PANEL_MAX_HEIGHT = 260;
 const SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
+
+const isCommandModifierKeyEvent = (event: KeyboardEvent) =>
+  event.key === 'Meta' ||
+  event.code === 'MetaLeft' ||
+  event.code === 'MetaRight';
+
+const isCommandKeyDownEvent = (event: KeyboardEvent) =>
+  isCommandModifierKeyEvent(event) || event.metaKey;
 
 export const ReviewShell = ({
   projectId,
@@ -385,6 +396,60 @@ export const ReviewShell = ({
   const [mutatingItemIds, setMutatingItemIds] = useState<Set<string>>(
     () => new Set()
   );
+  const [isCommandKeyPressed, setIsCommandKeyPressed] = useState(false);
+  const effectiveHiddenOverlayItemIdList = useMemo(() => {
+    if (!isCommandKeyPressed) return hiddenOverlayItemIdList;
+
+    const itemIds = new Set(hiddenOverlayItemIdList);
+    activeItems.forEach((item) => itemIds.add(item.id));
+    return Array.from(itemIds);
+  }, [activeItems, hiddenOverlayItemIdList, isCommandKeyPressed]);
+
+  useEffect(() => {
+    const targetDocument = iframeRef.current?.contentDocument;
+    const targetWindow = iframeRef.current?.contentWindow;
+
+    const setCommandKeyPressed = (pressed: boolean) => {
+      setIsCommandKeyPressed((current) =>
+        current === pressed ? current : pressed
+      );
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isCommandKeyDownEvent(event)) setCommandKeyPressed(true);
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (isCommandModifierKeyEvent(event) || !event.metaKey) {
+        setCommandKeyPressed(false);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') setCommandKeyPressed(false);
+    };
+
+    const clearCommandKeyPressed = () => setCommandKeyPressed(false);
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keyup', handleKeyUp, true);
+    window.addEventListener('blur', clearCommandKeyPressed);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    targetDocument?.addEventListener('keydown', handleKeyDown, true);
+    targetDocument?.addEventListener('keyup', handleKeyUp, true);
+    targetWindow?.addEventListener('blur', clearCommandKeyPressed);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('keyup', handleKeyUp, true);
+      window.removeEventListener('blur', clearCommandKeyPressed);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      targetDocument?.removeEventListener('keydown', handleKeyDown, true);
+      targetDocument?.removeEventListener('keyup', handleKeyUp, true);
+      targetWindow?.removeEventListener('blur', clearCommandKeyPressed);
+      clearCommandKeyPressed();
+    };
+  }, [iframeRef, targetFrameLoadVersion, targetSrc]);
   const {
     addImage: addFigmaImage,
     deleteImage: deleteFigmaImage,
@@ -575,7 +640,7 @@ export const ReviewShell = ({
     cleanupTargetRef,
     controllerRef,
     frameScrollRef,
-    hiddenOverlayItemIdList,
+    hiddenOverlayItemIdList: effectiveHiddenOverlayItemIdList,
     hiddenOverlayItemIdListRef,
     iframeRef,
     isFigmaOverlayAvailable,
@@ -759,23 +824,6 @@ export const ReviewShell = ({
     }
     setControllerReviewMode(nextMode);
   };
-
-  useReviewShellHotkeys({
-    isFigmaSettingsOpen,
-    isInitialPromptOpen,
-    isRulerAvailable,
-    isRulerVisible,
-    isSitemapOpen,
-    mode,
-    onCancelReviewMode: cancelReviewMode,
-    onCloseFigmaSettings: closeFigmaSettings,
-    onCloseInitialPrompt: closePromptModal,
-    onCloseRuler: closeRuler,
-    onCloseSitemap: closeSitemap,
-    onSetReviewMode: setReviewMode,
-    onToggleRuler: toggleRuler,
-    onToggleTargetOverlay: toggleTargetOverlay,
-  });
 
   const copyCurrentUrl = () =>
     copyCurrentReviewUrl({
@@ -1147,6 +1195,32 @@ export const ReviewShell = ({
     sidePanel,
   ]);
 
+  useReviewShellHotkeys({
+    isRailHotkeyBlocked:
+      isFigmaSettingsOpen ||
+      isInitialPromptOpen ||
+      isInitialPromptScriptOpen ||
+      isSitemapOpen ||
+      Boolean(editingItem),
+    isFigmaSettingsOpen,
+    isInitialPromptOpen,
+    isRulerAvailable,
+    isRulerVisible,
+    isSitemapOpen,
+    mode,
+    onCancelReviewMode: cancelReviewMode,
+    onCloseFigmaSettings: closeFigmaSettings,
+    onCloseInitialPrompt: closePromptModal,
+    onCloseRuler: closeRuler,
+    onCloseSitemap: closeSitemap,
+    onSetReviewMode: setReviewMode,
+    onToggleComponentListPanel: toggleSourceTreePanel,
+    onToggleFigmaImagesPanel: toggleFigmaImagesPanel,
+    onToggleQaPanel: toggleQaPanel,
+    onToggleRuler: toggleRuler,
+    onToggleTargetOverlay: toggleTargetOverlay,
+  });
+
   const toggleSectionOutlineEntry = useCallback((entryId: string) => {
     setCollapsedSectionOutlineIds((current) => {
       const next = new Set(current);
@@ -1175,6 +1249,17 @@ export const ReviewShell = ({
         omitPosition: true,
       });
       showToast(didOpen ? 'Source opened' : 'Source root required');
+    },
+    [showToast, sourceOpenOptions]
+  );
+
+  const openSectionUsageSource = useCallback(
+    (entry: SectionOutlineEntry) => {
+      const didOpen = openSourceInEditor(
+        entry.metadata.usage?.source,
+        sourceOpenOptions
+      );
+      showToast(didOpen ? 'Usage opened' : 'Usage source not found');
     },
     [showToast, sourceOpenOptions]
   );
@@ -1362,6 +1447,7 @@ export const ReviewShell = ({
 
     const setSourceSelecting = (isSelecting: boolean) => {
       isSourceSelecting = isSelecting;
+      setTargetFigmaSourceSelectLocked(frameDocument, isSelecting);
       if (isSelecting) {
         isSourcePanelPinned = false;
         frameDocument.documentElement.setAttribute(optionAttribute, 'true');
@@ -1835,12 +1921,36 @@ export const ReviewShell = ({
       )}
 
       <div className="df-review-side-rail">
+        {isFigmaImageManagementEnabled && (
+          <button
+            aria-label={
+              isFigmaImagesPanelVisible
+                ? 'Hide Figma images'
+                : 'Show Figma images'
+            }
+            aria-pressed={isFigmaImagesPanelVisible}
+            className={`df-review-side-toggle${
+              isFigmaImagesPanelVisible ? ' is-active' : ''
+            }`}
+            data-review-tooltip="Figma Images"
+            data-review-tooltip-placement="left"
+            type="button"
+            onClick={toggleFigmaImagesPanel}
+            title="Figma Images"
+          >
+            <span aria-hidden="true">
+              <FigmaRailIcon />
+            </span>
+          </button>
+        )}
         <button
           aria-label={isQaPanelVisible ? 'Hide QA list' : 'Show QA list'}
           aria-pressed={isQaPanelVisible}
           className={`df-review-side-toggle${
             isQaPanelVisible ? ' is-active' : ''
           }`}
+          data-review-tooltip="QA"
+          data-review-tooltip-placement="left"
           type="button"
           onClick={toggleQaPanel}
           title="QA"
@@ -1854,39 +1964,21 @@ export const ReviewShell = ({
             aria-controls="df-review-section-outline"
             aria-label={
               isSourceTreePanelVisible
-                ? 'Hide source tree'
-                : 'Show source tree'
+                ? 'Hide component list'
+                : 'Show component list'
             }
             aria-pressed={isSourceTreePanelVisible}
             className={`df-review-side-toggle${
               isSourceTreePanelVisible ? ' is-active' : ''
             }`}
+            data-review-tooltip="Component List"
+            data-review-tooltip-placement="left"
             type="button"
             onClick={toggleSourceTreePanel}
-            title="Source Tree"
+            title="Component List"
           >
             <span aria-hidden="true">
               <ComponentTreeIcon />
-            </span>
-          </button>
-        )}
-        {isFigmaImageManagementEnabled && (
-          <button
-            aria-label={
-              isFigmaImagesPanelVisible
-                ? 'Hide Figma images'
-                : 'Show Figma images'
-            }
-            aria-pressed={isFigmaImagesPanelVisible}
-            className={`df-review-side-toggle${
-              isFigmaImagesPanelVisible ? ' is-active' : ''
-            }`}
-            type="button"
-            onClick={toggleFigmaImagesPanel}
-            title="Figma Images"
-          >
-            <span aria-hidden="true">
-              <FigmaRailIcon />
             </span>
           </button>
         )}
@@ -1894,6 +1986,8 @@ export const ReviewShell = ({
           <button
             aria-label="Open initial prompt"
             className="df-review-side-toggle"
+            data-review-tooltip="Initial prompt"
+            data-review-tooltip-placement="left"
             type="button"
             onClick={() => setIsInitialPromptScriptOpen(true)}
             title="Initial prompt"
@@ -1905,6 +1999,8 @@ export const ReviewShell = ({
           <button
             aria-label="Open settings"
             className="df-review-side-toggle"
+            data-review-tooltip="Settings"
+            data-review-tooltip-placement="left"
             type="button"
             onClick={openFigmaSettings}
             title="Settings"
@@ -1923,6 +2019,8 @@ export const ReviewShell = ({
           <button
             aria-label="Open about"
             className="df-review-side-toggle"
+            data-review-tooltip="About"
+            data-review-tooltip-placement="left"
             type="button"
             onClick={() => {
               setIsInitialPromptOpen(true);
@@ -2023,6 +2121,7 @@ export const ReviewShell = ({
           onScrollToSection={scrollToSection}
           onOpenData={openSectionData}
           onOpenSource={openSectionSource}
+          onOpenUsageSource={openSectionUsageSource}
           onStartDomReview={startSectionDomReview}
           onHoverElement={showSourceOutlineForElement}
           onClearHover={clearSourceOutlineHover}

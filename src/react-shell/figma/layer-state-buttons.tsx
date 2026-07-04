@@ -47,6 +47,7 @@ export const FigmaImageLayerStateButtons = ({
         className={`df-review-figma-image-state-button${
           overlayState.isVisible ? ' is-active' : ''
         }`}
+        data-review-tooltip={overlayState.isVisible ? 'Hide overlay' : 'Show overlay'}
         title={overlayState.isVisible ? 'Hide overlay' : 'Show overlay'}
         type="button"
         onClick={(event) => {
@@ -70,6 +71,7 @@ export const FigmaImageLayerStateButtons = ({
         className={`df-review-figma-image-state-button${
           overlayState.isLocked ? ' is-active' : ''
         }`}
+        data-review-tooltip={overlayState.isLocked ? 'Unlock' : 'Lock'}
         title={overlayState.isLocked ? 'Unlock' : 'Lock'}
         type="button"
         onClick={(event) => {
@@ -93,6 +95,7 @@ export const FigmaImageLayerStateButtons = ({
         className={`df-review-figma-image-state-button${
           overlayState.mode === 'invert' ? ' is-active' : ''
         }`}
+        data-review-tooltip="Invert"
         title="Invert"
         type="button"
         onClick={(event) => {

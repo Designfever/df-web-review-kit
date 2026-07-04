@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type {
   NumberedReviewItem,
+  ReviewAttachment,
   ReviewFieldsConfig,
   ReviewItem,
   ReviewItemStatus,
@@ -16,6 +17,7 @@ import type {
 import type { NormalizedReviewShellAdapter } from '../adapters';
 import { getItemTitle } from '../prompt/prompt';
 import { QaItemAssigneeActions } from './item.assignee.actions';
+import { QaItemExternalLinks } from './item.external.links';
 import { QaItemRemoteActions } from './item.remote.actions';
 import { QaItemStatusActions } from './item.status.actions';
 import {
@@ -70,6 +72,44 @@ const formatItemCardDate = (value: string) => {
     minute: '2-digit',
     month: 'short',
   }).format(date);
+};
+
+const isImageAttachment = (attachment: ReviewAttachment) =>
+  Boolean(attachment.url) &&
+  (attachment.kind === 'capture' ||
+    attachment.kind === 'image' ||
+    attachment.mime.startsWith('image/'));
+
+const QaItemAttachments = ({
+  attachments,
+}: {
+  attachments: ReviewAttachment[];
+}) => {
+  const imageAttachments = attachments.filter(isImageAttachment);
+
+  if (imageAttachments.length === 0) return null;
+
+  return (
+    <div className="df-review-item-attachments">
+      {imageAttachments.map((attachment, index) => (
+        <a
+          key={attachment.id ?? `${attachment.url}-${index}`}
+          className="df-review-item-attachment"
+          href={attachment.url}
+          rel="noreferrer"
+          target="_blank"
+          title={attachment.name}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <img
+            alt={attachment.name}
+            loading="lazy"
+            src={attachment.url}
+          />
+        </a>
+      ))}
+    </div>
+  );
 };
 
 export const QaItemCard = ({
@@ -161,6 +201,9 @@ export const QaItemCard = ({
               className={`df-review-item-id${
                 isLabelCopied ? ' is-copied' : ''
               }`}
+              data-review-tooltip={
+                isLabelCopied ? 'Copied QA number' : 'Copy QA number'
+              }
               title={isLabelCopied ? 'Copied QA number' : 'Copy QA number'}
               type="button"
               onClick={(event) => {
@@ -191,6 +234,10 @@ export const QaItemCard = ({
           >
             {itemComment}
           </p>
+          {item.attachments && (
+            <QaItemAttachments attachments={item.attachments} />
+          )}
+          {!isRemoteSource && <QaItemExternalLinks item={item} />}
           <small className="df-review-item-meta">{itemMeta}</small>
           {isMutating && (
             <small className="df-review-item-saving" aria-live="polite">
@@ -211,6 +258,9 @@ export const QaItemCard = ({
             className={`df-review-item-visibility${
               isOverlayVisible ? ' is-visible' : ' is-hidden'
             }`}
+            data-review-tooltip={
+              isOverlayVisible ? 'Hide QA overlay' : 'Show QA overlay'
+            }
             type="button"
             onClick={() => onToggleItemOverlayVisibility(item.id)}
           >
@@ -225,6 +275,7 @@ export const QaItemCard = ({
             className={`df-review-item-link-copy${
               isLinkCopied ? ' is-copied' : ''
             }`}
+            data-review-tooltip={isLinkCopied ? 'Copied QA link' : 'Copy QA link'}
             title={isLinkCopied ? 'Copied QA link' : 'Copy QA link'}
             type="button"
             onClick={() => onCopyItemLink(numberedItem)}
@@ -235,6 +286,7 @@ export const QaItemCard = ({
             <button
               aria-label="Edit QA"
               className="df-review-item-edit"
+              data-review-tooltip="Edit QA"
               title="Edit QA"
               type="button"
               onClick={() => onEditItem(item)}
@@ -246,6 +298,7 @@ export const QaItemCard = ({
             <button
               aria-label="Delete QA"
               className="df-review-item-delete"
+              data-review-tooltip="Delete QA"
               type="button"
               onClick={() => void onRemoveItem(item)}
             >
@@ -281,6 +334,9 @@ export const QaItemCard = ({
             className={`df-review-item-action-button df-review-item-prompt-copy${
               isPromptCopied ? ' is-copied' : ''
             }`}
+            data-review-tooltip={
+              isPromptCopied ? 'Copied QA prompt' : 'Copy QA prompt'
+            }
             title={isPromptCopied ? 'Copied QA prompt' : 'Copy QA prompt'}
             type="button"
             onClick={() => onCopyItemPrompt(numberedItem)}

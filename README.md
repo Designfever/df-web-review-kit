@@ -2,7 +2,7 @@
 
 Designfever web page review overlay toolkit.
 
-`@designfever/web-review-kit` adds a `/review` shell to a host project. The shell opens real project pages in an iframe, creates QA notes/area/DOM markers, restores deep links, and lets each project choose its own storage adapter.
+`@designfever/web-review-kit` adds a `/review` shell to a host project. The shell opens real project pages in an iframe, creates DOM/area QA markers, restores deep links, and lets each project choose its own storage adapter.
 
 ## Package Role
 
@@ -23,12 +23,13 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Installation](docs/installation.md): install the package and mount `/review`.
 - [.env.sample](.env.sample): copyable host project env template for local, Supabase, and source opening.
 - [Adapter boundaries](docs/adapters.md): QA adapter vs Figma image store responsibilities.
+- [Testing](docs/testing.md): Vitest adapter contract tests and local verification commands.
 - [Custom adapter sample](docs/adaptor.sample.ts): starting point for host-owned remote adapters.
 - [DB setup](docs/db-setup.md): optional Supabase `review_items` setup, RLS, presence notes, and validation.
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, and extension boundaries.
 - [Figma overlay](docs/figma-overlay.md): how the shell toggles a host Figma overlay.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.7.3](docs/release-notes-0.7.3.md): latest endpoint Figma image store changes.
+- [Release notes 0.8.0](docs/release-notes-0.8.0.md): latest QA attachment, adapter contract, capture, and source inspector changes.
 
 ## Quick Start
 
@@ -156,7 +157,7 @@ export default defineConfig({
 });
 ```
 
-When source hints are available, hold `Option` over the review target to inspect source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose a file to open. The side rail can also open a Source Tree panel with section/source/data links, live box metrics, text/font/media metadata, and class tags. DOM QA cards show a source action when the saved item has source hints. Source Tree filter/options, QA panel mode, and QA status filter are stored in browser localStorage. Keep these plugins disabled for production builds because they write source paths into the DOM.
+When source hints are available, hold `Option` over the review target to inspect source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose a file to open. The source locator also reads TSX/JSX with the TypeScript parser when available and writes `data-wrk-source-component` for intrinsic JSX nodes, which helps the inspector prefer real component candidates over repeated wrapper primitives. For function component render paths, it also records the parent JSX call site so Source Tree can show where a component was used. The side rail can open a Source Tree panel with section/source/data links, parent usage links, live box metrics, text/font/media metadata, and class tags. DOM QA cards show a source action when the saved item has source hints. Source Tree filter/options, QA panel mode, and QA status filter are stored in browser localStorage. Keep these plugins disabled for production builds because they write source paths into the DOM.
 
 In Vite/ESM hosts, source opening reads `VITE_REVIEW_SOURCE_ROOT`, `VITE_REVIEW_SOURCE_EDITOR`, and `VITE_REVIEW_SOURCE_URL_TEMPLATE` from the host env. Env values override matching `sourceRoot`, `sourceInspector.editor`, and `sourceInspector.urlTemplate` init values; init values still work as a fallback for existing projects and CommonJS consumers. Use `VITE_REVIEW_SOURCE_URL_TEMPLATE` only with `VITE_REVIEW_SOURCE_EDITOR=custom`; the template supports `{path}`, `{encodedPath}`, `{line}`, and `{column}`.
 
@@ -187,6 +188,7 @@ Useful checks:
 
 ```bash
 pnpm typecheck
+pnpm test
 pnpm build
 pnpm typecheck:dev
 pnpm build:dev

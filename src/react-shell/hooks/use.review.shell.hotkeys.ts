@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
+import { getHotkeyActionKey, isHotkey } from '../../core/hotkey';
 import type { ReviewMode } from '../../types';
 import { isEditableEventTarget } from '../target/target';
 import type { TargetOverlayKey } from '../types';
 
 interface UseReviewShellHotkeysOptions {
+  isRailHotkeyBlocked: boolean;
   isFigmaSettingsOpen: boolean;
   isInitialPromptOpen: boolean;
   isRulerAvailable: boolean;
@@ -16,11 +18,15 @@ interface UseReviewShellHotkeysOptions {
   onCloseRuler: () => boolean;
   onCloseSitemap: () => void;
   onSetReviewMode: (mode: ReviewMode) => void;
+  onToggleComponentListPanel: () => void;
+  onToggleFigmaImagesPanel: () => void;
+  onToggleQaPanel: () => void;
   onToggleRuler: () => void;
   onToggleTargetOverlay: (overlay: TargetOverlayKey) => void;
 }
 
 export const useReviewShellHotkeys = ({
+  isRailHotkeyBlocked,
   isFigmaSettingsOpen,
   isInitialPromptOpen,
   isRulerAvailable,
@@ -33,6 +39,9 @@ export const useReviewShellHotkeys = ({
   onCloseRuler,
   onCloseSitemap,
   onSetReviewMode,
+  onToggleComponentListPanel,
+  onToggleFigmaImagesPanel,
+  onToggleQaPanel,
   onToggleRuler,
   onToggleTargetOverlay,
 }: UseReviewShellHotkeysOptions) => {
@@ -107,11 +116,11 @@ export const useReviewShellHotkeys = ({
         },
         g: () => onToggleTargetOverlay('grid'),
         f: () => onToggleTargetOverlay('figma'),
-        n: () => onSetReviewMode('note'),
         e: () => onSetReviewMode('element'),
         a: () => onSetReviewMode('area'),
       };
-      const action = actions[event.key.toLowerCase()];
+      const actionKey = getHotkeyActionKey(event, Object.keys(actions));
+      const action = actionKey ? actions[actionKey] : undefined;
       if (!action) return;
 
       event.preventDefault();
@@ -125,5 +134,31 @@ export const useReviewShellHotkeys = ({
     onSetReviewMode,
     onToggleRuler,
     onToggleTargetOverlay,
+  ]);
+
+  useEffect(() => {
+    const handleRailHotkey = (event: KeyboardEvent) => {
+      if (isRailHotkeyBlocked || isEditableEventTarget(event)) return;
+
+      const actions = [
+        { hotkey: 'Shift+1', run: onToggleFigmaImagesPanel },
+        { hotkey: 'Shift+2', run: onToggleQaPanel },
+        { hotkey: 'Shift+3', run: onToggleComponentListPanel },
+      ];
+      const action = actions.find(({ hotkey }) => isHotkey(event, hotkey));
+      if (!action) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      action.run();
+    };
+
+    window.addEventListener('keydown', handleRailHotkey);
+    return () => window.removeEventListener('keydown', handleRailHotkey);
+  }, [
+    isRailHotkeyBlocked,
+    onToggleComponentListPanel,
+    onToggleFigmaImagesPanel,
+    onToggleQaPanel,
   ]);
 };

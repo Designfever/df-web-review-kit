@@ -1,8 +1,8 @@
-type ReviewItemKind = 'note' | 'area';
+type ReviewItemKind = 'dom' | 'area';
 type ReviewItemScope = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'dom';
 type ReviewWorkflowStatus = 'todo' | 'doing' | 'review' | 'hold' | 'done';
 type ReviewItemStatus = 'open' | 'resolved' | ReviewWorkflowStatus;
-type ReviewMode = 'idle' | 'note' | 'element' | 'area';
+type ReviewMode = 'idle' | 'element' | 'area';
 type ReviewSource = 'local' | 'supabase' | (string & {});
 type ReviewSubmitStatus = 'idle' | 'submitting' | 'submitted' | 'failed';
 type ReviewViewportScope = Exclude<ReviewItemScope, 'dom'>;
@@ -44,6 +44,61 @@ interface ReviewAssigneeOption {
     value: string;
     label: string;
 }
+type ReviewExternalLinkIcon = 'external' | 'github' | 'issue' | 'jira' | 'sheet' | (string & {});
+interface ReviewExternalLink {
+    label: string;
+    url: string;
+    title?: string;
+    icon?: ReviewExternalLinkIcon;
+}
+type ReviewAttachmentKind = 'file' | 'image' | 'capture' | (string & {});
+interface ReviewAttachment {
+    id?: string;
+    url: string;
+    name: string;
+    mime: string;
+    size: number;
+    kind?: ReviewAttachmentKind;
+    width?: number;
+    height?: number;
+    metadata?: Record<string, unknown>;
+    createdAt?: string;
+}
+interface ReviewAttachmentUploadInput {
+    file: File | Blob;
+    name?: string;
+    mime?: string;
+    kind?: ReviewAttachmentKind;
+    item?: ReviewItem;
+    metadata?: Record<string, unknown>;
+}
+type ReviewAttachmentUploadErrorReason = 'quota-exceeded' | 'storage-full' | 'unsupported-type' | 'permission-denied' | 'upload-failed' | (string & {});
+interface ReviewAttachmentUploadError extends Error {
+    reason: ReviewAttachmentUploadErrorReason;
+}
+interface ReviewViewportCaptureInput {
+    routeKey: string;
+    pageUrl: string;
+    originalUrl?: string;
+    viewport: ViewportSize;
+    captureRegion?: RelativeSelection;
+    devicePixelRatio?: number;
+    scroll: {
+        x: number;
+        y: number;
+    };
+    marker?: ReviewMarker;
+    selection?: ReviewSelection;
+    timestamp: string;
+}
+interface ReviewViewportCaptureResult {
+    file: Blob;
+    name?: string;
+    mime?: string;
+    width?: number;
+    height?: number;
+    metadata?: Record<string, unknown>;
+}
 interface ReviewPoint {
     x: number;
     y: number;
@@ -81,8 +136,10 @@ interface ReviewItem {
     anchor?: DomAnchor;
     marker?: ReviewMarker;
     selection?: ReviewSelection;
+    attachments?: ReviewAttachment[];
     externalIssueId?: string;
     externalIssueUrl?: string;
+    externalLinks?: ReviewExternalLink[];
     submittedAt?: string;
     submitStatus?: ReviewSubmitStatus;
     submitError?: string;
@@ -102,6 +159,7 @@ interface WebReviewKitAdapter {
     list(query: ReviewItemQuery): Promise<ReviewItem[]>;
     create(item: ReviewItem): Promise<ReviewItem>;
     update(id: string, patch: Partial<Omit<ReviewItem, 'id' | 'createdAt'>>): Promise<ReviewItem>;
+    uploadAttachment?(input: ReviewAttachmentUploadInput): Promise<ReviewAttachment>;
     remove(id: string): Promise<void>;
 }
 interface LocalAdapterOptions {
@@ -189,6 +247,7 @@ interface WebReviewKitTarget {
     getViewportRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
     getOverlayRect?: () => Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
     getComposerHost?: () => HTMLElement | null | undefined;
+    captureViewport?: (input: ReviewViewportCaptureInput) => Promise<ReviewViewportCaptureResult>;
 }
 
-export type { DomAnchor as D, LocalAdapterOptions as L, NumberedReviewItem as N, ReviewWorkflowStatus as R, SupabaseReviewAdapterOptions as S, ViewportSize as V, WebReviewKitAdapter as W, ReviewItemStatus as a, WebReviewKitOptions as b, WebReviewKitController as c, ReviewViewportPreset as d, ReviewItem as e, ReviewItemScope as f, DomAnchorCandidate as g, DomAnchorStrategy as h, DomSourceHint as i, RelativeSelection as j, ReviewAssigneeOption as k, ReviewItemKind as l, ReviewItemQuery as m, ReviewMarker as n, ReviewMode as o, ReviewPoint as p, ReviewRulerConfig as q, ReviewSelection as r, ReviewSource as s, ReviewSubmitStatus as t, ReviewViewportScope as u, SupabaseReviewClient as v, WebReviewKitTarget as w, ReviewFieldsConfig as x };
+export type { ReviewSubmitStatus as A, ReviewViewportScope as B, SupabaseReviewClient as C, DomAnchor as D, WebReviewKitTarget as E, ReviewFieldsConfig as F, LocalAdapterOptions as L, NumberedReviewItem as N, ReviewWorkflowStatus as R, SupabaseReviewAdapterOptions as S, ViewportSize as V, WebReviewKitAdapter as W, ReviewItemStatus as a, WebReviewKitOptions as b, WebReviewKitController as c, ReviewViewportPreset as d, ReviewItem as e, ReviewItemScope as f, DomAnchorCandidate as g, DomAnchorStrategy as h, DomSourceHint as i, RelativeSelection as j, ReviewAssigneeOption as k, ReviewAttachment as l, ReviewAttachmentKind as m, ReviewAttachmentUploadError as n, ReviewAttachmentUploadErrorReason as o, ReviewAttachmentUploadInput as p, ReviewExternalLink as q, ReviewExternalLinkIcon as r, ReviewItemKind as s, ReviewItemQuery as t, ReviewMarker as u, ReviewMode as v, ReviewPoint as w, ReviewRulerConfig as x, ReviewSelection as y, ReviewSource as z };

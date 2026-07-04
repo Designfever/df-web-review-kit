@@ -371,6 +371,28 @@ export const reviewShellSectionOutlineStyle = `
     color: var(--df-review-accent);
   }
 
+  .df-review-section-outline-meta-row.is-usage code {
+    color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-usage-link {
+    display: block;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    color: var(--df-review-accent);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .df-review-section-outline-usage-link:hover,
+  .df-review-section-outline-usage-link:focus-visible {
+    color: var(--df-review-text);
+    outline: 0;
+  }
+
   .df-review-section-outline-media-link {
     display: block;
     min-width: 0;
@@ -513,11 +535,11 @@ export const reviewShellSectionOutlineStyle = `
 
   .df-review-section-outline-item.is-depth-3
     > .df-review-section-outline-children {
-    border-left-color: var(--df-review-note);
+    border-left-color: var(--df-review-warning);
   }
 
   .df-review-section-outline-item.is-depth-4 {
-    --df-review-section-outline-name-color: var(--df-review-note);
+    --df-review-section-outline-name-color: var(--df-review-warning);
   }
 
   .df-review-section-outline-item.is-depth-4

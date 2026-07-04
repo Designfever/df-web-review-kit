@@ -10,7 +10,7 @@ import {
   getReviewViewportScope,
   localAdapter,
   normalizeReviewItemStatus
-} from "./chunk-RPVLRULC.js";
+} from "./chunk-VEABMX6Q.js";
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
   DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
@@ -198,6 +198,8 @@ function rowToReviewItem(row, options) {
   const routeKey = row.route_key || item.routeKey || item.normalizedPath || "/";
   const viewport = item.viewport ?? { width: 390, height: 720 };
   const now = (/* @__PURE__ */ new Date()).toISOString();
+  const kind = normalizeReviewItemKind(item);
+  if (!kind) return null;
   return {
     ...item,
     id: row.id,
@@ -206,7 +208,7 @@ function rowToReviewItem(row, options) {
     routeKey,
     pageUrl: item.pageUrl || toAbsoluteReviewUrl(routeKey),
     normalizedPath: item.normalizedPath || routeKey,
-    kind: item.kind === "area" ? "area" : "note",
+    kind,
     comment: item.comment || "",
     status,
     viewport,
@@ -222,6 +224,10 @@ function rowToReviewItem(row, options) {
     createdAt: item.createdAt ?? row.created_at ?? now,
     updatedAt: row.updated_at ?? item.updatedAt ?? now
   };
+}
+function normalizeReviewItemKind(item) {
+  if (item.kind === "area" || item.kind === "dom") return item.kind;
+  return null;
 }
 async function unwrapResponse(request, label) {
   const { data, error } = await request;

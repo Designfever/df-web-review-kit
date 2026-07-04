@@ -1,6 +1,5 @@
 import {
   Copy as CopyIcon,
-  ExternalLink as ExternalLinkIcon,
   Upload as UploadIcon,
 } from 'lucide-react';
 import type { NumberedReviewItem, ReviewItem } from '../../types';
@@ -30,8 +29,9 @@ export const QaItemRemoteActions = ({
   onSubmitItem,
 }: QaItemRemoteActionsProps) => {
   const canSubmitToRemote = !isRemoteSource && Boolean(remoteAdapterEntry);
-  const canOpenRemoteIssue = !isRemoteSource && Boolean(item.externalIssueUrl);
-  const hasRemoteActions = canSubmitToRemote || canOpenRemoteIssue;
+  const canCopyRemoteIssuePath =
+    !isRemoteSource && Boolean(item.externalIssueUrl);
+  const hasRemoteActions = canSubmitToRemote || canCopyRemoteIssuePath;
 
   if (!hasRemoteActions) return null;
 
@@ -58,38 +58,26 @@ export const QaItemRemoteActions = ({
           </span>
         </button>
       )}
-      {canOpenRemoteIssue && (
-        <>
-          <button
-            aria-label={
-              isRemoteIssueCopied
-                ? 'Copied remote QA path'
-                : 'Copy remote QA path'
-            }
-            className={`df-review-item-action-button df-review-item-remote-copy${
-              isRemoteIssueCopied ? ' is-copied' : ''
-            }`}
-            title={
-              isRemoteIssueCopied
-                ? 'Copied remote QA path'
-                : 'Copy remote QA path'
-            }
-            type="button"
-            onClick={() => void onCopyRemoteIssuePath(item)}
-          >
-            <CopyIcon aria-hidden="true" />
-          </button>
-          <a
-            aria-label="Open remote issue"
-            className="df-review-item-action-button"
-            href={item.externalIssueUrl}
-            rel="noreferrer"
-            target="_blank"
-            title="Open remote issue"
-          >
-            <ExternalLinkIcon aria-hidden="true" />
-          </a>
-        </>
+      {canCopyRemoteIssuePath && (
+        <button
+          aria-label={
+            isRemoteIssueCopied
+              ? 'Copied remote QA path'
+              : 'Copy remote QA path'
+          }
+          className={`df-review-item-action-button df-review-item-remote-copy${
+            isRemoteIssueCopied ? ' is-copied' : ''
+          }`}
+          title={
+            isRemoteIssueCopied
+              ? 'Copied remote QA path'
+              : 'Copy remote QA path'
+          }
+          type="button"
+          onClick={() => void onCopyRemoteIssuePath(item)}
+        >
+          <CopyIcon aria-hidden="true" />
+        </button>
       )}
     </div>
   );

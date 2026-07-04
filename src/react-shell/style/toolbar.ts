@@ -50,6 +50,66 @@ export const reviewShellToolbarStyle = `
     padding: 3px;
   }
 
+  [data-review-tooltip] {
+    position: relative;
+  }
+
+  [data-review-tooltip]::before {
+    position: absolute;
+    right: auto;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    z-index: 1200;
+    max-width: 220px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    padding: 5px 7px;
+    color: var(--df-review-text);
+    background: var(--df-review-panel);
+    box-shadow: var(--df-review-shadow-modal);
+    content: attr(data-review-tooltip);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: var(--df-review-font-weight-normal);
+    line-height: 1.2;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    text-overflow: ellipsis;
+    transform: translate(-50%, 2px);
+    transition: opacity 120ms ease, transform 120ms ease;
+    white-space: nowrap;
+  }
+
+  [data-review-tooltip]:hover::before,
+  [data-review-tooltip]:focus-visible::before {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  [data-review-tooltip][data-review-tooltip-placement='bottom']::before {
+    top: calc(100% + 8px);
+    bottom: auto;
+    transform: translate(-50%, -2px);
+  }
+
+  [data-review-tooltip][data-review-tooltip-placement='bottom']:hover::before,
+  [data-review-tooltip][data-review-tooltip-placement='bottom']:focus-visible::before {
+    transform: translate(-50%, 0);
+  }
+
+  [data-review-tooltip][data-review-tooltip-placement='left']::before {
+    top: 50%;
+    right: calc(100% + 8px);
+    bottom: auto;
+    left: auto;
+    transform: translate(2px, -50%);
+  }
+
+  [data-review-tooltip][data-review-tooltip-placement='left']:hover::before,
+  [data-review-tooltip][data-review-tooltip-placement='left']:focus-visible::before {
+    transform: translate(0, -50%);
+  }
+
 		  .df-review-tool-divider,
 		  .df-review-mode-divider {
 		    display: inline-flex;

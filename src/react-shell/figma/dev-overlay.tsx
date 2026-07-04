@@ -10,6 +10,7 @@ import {
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
 } from '../../figma/image.types';
+import { isHotkey } from '../../core/hotkey';
 import { normalizeTarget } from '../route';
 import type {
   ReviewShellFigmaImagesOptions,
@@ -205,11 +206,7 @@ const FigmaDevOverlayWidget = ({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
-        !event.shiftKey ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.altKey ||
-        (event.code !== 'KeyF' && event.key.toLowerCase() !== 'f') ||
+        !isHotkey(event, 'Shift+F') ||
         isEditableFigmaDevOverlayEventTarget(event)
       ) {
         return;

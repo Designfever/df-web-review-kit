@@ -1,18 +1,21 @@
 import { localAdapter } from '../adapters/local';
 import type {
   DomAnchor,
+  ReviewAttachment,
   ReviewItem,
   ReviewMarker,
   ReviewMode,
   ReviewPoint,
   ReviewSelection,
+  RelativeSelection,
+  ReviewViewportCaptureInput,
+  ReviewViewportCaptureResult,
   WebReviewKitAdapter,
   WebReviewKitController,
   WebReviewKitOptions,
 } from '../types';
 import {
   cssEscape,
-  getDomAnchor,
   getDomAnchorFromElement,
   getDomAnchorFromPoint,
   getElementViewportSelection,
@@ -42,7 +45,8 @@ import { getReviewViewportScope } from './review/scope';
 import { createSelectionCenterMarker } from './review/item';
 import type {
   AreaDraft,
-  NoteDraft,
+  DomDraft,
+  ReviewDraftAttachment,
   ReviewDraftPreviewElement,
 } from './review/draft';
 import {
@@ -59,6 +63,11 @@ const ROOT_ID = 'df-web-review-kit-root';
 
 type DraftItemFields = Partial<
   Pick<ReviewItem, 'title' | 'comment' | 'assigneeId' | 'assigneeName'>
+>;
+
+type CaptureDraftInput = Pick<
+  AreaDraft,
+  'marker' | 'selection' | 'viewport'
 >;
 
 function isEditableEventTarget(event: KeyboardEvent) {
@@ -111,10 +120,11 @@ class WebReviewKitApp {
   private isOpen = false;
   private mode: ReviewMode = 'idle';
   private items: ReviewItem[] = [];
-  private noteDraft?: NoteDraft;
+  private domDraft?: DomDraft;
   private areaDraft?: AreaDraft;
   private draftError = '';
   private isCreatingItem = false;
+  private isCapturingViewport = false;
   private isSelectingArea = false;
   private highlightedItemId?: string;
   private hiddenItemIds?: Set<string>;
@@ -129,10 +139,11 @@ class WebReviewKitApp {
         isOpen: this.isOpen,
         mode: this.mode,
         items: this.items,
-        noteDraft: this.noteDraft,
+        domDraft: this.domDraft,
         areaDraft: this.areaDraft,
         draftError: this.draftError,
         isCreatingItem: this.isCreatingItem,
+        isCapturingViewport: this.isCapturingViewport,
         isSelectingArea: this.isSelectingArea,
         highlightedItemId: this.highlightedItemId,
       }),
@@ -144,13 +155,9 @@ class WebReviewKitApp {
         restoreItem: (item) => this.restoreItem(item),
         removeItem: (itemId) => this.adapter.remove(itemId),
         setModeState: (mode) => this.setModeState(mode),
-        clearDrafts: () => {
-          this.noteDraft = undefined;
-          this.areaDraft = undefined;
-          this.draftError = '';
-        },
-        setNoteDraft: (draft) => {
-          this.noteDraft = draft;
+        clearDrafts: () => this.clearDrafts(),
+        setDomDraft: (draft) => {
+          this.domDraft = draft;
           this.draftError = '';
         },
         setAreaDraft: (draft) => {
@@ -161,8 +168,8 @@ class WebReviewKitApp {
           this.isSelectingArea = isSelectingArea;
         },
         createItem: (input) => this.createItem(input),
-        bindNoteDraftToPoint: (point, fields) =>
-          this.bindNoteDraftToPoint(point, fields),
+        captureDomDraft: (input) => this.captureDomDraft(input),
+        captureAreaDraft: (input) => this.captureAreaDraft(input),
         bindElementDraftToPoint: (point, fields) =>
           this.bindElementDraftToPoint(point, fields),
         createAreaDraft: (selection) => this.createAreaDraft(selection),
@@ -191,6 +198,7 @@ class WebReviewKitApp {
 
   destroy() {
     this.view.clearDraftPreview();
+    this.clearDrafts();
     document.removeEventListener('keydown', this.handleKeyDown, true);
     window.removeEventListener('scroll', this.handleViewportChange, true);
     window.removeEventListener('resize', this.handleViewportChange);
@@ -213,8 +221,7 @@ class WebReviewKitApp {
   close() {
     this.isOpen = false;
     this.setModeState('idle');
-    this.noteDraft = undefined;
-    this.areaDraft = undefined;
+    this.clearDrafts();
     this.isSelectingArea = false;
     this.render();
   }
@@ -234,8 +241,7 @@ class WebReviewKitApp {
     }
 
     this.setModeState(this.mode === mode ? 'idle' : mode);
-    this.noteDraft = undefined;
-    this.areaDraft = undefined;
+    this.clearDrafts();
     this.render();
   }
 
@@ -245,8 +251,7 @@ class WebReviewKitApp {
     }
 
     this.setModeState('element');
-    this.noteDraft = undefined;
-    this.areaDraft = undefined;
+    this.clearDrafts();
     this.isSelectingArea = false;
     await this.bindElementDraftToElement(element, { comment });
   }
@@ -276,6 +281,22 @@ class WebReviewKitApp {
   setHiddenItemIds(itemIds?: string[]) {
     this.hiddenItemIds = itemIds ? new Set(itemIds) : undefined;
     this.updateHiddenItemsStyle();
+  }
+
+  private clearDrafts() {
+    this.revokeDraftAttachmentPreviews(this.domDraft);
+    this.revokeDraftAttachmentPreviews(this.areaDraft);
+    this.domDraft = undefined;
+    this.areaDraft = undefined;
+    this.draftError = '';
+  }
+
+  private revokeDraftAttachmentPreviews(draft?: DomDraft | AreaDraft) {
+    draft?.attachments?.forEach((attachment) => {
+      if (attachment.previewUrl) {
+        URL.revokeObjectURL(attachment.previewUrl);
+      }
+    });
   }
 
   private clearHighlightedItem() {
@@ -328,7 +349,7 @@ class WebReviewKitApp {
   private cancelMode() {
     if (
       this.mode === 'idle' &&
-      !this.noteDraft &&
+      !this.domDraft &&
       !this.areaDraft &&
       !this.isSelectingArea
     ) {
@@ -336,8 +357,7 @@ class WebReviewKitApp {
     }
 
     this.setModeState('idle');
-    this.noteDraft = undefined;
-    this.areaDraft = undefined;
+    this.clearDrafts();
     this.isSelectingArea = false;
     this.render();
     return true;
@@ -368,7 +388,7 @@ class WebReviewKitApp {
   };
 
   private isDraftComposerFocused() {
-    if (!this.noteDraft && !this.areaDraft) return false;
+    if (!this.domDraft && !this.areaDraft) return false;
     const composerHost = this.getEnvironment()?.composerHost;
     const activeElement = composerHost?.ownerDocument.activeElement;
     return Boolean(
@@ -429,6 +449,7 @@ class WebReviewKitApp {
           height: overlayRect.height,
         },
         composerHost,
+        captureViewport: target.captureViewport,
       };
     } catch {
       return undefined;
@@ -454,42 +475,6 @@ class WebReviewKitApp {
     if (!this.shadow) return;
 
     this.view.render(this.shadow, this.createHiddenItemsStyleElement());
-  }
-
-  private async bindNoteDraftToPoint(
-    point: ReviewPoint,
-    fields: DraftItemFields = {}
-  ) {
-    const environment = this.getEnvironment();
-    if (!environment) return;
-
-    const viewport = getViewportSize(environment);
-    const nextPoint = clampPoint(point, environment);
-
-    const draft = await this.withOverlayHidden(() => {
-      const selection = getPointSelection(nextPoint);
-      const anchor = getDomAnchor(
-        selection,
-        this.options.anchors?.attribute,
-        environment
-      );
-      const marker: ReviewMarker = {
-        viewport: roundPoint(nextPoint),
-        relative: anchor
-          ? getRelativePoint(nextPoint, anchor, environment)
-          : undefined,
-      };
-
-      return {
-        viewport,
-        anchor,
-        marker,
-        ...fields,
-      };
-    });
-
-    this.noteDraft = draft;
-    this.render();
   }
 
   private async bindElementDraftToPoint(
@@ -562,7 +547,7 @@ class WebReviewKitApp {
       };
     });
 
-    this.noteDraft = draft;
+    this.domDraft = draft;
     this.render();
   }
 
@@ -618,7 +603,7 @@ class WebReviewKitApp {
 
     if (!draft) return;
 
-    this.noteDraft = draft;
+    this.domDraft = draft;
     this.render();
   }
 
@@ -670,6 +655,147 @@ class WebReviewKitApp {
     }
   }
 
+  private async captureDomDraft(input: CaptureDraftInput) {
+    if (this.isCapturingViewport) return;
+
+    const environment = this.getEnvironment();
+    const draft = this.domDraft;
+    if (!draft) return;
+    if (!environment?.captureViewport) {
+      this.draftError = 'Viewport capture helper is not available.';
+      this.render();
+      return;
+    }
+
+    const captureInput = this.createViewportCaptureInput(
+      environment,
+      input,
+      input.selection?.viewport
+    );
+    this.draftError = '';
+    this.isCapturingViewport = true;
+    this.render();
+
+    try {
+      const result = await environment.captureViewport(captureInput);
+      const attachment = this.createCaptureDraftAttachment(result, captureInput);
+      const currentDraft = this.domDraft ?? draft;
+      this.domDraft = {
+        ...currentDraft,
+        attachments: [...(currentDraft.attachments ?? []), attachment],
+      };
+    } catch (error) {
+      this.draftError = this.getErrorMessage(
+        error,
+        'Failed to capture viewport.'
+      );
+    } finally {
+      this.isCapturingViewport = false;
+      this.render();
+    }
+  }
+
+  private async captureAreaDraft(input: CaptureDraftInput) {
+    if (this.isCapturingViewport) return;
+
+    const environment = this.getEnvironment();
+    const draft = this.areaDraft;
+    if (!draft) return;
+    if (!environment?.captureViewport) {
+      this.draftError = 'Viewport capture helper is not available.';
+      this.render();
+      return;
+    }
+
+    const captureInput = this.createViewportCaptureInput(
+      environment,
+      input,
+      input.selection?.viewport
+    );
+    this.draftError = '';
+    this.isCapturingViewport = true;
+    this.render();
+
+    try {
+      const result = await environment.captureViewport(captureInput);
+      const attachment = this.createCaptureDraftAttachment(result, captureInput);
+      const currentDraft = this.areaDraft ?? draft;
+      this.areaDraft = {
+        ...currentDraft,
+        attachments: [...(currentDraft.attachments ?? []), attachment],
+      };
+    } catch (error) {
+      this.draftError = this.getErrorMessage(
+        error,
+        'Failed to capture viewport.'
+      );
+    } finally {
+      this.isCapturingViewport = false;
+      this.render();
+    }
+  }
+
+  private createViewportCaptureInput(
+    environment: ReviewEnvironment,
+    draft: CaptureDraftInput,
+    captureRegion?: RelativeSelection
+  ): ReviewViewportCaptureInput {
+    const timestamp = new Date().toISOString();
+    const viewport = draft.viewport ?? getViewportSize(environment);
+    const routeKey = getRouteKey(environment);
+
+    return {
+      routeKey,
+      pageUrl: getPageUrl(environment),
+      originalUrl: getOriginalUrl(environment),
+      viewport,
+      captureRegion,
+      devicePixelRatio: environment.window.devicePixelRatio || 1,
+      scroll: {
+        x: environment.window.scrollX,
+        y: environment.window.scrollY,
+      },
+      marker: draft.marker,
+      selection: draft.selection,
+      timestamp,
+    };
+  }
+
+  private createCaptureDraftAttachment(
+    result: ReviewViewportCaptureResult,
+    input: ReviewViewportCaptureInput
+  ): ReviewDraftAttachment {
+    const mime = result.mime || result.file.type || 'image/png';
+    const name = result.name || `review-capture-${Date.now()}.png`;
+    return {
+      id: createId(),
+      file: result.file,
+      name,
+      mime,
+      size: result.file.size,
+      kind: 'capture',
+      previewUrl: mime.startsWith('image/')
+        ? URL.createObjectURL(result.file)
+        : undefined,
+      metadata: {
+        ...result.metadata,
+        source: 'viewport-capture',
+        target: 'iframe',
+        routeKey: input.routeKey,
+        pageUrl: input.pageUrl,
+        originalUrl: input.originalUrl,
+        viewport: input.viewport,
+        scroll: input.scroll,
+        marker: input.marker,
+        selection: input.selection,
+        timestamp: input.timestamp,
+        devicePixelRatio: input.devicePixelRatio,
+        width: result.width,
+        height: result.height,
+      },
+    };
+  }
+
   private async createItem(input: CreateReviewItemInput) {
     const environment = this.getEnvironment();
     if (!environment || this.isCreatingItem) return;
@@ -718,26 +844,84 @@ class WebReviewKitApp {
     this.render();
 
     try {
-      const createdItem = await this.adapter.create(item);
+      const attachments = await this.uploadDraftAttachments(
+        input.attachments,
+        item
+      );
+      const itemWithAttachments =
+        attachments.length > 0 ? { ...item, attachments } : item;
+      const createdItem = await this.adapter.create(itemWithAttachments);
       this.setModeState('idle');
-      this.noteDraft = undefined;
-      this.areaDraft = undefined;
+      this.clearDrafts();
       this.highlightItem(createdItem.id);
       await this.reload();
       await this.options.onCreateItem?.(createdItem);
     } catch (error) {
-      this.draftError =
-        error instanceof Error ? error.message : 'Failed to save QA.';
+      this.draftError = this.getCreateItemErrorMessage(
+        error,
+        Boolean(input.attachments?.length)
+      );
     } finally {
       this.isCreatingItem = false;
       this.render();
     }
   }
 
+  private async uploadDraftAttachments(
+    attachments: ReviewDraftAttachment[] | undefined,
+    item: ReviewItem
+  ): Promise<ReviewAttachment[]> {
+    if (!attachments?.length) return [];
+    const uploadAttachment = this.adapter.uploadAttachment;
+    if (!uploadAttachment) {
+      throw new Error('Attachment upload adapter is not configured.');
+    }
+
+    return Promise.all(
+      attachments.map((attachment) =>
+        uploadAttachment({
+          file: attachment.file,
+          name: attachment.name,
+          mime: attachment.mime,
+          kind: attachment.kind,
+          item,
+          metadata: attachment.metadata,
+        })
+      )
+    );
+  }
+
+  private getCreateItemErrorMessage(
+    error: unknown,
+    wasUploadingAttachments: boolean
+  ) {
+    const message = this.getErrorMessage(error, 'Failed to save QA.');
+    const reason =
+      error && typeof error === 'object' && 'reason' in error &&
+      typeof error.reason === 'string'
+        ? ` (${error.reason})`
+        : '';
+    return wasUploadingAttachments && reason
+      ? `Attachment upload failed${reason}: ${message}`
+      : message;
+  }
+
+  private getErrorMessage(error: unknown, fallback: string) {
+    if (error instanceof Error) return error.message;
+    if (
+      error &&
+      typeof error === 'object' &&
+      'message' in error &&
+      typeof error.message === 'string'
+    ) {
+      return error.message;
+    }
+    return fallback;
+  }
+
   private async restoreItem(item: ReviewItem) {
     this.setModeState('idle');
-    this.noteDraft = undefined;
-    this.areaDraft = undefined;
+    this.clearDrafts();
 
     if (this.options.onRestoreItem) {
       await this.options.onRestoreItem(item);

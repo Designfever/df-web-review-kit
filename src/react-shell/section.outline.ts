@@ -4,10 +4,12 @@ import {
   getComponentNameFromSourceFile,
   getDataHintFromElement,
   getDisplaySourcePath,
+  getParentSourceHintFromElement,
   getSourceFileCompareKey,
   getSourceHintFromElement,
   hasEquivalentSourceFileKey,
   isCoreOutlineNode,
+  isPlacerSourceNode,
   matchesIgnore,
   type GetSourceCandidatesOptions,
 } from './source.hint';
@@ -45,12 +47,20 @@ type SectionOutlineMetadata = {
   fontLabel?: string;
   mediaItems?: SectionOutlineMediaItem[];
   classNames?: string[];
+  usage?: SectionOutlineUsageMetadata;
 };
 
 type SectionOutlineMediaItem = {
   type: 'image' | 'video';
   url: string;
   variant: 'desktop' | 'mobile' | 'media';
+};
+
+type SectionOutlineUsageMetadata = {
+  source: DomSourceHint;
+  label: string;
+  filePath: string;
+  positionLabel: string;
 };
 
 export type GetSectionOutlineOptions = GetSourceCandidatesOptions & {
@@ -100,9 +110,30 @@ function getSectionOutlineRoots(
     (element) => {
       const source = getSourceHintFromElement(element);
       const label = getOutlineLabel(element, source, '');
-      return !isSkippedOutlineNode(label, source?.file, options);
+      return (
+        !isSkippedOutlineNode(label, source?.file, options) &&
+        !hasSectionOutlineRootAncestor(element, root, options)
+      );
     }
   );
+}
+
+function hasSectionOutlineRootAncestor(
+  element: Element,
+  root: ParentNode,
+  options: GetSectionOutlineOptions | undefined
+) {
+  let parent = element.parentElement;
+  while (parent && parent !== root) {
+    if (parent.matches(SECTION_OUTLINE_ROOT_SELECTOR)) {
+      const source = getSourceHintFromElement(parent);
+      const label = getOutlineLabel(parent, source, '');
+      if (!isSkippedOutlineNode(label, source?.file, options)) return true;
+    }
+    parent = parent.parentElement;
+  }
+
+  return false;
 }
 
 function getSectionOutlineChildren(
@@ -206,7 +237,57 @@ function getSectionOutlineMetadata(
     fontLabel: textElement ? getFontLabel(textElement) : undefined,
     mediaItems: getPlacerMediaItems(element, label, source?.file),
     classNames: getElementClassNames(element),
+    usage: getSectionOutlineUsageMetadata(element, source),
   };
+}
+
+function getSectionOutlineUsageMetadata(
+  element: Element,
+  source: DomSourceHint | undefined
+): SectionOutlineUsageMetadata | undefined {
+  const usage = getElementParentSourceHint(element);
+  if (!usage?.file || isSameSourceLocation(source, usage)) return undefined;
+
+  return {
+    source: usage,
+    label:
+      usage.component?.trim() ||
+      getComponentNameFromSourceFile(usage.file) ||
+      'Parent',
+    filePath: getDisplaySourcePath(usage.file) ?? usage.file,
+    positionLabel: getSourcePositionLabel(usage),
+  };
+}
+
+function getElementParentSourceHint(element: Element) {
+  const direct = getParentSourceHintFromElement(element);
+  if (direct?.file) return direct;
+
+  const descendant = element.querySelector('[data-wrk-source-parent-file]');
+  return descendant ? getParentSourceHintFromElement(descendant) : undefined;
+}
+
+function isSameSourceLocation(
+  source: DomSourceHint | undefined,
+  usage: DomSourceHint
+) {
+  return (
+    getSourceFileCompareKey(source?.file) === getSourceFileCompareKey(usage.file) &&
+    normalizeSourcePosition(source?.line) === normalizeSourcePosition(usage.line) &&
+    normalizeSourcePosition(source?.column) === normalizeSourcePosition(usage.column)
+  );
+}
+
+function getSourcePositionLabel(source: DomSourceHint) {
+  const line = normalizeSourcePosition(source.line);
+  const column = normalizeSourcePosition(source.column);
+  if (!line) return '';
+  return `${line}:${column || 1}`;
+}
+
+function normalizeSourcePosition(value: string | undefined) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? String(parsed) : '';
 }
 
 function getSectionOutlineRect(element: Element): SectionOutlineRect {
@@ -389,5 +470,5 @@ function isSkippedOutlineNode(
 }
 
 function isPlacerOutlineNode(label: string, file: string | undefined) {
-  return `${label} ${file ?? ''}`.toLowerCase().includes('placer');
+  return isPlacerSourceNode(label, file);
 }

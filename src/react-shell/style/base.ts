@@ -104,8 +104,8 @@ export const reviewShellBaseStyle = `
 	    --df-review-color-danger-soft: rgba(255, 143, 97, 0.12);
 	    --df-review-color-purple: #b395ff;
 	    --df-review-color-purple-soft: rgba(179, 149, 255, 0.16);
-	    --df-review-color-note: #f3b75f;
-	    --df-review-color-note-soft: rgba(243, 183, 95, 0.14);
+	    --df-review-color-warning: #f3b75f;
+	    --df-review-color-warning-soft: rgba(243, 183, 95, 0.14);
 	    --df-review-color-area: #63d7c7;
 	    --df-review-color-area-soft: rgba(99, 215, 199, 0.14);
 	    --df-review-color-side-rail: #111722;
@@ -162,8 +162,8 @@ export const reviewShellBaseStyle = `
 	    --df-review-danger-soft: var(--df-review-color-danger-soft);
 	    --df-review-purple: var(--df-review-color-purple);
 	    --df-review-purple-soft: var(--df-review-color-purple-soft);
-	    --df-review-note: var(--df-review-color-note);
-	    --df-review-note-soft: var(--df-review-color-note-soft);
+	    --df-review-warning: var(--df-review-color-warning);
+	    --df-review-warning-soft: var(--df-review-color-warning-soft);
 	    --df-review-area: var(--df-review-color-area);
 	    --df-review-area-soft: var(--df-review-color-area-soft);
 	    --df-review-side-rail: var(--df-review-color-side-rail);
@@ -201,8 +201,8 @@ export const reviewShellBaseStyle = `
 	    --df-review-color-danger-soft: rgba(185, 68, 24, 0.1);
 	    --df-review-color-purple: #6543b8;
 	    --df-review-color-purple-soft: rgba(101, 67, 184, 0.12);
-	    --df-review-color-note: #a76617;
-	    --df-review-color-note-soft: rgba(167, 102, 23, 0.12);
+	    --df-review-color-warning: #a76617;
+	    --df-review-color-warning-soft: rgba(167, 102, 23, 0.12);
 	    --df-review-color-area: #087f73;
 	    --df-review-color-area-soft: rgba(8, 127, 115, 0.12);
 	    --df-review-color-side-rail: #edf1f6;

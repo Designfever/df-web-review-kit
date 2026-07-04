@@ -6,6 +6,7 @@ import {
   createReviewFigmaImageStoreClient,
   localAdapter,
   supabaseAdapter,
+  type ReviewItem,
   type SupabaseReviewClient,
 } from '../../src';
 import {
@@ -15,10 +16,14 @@ import {
   mountFigmaDevOverlay,
   mountReviewShell,
   type ReviewShellAdapter,
-  type ReviewShellPage,
-  type ReviewShellViewportPreset,
   type SupabasePresenceClient,
 } from '../../src/react-shell';
+import {
+  REVIEW_PATH_PREFIX,
+  pages,
+  presets,
+} from './fixtures/config';
+import { TargetApp } from './fixtures/target-app';
 import './style.css';
 
 declare global {
@@ -32,30 +37,17 @@ declare global {
 
 const REVIEW_PROJECT_ID =
   import.meta.env.VITE_REVIEW_PROJECT_ID || 'df-web-review-kit';
-const REVIEW_PATH_PREFIX = '/review';
 const REVIEW_STORAGE_KEY = `${REVIEW_PROJECT_ID}:items`;
 const REVIEW_USER_ID = import.meta.env.VITE_REVIEW_USER_ID || '';
 const REVIEW_SUPABASE_TABLE =
   import.meta.env.VITE_REVIEW_SUPABASE_TABLE || 'review_items';
+const DEV_EXTERNAL_LINKS_ITEM_ID = 'dev-review-external-links-fixture';
 const figmaImageStore = createReviewFigmaImageStoreClient();
 
 window.__figma = {
   desktopNodeId: 'p2DY6W7xu5WmDNtJK8v6zd->4:228',
   mobileNodeId: 'p2DY6W7xu5WmDNtJK8v6zd->4:491',
 };
-
-const pages: ReviewShellPage[] = [
-  { href: '/' },
-  { href: '/components/' },
-  { href: '/long-form/' },
-];
-
-const presets: ReviewShellViewportPreset[] = [
-  { label: 'MO 390', kind: 'mobile', width: 390, height: 844, designWidth: 585 },
-  { label: 'MO 620', kind: 'mobile', width: 620, height: 900, designWidth: 620 },
-  { label: 'TA 768', kind: 'tablet', width: 768, height: 1024, designWidth: 768 },
-  { label: 'PC 1440', kind: 'desktop', width: 1440, height: 900, designWidth: 1440 },
-];
 
 const local = localAdapter({ storageKey: REVIEW_STORAGE_KEY });
 const assigneeOptions = [
@@ -90,11 +82,12 @@ const adapters: ReviewShellAdapter[] = [
     fields: { title: true },
     statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
     updateStatus: ({ id, status }) => local.update(id, { status }),
-    assigneeTitle: '담당자',
+    assigneeTitle: 'Part',
     assigneeOptions,
     updateAssignee: ({ id, assigneeId, assigneeName }) =>
       local.update(id, { assigneeId, assigneeName }),
     syncSubmission: ({ id, patch }) => local.update(id, patch),
+    uploadAttachment: createDevAttachmentUploader(),
     remove: (id) => local.remove(id),
   },
   ...(remote
@@ -110,7 +103,7 @@ const adapters: ReviewShellAdapter[] = [
           fields: { title: true },
           statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
           updateStatus: ({ id, status }) => remote.update(id, { status }),
-          assigneeTitle: '담당자',
+          assigneeTitle: 'Part',
           assigneeOptions,
           updateAssignee: ({ id, assigneeId, assigneeName }) =>
             remote.update(id, { assigneeId, assigneeName }),
@@ -140,6 +133,8 @@ const initialPrompt = [
 ].join('\n');
 
 function mountDevReviewShell() {
+  seedDevExternalLinksFixtureItem();
+
   mountReviewShell({
     projectId: REVIEW_PROJECT_ID,
     pages,
@@ -156,158 +151,110 @@ function mountDevReviewShell() {
   });
 }
 
-function normalizePath(pathname: string) {
-  if (pathname === '') return '/';
-  if (pathname !== '/' && !pathname.endsWith('/')) return `${pathname}/`;
-  return pathname;
-}
+function seedDevExternalLinksFixtureItem() {
+  const stored = readStoredReviewItems();
+  if (stored.some((item) => item.id === DEV_EXTERNAL_LINKS_ITEM_ID)) return;
 
-function getActivePage(pathname: string) {
-  const normalized = normalizePath(pathname);
-  return pages.some((page) => page.href === normalized) ? normalized : '/404/';
-}
-
-function TargetApp() {
-  const activePage = getActivePage(window.location.pathname);
-
-  return (
-    <main className="dev-page" data-page={activePage}>
-      <DevNav activePage={activePage} />
-      {activePage === '/' ? <HomeFixture /> : null}
-      {activePage === '/components/' ? <ComponentsFixture /> : null}
-      {activePage === '/long-form/' ? <LongFormFixture /> : null}
-      {activePage === '/404/' ? <NotFoundFixture /> : null}
-    </main>
+  window.localStorage.setItem(
+    REVIEW_STORAGE_KEY,
+    JSON.stringify([createDevExternalLinksFixtureItem(), ...stored])
   );
 }
 
-function DevNav({ activePage }: { activePage: string }) {
-  const isReviewTarget = new URLSearchParams(window.location.search).has('__dfwr_target');
+function readStoredReviewItems(): ReviewItem[] {
+  const raw = window.localStorage.getItem(REVIEW_STORAGE_KEY);
+  if (!raw) return [];
 
-  return (
-    <header className="dev-nav" data-qa-id="dev-nav">
-      <a className="dev-brand" href="/">
-        df-web-review-kit dev
-      </a>
-      <nav aria-label="Fixture pages">
-        {pages.map((page) => (
-          <a
-            key={page.href}
-            aria-current={activePage === page.href ? 'page' : undefined}
-            href={page.href}
-          >
-            {page.href === '/' ? 'Home' : page.href.replace(/\//g, '')}
-          </a>
-        ))}
-      </nav>
-      {!isReviewTarget ? (
-        <a className="dev-review-link" href="/review/?target=/&w=390&h=844">
-          Open /review
-        </a>
-      ) : null}
-    </header>
-  );
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter(isStoredReviewItem) : [];
+  } catch {
+    return [];
+  }
 }
 
-function HomeFixture() {
-  return (
-    <>
-      <section className="dev-hero" data-qa-id="home-hero">
-        <p className="dev-eyebrow">Local fixture</p>
-        <h1>Review shell smoke target</h1>
-        <p>
-          Use this page to create note, area, and DOM marker review items without a host project.
-        </p>
-        <div className="dev-actions" data-qa-id="home-actions">
-          <a href="/components/">Inspect components</a>
-          <a href="/long-form/">Test scroll restore</a>
-        </div>
-      </section>
-      <section className="dev-grid" aria-label="Smoke targets">
-        <article className="dev-card" data-qa-id="smoke-card-alpha">
-          <span data-font="12<24 - Label/XXS/Medium<Label/XS/Medium">
-            01
-          </span>
-          <h2 data-font="34<10 - Heading/H5<Heading/H2">Anchor target</h2>
-          <p data-font="40<20 - Body/S/Regular<Body/M/Regular">
-            DOM marker mode should capture this card with a stable data-qa-id selector.
-          </p>
-        </article>
-        <article className="dev-card dev-card-accent" data-qa-id="smoke-card-beta">
-          <span data-font="12<24 - Label/XXS/Medium<Label/XS/Medium">
-            02
-          </span>
-          <h2 data-font="34<10 - Heading/H5<Heading/H2">Area target</h2>
-          <p data-font="40<20 - Body/S/Regular<Body/M/Regular">
-            Area mode should keep the relative selection across viewport presets.
-          </p>
-        </article>
-        <article className="dev-card" data-qa-id="smoke-card-gamma">
-          <span data-font="12<24 - Label/XXS/Medium<Label/XS/Medium">
-            03
-          </span>
-          <h2 data-font="34<10 - Heading/H5<Heading/H2">Prompt target</h2>
-          <p data-font="40<20 - Body/S/Regular<Body/M/Regular">
-            Item prompt should include page, viewport, marker, anchor, and comment context.
-          </p>
-        </article>
-      </section>
-    </>
-  );
+function isStoredReviewItem(value: unknown): value is ReviewItem {
+  if (!value || typeof value !== 'object') return false;
+
+  const item = value as { kind?: unknown };
+  return item.kind === 'dom' || item.kind === 'area';
 }
 
-function ComponentsFixture() {
-  return (
-    <section className="dev-section" data-qa-id="components-section">
-      <p className="dev-eyebrow">Components</p>
-      <h1>Controls and layout states</h1>
-      <div className="dev-component-row">
-        <button data-qa-id="primary-button" type="button">Primary button</button>
-        <button data-qa-id="secondary-button" type="button">Secondary button</button>
-        <label data-qa-id="input-label">
-          Input label
-          <input placeholder="Focusable field" />
-        </label>
-      </div>
-      <div className="dev-panel" data-qa-id="metrics-panel">
-        <strong>Measured panel</strong>
-        <p>Use ruler/grid overlays to check spacing against this panel.</p>
-      </div>
-    </section>
-  );
+function createDevExternalLinksFixtureItem(): ReviewItem {
+  const now = new Date().toISOString();
+
+  return {
+    id: DEV_EXTERNAL_LINKS_ITEM_ID,
+    projectId: REVIEW_PROJECT_ID,
+    routeKey: '/',
+    pageUrl: `${window.location.origin}/`,
+    normalizedPath: '/',
+    scope: 'mobile',
+    kind: 'dom',
+    title: 'externalLinks adapter example',
+    comment:
+      'dev:review adapter fixture. 외부 연동 adapter가 externalLinks 배열을 내려주면 QA 본문 아래에 버튼 row로 렌더링된다.',
+    createdBy: 'dev:review',
+    status: 'todo',
+    viewport: { width: 390, height: 844 },
+    devicePixelRatio: window.devicePixelRatio || 1,
+    scroll: { x: 0, y: 0 },
+    marker: {
+      viewport: { x: 96, y: 210 },
+      relative: { x: 96 / 390, y: 210 / 844 },
+    },
+    externalLinks: [
+      {
+        label: 'df-sheet',
+        url: 'https://example.com/df-sheet/reviews/870',
+        title: 'Open df-sheet adapter example',
+        icon: 'sheet',
+      },
+      {
+        label: 'Jira',
+        url: 'https://example.com/jira/DFWR-870',
+        title: 'Open Jira adapter example',
+        icon: 'jira',
+      },
+      {
+        label: 'GitHub',
+        url: 'https://github.com/Designfever/df-web-review-kit',
+        title: 'Open df-web-review-kit repository',
+        icon: 'github',
+      },
+    ],
+    createdAt: now,
+    updatedAt: now,
+  };
 }
 
-function LongFormFixture() {
-  return (
-    <section className="dev-section dev-long" data-qa-id="long-form-section">
-      <p className="dev-eyebrow">Scroll restore</p>
-      <h1>Long page fixture</h1>
-      {Array.from({ length: 8 }).map((_, index) => (
-        <article
-          className="dev-long-card"
-          data-qa-id={`long-card-${index + 1}`}
-          key={index}
-        >
-          <span>{String(index + 1).padStart(2, '0')}</span>
-          <h2>Scrollable review target {index + 1}</h2>
-          <p>
-            Create a DOM marker on this block, open the copied deep link, and confirm that the
-            iframe scrolls back to the selected element.
-          </p>
-        </article>
-      ))}
-    </section>
-  );
+function createDevAttachmentUploader(): NonNullable<
+  ReviewShellAdapter['uploadAttachment']
+> {
+  return async ({ file, name, mime, kind, metadata }) => {
+    const url = URL.createObjectURL(file);
+    const resolvedMime = mime || file.type || 'application/octet-stream';
+
+    return {
+      id: createDevAttachmentId(),
+      url,
+      name: name || (file instanceof File ? file.name : 'attachment'),
+      mime: resolvedMime,
+      size: file.size,
+      kind: kind || (resolvedMime.startsWith('image/') ? 'image' : 'file'),
+      metadata: {
+        ...metadata,
+        storage: 'dev-object-url',
+      },
+      createdAt: new Date().toISOString(),
+    };
+  };
 }
 
-function NotFoundFixture() {
-  return (
-    <section className="dev-section" data-qa-id="not-found-section">
-      <p className="dev-eyebrow">Missing fixture</p>
-      <h1>Fixture not found</h1>
-      <p>Pick one of the registered fixture pages from the nav.</p>
-    </section>
-  );
+function createDevAttachmentId() {
+  return `dev-attachment-${
+    crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)
+  }`;
 }
 
 if (window.location.pathname.startsWith(REVIEW_PATH_PREFIX)) {
@@ -315,7 +262,7 @@ if (window.location.pathname.startsWith(REVIEW_PATH_PREFIX)) {
 } else {
   createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
-      <TargetApp />
+      <TargetApp reviewPathPrefix={REVIEW_PATH_PREFIX} />
     </React.StrictMode>
   );
   if (!new URLSearchParams(window.location.search).has('__dfwr_target')) {

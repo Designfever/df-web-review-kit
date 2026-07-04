@@ -46,6 +46,18 @@ Expected behavior:
 
 The review shell uses those selectors only to detect whether the overlay is active.
 
+When the package-managed Figma image store is configured, the shell renders image
+overlays into the iframe instead. Those overlays use:
+
+- `#df-review-figma-image-target-root`
+- `.df-review-figma-image-target-overlay`
+
+The image overlay hit layer is interactive only when the image can be dragged.
+During element review mode or `Option` source selection, the shell temporarily
+locks both host helper layers and package image overlays with
+`pointer-events: none` so target selection is not blocked. Releasing `Option`
+restores the image overlay hit area.
+
 ## Troubleshooting
 
 If the button does nothing:
@@ -54,6 +66,9 @@ If the button does nothing:
 - Confirm the host helper listens for `KeyF`.
 - Confirm the helper renders `.helper-figma-root` or `.helper-figma-loading-backdrop`.
 - Confirm the current viewport preset is `mobile` or `wide`.
+- If `Option` source selection cannot pick an element under a Figma image
+  overlay, confirm the overlay root uses the package selectors above or the host
+  helper selectors listed in Host Requirements.
 
 If the overlay needs a private shared Figma integration, move that work to a
 backend/admin service and expose only browser-safe state to the host page.

@@ -396,89 +396,6 @@ export function createStyleElement() {
       border-style: dashed;
     }
 
-    .dfwr-bound-marker.is-note-callout,
-    .dfwr-bound-marker.is-note-callout.is-highlighted {
-      --dfwr-scope: #7cc7ff;
-      --dfwr-scope-rgb: 124, 199, 255;
-      min-width: 0;
-      width: 0;
-      height: 0;
-      padding: 0;
-      transform: none;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-      color: var(--dfwr-scope);
-      animation: none;
-      overflow: visible;
-    }
-
-    .dfwr-bound-marker.is-note-callout::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 8px;
-      height: 8px;
-      transform: translate(-50%, -50%);
-      border: 2px solid #111820;
-      border-radius: var(--df-review-radius-pill);
-      background: var(--dfwr-scope);
-      box-shadow:
-        0 0 0 3px rgba(var(--dfwr-scope-rgb), 0.22),
-        0 6px 16px rgba(0, 0, 0, 0.28);
-    }
-
-    .dfwr-bound-marker.is-note-callout.is-highlighted::before {
-      animation: dfwr-note-dot-pulse 1000ms ease-in-out infinite;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 31px;
-      height: 2px;
-      transform: rotate(-42deg);
-      transform-origin: left center;
-      border-radius: var(--df-review-radius-pill);
-      background: currentColor;
-      opacity: 1;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon::before,
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-icon::after {
-      display: none;
-    }
-
-    .dfwr-bound-marker.is-note-callout .dfwr-bound-marker-number {
-      position: absolute;
-      left: 24px;
-      top: -41px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 28px;
-      height: 20px;
-      padding: 0 7px;
-      border: 1px solid var(--dfwr-scope);
-      border-radius: 4px;
-      background: var(--dfwr-scope);
-      box-shadow:
-        0 0 0 3px rgba(var(--dfwr-scope-rgb), 0.18),
-        0 8px 18px rgba(0, 0, 0, 0.28);
-      color: #111820;
-      text-align: center;
-      line-height: 1;
-      white-space: nowrap;
-    }
-
-    .dfwr-bound-marker.is-note-callout.is-highlighted .dfwr-bound-marker-icon,
-    .dfwr-bound-marker.is-note-callout.is-highlighted .dfwr-bound-marker-number {
-      animation: dfwr-selected-blink 1000ms ease-in-out infinite;
-    }
-
     .dfwr-area-preview-layer .dfwr-bound-marker {
       border-color: #63d7c7;
       background: var(--df-review-color-panel);
@@ -549,14 +466,14 @@ export function createStyleElement() {
       line-height: 1;
     }
 
-    .dfwr-note-draft {
+    .dfwr-dom-draft {
       position: fixed;
       inset: 0;
       z-index: 4;
       pointer-events: none;
     }
 
-    .dfwr-note-pin {
+    .dfwr-dom-pin {
       appearance: none;
       position: fixed;
       z-index: 5;
@@ -574,11 +491,11 @@ export function createStyleElement() {
       pointer-events: auto;
     }
 
-    .dfwr-note-pin:active {
+    .dfwr-dom-pin:active {
       cursor: grabbing;
     }
 
-    .dfwr-note-popover {
+    .dfwr-dom-popover {
       position: fixed;
       z-index: 4;
       width: min(320px, calc(100vw - 24px));
@@ -591,14 +508,14 @@ export function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
-    .dfwr-note-popover.is-composer,
+    .dfwr-dom-popover.is-composer,
     .dfwr-area-draft.is-composer {
       max-height: min(360px, calc(100vh - 32px));
       overflow: auto;
       border-color: rgba(99, 215, 199, 0.56);
     }
 
-    .dfwr-shell.is-docked-composer .dfwr-note-popover.is-docked-composer,
+    .dfwr-shell.is-docked-composer .dfwr-dom-popover.is-docked-composer,
     .dfwr-shell.is-docked-composer .dfwr-area-draft.is-docked-composer {
       position: relative;
       left: auto;
@@ -612,7 +529,7 @@ export function createStyleElement() {
       min-height: 184px;
     }
 
-    .dfwr-note-popover.is-dragging,
+    .dfwr-dom-popover.is-dragging,
     .dfwr-area-draft.is-dragging {
       user-select: none;
     }
@@ -656,7 +573,7 @@ export function createStyleElement() {
       box-shadow: var(--df-review-shadow-popover);
     }
 
-    .dfwr-note-popover .dfwr-actions {
+    .dfwr-dom-popover .dfwr-actions {
       padding: 0;
     }
 
@@ -704,14 +621,6 @@ export function createStyleElement() {
       height: 18px;
     }
 
-    .dfwr-note-actions {
-      justify-content: flex-end;
-    }
-
-    .dfwr-note-actions .dfwr-button:first-child {
-      margin-right: auto;
-    }
-
     .dfwr-area-draft .dfwr-actions {
       padding: 0;
     }
@@ -727,6 +636,82 @@ export function createStyleElement() {
       font-size: var(--df-review-font-size-sm);
       line-height: 1.4;
       overflow-wrap: anywhere;
+    }
+
+    .dfwr-attachment-queue {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .dfwr-attachment-label {
+      color: var(--df-review-color-text-muted);
+      font-size: var(--df-review-font-size-xs);
+      line-height: 1.35;
+    }
+
+    .dfwr-attachment-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dfwr-attachment-item {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--df-review-radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .dfwr-attachment-thumb {
+      display: block;
+      width: 42px;
+      height: 42px;
+      object-fit: cover;
+      border-radius: var(--df-review-radius-xs);
+      background: var(--df-review-color-panel-strong);
+    }
+
+    .dfwr-attachment-thumb.is-file {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--df-review-color-text-muted);
+      font-size: var(--df-review-font-size-xs);
+      font-weight: var(--df-review-font-weight-emphasis);
+    }
+
+    .dfwr-attachment-name {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--df-review-color-text);
+      font-size: var(--df-review-font-size-sm);
+      line-height: 1.35;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dfwr-attachment-remove {
+      appearance: none;
+      min-height: 28px;
+      padding: 0 8px;
+      border: 1px solid var(--df-review-color-border-strong);
+      border-radius: var(--df-review-radius-sm);
+      color: var(--df-review-color-text-muted);
+      background: var(--df-review-color-control);
+      cursor: pointer;
+      font: inherit;
+      font-size: var(--df-review-font-size-xs);
+      line-height: 1;
+    }
+
+    .dfwr-attachment-remove:hover {
+      color: var(--df-review-color-text);
+      background: var(--df-review-color-control-hover);
     }
 
     .dfwr-input,
@@ -1025,18 +1010,6 @@ export function createStyleElement() {
       }
       45% {
         transform: translate(-50%, -50%) scale(1.1);
-      }
-      100% {
-        transform: translate(-50%, -50%) scale(1);
-      }
-    }
-
-    @keyframes dfwr-note-dot-pulse {
-      0% {
-        transform: translate(-50%, -50%) scale(0.88);
-      }
-      45% {
-        transform: translate(-50%, -50%) scale(1.3);
       }
       100% {
         transform: translate(-50%, -50%) scale(1);

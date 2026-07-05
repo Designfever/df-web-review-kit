@@ -30,12 +30,10 @@ export const QaPanelContainer = () => {
   const selectedItemId = useReviewShellStore((state) => state.selectedItemId);
   const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
   const isItemsLoading = useReviewShellStore((state) => state.isItemsLoading);
-  const qaFilter = useReviewShellStore((state) => state.qaFilter);
-  const qaStatusFilter = useReviewShellStore((state) => state.qaStatusFilter);
+  const qaStatusFilters = useReviewShellStore((state) => state.qaStatusFilters);
   const copiedPromptKey = useReviewShellStore(
     (state) => state.copiedPromptKey
   );
-  const setQaFilter = useReviewShellStore((state) => state.setQaFilter);
   const toggleHiddenOverlayItemId = useReviewShellStore(
     (state) => state.toggleHiddenOverlayItemId
   );
@@ -49,9 +47,8 @@ export const QaPanelContainer = () => {
     currentPresetScope,
     filteredNumberedActiveItems,
     getItemPresetScope,
-    qaFilterCounts,
     qaStatusFilterCounts,
-    setQaStatusFilter,
+    toggleQaStatusFilter,
   } = useReviewQaPanelData();
 
   const {
@@ -98,9 +95,7 @@ export const QaPanelContainer = () => {
         isRemoteSource={isRemoteSource}
         mutatingItemIds={mutatingItemIds}
         copiedPromptKey={copiedPromptKey}
-        qaFilter={qaFilter}
-        qaFilterCounts={qaFilterCounts}
-        qaStatusFilter={qaStatusFilter}
+        qaStatusFilters={qaStatusFilters}
         qaStatusFilterCounts={qaStatusFilterCounts}
         remoteAdapterEntry={remoteAdapterEntry}
         selectedItemId={selectedItemId}
@@ -118,8 +113,7 @@ export const QaPanelContainer = () => {
         onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
         onCopyRemoteIssuePath={copyRemoteIssuePath}
         onEditItem={setEditingItem}
-        onQaFilterChange={setQaFilter}
-        onQaStatusFilterChange={setQaStatusFilter}
+        onQaStatusFilterToggle={toggleQaStatusFilter}
         onRefreshReviewData={refreshReviewData}
         onRemoveItem={removeItem}
         onRestoreReviewItem={restoreReviewItem}

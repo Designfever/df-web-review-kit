@@ -1,3 +1,5 @@
+// Scoped zustand bridge for one ReviewShell instance. This context carries the
+// store object, while useReviewShellStore() controls subscription granularity.
 import {
   createContext,
   useContext,

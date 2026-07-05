@@ -64,6 +64,9 @@ export const createReviewShellConfig = ({
   const resolvedSourceInspector =
     resolvedReviewSourceOptions.sourceInspector;
   const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
+  const isSourceInspectorEnabled =
+    resolvedSourceInspector?.enabled !== false &&
+    Boolean(resolvedSourceRoot?.trim());
 
   return {
     initialPrompt,
@@ -89,8 +92,9 @@ export const createReviewShellConfig = ({
       sourceRoot: resolvedSourceRoot,
     },
     showSourceSelect: normalizedAdapters.sources.length > 1,
-    isSourceInspectorEnabled: resolvedSourceInspector?.enabled !== false,
+    isSourceInspectorEnabled,
     isSourceTreeHoverOutlineEnabled:
+      isSourceInspectorEnabled &&
       resolvedSourceInspector?.hoverOutline !== false,
   };
 };

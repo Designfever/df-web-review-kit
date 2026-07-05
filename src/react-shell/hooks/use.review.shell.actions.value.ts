@@ -1,3 +1,5 @@
+// Stable cross-feature command surface. Containers should use this only for
+// commands shared across features; local state setters should stay local.
 import { useMemo } from 'react';
 import type {
   ReviewItem,

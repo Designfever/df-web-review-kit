@@ -13,11 +13,6 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 7. [Architecture and runtime logic](architecture.md)
 8. [Figma overlay](figma-overlay.md)
 9. [Grid overlay](grid-overlay.md)
-10. [Release notes 0.8.0](release-notes-0.8.0.md)
-11. [Release notes 0.7.3](release-notes-0.7.3.md)
-12. [Release notes 0.7.2](release-notes-0.7.2.md)
-13. [Release notes 0.7.1](release-notes-0.7.1.md)
-14. [Release notes 0.7.0](release-notes-0.7.0.md)
 
 ## Document Roles
 
@@ -30,11 +25,18 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 - `architecture.md`: core/runtime, React shell, coordinate, anchor, and feature boundary notes.
 - `figma-overlay.md`: host requirements for the Figma overlay toggle.
 - `grid-overlay.md`: host requirements for the grid/helper overlay toggle.
-- `release-notes-0.8.0.md`: latest release changes, QA attachment/adapter/capture contract, source inspector updates, and validation scope.
-- `release-notes-0.7.3.md`: previous release changes, endpoint Figma image store API, and validation scope.
-- `release-notes-0.7.2.md`: previous release changes, remote Figma image store API, and validation scope.
-- `release-notes-0.7.1.md`: previous release changes, host notes, and validation scope.
-- `release-notes-0.7.0.md`: previous release changes and validation scope.
+
+## Release History
+
+- [0.8.0](release-notes-0.8.0.md): next minor release notes for QA attachments, adapter contract, capture, source inspector, and dev fixture changes.
+- [0.7.3](release-notes-0.7.3.md): endpoint Figma image store API and validation scope.
+- [0.7.2](release-notes-0.7.2.md): remote Figma image store API and validation scope.
+- [0.7.1](release-notes-0.7.1.md): fallback settings, host notes, and validation scope.
+- [0.7.0](release-notes-0.7.0.md): Figma image workflow, QA fields, remote adapter pending UI, and release candidate fixes.
+- [0.6.0](release-notes-0.6.0.md): docked QA composer, Source Tree metadata, and local UI persistence.
+- [0.5.0](release-notes-0.5.0.md): Source Tree panel, data locator, source candidate, and QA filter changes.
+- [0.4.0](release-notes-0.4.0.md): Source inspector, sitemap QA overview, DOM anchor, and presence changes.
+- [0.3.0](release-notes-0.3.0.md): Vite source locator, source action, QA edit, and ruler improvements.
 
 ## Boundary
 

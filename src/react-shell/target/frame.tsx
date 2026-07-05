@@ -14,6 +14,7 @@ import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
 import {
   useTargetFigmaImageOverlays,
 } from './figma.image.overlay';
+import { ReviewOutsideMarkers } from './outside.markers';
 
 export const ReviewTargetFrame = () => {
   const {
@@ -54,6 +55,7 @@ export const ReviewTargetFrame = () => {
                 }`}
               >
                 {showRuler && <RulerGutters />}
+                <ReviewOutsideMarkers />
                 <div
                   className="df-review-device"
                   style={{

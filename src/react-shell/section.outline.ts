@@ -34,15 +34,7 @@ export type SectionOutlineEntry = {
   children: SectionOutlineEntry[];
 };
 
-type SectionOutlineRect = {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-};
-
 type SectionOutlineMetadata = {
-  rect: SectionOutlineRect;
   textValue?: string;
   fontLabel?: string;
   mediaItems?: SectionOutlineMediaItem[];
@@ -227,7 +219,6 @@ function getSectionOutlineMetadata(
   const textElement = getPlacerTextElement(element, label, source?.file);
 
   return {
-    rect: getSectionOutlineRect(element),
     textValue: textElement
       ? truncateOutlineValue(
           normalizeOutlineValue(textElement.textContent),
@@ -288,16 +279,6 @@ function getSourcePositionLabel(source: DomSourceHint) {
 function normalizeSourcePosition(value: string | undefined) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? String(parsed) : '';
-}
-
-function getSectionOutlineRect(element: Element): SectionOutlineRect {
-  const rect = element.getBoundingClientRect();
-  return {
-    top: Math.round(rect.top),
-    left: Math.round(rect.left),
-    width: Math.round(rect.width),
-    height: Math.round(rect.height),
-  };
 }
 
 function getElementClassNames(element: Element) {

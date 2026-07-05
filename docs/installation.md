@@ -8,7 +8,7 @@ For the QA adapter and Figma image store split, see [Adapter boundaries](adapter
 ## Package Install
 
 ```bash
-pnpm add @designfever/web-review-kit react react-dom
+pnpm add @designfever/web-review-kit react react-dom zustand
 ```
 
 Supabase is optional. Install it only in host projects that use the Supabase adapter.
@@ -17,7 +17,7 @@ Supabase is optional. Install it only in host projects that use the Supabase ada
 pnpm add @supabase/supabase-js
 ```
 
-## Environment
+## Environment Reference
 
 Copy the repository [.env.sample](../.env.sample) into the host project as `.env.local`.
 

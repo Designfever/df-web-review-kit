@@ -20,6 +20,7 @@ This package does not own internal operator tools, private admin keys, or produc
 
 ## Docs
 
+- [Docs index](docs/README.md): reading order, document roles, and release history.
 - [Installation](docs/installation.md): install the package and mount `/review`.
 - [.env.sample](.env.sample): copyable host project env template for local, Supabase, and source opening.
 - [Adapter boundaries](docs/adapters.md): QA adapter vs Figma image store responsibilities.
@@ -29,12 +30,12 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, and extension boundaries.
 - [Figma overlay](docs/figma-overlay.md): how the shell toggles a host Figma overlay.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.8.0](docs/release-notes-0.8.0.md): latest QA attachment, adapter contract, capture, and source inspector changes.
+- [Release notes 0.8.0](docs/release-notes-0.8.0.md): next minor release notes for QA attachment, adapter contract, capture, and source inspector changes.
 
 ## Quick Start
 
 ```bash
-pnpm add @designfever/web-review-kit react react-dom
+pnpm add @designfever/web-review-kit react react-dom zustand
 ```
 
 Minimal Vite route:

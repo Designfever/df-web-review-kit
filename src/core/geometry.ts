@@ -24,6 +24,8 @@ export interface ReviewEnvironment {
     width: number;
     height: number;
   };
+  scaleX?: number;
+  scaleY?: number;
   overlayRect: {
     left: number;
     top: number;
@@ -212,16 +214,34 @@ function getPopoverBounds(environment?: ReviewEnvironment) {
   return environment.overlayRect;
 }
 
+function getEnvironmentScale(environment: ReviewEnvironment) {
+  const scaleX =
+    typeof environment.scaleX === 'number' &&
+    Number.isFinite(environment.scaleX) &&
+    environment.scaleX > 0
+      ? environment.scaleX
+      : 1;
+  const scaleY =
+    typeof environment.scaleY === 'number' &&
+    Number.isFinite(environment.scaleY) &&
+    environment.scaleY > 0
+      ? environment.scaleY
+      : 1;
+
+  return { scaleX, scaleY };
+}
+
 /** Converts a target-space point to the host shell coordinate space. */
 export function toHostPoint(
   point: ReviewPoint,
   environment?: ReviewEnvironment
 ) {
   if (!environment) return point;
+  const { scaleX, scaleY } = getEnvironmentScale(environment);
 
   return {
-    x: point.x + environment.viewportRect.left,
-    y: point.y + environment.viewportRect.top,
+    x: point.x * scaleX + environment.viewportRect.left,
+    y: point.y * scaleY + environment.viewportRect.top,
   };
 }
 
@@ -230,11 +250,13 @@ export function toHostSelection(
   selection: ViewportSelection,
   environment: ReviewEnvironment
 ): ViewportSelection {
+  const { scaleX, scaleY } = getEnvironmentScale(environment);
+
   return {
-    left: selection.left + environment.viewportRect.left,
-    top: selection.top + environment.viewportRect.top,
-    width: selection.width,
-    height: selection.height,
+    left: selection.left * scaleX + environment.viewportRect.left,
+    top: selection.top * scaleY + environment.viewportRect.top,
+    width: selection.width * scaleX,
+    height: selection.height * scaleY,
   };
 }
 
@@ -244,10 +266,11 @@ export function toTargetPoint(
   environment?: ReviewEnvironment
 ) {
   if (!environment) return point;
+  const { scaleX, scaleY } = getEnvironmentScale(environment);
 
   return {
-    x: point.x - environment.viewportRect.left,
-    y: point.y - environment.viewportRect.top,
+    x: (point.x - environment.viewportRect.left) / scaleX,
+    y: (point.y - environment.viewportRect.top) / scaleY,
   };
 }
 

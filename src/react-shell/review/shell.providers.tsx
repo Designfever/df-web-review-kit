@@ -1,3 +1,5 @@
+// Runtime provider stack for values that are not plain zustand state.
+// Keep persistent UI state in store slices; put cross-feature controllers here.
 import type { ReactNode } from 'react';
 import {
   ReviewFigmaImagesProvider,

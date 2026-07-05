@@ -280,6 +280,7 @@ export interface WebReviewKitOptions {
   onModeChange?: (mode: ReviewMode) => void;
   ui?: {
     panel?: boolean;
+    markers?: 'inline' | 'external';
   };
   modules?: {
     qa?: boolean;

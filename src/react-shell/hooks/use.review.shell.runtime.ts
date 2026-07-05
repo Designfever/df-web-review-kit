@@ -1,3 +1,5 @@
+// Runtime assembler for ReviewShell. It wires hooks, adapter refresh, core
+// controller commands, and provider values; rendering stays in shell.frame.
 import {
   useCallback,
   useMemo,
@@ -294,6 +296,14 @@ export const useReviewShellRuntime = ({
     toggleSidePanel,
   });
 
+  const figmaOverlayState = useReviewShellFigmaOverlay({
+    figmaImagesController,
+    isFigmaImageManagementEnabled,
+    isFigmaOverlayAvailable,
+    isTargetFigmaOverlayActive: targetOverlayState.figma,
+    onToggleTargetOverlay: toggleTargetOverlay,
+  });
+
   useReviewShellHotkeys({
     isRailHotkeyBlocked:
       isFigmaSettingsOpen ||
@@ -302,6 +312,7 @@ export const useReviewShellRuntime = ({
       isSitemapOpen ||
       isItemEditing,
     isFigmaSettingsOpen,
+    isFigmaOverlayAvailable: figmaOverlayState.isFigmaOverlayAvailable,
     isRulerAvailable,
     isRulerVisible,
     onCancelReviewMode: cancelReviewMode,
@@ -309,6 +320,7 @@ export const useReviewShellRuntime = ({
     onCloseRuler: closeRuler,
     onSetReviewMode: setReviewMode,
     onToggleComponentListPanel: toggleSourceTreePanel,
+    onToggleFigmaOverlay: figmaOverlayState.toggleFigmaOverlay,
     onToggleFigmaImagesPanel: toggleFigmaImagesPanel,
     onToggleQaPanel: toggleQaPanel,
     onToggleRuler: toggleRuler,
@@ -324,13 +336,6 @@ export const useReviewShellRuntime = ({
     refreshTargetFigmaConfig,
   });
 
-  const figmaOverlayState = useReviewShellFigmaOverlay({
-    figmaImagesController,
-    isFigmaImageManagementEnabled,
-    isFigmaOverlayAvailable,
-    isTargetFigmaOverlayActive: targetOverlayState.figma,
-    onToggleTargetOverlay: toggleTargetOverlay,
-  });
   const shellActions = useReviewShellActionsValue({
     applyTarget,
     changeReviewSource,

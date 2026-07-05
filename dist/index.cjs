@@ -1327,26 +1327,34 @@ function getPopoverBounds(environment) {
   }
   return environment.overlayRect;
 }
+function getEnvironmentScale(environment) {
+  const scaleX = typeof environment.scaleX === "number" && Number.isFinite(environment.scaleX) && environment.scaleX > 0 ? environment.scaleX : 1;
+  const scaleY = typeof environment.scaleY === "number" && Number.isFinite(environment.scaleY) && environment.scaleY > 0 ? environment.scaleY : 1;
+  return { scaleX, scaleY };
+}
 function toHostPoint(point, environment) {
   if (!environment) return point;
+  const { scaleX, scaleY } = getEnvironmentScale(environment);
   return {
-    x: point.x + environment.viewportRect.left,
-    y: point.y + environment.viewportRect.top
+    x: point.x * scaleX + environment.viewportRect.left,
+    y: point.y * scaleY + environment.viewportRect.top
   };
 }
 function toHostSelection(selection, environment) {
+  const { scaleX, scaleY } = getEnvironmentScale(environment);
   return {
-    left: selection.left + environment.viewportRect.left,
-    top: selection.top + environment.viewportRect.top,
-    width: selection.width,
-    height: selection.height
+    left: selection.left * scaleX + environment.viewportRect.left,
+    top: selection.top * scaleY + environment.viewportRect.top,
+    width: selection.width * scaleX,
+    height: selection.height * scaleY
   };
 }
 function toTargetPoint(point, environment) {
   if (!environment) return point;
+  const { scaleX, scaleY } = getEnvironmentScale(environment);
   return {
-    x: point.x - environment.viewportRect.left,
-    y: point.y - environment.viewportRect.top
+    x: (point.x - environment.viewportRect.left) / scaleX,
+    y: (point.y - environment.viewportRect.top) / scaleY
   };
 }
 function toTargetPointFromHostEvent(event, environment) {
@@ -2121,7 +2129,7 @@ function normalizeReviewNumber(value) {
 function getBoundMarkerPoint(item, environment) {
   const marker = getItemMarker(item);
   if (!marker) return void 0;
-  if (item.kind !== "area" && item.anchor && marker.relative) {
+  if (item.anchor && marker.relative) {
     const resolved = resolveAnchorElement(item.anchor, environment);
     const element = resolved?.element;
     if (element) {
@@ -2180,8 +2188,14 @@ function getItemMarker(item) {
   const selection = getItemSelection(item);
   if (!selection?.viewport) return void 0;
   return {
-    viewport: roundPoint(getSelectionCenter(selection.viewport)),
-    relative: selection.relative ? roundPoint(getSelectionCenter(selection.relative)) : void 0
+    viewport: roundPoint({
+      x: selection.viewport.x,
+      y: selection.viewport.y
+    }),
+    relative: selection.relative ? roundPoint({
+      x: selection.relative.x,
+      y: selection.relative.y
+    }) : void 0
   };
 }
 function getItemSelection(item) {
@@ -2200,17 +2214,20 @@ function getItemSelection(item) {
 function shouldShowMarkerForScope(scope, currentScope) {
   return scope === currentScope;
 }
-function createSelectionCenterMarker(selection, anchor, environment) {
-  const centerPoint = getSelectionCenter(selection);
+function createSelectionStartMarker(selection, anchor, environment) {
+  const startPoint = {
+    x: selection.left,
+    y: selection.top
+  };
   return {
-    viewport: roundPoint(centerPoint),
-    relative: anchor ? getRelativePoint(centerPoint, anchor, environment) : void 0
+    viewport: roundPoint(startPoint),
+    relative: anchor ? getRelativePoint(startPoint, anchor, environment) : void 0
   };
 }
 function getBoundSelection(item, environment) {
   const selection = getItemSelection(item);
   if (!selection?.viewport) return void 0;
-  if (item.kind !== "area" && item.anchor && selection.relative) {
+  if (item.anchor && selection.relative) {
     const resolved = resolveAnchorElement(item.anchor, environment);
     const element = resolved?.element;
     if (element) {
@@ -2803,6 +2820,36 @@ function createStyleElement() {
       --dfwr-item-color-rgb: 255, 143, 97;
     }
 
+    .dfwr-item-target-highlight.is-scope-mobile,
+    .dfwr-item-target-label.is-scope-mobile {
+      --dfwr-item-color: #7cc7ff;
+      --dfwr-item-color-rgb: 124, 199, 255;
+    }
+
+    .dfwr-item-target-highlight.is-scope-tablet,
+    .dfwr-item-target-label.is-scope-tablet {
+      --dfwr-item-color: #63d7c7;
+      --dfwr-item-color-rgb: 99, 215, 199;
+    }
+
+    .dfwr-item-target-highlight.is-scope-desktop,
+    .dfwr-item-target-label.is-scope-desktop {
+      --dfwr-item-color: #f3b75f;
+      --dfwr-item-color-rgb: 243, 183, 95;
+    }
+
+    .dfwr-item-target-highlight.is-scope-wide,
+    .dfwr-item-target-label.is-scope-wide {
+      --dfwr-item-color: #c99cff;
+      --dfwr-item-color-rgb: 201, 156, 255;
+    }
+
+    .dfwr-item-target-highlight.is-scope-dom,
+    .dfwr-item-target-label.is-scope-dom {
+      --dfwr-item-color: #ff8f61;
+      --dfwr-item-color-rgb: 255, 143, 97;
+    }
+
     .dfwr-item-target-highlight {
       position: fixed;
       z-index: 2;
@@ -2811,7 +2858,6 @@ function createStyleElement() {
       background: rgba(var(--dfwr-item-color-rgb), 0.08);
       box-shadow:
         0 0 0 1px rgba(31, 36, 40, 0.78),
-        0 0 0 9999px rgba(0, 0, 0, 0.08),
         0 12px 30px rgba(0, 0, 0, 0.24);
       pointer-events: none;
     }
@@ -4233,13 +4279,14 @@ function createSelectionHighlight(selection, environment, isDraft) {
   highlight.style.height = `${rect.height}px`;
   return highlight;
 }
-function createItemHighlightElements(selection, environment, item, label, isBound, isHighlighted) {
+function createItemHighlightElements(selection, environment, item, label, scope, isBound, isHighlighted) {
   const rect = toHostSelection(selection, environment);
   const mode = getReviewItemHighlightMode(item);
   const highlight = document.createElement("div");
   highlight.className = [
     "dfwr-item-target-highlight",
     `is-mode-${mode}`,
+    `is-scope-${scope}`,
     isBound ? "is-bound" : "is-fallback",
     isHighlighted ? "is-highlighted" : ""
   ].filter(Boolean).join(" ");
@@ -4252,6 +4299,7 @@ function createItemHighlightElements(selection, environment, item, label, isBoun
   labelElement.className = [
     "dfwr-item-target-label",
     `is-mode-${mode}`,
+    `is-scope-${scope}`,
     isHighlighted ? "is-highlighted" : ""
   ].filter(Boolean).join(" ");
   labelElement.textContent = label;
@@ -4264,7 +4312,8 @@ function createMarkerLayer({
   items,
   highlightedItemId,
   environment,
-  presets
+  presets,
+  showCompactMarkers = true
 }) {
   const layer = document.createElement("div");
   layer.className = "dfwr-marker-layer";
@@ -4279,7 +4328,7 @@ function createMarkerLayer({
       return;
     }
     const isHighlighted = item.id === highlightedItemId;
-    if (!highlightedItemId || isHighlighted) {
+    if (isHighlighted) {
       const selection = getItemHighlightSelection(item, environment);
       if (selection) {
         layer.append(
@@ -4288,12 +4337,16 @@ function createMarkerLayer({
             environment,
             item,
             displayLabel,
+            scope,
             selection.isBound,
             isHighlighted
           )
         );
         return;
       }
+    }
+    if (!showCompactMarkers && !isHighlighted) {
+      return;
     }
     const point = getBoundMarkerPoint(item, environment);
     if (!point || !isPointInViewport(point.viewport, environment)) {
@@ -5245,12 +5298,12 @@ function createAreaLayer(config) {
     const top = Math.min(startY, nextPoint.y);
     const width = Math.abs(nextPoint.x - startX);
     const height = Math.abs(nextPoint.y - startY);
-    const hostPoint = toHostPoint({ x: left, y: top }, nextEnvironment);
     selection = { left, top, width, height };
-    box.style.left = `${hostPoint.x}px`;
-    box.style.top = `${hostPoint.y}px`;
-    box.style.width = `${width}px`;
-    box.style.height = `${height}px`;
+    const rect = nextEnvironment ? toHostSelection(selection, nextEnvironment) : selection;
+    box.style.left = `${rect.left}px`;
+    box.style.top = `${rect.top}px`;
+    box.style.width = `${rect.width}px`;
+    box.style.height = `${rect.height}px`;
   };
   const addDragListeners = () => {
     ownerWindow.addEventListener("pointermove", handlePointerMove, true);
@@ -5381,7 +5434,8 @@ var WebReviewKitView = class {
         items: state.items,
         highlightedItemId: state.highlightedItemId,
         environment: this.config.getEnvironment(),
-        presets: this.config.options.viewports?.presets
+        presets: this.config.options.viewports?.presets,
+        showCompactMarkers: this.config.options.ui?.markers !== "external"
       })
     );
     if (state.isOpen && hasDismissableDraft && !shouldDockComposer) {
@@ -5760,6 +5814,8 @@ var WebReviewKitApp = class {
       };
       const overlayRect = target.getOverlayRect?.() ?? rect;
       const composerHost = target.getComposerHost?.();
+      const scaleX = target.window.innerWidth > 0 ? rect.width / target.window.innerWidth : 1;
+      const scaleY = target.window.innerHeight > 0 ? rect.height / target.window.innerHeight : 1;
       return {
         window: target.window,
         document: target.document,
@@ -5769,6 +5825,8 @@ var WebReviewKitApp = class {
           width: rect.width,
           height: rect.height
         },
+        scaleX,
+        scaleY,
         overlayRect: {
           left: overlayRect.left,
           top: overlayRect.top,
@@ -5901,16 +5959,27 @@ var WebReviewKitApp = class {
     try {
       const viewport = getViewportSize(environment);
       this.areaDraft = await this.withOverlayHidden(() => {
-        const marker = createSelectionCenterMarker(
+        const anchorPoint = clampPoint(
+          getSelectionCenter(selection),
+          environment
+        );
+        const anchor = getDomAnchorFromPoint(
+          anchorPoint,
+          this.options.anchors?.attribute,
+          environment
+        );
+        const marker = createSelectionStartMarker(
           selection,
-          void 0,
+          anchor,
           environment
         );
         const reviewSelection = {
-          viewport: toPublicSelection(selection)
+          viewport: toPublicSelection(selection),
+          relative: anchor ? getRelativeSelection(selection, anchor, environment) : void 0
         };
         return {
           viewport,
+          anchor,
           marker,
           selection: reviewSelection
         };

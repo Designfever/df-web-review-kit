@@ -6,14 +6,12 @@ import {
   Database as DatabaseIcon,
   Image as ImageIcon,
   Search as SearchIcon,
-  SquareDashed as SquareDashedIcon,
   SquareMousePointer as SquareMousePointerIcon,
   Type as TypeIcon,
   X as XIcon,
 } from 'lucide-react';
 import type { SectionOutlineEntry } from '../section.outline';
 import type { StoredSourceTreeMetaVisibility } from '../settings';
-import { getLiveSectionOutlineRect } from './shell.helpers';
 
 type SourceTreeMetaVisibilityKey = keyof StoredSourceTreeMetaVisibility;
 
@@ -27,7 +25,6 @@ type SectionOutlinePanelProps = {
   entries: SectionOutlineEntry[];
   collapsedIds: Set<string>;
   canWriteDom: boolean;
-  isBoxMetaVisible: boolean;
   isFontMetaVisible: boolean;
   isMediaMetaVisible: boolean;
   isClassMetaVisible: boolean;
@@ -53,7 +50,6 @@ export const SectionOutlinePanel = ({
   entries,
   collapsedIds,
   canWriteDom,
-  isBoxMetaVisible,
   isFontMetaVisible,
   isMediaMetaVisible,
   isClassMetaVisible,
@@ -72,19 +68,6 @@ export const SectionOutlinePanel = ({
     const { metadata } = entry;
     const rows: React.ReactNode[] = [];
     const metaPaddingLeft = 29;
-    const rect = getLiveSectionOutlineRect(entry);
-
-    if (isBoxMetaVisible) {
-      rows.push(
-        <span className="df-review-section-outline-meta-row" key="box">
-          <b>box</b>
-          <code>
-            top {rect.top} / left {rect.left} / width {rect.width} / height{' '}
-            {rect.height}
-          </code>
-        </span>
-      );
-    }
 
     if (metadata.textValue) {
       rows.push(
@@ -145,6 +128,29 @@ export const SectionOutlinePanel = ({
       );
     }
 
+    if (entry.filePath) {
+      rows.push(
+        <span
+          className="df-review-section-outline-meta-row is-source"
+          key="source"
+        >
+          <b>src</b>
+          {entry.source?.file ? (
+            <button
+              className="df-review-section-outline-source-link"
+              type="button"
+              title={`Open ${entry.filePath}`}
+              onClick={() => onOpenSource(entry)}
+            >
+              <code>{entry.filePath}</code>
+            </button>
+          ) : (
+            <code>{entry.filePath}</code>
+          )}
+        </span>
+      );
+    }
+
     if (metadata.usage) {
       const usagePosition = metadata.usage.positionLabel
         ? `:${metadata.usage.positionLabel}`
@@ -158,11 +164,11 @@ export const SectionOutlinePanel = ({
           <button
             className="df-review-section-outline-usage-link"
             type="button"
-            title={`Open ${metadata.usage.label} usage`}
+            title={`Open ${metadata.usage.filePath}${usagePosition}`}
             onClick={() => onOpenUsageSource(entry)}
           >
             <code>
-              {metadata.usage.label} · {metadata.usage.filePath}
+              {metadata.usage.filePath}
               {usagePosition}
             </code>
           </button>
@@ -185,8 +191,6 @@ export const SectionOutlinePanel = ({
   const renderEntry = (entry: SectionOutlineEntry): React.ReactNode => {
     const hasChildren = entry.children.length > 0;
     const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
-    const liveRect = getLiveSectionOutlineRect(entry);
-    const isZeroArea = liveRect.width <= 0 || liveRect.height <= 0;
 
     return (
       <div
@@ -244,7 +248,6 @@ export const SectionOutlinePanel = ({
               onClick={() => onScrollToSection(entry)}
             >
               <span>{entry.label}</span>
-              <small>{entry.filePath}</small>
             </button>
             <span className="df-review-section-outline-links">
               <button
@@ -289,10 +292,10 @@ export const SectionOutlinePanel = ({
               <button
                 aria-label={`Start DOM QA for ${entry.label}`}
                 className="df-review-section-outline-link is-dom-select"
-                data-review-tooltip={isZeroArea ? 'No visible area' : 'DOM select'}
-                title={isZeroArea ? 'No visible area' : 'DOM select'}
+                data-review-tooltip="DOM select"
+                title="DOM select"
                 type="button"
-                disabled={!canWriteDom || isZeroArea}
+                disabled={!canWriteDom}
                 onClick={() => onStartDomReview(entry)}
               >
                 <SquareMousePointerIcon aria-hidden="true" />
@@ -327,19 +330,6 @@ export const SectionOutlinePanel = ({
               </small>
             </span>
             <div className="df-review-section-outline-meta-controls">
-              <button
-                aria-label="Toggle source tree box metadata"
-                aria-pressed={isBoxMetaVisible}
-                className={`df-review-section-outline-meta-toggle${
-                  isBoxMetaVisible ? ' is-active' : ''
-                }`}
-                data-review-tooltip="Box metrics"
-                title="top / left / width / height"
-                type="button"
-                onClick={() => onToggleMeta('box')}
-              >
-                <SquareDashedIcon aria-hidden="true" />
-              </button>
               <button
                 aria-label="Toggle source tree font metadata"
                 aria-pressed={isFontMetaVisible}

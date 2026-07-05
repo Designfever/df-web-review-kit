@@ -182,6 +182,8 @@ export const QaItemCard = ({
       }${isOverlayVisible ? '' : ' is-overlay-hidden'}${
         isMutating ? ' is-mutating' : ''
       }`}
+      data-review-qa-item-id={item.id}
+      tabIndex={-1}
       onClick={() => {
         if (isActive) {
           onClearSelectedItem();

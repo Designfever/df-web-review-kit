@@ -298,8 +298,7 @@ export const reviewShellSectionOutlineStyle = `
     cursor: pointer;
   }
 
-  .df-review-section-outline-name span,
-  .df-review-section-outline-name small {
+  .df-review-section-outline-name span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -308,13 +307,6 @@ export const reviewShellSectionOutlineStyle = `
 
   .df-review-section-outline-name span {
     color: var(--df-review-section-outline-name-color);
-  }
-
-  .df-review-section-outline-name small {
-    color: var(--df-review-muted);
-    font-family: var(--df-review-font-mono);
-    font-size: var(--df-review-font-size-2xs);
-    font-weight: var(--df-review-font-weight-normal);
   }
 
   .df-review-section-outline-name:hover {
@@ -371,10 +363,12 @@ export const reviewShellSectionOutlineStyle = `
     color: var(--df-review-accent);
   }
 
+  .df-review-section-outline-meta-row.is-source code,
   .df-review-section-outline-meta-row.is-usage code {
     color: var(--df-review-accent);
   }
 
+  .df-review-section-outline-source-link,
   .df-review-section-outline-usage-link {
     display: block;
     min-width: 0;
@@ -387,6 +381,8 @@ export const reviewShellSectionOutlineStyle = `
     cursor: pointer;
   }
 
+  .df-review-section-outline-source-link:hover,
+  .df-review-section-outline-source-link:focus-visible,
   .df-review-section-outline-usage-link:hover,
   .df-review-section-outline-usage-link:focus-visible {
     color: var(--df-review-text);

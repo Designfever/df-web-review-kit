@@ -16,6 +16,7 @@ import {
   normalizeTarget,
 } from '../route';
 import { getActiveReviewItems } from '../qa/derive';
+import { matchesReviewQaStatusFilters } from '../qa/status.filter';
 import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellStore } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
@@ -44,7 +45,7 @@ export const useReviewShellData = () => {
   const hiddenOverlayItemIds = useReviewShellStore(
     (state) => state.hiddenOverlayItemIds
   );
-  const qaStatusFilter = useReviewShellStore((state) => state.qaStatusFilter);
+  const qaStatusFilters = useReviewShellStore((state) => state.qaStatusFilters);
   const selectedItemId = useReviewShellStore((state) => state.selectedItemId);
   const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
 
@@ -79,17 +80,15 @@ export const useReviewShellData = () => {
     () => {
       const nextHiddenItemIds = new Set(hiddenOverlayItemIds);
 
-      if (qaStatusFilter !== 'all') {
-        activeItems.forEach((item) => {
-          if (normalizeReviewItemStatus(item.status) !== qaStatusFilter) {
-            nextHiddenItemIds.add(item.id);
-          }
-        });
-      }
+      activeItems.forEach((item) => {
+        if (!matchesReviewQaStatusFilters(item.status, qaStatusFilters)) {
+          nextHiddenItemIds.add(item.id);
+        }
+      });
 
       return Array.from(nextHiddenItemIds);
     },
-    [activeItems, hiddenOverlayItemIds, qaStatusFilter]
+    [activeItems, hiddenOverlayItemIds, qaStatusFilters]
   );
   const getItemPreset = useCallback(
     (item: ReviewItem) =>

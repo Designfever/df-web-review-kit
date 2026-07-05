@@ -2,7 +2,7 @@ import type { SetStateAction } from 'react';
 import type { StateCreator } from 'zustand';
 import type { ReviewItem } from '../../types';
 import { getInitialItemId } from '../route';
-import { getStoredReviewQaStatusFilter } from '../settings';
+import { getStoredReviewQaStatusFilters } from '../settings';
 import type {
   ReviewQaFilter,
   ReviewQaStatusFilter,
@@ -23,7 +23,7 @@ export interface QaSlice {
   items: ReviewItem[];
   mutatingItemIds: ReadonlySet<string>;
   qaFilter: ReviewQaFilter;
-  qaStatusFilter: ReviewQaStatusFilter;
+  qaStatusFilters: readonly ReviewQaStatusFilter[];
   selectedItemId: string | null;
   sitemapItems: SitemapItemsBySource;
   addMutatingItemId: (itemId: string) => void;
@@ -34,7 +34,7 @@ export interface QaSlice {
   setIsItemsLoading: (isLoading: boolean) => void;
   setItems: (items: ReviewItem[]) => void;
   setQaFilter: (filter: ReviewQaFilter) => void;
-  setQaStatusFilter: (filter: ReviewQaStatusFilter) => void;
+  setQaStatusFilters: (filters: readonly ReviewQaStatusFilter[]) => void;
   setSelectedItemId: (itemId: string | null) => void;
   setSitemapItems: (sitemapItems: SitemapItemsBySource) => void;
   toggleHiddenOverlayItemId: (itemId: string) => void;
@@ -54,7 +54,7 @@ export const createQaSlice: StateCreator<
   items: [],
   mutatingItemIds: new Set<string>(),
   qaFilter: 'all',
-  qaStatusFilter: getStoredReviewQaStatusFilter(),
+  qaStatusFilters: getStoredReviewQaStatusFilters(),
   selectedItemId: getInitialItemId(),
   sitemapItems: {
     local: [],
@@ -82,7 +82,7 @@ export const createQaSlice: StateCreator<
   setIsItemsLoading: (isItemsLoading) => set({ isItemsLoading }),
   setItems: (items) => set({ items }),
   setQaFilter: (qaFilter) => set({ qaFilter }),
-  setQaStatusFilter: (qaStatusFilter) => set({ qaStatusFilter }),
+  setQaStatusFilters: (qaStatusFilters) => set({ qaStatusFilters }),
   setSelectedItemId: (selectedItemId) => set({ selectedItemId }),
   setSitemapItems: (sitemapItems) => set({ sitemapItems }),
   toggleHiddenOverlayItemId: (itemId) =>

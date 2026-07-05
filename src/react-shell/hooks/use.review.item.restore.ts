@@ -170,15 +170,9 @@ export const useReviewItemRestore = ({
       const isCurrentRestore = () =>
         storeApi.getState().selectedItemId === item.id &&
         iframeRef.current?.contentDocument === targetDocument;
-      const anchorElement = await waitForRestoreAnchor(
-        targetWindow,
-        targetDocument,
-        item,
-        isCurrentRestore
-      );
-      if (!isCurrentRestore()) return false;
+      highlightControllerItem(item, controllerRef.current, isCurrentRestore);
 
-      const applyScrollPosition = () => {
+      const applyScrollPosition = (anchorElement?: Element) => {
         if (!isCurrentRestore()) return false;
         const currentAnchorElement =
           queryReviewItemAnchorElement(targetDocument, item) ?? anchorElement;
@@ -199,13 +193,26 @@ export const useReviewItemRestore = ({
         return true;
       };
 
-      if (!applyScrollPosition()) return false;
-      controllerRef.current?.highlightItem(item.id);
+      if (!applyScrollPosition(queryReviewItemAnchorElement(targetDocument, item))) {
+        return false;
+      }
+      highlightControllerItem(item, controllerRef.current, isCurrentRestore);
+
+      const anchorElement = await waitForRestoreAnchor(
+        targetWindow,
+        targetDocument,
+        item,
+        isCurrentRestore
+      );
+      if (!isCurrentRestore()) return false;
+
+      if (!applyScrollPosition(anchorElement)) return false;
+      highlightControllerItem(item, controllerRef.current, isCurrentRestore);
 
       for (const delay of RESTORE_SCROLL_RECHECK_DELAYS_MS) {
         await waitForTargetTimeout(targetWindow, delay);
-        if (!applyScrollPosition()) return false;
-        controllerRef.current?.highlightItem(item.id);
+        if (!applyScrollPosition(anchorElement)) return false;
+        highlightControllerItem(item, controllerRef.current, isCurrentRestore);
       }
 
       return true;
@@ -282,3 +289,24 @@ export const useReviewItemRestore = ({
     restoreReviewItem,
   };
 };
+
+function highlightControllerItem(
+  item: ReviewItem,
+  controller: WebReviewKitController | null | undefined,
+  isCurrent: () => boolean
+) {
+  if (!controller) return;
+  if (controller.getItems().some((currentItem) => currentItem.id === item.id)) {
+    controller.highlightItem(item.id);
+    return;
+  }
+
+  void controller
+    .reload()
+    .then(() => {
+      if (isCurrent()) {
+        controller.highlightItem(item.id);
+      }
+    })
+    .catch(() => undefined);
+}

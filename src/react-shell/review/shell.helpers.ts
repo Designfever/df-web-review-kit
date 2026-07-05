@@ -122,7 +122,7 @@ export const getSectionOutlineEntryCount = (
     0
   );
 
-const DEFAULT_VISIBLE_SECTION_OUTLINE_DEPTH = 6;
+const DEFAULT_VISIBLE_SECTION_OUTLINE_DEPTH = 1;
 
 export const getDefaultCollapsedSectionOutlineIds = (
   entries: SectionOutlineEntry[]
@@ -140,18 +140,6 @@ export const getDefaultCollapsedSectionOutlineIds = (
 
   entries.forEach(visit);
   return collapsedIds;
-};
-
-export const getLiveSectionOutlineRect = (entry: SectionOutlineEntry) => {
-  if (!entry.element.isConnected) return entry.metadata.rect;
-
-  const rect = entry.element.getBoundingClientRect();
-  return {
-    top: Math.round(rect.top),
-    left: Math.round(rect.left),
-    width: Math.round(rect.width),
-    height: Math.round(rect.height),
-  };
 };
 
 const matchesSectionOutlineFilter = (

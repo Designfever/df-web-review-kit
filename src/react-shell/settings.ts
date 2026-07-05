@@ -2,6 +2,7 @@ import type { ReviewShellTheme } from './types';
 import {
   DEFAULT_REVIEW_THEME,
   FIGMA_TOKEN_STORAGE_KEY,
+  REVIEW_QA_STATUS_FILTERS,
   REVIEW_QA_STATUS_FILTER_STORAGE_KEY,
   REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY,
   REVIEW_SOURCE_TREE_META_STORAGE_KEY,
@@ -11,22 +12,27 @@ import {
   REVIEW_USER_ID_STORAGE_KEY,
 } from './constants';
 import type { ReviewQaStatusFilter } from './types';
+import {
+  getDefaultReviewQaStatusFilters,
+  isDefaultReviewQaStatusFilters,
+  isReviewQaStatusFilter,
+  normalizeReviewQaStatusFilters,
+} from './qa/status.filter';
 
 export type StoredReviewSidePanel = 'qa' | 'source' | 'figma-images';
 export interface StoredSourceTreeMetaVisibility {
-  box: boolean;
   font: boolean;
   media: boolean;
   className: boolean;
 }
 
 const DEFAULT_SOURCE_TREE_META_VISIBILITY: StoredSourceTreeMetaVisibility = {
-  box: true,
   font: true,
   media: true,
   className: false,
 };
 const REVIEW_QA_STATUS_FILTER_VALUES = new Set([
+  'active',
   'all',
   'todo',
   'doing',
@@ -53,12 +59,29 @@ const normalizeStoredReviewSidePanel = (
   value: string | null
 ): StoredReviewSidePanel => normalizeReviewSidePanel(value) ?? 'qa';
 
-const normalizeStoredReviewQaStatusFilter = (
+const normalizeStoredReviewQaStatusFilters = (
   value: string | null
-): ReviewQaStatusFilter =>
-  value && REVIEW_QA_STATUS_FILTER_VALUES.has(value)
-    ? (value as ReviewQaStatusFilter)
-    : 'all';
+): ReviewQaStatusFilter[] => {
+  if (!value) return getDefaultReviewQaStatusFilters();
+
+  try {
+    const parsedValue = JSON.parse(value) as unknown;
+    if (Array.isArray(parsedValue)) {
+      return normalizeReviewQaStatusFilters(parsedValue);
+    }
+  } catch {}
+
+  if (!REVIEW_QA_STATUS_FILTER_VALUES.has(value)) {
+    return getDefaultReviewQaStatusFilters();
+  }
+  if (value === 'active') return getDefaultReviewQaStatusFilters();
+  if (value === 'all') {
+    return normalizeReviewQaStatusFilters(REVIEW_QA_STATUS_FILTERS);
+  }
+  if (isReviewQaStatusFilter(value)) return [value];
+
+  return getDefaultReviewQaStatusFilters();
+};
 
 const normalizeStoredSourceTreeMetaVisibility = (
   value: unknown
@@ -72,10 +95,6 @@ const normalizeStoredSourceTreeMetaVisibility = (
   >;
 
   return {
-    box:
-      typeof metaVisibility.box === 'boolean'
-        ? metaVisibility.box
-        : DEFAULT_SOURCE_TREE_META_VISIBILITY.box,
     font:
       typeof metaVisibility.font === 'boolean'
         ? metaVisibility.font
@@ -234,31 +253,31 @@ export const writeStoredReviewSidePanelVisible = (isVisible: boolean) => {
   }
 };
 
-export const getStoredReviewQaStatusFilter = () => {
-  if (typeof window === 'undefined') return 'all';
+export const getStoredReviewQaStatusFilters = () => {
+  if (typeof window === 'undefined') return getDefaultReviewQaStatusFilters();
 
   try {
-    return normalizeStoredReviewQaStatusFilter(
+    return normalizeStoredReviewQaStatusFilters(
       window.localStorage.getItem(REVIEW_QA_STATUS_FILTER_STORAGE_KEY)
     );
   } catch {
-    return 'all';
+    return getDefaultReviewQaStatusFilters();
   }
 };
 
-export const writeStoredReviewQaStatusFilter = (
-  filter: ReviewQaStatusFilter
+export const writeStoredReviewQaStatusFilters = (
+  filters: readonly ReviewQaStatusFilter[]
 ) => {
   if (typeof window === 'undefined') return;
 
   try {
-    const normalizedFilter = normalizeStoredReviewQaStatusFilter(filter);
-    if (normalizedFilter === 'all') {
+    const normalizedFilters = normalizeReviewQaStatusFilters(filters);
+    if (isDefaultReviewQaStatusFilters(normalizedFilters)) {
       window.localStorage.removeItem(REVIEW_QA_STATUS_FILTER_STORAGE_KEY);
     } else {
       window.localStorage.setItem(
         REVIEW_QA_STATUS_FILTER_STORAGE_KEY,
-        normalizedFilter
+        JSON.stringify(normalizedFilters)
       );
     }
   } catch {

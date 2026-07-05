@@ -9,7 +9,6 @@ import {
 import {
   clampPoint,
   placeLayerOverTarget,
-  toHostPoint,
   toHostSelection,
   toTargetPointFromHostEvent,
   type ViewportSelection,
@@ -105,13 +104,15 @@ export function createAreaLayer(config: WebReviewKitViewConfig) {
     const top = Math.min(startY, nextPoint.y);
     const width = Math.abs(nextPoint.x - startX);
     const height = Math.abs(nextPoint.y - startY);
-    const hostPoint = toHostPoint({ x: left, y: top }, nextEnvironment);
 
     selection = { left, top, width, height };
-    box.style.left = `${hostPoint.x}px`;
-    box.style.top = `${hostPoint.y}px`;
-    box.style.width = `${width}px`;
-    box.style.height = `${height}px`;
+    const rect = nextEnvironment
+      ? toHostSelection(selection, nextEnvironment)
+      : selection;
+    box.style.left = `${rect.left}px`;
+    box.style.top = `${rect.top}px`;
+    box.style.width = `${rect.width}px`;
+    box.style.height = `${rect.height}px`;
   };
 
   // pointer capture 가 끊기는 환경(iframe 리플로우 등)에 대비해

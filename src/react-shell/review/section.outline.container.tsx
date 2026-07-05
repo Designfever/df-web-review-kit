@@ -49,7 +49,6 @@ export const SectionOutlineContainer = () => {
       entries={filteredSectionOutline}
       collapsedIds={collapsedSectionOutlineIds}
       canWriteDom={canWriteDom}
-      isBoxMetaVisible={sectionOutlineMetaVisibility.box}
       isFontMetaVisible={sectionOutlineMetaVisibility.font}
       isMediaMetaVisible={sectionOutlineMetaVisibility.media}
       isClassMetaVisible={sectionOutlineMetaVisibility.className}

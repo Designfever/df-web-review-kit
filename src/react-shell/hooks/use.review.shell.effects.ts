@@ -1,3 +1,5 @@
+// Shell-level effects that depend on multiple runtime pieces. Keep feature-only
+// effects near the feature hook instead of adding them here.
 import {
   useEffect,
   type MutableRefObject,

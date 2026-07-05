@@ -165,6 +165,29 @@ describe('host/target coordinate conversions', () => {
       )
     ).toEqual({ left: 110, top: 70, width: 30, height: 40 });
   });
+
+  it('scales points and selections when the target is rendered smaller', () => {
+    const scaledEnvironment = createEnvironment({
+      viewportRect: { left: 100, top: 50, width: 200, height: 150 },
+      scaleX: 0.5,
+      scaleY: 0.5,
+    });
+
+    expect(toHostPoint({ x: 40, y: 80 }, scaledEnvironment)).toEqual({
+      x: 120,
+      y: 90,
+    });
+    expect(toTargetPoint({ x: 120, y: 90 }, scaledEnvironment)).toEqual({
+      x: 40,
+      y: 80,
+    });
+    expect(
+      toHostSelection(
+        { left: 10, top: 20, width: 30, height: 40 },
+        scaledEnvironment
+      )
+    ).toEqual({ left: 105, top: 60, width: 15, height: 20 });
+  });
 });
 
 describe('getPopoverPosition', () => {

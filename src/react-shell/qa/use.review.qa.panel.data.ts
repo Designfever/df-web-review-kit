@@ -4,20 +4,21 @@ import { getNumberedReviewItems } from '../../core/review/scope';
 import type { ReviewItem } from '../../types';
 import { normalizeReviewItemStatus } from '../../status';
 import {
-  writeStoredReviewQaStatusFilter,
+  writeStoredReviewQaStatusFilters,
 } from '../settings';
 import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellStore } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
-import type {
-  ReviewQaFilter,
-  ReviewQaStatusFilter,
-} from '../types';
+import type { ReviewQaStatusFilter } from '../types';
 import {
   findViewportPreset,
   getViewportPresetKind,
 } from '../viewport';
 import { getActiveReviewItems } from './derive';
+import {
+  matchesReviewQaStatusFilters,
+  normalizeReviewQaStatusFilters,
+} from './status.filter';
 
 const SITEMAP_STATUS_DONE = 'done';
 
@@ -29,10 +30,10 @@ export const useReviewQaPanelData = () => {
   const items = useReviewShellStore((state) => state.items);
   const sitemapItems = useReviewShellStore((state) => state.sitemapItems);
   const qaFilter = useReviewShellStore((state) => state.qaFilter);
-  const qaStatusFilter = useReviewShellStore((state) => state.qaStatusFilter);
+  const qaStatusFilters = useReviewShellStore((state) => state.qaStatusFilters);
   const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
-  const setQaStatusFilterState = useReviewShellStore(
-    (state) => state.setQaStatusFilter
+  const setQaStatusFiltersState = useReviewShellStore(
+    (state) => state.setQaStatusFilters
   );
   const { isRemoteSource } = useReviewShellAdapterState();
 
@@ -65,39 +66,15 @@ export const useReviewQaPanelData = () => {
           ),
     [numberedActiveItems, qaFilter]
   );
-  const statusFilteredNumberedActiveItems = useMemo(
-    () =>
-      qaStatusFilter === 'all'
-        ? numberedActiveItems
-        : numberedActiveItems.filter(
-            (numberedItem) =>
-              normalizeReviewItemStatus(numberedItem.item.status) ===
-              qaStatusFilter
-          ),
-    [numberedActiveItems, qaStatusFilter]
-  );
   const filteredNumberedActiveItems = useMemo(
     () =>
-      qaStatusFilter === 'all'
-        ? scopeFilteredNumberedActiveItems
-        : scopeFilteredNumberedActiveItems.filter(
-            (numberedItem) =>
-              normalizeReviewItemStatus(numberedItem.item.status) ===
-              qaStatusFilter
-          ),
-    [qaStatusFilter, scopeFilteredNumberedActiveItems]
+      scopeFilteredNumberedActiveItems.filter((numberedItem) =>
+        matchesReviewQaStatusFilters(numberedItem.item.status, qaStatusFilters)
+      ),
+    [qaStatusFilters, scopeFilteredNumberedActiveItems]
   );
-  const qaFilterCounts = useMemo(() => {
-    const counts = new Map<ReviewQaFilter, number>();
-    counts.set('all', statusFilteredNumberedActiveItems.length);
-    statusFilteredNumberedActiveItems.forEach((numberedItem) => {
-      counts.set(numberedItem.scope, (counts.get(numberedItem.scope) ?? 0) + 1);
-    });
-    return counts;
-  }, [statusFilteredNumberedActiveItems]);
   const qaStatusFilterCounts = useMemo(() => {
     const counts = new Map<ReviewQaStatusFilter, number>();
-    counts.set('all', scopeFilteredNumberedActiveItems.length);
     scopeFilteredNumberedActiveItems.forEach((numberedItem) => {
       const status = normalizeReviewItemStatus(numberedItem.item.status);
       counts.set(status, (counts.get(status) ?? 0) + 1);
@@ -122,12 +99,20 @@ export const useReviewQaPanelData = () => {
       ),
     [viewportPresets]
   );
-  const setQaStatusFilter = useCallback(
+  const toggleQaStatusFilter = useCallback(
     (filter: ReviewQaStatusFilter) => {
-      setQaStatusFilterState(filter);
-      writeStoredReviewQaStatusFilter(filter);
+      const normalizedFilters = normalizeReviewQaStatusFilters(qaStatusFilters);
+      const nextFilters = normalizedFilters.includes(filter)
+        ? normalizedFilters.filter((item) => item !== filter)
+        : [...normalizedFilters, filter];
+
+      if (nextFilters.length === 0) return;
+
+      const normalizedNextFilters = normalizeReviewQaStatusFilters(nextFilters);
+      setQaStatusFiltersState(normalizedNextFilters);
+      writeStoredReviewQaStatusFilters(normalizedNextFilters);
     },
-    [setQaStatusFilterState]
+    [qaStatusFilters, setQaStatusFiltersState]
   );
   const currentPresetScope = getViewportPresetKind(size);
 
@@ -137,8 +122,7 @@ export const useReviewQaPanelData = () => {
     currentPresetScope,
     filteredNumberedActiveItems,
     getItemPresetScope,
-    qaFilterCounts,
     qaStatusFilterCounts,
-    setQaStatusFilter,
+    toggleQaStatusFilter,
   };
 };

@@ -1,3 +1,5 @@
+// Pure shell layout. This component should only place slots, not read store,
+// refs, adapter state, or runtime contexts directly.
 import type { ReactNode } from 'react';
 
 export interface ReviewShellFrameSlots {

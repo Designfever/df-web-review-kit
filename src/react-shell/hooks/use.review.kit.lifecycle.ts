@@ -139,6 +139,7 @@ export const useReviewKitLifecycle = ({
       onModeChange,
       ui: {
         panel: false,
+        markers: 'external',
       },
       modules: {
         qa: true,

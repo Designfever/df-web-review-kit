@@ -8,6 +8,7 @@ import type { TargetOverlayKey } from '../types';
 interface UseReviewShellHotkeysOptions {
   isRailHotkeyBlocked: boolean;
   isFigmaSettingsOpen: boolean;
+  isFigmaOverlayAvailable: boolean;
   isRulerAvailable: boolean;
   isRulerVisible: boolean;
   onCancelReviewMode: () => boolean;
@@ -15,6 +16,7 @@ interface UseReviewShellHotkeysOptions {
   onCloseRuler: () => boolean;
   onSetReviewMode: (mode: ReviewMode) => void;
   onToggleComponentListPanel: () => void;
+  onToggleFigmaOverlay: () => void;
   onToggleFigmaImagesPanel: () => void;
   onToggleQaPanel: () => void;
   onToggleRuler: () => void;
@@ -24,6 +26,7 @@ interface UseReviewShellHotkeysOptions {
 export const useReviewShellHotkeys = ({
   isRailHotkeyBlocked,
   isFigmaSettingsOpen,
+  isFigmaOverlayAvailable,
   isRulerAvailable,
   isRulerVisible,
   onCancelReviewMode,
@@ -31,6 +34,7 @@ export const useReviewShellHotkeys = ({
   onCloseRuler,
   onSetReviewMode,
   onToggleComponentListPanel,
+  onToggleFigmaOverlay,
   onToggleFigmaImagesPanel,
   onToggleQaPanel,
   onToggleRuler,
@@ -118,7 +122,9 @@ export const useReviewShellHotkeys = ({
           if (isRulerAvailable) onToggleRuler();
         },
         g: () => onToggleTargetOverlay('grid'),
-        f: () => onToggleTargetOverlay('figma'),
+        f: () => {
+          if (isFigmaOverlayAvailable) onToggleFigmaOverlay();
+        },
         e: () => onSetReviewMode('element'),
         a: () => onSetReviewMode('area'),
       };
@@ -134,7 +140,9 @@ export const useReviewShellHotkeys = ({
     return () => window.removeEventListener('keydown', handleHotkey);
   }, [
     isRulerAvailable,
+    isFigmaOverlayAvailable,
     onSetReviewMode,
+    onToggleFigmaOverlay,
     onToggleRuler,
     onToggleTargetOverlay,
   ]);

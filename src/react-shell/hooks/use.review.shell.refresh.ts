@@ -1,3 +1,5 @@
+// Adapter refresh orchestration for route items and sitemap counts. It writes
+// results into the shell store so containers can subscribe with selectors.
 import {
   useCallback,
   useEffect,

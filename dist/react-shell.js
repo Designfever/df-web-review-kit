@@ -5015,11 +5015,11 @@ function ensureReviewShellStyle() {
 
 // src/react-shell/review/shell.tsx
 import {
-  useCallback as useCallback20,
+  useCallback as useCallback21,
   useEffect as useEffect17,
-  useMemo as useMemo10,
-  useRef as useRef10,
-  useState as useState17
+  useMemo as useMemo11,
+  useRef as useRef11,
+  useState as useState15
 } from "react";
 
 // src/react-shell/env.ts
@@ -8583,6 +8583,733 @@ var FigmaImagePreviewModal = ({
   );
 };
 
+// src/react-shell/hooks/use.review.item.actions.ts
+import { useCallback as useCallback3 } from "react";
+
+// src/react-shell/store/shell.config.tsx
+import {
+  createContext as createContext2,
+  useContext as useContext2
+} from "react";
+
+// src/react-shell/adapters.ts
+var ALL_REVIEW_WRITE_MODES = ["dom", "area"];
+var DEFAULT_ASSIGNEE_TITLE = "Assignee";
+function normalizeReviewShellAdapters(adapters) {
+  if (Array.isArray(adapters)) {
+    const normalized = adapters.map((adapter) => normalizeShellAdapter(adapter));
+    const local = normalized.find((adapter) => adapter.label === "local") ?? null;
+    const remote = normalized.find((adapter) => adapter.label !== "local") ?? null;
+    if (normalized.length === 0 || !local && !remote) {
+      throw new Error("ReviewShell requires at least one adapter.");
+    }
+    return {
+      local,
+      remote,
+      sources: normalized
+    };
+  }
+  return normalizeLegacyAdapterMap(adapters);
+}
+function normalizeLegacyAdapterMap(adapters) {
+  const local = {
+    label: "local",
+    adapter: adapters.local,
+    fields: { title: false },
+    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+    assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
+    assigneeOptions: [],
+    defaultUserId: adapters.defaultUserId?.trim() ?? "",
+    updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
+    updateAssignee: ({ id, assigneeId, assigneeName }) => adapters.local.update(id, { assigneeId, assigneeName }),
+    syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
+    uploadAttachment: adapters.local.uploadAttachment,
+    writeModes: [...ALL_REVIEW_WRITE_MODES],
+    canUpdate: true,
+    canRemove: true
+  };
+  const remote = adapters.remote ? {
+    label: "remote",
+    adapter: adapters.remote,
+    fields: { title: false },
+    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
+    assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
+    assigneeOptions: [],
+    defaultUserId: adapters.defaultUserId?.trim() ?? "",
+    updateStatus: ({ id, status }) => adapters.remote?.update(id, { status }) ?? Promise.reject(new Error("Remote adapter is not available.")),
+    updateAssignee: ({ id, assigneeId, assigneeName }) => adapters.remote?.update(id, { assigneeId, assigneeName }) ?? Promise.reject(new Error("Remote adapter is not available.")),
+    uploadAttachment: adapters.remote.uploadAttachment,
+    writeModes: [],
+    canUpdate: true,
+    canRemove: false,
+    pageId: adapters.remotePageId
+  } : null;
+  return {
+    local,
+    remote,
+    sources: remote ? [local, remote] : [local]
+  };
+}
+function normalizeShellAdapter(adapterConfig) {
+  const statusOptions = [
+    ...adapterConfig.statusOptions ?? REVIEW_WORKFLOW_STATUS_OPTIONS
+  ];
+  const fields = {
+    title: adapterConfig.fields?.title === true
+  };
+  const assigneeTitle = adapterConfig.assigneeTitle?.trim() || DEFAULT_ASSIGNEE_TITLE;
+  const assigneeOptions = [...adapterConfig.assigneeOptions ?? []];
+  const defaultUserId = adapterConfig.defaultUserId?.trim() ?? "";
+  const updateAdapter = adapterConfig.update;
+  const updateStatus = adapterConfig.updateStatus ? adapterConfig.updateStatus : updateAdapter ? ({ id, status }) => updateAdapter(id, { status }) : void 0;
+  const updateAssignee = adapterConfig.updateAssignee ? adapterConfig.updateAssignee : updateAdapter ? ({ id, assigneeId, assigneeName, assigneeOption }) => updateAdapter(id, {
+    assigneeId,
+    assigneeName: assigneeName ?? assigneeOption?.label
+  }) : void 0;
+  const writeModes = normalizeWriteModes(
+    adapterConfig.create ? adapterConfig.canWrite ?? adapterConfig.label === "local" : false
+  );
+  return {
+    label: adapterConfig.label,
+    pageId: adapterConfig.pageId,
+    fields,
+    statusOptions,
+    assigneeTitle,
+    assigneeOptions,
+    defaultUserId,
+    updateStatus,
+    updateAssignee,
+    syncSubmission: adapterConfig.syncSubmission,
+    uploadAttachment: adapterConfig.uploadAttachment,
+    writeModes,
+    canUpdate: Boolean(updateAdapter),
+    canRemove: Boolean(adapterConfig.remove),
+    adapter: {
+      get: adapterConfig.get,
+      list: adapterConfig.list,
+      create: async (item) => {
+        if (!adapterConfig.create) {
+          throw new Error(
+            `Review adapter "${adapterConfig.label}" does not support create.`
+          );
+        }
+        return adapterConfig.create(item);
+      },
+      update: async (id, patch) => {
+        const nextStatus = patch.status;
+        if (nextStatus && updateStatus) {
+          const statusIndex = statusOptions.findIndex(
+            (statusOption2) => statusOption2.value === nextStatus
+          );
+          const statusOption = statusOptions[statusIndex];
+          if (statusOption) {
+            const item2 = await adapterConfig.get(id);
+            if (!item2) throw new Error(`Review item not found: ${id}`);
+            const updated2 = await updateStatus({
+              id,
+              item: item2,
+              status: nextStatus,
+              statusOption,
+              statusIndex
+            });
+            return updated2;
+          }
+        }
+        if (updateAdapter) {
+          return updateAdapter(id, patch);
+        }
+        if (!adapterConfig.syncSubmission) {
+          throw new Error(
+            `Review adapter "${adapterConfig.label}" does not support update.`
+          );
+        }
+        const item = await adapterConfig.get(id);
+        if (!item) throw new Error(`Review item not found: ${id}`);
+        await adapterConfig.syncSubmission({
+          id,
+          item,
+          patch
+        });
+        const updated = await adapterConfig.get(id);
+        if (!updated) throw new Error(`Review item not found after update: ${id}`);
+        return updated;
+      },
+      uploadAttachment: adapterConfig.uploadAttachment,
+      remove: async (id) => {
+        if (!adapterConfig.remove) {
+          throw new Error(
+            `Review adapter "${adapterConfig.label}" does not support remove.`
+          );
+        }
+        return adapterConfig.remove(id);
+      }
+    }
+  };
+}
+function normalizeWriteModes(value) {
+  if (value === true) return [...ALL_REVIEW_WRITE_MODES];
+  if (Array.isArray(value)) {
+    const modes = value.filter(
+      (mode) => ALL_REVIEW_WRITE_MODES.includes(mode)
+    );
+    return Array.from(new Set(modes));
+  }
+  return [];
+}
+
+// src/react-shell/store/shell.config.tsx
+var createReviewShellConfig = ({
+  projectId,
+  pages,
+  adapters,
+  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
+  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
+}) => {
+  const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
+  const normalizedAdapters = normalizeReviewShellAdapters(adapters);
+  return {
+    projectId,
+    pages,
+    reviewPathPrefix,
+    viewportPresets,
+    reviewViewportPresets: toReviewViewportPresets(viewportPresets),
+    localAdapterEntry: normalizedAdapters.local,
+    remoteAdapterEntry: normalizedAdapters.remote,
+    sourceEntries: normalizedAdapters.sources,
+    showSourceSelect: normalizedAdapters.sources.length > 1
+  };
+};
+var ReviewShellConfigContext = createContext2(null);
+var ReviewShellConfigProvider = ReviewShellConfigContext.Provider;
+var useReviewShellConfig = () => {
+  const config = useContext2(ReviewShellConfigContext);
+  if (!config) {
+    throw new Error(
+      "useReviewShellConfig must be used within a ReviewShell provider"
+    );
+  }
+  return config;
+};
+
+// src/react-shell/store/store.context.tsx
+import {
+  createContext as createContext3,
+  useContext as useContext3
+} from "react";
+import { useStore } from "zustand";
+var ReviewShellStoreContext = createContext3(null);
+var ReviewShellStoreProvider = ReviewShellStoreContext.Provider;
+var useReviewShellStoreApi = () => {
+  const store = useContext3(ReviewShellStoreContext);
+  if (!store) {
+    throw new Error(
+      "useReviewShellStore must be used within a ReviewShell provider"
+    );
+  }
+  return store;
+};
+var useReviewShellStore = (selector) => useStore(useReviewShellStoreApi(), selector);
+
+// src/react-shell/store/use.review.adapter.state.ts
+var useReviewShellAdapterState = () => {
+  const {
+    localAdapterEntry,
+    remoteAdapterEntry,
+    showSourceSelect,
+    sourceEntries
+  } = useReviewShellConfig();
+  const source = useReviewShellStore((state) => state.source);
+  const remoteSource = remoteAdapterEntry?.label ?? null;
+  const activeAdapterEntry = sourceEntries.find((entry) => entry.label === source) ?? sourceEntries[0];
+  const isRemoteSource = Boolean(
+    remoteSource && activeAdapterEntry.label === remoteSource
+  );
+  return {
+    activeAdapterEntry,
+    adapter: activeAdapterEntry.adapter,
+    canWriteArea: activeAdapterEntry.writeModes.includes("area"),
+    canWriteDom: activeAdapterEntry.writeModes.includes("dom"),
+    isRemoteSource,
+    localAdapterEntry,
+    remoteAdapterEntry,
+    showSourceSelect,
+    source,
+    sourceEntries
+  };
+};
+
+// src/react-shell/review/shell.actions.ts
+var writeClipboardTextFallback = (value) => {
+  const selection = document.getSelection();
+  const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const ranges = selection ? Array.from(
+    { length: selection.rangeCount },
+    (_, index) => selection.getRangeAt(index)
+  ) : [];
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  const isCopied = document.execCommand("copy");
+  textarea.remove();
+  selection?.removeAllRanges();
+  ranges.forEach((range) => selection?.addRange(range));
+  activeElement?.focus();
+  if (!isCopied) {
+    throw new Error("Failed to copy to clipboard");
+  }
+};
+var writeClipboardText = async (value) => {
+  try {
+    writeClipboardTextFallback(value);
+    return;
+  } catch (error) {
+    if (!navigator.clipboard?.writeText) {
+      throw error;
+    }
+    await navigator.clipboard.writeText(value);
+  }
+};
+var listReviewItems = async ({
+  activeRoute,
+  adapter,
+  isRemoteSource,
+  pageId,
+  projectId
+}) => adapter.list({
+  projectId,
+  pageId,
+  routeKey: isRemoteSource ? activeRoute : void 0
+});
+var listSitemapReviewItems = async ({
+  localAdapterEntry,
+  projectId,
+  remoteAdapterEntry
+}) => {
+  const [localResult, remoteResult] = await Promise.allSettled([
+    localAdapterEntry ? localAdapterEntry.adapter.list({
+      projectId,
+      pageId: localAdapterEntry.pageId
+    }) : Promise.resolve([]),
+    remoteAdapterEntry ? remoteAdapterEntry.adapter.list({
+      projectId,
+      pageId: remoteAdapterEntry.pageId,
+      source: remoteAdapterEntry.label
+    }) : Promise.resolve([])
+  ]);
+  return {
+    local: localResult.status === "fulfilled" ? localResult.value : [],
+    remote: remoteResult.status === "fulfilled" ? remoteResult.value : []
+  };
+};
+var refreshReviewItems = async ({
+  onItemsChange,
+  ...listOptions
+}) => {
+  const nextItems = await listReviewItems(listOptions);
+  onItemsChange(nextItems);
+  return nextItems;
+};
+var refreshSitemapReviewItems = async ({
+  onSitemapItemsChange,
+  ...listOptions
+}) => {
+  const sitemapItems = await listSitemapReviewItems(listOptions);
+  onSitemapItemsChange(sitemapItems);
+};
+var copyCurrentReviewUrl = async ({
+  onCopyLabelChange
+}) => {
+  await writeClipboardText(window.location.href);
+  onCopyLabelChange("Copied");
+  window.setTimeout(() => onCopyLabelChange("Copy URL"), 1200);
+};
+var refreshReviewData = async ({
+  onRefreshItems,
+  onRefreshSitemapItems,
+  onReloadReviewKit
+}) => {
+  await onReloadReviewKit();
+  await Promise.all([onRefreshItems(), onRefreshSitemapItems()]);
+};
+var updateReviewItemStatus = async ({
+  activeAdapterEntry,
+  item,
+  nextStatus,
+  onRefreshReviewData,
+  onToast
+}) => {
+  if (!activeAdapterEntry.updateStatus) return;
+  const statusIndex = activeAdapterEntry.statusOptions.findIndex(
+    (statusOption2) => statusOption2.value === nextStatus
+  );
+  const statusOption = activeAdapterEntry.statusOptions[statusIndex];
+  if (!statusOption) return;
+  await activeAdapterEntry.updateStatus({
+    id: item.id,
+    item,
+    status: statusOption.value,
+    statusOption,
+    statusIndex
+  });
+  await onRefreshReviewData();
+  onToast?.("QA status updated");
+};
+var updateReviewItemAssignee = async ({
+  activeAdapterEntry,
+  item,
+  assigneeId,
+  onRefreshReviewData,
+  onToast
+}) => {
+  if (!activeAdapterEntry.updateAssignee) return;
+  const assigneeIndex = activeAdapterEntry.assigneeOptions.findIndex(
+    (assigneeOption2) => assigneeOption2.value === assigneeId
+  );
+  const assigneeOption = activeAdapterEntry.assigneeOptions[assigneeIndex];
+  const nextAssigneeId = assigneeOption?.value ?? (assigneeId && item.assigneeId === assigneeId ? assigneeId : null);
+  const nextAssigneeName = assigneeOption?.label ?? (nextAssigneeId ? item.assigneeName : void 0);
+  if ((item.assigneeId ?? null) === nextAssigneeId) {
+    onToast?.("No QA assignee changes");
+    return item;
+  }
+  const updated = await activeAdapterEntry.updateAssignee({
+    id: item.id,
+    item,
+    assigneeId: nextAssigneeId,
+    assigneeName: nextAssigneeName,
+    assigneeOption,
+    assigneeIndex
+  });
+  await onRefreshReviewData();
+  onToast?.("QA assignee updated");
+  return updated;
+};
+var updateReviewItemDetails = async ({
+  activeAdapterEntry,
+  fields,
+  item,
+  title,
+  comment,
+  onRefreshReviewData,
+  onToast
+}) => {
+  const nextTitle = title?.trim() || void 0;
+  const nextComment = comment.trim();
+  if (!nextComment) throw new Error("Comment is required.");
+  if (!activeAdapterEntry.canUpdate) {
+    throw new Error(
+      `Review adapter "${activeAdapterEntry.label}" does not support edit.`
+    );
+  }
+  const isTitleUnchanged = !fields.title || nextTitle === (item.title?.trim() || void 0);
+  const isUnchanged = isTitleUnchanged && nextComment === item.comment.trim();
+  if (isUnchanged) {
+    onToast?.("No QA changes");
+    return item;
+  }
+  const updated = await activeAdapterEntry.adapter.update(item.id, {
+    ...fields.title ? { title: nextTitle } : {},
+    comment: nextComment
+  });
+  await onRefreshReviewData();
+  onToast?.("QA updated");
+  return updated;
+};
+var submitReviewItem = async ({
+  getSelectedItemId,
+  localAdapterEntry,
+  numberedItem,
+  remoteAdapterEntry,
+  onClearSelectedItem,
+  onRefreshReviewData,
+  onToast
+}) => {
+  const { item } = numberedItem;
+  const syncLocalSubmission = localAdapterEntry?.syncSubmission;
+  if (!remoteAdapterEntry || !localAdapterEntry || !syncLocalSubmission || item.submitStatus === "submitted") {
+    return;
+  }
+  await syncLocalSubmission({
+    id: item.id,
+    item,
+    patch: {
+      submitStatus: "submitting",
+      submitError: void 0
+    }
+  });
+  await onRefreshReviewData();
+  let toastMessage;
+  try {
+    await remoteAdapterEntry.adapter.create({
+      ...item,
+      reviewNumber: void 0,
+      externalLinks: void 0,
+      externalIssueId: void 0,
+      externalIssueUrl: void 0,
+      submittedAt: void 0,
+      submitStatus: "submitted",
+      submitError: void 0
+    });
+    await localAdapterEntry.adapter.remove(item.id);
+    if (getSelectedItemId() === item.id) {
+      onClearSelectedItem();
+    }
+    toastMessage = "Remote submitted";
+  } catch (error) {
+    await syncLocalSubmission({
+      id: item.id,
+      item,
+      patch: {
+        submitStatus: "failed",
+        submitError: error instanceof Error ? error.message : "Failed to submit remote"
+      }
+    });
+    toastMessage = "Remote submit failed";
+  }
+  await onRefreshReviewData();
+  onToast?.(toastMessage);
+};
+var copyReviewPrompt = async ({
+  key,
+  toastMessage = "Copied",
+  value,
+  onCopiedPromptKeyChange,
+  onToast
+}) => {
+  if (!value) return;
+  await writeClipboardText(value);
+  onCopiedPromptKeyChange(key);
+  onToast?.(toastMessage);
+  window.setTimeout(() => {
+    onCopiedPromptKeyChange((current) => current === key ? null : current);
+  }, 1200);
+};
+var removeReviewItem = async ({
+  activeAdapterEntry,
+  getCurrentSize,
+  getCurrentTarget,
+  getSelectedItemId,
+  isRemoteSource,
+  item,
+  source,
+  onClearSelectedItem,
+  onRefreshReviewData,
+  onToast
+}) => {
+  if (!activeAdapterEntry.canRemove || item.submitStatus === "submitting" || !isRemoteSource && item.submitStatus === "submitted") {
+    return;
+  }
+  await activeAdapterEntry.adapter.remove(item.id);
+  if (getSelectedItemId() === item.id) {
+    onClearSelectedItem();
+    updateShellUrl(getCurrentTarget(), getCurrentSize(), source);
+  }
+  await onRefreshReviewData();
+  onToast?.("QA deleted");
+};
+
+// src/react-shell/hooks/use.review.item.actions.ts
+function useReviewItemActions({
+  onClearSelectedItem,
+  onRefreshReviewData,
+  onToast
+}) {
+  const { reviewPathPrefix, viewportPresets } = useReviewShellConfig();
+  const {
+    activeAdapterEntry,
+    isRemoteSource,
+    localAdapterEntry,
+    remoteAdapterEntry,
+    source
+  } = useReviewShellAdapterState();
+  const storeApi = useReviewShellStoreApi();
+  const mutatingItemIds = useReviewShellStore(
+    (state) => state.mutatingItemIds
+  );
+  const editingItem = useReviewShellStore((state) => state.editingItem);
+  const setEditingItem = useReviewShellStore((state) => state.setEditingItem);
+  const setCopiedPromptKey = useReviewShellStore(
+    (state) => state.setCopiedPromptKey
+  );
+  const withItemMutation = async (itemId, action) => {
+    storeApi.getState().addMutatingItemId(itemId);
+    try {
+      return await action();
+    } finally {
+      storeApi.getState().removeMutatingItemId(itemId);
+    }
+  };
+  const showItemMutationError = (error, fallback) => {
+    onToast(
+      error instanceof Error && error.message ? error.message : fallback
+    );
+  };
+  const changeItemStatus = async (item, nextStatus) => {
+    try {
+      await withItemMutation(
+        item.id,
+        () => updateReviewItemStatus({
+          activeAdapterEntry,
+          item,
+          nextStatus,
+          onRefreshReviewData,
+          onToast
+        })
+      );
+    } catch (error) {
+      showItemMutationError(error, "QA status update failed");
+    }
+  };
+  const changeItemAssignee = async (item, assigneeId) => {
+    try {
+      await withItemMutation(
+        item.id,
+        () => updateReviewItemAssignee({
+          activeAdapterEntry,
+          item,
+          assigneeId,
+          onRefreshReviewData,
+          onToast
+        })
+      );
+    } catch (error) {
+      showItemMutationError(error, "QA assignee update failed");
+    }
+  };
+  const saveItemDetails = async (item, patch) => {
+    try {
+      await withItemMutation(
+        item.id,
+        () => updateReviewItemDetails({
+          activeAdapterEntry,
+          fields: activeAdapterEntry.fields,
+          item,
+          ...patch,
+          onRefreshReviewData,
+          onToast
+        })
+      );
+      setEditingItem(null);
+    } catch (error) {
+      showItemMutationError(error, "QA update failed");
+      throw error;
+    }
+  };
+  const submitItem = async (numberedItem) => {
+    try {
+      await withItemMutation(
+        numberedItem.item.id,
+        () => submitReviewItem({
+          getSelectedItemId: () => storeApi.getState().selectedItemId,
+          localAdapterEntry,
+          numberedItem,
+          remoteAdapterEntry,
+          onClearSelectedItem,
+          onRefreshReviewData,
+          onToast
+        })
+      );
+    } catch (error) {
+      showItemMutationError(error, "QA submit failed");
+    }
+  };
+  const removeItem = async (item) => {
+    try {
+      await withItemMutation(
+        item.id,
+        () => removeReviewItem({
+          activeAdapterEntry,
+          getCurrentSize: () => storeApi.getState().size,
+          getCurrentTarget: () => storeApi.getState().target,
+          getSelectedItemId: () => storeApi.getState().selectedItemId,
+          isRemoteSource,
+          item,
+          source,
+          onClearSelectedItem,
+          onRefreshReviewData,
+          onToast
+        })
+      );
+    } catch (error) {
+      showItemMutationError(error, "QA delete failed");
+    }
+  };
+  const copyPrompt = (value, key, toastMessage = "Prompt copied") => copyReviewPrompt({
+    key,
+    toastMessage,
+    value,
+    onCopiedPromptKeyChange: setCopiedPromptKey,
+    onToast
+  });
+  const copyItemPrompt = (numberedItem) => copyPrompt(
+    buildReviewItemPrompt(numberedItem, reviewPathPrefix),
+    `qa:${numberedItem.item.id}`,
+    "QA prompt copied"
+  );
+  const copyItemLabel = (numberedItem) => copyPrompt(
+    numberedItem.displayLabel,
+    `label:${numberedItem.item.id}`,
+    "QA number copied"
+  );
+  const copyItemLink = (numberedItem) => {
+    const { item } = numberedItem;
+    return copyPrompt(
+      getShellUrlForItem(
+        getItemFrameTarget(item, reviewPathPrefix),
+        getRestoredSize(item, viewportPresets),
+        item.id,
+        source
+      ).href,
+      `link:${item.id}`,
+      "QA link copied"
+    );
+  };
+  const copyRemoteIssuePath = (item) => {
+    const path = getUrlPathWithoutOrigin(item.externalIssueUrl);
+    if (!path) {
+      onToast("QA link not found");
+      return Promise.resolve();
+    }
+    return copyPrompt(path, `remote-link:${item.id}`, "QA path copied");
+  };
+  const clearEditingItem = useCallback3(
+    () => setEditingItem(null),
+    [setEditingItem]
+  );
+  return {
+    changeItemAssignee,
+    changeItemStatus,
+    clearEditingItem,
+    copyItemLabel,
+    copyItemLink,
+    copyItemPrompt,
+    copyPrompt,
+    copyRemoteIssuePath,
+    editingItem,
+    mutatingItemIds,
+    removeItem,
+    saveItemDetails,
+    setEditingItem,
+    submitItem
+  };
+}
+function getUrlPathWithoutOrigin(value) {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  try {
+    const url = new URL(trimmed, window.location.origin);
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return trimmed;
+  }
+}
+
 // src/react-shell/qa/item.edit.modal.tsx
 import { useEffect as useEffect3, useState as useState5 } from "react";
 import { jsx as jsx9, jsxs as jsxs8 } from "react/jsx-runtime";
@@ -9602,6 +10329,249 @@ var ReviewQaPanel = ({
   ] });
 };
 
+// src/react-shell/qa/use.review.qa.panel.data.ts
+import { useCallback as useCallback4, useMemo as useMemo5 } from "react";
+
+// src/react-shell/qa/derive.ts
+var getActiveReviewItems = ({
+  activeRoute,
+  isAllQaVisible,
+  items,
+  reviewPathPrefix,
+  sitemapSourceItems
+}) => {
+  const sourceItems = isAllQaVisible ? sitemapSourceItems : items.filter(
+    (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
+  );
+  return [...sourceItems].sort(
+    (a, b) => b.createdAt.localeCompare(a.createdAt)
+  );
+};
+
+// src/react-shell/qa/use.review.qa.panel.data.ts
+var SITEMAP_STATUS_DONE = "done";
+var useReviewQaPanelData = () => {
+  const { reviewPathPrefix, reviewViewportPresets, viewportPresets } = useReviewShellConfig();
+  const activeRoute = useReviewShellStore((state) => state.activeRoute);
+  const size = useReviewShellStore((state) => state.size);
+  const items = useReviewShellStore((state) => state.items);
+  const sitemapItems = useReviewShellStore((state) => state.sitemapItems);
+  const qaFilter = useReviewShellStore((state) => state.qaFilter);
+  const qaStatusFilter = useReviewShellStore((state) => state.qaStatusFilter);
+  const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
+  const setQaStatusFilterState = useReviewShellStore(
+    (state) => state.setQaStatusFilter
+  );
+  const { isRemoteSource } = useReviewShellAdapterState();
+  const sitemapSourceItems = useMemo5(
+    () => isRemoteSource ? sitemapItems.remote : sitemapItems.local,
+    [isRemoteSource, sitemapItems]
+  );
+  const activeItems = useMemo5(
+    () => getActiveReviewItems({
+      activeRoute,
+      isAllQaVisible,
+      items,
+      reviewPathPrefix,
+      sitemapSourceItems
+    }),
+    [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
+  );
+  const numberedActiveItems = useMemo5(
+    () => getNumberedReviewItems(activeItems, reviewViewportPresets),
+    [activeItems, reviewViewportPresets]
+  );
+  const scopeFilteredNumberedActiveItems = useMemo5(
+    () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
+      (numberedItem) => numberedItem.scope === qaFilter
+    ),
+    [numberedActiveItems, qaFilter]
+  );
+  const statusFilteredNumberedActiveItems = useMemo5(
+    () => qaStatusFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
+      (numberedItem) => normalizeReviewItemStatus(numberedItem.item.status) === qaStatusFilter
+    ),
+    [numberedActiveItems, qaStatusFilter]
+  );
+  const filteredNumberedActiveItems = useMemo5(
+    () => qaStatusFilter === "all" ? scopeFilteredNumberedActiveItems : scopeFilteredNumberedActiveItems.filter(
+      (numberedItem) => normalizeReviewItemStatus(numberedItem.item.status) === qaStatusFilter
+    ),
+    [qaStatusFilter, scopeFilteredNumberedActiveItems]
+  );
+  const qaFilterCounts = useMemo5(() => {
+    const counts = /* @__PURE__ */ new Map();
+    counts.set("all", statusFilteredNumberedActiveItems.length);
+    statusFilteredNumberedActiveItems.forEach((numberedItem) => {
+      counts.set(numberedItem.scope, (counts.get(numberedItem.scope) ?? 0) + 1);
+    });
+    return counts;
+  }, [statusFilteredNumberedActiveItems]);
+  const qaStatusFilterCounts = useMemo5(() => {
+    const counts = /* @__PURE__ */ new Map();
+    counts.set("all", scopeFilteredNumberedActiveItems.length);
+    scopeFilteredNumberedActiveItems.forEach((numberedItem) => {
+      const status = normalizeReviewItemStatus(numberedItem.item.status);
+      counts.set(status, (counts.get(status) ?? 0) + 1);
+    });
+    return counts;
+  }, [scopeFilteredNumberedActiveItems]);
+  const activeRemainingItemCount = useMemo5(
+    () => activeItems.filter(
+      (item) => normalizeReviewItemStatus(item.status) !== SITEMAP_STATUS_DONE
+    ).length,
+    [activeItems]
+  );
+  const getItemPresetScope = useCallback4(
+    (item) => getViewportPresetKind(
+      findViewportPreset(
+        viewportPresets,
+        item.viewport?.width ?? 0,
+        item.viewport?.height ?? 0
+      )
+    ),
+    [viewportPresets]
+  );
+  const setQaStatusFilter = useCallback4(
+    (filter) => {
+      setQaStatusFilterState(filter);
+      writeStoredReviewQaStatusFilter(filter);
+    },
+    [setQaStatusFilterState]
+  );
+  const currentPresetScope = getViewportPresetKind(size);
+  return {
+    activeItems,
+    activeRemainingItemCount,
+    currentPresetScope,
+    filteredNumberedActiveItems,
+    getItemPresetScope,
+    qaFilterCounts,
+    qaStatusFilterCounts,
+    setQaStatusFilter
+  };
+};
+
+// src/react-shell/qa/panel.container.tsx
+import { Fragment as Fragment2, jsx as jsx18, jsxs as jsxs15 } from "react/jsx-runtime";
+var QaPanelContainer = ({
+  isListVisible,
+  onChangeReviewSource,
+  onClearSelectedItem,
+  onRefreshReviewData,
+  onRestoreReviewItem,
+  onToast
+}) => {
+  const {
+    activeAdapterEntry,
+    isRemoteSource,
+    remoteAdapterEntry,
+    showSourceSelect,
+    source,
+    sourceEntries
+  } = useReviewShellAdapterState();
+  const hiddenOverlayItemIds = useReviewShellStore(
+    (state) => state.hiddenOverlayItemIds
+  );
+  const selectedItemId = useReviewShellStore((state) => state.selectedItemId);
+  const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
+  const isItemsLoading = useReviewShellStore((state) => state.isItemsLoading);
+  const qaFilter = useReviewShellStore((state) => state.qaFilter);
+  const qaStatusFilter = useReviewShellStore((state) => state.qaStatusFilter);
+  const copiedPromptKey = useReviewShellStore(
+    (state) => state.copiedPromptKey
+  );
+  const setQaFilter = useReviewShellStore((state) => state.setQaFilter);
+  const toggleHiddenOverlayItemId = useReviewShellStore(
+    (state) => state.toggleHiddenOverlayItemId
+  );
+  const {
+    activeItems,
+    activeRemainingItemCount,
+    currentPresetScope,
+    filteredNumberedActiveItems,
+    getItemPresetScope,
+    qaFilterCounts,
+    qaStatusFilterCounts,
+    setQaStatusFilter
+  } = useReviewQaPanelData();
+  const {
+    changeItemAssignee,
+    changeItemStatus,
+    clearEditingItem,
+    copyItemLabel,
+    copyItemLink,
+    copyItemPrompt,
+    copyRemoteIssuePath,
+    editingItem,
+    mutatingItemIds,
+    removeItem,
+    saveItemDetails,
+    setEditingItem,
+    submitItem
+  } = useReviewItemActions({
+    onClearSelectedItem,
+    onRefreshReviewData,
+    onToast
+  });
+  return /* @__PURE__ */ jsxs15(Fragment2, { children: [
+    editingItem && /* @__PURE__ */ jsx18(
+      QaItemEditModal,
+      {
+        fields: activeAdapterEntry.fields,
+        item: editingItem,
+        onClose: clearEditingItem,
+        onSave: saveItemDetails
+      }
+    ),
+    /* @__PURE__ */ jsx18(
+      ReviewQaPanel,
+      {
+        activeAdapterEntry,
+        activeItems,
+        activeRemainingItemCount,
+        currentPresetScope,
+        filteredNumberedActiveItems,
+        getItemPresetScope,
+        hiddenOverlayItemIds,
+        isListVisible,
+        isAllQaVisible,
+        isLoading: isItemsLoading,
+        isRemoteSource,
+        mutatingItemIds,
+        copiedPromptKey,
+        qaFilter,
+        qaFilterCounts,
+        qaStatusFilter,
+        qaStatusFilterCounts,
+        remoteAdapterEntry,
+        selectedItemId,
+        showSourceSelect,
+        source,
+        sourceEntries,
+        fields: activeAdapterEntry.fields,
+        assigneeTitle: activeAdapterEntry.assigneeTitle,
+        onChangeItemStatus: changeItemStatus,
+        onClearSelectedItem,
+        onChangeItemAssignee: changeItemAssignee,
+        onChangeReviewSource,
+        onCopyItemLabel: (numberedItem) => void copyItemLabel(numberedItem),
+        onCopyItemLink: (numberedItem) => void copyItemLink(numberedItem),
+        onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
+        onCopyRemoteIssuePath: copyRemoteIssuePath,
+        onEditItem: setEditingItem,
+        onQaFilterChange: setQaFilter,
+        onQaStatusFilterChange: setQaStatusFilter,
+        onRefreshReviewData,
+        onRemoveItem: removeItem,
+        onRestoreReviewItem,
+        onSubmitItem: submitItem,
+        onToggleItemOverlayVisibility: toggleHiddenOverlayItemId
+      }
+    )
+  ] });
+};
+
 // src/react-shell/review/shell.helpers.ts
 var getReviewModeWriteMode = (mode) => {
   if (mode === "element") return "dom";
@@ -9731,7 +10701,7 @@ var filterSectionOutlineEntries = (entries, terms) => {
 };
 
 // src/react-shell/review/section.outline.panel.tsx
-import { jsx as jsx18, jsxs as jsxs15 } from "react/jsx-runtime";
+import { jsx as jsx19, jsxs as jsxs16 } from "react/jsx-runtime";
 var SectionOutlinePanel = ({
   isPanelVisible,
   isFiltering,
@@ -9764,9 +10734,9 @@ var SectionOutlinePanel = ({
     const rect = getLiveSectionOutlineRect(entry);
     if (isBoxMetaVisible) {
       rows.push(
-        /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ jsx18("b", { children: "box" }),
-          /* @__PURE__ */ jsxs15("code", { children: [
+        /* @__PURE__ */ jsxs16("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ jsx19("b", { children: "box" }),
+          /* @__PURE__ */ jsxs16("code", { children: [
             "top ",
             rect.top,
             " / left ",
@@ -9782,13 +10752,13 @@ var SectionOutlinePanel = ({
     }
     if (metadata.textValue) {
       rows.push(
-        /* @__PURE__ */ jsxs15(
+        /* @__PURE__ */ jsxs16(
           "span",
           {
             className: "df-review-section-outline-meta-row is-text",
             children: [
-              /* @__PURE__ */ jsx18("b", { children: "text" }),
-              /* @__PURE__ */ jsx18("code", { children: metadata.textValue })
+              /* @__PURE__ */ jsx19("b", { children: "text" }),
+              /* @__PURE__ */ jsx19("code", { children: metadata.textValue })
             ]
           },
           "text"
@@ -9797,9 +10767,9 @@ var SectionOutlinePanel = ({
     }
     if (isFontMetaVisible && metadata.fontLabel) {
       rows.push(
-        /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-meta-row", children: [
-          /* @__PURE__ */ jsx18("b", { children: "font" }),
-          /* @__PURE__ */ jsx18("code", { children: metadata.fontLabel })
+        /* @__PURE__ */ jsxs16("span", { className: "df-review-section-outline-meta-row", children: [
+          /* @__PURE__ */ jsx19("b", { children: "font" }),
+          /* @__PURE__ */ jsx19("code", { children: metadata.fontLabel })
         ] }, "font")
       );
     }
@@ -9808,13 +10778,13 @@ var SectionOutlinePanel = ({
         const mediaKey = `${mediaItem.variant}:${mediaItem.type}:${mediaItem.url}`;
         const mediaLabel = mediaItem.variant === "media" ? mediaItem.type : mediaItem.variant;
         rows.push(
-          /* @__PURE__ */ jsxs15(
+          /* @__PURE__ */ jsxs16(
             "span",
             {
               className: "df-review-section-outline-meta-row is-media",
               children: [
-                /* @__PURE__ */ jsx18("b", { children: mediaLabel }),
-                /* @__PURE__ */ jsx18(
+                /* @__PURE__ */ jsx19("b", { children: mediaLabel }),
+                /* @__PURE__ */ jsx19(
                   "a",
                   {
                     className: "df-review-section-outline-media-link",
@@ -9822,7 +10792,7 @@ var SectionOutlinePanel = ({
                     rel: "noopener noreferrer",
                     target: "_blank",
                     title: `${mediaLabel} ${mediaItem.type}`,
-                    children: /* @__PURE__ */ jsx18("code", { children: mediaItem.url })
+                    children: /* @__PURE__ */ jsx19("code", { children: mediaItem.url })
                   }
                 )
               ]
@@ -9834,29 +10804,29 @@ var SectionOutlinePanel = ({
     }
     if (isClassMetaVisible && metadata.classNames?.length) {
       rows.push(
-        /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-meta-row is-class", children: [
-          /* @__PURE__ */ jsx18("b", { children: "class" }),
-          /* @__PURE__ */ jsx18("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ jsx18("code", { children: className }, className)) })
+        /* @__PURE__ */ jsxs16("span", { className: "df-review-section-outline-meta-row is-class", children: [
+          /* @__PURE__ */ jsx19("b", { children: "class" }),
+          /* @__PURE__ */ jsx19("span", { className: "df-review-section-outline-class-tags", children: metadata.classNames.map((className) => /* @__PURE__ */ jsx19("code", { children: className }, className)) })
         ] }, "class")
       );
     }
     if (metadata.usage) {
       const usagePosition = metadata.usage.positionLabel ? `:${metadata.usage.positionLabel}` : "";
       rows.push(
-        /* @__PURE__ */ jsxs15(
+        /* @__PURE__ */ jsxs16(
           "span",
           {
             className: "df-review-section-outline-meta-row is-usage",
             children: [
-              /* @__PURE__ */ jsx18("b", { children: "used in" }),
-              /* @__PURE__ */ jsx18(
+              /* @__PURE__ */ jsx19("b", { children: "used in" }),
+              /* @__PURE__ */ jsx19(
                 "button",
                 {
                   className: "df-review-section-outline-usage-link",
                   type: "button",
                   title: `Open ${metadata.usage.label} usage`,
                   onClick: () => onOpenUsageSource(entry),
-                  children: /* @__PURE__ */ jsxs15("code", { children: [
+                  children: /* @__PURE__ */ jsxs16("code", { children: [
                     metadata.usage.label,
                     " \xB7 ",
                     metadata.usage.filePath,
@@ -9871,7 +10841,7 @@ var SectionOutlinePanel = ({
       );
     }
     if (rows.length === 0) return null;
-    return /* @__PURE__ */ jsx18(
+    return /* @__PURE__ */ jsx19(
       "div",
       {
         className: "df-review-section-outline-meta",
@@ -9885,12 +10855,12 @@ var SectionOutlinePanel = ({
     const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
     const liveRect = getLiveSectionOutlineRect(entry);
     const isZeroArea = liveRect.width <= 0 || liveRect.height <= 0;
-    return /* @__PURE__ */ jsxs15(
+    return /* @__PURE__ */ jsxs16(
       "div",
       {
         className: `df-review-section-outline-item is-depth-${entry.depth}`,
         children: [
-          /* @__PURE__ */ jsxs15(
+          /* @__PURE__ */ jsxs16(
             "div",
             {
               className: "df-review-section-outline-entry-body",
@@ -9906,13 +10876,13 @@ var SectionOutlinePanel = ({
               onPointerEnter: () => onHoverElement(entry.element),
               onPointerLeave: onClearHover,
               children: [
-                /* @__PURE__ */ jsxs15(
+                /* @__PURE__ */ jsxs16(
                   "div",
                   {
                     className: "df-review-section-outline-row",
                     style: { paddingLeft: "6px" },
                     children: [
-                      hasChildren ? /* @__PURE__ */ jsx18(
+                      hasChildren ? /* @__PURE__ */ jsx19(
                         "button",
                         {
                           "aria-label": isCollapsed ? `Expand ${entry.label}` : `Collapse ${entry.label}`,
@@ -9921,16 +10891,16 @@ var SectionOutlinePanel = ({
                           "data-review-tooltip": isCollapsed ? "Expand" : "Collapse",
                           type: "button",
                           onClick: () => onToggleEntry(entry.id),
-                          children: /* @__PURE__ */ jsx18(ChevronDown, { "aria-hidden": "true" })
+                          children: /* @__PURE__ */ jsx19(ChevronDown, { "aria-hidden": "true" })
                         }
-                      ) : /* @__PURE__ */ jsx18(
+                      ) : /* @__PURE__ */ jsx19(
                         "span",
                         {
                           "aria-hidden": "true",
                           className: "df-review-section-outline-toggle is-placeholder"
                         }
                       ),
-                      /* @__PURE__ */ jsxs15(
+                      /* @__PURE__ */ jsxs16(
                         "button",
                         {
                           className: "df-review-section-outline-name",
@@ -9938,13 +10908,13 @@ var SectionOutlinePanel = ({
                           type: "button",
                           onClick: () => onScrollToSection(entry),
                           children: [
-                            /* @__PURE__ */ jsx18("span", { children: entry.label }),
-                            /* @__PURE__ */ jsx18("small", { children: entry.filePath })
+                            /* @__PURE__ */ jsx19("span", { children: entry.label }),
+                            /* @__PURE__ */ jsx19("small", { children: entry.filePath })
                           ]
                         }
                       ),
-                      /* @__PURE__ */ jsxs15("span", { className: "df-review-section-outline-links", children: [
-                        /* @__PURE__ */ jsx18(
+                      /* @__PURE__ */ jsxs16("span", { className: "df-review-section-outline-links", children: [
+                        /* @__PURE__ */ jsx19(
                           "button",
                           {
                             "aria-label": `Open ${entry.label} data`,
@@ -9954,10 +10924,10 @@ var SectionOutlinePanel = ({
                             type: "button",
                             disabled: !entry.data?.file,
                             onClick: () => onOpenData(entry),
-                            children: /* @__PURE__ */ jsx18(Database, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ jsx19(Database, { "aria-hidden": "true" })
                           }
                         ),
-                        /* @__PURE__ */ jsx18(
+                        /* @__PURE__ */ jsx19(
                           "button",
                           {
                             "aria-label": `Open ${entry.label} source`,
@@ -9967,10 +10937,10 @@ var SectionOutlinePanel = ({
                             type: "button",
                             disabled: !entry.source?.file,
                             onClick: () => onOpenSource(entry),
-                            children: /* @__PURE__ */ jsx18(CodeXml, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ jsx19(CodeXml, { "aria-hidden": "true" })
                           }
                         ),
-                        /* @__PURE__ */ jsx18(
+                        /* @__PURE__ */ jsx19(
                           "button",
                           {
                             "aria-label": `Open ${entry.label} usage`,
@@ -9980,10 +10950,10 @@ var SectionOutlinePanel = ({
                             type: "button",
                             disabled: !entry.metadata.usage?.source.file,
                             onClick: () => onOpenUsageSource(entry),
-                            children: /* @__PURE__ */ jsx18(CornerUpRight, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ jsx19(CornerUpRight, { "aria-hidden": "true" })
                           }
                         ),
-                        /* @__PURE__ */ jsx18(
+                        /* @__PURE__ */ jsx19(
                           "span",
                           {
                             "aria-hidden": "true",
@@ -9991,7 +10961,7 @@ var SectionOutlinePanel = ({
                             children: "|"
                           }
                         ),
-                        /* @__PURE__ */ jsx18(
+                        /* @__PURE__ */ jsx19(
                           "button",
                           {
                             "aria-label": `Start DOM QA for ${entry.label}`,
@@ -10001,7 +10971,7 @@ var SectionOutlinePanel = ({
                             type: "button",
                             disabled: !canWriteDom || isZeroArea,
                             onClick: () => onStartDomReview(entry),
-                            children: /* @__PURE__ */ jsx18(SquareMousePointer, { "aria-hidden": "true" })
+                            children: /* @__PURE__ */ jsx19(SquareMousePointer, { "aria-hidden": "true" })
                           }
                         )
                       ] })
@@ -10012,26 +10982,26 @@ var SectionOutlinePanel = ({
               ]
             }
           ),
-          hasChildren && !isCollapsed && /* @__PURE__ */ jsx18("div", { className: "df-review-section-outline-children", children: entry.children.map(renderEntry) })
+          hasChildren && !isCollapsed && /* @__PURE__ */ jsx19("div", { className: "df-review-section-outline-children", children: entry.children.map(renderEntry) })
         ]
       },
       entry.id
     );
   };
-  return /* @__PURE__ */ jsx18(
+  return /* @__PURE__ */ jsx19(
     "aside",
     {
       className: "df-review-source-tree-panel",
       "aria-hidden": !isPanelVisible,
-      children: /* @__PURE__ */ jsxs15("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
-        /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-head", children: [
-          /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-summary", children: [
-            /* @__PURE__ */ jsxs15("span", { children: [
-              /* @__PURE__ */ jsx18("strong", { children: "Component" }),
-              /* @__PURE__ */ jsx18("small", { children: isFiltering ? `${filteredCount} / ${totalCount} results` : `${rootCount} ${rootCount === 1 ? "root" : "roots"}` })
+      children: /* @__PURE__ */ jsxs16("div", { id: "df-review-section-outline", className: "df-review-section-outline", children: [
+        /* @__PURE__ */ jsxs16("div", { className: "df-review-section-outline-head", children: [
+          /* @__PURE__ */ jsxs16("div", { className: "df-review-section-outline-summary", children: [
+            /* @__PURE__ */ jsxs16("span", { children: [
+              /* @__PURE__ */ jsx19("strong", { children: "Component" }),
+              /* @__PURE__ */ jsx19("small", { children: isFiltering ? `${filteredCount} / ${totalCount} results` : `${rootCount} ${rootCount === 1 ? "root" : "roots"}` })
             ] }),
-            /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-meta-controls", children: [
-              /* @__PURE__ */ jsx18(
+            /* @__PURE__ */ jsxs16("div", { className: "df-review-section-outline-meta-controls", children: [
+              /* @__PURE__ */ jsx19(
                 "button",
                 {
                   "aria-label": "Toggle source tree box metadata",
@@ -10041,10 +11011,10 @@ var SectionOutlinePanel = ({
                   title: "top / left / width / height",
                   type: "button",
                   onClick: () => onToggleMeta("box"),
-                  children: /* @__PURE__ */ jsx18(SquareDashed, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ jsx19(SquareDashed, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ jsx18(
+              /* @__PURE__ */ jsx19(
                 "button",
                 {
                   "aria-label": "Toggle source tree font metadata",
@@ -10054,10 +11024,10 @@ var SectionOutlinePanel = ({
                   title: "font size / weight",
                   type: "button",
                   onClick: () => onToggleMeta("font"),
-                  children: /* @__PURE__ */ jsx18(Type, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ jsx19(Type, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ jsx18(
+              /* @__PURE__ */ jsx19(
                 "button",
                 {
                   "aria-label": "Toggle source tree media metadata",
@@ -10067,10 +11037,10 @@ var SectionOutlinePanel = ({
                   title: "media urls",
                   type: "button",
                   onClick: () => onToggleMeta("media"),
-                  children: /* @__PURE__ */ jsx18(Image2, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ jsx19(Image2, { "aria-hidden": "true" })
                 }
               ),
-              /* @__PURE__ */ jsx18(
+              /* @__PURE__ */ jsx19(
                 "button",
                 {
                   "aria-label": "Toggle source tree class metadata",
@@ -10080,14 +11050,14 @@ var SectionOutlinePanel = ({
                   title: "class names",
                   type: "button",
                   onClick: () => onToggleMeta("className"),
-                  children: /* @__PURE__ */ jsx18(CodeXml, { "aria-hidden": "true" })
+                  children: /* @__PURE__ */ jsx19(CodeXml, { "aria-hidden": "true" })
                 }
               )
             ] })
           ] }),
-          /* @__PURE__ */ jsxs15("div", { className: "df-review-section-outline-filter", children: [
-            /* @__PURE__ */ jsx18(Search, { "aria-hidden": "true" }),
-            /* @__PURE__ */ jsx18(
+          /* @__PURE__ */ jsxs16("div", { className: "df-review-section-outline-filter", children: [
+            /* @__PURE__ */ jsx19(Search, { "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx19(
               "input",
               {
                 "aria-label": "Filter source tree",
@@ -10100,7 +11070,7 @@ var SectionOutlinePanel = ({
                 onChange: (event) => onFilterChange(event.currentTarget.value)
               }
             ),
-            filter && /* @__PURE__ */ jsx18(
+            filter && /* @__PURE__ */ jsx19(
               "button",
               {
                 "aria-label": "Clear source tree filter",
@@ -10108,19 +11078,19 @@ var SectionOutlinePanel = ({
                 type: "button",
                 onMouseDown: (event) => event.preventDefault(),
                 onClick: () => onFilterChange(""),
-                children: /* @__PURE__ */ jsx18(X, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ jsx19(X, { "aria-hidden": "true" })
               }
             )
           ] })
         ] }),
-        entries.length > 0 ? /* @__PURE__ */ jsx18("div", { className: "df-review-section-outline-list", children: entries.map(renderEntry) }) : /* @__PURE__ */ jsx18("div", { className: "df-review-section-outline-empty", children: isFiltering ? "No source matches" : "No sections found" })
+        entries.length > 0 ? /* @__PURE__ */ jsx19("div", { className: "df-review-section-outline-list", children: entries.map(renderEntry) }) : /* @__PURE__ */ jsx19("div", { className: "df-review-section-outline-empty", children: isFiltering ? "No source matches" : "No sections found" })
       ] })
     }
   );
 };
 
 // src/react-shell/review/source.inspector.overlay.tsx
-import { Fragment as Fragment2, jsx as jsx19, jsxs as jsxs16 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx20, jsxs as jsxs17 } from "react/jsx-runtime";
 var SourceInspectorOverlay = ({
   state,
   interactionRef,
@@ -10128,8 +11098,8 @@ var SourceInspectorOverlay = ({
   onOpenCandidate
 }) => {
   if (!state) return null;
-  return /* @__PURE__ */ jsxs16(Fragment2, { children: [
-    /* @__PURE__ */ jsx19(
+  return /* @__PURE__ */ jsxs17(Fragment3, { children: [
+    /* @__PURE__ */ jsx20(
       "div",
       {
         className: `df-review-source-outline${state.isPinned ? " is-pinned" : ""}`,
@@ -10141,7 +11111,7 @@ var SourceInspectorOverlay = ({
         }
       }
     ),
-    state.candidates.length > 0 && /* @__PURE__ */ jsxs16(
+    state.candidates.length > 0 && /* @__PURE__ */ jsxs17(
       "div",
       {
         className: `df-review-source-popover${state.isPinned ? " is-pinned" : ""}`,
@@ -10162,7 +11132,7 @@ var SourceInspectorOverlay = ({
         },
         onClick: (event) => event.stopPropagation(),
         children: [
-          /* @__PURE__ */ jsx19("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ jsx19(
+          /* @__PURE__ */ jsx20("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ jsx20(
             "button",
             {
               "aria-label": "Close source candidates",
@@ -10171,7 +11141,7 @@ var SourceInspectorOverlay = ({
               children: "\xD7"
             }
           ) }),
-          /* @__PURE__ */ jsx19("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ jsx19(
+          /* @__PURE__ */ jsx20("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ jsx20(
             "button",
             {
               className: `df-review-source-candidate is-${candidate.kind}`,
@@ -10181,10 +11151,10 @@ var SourceInspectorOverlay = ({
                 event.stopPropagation();
                 onOpenCandidate(candidate);
               },
-              children: /* @__PURE__ */ jsxs16("span", { className: "df-review-source-candidate-main", children: [
-                /* @__PURE__ */ jsx19("strong", { children: candidate.label }),
-                /* @__PURE__ */ jsx19("span", { children: candidate.filePath }),
-                /* @__PURE__ */ jsx19("small", { children: [candidate.positionLabel || "-:-", candidate.detail].filter(Boolean).join(" \xB7 ") })
+              children: /* @__PURE__ */ jsxs17("span", { className: "df-review-source-candidate-main", children: [
+                /* @__PURE__ */ jsx20("strong", { children: candidate.label }),
+                /* @__PURE__ */ jsx20("span", { children: candidate.filePath }),
+                /* @__PURE__ */ jsx20("small", { children: [candidate.positionLabel || "-:-", candidate.detail].filter(Boolean).join(" \xB7 ") })
               ] })
             },
             candidate.id
@@ -10196,20 +11166,20 @@ var SourceInspectorOverlay = ({
 };
 
 // src/react-shell/figma/figma-mark-icon.tsx
-import { jsx as jsx20, jsxs as jsxs17 } from "react/jsx-runtime";
+import { jsx as jsx21, jsxs as jsxs18 } from "react/jsx-runtime";
 function FigmaMarkIcon() {
-  return /* @__PURE__ */ jsx20(
+  return /* @__PURE__ */ jsx21(
     "svg",
     {
       "aria-hidden": "true",
       className: "df-review-figma-mark-icon",
       viewBox: "0 0 24 24",
-      children: /* @__PURE__ */ jsx20("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
+      children: /* @__PURE__ */ jsx21("path", { d: "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441C12.735 21.964 10.688 24 8.172 24zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z" })
     }
   );
 }
 function FigmaRailIcon() {
-  return /* @__PURE__ */ jsxs17(
+  return /* @__PURE__ */ jsxs18(
     "svg",
     {
       "aria-hidden": "true",
@@ -10220,11 +11190,11 @@ function FigmaRailIcon() {
       strokeLinejoin: "round",
       viewBox: "0 0 24 24",
       children: [
-        /* @__PURE__ */ jsx20("path", { d: "M12 8H8.5a3 3 0 1 1 0-6H12v6Z" }),
-        /* @__PURE__ */ jsx20("path", { d: "M12 14H8.5a3 3 0 1 1 0-6H12v6Z" }),
-        /* @__PURE__ */ jsx20("path", { d: "M12 17.5A3.5 3.5 0 1 1 8.5 14H12v3.5Z" }),
-        /* @__PURE__ */ jsx20("path", { d: "M12 2h3.5a3 3 0 1 1 0 6H12V2Z" }),
-        /* @__PURE__ */ jsx20("circle", { cx: "15.5", cy: "11", r: "3" })
+        /* @__PURE__ */ jsx21("path", { d: "M12 8H8.5a3 3 0 1 1 0-6H12v6Z" }),
+        /* @__PURE__ */ jsx21("path", { d: "M12 14H8.5a3 3 0 1 1 0-6H12v6Z" }),
+        /* @__PURE__ */ jsx21("path", { d: "M12 17.5A3.5 3.5 0 1 1 8.5 14H12v3.5Z" }),
+        /* @__PURE__ */ jsx21("path", { d: "M12 2h3.5a3 3 0 1 1 0 6H12V2Z" }),
+        /* @__PURE__ */ jsx21("circle", { cx: "15.5", cy: "11", r: "3" })
       ]
     }
   );
@@ -10232,10 +11202,10 @@ function FigmaRailIcon() {
 
 // src/react-shell/presence/overlay.tsx
 import { useState as useState6 } from "react";
-import { jsx as jsx21, jsxs as jsxs18 } from "react/jsx-runtime";
+import { jsx as jsx22, jsxs as jsxs19 } from "react/jsx-runtime";
 var getPresenceName = (user) => user.displayName || user.userId;
-var PresenceUserIcon = () => /* @__PURE__ */ jsxs18("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
-  /* @__PURE__ */ jsx21(
+var PresenceUserIcon = () => /* @__PURE__ */ jsxs19("svg", { "aria-hidden": "true", viewBox: "0 0 30 30", children: [
+  /* @__PURE__ */ jsx22(
     "circle",
     {
       cx: "15",
@@ -10246,8 +11216,8 @@ var PresenceUserIcon = () => /* @__PURE__ */ jsxs18("svg", { "aria-hidden": "tru
       strokeWidth: "2.6"
     }
   ),
-  /* @__PURE__ */ jsx21("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
-  /* @__PURE__ */ jsx21(
+  /* @__PURE__ */ jsx22("circle", { cx: "15", cy: "10.5", r: "3.4", fill: "currentColor", stroke: "none" }),
+  /* @__PURE__ */ jsx22(
     "path",
     {
       d: "M7.8 22.1c.9-4.1 3.4-6.1 7.2-6.1s6.3 2 7.2 6.1c-1.7 1.5-4.1 2.4-7.2 2.4s-5.5-.9-7.2-2.4z",
@@ -10262,13 +11232,13 @@ var PresenceOverlay = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState6(false);
   if (users.length === 0) return null;
-  return /* @__PURE__ */ jsxs18(
+  return /* @__PURE__ */ jsxs19(
     "div",
     {
       "aria-label": `Review presence, ${users.length} online`,
       className: `df-review-presence-overlay${isExpanded ? " is-expanded" : ""}`,
       children: [
-        /* @__PURE__ */ jsxs18(
+        /* @__PURE__ */ jsxs19(
           "button",
           {
             "aria-label": `Show online reviewers, ${users.length} online`,
@@ -10277,12 +11247,12 @@ var PresenceOverlay = ({
             type: "button",
             onClick: () => setIsExpanded((current) => !current),
             children: [
-              /* @__PURE__ */ jsx21(PresenceUserIcon, {}),
-              /* @__PURE__ */ jsx21("span", { className: "df-review-presence-badge", children: users.length })
+              /* @__PURE__ */ jsx22(PresenceUserIcon, {}),
+              /* @__PURE__ */ jsx22("span", { className: "df-review-presence-badge", children: users.length })
             ]
           }
         ),
-        isExpanded && /* @__PURE__ */ jsx21("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ jsx21(
+        isExpanded && /* @__PURE__ */ jsx22("div", { className: "df-review-presence-list", role: "list", children: users.map((user) => /* @__PURE__ */ jsx22(
           "span",
           {
             className: `df-review-presence-chip${user.sessionId === presenceSessionId ? " is-self" : ""}`,
@@ -10291,7 +11261,7 @@ var PresenceOverlay = ({
               "--df-review-presence-color": user.color
             },
             title: getPresenceName(user),
-            children: /* @__PURE__ */ jsx21("span", { children: getPresenceName(user) })
+            children: /* @__PURE__ */ jsx22("span", { children: getPresenceName(user) })
           },
           user.sessionId
         )) })
@@ -10301,8 +11271,8 @@ var PresenceOverlay = ({
 };
 
 // src/react-shell/review/df.logo.tsx
-import { jsx as jsx22, jsxs as jsxs19 } from "react/jsx-runtime";
-var DfLogoIcon = () => /* @__PURE__ */ jsxs19(
+import { jsx as jsx23, jsxs as jsxs20 } from "react/jsx-runtime";
+var DfLogoIcon = () => /* @__PURE__ */ jsxs20(
   "svg",
   {
     className: "df-review-brand-icon",
@@ -10311,7 +11281,7 @@ var DfLogoIcon = () => /* @__PURE__ */ jsxs19(
     "aria-hidden": "true",
     focusable: "false",
     children: [
-      /* @__PURE__ */ jsx22(
+      /* @__PURE__ */ jsx23(
         "rect",
         {
           width: "4.787",
@@ -10320,14 +11290,14 @@ var DfLogoIcon = () => /* @__PURE__ */ jsxs19(
           fill: "currentColor"
         }
       ),
-      /* @__PURE__ */ jsx22(
+      /* @__PURE__ */ jsx23(
         "path",
         {
           d: "M25.337,12.329a15.036,15.036,0,1,0,0,21.866v4.186h4.787V0H25.337V12.329ZM15.033,33.5A10.236,10.236,0,1,1,25.27,23.265,10.249,10.249,0,0,1,15.033,33.5Z",
           fill: "currentColor"
         }
       ),
-      /* @__PURE__ */ jsx22(
+      /* @__PURE__ */ jsx23(
         "path",
         {
           d: "M72.092,0H67.3V38.314h4.792V23.939H86.5V19.152H72.092Z",
@@ -10340,7 +11310,7 @@ var DfLogoIcon = () => /* @__PURE__ */ jsxs19(
 );
 
 // src/react-shell/review/side.rail.tsx
-import { jsx as jsx23, jsxs as jsxs20 } from "react/jsx-runtime";
+import { jsx as jsx24, jsxs as jsxs21 } from "react/jsx-runtime";
 var ReviewSideRail = ({
   currentPagePresenceUsers,
   isFigmaImageManagementEnabled,
@@ -10356,8 +11326,8 @@ var ReviewSideRail = ({
   onToggleQaPanel,
   onToggleSourceTreePanel
 }) => {
-  return /* @__PURE__ */ jsxs20("div", { className: "df-review-side-rail", children: [
-    isFigmaImageManagementEnabled && /* @__PURE__ */ jsx23(
+  return /* @__PURE__ */ jsxs21("div", { className: "df-review-side-rail", children: [
+    isFigmaImageManagementEnabled && /* @__PURE__ */ jsx24(
       "button",
       {
         "aria-label": isFigmaImagesPanelVisible ? "Hide Figma images" : "Show Figma images",
@@ -10368,10 +11338,10 @@ var ReviewSideRail = ({
         type: "button",
         onClick: onToggleFigmaImagesPanel,
         title: "Figma Images",
-        children: /* @__PURE__ */ jsx23("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx23(FigmaRailIcon, {}) })
+        children: /* @__PURE__ */ jsx24("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx24(FigmaRailIcon, {}) })
       }
     ),
-    /* @__PURE__ */ jsx23(
+    /* @__PURE__ */ jsx24(
       "button",
       {
         "aria-label": isQaPanelVisible ? "Hide QA list" : "Show QA list",
@@ -10382,10 +11352,10 @@ var ReviewSideRail = ({
         type: "button",
         onClick: onToggleQaPanel,
         title: "QA",
-        children: /* @__PURE__ */ jsx23("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx23(ListChecks, {}) })
+        children: /* @__PURE__ */ jsx24("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx24(ListChecks, {}) })
       }
     ),
-    isSourceInspectorEnabled && /* @__PURE__ */ jsx23(
+    isSourceInspectorEnabled && /* @__PURE__ */ jsx24(
       "button",
       {
         "aria-controls": "df-review-section-outline",
@@ -10397,11 +11367,11 @@ var ReviewSideRail = ({
         type: "button",
         onClick: onToggleSourceTreePanel,
         title: "Component List",
-        children: /* @__PURE__ */ jsx23("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx23(Network, {}) })
+        children: /* @__PURE__ */ jsx24("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx24(Network, {}) })
       }
     ),
-    /* @__PURE__ */ jsxs20("div", { className: "df-review-side-actions", children: [
-      /* @__PURE__ */ jsx23(
+    /* @__PURE__ */ jsxs21("div", { className: "df-review-side-actions", children: [
+      /* @__PURE__ */ jsx24(
         "button",
         {
           "aria-label": "Open initial prompt",
@@ -10411,10 +11381,10 @@ var ReviewSideRail = ({
           type: "button",
           onClick: onOpenInitialPrompt,
           title: "Initial prompt",
-          children: /* @__PURE__ */ jsx23("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx23(Bot, {}) })
+          children: /* @__PURE__ */ jsx24("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx24(Bot, {}) })
         }
       ),
-      /* @__PURE__ */ jsx23(
+      /* @__PURE__ */ jsx24(
         "button",
         {
           "aria-label": "Open settings",
@@ -10424,18 +11394,18 @@ var ReviewSideRail = ({
           type: "button",
           onClick: onOpenSettings,
           title: "Settings",
-          children: /* @__PURE__ */ jsx23("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx23(Settings, {}) })
+          children: /* @__PURE__ */ jsx24("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx24(Settings, {}) })
         }
       ),
-      currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsx23(
+      currentPagePresenceUsers.length > 0 && /* @__PURE__ */ jsx24(
         PresenceOverlay,
         {
           presenceSessionId,
           users: currentPagePresenceUsers
         }
       ),
-      /* @__PURE__ */ jsx23("span", { className: "df-review-side-divider", "aria-hidden": "true" }),
-      /* @__PURE__ */ jsx23(
+      /* @__PURE__ */ jsx24("span", { className: "df-review-side-divider", "aria-hidden": "true" }),
+      /* @__PURE__ */ jsx24(
         "button",
         {
           "aria-label": "Open about",
@@ -10445,7 +11415,7 @@ var ReviewSideRail = ({
           type: "button",
           onClick: onOpenAbout,
           title: "About",
-          children: /* @__PURE__ */ jsx23("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx23(DfLogoIcon, {}) })
+          children: /* @__PURE__ */ jsx24("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx24(DfLogoIcon, {}) })
         }
       )
     ] })
@@ -10453,7 +11423,7 @@ var ReviewSideRail = ({
 };
 
 // src/react-shell/review/mode.toolbar.tsx
-import { jsx as jsx24, jsxs as jsxs21 } from "react/jsx-runtime";
+import { jsx as jsx25, jsxs as jsxs22 } from "react/jsx-runtime";
 var ReviewModeToolbar = ({
   canWriteArea,
   canWriteDom,
@@ -10461,8 +11431,8 @@ var ReviewModeToolbar = ({
   onSetReviewMode
 }) => {
   if (!canWriteDom && !canWriteArea) return null;
-  return /* @__PURE__ */ jsxs21("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
-    canWriteDom && /* @__PURE__ */ jsx24(
+  return /* @__PURE__ */ jsxs22("div", { className: "df-review-mode", "aria-label": "Add QA", children: [
+    canWriteDom && /* @__PURE__ */ jsx25(
       "button",
       {
         "aria-label": "Element",
@@ -10470,11 +11440,11 @@ var ReviewModeToolbar = ({
         "data-review-tooltip": "Element QA",
         type: "button",
         onClick: () => onSetReviewMode("element"),
-        children: /* @__PURE__ */ jsx24(SquareMousePointer, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ jsx25(SquareMousePointer, { "aria-hidden": "true" })
       }
     ),
-    canWriteDom && canWriteArea && /* @__PURE__ */ jsx24("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
-    canWriteArea && /* @__PURE__ */ jsx24(
+    canWriteDom && canWriteArea && /* @__PURE__ */ jsx25("span", { className: "df-review-mode-divider", "aria-hidden": "true", children: "|" }),
+    canWriteArea && /* @__PURE__ */ jsx25(
       "button",
       {
         "aria-label": "Area",
@@ -10482,14 +11452,14 @@ var ReviewModeToolbar = ({
         "data-review-tooltip": "Area QA",
         type: "button",
         onClick: () => onSetReviewMode("area"),
-        children: /* @__PURE__ */ jsx24(Scan, { "aria-hidden": "true" })
+        children: /* @__PURE__ */ jsx25(Scan, { "aria-hidden": "true" })
       }
     )
   ] });
 };
 
 // src/react-shell/ruler/gutters.tsx
-import { Fragment as Fragment3, jsx as jsx25, jsxs as jsxs22 } from "react/jsx-runtime";
+import { Fragment as Fragment4, jsx as jsx26, jsxs as jsxs23 } from "react/jsx-runtime";
 var RulerGutters = ({
   rulerHover,
   rulerScaleX,
@@ -10497,9 +11467,9 @@ var RulerGutters = ({
   rulerUnit,
   size
 }) => {
-  return /* @__PURE__ */ jsxs22(Fragment3, { children: [
-    /* @__PURE__ */ jsx25("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
-    /* @__PURE__ */ jsxs22(
+  return /* @__PURE__ */ jsxs23(Fragment4, { children: [
+    /* @__PURE__ */ jsx26("div", { className: "df-review-ruler-corner", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsxs23(
       "div",
       {
         className: "df-review-ruler-gutter is-x",
@@ -10507,15 +11477,15 @@ var RulerGutters = ({
           "--df-review-ruler-step-x": `${rulerScaleX * 20}px`
         },
         children: [
-          /* @__PURE__ */ jsxs22("div", { className: "df-review-ruler-frame-label", children: [
-            /* @__PURE__ */ jsx25("strong", { children: size.label }),
-            /* @__PURE__ */ jsxs22("span", { children: [
+          /* @__PURE__ */ jsxs23("div", { className: "df-review-ruler-frame-label", children: [
+            /* @__PURE__ */ jsx26("strong", { children: size.label }),
+            /* @__PURE__ */ jsxs23("span", { children: [
               size.designWidth,
               size.designHeight ? `x${size.designHeight}` : "",
               rulerUnit
             ] })
           ] }),
-          rulerHover && /* @__PURE__ */ jsx25(
+          rulerHover && /* @__PURE__ */ jsx26(
             "div",
             {
               className: "df-review-ruler-coord is-x",
@@ -10526,14 +11496,14 @@ var RulerGutters = ({
         ]
       }
     ),
-    /* @__PURE__ */ jsx25(
+    /* @__PURE__ */ jsx26(
       "div",
       {
         className: "df-review-ruler-gutter is-y",
         style: {
           "--df-review-ruler-step-y": `${rulerScaleY * 20}px`
         },
-        children: rulerHover && /* @__PURE__ */ jsx25(
+        children: rulerHover && /* @__PURE__ */ jsx26(
           "div",
           {
             className: "df-review-ruler-coord is-y",
@@ -10547,7 +11517,7 @@ var RulerGutters = ({
 };
 
 // src/react-shell/ruler/overlay.tsx
-import { Fragment as Fragment4, jsx as jsx26, jsxs as jsxs23 } from "react/jsx-runtime";
+import { Fragment as Fragment5, jsx as jsx27, jsxs as jsxs24 } from "react/jsx-runtime";
 var RulerOverlay = ({
   iframeRef,
   isRulerDragging,
@@ -10557,7 +11527,7 @@ var RulerOverlay = ({
   rulerOverlayRef,
   size
 }) => {
-  return /* @__PURE__ */ jsxs23(
+  return /* @__PURE__ */ jsxs24(
     "div",
     {
       ref: rulerOverlayRef,
@@ -10571,8 +11541,8 @@ var RulerOverlay = ({
         );
       },
       children: [
-        rulerHover && /* @__PURE__ */ jsxs23(Fragment4, { children: [
-          /* @__PURE__ */ jsx26(
+        rulerHover && /* @__PURE__ */ jsxs24(Fragment5, { children: [
+          /* @__PURE__ */ jsx27(
             "div",
             {
               className: "df-review-ruler-guide is-x",
@@ -10580,7 +11550,7 @@ var RulerOverlay = ({
               style: { top: `${rulerHover.y}px` }
             }
           ),
-          /* @__PURE__ */ jsx26(
+          /* @__PURE__ */ jsx27(
             "div",
             {
               className: "df-review-ruler-guide is-y",
@@ -10589,8 +11559,8 @@ var RulerOverlay = ({
             }
           )
         ] }),
-        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs23(Fragment4, { children: [
-          /* @__PURE__ */ jsx26(
+        rulerMeasure && (rulerMeasure.width > 0 || rulerMeasure.height > 0) && /* @__PURE__ */ jsxs24(Fragment5, { children: [
+          /* @__PURE__ */ jsx27(
             "div",
             {
               className: "df-review-ruler-selection",
@@ -10603,7 +11573,7 @@ var RulerOverlay = ({
               }
             }
           ),
-          /* @__PURE__ */ jsx26(
+          /* @__PURE__ */ jsx27(
             "div",
             {
               className: "df-review-ruler-label",
@@ -10627,7 +11597,7 @@ var RulerOverlay = ({
 };
 
 // src/react-shell/target/figma.image.overlay.ts
-import { useCallback as useCallback3, useEffect as useEffect4, useRef as useRef3 } from "react";
+import { useCallback as useCallback5, useEffect as useEffect4, useRef as useRef3 } from "react";
 
 // src/react-shell/target/target.ts
 var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
@@ -10821,7 +11791,7 @@ var useTargetFigmaImageOverlays = ({
   const overlaySignature = createTargetFigmaImageOverlaySignature(
     figmaImageOverlays
   );
-  const syncTargetFigmaImageOverlays = useCallback3(() => {
+  const syncTargetFigmaImageOverlays = useCallback5(() => {
     let targetDocument;
     try {
       targetDocument = iframeRef.current?.contentDocument;
@@ -11059,7 +12029,7 @@ function normalizeTargetFigmaImageOffsetY(value) {
 }
 
 // src/react-shell/target/frame.tsx
-import { jsx as jsx27, jsxs as jsxs24 } from "react/jsx-runtime";
+import { jsx as jsx28, jsxs as jsxs25 } from "react/jsx-runtime";
 var ReviewTargetFrame = ({
   canWriteArea,
   canWriteDom,
@@ -11096,13 +12066,13 @@ var ReviewTargetFrame = ({
     syncTargetFigmaImageOverlays();
     window.requestAnimationFrame(syncTargetFigmaImageOverlays);
   };
-  return /* @__PURE__ */ jsx27("main", { className: "df-review-stage", children: /* @__PURE__ */ jsxs24("div", { className: "df-review-frame", children: [
-    /* @__PURE__ */ jsx27("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ jsx27("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ jsx27("div", { className: "df-review-target-stack", children: /* @__PURE__ */ jsxs24(
+  return /* @__PURE__ */ jsx28("main", { className: "df-review-stage", children: /* @__PURE__ */ jsxs25("div", { className: "df-review-frame", children: [
+    /* @__PURE__ */ jsx28("div", { className: "df-review-frame-scroll", ref: frameScrollRef, children: /* @__PURE__ */ jsx28("div", { className: "df-review-frame-canvas", children: /* @__PURE__ */ jsx28("div", { className: "df-review-target-stack", children: /* @__PURE__ */ jsxs25(
       "div",
       {
         className: `df-review-device-frame${showRuler ? " is-ruler" : ""}`,
         children: [
-          showRuler && /* @__PURE__ */ jsx27(
+          showRuler && /* @__PURE__ */ jsx28(
             RulerGutters,
             {
               rulerHover,
@@ -11112,7 +12082,7 @@ var ReviewTargetFrame = ({
               size
             }
           ),
-          /* @__PURE__ */ jsxs24(
+          /* @__PURE__ */ jsxs25(
             "div",
             {
               className: "df-review-device",
@@ -11123,7 +12093,7 @@ var ReviewTargetFrame = ({
                 minHeight: `${size.height}px`
               },
               children: [
-                /* @__PURE__ */ jsx27(
+                /* @__PURE__ */ jsx28(
                   "iframe",
                   {
                     ref: iframeRef,
@@ -11135,7 +12105,7 @@ var ReviewTargetFrame = ({
                   },
                   targetSrc
                 ),
-                showRuler && /* @__PURE__ */ jsx27(
+                showRuler && /* @__PURE__ */ jsx28(
                   RulerOverlay,
                   {
                     iframeRef,
@@ -11153,7 +12123,7 @@ var ReviewTargetFrame = ({
         ]
       }
     ) }) }) }),
-    /* @__PURE__ */ jsx27("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ jsx27(
+    /* @__PURE__ */ jsx28("div", { className: "df-review-frame-actions", children: /* @__PURE__ */ jsx28(
       ReviewModeToolbar,
       {
         canWriteArea,
@@ -11166,18 +12136,18 @@ var ReviewTargetFrame = ({
 };
 
 // src/react-shell/topbar.tsx
-import { jsx as jsx28, jsxs as jsxs25 } from "react/jsx-runtime";
+import { jsx as jsx29, jsxs as jsxs26 } from "react/jsx-runtime";
 var ReviewScopeIcon2 = ({ scope }) => {
-  if (scope === "mobile") return /* @__PURE__ */ jsx28(Smartphone, { "aria-hidden": "true" });
-  if (scope === "tablet") return /* @__PURE__ */ jsx28(RectangleHorizontal, { "aria-hidden": "true" });
-  if (scope === "wide") return /* @__PURE__ */ jsx28(Maximize2, { "aria-hidden": "true" });
-  if (scope === "dom") return /* @__PURE__ */ jsx28(SquareMousePointer, { "aria-hidden": "true" });
-  return /* @__PURE__ */ jsx28(Monitor, { "aria-hidden": "true" });
+  if (scope === "mobile") return /* @__PURE__ */ jsx29(Smartphone, { "aria-hidden": "true" });
+  if (scope === "tablet") return /* @__PURE__ */ jsx29(RectangleHorizontal, { "aria-hidden": "true" });
+  if (scope === "wide") return /* @__PURE__ */ jsx29(Maximize2, { "aria-hidden": "true" });
+  if (scope === "dom") return /* @__PURE__ */ jsx29(SquareMousePointer, { "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx29(Monitor, { "aria-hidden": "true" });
 };
 var ViewportPresetIcon = ({
   preset
 }) => {
-  return /* @__PURE__ */ jsx28(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
+  return /* @__PURE__ */ jsx29(ReviewScopeIcon2, { scope: getViewportPresetKind(preset) });
 };
 var getPresetSelectValue = (preset) => `${preset.label}:${preset.width}x${preset.height}`;
 function getTargetOpenHref(targetSrc) {
@@ -11214,8 +12184,8 @@ var ReviewTopbar = ({
     );
     if (nextPreset) onSizeChange(nextPreset);
   };
-  return /* @__PURE__ */ jsxs25("header", { className: "df-review-topbar", children: [
-    /* @__PURE__ */ jsxs25(
+  return /* @__PURE__ */ jsxs26("header", { className: "df-review-topbar", children: [
+    /* @__PURE__ */ jsxs26(
       "form",
       {
         className: "df-review-address",
@@ -11224,7 +12194,7 @@ var ReviewTopbar = ({
           onApplyTarget();
         },
         children: [
-          /* @__PURE__ */ jsx28(
+          /* @__PURE__ */ jsx29(
             "button",
             {
               "aria-label": "Open sitemap",
@@ -11233,10 +12203,10 @@ var ReviewTopbar = ({
               "data-review-tooltip-placement": "bottom",
               type: "button",
               onClick: onOpenSitemap,
-              children: /* @__PURE__ */ jsx28(Map2, { "aria-hidden": "true" })
+              children: /* @__PURE__ */ jsx29(Map2, { "aria-hidden": "true" })
             }
           ),
-          /* @__PURE__ */ jsx28(
+          /* @__PURE__ */ jsx29(
             "input",
             {
               "aria-label": "Path",
@@ -11244,8 +12214,8 @@ var ReviewTopbar = ({
               onChange: (event) => onDraftTargetChange(event.target.value)
             }
           ),
-          /* @__PURE__ */ jsxs25("div", { className: "df-review-address-actions", children: [
-            /* @__PURE__ */ jsx28(
+          /* @__PURE__ */ jsxs26("div", { className: "df-review-address-actions", children: [
+            /* @__PURE__ */ jsx29(
               "button",
               {
                 "aria-label": "Refresh target",
@@ -11254,10 +12224,10 @@ var ReviewTopbar = ({
                 "data-review-tooltip-placement": "bottom",
                 title: "Refresh target",
                 type: "submit",
-                children: /* @__PURE__ */ jsx28(RefreshCw, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ jsx29(RefreshCw, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ jsx28(
+            /* @__PURE__ */ jsx29(
               "button",
               {
                 "aria-label": copyLabel,
@@ -11267,10 +12237,10 @@ var ReviewTopbar = ({
                 title: copyLabel,
                 type: "button",
                 onClick: onCopyCurrentUrl,
-                children: /* @__PURE__ */ jsx28(Copy, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ jsx29(Copy, { "aria-hidden": "true" })
               }
             ),
-            /* @__PURE__ */ jsx28(
+            /* @__PURE__ */ jsx29(
               "a",
               {
                 "aria-label": "Open target page",
@@ -11281,30 +12251,30 @@ var ReviewTopbar = ({
                 rel: "noreferrer",
                 target: "_blank",
                 title: "Open target page",
-                children: /* @__PURE__ */ jsx28(ExternalLink, { "aria-hidden": "true" })
+                children: /* @__PURE__ */ jsx29(ExternalLink, { "aria-hidden": "true" })
               }
             )
           ] })
         ]
       }
     ),
-    /* @__PURE__ */ jsxs25("div", { className: "df-review-tools", children: [
-      /* @__PURE__ */ jsxs25("div", { className: "df-review-tool-controls", children: [
-        /* @__PURE__ */ jsx28("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ jsxs25(
+    /* @__PURE__ */ jsxs26("div", { className: "df-review-tools", children: [
+      /* @__PURE__ */ jsxs26("div", { className: "df-review-tool-controls", children: [
+        /* @__PURE__ */ jsx29("div", { className: "df-review-presets", "aria-label": "Viewport presets", children: viewportPresets.map((preset) => /* @__PURE__ */ jsxs26(
           "button",
           {
             className: preset.label === size.label ? "is-active" : "",
             type: "button",
             onClick: () => onSizeChange(preset),
             children: [
-              /* @__PURE__ */ jsx28(ViewportPresetIcon, { preset }),
-              /* @__PURE__ */ jsx28("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ jsx28("strong", { children: preset.label }) }),
-              /* @__PURE__ */ jsx28("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
+              /* @__PURE__ */ jsx29(ViewportPresetIcon, { preset }),
+              /* @__PURE__ */ jsx29("span", { className: "df-review-preset-copy", children: /* @__PURE__ */ jsx29("strong", { children: preset.label }) }),
+              /* @__PURE__ */ jsx29("span", { className: "df-review-preset-count", children: presetScopeCounts.get(getViewportPresetKind(preset)) ?? 0 })
             ]
           },
           preset.label
         )) }),
-        /* @__PURE__ */ jsx28(
+        /* @__PURE__ */ jsx29(
           "select",
           {
             "aria-label": "Viewport preset",
@@ -11314,7 +12284,7 @@ var ReviewTopbar = ({
             children: viewportPresets.map((preset) => {
               const scope = getViewportPresetKind(preset);
               const count = presetScopeCounts.get(scope) ?? 0;
-              return /* @__PURE__ */ jsx28(
+              return /* @__PURE__ */ jsx29(
                 "option",
                 {
                   value: getPresetSelectValue(preset),
@@ -11325,15 +12295,15 @@ var ReviewTopbar = ({
             })
           }
         ),
-        /* @__PURE__ */ jsx28("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
-        /* @__PURE__ */ jsxs25("span", { className: "df-review-active-size", children: [
+        /* @__PURE__ */ jsx29("span", { className: "df-review-tool-divider", "aria-hidden": "true", children: "|" }),
+        /* @__PURE__ */ jsxs26("span", { className: "df-review-active-size", children: [
           size.width,
           "x",
           size.height
         ] })
       ] }),
-      /* @__PURE__ */ jsxs25("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
-        isRulerAvailable && /* @__PURE__ */ jsx28(
+      /* @__PURE__ */ jsxs26("div", { className: "df-review-overlays", "aria-label": "Target overlays", children: [
+        isRulerAvailable && /* @__PURE__ */ jsx29(
           "button",
           {
             "aria-label": "Toggle ruler",
@@ -11342,10 +12312,10 @@ var ReviewTopbar = ({
             "data-review-tooltip-placement": "bottom",
             type: "button",
             onClick: onToggleRuler,
-            children: /* @__PURE__ */ jsx28(Ruler, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ jsx29(Ruler, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ jsx28(
+        /* @__PURE__ */ jsx29(
           "button",
           {
             "aria-label": "Toggle grid overlay",
@@ -11354,10 +12324,10 @@ var ReviewTopbar = ({
             "data-review-tooltip-placement": "bottom",
             type: "button",
             onClick: () => onToggleTargetOverlay("grid"),
-            children: /* @__PURE__ */ jsx28(LayoutGrid, { "aria-hidden": "true" })
+            children: /* @__PURE__ */ jsx29(LayoutGrid, { "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ jsx28(
+        /* @__PURE__ */ jsx29(
           "button",
           {
             "aria-disabled": !isFigmaOverlayAvailable,
@@ -11368,7 +12338,7 @@ var ReviewTopbar = ({
             disabled: !isFigmaOverlayAvailable,
             type: "button",
             onClick: onToggleFigmaOverlay,
-            children: /* @__PURE__ */ jsx28(FigmaMarkIcon, {})
+            children: /* @__PURE__ */ jsx29(FigmaMarkIcon, {})
           }
         )
       ] })
@@ -11429,34 +12399,13 @@ function useReviewCommandKey({
 
 // src/react-shell/hooks/use.review.controller.ts
 import {
-  useCallback as useCallback8
+  useCallback as useCallback10
 } from "react";
 
 // src/react-shell/hooks/use.review.item.restore.ts
 import {
-  useCallback as useCallback4
+  useCallback as useCallback6
 } from "react";
-
-// src/react-shell/store/store.context.tsx
-import {
-  createContext as createContext2,
-  useContext as useContext2
-} from "react";
-import { useStore } from "zustand";
-var ReviewShellStoreContext = createContext2(null);
-var ReviewShellStoreProvider = ReviewShellStoreContext.Provider;
-var useReviewShellStoreApi = () => {
-  const store = useContext2(ReviewShellStoreContext);
-  if (!store) {
-    throw new Error(
-      "useReviewShellStore must be used within a ReviewShell provider"
-    );
-  }
-  return store;
-};
-var useReviewShellStore = (selector) => useStore(useReviewShellStoreApi(), selector);
-
-// src/react-shell/hooks/use.review.item.restore.ts
 function runWithAutoScrollBehavior2(targetDocument, callback) {
   const elements = [
     targetDocument?.documentElement,
@@ -11526,7 +12475,6 @@ var useReviewItemRestore = ({
   pendingInitialItemIdRef,
   pendingRestoreRef,
   reviewPathPrefix,
-  selectedItemIdRef,
   source,
   viewportPresets,
   onActiveRouteChange,
@@ -11537,24 +12485,22 @@ var useReviewItemRestore = ({
   onTargetChange
 }) => {
   const storeApi = useReviewShellStoreApi();
-  const clearSelectedItem = useCallback4(() => {
+  const clearSelectedItem = useCallback6(() => {
     pendingRestoreRef.current = null;
-    selectedItemIdRef.current = null;
     onSelectedItemIdChange(null);
     controllerRef.current?.highlightItem(void 0);
   }, [
     controllerRef,
     onSelectedItemIdChange,
-    pendingRestoreRef,
-    selectedItemIdRef
+    pendingRestoreRef
   ]);
-  const applyItemScroll = useCallback4(
+  const applyItemScroll = useCallback6(
     async (item) => {
-      if (selectedItemIdRef.current !== item.id) return false;
+      if (storeApi.getState().selectedItemId !== item.id) return false;
       const targetWindow = iframeRef.current?.contentWindow;
       const targetDocument = iframeRef.current?.contentDocument;
       if (!targetWindow || !targetDocument) return false;
-      const isCurrentRestore = () => selectedItemIdRef.current === item.id && iframeRef.current?.contentDocument === targetDocument;
+      const isCurrentRestore = () => storeApi.getState().selectedItemId === item.id && iframeRef.current?.contentDocument === targetDocument;
       const anchorElement = await waitForRestoreAnchor(
         targetWindow,
         targetDocument,
@@ -11589,9 +12535,9 @@ var useReviewItemRestore = ({
       }
       return true;
     },
-    [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
+    [controllerRef, iframeRef, onSyncTargetViewport, storeApi]
   );
-  const applyPendingRestore = useCallback4(() => {
+  const applyPendingRestore = useCallback6(() => {
     const item = pendingRestoreRef.current;
     if (!item) return;
     void applyItemScroll(item).then((didApply) => {
@@ -11600,14 +12546,13 @@ var useReviewItemRestore = ({
       }
     });
   }, [applyItemScroll, pendingRestoreRef]);
-  const restoreReviewItem = useCallback4(
+  const restoreReviewItem = useCallback6(
     (item) => {
       const nextRoute = getItemTarget(item, reviewPathPrefix);
       const nextTarget = getItemFrameTarget(item, reviewPathPrefix);
       const nextSize = getRestoredSize(item, viewportPresets);
       pendingInitialItemIdRef.current = null;
       pendingRestoreRef.current = item;
-      selectedItemIdRef.current = item.id;
       onSelectedItemIdChange(item.id);
       onActiveRouteChange(nextRoute);
       onDraftTargetChange(nextTarget);
@@ -11629,13 +12574,12 @@ var useReviewItemRestore = ({
       pendingRestoreRef,
       pendingInitialItemIdRef,
       reviewPathPrefix,
-      selectedItemIdRef,
       source,
       storeApi,
       viewportPresets
     ]
   );
-  const restoreInitialItem = useCallback4(async () => {
+  const restoreInitialItem = useCallback6(async () => {
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
     try {
@@ -11656,8 +12600,9 @@ var useReviewItemRestore = ({
 
 // src/react-shell/hooks/use.review.kit.lifecycle.ts
 import {
-  useCallback as useCallback5,
-  useEffect as useEffect6
+  useCallback as useCallback7,
+  useEffect as useEffect6,
+  useRef as useRef4
 } from "react";
 
 // src/react-shell/hooks/review.frame.navigation.ts
@@ -12298,7 +13243,6 @@ var useReviewKitLifecycle = ({
   controllerRef,
   frameScrollRef,
   hiddenOverlayItemIdList,
-  hiddenOverlayItemIdListRef,
   iframeRef,
   pageTargets,
   projectId,
@@ -12320,13 +13264,14 @@ var useReviewKitLifecycle = ({
   onSyncTargetViewport
 }) => {
   const storeApi = useReviewShellStoreApi();
-  const destroyReviewKit = useCallback5(() => {
+  const hiddenOverlayItemIdListRef = useRef4(hiddenOverlayItemIdList);
+  const destroyReviewKit = useCallback7(() => {
     cleanupTargetRef.current?.();
     cleanupTargetRef.current = null;
     controllerRef.current?.destroy();
     controllerRef.current = null;
   }, [cleanupTargetRef, controllerRef]);
-  const initReviewKit = useCallback5(() => {
+  const initReviewKit = useCallback7(() => {
     destroyReviewKit();
     const iframe = iframeRef.current;
     const targetWindow = iframe?.contentWindow;
@@ -12418,10 +13363,10 @@ var useReviewKitLifecycle = ({
     adjustmentLabel,
     storeApi
   ]);
-  const reloadReviewKit = useCallback5(async () => {
+  const reloadReviewKit = useCallback7(async () => {
     await controllerRef.current?.reload();
   }, [controllerRef]);
-  const setControllerReviewMode = useCallback5(
+  const setControllerReviewMode = useCallback7(
     (nextMode) => {
       controllerRef.current?.setMode(nextMode);
       onModeChange(controllerRef.current?.getMode() ?? "idle");
@@ -12437,7 +13382,7 @@ var useReviewKitLifecycle = ({
   useEffect6(() => {
     hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
     controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
-  }, [controllerRef, hiddenOverlayItemIdList, hiddenOverlayItemIdListRef]);
+  }, [controllerRef, hiddenOverlayItemIdList]);
   return {
     destroyReviewKit,
     initReviewKit,
@@ -12447,7 +13392,7 @@ var useReviewKitLifecycle = ({
 };
 
 // src/react-shell/hooks/use.review.target.overlay.ts
-import { useCallback as useCallback6, useEffect as useEffect7, useRef as useRef4 } from "react";
+import { useCallback as useCallback8, useEffect as useEffect7, useRef as useRef5 } from "react";
 var TARGET_OVERLAY_REFRESH_DELAYS = [80, 240, 600];
 var useReviewTargetOverlay = ({
   iframeRef,
@@ -12455,26 +13400,26 @@ var useReviewTargetOverlay = ({
   targetOverlayState,
   onTargetOverlayStateChange
 }) => {
-  const refreshTimersRef = useRef4([]);
-  const clearRefreshTimers = useCallback6(() => {
+  const refreshTimersRef = useRef5([]);
+  const clearRefreshTimers = useCallback8(() => {
     refreshTimersRef.current.forEach((timer) => window.clearTimeout(timer));
     refreshTimersRef.current = [];
   }, []);
-  const updateTargetOverlayState = useCallback6(() => {
+  const updateTargetOverlayState = useCallback8(() => {
     const targetDocument = iframeRef.current?.contentDocument ?? void 0;
     ensureTargetOverlayStackingStyle(targetDocument);
     const state = getTargetOverlayState(targetDocument);
     onTargetOverlayStateChange(state);
     return state;
   }, [iframeRef, onTargetOverlayStateChange]);
-  const refreshTargetOverlayState = useCallback6(() => {
+  const refreshTargetOverlayState = useCallback8(() => {
     clearRefreshTimers();
     updateTargetOverlayState();
     refreshTimersRef.current = TARGET_OVERLAY_REFRESH_DELAYS.map(
       (delay) => window.setTimeout(updateTargetOverlayState, delay)
     );
   }, [clearRefreshTimers, updateTargetOverlayState]);
-  const dispatchTargetOverlayHotkey = useCallback6(
+  const dispatchTargetOverlayHotkey = useCallback8(
     (overlay) => {
       const targetWindow = iframeRef.current?.contentWindow;
       if (!targetWindow) return false;
@@ -12496,7 +13441,7 @@ var useReviewTargetOverlay = ({
     },
     [iframeRef, refreshTargetOverlayState]
   );
-  const toggleTargetOverlay = useCallback6(
+  const toggleTargetOverlay = useCallback8(
     (overlay) => {
       if (overlay === "figma" && !isFigmaOverlayAvailable) {
         refreshTargetOverlayState();
@@ -12510,7 +13455,7 @@ var useReviewTargetOverlay = ({
       refreshTargetOverlayState
     ]
   );
-  const closeTargetOverlay = useCallback6(
+  const closeTargetOverlay = useCallback8(
     (overlay) => {
       const currentState = updateTargetOverlayState();
       if (!currentState[overlay]) return false;
@@ -12532,13 +13477,12 @@ var useReviewTargetOverlay = ({
 
 // src/react-shell/hooks/use.review.target.sync.ts
 import {
-  useCallback as useCallback7,
+  useCallback as useCallback9,
   useEffect as useEffect8
 } from "react";
 var useReviewTargetSync = ({
   iframeRef,
   reviewPathPrefix,
-  selectedItemIdRef,
   size,
   source,
   target,
@@ -12549,7 +13493,7 @@ var useReviewTargetSync = ({
   onTargetChange
 }) => {
   const storeApi = useReviewShellStoreApi();
-  const syncShellTarget = useCallback7(
+  const syncShellTarget = useCallback9(
     (nextTarget) => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
       const nextRouteKey = getTargetRouteKey(
@@ -12562,12 +13506,12 @@ var useReviewTargetSync = ({
         onDraftTargetChange(normalizedTarget);
         onActiveRouteChange(nextRouteKey);
       }
-      const currentSize = storeApi.getState().size;
-      if (selectedItemIdRef.current) {
+      const { size: currentSize, selectedItemId } = storeApi.getState();
+      if (selectedItemId) {
         updateShellUrlForItem(
           normalizedTarget,
           currentSize,
-          selectedItemIdRef.current,
+          selectedItemId,
           source
         );
       } else {
@@ -12580,7 +13524,6 @@ var useReviewTargetSync = ({
       onDraftTargetChange,
       onTargetChange,
       reviewPathPrefix,
-      selectedItemIdRef,
       source,
       storeApi
     ]
@@ -12589,15 +13532,11 @@ var useReviewTargetSync = ({
     onActiveRouteChange(getTargetRouteKey(target, reviewPathPrefix));
   }, [onActiveRouteChange, reviewPathPrefix, target]);
   useEffect8(() => {
-    if (selectedItemIdRef.current) {
-      updateShellUrlForItem(
-        storeApi.getState().target,
-        size,
-        selectedItemIdRef.current,
-        source
-      );
+    const { target: currentTarget, selectedItemId } = storeApi.getState();
+    if (selectedItemId) {
+      updateShellUrlForItem(currentTarget, size, selectedItemId, source);
     } else {
-      updateShellUrl(storeApi.getState().target, size, source);
+      updateShellUrl(currentTarget, size, source);
     }
     onSyncTargetViewport();
     setTargetScrollbarHidden(
@@ -12607,7 +13546,6 @@ var useReviewTargetSync = ({
   }, [
     iframeRef,
     onSyncTargetViewport,
-    selectedItemIdRef,
     size,
     source,
     storeApi
@@ -12627,7 +13565,6 @@ var useReviewController = ({
   controllerRef,
   frameScrollRef,
   hiddenOverlayItemIdList,
-  hiddenOverlayItemIdListRef,
   iframeRef,
   isFigmaOverlayAvailable,
   pageTargets,
@@ -12639,7 +13576,6 @@ var useReviewController = ({
   reviewViewportPresets,
   ruler,
   adjustmentLabel,
-  selectedItemIdRef,
   size,
   source,
   target,
@@ -12656,7 +13592,7 @@ var useReviewController = ({
   onTargetOverlayStateChange,
   onCloseRuler
 }) => {
-  const syncTargetViewport = useCallback8(() => {
+  const syncTargetViewport = useCallback10(() => {
     window.dispatchEvent(new Event("resize"));
   }, []);
   const {
@@ -12681,7 +13617,6 @@ var useReviewController = ({
     pendingInitialItemIdRef,
     pendingRestoreRef,
     reviewPathPrefix,
-    selectedItemIdRef,
     source,
     viewportPresets,
     onActiveRouteChange,
@@ -12694,7 +13629,6 @@ var useReviewController = ({
   const { syncShellTarget } = useReviewTargetSync({
     iframeRef,
     reviewPathPrefix,
-    selectedItemIdRef,
     size,
     source,
     target,
@@ -12717,7 +13651,6 @@ var useReviewController = ({
     controllerRef,
     frameScrollRef,
     hiddenOverlayItemIdList,
-    hiddenOverlayItemIdListRef,
     iframeRef,
     pageTargets,
     projectId,
@@ -12750,493 +13683,13 @@ var useReviewController = ({
   };
 };
 
-// src/react-shell/hooks/use.review.item.actions.ts
-import {
-  useCallback as useCallback9,
-  useState as useState8
-} from "react";
-
-// src/react-shell/review/shell.actions.ts
-var writeClipboardTextFallback = (value) => {
-  const selection = document.getSelection();
-  const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  const ranges = selection ? Array.from(
-    { length: selection.rangeCount },
-    (_, index) => selection.getRangeAt(index)
-  ) : [];
-  const textarea = document.createElement("textarea");
-  textarea.value = value;
-  textarea.setAttribute("readonly", "");
-  textarea.style.position = "fixed";
-  textarea.style.left = "-9999px";
-  textarea.style.top = "0";
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-  const isCopied = document.execCommand("copy");
-  textarea.remove();
-  selection?.removeAllRanges();
-  ranges.forEach((range) => selection?.addRange(range));
-  activeElement?.focus();
-  if (!isCopied) {
-    throw new Error("Failed to copy to clipboard");
-  }
-};
-var writeClipboardText = async (value) => {
-  try {
-    writeClipboardTextFallback(value);
-    return;
-  } catch (error) {
-    if (!navigator.clipboard?.writeText) {
-      throw error;
-    }
-    await navigator.clipboard.writeText(value);
-  }
-};
-var listReviewItems = async ({
-  activeRoute,
-  adapter,
-  isRemoteSource,
-  pageId,
-  projectId
-}) => adapter.list({
-  projectId,
-  pageId,
-  routeKey: isRemoteSource ? activeRoute : void 0
-});
-var listSitemapReviewItems = async ({
-  localAdapterEntry,
-  projectId,
-  remoteAdapterEntry
-}) => {
-  const [localResult, remoteResult] = await Promise.allSettled([
-    localAdapterEntry ? localAdapterEntry.adapter.list({
-      projectId,
-      pageId: localAdapterEntry.pageId
-    }) : Promise.resolve([]),
-    remoteAdapterEntry ? remoteAdapterEntry.adapter.list({
-      projectId,
-      pageId: remoteAdapterEntry.pageId,
-      source: remoteAdapterEntry.label
-    }) : Promise.resolve([])
-  ]);
-  return {
-    local: localResult.status === "fulfilled" ? localResult.value : [],
-    remote: remoteResult.status === "fulfilled" ? remoteResult.value : []
-  };
-};
-var refreshReviewItems = async ({
-  onItemsChange,
-  ...listOptions
-}) => {
-  const nextItems = await listReviewItems(listOptions);
-  onItemsChange(nextItems);
-  return nextItems;
-};
-var refreshSitemapReviewItems = async ({
-  onSitemapItemsChange,
-  ...listOptions
-}) => {
-  const sitemapItems = await listSitemapReviewItems(listOptions);
-  onSitemapItemsChange(sitemapItems);
-};
-var copyCurrentReviewUrl = async ({
-  onCopyLabelChange
-}) => {
-  await writeClipboardText(window.location.href);
-  onCopyLabelChange("Copied");
-  window.setTimeout(() => onCopyLabelChange("Copy URL"), 1200);
-};
-var refreshReviewData = async ({
-  onRefreshItems,
-  onRefreshSitemapItems,
-  onReloadReviewKit
-}) => {
-  await onReloadReviewKit();
-  await Promise.all([onRefreshItems(), onRefreshSitemapItems()]);
-};
-var updateReviewItemStatus = async ({
-  activeAdapterEntry,
-  item,
-  nextStatus,
-  onRefreshReviewData,
-  onToast
-}) => {
-  if (!activeAdapterEntry.updateStatus) return;
-  const statusIndex = activeAdapterEntry.statusOptions.findIndex(
-    (statusOption2) => statusOption2.value === nextStatus
-  );
-  const statusOption = activeAdapterEntry.statusOptions[statusIndex];
-  if (!statusOption) return;
-  await activeAdapterEntry.updateStatus({
-    id: item.id,
-    item,
-    status: statusOption.value,
-    statusOption,
-    statusIndex
-  });
-  await onRefreshReviewData();
-  onToast?.("QA status updated");
-};
-var updateReviewItemAssignee = async ({
-  activeAdapterEntry,
-  item,
-  assigneeId,
-  onRefreshReviewData,
-  onToast
-}) => {
-  if (!activeAdapterEntry.updateAssignee) return;
-  const assigneeIndex = activeAdapterEntry.assigneeOptions.findIndex(
-    (assigneeOption2) => assigneeOption2.value === assigneeId
-  );
-  const assigneeOption = activeAdapterEntry.assigneeOptions[assigneeIndex];
-  const nextAssigneeId = assigneeOption?.value ?? (assigneeId && item.assigneeId === assigneeId ? assigneeId : null);
-  const nextAssigneeName = assigneeOption?.label ?? (nextAssigneeId ? item.assigneeName : void 0);
-  if ((item.assigneeId ?? null) === nextAssigneeId) {
-    onToast?.("No QA assignee changes");
-    return item;
-  }
-  const updated = await activeAdapterEntry.updateAssignee({
-    id: item.id,
-    item,
-    assigneeId: nextAssigneeId,
-    assigneeName: nextAssigneeName,
-    assigneeOption,
-    assigneeIndex
-  });
-  await onRefreshReviewData();
-  onToast?.("QA assignee updated");
-  return updated;
-};
-var updateReviewItemDetails = async ({
-  activeAdapterEntry,
-  fields,
-  item,
-  title,
-  comment,
-  onRefreshReviewData,
-  onToast
-}) => {
-  const nextTitle = title?.trim() || void 0;
-  const nextComment = comment.trim();
-  if (!nextComment) throw new Error("Comment is required.");
-  if (!activeAdapterEntry.canUpdate) {
-    throw new Error(
-      `Review adapter "${activeAdapterEntry.label}" does not support edit.`
-    );
-  }
-  const isTitleUnchanged = !fields.title || nextTitle === (item.title?.trim() || void 0);
-  const isUnchanged = isTitleUnchanged && nextComment === item.comment.trim();
-  if (isUnchanged) {
-    onToast?.("No QA changes");
-    return item;
-  }
-  const updated = await activeAdapterEntry.adapter.update(item.id, {
-    ...fields.title ? { title: nextTitle } : {},
-    comment: nextComment
-  });
-  await onRefreshReviewData();
-  onToast?.("QA updated");
-  return updated;
-};
-var submitReviewItem = async ({
-  localAdapterEntry,
-  numberedItem,
-  remoteAdapterEntry,
-  selectedItemIdRef,
-  onClearSelectedItem,
-  onRefreshReviewData,
-  onToast
-}) => {
-  const { item } = numberedItem;
-  const syncLocalSubmission = localAdapterEntry?.syncSubmission;
-  if (!remoteAdapterEntry || !localAdapterEntry || !syncLocalSubmission || item.submitStatus === "submitted") {
-    return;
-  }
-  await syncLocalSubmission({
-    id: item.id,
-    item,
-    patch: {
-      submitStatus: "submitting",
-      submitError: void 0
-    }
-  });
-  await onRefreshReviewData();
-  let toastMessage;
-  try {
-    await remoteAdapterEntry.adapter.create({
-      ...item,
-      reviewNumber: void 0,
-      externalLinks: void 0,
-      externalIssueId: void 0,
-      externalIssueUrl: void 0,
-      submittedAt: void 0,
-      submitStatus: "submitted",
-      submitError: void 0
-    });
-    await localAdapterEntry.adapter.remove(item.id);
-    if (selectedItemIdRef.current === item.id) {
-      onClearSelectedItem();
-    }
-    toastMessage = "Remote submitted";
-  } catch (error) {
-    await syncLocalSubmission({
-      id: item.id,
-      item,
-      patch: {
-        submitStatus: "failed",
-        submitError: error instanceof Error ? error.message : "Failed to submit remote"
-      }
-    });
-    toastMessage = "Remote submit failed";
-  }
-  await onRefreshReviewData();
-  onToast?.(toastMessage);
-};
-var copyReviewPrompt = async ({
-  key,
-  toastMessage = "Copied",
-  value,
-  onCopiedPromptKeyChange,
-  onToast
-}) => {
-  if (!value) return;
-  await writeClipboardText(value);
-  onCopiedPromptKeyChange(key);
-  onToast?.(toastMessage);
-  window.setTimeout(() => {
-    onCopiedPromptKeyChange((current) => current === key ? null : current);
-  }, 1200);
-};
-var removeReviewItem = async ({
-  activeAdapterEntry,
-  getCurrentSize,
-  getCurrentTarget,
-  isRemoteSource,
-  item,
-  selectedItemIdRef,
-  source,
-  onClearSelectedItem,
-  onRefreshReviewData,
-  onToast
-}) => {
-  if (!activeAdapterEntry.canRemove || item.submitStatus === "submitting" || !isRemoteSource && item.submitStatus === "submitted") {
-    return;
-  }
-  await activeAdapterEntry.adapter.remove(item.id);
-  if (selectedItemIdRef.current === item.id) {
-    onClearSelectedItem();
-    updateShellUrl(getCurrentTarget(), getCurrentSize(), source);
-  }
-  await onRefreshReviewData();
-  onToast?.("QA deleted");
-};
-
-// src/react-shell/hooks/use.review.item.actions.ts
-function useReviewItemActions({
-  activeAdapterEntry,
-  isRemoteSource,
-  localAdapterEntry,
-  remoteAdapterEntry,
-  reviewPathPrefix,
-  selectedItemIdRef,
-  source,
-  viewportPresets,
-  onClearSelectedItem,
-  onCopiedPromptKeyChange,
-  onRefreshReviewData,
-  onToast
-}) {
-  const storeApi = useReviewShellStoreApi();
-  const [mutatingItemIds, setMutatingItemIds] = useState8(
-    () => /* @__PURE__ */ new Set()
-  );
-  const [editingItem, setEditingItem] = useState8(null);
-  const withItemMutation = async (itemId, action) => {
-    setMutatingItemIds((currentIds) => {
-      const nextIds = new Set(currentIds);
-      nextIds.add(itemId);
-      return nextIds;
-    });
-    try {
-      return await action();
-    } finally {
-      setMutatingItemIds((currentIds) => {
-        const nextIds = new Set(currentIds);
-        nextIds.delete(itemId);
-        return nextIds;
-      });
-    }
-  };
-  const showItemMutationError = (error, fallback) => {
-    onToast(
-      error instanceof Error && error.message ? error.message : fallback
-    );
-  };
-  const changeItemStatus = async (item, nextStatus) => {
-    try {
-      await withItemMutation(
-        item.id,
-        () => updateReviewItemStatus({
-          activeAdapterEntry,
-          item,
-          nextStatus,
-          onRefreshReviewData,
-          onToast
-        })
-      );
-    } catch (error) {
-      showItemMutationError(error, "QA status update failed");
-    }
-  };
-  const changeItemAssignee = async (item, assigneeId) => {
-    try {
-      await withItemMutation(
-        item.id,
-        () => updateReviewItemAssignee({
-          activeAdapterEntry,
-          item,
-          assigneeId,
-          onRefreshReviewData,
-          onToast
-        })
-      );
-    } catch (error) {
-      showItemMutationError(error, "QA assignee update failed");
-    }
-  };
-  const saveItemDetails = async (item, patch) => {
-    try {
-      await withItemMutation(
-        item.id,
-        () => updateReviewItemDetails({
-          activeAdapterEntry,
-          fields: activeAdapterEntry.fields,
-          item,
-          ...patch,
-          onRefreshReviewData,
-          onToast
-        })
-      );
-      setEditingItem(null);
-    } catch (error) {
-      showItemMutationError(error, "QA update failed");
-      throw error;
-    }
-  };
-  const submitItem = async (numberedItem) => {
-    try {
-      await withItemMutation(
-        numberedItem.item.id,
-        () => submitReviewItem({
-          localAdapterEntry,
-          numberedItem,
-          remoteAdapterEntry,
-          selectedItemIdRef,
-          onClearSelectedItem,
-          onRefreshReviewData,
-          onToast
-        })
-      );
-    } catch (error) {
-      showItemMutationError(error, "QA submit failed");
-    }
-  };
-  const removeItem = async (item) => {
-    try {
-      await withItemMutation(
-        item.id,
-        () => removeReviewItem({
-          activeAdapterEntry,
-          getCurrentSize: () => storeApi.getState().size,
-          getCurrentTarget: () => storeApi.getState().target,
-          isRemoteSource,
-          item,
-          selectedItemIdRef,
-          source,
-          onClearSelectedItem,
-          onRefreshReviewData,
-          onToast
-        })
-      );
-    } catch (error) {
-      showItemMutationError(error, "QA delete failed");
-    }
-  };
-  const copyPrompt = (value, key, toastMessage = "Prompt copied") => copyReviewPrompt({
-    key,
-    toastMessage,
-    value,
-    onCopiedPromptKeyChange,
-    onToast
-  });
-  const copyItemPrompt = (numberedItem) => copyPrompt(
-    buildReviewItemPrompt(numberedItem, reviewPathPrefix),
-    `qa:${numberedItem.item.id}`,
-    "QA prompt copied"
-  );
-  const copyItemLabel = (numberedItem) => copyPrompt(
-    numberedItem.displayLabel,
-    `label:${numberedItem.item.id}`,
-    "QA number copied"
-  );
-  const copyItemLink = (numberedItem) => {
-    const { item } = numberedItem;
-    return copyPrompt(
-      getShellUrlForItem(
-        getItemFrameTarget(item, reviewPathPrefix),
-        getRestoredSize(item, viewportPresets),
-        item.id,
-        source
-      ).href,
-      `link:${item.id}`,
-      "QA link copied"
-    );
-  };
-  const copyRemoteIssuePath = (item) => {
-    const path = getUrlPathWithoutOrigin(item.externalIssueUrl);
-    if (!path) {
-      onToast("QA link not found");
-      return Promise.resolve();
-    }
-    return copyPrompt(path, `remote-link:${item.id}`, "QA path copied");
-  };
-  const clearEditingItem = useCallback9(() => setEditingItem(null), []);
-  return {
-    changeItemAssignee,
-    changeItemStatus,
-    clearEditingItem,
-    copyItemLabel,
-    copyItemLink,
-    copyItemPrompt,
-    copyPrompt,
-    copyRemoteIssuePath,
-    editingItem,
-    mutatingItemIds,
-    removeItem,
-    saveItemDetails,
-    setEditingItem,
-    submitItem
-  };
-}
-function getUrlPathWithoutOrigin(value) {
-  const trimmed = value?.trim();
-  if (!trimmed) return null;
-  try {
-    const url = new URL(trimmed, window.location.origin);
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return trimmed;
-  }
-}
-
 // src/react-shell/hooks/use.review.presence.ts
 import {
-  useCallback as useCallback10,
+  useCallback as useCallback11,
   useEffect as useEffect9,
-  useMemo as useMemo5,
-  useRef as useRef5,
-  useState as useState9
+  useMemo as useMemo6,
+  useRef as useRef6,
+  useState as useState8
 } from "react";
 
 // src/react-shell/presence/presence.ts
@@ -13452,10 +13905,10 @@ var useReviewPresence = ({
   size,
   source
 }) => {
-  const presenceSessionRef = useRef5(null);
-  const [presenceUsers, setPresenceUsers] = useState9([]);
-  const [presenceSessionVersion, setPresenceSessionVersion] = useState9(0);
-  const presenceSessionId = useMemo5(getReviewPresenceSessionId, []);
+  const presenceSessionRef = useRef6(null);
+  const [presenceUsers, setPresenceUsers] = useState8([]);
+  const [presenceSessionVersion, setPresenceSessionVersion] = useState8(0);
+  const presenceSessionId = useMemo6(getReviewPresenceSessionId, []);
   const normalizedReviewUserId = reviewUserId.trim();
   const presenceDisplayName = getReviewPresenceDisplayName(
     normalizedReviewUserId
@@ -13463,7 +13916,7 @@ var useReviewPresence = ({
   const presenceColor = getReviewPresenceColor(
     normalizedReviewUserId || presenceSessionId
   );
-  const presenceViewport = useMemo5(
+  const presenceViewport = useMemo6(
     () => ({
       label: size.label,
       width: size.width,
@@ -13473,7 +13926,7 @@ var useReviewPresence = ({
     [size]
   );
   const presenceStatus = mode === "idle" ? "reviewing" : "editing";
-  const visiblePresenceUsers = useMemo5(
+  const visiblePresenceUsers = useMemo6(
     () => {
       const projectPresenceUsers = presenceUsers.filter(
         (user) => user.projectId === projectId && user.userId.trim()
@@ -13485,14 +13938,14 @@ var useReviewPresence = ({
     },
     [presenceUsers, projectId, reviewPathPrefix]
   );
-  const currentPagePresenceUsers = useMemo5(
+  const currentPagePresenceUsers = useMemo6(
     () => visiblePresenceUsers.filter((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
       return userTarget === activeRoute;
     }),
     [activeRoute, reviewPathPrefix, visiblePresenceUsers]
   );
-  const pagePresenceUsers = useMemo5(() => {
+  const pagePresenceUsers = useMemo6(() => {
     const usersByTarget = /* @__PURE__ */ new Map();
     visiblePresenceUsers.forEach((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
@@ -13502,7 +13955,7 @@ var useReviewPresence = ({
     });
     return usersByTarget;
   }, [reviewPathPrefix, visiblePresenceUsers]);
-  const getCurrentPresenceState = useCallback10(
+  const getCurrentPresenceState = useCallback11(
     () => ({
       projectId,
       sessionId: presenceSessionId,
@@ -13533,7 +13986,7 @@ var useReviewPresence = ({
       source
     ]
   );
-  const getCurrentPresenceStateRef = useRef5(getCurrentPresenceState);
+  const getCurrentPresenceStateRef = useRef6(getCurrentPresenceState);
   getCurrentPresenceStateRef.current = getCurrentPresenceState;
   useEffect9(() => {
     if (!presence || !normalizedReviewUserId) {
@@ -13603,18 +14056,18 @@ var useReviewPresence = ({
 
 // src/react-shell/hooks/use.review.ruler.ts
 import {
-  useCallback as useCallback12,
+  useCallback as useCallback13,
   useEffect as useEffect11,
-  useState as useState11
+  useState as useState10
 } from "react";
 
 // src/react-shell/hooks/use.review.ruler.drag.ts
 import {
-  useCallback as useCallback11,
+  useCallback as useCallback12,
   useEffect as useEffect10,
-  useMemo as useMemo6,
-  useRef as useRef6,
-  useState as useState10
+  useMemo as useMemo7,
+  useRef as useRef7,
+  useState as useState9
 } from "react";
 
 // src/react-shell/ruler/ruler.ts
@@ -13644,19 +14097,19 @@ var useReviewRulerDrag = ({
   size,
   targetSrc
 }) => {
-  const rulerOverlayRef = useRef6(null);
-  const rulerDragRectRef = useRef6(null);
-  const isRulerDraggingRef = useRef6(false);
-  const sizeRef = useRef6(size);
-  const [rulerStart, setRulerStart] = useState10(null);
-  const [rulerPoint, setRulerPoint] = useState10(null);
-  const [rulerHover, setRulerHover] = useState10(null);
-  const [isRulerDragging, setIsRulerDragging] = useState10(false);
-  const rulerMeasure = useMemo6(
+  const rulerOverlayRef = useRef7(null);
+  const rulerDragRectRef = useRef7(null);
+  const isRulerDraggingRef = useRef7(false);
+  const sizeRef = useRef7(size);
+  const [rulerStart, setRulerStart] = useState9(null);
+  const [rulerPoint, setRulerPoint] = useState9(null);
+  const [rulerHover, setRulerHover] = useState9(null);
+  const [isRulerDragging, setIsRulerDragging] = useState9(false);
+  const rulerMeasure = useMemo7(
     () => getRulerMeasure(rulerStart, rulerPoint),
     [rulerPoint, rulerStart]
   );
-  const clearRulerMeasure = useCallback11(() => {
+  const clearRulerMeasure = useCallback12(() => {
     rulerDragRectRef.current = null;
     isRulerDraggingRef.current = false;
     setRulerStart(null);
@@ -13664,7 +14117,7 @@ var useReviewRulerDrag = ({
     setRulerHover(null);
     setIsRulerDragging(false);
   }, []);
-  const finishRulerDrag = useCallback11((point) => {
+  const finishRulerDrag = useCallback12((point) => {
     if (point) {
       setRulerPoint(point);
     }
@@ -13672,7 +14125,7 @@ var useReviewRulerDrag = ({
     isRulerDraggingRef.current = false;
     setIsRulerDragging(false);
   }, []);
-  const startRulerDrag = useCallback11(
+  const startRulerDrag = useCallback12(
     (clientX, clientY, rect) => {
       const point = getRulerPointFromRect(clientX, clientY, rect);
       rulerDragRectRef.current = rect;
@@ -13821,7 +14274,7 @@ var useReviewRuler = ({
   onCancelReviewMode,
   onCloseTransientPanels
 }) => {
-  const [isRulerVisible, setIsRulerVisible] = useState11(false);
+  const [isRulerVisible, setIsRulerVisible] = useState10(false);
   const isRulerAvailable = ruler?.enabled !== false && typeof size.designWidth === "number" && size.designWidth > 0;
   const rulerUnit = ruler?.unit ?? "px";
   const rulerScaleX = isRulerAvailable && size.designWidth ? size.width / size.designWidth : 1;
@@ -13842,13 +14295,13 @@ var useReviewRuler = ({
   const rulerMeasureLabel = rulerMeasure ? `${Math.round(rulerMeasure.width / rulerScaleX)} \xD7 ${Math.round(
     rulerMeasure.height / rulerScaleY
   )} ${rulerUnit}` : "";
-  const closeRuler = useCallback12(() => {
+  const closeRuler = useCallback13(() => {
     if (!isRulerVisible) return false;
     setIsRulerVisible(false);
     clearRulerMeasure();
     return true;
   }, [clearRulerMeasure, isRulerVisible]);
-  const toggleRuler = useCallback12(() => {
+  const toggleRuler = useCallback13(() => {
     if (!isRulerAvailable) return;
     onCancelReviewMode();
     onCloseTransientPanels();
@@ -13881,7 +14334,7 @@ var useReviewRuler = ({
 };
 
 // src/react-shell/hooks/use.review.figma.images.ts
-import { useCallback as useCallback13, useMemo as useMemo7 } from "react";
+import { useCallback as useCallback14, useMemo as useMemo8 } from "react";
 var useReviewFigmaImages = ({
   imageFormat = DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
   pageUrl,
@@ -13889,7 +14342,7 @@ var useReviewFigmaImages = ({
   store,
   viewport
 }) => {
-  const target = useMemo7(
+  const target = useMemo8(
     () => createReviewFigmaRouteTarget({
       pageUrl,
       projectId,
@@ -13952,7 +14405,7 @@ var useReviewFigmaImages = ({
     isLoading,
     target
   });
-  const addImage = useCallback13(
+  const addImage = useCallback14(
     async (figmaUrl, label) => {
       const image = await addStoreImage(figmaUrl, label);
       if (image) showImage(image.id);
@@ -14002,11 +14455,11 @@ var useReviewFigmaImages = ({
 
 // src/react-shell/hooks/use.review.section.outline.ts
 import {
-  useCallback as useCallback14,
+  useCallback as useCallback15,
   useEffect as useEffect12,
-  useMemo as useMemo8,
-  useRef as useRef7,
-  useState as useState12
+  useMemo as useMemo9,
+  useRef as useRef8,
+  useState as useState11
 } from "react";
 
 // src/react-shell/source.hint.ts
@@ -14707,18 +15160,18 @@ function useReviewSectionOutline({
   onShowQaPanel,
   onToast
 }) {
-  const sectionOutlineCountRef = useRef7(0);
-  const [sectionOutline, setSectionOutline] = useState12(null);
-  const [sectionOutlineFilter, setSectionOutlineFilter] = useState12(
+  const sectionOutlineCountRef = useRef8(0);
+  const [sectionOutline, setSectionOutline] = useState11(null);
+  const [sectionOutlineFilter, setSectionOutlineFilter] = useState11(
     () => getStoredSourceTreeFilter()
   );
-  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] = useState12(() => getStoredSourceTreeMetaVisibility());
-  const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = useState12(() => /* @__PURE__ */ new Set());
-  const updateSectionOutlineFilter = useCallback14((nextFilter) => {
+  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] = useState11(() => getStoredSourceTreeMetaVisibility());
+  const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = useState11(() => /* @__PURE__ */ new Set());
+  const updateSectionOutlineFilter = useCallback15((nextFilter) => {
     setSectionOutlineFilter(nextFilter);
     writeStoredSourceTreeFilter(nextFilter);
   }, []);
-  const updateSectionOutlineMetaVisibility = useCallback14(
+  const updateSectionOutlineMetaVisibility = useCallback15(
     (key) => {
       setSectionOutlineMetaVisibility((current) => {
         const next = { ...current, [key]: !current[key] };
@@ -14728,19 +15181,19 @@ function useReviewSectionOutline({
     },
     []
   );
-  const sectionOutlineFilterTerms = useMemo8(
+  const sectionOutlineFilterTerms = useMemo9(
     () => getSectionOutlineFilterTerms(sectionOutlineFilter),
     [sectionOutlineFilter]
   );
-  const filteredSectionOutline = useMemo8(
+  const filteredSectionOutline = useMemo9(
     () => sectionOutline ? filterSectionOutlineEntries(sectionOutline, sectionOutlineFilterTerms) : [],
     [sectionOutline, sectionOutlineFilterTerms]
   );
-  const sectionOutlineTotalCount = useMemo8(
+  const sectionOutlineTotalCount = useMemo9(
     () => getSectionOutlineEntryCount(sectionOutline ?? []),
     [sectionOutline]
   );
-  const filteredSectionOutlineCount = useMemo8(
+  const filteredSectionOutlineCount = useMemo9(
     () => getSectionOutlineEntryCount(filteredSectionOutline),
     [filteredSectionOutline]
   );
@@ -14753,7 +15206,7 @@ function useReviewSectionOutline({
     setCollapsedSectionOutlineIds(/* @__PURE__ */ new Set());
     setSectionOutline(null);
   }, [onClearSourceInspector, targetSrc]);
-  const getCurrentSectionOutline = useCallback14(
+  const getCurrentSectionOutline = useCallback15(
     () => {
       let frameDocument = null;
       try {
@@ -14768,7 +15221,7 @@ function useReviewSectionOutline({
     },
     [iframeRef, sectionOutlineOptions]
   );
-  const refreshCurrentSectionOutline = useCallback14(
+  const refreshCurrentSectionOutline = useCallback15(
     (resetCollapse = false) => {
       const nextSectionOutline = getCurrentSectionOutline();
       if (!nextSectionOutline) return false;
@@ -14833,7 +15286,7 @@ function useReviewSectionOutline({
     targetFrameLoadVersion,
     targetSrc
   ]);
-  const toggleSectionOutlineEntry = useCallback14((entryId) => {
+  const toggleSectionOutlineEntry = useCallback15((entryId) => {
     setCollapsedSectionOutlineIds((current) => {
       const next = new Set(current);
       if (next.has(entryId)) {
@@ -14844,7 +15297,7 @@ function useReviewSectionOutline({
       return next;
     });
   }, []);
-  const scrollToSection = useCallback14((entry) => {
+  const scrollToSection = useCallback15((entry) => {
     scrollElementInTarget(entry.element, "start");
     centerFrameScrollOnElement(
       frameScrollRef.current,
@@ -14852,7 +15305,7 @@ function useReviewSectionOutline({
       entry.element
     );
   }, [frameScrollRef, iframeRef]);
-  const openSectionSource = useCallback14(
+  const openSectionSource = useCallback15(
     (entry) => {
       const didOpen = openSourceInEditor(entry.source, {
         ...sourceOpenOptions,
@@ -14862,7 +15315,7 @@ function useReviewSectionOutline({
     },
     [onToast, sourceOpenOptions]
   );
-  const openSectionUsageSource = useCallback14(
+  const openSectionUsageSource = useCallback15(
     (entry) => {
       const didOpen = openSourceInEditor(
         entry.metadata.usage?.source,
@@ -14872,14 +15325,14 @@ function useReviewSectionOutline({
     },
     [onToast, sourceOpenOptions]
   );
-  const openSectionData = useCallback14(
+  const openSectionData = useCallback15(
     (entry) => {
       const didOpen = openSourceInEditor(entry.data, sourceOpenOptions);
       onToast(didOpen ? "Data opened" : "Data hint not found");
     },
     [onToast, sourceOpenOptions]
   );
-  const startSectionDomReview = useCallback14(
+  const startSectionDomReview = useCallback15(
     (entry) => {
       if (!canWriteDom) {
         onToast("DOM QA unavailable");
@@ -14955,7 +15408,7 @@ function useReviewSectionOutline({
 }
 
 // src/react-shell/hooks/use.review.settings.ts
-import { useCallback as useCallback15, useEffect as useEffect13, useState as useState13 } from "react";
+import { useCallback as useCallback16, useEffect as useEffect13, useState as useState12 } from "react";
 var useReviewSettings = ({
   defaultReviewUserId = "",
   onCancelReviewMode,
@@ -14963,28 +15416,28 @@ var useReviewSettings = ({
   onCloseSitemap,
   onReloadTargetFrame
 }) => {
-  const [figmaTokenDraft, setFigmaTokenDraft] = useState13(getStoredFigmaToken);
-  const [reviewUserId, setReviewUserId] = useState13(
+  const [figmaTokenDraft, setFigmaTokenDraft] = useState12(getStoredFigmaToken);
+  const [reviewUserId, setReviewUserId] = useState12(
     () => getStoredReviewUserId(defaultReviewUserId)
   );
-  const [reviewUserIdDraft, setReviewUserIdDraft] = useState13(
+  const [reviewUserIdDraft, setReviewUserIdDraft] = useState12(
     () => getStoredReviewUserId(defaultReviewUserId)
   );
-  const [reviewTheme, setReviewTheme] = useState13(getStoredReviewTheme);
-  const [reviewThemeDraft, setReviewThemeDraft] = useState13(getStoredReviewTheme);
-  const [systemReviewTheme, setSystemReviewTheme] = useState13(getSystemReviewTheme);
-  const [figmaSettingsStatus, setFigmaSettingsStatus] = useState13("");
-  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState13(false);
-  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState13(false);
-  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState13(false);
+  const [reviewTheme, setReviewTheme] = useState12(getStoredReviewTheme);
+  const [reviewThemeDraft, setReviewThemeDraft] = useState12(getStoredReviewTheme);
+  const [systemReviewTheme, setSystemReviewTheme] = useState12(getSystemReviewTheme);
+  const [figmaSettingsStatus, setFigmaSettingsStatus] = useState12("");
+  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState12(false);
+  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = useState12(false);
+  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = useState12(false);
   const effectiveReviewTheme = reviewTheme === "system" ? systemReviewTheme : reviewTheme;
-  const closeFigmaSettings = useCallback15(() => {
+  const closeFigmaSettings = useCallback16(() => {
     setIsFigmaSettingsOpen(false);
     setFigmaSettingsStatus("");
     setIsFigmaTokenVisible(false);
     setIsFigmaTokenGuideOpen(false);
   }, []);
-  const openFigmaSettings = useCallback15(() => {
+  const openFigmaSettings = useCallback16(() => {
     onCancelReviewMode();
     onCloseSitemap();
     onCloseInitialPrompt();
@@ -15002,7 +15455,7 @@ var useReviewSettings = ({
     defaultReviewUserId,
     reviewTheme
   ]);
-  const saveReviewSettings = useCallback15(
+  const saveReviewSettings = useCallback16(
     (token, userId, theme) => {
       const nextToken = token.trim();
       const nextUserId = userId.trim();
@@ -15086,7 +15539,7 @@ var useReviewSettings = ({
 
 // src/react-shell/hooks/use.review.side.panel.ts
 import {
-  useCallback as useCallback16,
+  useCallback as useCallback17,
   useEffect as useEffect14
 } from "react";
 var getAvailableSidePanel = (sidePanel, {
@@ -15129,7 +15582,7 @@ var useReviewSidePanel = ({
   useEffect14(() => {
     writeStoredReviewSidePanelVisible(isListVisible);
   }, [isListVisible]);
-  const openSidePanel = useCallback16(
+  const openSidePanel = useCallback17(
     (nextSidePanel) => {
       const state = storeApi.getState();
       state.setSidePanel(
@@ -15142,7 +15595,7 @@ var useReviewSidePanel = ({
     },
     [isFigmaImageManagementEnabled, isSourceInspectorEnabled, storeApi]
   );
-  const toggleSidePanel = useCallback16(
+  const toggleSidePanel = useCallback17(
     (nextSidePanel) => {
       const state = storeApi.getState();
       const currentSidePanel = getAvailableSidePanel(state.sidePanel, {
@@ -15172,75 +15625,47 @@ var useReviewSidePanel = ({
 };
 
 // src/react-shell/hooks/use.review.shell.data.ts
-import { useCallback as useCallback17, useMemo as useMemo9, useState as useState14 } from "react";
-var SITEMAP_STATUS_DONE = "done";
-var useReviewShellData = ({
-  activeRoute,
-  isAllQaVisible,
-  isRemoteSource,
-  pages,
-  reviewPathPrefix,
-  reviewViewportPresets,
-  selectedItemId,
-  size,
-  target,
-  viewportPresets
-}) => {
-  const [items, setItems] = useState14([]);
-  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = useState14(
-    () => /* @__PURE__ */ new Set()
+import { useCallback as useCallback18, useMemo as useMemo10 } from "react";
+var SITEMAP_STATUS_DONE2 = "done";
+var useReviewShellData = () => {
+  const { pages, reviewPathPrefix, reviewViewportPresets, viewportPresets } = useReviewShellConfig();
+  const { isRemoteSource } = useReviewShellAdapterState();
+  const activeRoute = useReviewShellStore((state) => state.activeRoute);
+  const target = useReviewShellStore((state) => state.target);
+  const items = useReviewShellStore((state) => state.items);
+  const sitemapItems = useReviewShellStore((state) => state.sitemapItems);
+  const hiddenOverlayItemIds = useReviewShellStore(
+    (state) => state.hiddenOverlayItemIds
   );
-  const [qaFilter, setQaFilter] = useState14("all");
-  const [qaStatusFilter, setQaStatusFilterState] = useState14(getStoredReviewQaStatusFilter);
-  const [sitemapItems, setSitemapItems] = useState14(() => ({
-    local: [],
-    remote: []
-  }));
-  const targetSrc = useMemo9(() => buildTargetSrc(target), [target]);
-  const pageTargets = useMemo9(
+  const qaStatusFilter = useReviewShellStore((state) => state.qaStatusFilter);
+  const selectedItemId = useReviewShellStore((state) => state.selectedItemId);
+  const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
+  const targetSrc = useMemo10(() => buildTargetSrc(target), [target]);
+  const pageTargets = useMemo10(
     () => new Set(
       pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
     ),
     [pages, reviewPathPrefix]
   );
-  const sitemapSourceItems = useMemo9(
+  const sitemapSourceItems = useMemo10(
     () => isRemoteSource ? sitemapItems.remote : sitemapItems.local,
     [isRemoteSource, sitemapItems]
   );
-  const activeItems = useMemo9(
-    () => {
-      const sourceItems = isAllQaVisible ? sitemapSourceItems : items.filter(
-        (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
-      );
-      return [...sourceItems].sort(
-        (a, b) => b.createdAt.localeCompare(a.createdAt)
-      );
-    },
+  const activeItems = useMemo10(
+    () => getActiveReviewItems({
+      activeRoute,
+      isAllQaVisible,
+      items,
+      reviewPathPrefix,
+      sitemapSourceItems
+    }),
     [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
   );
-  const numberedActiveItems = useMemo9(
+  const numberedActiveItems = useMemo10(
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
     [activeItems, reviewViewportPresets]
   );
-  const scopeFilteredNumberedActiveItems = useMemo9(
-    () => qaFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
-      (numberedItem) => numberedItem.scope === qaFilter
-    ),
-    [numberedActiveItems, qaFilter]
-  );
-  const statusFilteredNumberedActiveItems = useMemo9(
-    () => qaStatusFilter === "all" ? numberedActiveItems : numberedActiveItems.filter(
-      (numberedItem) => normalizeReviewItemStatus(numberedItem.item.status) === qaStatusFilter
-    ),
-    [numberedActiveItems, qaStatusFilter]
-  );
-  const filteredNumberedActiveItems = useMemo9(
-    () => qaStatusFilter === "all" ? scopeFilteredNumberedActiveItems : scopeFilteredNumberedActiveItems.filter(
-      (numberedItem) => normalizeReviewItemStatus(numberedItem.item.status) === qaStatusFilter
-    ),
-    [qaStatusFilter, scopeFilteredNumberedActiveItems]
-  );
-  const hiddenOverlayItemIdList = useMemo9(
+  const hiddenOverlayItemIdList = useMemo10(
     () => {
       const nextHiddenItemIds = new Set(hiddenOverlayItemIds);
       if (qaStatusFilter !== "all") {
@@ -15254,24 +15679,7 @@ var useReviewShellData = ({
     },
     [activeItems, hiddenOverlayItemIds, qaStatusFilter]
   );
-  const qaFilterCounts = useMemo9(() => {
-    const counts = /* @__PURE__ */ new Map();
-    counts.set("all", statusFilteredNumberedActiveItems.length);
-    statusFilteredNumberedActiveItems.forEach((numberedItem) => {
-      counts.set(numberedItem.scope, (counts.get(numberedItem.scope) ?? 0) + 1);
-    });
-    return counts;
-  }, [statusFilteredNumberedActiveItems]);
-  const qaStatusFilterCounts = useMemo9(() => {
-    const counts = /* @__PURE__ */ new Map();
-    counts.set("all", scopeFilteredNumberedActiveItems.length);
-    scopeFilteredNumberedActiveItems.forEach((numberedItem) => {
-      const status = normalizeReviewItemStatus(numberedItem.item.status);
-      counts.set(status, (counts.get(status) ?? 0) + 1);
-    });
-    return counts;
-  }, [scopeFilteredNumberedActiveItems]);
-  const getItemPreset = useCallback17(
+  const getItemPreset = useCallback18(
     (item) => findViewportPreset(
       viewportPresets,
       item.viewport?.width ?? 0,
@@ -15279,11 +15687,11 @@ var useReviewShellData = ({
     ),
     [viewportPresets]
   );
-  const getItemPresetScope = useCallback17(
+  const getItemPresetScope = useCallback18(
     (item) => getViewportPresetKind(getItemPreset(item)),
     [getItemPreset]
   );
-  const getItemPresetColumn = useCallback17(
+  const getItemPresetColumn = useCallback18(
     (item) => {
       const preset = getItemPreset(item);
       const presetIndex = Math.max(0, viewportPresets.indexOf(preset));
@@ -15291,17 +15699,11 @@ var useReviewShellData = ({
     },
     [getItemPreset, viewportPresets]
   );
-  const getItemCountScope = useCallback17(
+  const getItemCountScope = useCallback18(
     (item) => item.scope === "dom" ? "dom" : getItemPresetScope(item),
     [getItemPresetScope]
   );
-  const activeRemainingItemCount = useMemo9(
-    () => activeItems.filter(
-      (item) => normalizeReviewItemStatus(item.status) !== SITEMAP_STATUS_DONE
-    ).length,
-    [activeItems]
-  );
-  const presetScopeCounts = useMemo9(() => {
+  const presetScopeCounts = useMemo10(() => {
     const counts = /* @__PURE__ */ new Map();
     activeItems.forEach((item) => {
       const scope = getItemPresetScope(item);
@@ -15309,12 +15711,7 @@ var useReviewShellData = ({
     });
     return counts;
   }, [activeItems, getItemPresetScope]);
-  const currentPresetScope = getViewportPresetKind(size);
-  const setQaStatusFilter = useCallback17((filter) => {
-    setQaStatusFilterState(filter);
-    writeStoredReviewQaStatusFilter(filter);
-  }, []);
-  const pageQaCounts = useMemo9(() => {
+  const pageQaCounts = useMemo10(() => {
     const counts = /* @__PURE__ */ new Map();
     const addItems = (sourceKey, sourceItems) => {
       sourceItems.forEach((item) => {
@@ -15327,7 +15724,7 @@ var useReviewShellData = ({
         const scope = getItemCountScope(item);
         const viewportColumn = getItemPresetColumn(item);
         const currentViewportCount = currentCount.viewport[viewportColumn.key] ?? { total: 0, remaining: 0 };
-        const isRemaining = status !== SITEMAP_STATUS_DONE;
+        const isRemaining = status !== SITEMAP_STATUS_DONE2;
         counts.set(pageTarget, {
           ...currentCount,
           total: currentCount.total + 1,
@@ -15356,14 +15753,14 @@ var useReviewShellData = ({
     addItems("remote", sitemapItems.remote);
     return counts;
   }, [getItemCountScope, getItemPresetColumn, reviewPathPrefix, sitemapItems]);
-  const allQaCount = useMemo9(
+  const allQaCount = useMemo10(
     () => Array.from(pageQaCounts.values()).reduce(
       addSitemapQaCounts,
       createEmptySitemapQaCount()
     ),
     [pageQaCounts]
   );
-  const selectedNumberedItem = useMemo9(
+  const selectedNumberedItem = useMemo10(
     () => selectedItemId ? numberedActiveItems.find(
       (numberedItem) => numberedItem.item.id === selectedItemId
     ) : void 0,
@@ -15371,27 +15768,13 @@ var useReviewShellData = ({
   );
   return {
     activeItems,
-    activeRemainingItemCount,
     allQaCount,
-    currentPresetScope,
-    filteredNumberedActiveItems,
-    getItemPresetScope,
     hiddenOverlayItemIdList,
-    hiddenOverlayItemIds,
     items,
     pageQaCounts,
     pageTargets,
     presetScopeCounts,
-    qaFilter,
-    qaFilterCounts,
-    qaStatusFilter,
-    qaStatusFilterCounts,
     selectedNumberedItem,
-    setHiddenOverlayItemIds,
-    setItems,
-    setQaFilter,
-    setQaStatusFilter,
-    setSitemapItems,
     targetSrc
   };
 };
@@ -15517,229 +15900,26 @@ var useReviewShellHotkeys = ({
 
 // src/react-shell/hooks/use.review.shell.state.ts
 import {
-  useRef as useRef8,
-  useState as useState15
+  useRef as useRef9,
+  useState as useState13
 } from "react";
-
-// src/react-shell/store/shell.config.tsx
-import {
-  createContext as createContext3,
-  useContext as useContext3
-} from "react";
-
-// src/react-shell/adapters.ts
-var ALL_REVIEW_WRITE_MODES = ["dom", "area"];
-var DEFAULT_ASSIGNEE_TITLE = "Assignee";
-function normalizeReviewShellAdapters(adapters) {
-  if (Array.isArray(adapters)) {
-    const normalized = adapters.map((adapter) => normalizeShellAdapter(adapter));
-    const local = normalized.find((adapter) => adapter.label === "local") ?? null;
-    const remote = normalized.find((adapter) => adapter.label !== "local") ?? null;
-    if (normalized.length === 0 || !local && !remote) {
-      throw new Error("ReviewShell requires at least one adapter.");
-    }
-    return {
-      local,
-      remote,
-      sources: normalized
-    };
-  }
-  return normalizeLegacyAdapterMap(adapters);
-}
-function normalizeLegacyAdapterMap(adapters) {
-  const local = {
-    label: "local",
-    adapter: adapters.local,
-    fields: { title: false },
-    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
-    assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
-    assigneeOptions: [],
-    defaultUserId: adapters.defaultUserId?.trim() ?? "",
-    updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
-    updateAssignee: ({ id, assigneeId, assigneeName }) => adapters.local.update(id, { assigneeId, assigneeName }),
-    syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
-    uploadAttachment: adapters.local.uploadAttachment,
-    writeModes: [...ALL_REVIEW_WRITE_MODES],
-    canUpdate: true,
-    canRemove: true
-  };
-  const remote = adapters.remote ? {
-    label: "remote",
-    adapter: adapters.remote,
-    fields: { title: false },
-    statusOptions: [...REVIEW_WORKFLOW_STATUS_OPTIONS],
-    assigneeTitle: DEFAULT_ASSIGNEE_TITLE,
-    assigneeOptions: [],
-    defaultUserId: adapters.defaultUserId?.trim() ?? "",
-    updateStatus: ({ id, status }) => adapters.remote?.update(id, { status }) ?? Promise.reject(new Error("Remote adapter is not available.")),
-    updateAssignee: ({ id, assigneeId, assigneeName }) => adapters.remote?.update(id, { assigneeId, assigneeName }) ?? Promise.reject(new Error("Remote adapter is not available.")),
-    uploadAttachment: adapters.remote.uploadAttachment,
-    writeModes: [],
-    canUpdate: true,
-    canRemove: false,
-    pageId: adapters.remotePageId
-  } : null;
-  return {
-    local,
-    remote,
-    sources: remote ? [local, remote] : [local]
-  };
-}
-function normalizeShellAdapter(adapterConfig) {
-  const statusOptions = [
-    ...adapterConfig.statusOptions ?? REVIEW_WORKFLOW_STATUS_OPTIONS
-  ];
-  const fields = {
-    title: adapterConfig.fields?.title === true
-  };
-  const assigneeTitle = adapterConfig.assigneeTitle?.trim() || DEFAULT_ASSIGNEE_TITLE;
-  const assigneeOptions = [...adapterConfig.assigneeOptions ?? []];
-  const defaultUserId = adapterConfig.defaultUserId?.trim() ?? "";
-  const updateAdapter = adapterConfig.update;
-  const updateStatus = adapterConfig.updateStatus ? adapterConfig.updateStatus : updateAdapter ? ({ id, status }) => updateAdapter(id, { status }) : void 0;
-  const updateAssignee = adapterConfig.updateAssignee ? adapterConfig.updateAssignee : updateAdapter ? ({ id, assigneeId, assigneeName, assigneeOption }) => updateAdapter(id, {
-    assigneeId,
-    assigneeName: assigneeName ?? assigneeOption?.label
-  }) : void 0;
-  const writeModes = normalizeWriteModes(
-    adapterConfig.create ? adapterConfig.canWrite ?? adapterConfig.label === "local" : false
-  );
-  return {
-    label: adapterConfig.label,
-    pageId: adapterConfig.pageId,
-    fields,
-    statusOptions,
-    assigneeTitle,
-    assigneeOptions,
-    defaultUserId,
-    updateStatus,
-    updateAssignee,
-    syncSubmission: adapterConfig.syncSubmission,
-    uploadAttachment: adapterConfig.uploadAttachment,
-    writeModes,
-    canUpdate: Boolean(updateAdapter),
-    canRemove: Boolean(adapterConfig.remove),
-    adapter: {
-      get: adapterConfig.get,
-      list: adapterConfig.list,
-      create: async (item) => {
-        if (!adapterConfig.create) {
-          throw new Error(
-            `Review adapter "${adapterConfig.label}" does not support create.`
-          );
-        }
-        return adapterConfig.create(item);
-      },
-      update: async (id, patch) => {
-        const nextStatus = patch.status;
-        if (nextStatus && updateStatus) {
-          const statusIndex = statusOptions.findIndex(
-            (statusOption2) => statusOption2.value === nextStatus
-          );
-          const statusOption = statusOptions[statusIndex];
-          if (statusOption) {
-            const item2 = await adapterConfig.get(id);
-            if (!item2) throw new Error(`Review item not found: ${id}`);
-            const updated2 = await updateStatus({
-              id,
-              item: item2,
-              status: nextStatus,
-              statusOption,
-              statusIndex
-            });
-            return updated2;
-          }
-        }
-        if (updateAdapter) {
-          return updateAdapter(id, patch);
-        }
-        if (!adapterConfig.syncSubmission) {
-          throw new Error(
-            `Review adapter "${adapterConfig.label}" does not support update.`
-          );
-        }
-        const item = await adapterConfig.get(id);
-        if (!item) throw new Error(`Review item not found: ${id}`);
-        await adapterConfig.syncSubmission({
-          id,
-          item,
-          patch
-        });
-        const updated = await adapterConfig.get(id);
-        if (!updated) throw new Error(`Review item not found after update: ${id}`);
-        return updated;
-      },
-      uploadAttachment: adapterConfig.uploadAttachment,
-      remove: async (id) => {
-        if (!adapterConfig.remove) {
-          throw new Error(
-            `Review adapter "${adapterConfig.label}" does not support remove.`
-          );
-        }
-        return adapterConfig.remove(id);
-      }
-    }
-  };
-}
-function normalizeWriteModes(value) {
-  if (value === true) return [...ALL_REVIEW_WRITE_MODES];
-  if (Array.isArray(value)) {
-    const modes = value.filter(
-      (mode) => ALL_REVIEW_WRITE_MODES.includes(mode)
-    );
-    return Array.from(new Set(modes));
-  }
-  return [];
-}
-
-// src/react-shell/store/shell.config.tsx
-var createReviewShellConfig = ({
-  projectId,
-  pages,
-  adapters,
-  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
-  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
-}) => {
-  const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const normalizedAdapters = normalizeReviewShellAdapters(adapters);
-  return {
-    projectId,
-    pages,
-    reviewPathPrefix,
-    viewportPresets,
-    reviewViewportPresets: toReviewViewportPresets(viewportPresets),
-    localAdapterEntry: normalizedAdapters.local,
-    remoteAdapterEntry: normalizedAdapters.remote,
-    sourceEntries: normalizedAdapters.sources,
-    showSourceSelect: normalizedAdapters.sources.length > 1
-  };
-};
-var ReviewShellConfigContext = createContext3(null);
-var ReviewShellConfigProvider = ReviewShellConfigContext.Provider;
-var useReviewShellConfig = () => {
-  const config = useContext3(ReviewShellConfigContext);
-  if (!config) {
-    throw new Error(
-      "useReviewShellConfig must be used within a ReviewShell provider"
-    );
-  }
-  return config;
-};
-
-// src/react-shell/hooks/use.review.shell.state.ts
 var useReviewShellState = () => {
+  const { reviewViewportPresets, viewportPresets } = useReviewShellConfig();
   const {
+    activeAdapterEntry,
+    adapter,
+    canWriteArea,
+    canWriteDom,
+    isRemoteSource,
     localAdapterEntry,
     remoteAdapterEntry,
-    reviewViewportPresets,
     showSourceSelect,
-    sourceEntries,
-    viewportPresets
-  } = useReviewShellConfig();
+    source,
+    sourceEntries
+  } = useReviewShellAdapterState();
   const activeRoute = useReviewShellStore((state) => state.activeRoute);
   const draftTarget = useReviewShellStore((state) => state.draftTarget);
   const size = useReviewShellStore((state) => state.size);
-  const source = useReviewShellStore((state) => state.source);
   const target = useReviewShellStore((state) => state.target);
   const targetOverlayState = useReviewShellStore(
     (state) => state.targetOverlayState
@@ -15752,30 +15932,27 @@ var useReviewShellState = () => {
   const setTargetOverlayState = useReviewShellStore(
     (state) => state.setTargetOverlayState
   );
-  const remoteSource = remoteAdapterEntry?.label ?? null;
-  const activeAdapterEntry = sourceEntries.find((entry) => entry.label === source) ?? sourceEntries[0];
-  const isRemoteSource = Boolean(
-    remoteSource && activeAdapterEntry.label === remoteSource
+  const setSelectedItemId = useReviewShellStore(
+    (state) => state.setSelectedItemId
   );
-  const canWriteArea = activeAdapterEntry.writeModes.includes("area");
-  const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
-  const adapter = activeAdapterEntry.adapter;
+  const copiedPromptKey = useReviewShellStore(
+    (state) => state.copiedPromptKey
+  );
+  const setCopiedPromptKey = useReviewShellStore(
+    (state) => state.setCopiedPromptKey
+  );
   const initialItemId = getInitialItemId();
-  const iframeRef = useRef8(null);
-  const frameScrollRef = useRef8(null);
-  const controllerRef = useRef8(null);
-  const cleanupTargetRef = useRef8(null);
-  const pendingRestoreRef = useRef8(null);
-  const pendingInitialItemIdRef = useRef8(initialItemId);
-  const selectedItemIdRef = useRef8(initialItemId);
-  const hiddenOverlayItemIdListRef = useRef8([]);
-  const [mode, setMode] = useState15("idle");
-  const [selectedItemId, setSelectedItemId] = useState15(initialItemId);
-  const [isSitemapOpen, setIsSitemapOpen] = useState15(false);
-  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState15(false);
-  const [copyLabel, setCopyLabel] = useState15("Copy URL");
-  const [toastMessage, setToastMessage] = useState15("");
-  const [copiedPromptKey, setCopiedPromptKey] = useState15(null);
+  const iframeRef = useRef9(null);
+  const frameScrollRef = useRef9(null);
+  const controllerRef = useRef9(null);
+  const cleanupTargetRef = useRef9(null);
+  const pendingRestoreRef = useRef9(null);
+  const pendingInitialItemIdRef = useRef9(initialItemId);
+  const [mode, setMode] = useState13("idle");
+  const [isSitemapOpen, setIsSitemapOpen] = useState13(false);
+  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState13(false);
+  const [copyLabel, setCopyLabel] = useState13("Copy URL");
+  const [toastMessage, setToastMessage] = useState13("");
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
   return {
     activeAdapterEntry,
@@ -15789,7 +15966,6 @@ var useReviewShellState = () => {
     copyLabel,
     draftTarget,
     frameScrollRef,
-    hiddenOverlayItemIdListRef,
     iframeRef,
     isFigmaOverlayAvailable,
     isInitialPromptOpen,
@@ -15801,8 +15977,6 @@ var useReviewShellState = () => {
     pendingRestoreRef,
     remoteAdapterEntry,
     reviewViewportPresets,
-    selectedItemId,
-    selectedItemIdRef,
     setActiveRoute,
     setCopiedPromptKey,
     setCopyLabel,
@@ -15828,7 +16002,7 @@ var useReviewShellState = () => {
 };
 
 // src/react-shell/hooks/use.review.source.inspector.ts
-import { useCallback as useCallback18, useEffect as useEffect16, useRef as useRef9, useState as useState16 } from "react";
+import { useCallback as useCallback19, useEffect as useEffect16, useRef as useRef10, useState as useState14 } from "react";
 
 // src/react-shell/review/source.shortcut.style.ts
 function createSourceShortcutStyle(optionAttribute, fontOverlayAttribute) {
@@ -15914,14 +16088,14 @@ function useReviewSourceInspector({
   onCancelReviewMode,
   onToast
 }) {
-  const sourceShortcutCleanupRef = useRef9(null);
-  const sourceInspectorInteractionRef = useRef9(false);
-  const [sourceInspectorState, setSourceInspectorState] = useState16(null);
-  const clearSourceInspector = useCallback18(() => {
+  const sourceShortcutCleanupRef = useRef10(null);
+  const sourceInspectorInteractionRef = useRef10(false);
+  const [sourceInspectorState, setSourceInspectorState] = useState14(null);
+  const clearSourceInspector = useCallback19(() => {
     sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
-  const getSourceInspectorRect = useCallback18(
+  const getSourceInspectorRect = useCallback19(
     (element) => {
       const frame = iframeRef.current;
       if (!frame) return null;
@@ -15946,7 +16120,7 @@ function useReviewSourceInspector({
     },
     [iframeRef]
   );
-  const getSourceInspectorPanelPosition = useCallback18(
+  const getSourceInspectorPanelPosition = useCallback19(
     (rect) => {
       const margin = 12;
       const gap = 10;
@@ -15972,7 +16146,7 @@ function useReviewSourceInspector({
     },
     []
   );
-  const showSourceInspectorForTarget = useCallback18(
+  const showSourceInspectorForTarget = useCallback19(
     (target, isPinned = false) => {
       const candidates = getSourceCandidates(target, sourceCandidateOptions).map(
         (candidate) => ({
@@ -16008,7 +16182,7 @@ function useReviewSourceInspector({
       sourceOpenOptions
     ]
   );
-  const showSourceOutlineForTarget = useCallback18(
+  const showSourceOutlineForTarget = useCallback19(
     (target) => {
       const firstCandidate = getSourceCandidates(
         target,
@@ -16032,7 +16206,7 @@ function useReviewSourceInspector({
     },
     [getSourceInspectorRect, sourceCandidateOptions]
   );
-  const showSourceOutlineForElement = useCallback18(
+  const showSourceOutlineForElement = useCallback19(
     (element) => {
       if (!isSourceTreeHoverOutlineEnabled) return;
       const rect = getSourceInspectorRect(element);
@@ -16056,10 +16230,10 @@ function useReviewSourceInspector({
     },
     [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
   );
-  const clearSourceOutlineHover = useCallback18(() => {
+  const clearSourceOutlineHover = useCallback19(() => {
     setSourceInspectorState((current) => current?.isPinned ? current : null);
   }, []);
-  const openSourceCandidate = useCallback18(
+  const openSourceCandidate = useCallback19(
     (candidate) => {
       const didOpen = openSourceInEditor(candidate.source, {
         ...sourceOpenOptions,
@@ -16070,11 +16244,11 @@ function useReviewSourceInspector({
     },
     [clearSourceInspector, onToast, sourceOpenOptions]
   );
-  const cleanupSourceOpenShortcut = useCallback18(() => {
+  const cleanupSourceOpenShortcut = useCallback19(() => {
     sourceShortcutCleanupRef.current?.();
     sourceShortcutCleanupRef.current = null;
   }, []);
-  const bindSourceOpenShortcut = useCallback18(() => {
+  const bindSourceOpenShortcut = useCallback19(() => {
     cleanupSourceOpenShortcut();
     let frameDocument = null;
     try {
@@ -16284,7 +16458,7 @@ function useReviewSourceInspector({
 }
 
 // src/react-shell/hooks/use.review.target.navigation.ts
-import { useCallback as useCallback19 } from "react";
+import { useCallback as useCallback20 } from "react";
 var useReviewTargetNavigation = ({
   activeAdapterEntry,
   draftTarget,
@@ -16306,11 +16480,11 @@ var useReviewTargetNavigation = ({
   onTargetChange
 }) => {
   const storeApi = useReviewShellStoreApi();
-  const getPageTarget = useCallback19(
+  const getPageTarget = useCallback20(
     (href) => normalizeTarget(href, reviewPathPrefix),
     [reviewPathPrefix]
   );
-  const applyTarget = useCallback19(async () => {
+  const applyTarget = useCallback20(async () => {
     const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
     const normalizedTarget = parsedInput.target;
     const normalizedRoute = getTargetRouteKey(
@@ -16362,7 +16536,7 @@ var useReviewTargetNavigation = ({
     storeApi,
     viewportPresets
   ]);
-  const selectPage = useCallback19(
+  const selectPage = useCallback20(
     (href) => {
       const normalizedTarget = getPageTarget(href);
       const normalizedRoute = getTargetRouteKey(
@@ -16390,16 +16564,16 @@ var useReviewTargetNavigation = ({
       storeApi
     ]
   );
-  const selectAllQa = useCallback19(() => {
+  const selectAllQa = useCallback20(() => {
     onAllQaVisibleChange(true);
     onSitemapOpenChange(false);
   }, [onAllQaVisibleChange, onSitemapOpenChange]);
-  const clearSelectedReviewItem = useCallback19(() => {
+  const clearSelectedReviewItem = useCallback20(() => {
     onClearSelectedItem();
     const state = storeApi.getState();
     updateShellUrl(state.target, state.size, source);
   }, [onClearSelectedItem, source, storeApi]);
-  const changeReviewSource = useCallback19(
+  const changeReviewSource = useCallback20(
     (nextSource) => {
       if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
       onCancelReviewMode();
@@ -16430,6 +16604,54 @@ var useReviewTargetNavigation = ({
 
 // src/react-shell/store/create.review.shell.store.ts
 import { createStore } from "zustand";
+
+// src/react-shell/store/qa.slice.ts
+var createQaSlice = (set) => ({
+  copiedPromptKey: null,
+  editingItem: null,
+  hiddenOverlayItemIds: /* @__PURE__ */ new Set(),
+  isAllQaVisible: false,
+  isItemsLoading: false,
+  items: [],
+  mutatingItemIds: /* @__PURE__ */ new Set(),
+  qaFilter: "all",
+  qaStatusFilter: getStoredReviewQaStatusFilter(),
+  selectedItemId: getInitialItemId(),
+  sitemapItems: {
+    local: [],
+    remote: []
+  },
+  addMutatingItemId: (itemId) => set((state) => {
+    const mutatingItemIds = new Set(state.mutatingItemIds);
+    mutatingItemIds.add(itemId);
+    return { mutatingItemIds };
+  }),
+  removeMutatingItemId: (itemId) => set((state) => {
+    const mutatingItemIds = new Set(state.mutatingItemIds);
+    mutatingItemIds.delete(itemId);
+    return { mutatingItemIds };
+  }),
+  setCopiedPromptKey: (value) => set((state) => ({
+    copiedPromptKey: typeof value === "function" ? value(state.copiedPromptKey) : value
+  })),
+  setEditingItem: (editingItem) => set({ editingItem }),
+  setIsAllQaVisible: (isAllQaVisible) => set({ isAllQaVisible }),
+  setIsItemsLoading: (isItemsLoading) => set({ isItemsLoading }),
+  setItems: (items) => set({ items }),
+  setQaFilter: (qaFilter) => set({ qaFilter }),
+  setQaStatusFilter: (qaStatusFilter) => set({ qaStatusFilter }),
+  setSelectedItemId: (selectedItemId) => set({ selectedItemId }),
+  setSitemapItems: (sitemapItems) => set({ sitemapItems }),
+  toggleHiddenOverlayItemId: (itemId) => set((state) => {
+    const hiddenOverlayItemIds = new Set(state.hiddenOverlayItemIds);
+    if (hiddenOverlayItemIds.has(itemId)) {
+      hiddenOverlayItemIds.delete(itemId);
+    } else {
+      hiddenOverlayItemIds.add(itemId);
+    }
+    return { hiddenOverlayItemIds };
+  })
+});
 
 // src/react-shell/store/side.panel.slice.ts
 var getInitialSidePanel = () => getInitialReviewSidePanel() ?? (getInitialItemId() ? "qa" : getStoredReviewSidePanel());
@@ -16474,13 +16696,14 @@ var createTargetSlice = (initialState) => (set) => ({
 // src/react-shell/store/create.review.shell.store.ts
 var createReviewShellStore = (init) => createStore()((...args) => ({
   ...createSidePanelSlice(...args),
-  ...createTargetSlice(init.target)(...args)
+  ...createTargetSlice(init.target)(...args),
+  ...createQaSlice(...args)
 }));
 
 // src/react-shell/review/shell.tsx
-import { jsx as jsx29, jsxs as jsxs26 } from "react/jsx-runtime";
+import { jsx as jsx30, jsxs as jsxs27 } from "react/jsx-runtime";
 var ReviewShell = (props) => {
-  const config = useMemo10(
+  const config = useMemo11(
     () => createReviewShellConfig(props),
     [
       props.adapters,
@@ -16490,10 +16713,10 @@ var ReviewShell = (props) => {
       props.reviewPathPrefix
     ]
   );
-  const [store] = useState17(
+  const [store] = useState15(
     () => createReviewShellStore({ target: getInitialTargetSliceState(config) })
   );
-  return /* @__PURE__ */ jsx29(ReviewShellConfigProvider, { value: config, children: /* @__PURE__ */ jsx29(ReviewShellStoreProvider, { value: store, children: /* @__PURE__ */ jsx29(ReviewShellContent, { ...props }) }) });
+  return /* @__PURE__ */ jsx30(ReviewShellConfigProvider, { value: config, children: /* @__PURE__ */ jsx30(ReviewShellStoreProvider, { value: store, children: /* @__PURE__ */ jsx30(ReviewShellContent, { ...props }) }) });
 };
 var ReviewShellContent = ({
   projectId,
@@ -16519,7 +16742,6 @@ var ReviewShellContent = ({
     copyLabel,
     draftTarget,
     frameScrollRef,
-    hiddenOverlayItemIdListRef,
     iframeRef,
     isFigmaOverlayAvailable: isViewportFigmaOverlayAvailable,
     isInitialPromptOpen,
@@ -16531,8 +16753,6 @@ var ReviewShellContent = ({
     pendingRestoreRef,
     remoteAdapterEntry,
     reviewViewportPresets,
-    selectedItemId,
-    selectedItemIdRef,
     setActiveRoute,
     setCopiedPromptKey,
     setCopyLabel,
@@ -16545,7 +16765,6 @@ var ReviewShellContent = ({
     setSource,
     setTarget,
     setTargetOverlayState,
-    showSourceSelect,
     size,
     source,
     sourceEntries,
@@ -16555,30 +16774,37 @@ var ReviewShellContent = ({
     viewportPresets,
     setToastMessage
   } = useReviewShellState();
-  const [targetFrameLoadVersion, setTargetFrameLoadVersion] = useState17(0);
-  const [isAllQaVisible, setIsAllQaVisible] = useState17(false);
-  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = useState17(false);
-  const resolvedReviewSourceOptions = useMemo10(
+  const storeApi = useReviewShellStoreApi();
+  const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
+  const setIsAllQaVisible = useReviewShellStore(
+    (state) => state.setIsAllQaVisible
+  );
+  const isItemEditing = useReviewShellStore(
+    (state) => Boolean(state.editingItem)
+  );
+  const [targetFrameLoadVersion, setTargetFrameLoadVersion] = useState15(0);
+  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = useState15(false);
+  const resolvedReviewSourceOptions = useMemo11(
     () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
     [sourceInspector, sourceRoot]
   );
   const resolvedSourceInspector = resolvedReviewSourceOptions.sourceInspector;
   const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
-  const sourceOpenOptions = useMemo10(
+  const sourceOpenOptions = useMemo11(
     () => ({
       ...resolvedSourceInspector,
       sourceRoot: resolvedSourceRoot
     }),
     [resolvedSourceInspector, resolvedSourceRoot]
   );
-  const sourceCandidateOptions = useMemo10(
+  const sourceCandidateOptions = useMemo11(
     () => ({
       ignore: resolvedSourceInspector?.ignore,
       includePlacer: resolvedSourceInspector?.includePlacer
     }),
     [resolvedSourceInspector]
   );
-  const sectionOutlineOptions = useMemo10(
+  const sectionOutlineOptions = useMemo11(
     () => ({
       includePlacer: resolvedSourceInspector?.includePlacer,
       ignore: resolvedSourceInspector?.ignore,
@@ -16588,7 +16814,7 @@ var ReviewShellContent = ({
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
   const isSourceTreeHoverOutlineEnabled = resolvedSourceInspector?.hoverOutline !== false;
-  const figmaImageStore = useMemo10(
+  const figmaImageStore = useMemo11(
     () => getReviewFigmaImageStore(figmaImages),
     [figmaImages]
   );
@@ -16608,48 +16834,22 @@ var ReviewShellContent = ({
   });
   const {
     activeItems,
-    activeRemainingItemCount,
     allQaCount,
-    currentPresetScope,
-    filteredNumberedActiveItems,
-    getItemPresetScope,
     hiddenOverlayItemIdList,
-    hiddenOverlayItemIds,
     items,
     pageQaCounts,
     pageTargets,
     presetScopeCounts,
-    qaFilter,
-    qaFilterCounts,
-    qaStatusFilter,
-    qaStatusFilterCounts,
     selectedNumberedItem,
-    setHiddenOverlayItemIds,
-    setItems,
-    setQaFilter,
-    setQaStatusFilter,
-    setSitemapItems,
     targetSrc
-  } = useReviewShellData({
-    activeRoute,
-    isAllQaVisible,
-    isRemoteSource,
-    pages,
-    reviewPathPrefix,
-    reviewViewportPresets,
-    selectedItemId,
-    size,
-    target,
-    viewportPresets
-  });
-  const itemRefreshIdRef = useRef10(0);
-  const [isItemsLoading, setIsItemsLoading] = useState17(false);
+  } = useReviewShellData();
+  const itemRefreshIdRef = useRef11(0);
   const isCommandKeyPressed = useReviewCommandKey({
     iframeRef,
     targetFrameLoadVersion,
     targetSrc
   });
-  const effectiveHiddenOverlayItemIdList = useMemo10(() => {
+  const effectiveHiddenOverlayItemIdList = useMemo11(() => {
     if (!isCommandKeyPressed) return hiddenOverlayItemIdList;
     const itemIds = new Set(hiddenOverlayItemIdList);
     activeItems.forEach((item) => itemIds.add(item.id));
@@ -16682,14 +16882,14 @@ var ReviewShellContent = ({
     store: figmaImageStore,
     viewport: size
   });
-  const [targetFigmaState, setTargetFigmaState] = useState17(null);
+  const [targetFigmaState, setTargetFigmaState] = useState15(null);
   const targetFigmaConfig = targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
   const isFigmaOverlayAvailable = !isFigmaImageManagementEnabled && isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
   const initialPromptText = initialPrompt.trim();
-  const refreshItems = useCallback20(
+  const refreshItems = useCallback21(
     async () => {
       const requestId = ++itemRefreshIdRef.current;
-      setIsItemsLoading(true);
+      storeApi.getState().setIsItemsLoading(true);
       try {
         return await refreshReviewItems({
           activeRoute,
@@ -16697,11 +16897,11 @@ var ReviewShellContent = ({
           isRemoteSource,
           pageId: activeAdapterEntry.pageId,
           projectId,
-          onItemsChange: setItems
+          onItemsChange: storeApi.getState().setItems
         });
       } finally {
         if (itemRefreshIdRef.current === requestId) {
-          setIsItemsLoading(false);
+          storeApi.getState().setIsItemsLoading(false);
         }
       }
     },
@@ -16711,39 +16911,39 @@ var ReviewShellContent = ({
       adapter,
       isRemoteSource,
       projectId,
-      setItems
+      storeApi
     ]
   );
-  const refreshSitemapItems = useCallback20(
+  const refreshSitemapItems = useCallback21(
     () => refreshSitemapReviewItems({
       localAdapterEntry,
       projectId,
       remoteAdapterEntry,
-      onSitemapItemsChange: setSitemapItems
+      onSitemapItemsChange: storeApi.getState().setSitemapItems
     }),
-    [localAdapterEntry, projectId, remoteAdapterEntry]
+    [localAdapterEntry, projectId, remoteAdapterEntry, storeApi]
   );
-  const cancelReviewMode = useCallback20(() => {
+  const cancelReviewMode = useCallback21(() => {
     const controller = controllerRef.current;
     if (!controller || controller.getMode() === "idle") return false;
     controller.setMode("idle");
     setMode(controller.getMode());
     return true;
   }, []);
-  const closePromptModal = useCallback20(() => {
+  const closePromptModal = useCallback21(() => {
     setIsInitialPromptOpen(false);
   }, []);
-  const closeSitemap = useCallback20(() => {
+  const closeSitemap = useCallback21(() => {
     setIsSitemapOpen(false);
   }, []);
-  const reloadTargetFrame = useCallback20(() => {
+  const reloadTargetFrame = useCallback21(() => {
     try {
       iframeRef.current?.contentWindow?.location.reload();
     } catch {
       return;
     }
   }, []);
-  const showToast = useCallback20(
+  const showToast = useCallback21(
     (message) => {
       setToastMessage(message);
       window.setTimeout(() => {
@@ -16793,7 +16993,7 @@ var ReviewShellContent = ({
     size,
     source
   });
-  const closeRulerPanels = useCallback20(() => {
+  const closeRulerPanels = useCallback21(() => {
     closeSitemap();
     closeFigmaSettings();
   }, [closeFigmaSettings, closeSitemap]);
@@ -16835,7 +17035,6 @@ var ReviewShellContent = ({
     controllerRef,
     frameScrollRef,
     hiddenOverlayItemIdList: effectiveHiddenOverlayItemIdList,
-    hiddenOverlayItemIdListRef,
     iframeRef,
     isFigmaOverlayAvailable,
     pageTargets,
@@ -16847,7 +17046,6 @@ var ReviewShellContent = ({
     reviewViewportPresets,
     ruler,
     adjustmentLabel,
-    selectedItemIdRef,
     size,
     source,
     target,
@@ -16873,24 +17071,13 @@ var ReviewShellContent = ({
     if (!item) return;
     restoreReviewItem(item);
   }, [items, pendingInitialItemIdRef, restoreReviewItem]);
-  const refreshReviewData2 = useCallback20(() => {
+  const refreshReviewData2 = useCallback21(() => {
     return refreshReviewData({
       onRefreshItems: refreshItems,
       onRefreshSitemapItems: refreshSitemapItems,
       onReloadReviewKit: reloadReviewKit
     });
   }, [refreshItems, refreshSitemapItems, reloadReviewKit]);
-  const toggleItemOverlayVisibility = useCallback20((itemId) => {
-    setHiddenOverlayItemIds((currentHiddenOverlayItemIds) => {
-      const nextHiddenItemIds = new Set(currentHiddenOverlayItemIds);
-      if (nextHiddenItemIds.has(itemId)) {
-        nextHiddenItemIds.delete(itemId);
-      } else {
-        nextHiddenItemIds.add(itemId);
-      }
-      return nextHiddenItemIds;
-    });
-  }, []);
   useEffect17(() => {
     void refreshItems();
   }, [refreshItems]);
@@ -16936,7 +17123,7 @@ var ReviewShellContent = ({
     onActiveRouteChange: setActiveRoute,
     onAllQaVisibleChange: setIsAllQaVisible,
     onCancelReviewMode: cancelReviewMode,
-    onClearItems: () => setItems([]),
+    onClearItems: () => storeApi.getState().setItems([]),
     onClearSelectedItem: clearSelectedItem,
     onDraftTargetChange: setDraftTarget,
     onReloadTargetFrame: reloadTargetFrame,
@@ -16958,7 +17145,7 @@ var ReviewShellContent = ({
   const copyCurrentUrl = () => copyCurrentReviewUrl({
     onCopyLabelChange: setCopyLabel
   });
-  const refreshTargetFigmaConfig = useCallback20(() => {
+  const refreshTargetFigmaConfig = useCallback21(() => {
     const config = getTargetFigmaFrameConfig(
       iframeRef.current?.contentWindow
     );
@@ -16989,7 +17176,7 @@ var ReviewShellContent = ({
     onCancelReviewMode: cancelReviewMode,
     onToast: showToast
   });
-  const showQaPanel = useCallback20(() => {
+  const showQaPanel = useCallback21(() => {
     openSidePanel("qa");
   }, [openSidePanel]);
   const {
@@ -17026,10 +17213,10 @@ var ReviewShellContent = ({
     onShowQaPanel: showQaPanel,
     onToast: showToast
   });
-  const toggleQaPanel = useCallback20(() => {
+  const toggleQaPanel = useCallback21(() => {
     toggleSidePanel("qa");
   }, [toggleSidePanel]);
-  const toggleSourceTreePanel = useCallback20(() => {
+  const toggleSourceTreePanel = useCallback21(() => {
     if (!isSourceInspectorEnabled) return;
     if (sidePanel !== "source" || !isListVisible) {
       refreshCurrentSectionOutline(true);
@@ -17042,44 +17229,24 @@ var ReviewShellContent = ({
     sidePanel,
     toggleSidePanel
   ]);
-  const toggleFigmaImagesPanel = useCallback20(() => {
+  const toggleFigmaImagesPanel = useCallback21(() => {
     if (!isFigmaImageManagementEnabled) return;
     toggleSidePanel("figma-images");
   }, [
     isFigmaImageManagementEnabled,
     toggleSidePanel
   ]);
-  const {
-    changeItemAssignee,
-    changeItemStatus,
-    clearEditingItem,
-    copyItemLabel,
-    copyItemLink,
-    copyItemPrompt,
-    copyPrompt,
-    copyRemoteIssuePath,
-    editingItem,
-    mutatingItemIds,
-    removeItem,
-    saveItemDetails,
-    setEditingItem,
-    submitItem
-  } = useReviewItemActions({
-    activeAdapterEntry,
-    isRemoteSource,
-    localAdapterEntry,
-    remoteAdapterEntry,
-    reviewPathPrefix,
-    selectedItemIdRef,
-    source,
-    viewportPresets,
-    onClearSelectedItem: clearSelectedItem,
-    onCopiedPromptKeyChange: setCopiedPromptKey,
-    onRefreshReviewData: refreshReviewData2,
-    onToast: showToast
-  });
+  const copyInitialPrompt = useCallback21(
+    (value, key) => copyReviewPrompt({
+      key,
+      value,
+      onCopiedPromptKeyChange: setCopiedPromptKey,
+      onToast: showToast
+    }),
+    [setCopiedPromptKey, showToast]
+  );
   useReviewShellHotkeys({
-    isRailHotkeyBlocked: isFigmaSettingsOpen || isInitialPromptOpen || isInitialPromptScriptOpen || isSitemapOpen || Boolean(editingItem),
+    isRailHotkeyBlocked: isFigmaSettingsOpen || isInitialPromptOpen || isInitialPromptScriptOpen || isSitemapOpen || isItemEditing,
     isFigmaSettingsOpen,
     isInitialPromptOpen,
     isRulerAvailable,
@@ -17098,7 +17265,7 @@ var ReviewShellContent = ({
     onToggleRuler: toggleRuler,
     onToggleTargetOverlay: toggleTargetOverlay
   });
-  const loadTargetFrame = useCallback20(() => {
+  const loadTargetFrame = useCallback21(() => {
     setTargetFrameLoadVersion((currentVersion) => currentVersion + 1);
     initReviewKit();
     refreshTargetFigmaConfig();
@@ -17123,12 +17290,12 @@ var ReviewShellContent = ({
     imageOverlayStates: figmaImageOverlayStates,
     images: figmaImageList
   });
-  return /* @__PURE__ */ jsxs26(
+  return /* @__PURE__ */ jsxs27(
     "div",
     {
       className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
       children: [
-        /* @__PURE__ */ jsx29(
+        /* @__PURE__ */ jsx30(
           ReviewTopbar,
           {
             draftTarget,
@@ -17152,7 +17319,7 @@ var ReviewShellContent = ({
             onToggleTargetOverlay: toggleTargetOverlay
           }
         ),
-        isSitemapOpen && /* @__PURE__ */ jsx29(
+        isSitemapOpen && /* @__PURE__ */ jsx30(
           SitemapModal,
           {
             pages,
@@ -17167,7 +17334,7 @@ var ReviewShellContent = ({
             onSelectPage: selectPage
           }
         ),
-        isFigmaSettingsOpen && /* @__PURE__ */ jsx29(
+        isFigmaSettingsOpen && /* @__PURE__ */ jsx30(
           ReviewSettingsModal,
           {
             figmaTokenDraft,
@@ -17186,27 +17353,18 @@ var ReviewShellContent = ({
             onSave: saveReviewSettings
           }
         ),
-        isInitialPromptOpen && /* @__PURE__ */ jsx29(PromptModal, { onClose: closePromptModal }),
-        isInitialPromptScriptOpen && /* @__PURE__ */ jsx29(
+        isInitialPromptOpen && /* @__PURE__ */ jsx30(PromptModal, { onClose: closePromptModal }),
+        isInitialPromptScriptOpen && /* @__PURE__ */ jsx30(
           InitialPromptModal,
           {
             initialPromptText,
             copiedPromptKey,
             onClose: () => setIsInitialPromptScriptOpen(false),
-            onCopyPrompt: (text, key) => void copyPrompt(text, key)
+            onCopyPrompt: (text, key) => void copyInitialPrompt(text, key)
           }
         ),
-        editingItem && /* @__PURE__ */ jsx29(
-          QaItemEditModal,
-          {
-            fields: activeAdapterEntry.fields,
-            item: editingItem,
-            onClose: clearEditingItem,
-            onSave: saveItemDetails
-          }
-        ),
-        toastMessage && /* @__PURE__ */ jsx29("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
-        /* @__PURE__ */ jsx29(
+        toastMessage && /* @__PURE__ */ jsx30("div", { className: "df-review-copy-toast", role: "status", children: toastMessage }),
+        /* @__PURE__ */ jsx30(
           ReviewSideRail,
           {
             currentPagePresenceUsers,
@@ -17224,52 +17382,18 @@ var ReviewShellContent = ({
             onToggleSourceTreePanel: toggleSourceTreePanel
           }
         ),
-        /* @__PURE__ */ jsx29(
-          ReviewQaPanel,
+        /* @__PURE__ */ jsx30(
+          QaPanelContainer,
           {
-            activeAdapterEntry,
-            activeItems,
-            activeRemainingItemCount,
-            currentPresetScope,
-            filteredNumberedActiveItems,
-            getItemPresetScope,
-            hiddenOverlayItemIds,
             isListVisible: isQaPanelVisible,
-            isAllQaVisible,
-            isLoading: isItemsLoading,
-            isRemoteSource,
-            mutatingItemIds,
-            copiedPromptKey,
-            qaFilter,
-            qaFilterCounts,
-            qaStatusFilter,
-            qaStatusFilterCounts,
-            remoteAdapterEntry,
-            selectedItemId,
-            showSourceSelect,
-            source,
-            sourceEntries,
-            fields: activeAdapterEntry.fields,
-            assigneeTitle: activeAdapterEntry.assigneeTitle,
-            onChangeItemStatus: changeItemStatus,
-            onClearSelectedItem: clearSelectedReviewItem,
-            onChangeItemAssignee: changeItemAssignee,
             onChangeReviewSource: changeReviewSource,
-            onCopyItemLabel: (numberedItem) => void copyItemLabel(numberedItem),
-            onCopyItemLink: (numberedItem) => void copyItemLink(numberedItem),
-            onCopyItemPrompt: (numberedItem) => void copyItemPrompt(numberedItem),
-            onCopyRemoteIssuePath: copyRemoteIssuePath,
-            onEditItem: setEditingItem,
-            onQaFilterChange: setQaFilter,
-            onQaStatusFilterChange: setQaStatusFilter,
+            onClearSelectedItem: clearSelectedReviewItem,
             onRefreshReviewData: refreshReviewData2,
-            onRemoveItem: removeItem,
             onRestoreReviewItem: restoreReviewItem,
-            onSubmitItem: submitItem,
-            onToggleItemOverlayVisibility: toggleItemOverlayVisibility
+            onToast: showToast
           }
         ),
-        isFigmaImageManagementEnabled && /* @__PURE__ */ jsx29(
+        isFigmaImageManagementEnabled && /* @__PURE__ */ jsx30(
           FigmaImagesPanel,
           {
             error: figmaImageError,
@@ -17292,7 +17416,7 @@ var ReviewShellContent = ({
             onUpdateImage: updateFigmaImage
           }
         ),
-        isSourceInspectorEnabled && /* @__PURE__ */ jsx29(
+        isSourceInspectorEnabled && /* @__PURE__ */ jsx30(
           SectionOutlinePanel,
           {
             isPanelVisible: isSourceTreePanelVisible,
@@ -17320,7 +17444,7 @@ var ReviewShellContent = ({
             onClearHover: clearSourceOutlineHover
           }
         ),
-        /* @__PURE__ */ jsx29(
+        /* @__PURE__ */ jsx30(
           ReviewTargetFrame,
           {
             canWriteArea,
@@ -17346,7 +17470,7 @@ var ReviewShellContent = ({
             onSetReviewMode: setReviewMode
           }
         ),
-        /* @__PURE__ */ jsx29(
+        /* @__PURE__ */ jsx30(
           SourceInspectorOverlay,
           {
             state: sourceInspectorState,
@@ -17363,11 +17487,11 @@ var ReviewShellContent = ({
 // src/react-shell/figma/dev-overlay.tsx
 import React, {
   useEffect as useEffect18,
-  useMemo as useMemo11,
-  useState as useState18
+  useMemo as useMemo12,
+  useState as useState16
 } from "react";
 import { createRoot } from "react-dom/client";
-import { jsx as jsx30, jsxs as jsxs27 } from "react/jsx-runtime";
+import { jsx as jsx31, jsxs as jsxs28 } from "react/jsx-runtime";
 var FIGMA_DEV_OVERLAY_ROOT_ID = "df-review-figma-dev-overlay-root";
 var FIGMA_DEV_OVERLAY_MOUNT_ID = "df-review-figma-dev-overlay-mount";
 var mountFigmaDevOverlay = (options) => {
@@ -17388,7 +17512,7 @@ var mountFigmaDevOverlay = (options) => {
   document.body.appendChild(host);
   const root = createRoot(mountNode);
   root.render(
-    /* @__PURE__ */ jsx30(React.StrictMode, { children: /* @__PURE__ */ jsx30(FigmaDevOverlayWidget, { ...options }) })
+    /* @__PURE__ */ jsx31(React.StrictMode, { children: /* @__PURE__ */ jsx31(FigmaDevOverlayWidget, { ...options }) })
   );
   return {
     destroy() {
@@ -17408,11 +17532,11 @@ var FigmaDevOverlayWidget = ({
   const figmaImageStore = getReviewFigmaImageStore(figmaImages);
   const viewport = useCurrentViewport();
   const currentPageUrl = useCurrentPageUrl(pageUrl, reviewPathPrefix);
-  const viewportBoundaries = useMemo11(
+  const viewportBoundaries = useMemo12(
     () => getFigmaDevViewportBoundaries(presets),
     [presets]
   );
-  const matchedViewportMatch = useMemo11(
+  const matchedViewportMatch = useMemo12(
     () => findBoundaryFigmaDevViewportMatch(presets, viewport.width),
     [presets, viewport.width]
   );
@@ -17438,16 +17562,16 @@ var FigmaDevOverlayWidget = ({
     store: matchedViewport ? figmaImageStore : null,
     viewport: activeViewport
   });
-  const [isPanelOpen, setIsPanelOpen] = useState18(false);
-  const [isWidgetVisible, setIsWidgetVisible] = useState18(false);
-  const [offsetYDraftByImageId, setOffsetYDraftByImageId] = useState18({});
+  const [isPanelOpen, setIsPanelOpen] = useState16(false);
+  const [isWidgetVisible, setIsWidgetVisible] = useState16(false);
+  const [offsetYDraftByImageId, setOffsetYDraftByImageId] = useState16({});
   const selectedImage = selectedImageId ? images.find((image) => image.id === selectedImageId) ?? null : null;
   const selectedImageIndex = selectedImage ? images.indexOf(selectedImage) : -1;
   const selectedImageLabel = selectedImage ? getFigmaImageLabel(selectedImage, selectedImageIndex) : "Figma layer";
   const selectedOverlayState = selectedImage ? imageOverlayStates[selectedImage.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE : DEFAULT_FIGMA_IMAGE_LAYER_STATE;
   const selectedOpacityPercent = selectedImage ? getSnappedOpacityPercent(selectedOverlayState.opacity) : 0;
   const selectedOffsetYDraft = selectedImage ? offsetYDraftByImageId[selectedImage.id] ?? String(selectedOverlayState.offsetY) : "";
-  const figmaImageOverlays = useMemo11(
+  const figmaImageOverlays = useMemo12(
     () => createReviewTargetFigmaImageOverlays({
       imageOverlayStates,
       images
@@ -17501,21 +17625,21 @@ var FigmaDevOverlayWidget = ({
       setImageOverlayOpacity(selectedImage.id, opacityPercent / 100);
     }
   };
-  return /* @__PURE__ */ jsxs27(
+  return /* @__PURE__ */ jsxs28(
     "aside",
     {
       "aria-label": "Figma overlay",
       className: `df-review-figma-dev-widget${isPanelOpen ? " is-open" : ""}${isAnyImageOverlayVisible ? " is-active" : ""}`,
       children: [
-        isPanelOpen && /* @__PURE__ */ jsxs27("div", { className: "df-review-figma-dev-panel", children: [
-          /* @__PURE__ */ jsxs27("div", { className: "df-review-figma-dev-panel-header", children: [
-            /* @__PURE__ */ jsx30("strong", { children: "Figma" }),
-            /* @__PURE__ */ jsx30("span", { children: matchedViewportMatch ? `${matchedViewportMatch.label} \xB7 ${matchedViewportMatch.rangeLabel}` : `${viewport.width}px` })
+        isPanelOpen && /* @__PURE__ */ jsxs28("div", { className: "df-review-figma-dev-panel", children: [
+          /* @__PURE__ */ jsxs28("div", { className: "df-review-figma-dev-panel-header", children: [
+            /* @__PURE__ */ jsx31("strong", { children: "Figma" }),
+            /* @__PURE__ */ jsx31("span", { children: matchedViewportMatch ? `${matchedViewportMatch.label} \xB7 ${matchedViewportMatch.rangeLabel}` : `${viewport.width}px` })
           ] }),
-          selectedImage && /* @__PURE__ */ jsxs27("div", { className: "df-review-figma-dev-selected-controls", children: [
-            /* @__PURE__ */ jsxs27("label", { className: "df-review-figma-dev-opacity-control", children: [
-              /* @__PURE__ */ jsx30("span", { children: "Opacity" }),
-              /* @__PURE__ */ jsx30(
+          selectedImage && /* @__PURE__ */ jsxs28("div", { className: "df-review-figma-dev-selected-controls", children: [
+            /* @__PURE__ */ jsxs28("label", { className: "df-review-figma-dev-opacity-control", children: [
+              /* @__PURE__ */ jsx31("span", { children: "Opacity" }),
+              /* @__PURE__ */ jsx31(
                 "input",
                 {
                   "aria-label": `${selectedImageLabel} overlay opacity`,
@@ -17528,11 +17652,11 @@ var FigmaDevOverlayWidget = ({
                   onInput: (event) => updateSelectedImageOpacity(event.currentTarget.value)
                 }
               ),
-              /* @__PURE__ */ jsx30("strong", { children: selectedOpacityPercent })
+              /* @__PURE__ */ jsx31("strong", { children: selectedOpacityPercent })
             ] }),
-            /* @__PURE__ */ jsxs27("label", { className: "df-review-figma-dev-y-control", children: [
-              /* @__PURE__ */ jsx30(MoveVertical, { "aria-hidden": "true" }),
-              /* @__PURE__ */ jsx30(
+            /* @__PURE__ */ jsxs28("label", { className: "df-review-figma-dev-y-control", children: [
+              /* @__PURE__ */ jsx31(MoveVertical, { "aria-hidden": "true" }),
+              /* @__PURE__ */ jsx31(
                 "input",
                 {
                   "aria-label": `${selectedImageLabel} overlay Y offset`,
@@ -17562,14 +17686,14 @@ var FigmaDevOverlayWidget = ({
               )
             ] })
           ] }),
-          error && /* @__PURE__ */ jsx30("p", { className: "df-review-figma-dev-status", children: error }),
-          !matchedViewport ? /* @__PURE__ */ jsxs27("p", { className: "df-review-figma-dev-empty", children: [
+          error && /* @__PURE__ */ jsx31("p", { className: "df-review-figma-dev-status", children: error }),
+          !matchedViewport ? /* @__PURE__ */ jsxs28("p", { className: "df-review-figma-dev-empty", children: [
             "No Figma layers for this viewport.",
             viewportBoundaries ? ` Mobile ${viewportBoundaries.mobileRangeLabel} / Full width ${viewportBoundaries.fullWidthRangeLabel}` : ""
-          ] }) : isLoading ? /* @__PURE__ */ jsx30("p", { className: "df-review-figma-dev-status", children: "Loading..." }) : images.length === 0 ? /* @__PURE__ */ jsx30("p", { className: "df-review-figma-dev-empty", children: "No Figma layers for this viewport." }) : /* @__PURE__ */ jsx30("div", { className: "df-review-figma-dev-list", children: images.map((image, index) => {
+          ] }) : isLoading ? /* @__PURE__ */ jsx31("p", { className: "df-review-figma-dev-status", children: "Loading..." }) : images.length === 0 ? /* @__PURE__ */ jsx31("p", { className: "df-review-figma-dev-empty", children: "No Figma layers for this viewport." }) : /* @__PURE__ */ jsx31("div", { className: "df-review-figma-dev-list", children: images.map((image, index) => {
             const imageLabel = getFigmaImageLabel(image, index);
             const overlayState = imageOverlayStates[image.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE;
-            return /* @__PURE__ */ jsxs27(
+            return /* @__PURE__ */ jsxs28(
               "article",
               {
                 className: `df-review-figma-dev-row${image.id === selectedImageId ? " is-active" : ""}`,
@@ -17582,7 +17706,7 @@ var FigmaDevOverlayWidget = ({
                   setSelectedImageId(image.id);
                 },
                 children: [
-                  /* @__PURE__ */ jsx30(
+                  /* @__PURE__ */ jsx31(
                     FigmaImageLayerStateButtons,
                     {
                       imageLabel,
@@ -17594,9 +17718,9 @@ var FigmaDevOverlayWidget = ({
                       onToggleVisible: () => toggleImageOverlayVisible(image.id)
                     }
                   ),
-                  /* @__PURE__ */ jsxs27("span", { className: "df-review-figma-dev-row-main", children: [
-                    /* @__PURE__ */ jsx30("strong", { children: imageLabel }),
-                    /* @__PURE__ */ jsx30("small", { children: formatFigmaImageDate(image.updatedAt) })
+                  /* @__PURE__ */ jsxs28("span", { className: "df-review-figma-dev-row-main", children: [
+                    /* @__PURE__ */ jsx31("strong", { children: imageLabel }),
+                    /* @__PURE__ */ jsx31("small", { children: formatFigmaImageDate(image.updatedAt) })
                   ] })
                 ]
               },
@@ -17604,7 +17728,7 @@ var FigmaDevOverlayWidget = ({
             );
           }) })
         ] }),
-        /* @__PURE__ */ jsx30("div", { className: "df-review-figma-dev-bar", children: /* @__PURE__ */ jsxs27(
+        /* @__PURE__ */ jsx31("div", { className: "df-review-figma-dev-bar", children: /* @__PURE__ */ jsxs28(
           "button",
           {
             "aria-expanded": isPanelOpen,
@@ -17614,8 +17738,8 @@ var FigmaDevOverlayWidget = ({
             type: "button",
             onClick: () => setIsPanelOpen((isOpen) => !isOpen),
             children: [
-              /* @__PURE__ */ jsx30(FigmaMarkIcon, {}),
-              /* @__PURE__ */ jsx30("span", { className: "df-review-figma-dev-button-count", children: images.length })
+              /* @__PURE__ */ jsx31(FigmaMarkIcon, {}),
+              /* @__PURE__ */ jsx31("span", { className: "df-review-figma-dev-button-count", children: images.length })
             ]
           }
         ) })
@@ -17624,7 +17748,7 @@ var FigmaDevOverlayWidget = ({
   );
 };
 function useCurrentPageUrl(pageUrl, reviewPathPrefix) {
-  const [currentPageUrl, setCurrentPageUrl] = useState18(
+  const [currentPageUrl, setCurrentPageUrl] = useState16(
     () => getFigmaDevOverlayPageUrl(pageUrl, reviewPathPrefix)
   );
   useEffect18(() => {
@@ -17648,7 +17772,7 @@ function isEditableFigmaDevOverlayEventTarget(event) {
   return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT" || element.isContentEditable === true;
 }
 function useCurrentViewport() {
-  const [viewport, setViewport] = useState18(getCurrentViewportSize);
+  const [viewport, setViewport] = useState16(getCurrentViewportSize);
   useEffect18(() => {
     const updateViewport = () => setViewport(getCurrentViewportSize());
     window.addEventListener("resize", updateViewport);
@@ -18206,7 +18330,7 @@ var createSupabasePresenceAdapter = ({
 });
 
 // src/react-shell.tsx
-import { jsx as jsx31 } from "react/jsx-runtime";
+import { jsx as jsx32 } from "react/jsx-runtime";
 var mountReviewShell = (options) => {
   if (typeof document === "undefined" || !document.head) return;
   const { rootId = "root", ...shellProps } = options;
@@ -18217,7 +18341,7 @@ var mountReviewShell = (options) => {
   root.style.height = "100%";
   root.style.margin = "0";
   createRoot2(root).render(
-    /* @__PURE__ */ jsx31(React2.StrictMode, { children: /* @__PURE__ */ jsx31(ReviewShell, { ...shellProps }) })
+    /* @__PURE__ */ jsx32(React2.StrictMode, { children: /* @__PURE__ */ jsx32(ReviewShell, { ...shellProps }) })
   );
 };
 export {

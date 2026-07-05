@@ -46,8 +46,7 @@ import {
   type ReviewFigmaFrameConfig,
 } from '../figma';
 import { FigmaImagesPanel } from '../figma/images.panel';
-import { QaItemEditModal } from '../qa/item.edit.modal';
-import { ReviewQaPanel } from '../qa/panel';
+import { QaPanelContainer } from '../qa/panel.container';
 import type {
   GetSourceCandidatesOptions,
   SourceOpenOptions,
@@ -62,7 +61,6 @@ import { setTargetFigmaOverlayLocked } from '../target/target';
 import { ReviewTopbar } from '../topbar';
 import { useReviewCommandKey } from '../hooks/use.review.command.key';
 import { useReviewController } from '../hooks/use.review.controller';
-import { useReviewItemActions } from '../hooks/use.review.item.actions';
 import { useReviewPresence } from '../hooks/use.review.presence';
 import { useReviewRuler } from '../hooks/use.review.ruler';
 import { useReviewFigmaImages } from '../hooks/use.review.figma.images';
@@ -76,6 +74,7 @@ import { useReviewSourceInspector } from '../hooks/use.review.source.inspector';
 import { useReviewTargetNavigation } from '../hooks/use.review.target.navigation';
 import {
   copyCurrentReviewUrl,
+  copyReviewPrompt,
   refreshReviewItems,
   refreshSitemapReviewItems,
   refreshReviewData as refreshReviewDataAction,
@@ -87,7 +86,11 @@ import {
   ReviewShellConfigProvider,
 } from '../store/shell.config';
 import { getInitialTargetSliceState } from '../store/target.slice';
-import { ReviewShellStoreProvider } from '../store/store.context';
+import {
+  ReviewShellStoreProvider,
+  useReviewShellStore,
+  useReviewShellStoreApi,
+} from '../store/store.context';
 
 // store 는 인스턴스마다 생성한다 (전역 아님). useState initializer 는 StrictMode 안전.
 export const ReviewShell = (props: ReviewShellProps) => {
@@ -161,7 +164,6 @@ const ReviewShellContent = ({
     setSource,
     setTarget,
     setTargetOverlayState,
-    showSourceSelect,
     size,
     source,
     sourceEntries,

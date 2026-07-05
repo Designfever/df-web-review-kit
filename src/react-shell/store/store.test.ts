@@ -50,6 +50,31 @@ describe('createReviewShellStore', () => {
     expect(store.getState().isListVisible).toBe(false);
   });
 
+  it('updates qa state through slice actions', () => {
+    const store = createReviewShellStore(createTestInit());
+
+    store.getState().toggleHiddenOverlayItemId('item-1');
+    expect(store.getState().hiddenOverlayItemIds.has('item-1')).toBe(true);
+    store.getState().toggleHiddenOverlayItemId('item-1');
+    expect(store.getState().hiddenOverlayItemIds.has('item-1')).toBe(false);
+
+    store.getState().addMutatingItemId('item-2');
+    expect(store.getState().mutatingItemIds.has('item-2')).toBe(true);
+    store.getState().removeMutatingItemId('item-2');
+    expect(store.getState().mutatingItemIds.has('item-2')).toBe(false);
+
+    store.getState().setCopiedPromptKey('qa:item-3');
+    store
+      .getState()
+      .setCopiedPromptKey((current) =>
+        current === 'qa:item-3' ? null : current
+      );
+    expect(store.getState().copiedPromptKey).toBe(null);
+
+    store.getState().setSelectedItemId('item-4');
+    expect(store.getState().selectedItemId).toBe('item-4');
+  });
+
   it('updates target state through slice actions', () => {
     const store = createReviewShellStore(createTestInit());
 

@@ -1,76 +1,57 @@
 import {
-  useMemo,
   useRef,
   useState,
 } from 'react';
 import type {
   ReviewItem,
   ReviewMode,
-  ReviewSource,
   WebReviewKitController,
 } from '../../types';
-import { normalizeReviewShellAdapters } from '../adapters';
-import {
-  getTargetRouteKey,
-  getInitialItemId,
-  getInitialSource,
-  getInitialTarget,
-} from '../route';
-import type {
-  ReviewShellAdapters,
-  ReviewShellViewportPreset,
-  TargetOverlayState,
-} from '../types';
-import {
-  DEFAULT_REVIEW_VIEWPORT_PRESETS,
-  getInitialSize,
-  getIsFigmaOverlayAvailable,
-  toReviewViewportPresets,
-} from '../viewport';
+import { getInitialItemId } from '../route';
+import { useReviewShellConfig } from '../store/shell.config';
+import { useReviewShellStore } from '../store/store.context';
+import { getIsFigmaOverlayAvailable } from '../viewport';
 
-interface UseReviewShellStateOptions {
-  adapters: ReviewShellAdapters;
-  presets: ReviewShellViewportPreset[];
-  reviewPathPrefix: string;
-}
+// target/source/size/route/overlay 상태는 target slice 로 이동했다.
+// 이 훅은 config + store 를 조합해 기존 반환 shape 을 유지하는 과도기 레이어다.
+export const useReviewShellState = () => {
+  const {
+    localAdapterEntry,
+    remoteAdapterEntry,
+    reviewViewportPresets,
+    showSourceSelect,
+    sourceEntries,
+    viewportPresets,
+  } = useReviewShellConfig();
 
-export const useReviewShellState = ({
-  adapters,
-  presets,
-  reviewPathPrefix,
-}: UseReviewShellStateOptions) => {
-  const viewportPresets =
-    presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const reviewViewportPresets = useMemo(
-    () => toReviewViewportPresets(viewportPresets),
-    [viewportPresets]
+  const activeRoute = useReviewShellStore((state) => state.activeRoute);
+  const draftTarget = useReviewShellStore((state) => state.draftTarget);
+  const size = useReviewShellStore((state) => state.size);
+  const source = useReviewShellStore((state) => state.source);
+  const target = useReviewShellStore((state) => state.target);
+  const targetOverlayState = useReviewShellStore(
+    (state) => state.targetOverlayState
   );
-  const normalizedAdapters = useMemo(
-    () => normalizeReviewShellAdapters(adapters),
-    [adapters]
+  const setActiveRoute = useReviewShellStore((state) => state.setActiveRoute);
+  const setDraftTarget = useReviewShellStore((state) => state.setDraftTarget);
+  const setSize = useReviewShellStore((state) => state.setSize);
+  const setSource = useReviewShellStore((state) => state.setSource);
+  const setTarget = useReviewShellStore((state) => state.setTarget);
+  const setTargetOverlayState = useReviewShellStore(
+    (state) => state.setTargetOverlayState
   );
-  const localAdapterEntry = normalizedAdapters.local;
-  const remoteAdapterEntry = normalizedAdapters.remote;
-  const sourceEntries = normalizedAdapters.sources;
-  const defaultSource = sourceEntries[0]?.label ?? 'local';
-  const initialItemId = getInitialItemId();
-  const [source, setSource] = useState<ReviewSource>(() => {
-    const initialSource = getInitialSource(remoteAdapterEntry?.label);
-    return sourceEntries.some((entry) => entry.label === initialSource)
-      ? initialSource
-      : defaultSource;
-  });
+
   const remoteSource = remoteAdapterEntry?.label ?? null;
   const activeAdapterEntry =
     sourceEntries.find((entry) => entry.label === source) ?? sourceEntries[0]!;
   const isRemoteSource = Boolean(
     remoteSource && activeAdapterEntry.label === remoteSource
   );
-  const showSourceSelect = sourceEntries.length > 1;
   const canWriteArea = activeAdapterEntry.writeModes.includes('area');
   const canWriteDom = activeAdapterEntry.writeModes.includes('dom');
   const adapter = activeAdapterEntry.adapter;
 
+  const initialItemId = getInitialItemId();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const frameScrollRef = useRef<HTMLDivElement | null>(null);
   const controllerRef = useRef<WebReviewKitController | null>(null);
@@ -79,32 +60,14 @@ export const useReviewShellState = ({
   const pendingInitialItemIdRef = useRef(initialItemId);
   const selectedItemIdRef = useRef(initialItemId);
   const hiddenOverlayItemIdListRef = useRef<string[]>([]);
-  const [target, setTarget] = useState(() =>
-    getInitialTarget(reviewPathPrefix)
-  );
-  const [draftTarget, setDraftTarget] = useState(() =>
-    getInitialTarget(reviewPathPrefix)
-  );
-  const [activeRoute, setActiveRoute] = useState(() =>
-    getTargetRouteKey(getInitialTarget(reviewPathPrefix), reviewPathPrefix)
-  );
-  const [size, setSize] = useState<ReviewShellViewportPreset>(() =>
-    getInitialSize(viewportPresets)
-  );
+
   const [mode, setMode] = useState<ReviewMode>('idle');
-  const [targetOverlayState, setTargetOverlayState] =
-    useState<TargetOverlayState>({
-      grid: false,
-      figma: false,
-    });
   const [selectedItemId, setSelectedItemId] = useState(initialItemId);
   const [isSitemapOpen, setIsSitemapOpen] = useState(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState(false);
   const [copyLabel, setCopyLabel] = useState('Copy URL');
   const [toastMessage, setToastMessage] = useState('');
   const [copiedPromptKey, setCopiedPromptKey] = useState<string | null>(null);
-  const targetRef = useRef(target);
-  const sizeRef = useRef(size);
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
 
   return {
@@ -147,12 +110,10 @@ export const useReviewShellState = ({
     setTargetOverlayState,
     showSourceSelect,
     size,
-    sizeRef,
     source,
     sourceEntries,
     target,
     targetOverlayState,
-    targetRef,
     toastMessage,
     viewportPresets,
     setToastMessage,

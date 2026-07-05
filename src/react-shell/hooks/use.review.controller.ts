@@ -46,11 +46,9 @@ interface UseReviewControllerOptions {
   adjustmentLabel?: string;
   selectedItemIdRef: MutableRefObject<string | null>;
   size: ReviewShellViewportPreset;
-  sizeRef: MutableRefObject<ReviewShellViewportPreset>;
   source: ReviewSource;
   target: string;
   targetOverlayState: TargetOverlayState;
-  targetRef: MutableRefObject<string>;
   viewportPresets: ReviewShellViewportPreset[];
   onActiveRouteChange: (target: string) => void;
   onCancelReviewMode: () => boolean;
@@ -87,11 +85,9 @@ export const useReviewController = ({
   adjustmentLabel,
   selectedItemIdRef,
   size,
-  sizeRef,
   source,
   target,
   targetOverlayState,
-  targetRef,
   viewportPresets,
   onActiveRouteChange,
   onCancelReviewMode,
@@ -131,7 +127,6 @@ export const useReviewController = ({
     reviewPathPrefix,
     selectedItemIdRef,
     source,
-    targetRef,
     viewportPresets,
     onActiveRouteChange,
     onDraftTargetChange,
@@ -145,10 +140,8 @@ export const useReviewController = ({
     reviewPathPrefix,
     selectedItemIdRef,
     size,
-    sizeRef,
     source,
     target,
-    targetRef,
     onActiveRouteChange,
     onClearSelectedItem: clearSelectedItem,
     onDraftTargetChange,
@@ -177,8 +170,6 @@ export const useReviewController = ({
     reviewViewportPresets,
     ruler,
     adjustmentLabel,
-    sizeRef,
-    targetRef,
     onApplyPendingRestore: applyPendingRestore,
     onCancelReviewMode,
     onCloseRuler,

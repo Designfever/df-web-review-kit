@@ -15,8 +15,8 @@ import type {
   WebReviewKitController,
 } from '../../types';
 import { createWebReviewKit } from '../../core/web.review.kit.app';
+import { useReviewShellStoreApi } from '../store/store.context';
 import { setTargetScrollbarHidden } from '../target/target';
-import type { ReviewShellViewportPreset } from '../types';
 import { getViewportPresetKind } from '../viewport';
 import { bindReviewFrameNavigation } from './review.frame.navigation';
 import { getReviewKitTarget } from './review.kit.target';
@@ -39,8 +39,6 @@ interface UseReviewKitLifecycleOptions {
   reviewViewportPresets: ReviewViewportPreset[];
   ruler?: ReviewRulerConfig;
   adjustmentLabel?: string;
-  sizeRef: MutableRefObject<ReviewShellViewportPreset>;
-  targetRef: MutableRefObject<string>;
   onApplyPendingRestore: () => void;
   onCancelReviewMode: () => boolean;
   onCloseRuler: () => boolean;
@@ -72,8 +70,6 @@ export const useReviewKitLifecycle = ({
   reviewViewportPresets,
   ruler,
   adjustmentLabel,
-  sizeRef,
-  targetRef,
   onApplyPendingRestore,
   onCancelReviewMode,
   onCloseRuler,
@@ -86,6 +82,7 @@ export const useReviewKitLifecycle = ({
   onSyncShellTarget,
   onSyncTargetViewport,
 }: UseReviewKitLifecycleOptions) => {
+  const storeApi = useReviewShellStoreApi();
   const destroyReviewKit = useCallback(() => {
     cleanupTargetRef.current?.();
     cleanupTargetRef.current = null;
@@ -102,10 +99,10 @@ export const useReviewKitLifecycle = ({
     if (!iframe || !targetWindow || !targetDocument) return;
 
     cleanupTargetRef.current = bindReviewFrameNavigation({
+      getCurrentTarget: () => storeApi.getState().target,
       pageTargets,
       reviewPathPrefix,
       targetDocument,
-      targetRef,
       targetWindow,
       onCancelReviewMode,
       onCloseRuler,
@@ -155,7 +152,7 @@ export const useReviewKitLifecycle = ({
     onRefreshTargetOverlayState();
     setTargetScrollbarHidden(
       targetDocument,
-      getViewportPresetKind(sizeRef.current) === 'mobile'
+      getViewportPresetKind(storeApi.getState().size) === 'mobile'
     );
   }, [
     adapter,
@@ -186,8 +183,7 @@ export const useReviewKitLifecycle = ({
     reviewViewportPresets,
     ruler,
     adjustmentLabel,
-    sizeRef,
-    targetRef,
+    storeApi,
   ]);
 
   const reloadReviewKit = useCallback(async () => {

@@ -1,7 +1,4 @@
-import {
-  useCallback,
-  type MutableRefObject,
-} from 'react';
+import { useCallback } from 'react';
 import type {
   ReviewItem,
   ReviewSource,
@@ -13,6 +10,7 @@ import {
   parseReviewAddressInput,
   updateShellUrl,
 } from '../route';
+import { useReviewShellStoreApi } from '../store/store.context';
 import type { ReviewShellViewportPreset } from '../types';
 import { findViewportPreset } from '../viewport';
 
@@ -20,10 +18,8 @@ interface UseReviewTargetNavigationOptions {
   activeAdapterEntry: NormalizedReviewShellAdapter;
   draftTarget: string;
   reviewPathPrefix: string;
-  sizeRef: MutableRefObject<ReviewShellViewportPreset>;
   source: ReviewSource;
   sourceEntries: NormalizedReviewShellAdapter[];
-  targetRef: MutableRefObject<string>;
   viewportPresets: ReviewShellViewportPreset[];
   onActiveRouteChange: (routeKey: string) => void;
   onAllQaVisibleChange: (isVisible: boolean) => void;
@@ -43,10 +39,8 @@ export const useReviewTargetNavigation = ({
   activeAdapterEntry,
   draftTarget,
   reviewPathPrefix,
-  sizeRef,
   source,
   sourceEntries,
-  targetRef,
   viewportPresets,
   onActiveRouteChange,
   onAllQaVisibleChange,
@@ -61,6 +55,7 @@ export const useReviewTargetNavigation = ({
   onSourceChange,
   onTargetChange,
 }: UseReviewTargetNavigationOptions) => {
+  const storeApi = useReviewShellStoreApi();
   const getPageTarget = useCallback(
     (href: string) => normalizeTarget(href, reviewPathPrefix),
     [reviewPathPrefix]
@@ -78,6 +73,7 @@ export const useReviewTargetNavigation = ({
       sourceEntries.some((entry) => entry.label === parsedInput.source)
         ? parsedInput.source
         : source;
+    const currentSize = storeApi.getState().size;
     const nextSize =
       parsedInput.width && parsedInput.height
         ? findViewportPreset(
@@ -85,15 +81,15 @@ export const useReviewTargetNavigation = ({
             parsedInput.width,
             parsedInput.height
           )
-        : sizeRef.current;
+        : currentSize;
     const nextAdapter =
       sourceEntries.find((entry) => entry.label === nextSource) ??
       activeAdapterEntry;
     const isCurrentTarget =
-      targetRef.current === normalizedTarget &&
+      storeApi.getState().target === normalizedTarget &&
       source === nextSource &&
-      sizeRef.current.width === nextSize.width &&
-      sizeRef.current.height === nextSize.height;
+      currentSize.width === nextSize.width &&
+      currentSize.height === nextSize.height;
 
     if (parsedInput.itemId) {
       const item = await nextAdapter.adapter.get(parsedInput.itemId);
@@ -108,7 +104,6 @@ export const useReviewTargetNavigation = ({
     onClearSelectedItem();
     onAllQaVisibleChange(false);
     onSourceChange(nextSource);
-    targetRef.current = normalizedTarget;
     onActiveRouteChange(normalizedRoute);
     onDraftTargetChange(normalizedTarget);
     onSizeChange(nextSize);
@@ -128,10 +123,9 @@ export const useReviewTargetNavigation = ({
     onSourceChange,
     onTargetChange,
     reviewPathPrefix,
-    sizeRef,
     source,
     sourceEntries,
-    targetRef,
+    storeApi,
     viewportPresets,
   ]);
 
@@ -144,11 +138,10 @@ export const useReviewTargetNavigation = ({
       );
       onClearSelectedItem();
       onAllQaVisibleChange(false);
-      targetRef.current = normalizedTarget;
       onActiveRouteChange(normalizedRoute);
       onDraftTargetChange(normalizedTarget);
       onTargetChange(normalizedTarget);
-      updateShellUrl(normalizedTarget, sizeRef.current, source);
+      updateShellUrl(normalizedTarget, storeApi.getState().size, source);
       onSitemapOpenChange(false);
     },
     [
@@ -160,9 +153,8 @@ export const useReviewTargetNavigation = ({
       onSitemapOpenChange,
       onTargetChange,
       reviewPathPrefix,
-      sizeRef,
       source,
-      targetRef,
+      storeApi,
     ]
   );
 
@@ -173,8 +165,9 @@ export const useReviewTargetNavigation = ({
 
   const clearSelectedReviewItem = useCallback(() => {
     onClearSelectedItem();
-    updateShellUrl(targetRef.current, sizeRef.current, source);
-  }, [onClearSelectedItem, sizeRef, source, targetRef]);
+    const state = storeApi.getState();
+    updateShellUrl(state.target, state.size, source);
+  }, [onClearSelectedItem, source, storeApi]);
 
   const changeReviewSource = useCallback(
     (nextSource: ReviewSource) => {
@@ -184,16 +177,16 @@ export const useReviewTargetNavigation = ({
       onClearSelectedItem();
       onClearItems();
       onSourceChange(nextSource);
-      updateShellUrl(targetRef.current, sizeRef.current, nextSource);
+      const state = storeApi.getState();
+      updateShellUrl(state.target, state.size, nextSource);
     },
     [
       onCancelReviewMode,
       onClearItems,
       onClearSelectedItem,
       onSourceChange,
-      sizeRef,
       sourceEntries,
-      targetRef,
+      storeApi,
     ]
   );
 

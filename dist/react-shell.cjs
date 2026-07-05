@@ -40,7 +40,7 @@ __export(react_shell_exports, {
   mountReviewShell: () => mountReviewShell
 });
 module.exports = __toCommonJS(react_shell_exports);
-var import_react33 = __toESM(require("react"), 1);
+var import_react34 = __toESM(require("react"), 1);
 var import_client2 = require("react-dom/client");
 
 // src/core/typography.tokens.ts
@@ -5061,7 +5061,7 @@ function ensureReviewShellStyle() {
 }
 
 // src/react-shell/review/shell.tsx
-var import_react31 = require("react");
+var import_react32 = require("react");
 
 // src/react-shell/env.ts
 var REVIEW_SOURCE_EDITORS = [
@@ -5301,75 +5301,6 @@ function getItemUrlTarget(value, reviewPathPrefix) {
     return null;
   }
 }
-
-// src/react-shell/viewport.ts
-var DEFAULT_REVIEW_VIEWPORT_PRESETS = [
-  { label: "Mobile", width: 390, height: 720, kind: "mobile" },
-  { label: "Tablet", width: 768, height: 1024, kind: "tablet" },
-  { label: "Desktop", width: 1440, height: 900, kind: "desktop" },
-  { label: "Wide", width: 1980, height: 1080, kind: "wide" }
-];
-var getFallbackPreset = (presets) => presets[0] ?? DEFAULT_REVIEW_VIEWPORT_PRESETS[0];
-var getViewportPresetDistance = (preset, width, height) => Math.abs(preset.width - width) + Math.abs(preset.height - height);
-var findViewportPreset = (presets, width, height) => {
-  const fallback = getFallbackPreset(presets);
-  const exact = presets.find(
-    (preset) => preset.width === width && preset.height === height
-  );
-  if (exact) return exact;
-  return presets.reduce((closest, preset) => {
-    const closestDistance = getViewportPresetDistance(closest, width, height);
-    const presetDistance = getViewportPresetDistance(preset, width, height);
-    return presetDistance < closestDistance ? preset : closest;
-  }, fallback);
-};
-var getInitialSize = (presets) => {
-  if (typeof window === "undefined") return getFallbackPreset(presets);
-  const params = new URLSearchParams(window.location.search);
-  const width = Number(params.get("w"));
-  const height = Number(params.get("h"));
-  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
-    return findViewportPreset(presets, width, height);
-  }
-  return getFallbackPreset(presets);
-};
-var getRestoredSize = (item, presets) => findViewportPreset(
-  presets,
-  Math.max(
-    240,
-    Math.round(item.viewport?.width ?? getFallbackPreset(presets).width)
-  ),
-  Math.max(
-    320,
-    Math.round(item.viewport?.height ?? getFallbackPreset(presets).height)
-  )
-);
-var getViewportPresetKind = (preset) => {
-  if (preset.kind) return preset.kind;
-  const label = preset.label.toLowerCase();
-  if (label.includes("mobile") || label.includes("phone")) return "mobile";
-  if (label.includes("tablet") || label.includes("pad")) return "tablet";
-  if (label.includes("wide") || label.includes("1980") || label.includes("1940") || label.includes("1920")) {
-    return "wide";
-  }
-  if (label.includes("desktop")) return "desktop";
-  if (preset.width >= 1800) return "wide";
-  if (preset.width >= 1e3) return "desktop";
-  if (preset.width >= 700) return "tablet";
-  return "mobile";
-};
-var toReviewViewportPresets = (presets) => presets.map((preset) => ({
-  label: preset.label,
-  width: preset.width,
-  height: preset.height,
-  scope: getViewportPresetKind(preset),
-  designWidth: preset.designWidth,
-  designHeight: preset.designHeight
-}));
-var getIsFigmaOverlayAvailable = (preset) => {
-  const kind = getViewportPresetKind(preset);
-  return kind === "mobile" || kind === "wide";
-};
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
 var import_react3 = require("react");
@@ -7146,6 +7077,77 @@ var import_react6 = require("react");
 
 // src/react-shell/figma/image.controller.ts
 var import_react5 = require("react");
+
+// src/react-shell/viewport.ts
+var DEFAULT_REVIEW_VIEWPORT_PRESETS = [
+  { label: "Mobile", width: 390, height: 720, kind: "mobile" },
+  { label: "Tablet", width: 768, height: 1024, kind: "tablet" },
+  { label: "Desktop", width: 1440, height: 900, kind: "desktop" },
+  { label: "Wide", width: 1980, height: 1080, kind: "wide" }
+];
+var getFallbackPreset = (presets) => presets[0] ?? DEFAULT_REVIEW_VIEWPORT_PRESETS[0];
+var getViewportPresetDistance = (preset, width, height) => Math.abs(preset.width - width) + Math.abs(preset.height - height);
+var findViewportPreset = (presets, width, height) => {
+  const fallback = getFallbackPreset(presets);
+  const exact = presets.find(
+    (preset) => preset.width === width && preset.height === height
+  );
+  if (exact) return exact;
+  return presets.reduce((closest, preset) => {
+    const closestDistance = getViewportPresetDistance(closest, width, height);
+    const presetDistance = getViewportPresetDistance(preset, width, height);
+    return presetDistance < closestDistance ? preset : closest;
+  }, fallback);
+};
+var getInitialSize = (presets) => {
+  if (typeof window === "undefined") return getFallbackPreset(presets);
+  const params = new URLSearchParams(window.location.search);
+  const width = Number(params.get("w"));
+  const height = Number(params.get("h"));
+  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
+    return findViewportPreset(presets, width, height);
+  }
+  return getFallbackPreset(presets);
+};
+var getRestoredSize = (item, presets) => findViewportPreset(
+  presets,
+  Math.max(
+    240,
+    Math.round(item.viewport?.width ?? getFallbackPreset(presets).width)
+  ),
+  Math.max(
+    320,
+    Math.round(item.viewport?.height ?? getFallbackPreset(presets).height)
+  )
+);
+var getViewportPresetKind = (preset) => {
+  if (preset.kind) return preset.kind;
+  const label = preset.label.toLowerCase();
+  if (label.includes("mobile") || label.includes("phone")) return "mobile";
+  if (label.includes("tablet") || label.includes("pad")) return "tablet";
+  if (label.includes("wide") || label.includes("1980") || label.includes("1940") || label.includes("1920")) {
+    return "wide";
+  }
+  if (label.includes("desktop")) return "desktop";
+  if (preset.width >= 1800) return "wide";
+  if (preset.width >= 1e3) return "desktop";
+  if (preset.width >= 700) return "tablet";
+  return "mobile";
+};
+var toReviewViewportPresets = (presets) => presets.map((preset) => ({
+  label: preset.label,
+  width: preset.width,
+  height: preset.height,
+  scope: getViewportPresetKind(preset),
+  designWidth: preset.designWidth,
+  designHeight: preset.designHeight
+}));
+var getIsFigmaOverlayAvailable = (preset) => {
+  const kind = getViewportPresetKind(preset);
+  return kind === "mobile" || kind === "wide";
+};
+
+// src/react-shell/figma/image.controller.ts
 var createReviewFigmaRouteTarget = ({
   pageUrl,
   projectId,
@@ -11663,10 +11665,28 @@ function useReviewCommandKey({
 }
 
 // src/react-shell/hooks/use.review.controller.ts
-var import_react16 = require("react");
+var import_react17 = require("react");
 
 // src/react-shell/hooks/use.review.item.restore.ts
+var import_react13 = require("react");
+
+// src/react-shell/store/store.context.tsx
 var import_react12 = require("react");
+var import_zustand = require("zustand");
+var ReviewShellStoreContext = (0, import_react12.createContext)(null);
+var ReviewShellStoreProvider = ReviewShellStoreContext.Provider;
+var useReviewShellStoreApi = () => {
+  const store = (0, import_react12.useContext)(ReviewShellStoreContext);
+  if (!store) {
+    throw new Error(
+      "useReviewShellStore must be used within a ReviewShell provider"
+    );
+  }
+  return store;
+};
+var useReviewShellStore = (selector) => (0, import_zustand.useStore)(useReviewShellStoreApi(), selector);
+
+// src/react-shell/hooks/use.review.item.restore.ts
 function runWithAutoScrollBehavior2(targetDocument, callback) {
   const elements = [
     targetDocument?.documentElement,
@@ -11738,7 +11758,6 @@ var useReviewItemRestore = ({
   reviewPathPrefix,
   selectedItemIdRef,
   source,
-  targetRef,
   viewportPresets,
   onActiveRouteChange,
   onDraftTargetChange,
@@ -11747,7 +11766,8 @@ var useReviewItemRestore = ({
   onSyncTargetViewport,
   onTargetChange
 }) => {
-  const clearSelectedItem = (0, import_react12.useCallback)(() => {
+  const storeApi = useReviewShellStoreApi();
+  const clearSelectedItem = (0, import_react13.useCallback)(() => {
     pendingRestoreRef.current = null;
     selectedItemIdRef.current = null;
     onSelectedItemIdChange(null);
@@ -11758,7 +11778,7 @@ var useReviewItemRestore = ({
     pendingRestoreRef,
     selectedItemIdRef
   ]);
-  const applyItemScroll = (0, import_react12.useCallback)(
+  const applyItemScroll = (0, import_react13.useCallback)(
     async (item) => {
       if (selectedItemIdRef.current !== item.id) return false;
       const targetWindow = iframeRef.current?.contentWindow;
@@ -11801,7 +11821,7 @@ var useReviewItemRestore = ({
     },
     [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
   );
-  const applyPendingRestore = (0, import_react12.useCallback)(() => {
+  const applyPendingRestore = (0, import_react13.useCallback)(() => {
     const item = pendingRestoreRef.current;
     if (!item) return;
     void applyItemScroll(item).then((didApply) => {
@@ -11810,7 +11830,7 @@ var useReviewItemRestore = ({
       }
     });
   }, [applyItemScroll, pendingRestoreRef]);
-  const restoreReviewItem = (0, import_react12.useCallback)(
+  const restoreReviewItem = (0, import_react13.useCallback)(
     (item) => {
       const nextRoute = getItemTarget(item, reviewPathPrefix);
       const nextTarget = getItemFrameTarget(item, reviewPathPrefix);
@@ -11823,7 +11843,7 @@ var useReviewItemRestore = ({
       onDraftTargetChange(nextTarget);
       onSizeChange(nextSize);
       updateShellUrlForItem(nextTarget, nextSize, item.id, source);
-      if (targetRef.current !== nextTarget) {
+      if (storeApi.getState().target !== nextTarget) {
         onTargetChange(nextTarget);
         return;
       }
@@ -11841,11 +11861,11 @@ var useReviewItemRestore = ({
       reviewPathPrefix,
       selectedItemIdRef,
       source,
-      targetRef,
+      storeApi,
       viewportPresets
     ]
   );
-  const restoreInitialItem = (0, import_react12.useCallback)(async () => {
+  const restoreInitialItem = (0, import_react13.useCallback)(async () => {
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
     try {
@@ -11865,7 +11885,7 @@ var useReviewItemRestore = ({
 };
 
 // src/react-shell/hooks/use.review.kit.lifecycle.ts
-var import_react13 = require("react");
+var import_react14 = require("react");
 
 // src/route.ts
 function getItemRouteKey(item) {
@@ -16731,10 +16751,10 @@ function createNoopController() {
 
 // src/react-shell/hooks/review.frame.navigation.ts
 var bindReviewFrameNavigation = ({
+  getCurrentTarget,
   pageTargets,
   reviewPathPrefix,
   targetDocument,
-  targetRef,
   targetWindow,
   onCancelReviewMode,
   onCloseRuler,
@@ -16745,7 +16765,7 @@ var bindReviewFrameNavigation = ({
     const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
     const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
     const currentRouteKey = getTargetRouteKey(
-      targetRef.current,
+      getCurrentTarget(),
       reviewPathPrefix
     );
     if (nextRouteKey === currentRouteKey) return;
@@ -16773,7 +16793,7 @@ var bindReviewFrameNavigation = ({
     );
     const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
     const currentRouteKey = getTargetRouteKey(
-      targetRef.current,
+      getCurrentTarget(),
       reviewPathPrefix
     );
     if (nextRouteKey === currentRouteKey) return;
@@ -17376,8 +17396,6 @@ var useReviewKitLifecycle = ({
   reviewViewportPresets,
   ruler,
   adjustmentLabel,
-  sizeRef,
-  targetRef,
   onApplyPendingRestore,
   onCancelReviewMode,
   onCloseRuler,
@@ -17390,23 +17408,24 @@ var useReviewKitLifecycle = ({
   onSyncShellTarget,
   onSyncTargetViewport
 }) => {
-  const destroyReviewKit = (0, import_react13.useCallback)(() => {
+  const storeApi = useReviewShellStoreApi();
+  const destroyReviewKit = (0, import_react14.useCallback)(() => {
     cleanupTargetRef.current?.();
     cleanupTargetRef.current = null;
     controllerRef.current?.destroy();
     controllerRef.current = null;
   }, [cleanupTargetRef, controllerRef]);
-  const initReviewKit = (0, import_react13.useCallback)(() => {
+  const initReviewKit = (0, import_react14.useCallback)(() => {
     destroyReviewKit();
     const iframe = iframeRef.current;
     const targetWindow = iframe?.contentWindow;
     const targetDocument = iframe?.contentDocument;
     if (!iframe || !targetWindow || !targetDocument) return;
     cleanupTargetRef.current = bindReviewFrameNavigation({
+      getCurrentTarget: () => storeApi.getState().target,
       pageTargets,
       reviewPathPrefix,
       targetDocument,
-      targetRef,
       targetWindow,
       onCancelReviewMode,
       onCloseRuler,
@@ -17455,7 +17474,7 @@ var useReviewKitLifecycle = ({
     onRefreshTargetOverlayState();
     setTargetScrollbarHidden(
       targetDocument,
-      getViewportPresetKind(sizeRef.current) === "mobile"
+      getViewportPresetKind(storeApi.getState().size) === "mobile"
     );
   }, [
     adapter,
@@ -17486,26 +17505,25 @@ var useReviewKitLifecycle = ({
     reviewViewportPresets,
     ruler,
     adjustmentLabel,
-    sizeRef,
-    targetRef
+    storeApi
   ]);
-  const reloadReviewKit = (0, import_react13.useCallback)(async () => {
+  const reloadReviewKit = (0, import_react14.useCallback)(async () => {
     await controllerRef.current?.reload();
   }, [controllerRef]);
-  const setControllerReviewMode = (0, import_react13.useCallback)(
+  const setControllerReviewMode = (0, import_react14.useCallback)(
     (nextMode) => {
       controllerRef.current?.setMode(nextMode);
       onModeChange(controllerRef.current?.getMode() ?? "idle");
     },
     [controllerRef, onModeChange]
   );
-  (0, import_react13.useEffect)(() => destroyReviewKit, [destroyReviewKit]);
-  (0, import_react13.useEffect)(() => {
+  (0, import_react14.useEffect)(() => destroyReviewKit, [destroyReviewKit]);
+  (0, import_react14.useEffect)(() => {
     const frameDocument = iframeRef.current?.contentDocument;
     if (!frameDocument || frameDocument.readyState !== "complete") return;
     initReviewKit();
   }, [iframeRef, initReviewKit]);
-  (0, import_react13.useEffect)(() => {
+  (0, import_react14.useEffect)(() => {
     hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
     controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
   }, [controllerRef, hiddenOverlayItemIdList, hiddenOverlayItemIdListRef]);
@@ -17518,7 +17536,7 @@ var useReviewKitLifecycle = ({
 };
 
 // src/react-shell/hooks/use.review.target.overlay.ts
-var import_react14 = require("react");
+var import_react15 = require("react");
 var TARGET_OVERLAY_REFRESH_DELAYS = [80, 240, 600];
 var useReviewTargetOverlay = ({
   iframeRef,
@@ -17526,26 +17544,26 @@ var useReviewTargetOverlay = ({
   targetOverlayState,
   onTargetOverlayStateChange
 }) => {
-  const refreshTimersRef = (0, import_react14.useRef)([]);
-  const clearRefreshTimers = (0, import_react14.useCallback)(() => {
+  const refreshTimersRef = (0, import_react15.useRef)([]);
+  const clearRefreshTimers = (0, import_react15.useCallback)(() => {
     refreshTimersRef.current.forEach((timer) => window.clearTimeout(timer));
     refreshTimersRef.current = [];
   }, []);
-  const updateTargetOverlayState = (0, import_react14.useCallback)(() => {
+  const updateTargetOverlayState = (0, import_react15.useCallback)(() => {
     const targetDocument = iframeRef.current?.contentDocument ?? void 0;
     ensureTargetOverlayStackingStyle(targetDocument);
     const state = getTargetOverlayState(targetDocument);
     onTargetOverlayStateChange(state);
     return state;
   }, [iframeRef, onTargetOverlayStateChange]);
-  const refreshTargetOverlayState = (0, import_react14.useCallback)(() => {
+  const refreshTargetOverlayState = (0, import_react15.useCallback)(() => {
     clearRefreshTimers();
     updateTargetOverlayState();
     refreshTimersRef.current = TARGET_OVERLAY_REFRESH_DELAYS.map(
       (delay) => window.setTimeout(updateTargetOverlayState, delay)
     );
   }, [clearRefreshTimers, updateTargetOverlayState]);
-  const dispatchTargetOverlayHotkey = (0, import_react14.useCallback)(
+  const dispatchTargetOverlayHotkey = (0, import_react15.useCallback)(
     (overlay) => {
       const targetWindow = iframeRef.current?.contentWindow;
       if (!targetWindow) return false;
@@ -17567,7 +17585,7 @@ var useReviewTargetOverlay = ({
     },
     [iframeRef, refreshTargetOverlayState]
   );
-  const toggleTargetOverlay = (0, import_react14.useCallback)(
+  const toggleTargetOverlay = (0, import_react15.useCallback)(
     (overlay) => {
       if (overlay === "figma" && !isFigmaOverlayAvailable) {
         refreshTargetOverlayState();
@@ -17581,7 +17599,7 @@ var useReviewTargetOverlay = ({
       refreshTargetOverlayState
     ]
   );
-  const closeTargetOverlay = (0, import_react14.useCallback)(
+  const closeTargetOverlay = (0, import_react15.useCallback)(
     (overlay) => {
       const currentState = updateTargetOverlayState();
       if (!currentState[overlay]) return false;
@@ -17589,11 +17607,11 @@ var useReviewTargetOverlay = ({
     },
     [dispatchTargetOverlayHotkey, updateTargetOverlayState]
   );
-  (0, import_react14.useEffect)(() => {
+  (0, import_react15.useEffect)(() => {
     if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
     closeTargetOverlay("figma");
   }, [closeTargetOverlay, isFigmaOverlayAvailable, targetOverlayState.figma]);
-  (0, import_react14.useEffect)(() => clearRefreshTimers, [clearRefreshTimers]);
+  (0, import_react15.useEffect)(() => clearRefreshTimers, [clearRefreshTimers]);
   return {
     closeTargetOverlay,
     refreshTargetOverlayState,
@@ -17602,45 +17620,44 @@ var useReviewTargetOverlay = ({
 };
 
 // src/react-shell/hooks/use.review.target.sync.ts
-var import_react15 = require("react");
+var import_react16 = require("react");
 var useReviewTargetSync = ({
   iframeRef,
   reviewPathPrefix,
   selectedItemIdRef,
   size,
-  sizeRef,
   source,
   target,
-  targetRef,
   onActiveRouteChange,
   onClearSelectedItem,
   onDraftTargetChange,
   onSyncTargetViewport,
   onTargetChange
 }) => {
-  const syncShellTarget = (0, import_react15.useCallback)(
+  const storeApi = useReviewShellStoreApi();
+  const syncShellTarget = (0, import_react16.useCallback)(
     (nextTarget) => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
       const nextRouteKey = getTargetRouteKey(
         normalizedTarget,
         reviewPathPrefix
       );
-      if (normalizedTarget !== targetRef.current) {
+      if (normalizedTarget !== storeApi.getState().target) {
         onClearSelectedItem();
-        targetRef.current = normalizedTarget;
         onTargetChange(normalizedTarget);
         onDraftTargetChange(normalizedTarget);
         onActiveRouteChange(nextRouteKey);
       }
+      const currentSize = storeApi.getState().size;
       if (selectedItemIdRef.current) {
         updateShellUrlForItem(
           normalizedTarget,
-          sizeRef.current,
+          currentSize,
           selectedItemIdRef.current,
           source
         );
       } else {
-        updateShellUrl(normalizedTarget, sizeRef.current, source);
+        updateShellUrl(normalizedTarget, currentSize, source);
       }
     },
     [
@@ -17650,26 +17667,23 @@ var useReviewTargetSync = ({
       onTargetChange,
       reviewPathPrefix,
       selectedItemIdRef,
-      sizeRef,
       source,
-      targetRef
+      storeApi
     ]
   );
-  (0, import_react15.useEffect)(() => {
-    targetRef.current = target;
+  (0, import_react16.useEffect)(() => {
     onActiveRouteChange(getTargetRouteKey(target, reviewPathPrefix));
-  }, [onActiveRouteChange, reviewPathPrefix, target, targetRef]);
-  (0, import_react15.useEffect)(() => {
-    sizeRef.current = size;
+  }, [onActiveRouteChange, reviewPathPrefix, target]);
+  (0, import_react16.useEffect)(() => {
     if (selectedItemIdRef.current) {
       updateShellUrlForItem(
-        targetRef.current,
+        storeApi.getState().target,
         size,
         selectedItemIdRef.current,
         source
       );
     } else {
-      updateShellUrl(targetRef.current, size, source);
+      updateShellUrl(storeApi.getState().target, size, source);
     }
     onSyncTargetViewport();
     setTargetScrollbarHidden(
@@ -17681,9 +17695,8 @@ var useReviewTargetSync = ({
     onSyncTargetViewport,
     selectedItemIdRef,
     size,
-    sizeRef,
     source,
-    targetRef
+    storeApi
   ]);
   return {
     syncShellTarget
@@ -17714,11 +17727,9 @@ var useReviewController = ({
   adjustmentLabel,
   selectedItemIdRef,
   size,
-  sizeRef,
   source,
   target,
   targetOverlayState,
-  targetRef,
   viewportPresets,
   onActiveRouteChange,
   onCancelReviewMode,
@@ -17731,7 +17742,7 @@ var useReviewController = ({
   onTargetOverlayStateChange,
   onCloseRuler
 }) => {
-  const syncTargetViewport = (0, import_react16.useCallback)(() => {
+  const syncTargetViewport = (0, import_react17.useCallback)(() => {
     window.dispatchEvent(new Event("resize"));
   }, []);
   const {
@@ -17758,7 +17769,6 @@ var useReviewController = ({
     reviewPathPrefix,
     selectedItemIdRef,
     source,
-    targetRef,
     viewportPresets,
     onActiveRouteChange,
     onDraftTargetChange,
@@ -17772,10 +17782,8 @@ var useReviewController = ({
     reviewPathPrefix,
     selectedItemIdRef,
     size,
-    sizeRef,
     source,
     target,
-    targetRef,
     onActiveRouteChange,
     onClearSelectedItem: clearSelectedItem,
     onDraftTargetChange,
@@ -17804,8 +17812,6 @@ var useReviewController = ({
     reviewViewportPresets,
     ruler,
     adjustmentLabel,
-    sizeRef,
-    targetRef,
     onApplyPendingRestore: applyPendingRestore,
     onCancelReviewMode,
     onCloseRuler,
@@ -17831,7 +17837,7 @@ var useReviewController = ({
 };
 
 // src/react-shell/hooks/use.review.item.actions.ts
-var import_react17 = require("react");
+var import_react18 = require("react");
 
 // src/react-shell/review/shell.actions.ts
 var writeClipboardTextFallback = (value) => {
@@ -18087,12 +18093,12 @@ var copyReviewPrompt = async ({
 };
 var removeReviewItem = async ({
   activeAdapterEntry,
+  getCurrentSize,
+  getCurrentTarget,
   isRemoteSource,
   item,
   selectedItemIdRef,
-  sizeRef,
   source,
-  targetRef,
   onClearSelectedItem,
   onRefreshReviewData,
   onToast
@@ -18103,7 +18109,7 @@ var removeReviewItem = async ({
   await activeAdapterEntry.adapter.remove(item.id);
   if (selectedItemIdRef.current === item.id) {
     onClearSelectedItem();
-    updateShellUrl(targetRef.current, sizeRef.current, source);
+    updateShellUrl(getCurrentTarget(), getCurrentSize(), source);
   }
   await onRefreshReviewData();
   onToast?.("QA deleted");
@@ -18117,19 +18123,18 @@ function useReviewItemActions({
   remoteAdapterEntry,
   reviewPathPrefix,
   selectedItemIdRef,
-  sizeRef,
   source,
-  targetRef,
   viewportPresets,
   onClearSelectedItem,
   onCopiedPromptKeyChange,
   onRefreshReviewData,
   onToast
 }) {
-  const [mutatingItemIds, setMutatingItemIds] = (0, import_react17.useState)(
+  const storeApi = useReviewShellStoreApi();
+  const [mutatingItemIds, setMutatingItemIds] = (0, import_react18.useState)(
     () => /* @__PURE__ */ new Set()
   );
-  const [editingItem, setEditingItem] = (0, import_react17.useState)(null);
+  const [editingItem, setEditingItem] = (0, import_react18.useState)(null);
   const withItemMutation = async (itemId, action) => {
     setMutatingItemIds((currentIds) => {
       const nextIds = new Set(currentIds);
@@ -18226,12 +18231,12 @@ function useReviewItemActions({
         item.id,
         () => removeReviewItem({
           activeAdapterEntry,
+          getCurrentSize: () => storeApi.getState().size,
+          getCurrentTarget: () => storeApi.getState().target,
           isRemoteSource,
           item,
           selectedItemIdRef,
-          sizeRef,
           source,
-          targetRef,
           onClearSelectedItem,
           onRefreshReviewData,
           onToast
@@ -18279,7 +18284,7 @@ function useReviewItemActions({
     }
     return copyPrompt(path, `remote-link:${item.id}`, "QA path copied");
   };
-  const clearEditingItem = (0, import_react17.useCallback)(() => setEditingItem(null), []);
+  const clearEditingItem = (0, import_react18.useCallback)(() => setEditingItem(null), []);
   return {
     changeItemAssignee,
     changeItemStatus,
@@ -18309,7 +18314,7 @@ function getUrlPathWithoutOrigin(value) {
 }
 
 // src/react-shell/hooks/use.review.presence.ts
-var import_react18 = require("react");
+var import_react19 = require("react");
 
 // src/react-shell/presence/presence.ts
 var REVIEW_PRESENCE_SESSION_KEY = "df-review-presence-session-id";
@@ -18524,10 +18529,10 @@ var useReviewPresence = ({
   size,
   source
 }) => {
-  const presenceSessionRef = (0, import_react18.useRef)(null);
-  const [presenceUsers, setPresenceUsers] = (0, import_react18.useState)([]);
-  const [presenceSessionVersion, setPresenceSessionVersion] = (0, import_react18.useState)(0);
-  const presenceSessionId = (0, import_react18.useMemo)(getReviewPresenceSessionId, []);
+  const presenceSessionRef = (0, import_react19.useRef)(null);
+  const [presenceUsers, setPresenceUsers] = (0, import_react19.useState)([]);
+  const [presenceSessionVersion, setPresenceSessionVersion] = (0, import_react19.useState)(0);
+  const presenceSessionId = (0, import_react19.useMemo)(getReviewPresenceSessionId, []);
   const normalizedReviewUserId = reviewUserId.trim();
   const presenceDisplayName = getReviewPresenceDisplayName(
     normalizedReviewUserId
@@ -18535,7 +18540,7 @@ var useReviewPresence = ({
   const presenceColor = getReviewPresenceColor(
     normalizedReviewUserId || presenceSessionId
   );
-  const presenceViewport = (0, import_react18.useMemo)(
+  const presenceViewport = (0, import_react19.useMemo)(
     () => ({
       label: size.label,
       width: size.width,
@@ -18545,7 +18550,7 @@ var useReviewPresence = ({
     [size]
   );
   const presenceStatus = mode === "idle" ? "reviewing" : "editing";
-  const visiblePresenceUsers = (0, import_react18.useMemo)(
+  const visiblePresenceUsers = (0, import_react19.useMemo)(
     () => {
       const projectPresenceUsers = presenceUsers.filter(
         (user) => user.projectId === projectId && user.userId.trim()
@@ -18557,14 +18562,14 @@ var useReviewPresence = ({
     },
     [presenceUsers, projectId, reviewPathPrefix]
   );
-  const currentPagePresenceUsers = (0, import_react18.useMemo)(
+  const currentPagePresenceUsers = (0, import_react19.useMemo)(
     () => visiblePresenceUsers.filter((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
       return userTarget === activeRoute;
     }),
     [activeRoute, reviewPathPrefix, visiblePresenceUsers]
   );
-  const pagePresenceUsers = (0, import_react18.useMemo)(() => {
+  const pagePresenceUsers = (0, import_react19.useMemo)(() => {
     const usersByTarget = /* @__PURE__ */ new Map();
     visiblePresenceUsers.forEach((user) => {
       const userTarget = getPresenceUserTarget(user, reviewPathPrefix);
@@ -18574,7 +18579,7 @@ var useReviewPresence = ({
     });
     return usersByTarget;
   }, [reviewPathPrefix, visiblePresenceUsers]);
-  const getCurrentPresenceState = (0, import_react18.useCallback)(
+  const getCurrentPresenceState = (0, import_react19.useCallback)(
     () => ({
       projectId,
       sessionId: presenceSessionId,
@@ -18605,9 +18610,9 @@ var useReviewPresence = ({
       source
     ]
   );
-  const getCurrentPresenceStateRef = (0, import_react18.useRef)(getCurrentPresenceState);
+  const getCurrentPresenceStateRef = (0, import_react19.useRef)(getCurrentPresenceState);
   getCurrentPresenceStateRef.current = getCurrentPresenceState;
-  (0, import_react18.useEffect)(() => {
+  (0, import_react19.useEffect)(() => {
     if (!presence || !normalizedReviewUserId) {
       const session = presenceSessionRef.current;
       presenceSessionRef.current = null;
@@ -18657,7 +18662,7 @@ var useReviewPresence = ({
     presenceSessionId,
     projectId
   ]);
-  (0, import_react18.useEffect)(() => {
+  (0, import_react19.useEffect)(() => {
     const session = presenceSessionRef.current;
     if (!session || !normalizedReviewUserId) return;
     void session.update(getCurrentPresenceState());
@@ -18674,10 +18679,10 @@ var useReviewPresence = ({
 };
 
 // src/react-shell/hooks/use.review.ruler.ts
-var import_react20 = require("react");
+var import_react21 = require("react");
 
 // src/react-shell/hooks/use.review.ruler.drag.ts
-var import_react19 = require("react");
+var import_react20 = require("react");
 
 // src/react-shell/ruler/ruler.ts
 var getRulerPointFromRect = (clientX, clientY, rect) => {
@@ -18706,19 +18711,19 @@ var useReviewRulerDrag = ({
   size,
   targetSrc
 }) => {
-  const rulerOverlayRef = (0, import_react19.useRef)(null);
-  const rulerDragRectRef = (0, import_react19.useRef)(null);
-  const isRulerDraggingRef = (0, import_react19.useRef)(false);
-  const sizeRef = (0, import_react19.useRef)(size);
-  const [rulerStart, setRulerStart] = (0, import_react19.useState)(null);
-  const [rulerPoint, setRulerPoint] = (0, import_react19.useState)(null);
-  const [rulerHover, setRulerHover] = (0, import_react19.useState)(null);
-  const [isRulerDragging, setIsRulerDragging] = (0, import_react19.useState)(false);
-  const rulerMeasure = (0, import_react19.useMemo)(
+  const rulerOverlayRef = (0, import_react20.useRef)(null);
+  const rulerDragRectRef = (0, import_react20.useRef)(null);
+  const isRulerDraggingRef = (0, import_react20.useRef)(false);
+  const sizeRef = (0, import_react20.useRef)(size);
+  const [rulerStart, setRulerStart] = (0, import_react20.useState)(null);
+  const [rulerPoint, setRulerPoint] = (0, import_react20.useState)(null);
+  const [rulerHover, setRulerHover] = (0, import_react20.useState)(null);
+  const [isRulerDragging, setIsRulerDragging] = (0, import_react20.useState)(false);
+  const rulerMeasure = (0, import_react20.useMemo)(
     () => getRulerMeasure(rulerStart, rulerPoint),
     [rulerPoint, rulerStart]
   );
-  const clearRulerMeasure = (0, import_react19.useCallback)(() => {
+  const clearRulerMeasure = (0, import_react20.useCallback)(() => {
     rulerDragRectRef.current = null;
     isRulerDraggingRef.current = false;
     setRulerStart(null);
@@ -18726,7 +18731,7 @@ var useReviewRulerDrag = ({
     setRulerHover(null);
     setIsRulerDragging(false);
   }, []);
-  const finishRulerDrag = (0, import_react19.useCallback)((point) => {
+  const finishRulerDrag = (0, import_react20.useCallback)((point) => {
     if (point) {
       setRulerPoint(point);
     }
@@ -18734,7 +18739,7 @@ var useReviewRulerDrag = ({
     isRulerDraggingRef.current = false;
     setIsRulerDragging(false);
   }, []);
-  const startRulerDrag = (0, import_react19.useCallback)(
+  const startRulerDrag = (0, import_react20.useCallback)(
     (clientX, clientY, rect) => {
       const point = getRulerPointFromRect(clientX, clientY, rect);
       rulerDragRectRef.current = rect;
@@ -18745,10 +18750,10 @@ var useReviewRulerDrag = ({
     },
     []
   );
-  (0, import_react19.useEffect)(() => {
+  (0, import_react20.useEffect)(() => {
     sizeRef.current = size;
   }, [size]);
-  (0, import_react19.useEffect)(() => {
+  (0, import_react20.useEffect)(() => {
     if (!isRulerVisible || !isRulerAvailable) return void 0;
     const getRulerEventClientPoint = (event) => {
       const frame2 = iframeRef.current;
@@ -18862,7 +18867,7 @@ var useReviewRulerDrag = ({
     isRulerVisible,
     startRulerDrag
   ]);
-  (0, import_react19.useEffect)(() => {
+  (0, import_react20.useEffect)(() => {
     clearRulerMeasure();
   }, [clearRulerMeasure, size.height, size.width, targetSrc]);
   return {
@@ -18883,7 +18888,7 @@ var useReviewRuler = ({
   onCancelReviewMode,
   onCloseTransientPanels
 }) => {
-  const [isRulerVisible, setIsRulerVisible] = (0, import_react20.useState)(false);
+  const [isRulerVisible, setIsRulerVisible] = (0, import_react21.useState)(false);
   const isRulerAvailable = ruler?.enabled !== false && typeof size.designWidth === "number" && size.designWidth > 0;
   const rulerUnit = ruler?.unit ?? "px";
   const rulerScaleX = isRulerAvailable && size.designWidth ? size.width / size.designWidth : 1;
@@ -18904,13 +18909,13 @@ var useReviewRuler = ({
   const rulerMeasureLabel = rulerMeasure ? `${Math.round(rulerMeasure.width / rulerScaleX)} \xD7 ${Math.round(
     rulerMeasure.height / rulerScaleY
   )} ${rulerUnit}` : "";
-  const closeRuler = (0, import_react20.useCallback)(() => {
+  const closeRuler = (0, import_react21.useCallback)(() => {
     if (!isRulerVisible) return false;
     setIsRulerVisible(false);
     clearRulerMeasure();
     return true;
   }, [clearRulerMeasure, isRulerVisible]);
-  const toggleRuler = (0, import_react20.useCallback)(() => {
+  const toggleRuler = (0, import_react21.useCallback)(() => {
     if (!isRulerAvailable) return;
     onCancelReviewMode();
     onCloseTransientPanels();
@@ -18922,7 +18927,7 @@ var useReviewRuler = ({
     onCancelReviewMode,
     onCloseTransientPanels
   ]);
-  (0, import_react20.useEffect)(() => {
+  (0, import_react21.useEffect)(() => {
     if (!isRulerVisible || isRulerAvailable) return;
     closeRuler();
   }, [closeRuler, isRulerAvailable, isRulerVisible]);
@@ -18943,7 +18948,7 @@ var useReviewRuler = ({
 };
 
 // src/react-shell/hooks/use.review.figma.images.ts
-var import_react21 = require("react");
+var import_react22 = require("react");
 var useReviewFigmaImages = ({
   imageFormat = DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
   pageUrl,
@@ -18951,7 +18956,7 @@ var useReviewFigmaImages = ({
   store,
   viewport
 }) => {
-  const target = (0, import_react21.useMemo)(
+  const target = (0, import_react22.useMemo)(
     () => createReviewFigmaRouteTarget({
       pageUrl,
       projectId,
@@ -19014,7 +19019,7 @@ var useReviewFigmaImages = ({
     isLoading,
     target
   });
-  const addImage = (0, import_react21.useCallback)(
+  const addImage = (0, import_react22.useCallback)(
     async (figmaUrl, label) => {
       const image = await addStoreImage(figmaUrl, label);
       if (image) showImage(image.id);
@@ -19063,7 +19068,7 @@ var useReviewFigmaImages = ({
 };
 
 // src/react-shell/hooks/use.review.section.outline.ts
-var import_react22 = require("react");
+var import_react23 = require("react");
 
 // src/react-shell/source.hint.ts
 var matchesIgnore = (file, patterns) => {
@@ -19763,18 +19768,18 @@ function useReviewSectionOutline({
   onShowQaPanel,
   onToast
 }) {
-  const sectionOutlineCountRef = (0, import_react22.useRef)(0);
-  const [sectionOutline, setSectionOutline] = (0, import_react22.useState)(null);
-  const [sectionOutlineFilter, setSectionOutlineFilter] = (0, import_react22.useState)(
+  const sectionOutlineCountRef = (0, import_react23.useRef)(0);
+  const [sectionOutline, setSectionOutline] = (0, import_react23.useState)(null);
+  const [sectionOutlineFilter, setSectionOutlineFilter] = (0, import_react23.useState)(
     () => getStoredSourceTreeFilter()
   );
-  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] = (0, import_react22.useState)(() => getStoredSourceTreeMetaVisibility());
-  const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = (0, import_react22.useState)(() => /* @__PURE__ */ new Set());
-  const updateSectionOutlineFilter = (0, import_react22.useCallback)((nextFilter) => {
+  const [sectionOutlineMetaVisibility, setSectionOutlineMetaVisibility] = (0, import_react23.useState)(() => getStoredSourceTreeMetaVisibility());
+  const [collapsedSectionOutlineIds, setCollapsedSectionOutlineIds] = (0, import_react23.useState)(() => /* @__PURE__ */ new Set());
+  const updateSectionOutlineFilter = (0, import_react23.useCallback)((nextFilter) => {
     setSectionOutlineFilter(nextFilter);
     writeStoredSourceTreeFilter(nextFilter);
   }, []);
-  const updateSectionOutlineMetaVisibility = (0, import_react22.useCallback)(
+  const updateSectionOutlineMetaVisibility = (0, import_react23.useCallback)(
     (key) => {
       setSectionOutlineMetaVisibility((current) => {
         const next = { ...current, [key]: !current[key] };
@@ -19784,32 +19789,32 @@ function useReviewSectionOutline({
     },
     []
   );
-  const sectionOutlineFilterTerms = (0, import_react22.useMemo)(
+  const sectionOutlineFilterTerms = (0, import_react23.useMemo)(
     () => getSectionOutlineFilterTerms(sectionOutlineFilter),
     [sectionOutlineFilter]
   );
-  const filteredSectionOutline = (0, import_react22.useMemo)(
+  const filteredSectionOutline = (0, import_react23.useMemo)(
     () => sectionOutline ? filterSectionOutlineEntries(sectionOutline, sectionOutlineFilterTerms) : [],
     [sectionOutline, sectionOutlineFilterTerms]
   );
-  const sectionOutlineTotalCount = (0, import_react22.useMemo)(
+  const sectionOutlineTotalCount = (0, import_react23.useMemo)(
     () => getSectionOutlineEntryCount(sectionOutline ?? []),
     [sectionOutline]
   );
-  const filteredSectionOutlineCount = (0, import_react22.useMemo)(
+  const filteredSectionOutlineCount = (0, import_react23.useMemo)(
     () => getSectionOutlineEntryCount(filteredSectionOutline),
     [filteredSectionOutline]
   );
   const isSectionOutlineFiltering = sectionOutlineFilterTerms.length > 0;
-  (0, import_react22.useEffect)(() => {
+  (0, import_react23.useEffect)(() => {
     sectionOutlineCountRef.current = sectionOutlineTotalCount;
   }, [sectionOutlineTotalCount]);
-  (0, import_react22.useEffect)(() => {
+  (0, import_react23.useEffect)(() => {
     onClearSourceInspector();
     setCollapsedSectionOutlineIds(/* @__PURE__ */ new Set());
     setSectionOutline(null);
   }, [onClearSourceInspector, targetSrc]);
-  const getCurrentSectionOutline = (0, import_react22.useCallback)(
+  const getCurrentSectionOutline = (0, import_react23.useCallback)(
     () => {
       let frameDocument = null;
       try {
@@ -19824,7 +19829,7 @@ function useReviewSectionOutline({
     },
     [iframeRef, sectionOutlineOptions]
   );
-  const refreshCurrentSectionOutline = (0, import_react22.useCallback)(
+  const refreshCurrentSectionOutline = (0, import_react23.useCallback)(
     (resetCollapse = false) => {
       const nextSectionOutline = getCurrentSectionOutline();
       if (!nextSectionOutline) return false;
@@ -19841,7 +19846,7 @@ function useReviewSectionOutline({
     },
     [getCurrentSectionOutline]
   );
-  (0, import_react22.useEffect)(() => {
+  (0, import_react23.useEffect)(() => {
     if (!isPanelVisible) return void 0;
     const refreshSectionOutline = () => {
       refreshCurrentSectionOutline(true);
@@ -19862,7 +19867,7 @@ function useReviewSectionOutline({
     targetFrameLoadVersion,
     targetSrc
   ]);
-  (0, import_react22.useEffect)(() => {
+  (0, import_react23.useEffect)(() => {
     if (!isPanelVisible) return void 0;
     const frameDocument = iframeRef.current?.contentDocument;
     const body = frameDocument?.body;
@@ -19889,7 +19894,7 @@ function useReviewSectionOutline({
     targetFrameLoadVersion,
     targetSrc
   ]);
-  const toggleSectionOutlineEntry = (0, import_react22.useCallback)((entryId) => {
+  const toggleSectionOutlineEntry = (0, import_react23.useCallback)((entryId) => {
     setCollapsedSectionOutlineIds((current) => {
       const next = new Set(current);
       if (next.has(entryId)) {
@@ -19900,7 +19905,7 @@ function useReviewSectionOutline({
       return next;
     });
   }, []);
-  const scrollToSection = (0, import_react22.useCallback)((entry) => {
+  const scrollToSection = (0, import_react23.useCallback)((entry) => {
     scrollElementInTarget(entry.element, "start");
     centerFrameScrollOnElement(
       frameScrollRef.current,
@@ -19908,7 +19913,7 @@ function useReviewSectionOutline({
       entry.element
     );
   }, [frameScrollRef, iframeRef]);
-  const openSectionSource = (0, import_react22.useCallback)(
+  const openSectionSource = (0, import_react23.useCallback)(
     (entry) => {
       const didOpen = openSourceInEditor(entry.source, {
         ...sourceOpenOptions,
@@ -19918,7 +19923,7 @@ function useReviewSectionOutline({
     },
     [onToast, sourceOpenOptions]
   );
-  const openSectionUsageSource = (0, import_react22.useCallback)(
+  const openSectionUsageSource = (0, import_react23.useCallback)(
     (entry) => {
       const didOpen = openSourceInEditor(
         entry.metadata.usage?.source,
@@ -19928,14 +19933,14 @@ function useReviewSectionOutline({
     },
     [onToast, sourceOpenOptions]
   );
-  const openSectionData = (0, import_react22.useCallback)(
+  const openSectionData = (0, import_react23.useCallback)(
     (entry) => {
       const didOpen = openSourceInEditor(entry.data, sourceOpenOptions);
       onToast(didOpen ? "Data opened" : "Data hint not found");
     },
     [onToast, sourceOpenOptions]
   );
-  const startSectionDomReview = (0, import_react22.useCallback)(
+  const startSectionDomReview = (0, import_react23.useCallback)(
     (entry) => {
       if (!canWriteDom) {
         onToast("DOM QA unavailable");
@@ -20011,7 +20016,7 @@ function useReviewSectionOutline({
 }
 
 // src/react-shell/hooks/use.review.settings.ts
-var import_react23 = require("react");
+var import_react24 = require("react");
 var useReviewSettings = ({
   defaultReviewUserId = "",
   onCancelReviewMode,
@@ -20019,28 +20024,28 @@ var useReviewSettings = ({
   onCloseSitemap,
   onReloadTargetFrame
 }) => {
-  const [figmaTokenDraft, setFigmaTokenDraft] = (0, import_react23.useState)(getStoredFigmaToken);
-  const [reviewUserId, setReviewUserId] = (0, import_react23.useState)(
+  const [figmaTokenDraft, setFigmaTokenDraft] = (0, import_react24.useState)(getStoredFigmaToken);
+  const [reviewUserId, setReviewUserId] = (0, import_react24.useState)(
     () => getStoredReviewUserId(defaultReviewUserId)
   );
-  const [reviewUserIdDraft, setReviewUserIdDraft] = (0, import_react23.useState)(
+  const [reviewUserIdDraft, setReviewUserIdDraft] = (0, import_react24.useState)(
     () => getStoredReviewUserId(defaultReviewUserId)
   );
-  const [reviewTheme, setReviewTheme] = (0, import_react23.useState)(getStoredReviewTheme);
-  const [reviewThemeDraft, setReviewThemeDraft] = (0, import_react23.useState)(getStoredReviewTheme);
-  const [systemReviewTheme, setSystemReviewTheme] = (0, import_react23.useState)(getSystemReviewTheme);
-  const [figmaSettingsStatus, setFigmaSettingsStatus] = (0, import_react23.useState)("");
-  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = (0, import_react23.useState)(false);
-  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = (0, import_react23.useState)(false);
-  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = (0, import_react23.useState)(false);
+  const [reviewTheme, setReviewTheme] = (0, import_react24.useState)(getStoredReviewTheme);
+  const [reviewThemeDraft, setReviewThemeDraft] = (0, import_react24.useState)(getStoredReviewTheme);
+  const [systemReviewTheme, setSystemReviewTheme] = (0, import_react24.useState)(getSystemReviewTheme);
+  const [figmaSettingsStatus, setFigmaSettingsStatus] = (0, import_react24.useState)("");
+  const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = (0, import_react24.useState)(false);
+  const [isFigmaTokenVisible, setIsFigmaTokenVisible] = (0, import_react24.useState)(false);
+  const [isFigmaTokenGuideOpen, setIsFigmaTokenGuideOpen] = (0, import_react24.useState)(false);
   const effectiveReviewTheme = reviewTheme === "system" ? systemReviewTheme : reviewTheme;
-  const closeFigmaSettings = (0, import_react23.useCallback)(() => {
+  const closeFigmaSettings = (0, import_react24.useCallback)(() => {
     setIsFigmaSettingsOpen(false);
     setFigmaSettingsStatus("");
     setIsFigmaTokenVisible(false);
     setIsFigmaTokenGuideOpen(false);
   }, []);
-  const openFigmaSettings = (0, import_react23.useCallback)(() => {
+  const openFigmaSettings = (0, import_react24.useCallback)(() => {
     onCancelReviewMode();
     onCloseSitemap();
     onCloseInitialPrompt();
@@ -20058,7 +20063,7 @@ var useReviewSettings = ({
     defaultReviewUserId,
     reviewTheme
   ]);
-  const saveReviewSettings = (0, import_react23.useCallback)(
+  const saveReviewSettings = (0, import_react24.useCallback)(
     (token, userId, theme) => {
       const nextToken = token.trim();
       const nextUserId = userId.trim();
@@ -20082,13 +20087,13 @@ var useReviewSettings = ({
     },
     [closeFigmaSettings, onReloadTargetFrame]
   );
-  (0, import_react23.useEffect)(() => {
+  (0, import_react24.useEffect)(() => {
     if (getStoredReviewUserId()) return;
     const nextDefaultUserId = defaultReviewUserId.trim();
     setReviewUserId(nextDefaultUserId);
     setReviewUserIdDraft(nextDefaultUserId);
   }, [defaultReviewUserId]);
-  (0, import_react23.useEffect)(() => {
+  (0, import_react24.useEffect)(() => {
     if (typeof window === "undefined" || !window.matchMedia) return void 0;
     const query = window.matchMedia("(prefers-color-scheme: light)");
     const syncSystemTheme = () => {
@@ -20102,7 +20107,7 @@ var useReviewSettings = ({
     query.addListener(syncSystemTheme);
     return () => query.removeListener(syncSystemTheme);
   }, []);
-  (0, import_react23.useEffect)(() => {
+  (0, import_react24.useEffect)(() => {
     document.body.classList.toggle(
       "df-review-theme-light",
       effectiveReviewTheme === "light"
@@ -20142,24 +20147,6 @@ var useReviewSettings = ({
 
 // src/react-shell/hooks/use.review.side.panel.ts
 var import_react25 = require("react");
-
-// src/react-shell/store/store.context.tsx
-var import_react24 = require("react");
-var import_zustand = require("zustand");
-var ReviewShellStoreContext = (0, import_react24.createContext)(null);
-var ReviewShellStoreProvider = ReviewShellStoreContext.Provider;
-var useReviewShellStoreApi = () => {
-  const store = (0, import_react24.useContext)(ReviewShellStoreContext);
-  if (!store) {
-    throw new Error(
-      "useReviewShellStore must be used within a ReviewShell provider"
-    );
-  }
-  return store;
-};
-var useReviewShellStore = (selector) => (0, import_zustand.useStore)(useReviewShellStoreApi(), selector);
-
-// src/react-shell/hooks/use.review.side.panel.ts
 var getAvailableSidePanel = (sidePanel, {
   isFigmaImageManagementEnabled,
   isSourceInspectorEnabled
@@ -20587,6 +20574,9 @@ var useReviewShellHotkeys = ({
 };
 
 // src/react-shell/hooks/use.review.shell.state.ts
+var import_react29 = require("react");
+
+// src/react-shell/store/shell.config.tsx
 var import_react28 = require("react");
 
 // src/react-shell/adapters.ts
@@ -20754,72 +20744,90 @@ function normalizeWriteModes(value) {
   return [];
 }
 
-// src/react-shell/hooks/use.review.shell.state.ts
-var useReviewShellState = ({
+// src/react-shell/store/shell.config.tsx
+var createReviewShellConfig = ({
+  projectId,
+  pages,
   adapters,
-  presets,
-  reviewPathPrefix
+  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
+  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
 }) => {
   const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const reviewViewportPresets = (0, import_react28.useMemo)(
-    () => toReviewViewportPresets(viewportPresets),
-    [viewportPresets]
+  const normalizedAdapters = normalizeReviewShellAdapters(adapters);
+  return {
+    projectId,
+    pages,
+    reviewPathPrefix,
+    viewportPresets,
+    reviewViewportPresets: toReviewViewportPresets(viewportPresets),
+    localAdapterEntry: normalizedAdapters.local,
+    remoteAdapterEntry: normalizedAdapters.remote,
+    sourceEntries: normalizedAdapters.sources,
+    showSourceSelect: normalizedAdapters.sources.length > 1
+  };
+};
+var ReviewShellConfigContext = (0, import_react28.createContext)(null);
+var ReviewShellConfigProvider = ReviewShellConfigContext.Provider;
+var useReviewShellConfig = () => {
+  const config = (0, import_react28.useContext)(ReviewShellConfigContext);
+  if (!config) {
+    throw new Error(
+      "useReviewShellConfig must be used within a ReviewShell provider"
+    );
+  }
+  return config;
+};
+
+// src/react-shell/hooks/use.review.shell.state.ts
+var useReviewShellState = () => {
+  const {
+    localAdapterEntry,
+    remoteAdapterEntry,
+    reviewViewportPresets,
+    showSourceSelect,
+    sourceEntries,
+    viewportPresets
+  } = useReviewShellConfig();
+  const activeRoute = useReviewShellStore((state) => state.activeRoute);
+  const draftTarget = useReviewShellStore((state) => state.draftTarget);
+  const size = useReviewShellStore((state) => state.size);
+  const source = useReviewShellStore((state) => state.source);
+  const target = useReviewShellStore((state) => state.target);
+  const targetOverlayState = useReviewShellStore(
+    (state) => state.targetOverlayState
   );
-  const normalizedAdapters = (0, import_react28.useMemo)(
-    () => normalizeReviewShellAdapters(adapters),
-    [adapters]
+  const setActiveRoute = useReviewShellStore((state) => state.setActiveRoute);
+  const setDraftTarget = useReviewShellStore((state) => state.setDraftTarget);
+  const setSize = useReviewShellStore((state) => state.setSize);
+  const setSource = useReviewShellStore((state) => state.setSource);
+  const setTarget = useReviewShellStore((state) => state.setTarget);
+  const setTargetOverlayState = useReviewShellStore(
+    (state) => state.setTargetOverlayState
   );
-  const localAdapterEntry = normalizedAdapters.local;
-  const remoteAdapterEntry = normalizedAdapters.remote;
-  const sourceEntries = normalizedAdapters.sources;
-  const defaultSource = sourceEntries[0]?.label ?? "local";
-  const initialItemId = getInitialItemId();
-  const [source, setSource] = (0, import_react28.useState)(() => {
-    const initialSource = getInitialSource(remoteAdapterEntry?.label);
-    return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
-  });
   const remoteSource = remoteAdapterEntry?.label ?? null;
   const activeAdapterEntry = sourceEntries.find((entry) => entry.label === source) ?? sourceEntries[0];
   const isRemoteSource = Boolean(
     remoteSource && activeAdapterEntry.label === remoteSource
   );
-  const showSourceSelect = sourceEntries.length > 1;
   const canWriteArea = activeAdapterEntry.writeModes.includes("area");
   const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
   const adapter = activeAdapterEntry.adapter;
-  const iframeRef = (0, import_react28.useRef)(null);
-  const frameScrollRef = (0, import_react28.useRef)(null);
-  const controllerRef = (0, import_react28.useRef)(null);
-  const cleanupTargetRef = (0, import_react28.useRef)(null);
-  const pendingRestoreRef = (0, import_react28.useRef)(null);
-  const pendingInitialItemIdRef = (0, import_react28.useRef)(initialItemId);
-  const selectedItemIdRef = (0, import_react28.useRef)(initialItemId);
-  const hiddenOverlayItemIdListRef = (0, import_react28.useRef)([]);
-  const [target, setTarget] = (0, import_react28.useState)(
-    () => getInitialTarget(reviewPathPrefix)
-  );
-  const [draftTarget, setDraftTarget] = (0, import_react28.useState)(
-    () => getInitialTarget(reviewPathPrefix)
-  );
-  const [activeRoute, setActiveRoute] = (0, import_react28.useState)(
-    () => getTargetRouteKey(getInitialTarget(reviewPathPrefix), reviewPathPrefix)
-  );
-  const [size, setSize] = (0, import_react28.useState)(
-    () => getInitialSize(viewportPresets)
-  );
-  const [mode, setMode] = (0, import_react28.useState)("idle");
-  const [targetOverlayState, setTargetOverlayState] = (0, import_react28.useState)({
-    grid: false,
-    figma: false
-  });
-  const [selectedItemId, setSelectedItemId] = (0, import_react28.useState)(initialItemId);
-  const [isSitemapOpen, setIsSitemapOpen] = (0, import_react28.useState)(false);
-  const [isInitialPromptOpen, setIsInitialPromptOpen] = (0, import_react28.useState)(false);
-  const [copyLabel, setCopyLabel] = (0, import_react28.useState)("Copy URL");
-  const [toastMessage, setToastMessage] = (0, import_react28.useState)("");
-  const [copiedPromptKey, setCopiedPromptKey] = (0, import_react28.useState)(null);
-  const targetRef = (0, import_react28.useRef)(target);
-  const sizeRef = (0, import_react28.useRef)(size);
+  const initialItemId = getInitialItemId();
+  const iframeRef = (0, import_react29.useRef)(null);
+  const frameScrollRef = (0, import_react29.useRef)(null);
+  const controllerRef = (0, import_react29.useRef)(null);
+  const cleanupTargetRef = (0, import_react29.useRef)(null);
+  const pendingRestoreRef = (0, import_react29.useRef)(null);
+  const pendingInitialItemIdRef = (0, import_react29.useRef)(initialItemId);
+  const selectedItemIdRef = (0, import_react29.useRef)(initialItemId);
+  const hiddenOverlayItemIdListRef = (0, import_react29.useRef)([]);
+  const [mode, setMode] = (0, import_react29.useState)("idle");
+  const [selectedItemId, setSelectedItemId] = (0, import_react29.useState)(initialItemId);
+  const [isSitemapOpen, setIsSitemapOpen] = (0, import_react29.useState)(false);
+  const [isInitialPromptOpen, setIsInitialPromptOpen] = (0, import_react29.useState)(false);
+  const [copyLabel, setCopyLabel] = (0, import_react29.useState)("Copy URL");
+  const [toastMessage, setToastMessage] = (0, import_react29.useState)("");
+  const [copiedPromptKey, setCopiedPromptKey] = (0, import_react29.useState)(null);
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
   return {
     activeAdapterEntry,
@@ -20861,12 +20869,10 @@ var useReviewShellState = ({
     setTargetOverlayState,
     showSourceSelect,
     size,
-    sizeRef,
     source,
     sourceEntries,
     target,
     targetOverlayState,
-    targetRef,
     toastMessage,
     viewportPresets,
     setToastMessage
@@ -20874,7 +20880,7 @@ var useReviewShellState = ({
 };
 
 // src/react-shell/hooks/use.review.source.inspector.ts
-var import_react29 = require("react");
+var import_react30 = require("react");
 
 // src/react-shell/review/source.shortcut.style.ts
 function createSourceShortcutStyle(optionAttribute, fontOverlayAttribute) {
@@ -20960,14 +20966,14 @@ function useReviewSourceInspector({
   onCancelReviewMode,
   onToast
 }) {
-  const sourceShortcutCleanupRef = (0, import_react29.useRef)(null);
-  const sourceInspectorInteractionRef = (0, import_react29.useRef)(false);
-  const [sourceInspectorState, setSourceInspectorState] = (0, import_react29.useState)(null);
-  const clearSourceInspector = (0, import_react29.useCallback)(() => {
+  const sourceShortcutCleanupRef = (0, import_react30.useRef)(null);
+  const sourceInspectorInteractionRef = (0, import_react30.useRef)(false);
+  const [sourceInspectorState, setSourceInspectorState] = (0, import_react30.useState)(null);
+  const clearSourceInspector = (0, import_react30.useCallback)(() => {
     sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
-  const getSourceInspectorRect = (0, import_react29.useCallback)(
+  const getSourceInspectorRect = (0, import_react30.useCallback)(
     (element) => {
       const frame = iframeRef.current;
       if (!frame) return null;
@@ -20992,7 +20998,7 @@ function useReviewSourceInspector({
     },
     [iframeRef]
   );
-  const getSourceInspectorPanelPosition = (0, import_react29.useCallback)(
+  const getSourceInspectorPanelPosition = (0, import_react30.useCallback)(
     (rect) => {
       const margin = 12;
       const gap = 10;
@@ -21018,7 +21024,7 @@ function useReviewSourceInspector({
     },
     []
   );
-  const showSourceInspectorForTarget = (0, import_react29.useCallback)(
+  const showSourceInspectorForTarget = (0, import_react30.useCallback)(
     (target, isPinned = false) => {
       const candidates = getSourceCandidates(target, sourceCandidateOptions).map(
         (candidate) => ({
@@ -21054,7 +21060,7 @@ function useReviewSourceInspector({
       sourceOpenOptions
     ]
   );
-  const showSourceOutlineForTarget = (0, import_react29.useCallback)(
+  const showSourceOutlineForTarget = (0, import_react30.useCallback)(
     (target) => {
       const firstCandidate = getSourceCandidates(
         target,
@@ -21078,7 +21084,7 @@ function useReviewSourceInspector({
     },
     [getSourceInspectorRect, sourceCandidateOptions]
   );
-  const showSourceOutlineForElement = (0, import_react29.useCallback)(
+  const showSourceOutlineForElement = (0, import_react30.useCallback)(
     (element) => {
       if (!isSourceTreeHoverOutlineEnabled) return;
       const rect = getSourceInspectorRect(element);
@@ -21102,10 +21108,10 @@ function useReviewSourceInspector({
     },
     [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
   );
-  const clearSourceOutlineHover = (0, import_react29.useCallback)(() => {
+  const clearSourceOutlineHover = (0, import_react30.useCallback)(() => {
     setSourceInspectorState((current) => current?.isPinned ? current : null);
   }, []);
-  const openSourceCandidate = (0, import_react29.useCallback)(
+  const openSourceCandidate = (0, import_react30.useCallback)(
     (candidate) => {
       const didOpen = openSourceInEditor(candidate.source, {
         ...sourceOpenOptions,
@@ -21116,11 +21122,11 @@ function useReviewSourceInspector({
     },
     [clearSourceInspector, onToast, sourceOpenOptions]
   );
-  const cleanupSourceOpenShortcut = (0, import_react29.useCallback)(() => {
+  const cleanupSourceOpenShortcut = (0, import_react30.useCallback)(() => {
     sourceShortcutCleanupRef.current?.();
     sourceShortcutCleanupRef.current = null;
   }, []);
-  const bindSourceOpenShortcut = (0, import_react29.useCallback)(() => {
+  const bindSourceOpenShortcut = (0, import_react30.useCallback)(() => {
     cleanupSourceOpenShortcut();
     let frameDocument = null;
     try {
@@ -21311,10 +21317,10 @@ function useReviewSourceInspector({
     showSourceOutlineForTarget,
     showSourceInspectorForTarget
   ]);
-  (0, import_react29.useEffect)(() => {
+  (0, import_react30.useEffect)(() => {
     return cleanupSourceOpenShortcut;
   }, [cleanupSourceOpenShortcut]);
-  (0, import_react29.useEffect)(() => {
+  (0, import_react30.useEffect)(() => {
     const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
     return () => window.cancelAnimationFrame(frame);
   }, [bindSourceOpenShortcut, targetSrc]);
@@ -21330,15 +21336,13 @@ function useReviewSourceInspector({
 }
 
 // src/react-shell/hooks/use.review.target.navigation.ts
-var import_react30 = require("react");
+var import_react31 = require("react");
 var useReviewTargetNavigation = ({
   activeAdapterEntry,
   draftTarget,
   reviewPathPrefix,
-  sizeRef,
   source,
   sourceEntries,
-  targetRef,
   viewportPresets,
   onActiveRouteChange,
   onAllQaVisibleChange,
@@ -21353,11 +21357,12 @@ var useReviewTargetNavigation = ({
   onSourceChange,
   onTargetChange
 }) => {
-  const getPageTarget = (0, import_react30.useCallback)(
+  const storeApi = useReviewShellStoreApi();
+  const getPageTarget = (0, import_react31.useCallback)(
     (href) => normalizeTarget(href, reviewPathPrefix),
     [reviewPathPrefix]
   );
-  const applyTarget = (0, import_react30.useCallback)(async () => {
+  const applyTarget = (0, import_react31.useCallback)(async () => {
     const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
     const normalizedTarget = parsedInput.target;
     const normalizedRoute = getTargetRouteKey(
@@ -21365,13 +21370,14 @@ var useReviewTargetNavigation = ({
       reviewPathPrefix
     );
     const nextSource = parsedInput.source && sourceEntries.some((entry) => entry.label === parsedInput.source) ? parsedInput.source : source;
+    const currentSize = storeApi.getState().size;
     const nextSize = parsedInput.width && parsedInput.height ? findViewportPreset(
       viewportPresets,
       parsedInput.width,
       parsedInput.height
-    ) : sizeRef.current;
+    ) : currentSize;
     const nextAdapter = sourceEntries.find((entry) => entry.label === nextSource) ?? activeAdapterEntry;
-    const isCurrentTarget = targetRef.current === normalizedTarget && source === nextSource && sizeRef.current.width === nextSize.width && sizeRef.current.height === nextSize.height;
+    const isCurrentTarget = storeApi.getState().target === normalizedTarget && source === nextSource && currentSize.width === nextSize.width && currentSize.height === nextSize.height;
     if (parsedInput.itemId) {
       const item = await nextAdapter.adapter.get(parsedInput.itemId);
       if (item) {
@@ -21384,7 +21390,6 @@ var useReviewTargetNavigation = ({
     onClearSelectedItem();
     onAllQaVisibleChange(false);
     onSourceChange(nextSource);
-    targetRef.current = normalizedTarget;
     onActiveRouteChange(normalizedRoute);
     onDraftTargetChange(normalizedTarget);
     onSizeChange(nextSize);
@@ -21404,13 +21409,12 @@ var useReviewTargetNavigation = ({
     onSourceChange,
     onTargetChange,
     reviewPathPrefix,
-    sizeRef,
     source,
     sourceEntries,
-    targetRef,
+    storeApi,
     viewportPresets
   ]);
-  const selectPage = (0, import_react30.useCallback)(
+  const selectPage = (0, import_react31.useCallback)(
     (href) => {
       const normalizedTarget = getPageTarget(href);
       const normalizedRoute = getTargetRouteKey(
@@ -21419,11 +21423,10 @@ var useReviewTargetNavigation = ({
       );
       onClearSelectedItem();
       onAllQaVisibleChange(false);
-      targetRef.current = normalizedTarget;
       onActiveRouteChange(normalizedRoute);
       onDraftTargetChange(normalizedTarget);
       onTargetChange(normalizedTarget);
-      updateShellUrl(normalizedTarget, sizeRef.current, source);
+      updateShellUrl(normalizedTarget, storeApi.getState().size, source);
       onSitemapOpenChange(false);
     },
     [
@@ -21435,36 +21438,36 @@ var useReviewTargetNavigation = ({
       onSitemapOpenChange,
       onTargetChange,
       reviewPathPrefix,
-      sizeRef,
       source,
-      targetRef
+      storeApi
     ]
   );
-  const selectAllQa = (0, import_react30.useCallback)(() => {
+  const selectAllQa = (0, import_react31.useCallback)(() => {
     onAllQaVisibleChange(true);
     onSitemapOpenChange(false);
   }, [onAllQaVisibleChange, onSitemapOpenChange]);
-  const clearSelectedReviewItem = (0, import_react30.useCallback)(() => {
+  const clearSelectedReviewItem = (0, import_react31.useCallback)(() => {
     onClearSelectedItem();
-    updateShellUrl(targetRef.current, sizeRef.current, source);
-  }, [onClearSelectedItem, sizeRef, source, targetRef]);
-  const changeReviewSource = (0, import_react30.useCallback)(
+    const state = storeApi.getState();
+    updateShellUrl(state.target, state.size, source);
+  }, [onClearSelectedItem, source, storeApi]);
+  const changeReviewSource = (0, import_react31.useCallback)(
     (nextSource) => {
       if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
       onCancelReviewMode();
       onClearSelectedItem();
       onClearItems();
       onSourceChange(nextSource);
-      updateShellUrl(targetRef.current, sizeRef.current, nextSource);
+      const state = storeApi.getState();
+      updateShellUrl(state.target, state.size, nextSource);
     },
     [
       onCancelReviewMode,
       onClearItems,
       onClearSelectedItem,
       onSourceChange,
-      sizeRef,
       sourceEntries,
-      targetRef
+      storeApi
     ]
   );
   return {
@@ -21490,22 +21493,63 @@ var createSidePanelSlice = (set) => ({
   setIsListVisible: (isListVisible) => set({ isListVisible })
 });
 
+// src/react-shell/store/target.slice.ts
+var getInitialTargetSliceState = (config) => {
+  const defaultSource = config.sourceEntries[0]?.label ?? "local";
+  const initialSource = getInitialSource(config.remoteAdapterEntry?.label);
+  const source = config.sourceEntries.some(
+    (entry) => entry.label === initialSource
+  ) ? initialSource : defaultSource;
+  const target = getInitialTarget(config.reviewPathPrefix);
+  return {
+    activeRoute: getTargetRouteKey(target, config.reviewPathPrefix),
+    draftTarget: target,
+    size: getInitialSize(config.viewportPresets),
+    source,
+    target,
+    targetOverlayState: {
+      grid: false,
+      figma: false
+    }
+  };
+};
+var createTargetSlice = (initialState) => (set) => ({
+  ...initialState,
+  setActiveRoute: (activeRoute) => set({ activeRoute }),
+  setDraftTarget: (draftTarget) => set({ draftTarget }),
+  setSize: (size) => set({ size }),
+  setSource: (source) => set({ source }),
+  setTarget: (target) => set({ target }),
+  setTargetOverlayState: (targetOverlayState) => set({ targetOverlayState })
+});
+
 // src/react-shell/store/create.review.shell.store.ts
-var createReviewShellStore = () => (0, import_zustand2.createStore)()((...args) => ({
-  ...createSidePanelSlice(...args)
+var createReviewShellStore = (init) => (0, import_zustand2.createStore)()((...args) => ({
+  ...createSidePanelSlice(...args),
+  ...createTargetSlice(init.target)(...args)
 }));
 
 // src/react-shell/review/shell.tsx
 var import_jsx_runtime29 = require("react/jsx-runtime");
 var ReviewShell = (props) => {
-  const [store] = (0, import_react31.useState)(() => createReviewShellStore());
-  return /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(ReviewShellStoreProvider, { value: store, children: /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(ReviewShellContent, { ...props }) });
+  const config = (0, import_react32.useMemo)(
+    () => createReviewShellConfig(props),
+    [
+      props.adapters,
+      props.pages,
+      props.presets,
+      props.projectId,
+      props.reviewPathPrefix
+    ]
+  );
+  const [store] = (0, import_react32.useState)(
+    () => createReviewShellStore({ target: getInitialTargetSliceState(config) })
+  );
+  return /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(ReviewShellConfigProvider, { value: config, children: /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(ReviewShellStoreProvider, { value: store, children: /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(ReviewShellContent, { ...props }) }) });
 };
 var ReviewShellContent = ({
   projectId,
   pages,
-  adapters,
-  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
   ruler,
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
   adjustmentLabel,
@@ -21555,44 +21599,38 @@ var ReviewShellContent = ({
     setTargetOverlayState,
     showSourceSelect,
     size,
-    sizeRef,
     source,
     sourceEntries,
     target,
     targetOverlayState,
-    targetRef,
     toastMessage,
     viewportPresets,
     setToastMessage
-  } = useReviewShellState({
-    adapters,
-    presets,
-    reviewPathPrefix
-  });
-  const [targetFrameLoadVersion, setTargetFrameLoadVersion] = (0, import_react31.useState)(0);
-  const [isAllQaVisible, setIsAllQaVisible] = (0, import_react31.useState)(false);
-  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = (0, import_react31.useState)(false);
-  const resolvedReviewSourceOptions = (0, import_react31.useMemo)(
+  } = useReviewShellState();
+  const [targetFrameLoadVersion, setTargetFrameLoadVersion] = (0, import_react32.useState)(0);
+  const [isAllQaVisible, setIsAllQaVisible] = (0, import_react32.useState)(false);
+  const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = (0, import_react32.useState)(false);
+  const resolvedReviewSourceOptions = (0, import_react32.useMemo)(
     () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
     [sourceInspector, sourceRoot]
   );
   const resolvedSourceInspector = resolvedReviewSourceOptions.sourceInspector;
   const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
-  const sourceOpenOptions = (0, import_react31.useMemo)(
+  const sourceOpenOptions = (0, import_react32.useMemo)(
     () => ({
       ...resolvedSourceInspector,
       sourceRoot: resolvedSourceRoot
     }),
     [resolvedSourceInspector, resolvedSourceRoot]
   );
-  const sourceCandidateOptions = (0, import_react31.useMemo)(
+  const sourceCandidateOptions = (0, import_react32.useMemo)(
     () => ({
       ignore: resolvedSourceInspector?.ignore,
       includePlacer: resolvedSourceInspector?.includePlacer
     }),
     [resolvedSourceInspector]
   );
-  const sectionOutlineOptions = (0, import_react31.useMemo)(
+  const sectionOutlineOptions = (0, import_react32.useMemo)(
     () => ({
       includePlacer: resolvedSourceInspector?.includePlacer,
       ignore: resolvedSourceInspector?.ignore,
@@ -21602,7 +21640,7 @@ var ReviewShellContent = ({
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
   const isSourceTreeHoverOutlineEnabled = resolvedSourceInspector?.hoverOutline !== false;
-  const figmaImageStore = (0, import_react31.useMemo)(
+  const figmaImageStore = (0, import_react32.useMemo)(
     () => getReviewFigmaImageStore(figmaImages),
     [figmaImages]
   );
@@ -21656,14 +21694,14 @@ var ReviewShellContent = ({
     target,
     viewportPresets
   });
-  const itemRefreshIdRef = (0, import_react31.useRef)(0);
-  const [isItemsLoading, setIsItemsLoading] = (0, import_react31.useState)(false);
+  const itemRefreshIdRef = (0, import_react32.useRef)(0);
+  const [isItemsLoading, setIsItemsLoading] = (0, import_react32.useState)(false);
   const isCommandKeyPressed = useReviewCommandKey({
     iframeRef,
     targetFrameLoadVersion,
     targetSrc
   });
-  const effectiveHiddenOverlayItemIdList = (0, import_react31.useMemo)(() => {
+  const effectiveHiddenOverlayItemIdList = (0, import_react32.useMemo)(() => {
     if (!isCommandKeyPressed) return hiddenOverlayItemIdList;
     const itemIds = new Set(hiddenOverlayItemIdList);
     activeItems.forEach((item) => itemIds.add(item.id));
@@ -21696,11 +21734,11 @@ var ReviewShellContent = ({
     store: figmaImageStore,
     viewport: size
   });
-  const [targetFigmaState, setTargetFigmaState] = (0, import_react31.useState)(null);
+  const [targetFigmaState, setTargetFigmaState] = (0, import_react32.useState)(null);
   const targetFigmaConfig = targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
   const isFigmaOverlayAvailable = !isFigmaImageManagementEnabled && isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
   const initialPromptText = initialPrompt.trim();
-  const refreshItems = (0, import_react31.useCallback)(
+  const refreshItems = (0, import_react32.useCallback)(
     async () => {
       const requestId = ++itemRefreshIdRef.current;
       setIsItemsLoading(true);
@@ -21728,7 +21766,7 @@ var ReviewShellContent = ({
       setItems
     ]
   );
-  const refreshSitemapItems = (0, import_react31.useCallback)(
+  const refreshSitemapItems = (0, import_react32.useCallback)(
     () => refreshSitemapReviewItems({
       localAdapterEntry,
       projectId,
@@ -21737,27 +21775,27 @@ var ReviewShellContent = ({
     }),
     [localAdapterEntry, projectId, remoteAdapterEntry]
   );
-  const cancelReviewMode = (0, import_react31.useCallback)(() => {
+  const cancelReviewMode = (0, import_react32.useCallback)(() => {
     const controller = controllerRef.current;
     if (!controller || controller.getMode() === "idle") return false;
     controller.setMode("idle");
     setMode(controller.getMode());
     return true;
   }, []);
-  const closePromptModal = (0, import_react31.useCallback)(() => {
+  const closePromptModal = (0, import_react32.useCallback)(() => {
     setIsInitialPromptOpen(false);
   }, []);
-  const closeSitemap = (0, import_react31.useCallback)(() => {
+  const closeSitemap = (0, import_react32.useCallback)(() => {
     setIsSitemapOpen(false);
   }, []);
-  const reloadTargetFrame = (0, import_react31.useCallback)(() => {
+  const reloadTargetFrame = (0, import_react32.useCallback)(() => {
     try {
       iframeRef.current?.contentWindow?.location.reload();
     } catch {
       return;
     }
   }, []);
-  const showToast = (0, import_react31.useCallback)(
+  const showToast = (0, import_react32.useCallback)(
     (message) => {
       setToastMessage(message);
       window.setTimeout(() => {
@@ -21807,7 +21845,7 @@ var ReviewShellContent = ({
     size,
     source
   });
-  const closeRulerPanels = (0, import_react31.useCallback)(() => {
+  const closeRulerPanels = (0, import_react32.useCallback)(() => {
     closeSitemap();
     closeFigmaSettings();
   }, [closeFigmaSettings, closeSitemap]);
@@ -21863,11 +21901,9 @@ var ReviewShellContent = ({
     adjustmentLabel,
     selectedItemIdRef,
     size,
-    sizeRef,
     source,
     target,
     targetOverlayState,
-    targetRef,
     viewportPresets,
     onActiveRouteChange: setActiveRoute,
     onCancelReviewMode: cancelReviewMode,
@@ -21880,7 +21916,7 @@ var ReviewShellContent = ({
     onTargetChange: setTarget,
     onTargetOverlayStateChange: setTargetOverlayState
   });
-  (0, import_react31.useEffect)(() => {
+  (0, import_react32.useEffect)(() => {
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
     const item = items.find(
@@ -21889,14 +21925,14 @@ var ReviewShellContent = ({
     if (!item) return;
     restoreReviewItem(item);
   }, [items, pendingInitialItemIdRef, restoreReviewItem]);
-  const refreshReviewData2 = (0, import_react31.useCallback)(() => {
+  const refreshReviewData2 = (0, import_react32.useCallback)(() => {
     return refreshReviewData({
       onRefreshItems: refreshItems,
       onRefreshSitemapItems: refreshSitemapItems,
       onReloadReviewKit: reloadReviewKit
     });
   }, [refreshItems, refreshSitemapItems, reloadReviewKit]);
-  const toggleItemOverlayVisibility = (0, import_react31.useCallback)((itemId) => {
+  const toggleItemOverlayVisibility = (0, import_react32.useCallback)((itemId) => {
     setHiddenOverlayItemIds((currentHiddenOverlayItemIds) => {
       const nextHiddenItemIds = new Set(currentHiddenOverlayItemIds);
       if (nextHiddenItemIds.has(itemId)) {
@@ -21907,17 +21943,17 @@ var ReviewShellContent = ({
       return nextHiddenItemIds;
     });
   }, []);
-  (0, import_react31.useEffect)(() => {
+  (0, import_react32.useEffect)(() => {
     void refreshItems();
   }, [refreshItems]);
-  (0, import_react31.useEffect)(() => {
+  (0, import_react32.useEffect)(() => {
     void refreshSitemapItems();
   }, [refreshSitemapItems]);
-  (0, import_react31.useEffect)(() => {
+  (0, import_react32.useEffect)(() => {
     if (!isSitemapOpen) return;
     void refreshSitemapItems();
   }, [isSitemapOpen, refreshSitemapItems]);
-  (0, import_react31.useEffect)(() => {
+  (0, import_react32.useEffect)(() => {
     const frameScroll = frameScrollRef.current;
     if (!frameScroll) return void 0;
     const centerFrameScroll = () => {
@@ -21946,10 +21982,8 @@ var ReviewShellContent = ({
     activeAdapterEntry,
     draftTarget,
     reviewPathPrefix,
-    sizeRef,
     source,
     sourceEntries,
-    targetRef,
     viewportPresets,
     onActiveRouteChange: setActiveRoute,
     onAllQaVisibleChange: setIsAllQaVisible,
@@ -21976,13 +22010,13 @@ var ReviewShellContent = ({
   const copyCurrentUrl = () => copyCurrentReviewUrl({
     onCopyLabelChange: setCopyLabel
   });
-  const refreshTargetFigmaConfig = (0, import_react31.useCallback)(() => {
+  const refreshTargetFigmaConfig = (0, import_react32.useCallback)(() => {
     const config = getTargetFigmaFrameConfig(
       iframeRef.current?.contentWindow
     );
     setTargetFigmaState(config ? { targetSrc, config } : null);
   }, [iframeRef, targetSrc]);
-  (0, import_react31.useEffect)(() => {
+  (0, import_react32.useEffect)(() => {
     const targetDocument = iframeRef.current?.contentDocument;
     setTargetFigmaOverlayLocked(targetDocument, mode === "element");
     return () => {
@@ -22007,7 +22041,7 @@ var ReviewShellContent = ({
     onCancelReviewMode: cancelReviewMode,
     onToast: showToast
   });
-  const showQaPanel = (0, import_react31.useCallback)(() => {
+  const showQaPanel = (0, import_react32.useCallback)(() => {
     openSidePanel("qa");
   }, [openSidePanel]);
   const {
@@ -22044,10 +22078,10 @@ var ReviewShellContent = ({
     onShowQaPanel: showQaPanel,
     onToast: showToast
   });
-  const toggleQaPanel = (0, import_react31.useCallback)(() => {
+  const toggleQaPanel = (0, import_react32.useCallback)(() => {
     toggleSidePanel("qa");
   }, [toggleSidePanel]);
-  const toggleSourceTreePanel = (0, import_react31.useCallback)(() => {
+  const toggleSourceTreePanel = (0, import_react32.useCallback)(() => {
     if (!isSourceInspectorEnabled) return;
     if (sidePanel !== "source" || !isListVisible) {
       refreshCurrentSectionOutline(true);
@@ -22060,7 +22094,7 @@ var ReviewShellContent = ({
     sidePanel,
     toggleSidePanel
   ]);
-  const toggleFigmaImagesPanel = (0, import_react31.useCallback)(() => {
+  const toggleFigmaImagesPanel = (0, import_react32.useCallback)(() => {
     if (!isFigmaImageManagementEnabled) return;
     toggleSidePanel("figma-images");
   }, [
@@ -22089,9 +22123,7 @@ var ReviewShellContent = ({
     remoteAdapterEntry,
     reviewPathPrefix,
     selectedItemIdRef,
-    sizeRef,
     source,
-    targetRef,
     viewportPresets,
     onClearSelectedItem: clearSelectedItem,
     onCopiedPromptKeyChange: setCopiedPromptKey,
@@ -22118,7 +22150,7 @@ var ReviewShellContent = ({
     onToggleRuler: toggleRuler,
     onToggleTargetOverlay: toggleTargetOverlay
   });
-  const loadTargetFrame = (0, import_react31.useCallback)(() => {
+  const loadTargetFrame = (0, import_react32.useCallback)(() => {
     setTargetFrameLoadVersion((currentVersion) => currentVersion + 1);
     initReviewKit();
     refreshTargetFigmaConfig();
@@ -22381,7 +22413,7 @@ var ReviewShellContent = ({
 };
 
 // src/react-shell/figma/dev-overlay.tsx
-var import_react32 = __toESM(require("react"), 1);
+var import_react33 = __toESM(require("react"), 1);
 var import_client = require("react-dom/client");
 var import_jsx_runtime30 = require("react/jsx-runtime");
 var FIGMA_DEV_OVERLAY_ROOT_ID = "df-review-figma-dev-overlay-root";
@@ -22404,7 +22436,7 @@ var mountFigmaDevOverlay = (options) => {
   document.body.appendChild(host);
   const root = (0, import_client.createRoot)(mountNode);
   root.render(
-    /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(import_react32.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(FigmaDevOverlayWidget, { ...options }) })
+    /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(import_react33.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(FigmaDevOverlayWidget, { ...options }) })
   );
   return {
     destroy() {
@@ -22424,11 +22456,11 @@ var FigmaDevOverlayWidget = ({
   const figmaImageStore = getReviewFigmaImageStore(figmaImages);
   const viewport = useCurrentViewport();
   const currentPageUrl = useCurrentPageUrl(pageUrl, reviewPathPrefix);
-  const viewportBoundaries = (0, import_react32.useMemo)(
+  const viewportBoundaries = (0, import_react33.useMemo)(
     () => getFigmaDevViewportBoundaries(presets),
     [presets]
   );
-  const matchedViewportMatch = (0, import_react32.useMemo)(
+  const matchedViewportMatch = (0, import_react33.useMemo)(
     () => findBoundaryFigmaDevViewportMatch(presets, viewport.width),
     [presets, viewport.width]
   );
@@ -22454,23 +22486,23 @@ var FigmaDevOverlayWidget = ({
     store: matchedViewport ? figmaImageStore : null,
     viewport: activeViewport
   });
-  const [isPanelOpen, setIsPanelOpen] = (0, import_react32.useState)(false);
-  const [isWidgetVisible, setIsWidgetVisible] = (0, import_react32.useState)(false);
-  const [offsetYDraftByImageId, setOffsetYDraftByImageId] = (0, import_react32.useState)({});
+  const [isPanelOpen, setIsPanelOpen] = (0, import_react33.useState)(false);
+  const [isWidgetVisible, setIsWidgetVisible] = (0, import_react33.useState)(false);
+  const [offsetYDraftByImageId, setOffsetYDraftByImageId] = (0, import_react33.useState)({});
   const selectedImage = selectedImageId ? images.find((image) => image.id === selectedImageId) ?? null : null;
   const selectedImageIndex = selectedImage ? images.indexOf(selectedImage) : -1;
   const selectedImageLabel = selectedImage ? getFigmaImageLabel(selectedImage, selectedImageIndex) : "Figma layer";
   const selectedOverlayState = selectedImage ? imageOverlayStates[selectedImage.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE : DEFAULT_FIGMA_IMAGE_LAYER_STATE;
   const selectedOpacityPercent = selectedImage ? getSnappedOpacityPercent(selectedOverlayState.opacity) : 0;
   const selectedOffsetYDraft = selectedImage ? offsetYDraftByImageId[selectedImage.id] ?? String(selectedOverlayState.offsetY) : "";
-  const figmaImageOverlays = (0, import_react32.useMemo)(
+  const figmaImageOverlays = (0, import_react33.useMemo)(
     () => createReviewTargetFigmaImageOverlays({
       imageOverlayStates,
       images
     }),
     [imageOverlayStates, images]
   );
-  (0, import_react32.useEffect)(() => {
+  (0, import_react33.useEffect)(() => {
     if (!isWidgetVisible || !matchedViewport) {
       removeTargetFigmaImageOverlays(document);
       return;
@@ -22487,13 +22519,13 @@ var FigmaDevOverlayWidget = ({
     matchedViewport,
     setImageOverlayOffsetY
   ]);
-  (0, import_react32.useEffect)(
+  (0, import_react33.useEffect)(
     () => () => {
       removeTargetFigmaImageOverlays(document);
     },
     []
   );
-  (0, import_react32.useEffect)(() => {
+  (0, import_react33.useEffect)(() => {
     const handleKeyDown = (event) => {
       if (!isHotkey(event, "Shift+F") || isEditableFigmaDevOverlayEventTarget(event)) {
         return;
@@ -22640,10 +22672,10 @@ var FigmaDevOverlayWidget = ({
   );
 };
 function useCurrentPageUrl(pageUrl, reviewPathPrefix) {
-  const [currentPageUrl, setCurrentPageUrl] = (0, import_react32.useState)(
+  const [currentPageUrl, setCurrentPageUrl] = (0, import_react33.useState)(
     () => getFigmaDevOverlayPageUrl(pageUrl, reviewPathPrefix)
   );
-  (0, import_react32.useEffect)(() => {
+  (0, import_react33.useEffect)(() => {
     const updatePageUrl = () => {
       setCurrentPageUrl(getFigmaDevOverlayPageUrl(pageUrl, reviewPathPrefix));
     };
@@ -22664,8 +22696,8 @@ function isEditableFigmaDevOverlayEventTarget(event) {
   return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT" || element.isContentEditable === true;
 }
 function useCurrentViewport() {
-  const [viewport, setViewport] = (0, import_react32.useState)(getCurrentViewportSize);
-  (0, import_react32.useEffect)(() => {
+  const [viewport, setViewport] = (0, import_react33.useState)(getCurrentViewportSize);
+  (0, import_react33.useEffect)(() => {
     const updateViewport = () => setViewport(getCurrentViewportSize());
     window.addEventListener("resize", updateViewport);
     window.addEventListener("orientationchange", updateViewport);
@@ -23233,7 +23265,7 @@ var mountReviewShell = (options) => {
   root.style.height = "100%";
   root.style.margin = "0";
   (0, import_client2.createRoot)(root).render(
-    /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(import_react33.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(ReviewShell, { ...shellProps }) })
+    /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(import_react34.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(ReviewShell, { ...shellProps }) })
   );
 };
 // Annotate the CommonJS export names for ESM import in node:

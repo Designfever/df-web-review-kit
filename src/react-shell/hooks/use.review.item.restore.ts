@@ -19,6 +19,7 @@ import {
   getItemTarget,
   updateShellUrlForItem,
 } from '../route';
+import { useReviewShellStoreApi } from '../store/store.context';
 import type { ReviewShellViewportPreset } from '../types';
 import { getRestoredSize } from '../viewport';
 
@@ -31,7 +32,6 @@ interface UseReviewItemRestoreOptions {
   reviewPathPrefix: string;
   selectedItemIdRef: MutableRefObject<string | null>;
   source: ReviewSource;
-  targetRef: MutableRefObject<string>;
   viewportPresets: ReviewShellViewportPreset[];
   onActiveRouteChange: (target: string) => void;
   onDraftTargetChange: (target: string) => void;
@@ -142,7 +142,6 @@ export const useReviewItemRestore = ({
   reviewPathPrefix,
   selectedItemIdRef,
   source,
-  targetRef,
   viewportPresets,
   onActiveRouteChange,
   onDraftTargetChange,
@@ -151,6 +150,7 @@ export const useReviewItemRestore = ({
   onSyncTargetViewport,
   onTargetChange,
 }: UseReviewItemRestoreOptions) => {
+  const storeApi = useReviewShellStoreApi();
   const clearSelectedItem = useCallback(() => {
     pendingRestoreRef.current = null;
     selectedItemIdRef.current = null;
@@ -243,7 +243,7 @@ export const useReviewItemRestore = ({
       onSizeChange(nextSize);
       updateShellUrlForItem(nextTarget, nextSize, item.id, source);
 
-      if (targetRef.current !== nextTarget) {
+      if (storeApi.getState().target !== nextTarget) {
         onTargetChange(nextTarget);
         return;
       }
@@ -262,7 +262,7 @@ export const useReviewItemRestore = ({
       reviewPathPrefix,
       selectedItemIdRef,
       source,
-      targetRef,
+      storeApi,
       viewportPresets,
     ]
   );

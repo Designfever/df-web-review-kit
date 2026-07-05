@@ -5017,7 +5017,7 @@ function ensureReviewShellStyle() {
 import {
   useCallback as useCallback20,
   useEffect as useEffect17,
-  useMemo as useMemo11,
+  useMemo as useMemo10,
   useRef as useRef10,
   useState as useState17
 } from "react";
@@ -5257,75 +5257,6 @@ function getItemUrlTarget(value, reviewPathPrefix) {
     return null;
   }
 }
-
-// src/react-shell/viewport.ts
-var DEFAULT_REVIEW_VIEWPORT_PRESETS = [
-  { label: "Mobile", width: 390, height: 720, kind: "mobile" },
-  { label: "Tablet", width: 768, height: 1024, kind: "tablet" },
-  { label: "Desktop", width: 1440, height: 900, kind: "desktop" },
-  { label: "Wide", width: 1980, height: 1080, kind: "wide" }
-];
-var getFallbackPreset = (presets) => presets[0] ?? DEFAULT_REVIEW_VIEWPORT_PRESETS[0];
-var getViewportPresetDistance = (preset, width, height) => Math.abs(preset.width - width) + Math.abs(preset.height - height);
-var findViewportPreset = (presets, width, height) => {
-  const fallback = getFallbackPreset(presets);
-  const exact = presets.find(
-    (preset) => preset.width === width && preset.height === height
-  );
-  if (exact) return exact;
-  return presets.reduce((closest, preset) => {
-    const closestDistance = getViewportPresetDistance(closest, width, height);
-    const presetDistance = getViewportPresetDistance(preset, width, height);
-    return presetDistance < closestDistance ? preset : closest;
-  }, fallback);
-};
-var getInitialSize = (presets) => {
-  if (typeof window === "undefined") return getFallbackPreset(presets);
-  const params = new URLSearchParams(window.location.search);
-  const width = Number(params.get("w"));
-  const height = Number(params.get("h"));
-  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
-    return findViewportPreset(presets, width, height);
-  }
-  return getFallbackPreset(presets);
-};
-var getRestoredSize = (item, presets) => findViewportPreset(
-  presets,
-  Math.max(
-    240,
-    Math.round(item.viewport?.width ?? getFallbackPreset(presets).width)
-  ),
-  Math.max(
-    320,
-    Math.round(item.viewport?.height ?? getFallbackPreset(presets).height)
-  )
-);
-var getViewportPresetKind = (preset) => {
-  if (preset.kind) return preset.kind;
-  const label = preset.label.toLowerCase();
-  if (label.includes("mobile") || label.includes("phone")) return "mobile";
-  if (label.includes("tablet") || label.includes("pad")) return "tablet";
-  if (label.includes("wide") || label.includes("1980") || label.includes("1940") || label.includes("1920")) {
-    return "wide";
-  }
-  if (label.includes("desktop")) return "desktop";
-  if (preset.width >= 1800) return "wide";
-  if (preset.width >= 1e3) return "desktop";
-  if (preset.width >= 700) return "tablet";
-  return "mobile";
-};
-var toReviewViewportPresets = (presets) => presets.map((preset) => ({
-  label: preset.label,
-  width: preset.width,
-  height: preset.height,
-  scope: getViewportPresetKind(preset),
-  designWidth: preset.designWidth,
-  designHeight: preset.designHeight
-}));
-var getIsFigmaOverlayAvailable = (preset) => {
-  const kind = getViewportPresetKind(preset);
-  return kind === "mobile" || kind === "wide";
-};
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/createLucideIcon.mjs
 import { forwardRef as forwardRef2, createElement as createElement3 } from "react";
@@ -7119,6 +7050,77 @@ import {
   useRef,
   useState as useState2
 } from "react";
+
+// src/react-shell/viewport.ts
+var DEFAULT_REVIEW_VIEWPORT_PRESETS = [
+  { label: "Mobile", width: 390, height: 720, kind: "mobile" },
+  { label: "Tablet", width: 768, height: 1024, kind: "tablet" },
+  { label: "Desktop", width: 1440, height: 900, kind: "desktop" },
+  { label: "Wide", width: 1980, height: 1080, kind: "wide" }
+];
+var getFallbackPreset = (presets) => presets[0] ?? DEFAULT_REVIEW_VIEWPORT_PRESETS[0];
+var getViewportPresetDistance = (preset, width, height) => Math.abs(preset.width - width) + Math.abs(preset.height - height);
+var findViewportPreset = (presets, width, height) => {
+  const fallback = getFallbackPreset(presets);
+  const exact = presets.find(
+    (preset) => preset.width === width && preset.height === height
+  );
+  if (exact) return exact;
+  return presets.reduce((closest, preset) => {
+    const closestDistance = getViewportPresetDistance(closest, width, height);
+    const presetDistance = getViewportPresetDistance(preset, width, height);
+    return presetDistance < closestDistance ? preset : closest;
+  }, fallback);
+};
+var getInitialSize = (presets) => {
+  if (typeof window === "undefined") return getFallbackPreset(presets);
+  const params = new URLSearchParams(window.location.search);
+  const width = Number(params.get("w"));
+  const height = Number(params.get("h"));
+  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
+    return findViewportPreset(presets, width, height);
+  }
+  return getFallbackPreset(presets);
+};
+var getRestoredSize = (item, presets) => findViewportPreset(
+  presets,
+  Math.max(
+    240,
+    Math.round(item.viewport?.width ?? getFallbackPreset(presets).width)
+  ),
+  Math.max(
+    320,
+    Math.round(item.viewport?.height ?? getFallbackPreset(presets).height)
+  )
+);
+var getViewportPresetKind = (preset) => {
+  if (preset.kind) return preset.kind;
+  const label = preset.label.toLowerCase();
+  if (label.includes("mobile") || label.includes("phone")) return "mobile";
+  if (label.includes("tablet") || label.includes("pad")) return "tablet";
+  if (label.includes("wide") || label.includes("1980") || label.includes("1940") || label.includes("1920")) {
+    return "wide";
+  }
+  if (label.includes("desktop")) return "desktop";
+  if (preset.width >= 1800) return "wide";
+  if (preset.width >= 1e3) return "desktop";
+  if (preset.width >= 700) return "tablet";
+  return "mobile";
+};
+var toReviewViewportPresets = (presets) => presets.map((preset) => ({
+  label: preset.label,
+  width: preset.width,
+  height: preset.height,
+  scope: getViewportPresetKind(preset),
+  designWidth: preset.designWidth,
+  designHeight: preset.designHeight
+}));
+var getIsFigmaOverlayAvailable = (preset) => {
+  const kind = getViewportPresetKind(preset);
+  return kind === "mobile" || kind === "wide";
+};
+
+// src/react-shell/figma/image.controller.ts
 var createReviewFigmaRouteTarget = ({
   pageUrl,
   projectId,
@@ -11434,6 +11436,27 @@ import {
 import {
   useCallback as useCallback4
 } from "react";
+
+// src/react-shell/store/store.context.tsx
+import {
+  createContext as createContext2,
+  useContext as useContext2
+} from "react";
+import { useStore } from "zustand";
+var ReviewShellStoreContext = createContext2(null);
+var ReviewShellStoreProvider = ReviewShellStoreContext.Provider;
+var useReviewShellStoreApi = () => {
+  const store = useContext2(ReviewShellStoreContext);
+  if (!store) {
+    throw new Error(
+      "useReviewShellStore must be used within a ReviewShell provider"
+    );
+  }
+  return store;
+};
+var useReviewShellStore = (selector) => useStore(useReviewShellStoreApi(), selector);
+
+// src/react-shell/hooks/use.review.item.restore.ts
 function runWithAutoScrollBehavior2(targetDocument, callback) {
   const elements = [
     targetDocument?.documentElement,
@@ -11505,7 +11528,6 @@ var useReviewItemRestore = ({
   reviewPathPrefix,
   selectedItemIdRef,
   source,
-  targetRef,
   viewportPresets,
   onActiveRouteChange,
   onDraftTargetChange,
@@ -11514,6 +11536,7 @@ var useReviewItemRestore = ({
   onSyncTargetViewport,
   onTargetChange
 }) => {
+  const storeApi = useReviewShellStoreApi();
   const clearSelectedItem = useCallback4(() => {
     pendingRestoreRef.current = null;
     selectedItemIdRef.current = null;
@@ -11590,7 +11613,7 @@ var useReviewItemRestore = ({
       onDraftTargetChange(nextTarget);
       onSizeChange(nextSize);
       updateShellUrlForItem(nextTarget, nextSize, item.id, source);
-      if (targetRef.current !== nextTarget) {
+      if (storeApi.getState().target !== nextTarget) {
         onTargetChange(nextTarget);
         return;
       }
@@ -11608,7 +11631,7 @@ var useReviewItemRestore = ({
       reviewPathPrefix,
       selectedItemIdRef,
       source,
-      targetRef,
+      storeApi,
       viewportPresets
     ]
   );
@@ -11639,10 +11662,10 @@ import {
 
 // src/react-shell/hooks/review.frame.navigation.ts
 var bindReviewFrameNavigation = ({
+  getCurrentTarget,
   pageTargets,
   reviewPathPrefix,
   targetDocument,
-  targetRef,
   targetWindow,
   onCancelReviewMode,
   onCloseRuler,
@@ -11653,7 +11676,7 @@ var bindReviewFrameNavigation = ({
     const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
     const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
     const currentRouteKey = getTargetRouteKey(
-      targetRef.current,
+      getCurrentTarget(),
       reviewPathPrefix
     );
     if (nextRouteKey === currentRouteKey) return;
@@ -11681,7 +11704,7 @@ var bindReviewFrameNavigation = ({
     );
     const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
     const currentRouteKey = getTargetRouteKey(
-      targetRef.current,
+      getCurrentTarget(),
       reviewPathPrefix
     );
     if (nextRouteKey === currentRouteKey) return;
@@ -12284,8 +12307,6 @@ var useReviewKitLifecycle = ({
   reviewViewportPresets,
   ruler,
   adjustmentLabel,
-  sizeRef,
-  targetRef,
   onApplyPendingRestore,
   onCancelReviewMode,
   onCloseRuler,
@@ -12298,6 +12319,7 @@ var useReviewKitLifecycle = ({
   onSyncShellTarget,
   onSyncTargetViewport
 }) => {
+  const storeApi = useReviewShellStoreApi();
   const destroyReviewKit = useCallback5(() => {
     cleanupTargetRef.current?.();
     cleanupTargetRef.current = null;
@@ -12311,10 +12333,10 @@ var useReviewKitLifecycle = ({
     const targetDocument = iframe?.contentDocument;
     if (!iframe || !targetWindow || !targetDocument) return;
     cleanupTargetRef.current = bindReviewFrameNavigation({
+      getCurrentTarget: () => storeApi.getState().target,
       pageTargets,
       reviewPathPrefix,
       targetDocument,
-      targetRef,
       targetWindow,
       onCancelReviewMode,
       onCloseRuler,
@@ -12363,7 +12385,7 @@ var useReviewKitLifecycle = ({
     onRefreshTargetOverlayState();
     setTargetScrollbarHidden(
       targetDocument,
-      getViewportPresetKind(sizeRef.current) === "mobile"
+      getViewportPresetKind(storeApi.getState().size) === "mobile"
     );
   }, [
     adapter,
@@ -12394,8 +12416,7 @@ var useReviewKitLifecycle = ({
     reviewViewportPresets,
     ruler,
     adjustmentLabel,
-    sizeRef,
-    targetRef
+    storeApi
   ]);
   const reloadReviewKit = useCallback5(async () => {
     await controllerRef.current?.reload();
@@ -12519,16 +12540,15 @@ var useReviewTargetSync = ({
   reviewPathPrefix,
   selectedItemIdRef,
   size,
-  sizeRef,
   source,
   target,
-  targetRef,
   onActiveRouteChange,
   onClearSelectedItem,
   onDraftTargetChange,
   onSyncTargetViewport,
   onTargetChange
 }) => {
+  const storeApi = useReviewShellStoreApi();
   const syncShellTarget = useCallback7(
     (nextTarget) => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
@@ -12536,22 +12556,22 @@ var useReviewTargetSync = ({
         normalizedTarget,
         reviewPathPrefix
       );
-      if (normalizedTarget !== targetRef.current) {
+      if (normalizedTarget !== storeApi.getState().target) {
         onClearSelectedItem();
-        targetRef.current = normalizedTarget;
         onTargetChange(normalizedTarget);
         onDraftTargetChange(normalizedTarget);
         onActiveRouteChange(nextRouteKey);
       }
+      const currentSize = storeApi.getState().size;
       if (selectedItemIdRef.current) {
         updateShellUrlForItem(
           normalizedTarget,
-          sizeRef.current,
+          currentSize,
           selectedItemIdRef.current,
           source
         );
       } else {
-        updateShellUrl(normalizedTarget, sizeRef.current, source);
+        updateShellUrl(normalizedTarget, currentSize, source);
       }
     },
     [
@@ -12561,26 +12581,23 @@ var useReviewTargetSync = ({
       onTargetChange,
       reviewPathPrefix,
       selectedItemIdRef,
-      sizeRef,
       source,
-      targetRef
+      storeApi
     ]
   );
   useEffect8(() => {
-    targetRef.current = target;
     onActiveRouteChange(getTargetRouteKey(target, reviewPathPrefix));
-  }, [onActiveRouteChange, reviewPathPrefix, target, targetRef]);
+  }, [onActiveRouteChange, reviewPathPrefix, target]);
   useEffect8(() => {
-    sizeRef.current = size;
     if (selectedItemIdRef.current) {
       updateShellUrlForItem(
-        targetRef.current,
+        storeApi.getState().target,
         size,
         selectedItemIdRef.current,
         source
       );
     } else {
-      updateShellUrl(targetRef.current, size, source);
+      updateShellUrl(storeApi.getState().target, size, source);
     }
     onSyncTargetViewport();
     setTargetScrollbarHidden(
@@ -12592,9 +12609,8 @@ var useReviewTargetSync = ({
     onSyncTargetViewport,
     selectedItemIdRef,
     size,
-    sizeRef,
     source,
-    targetRef
+    storeApi
   ]);
   return {
     syncShellTarget
@@ -12625,11 +12641,9 @@ var useReviewController = ({
   adjustmentLabel,
   selectedItemIdRef,
   size,
-  sizeRef,
   source,
   target,
   targetOverlayState,
-  targetRef,
   viewportPresets,
   onActiveRouteChange,
   onCancelReviewMode,
@@ -12669,7 +12683,6 @@ var useReviewController = ({
     reviewPathPrefix,
     selectedItemIdRef,
     source,
-    targetRef,
     viewportPresets,
     onActiveRouteChange,
     onDraftTargetChange,
@@ -12683,10 +12696,8 @@ var useReviewController = ({
     reviewPathPrefix,
     selectedItemIdRef,
     size,
-    sizeRef,
     source,
     target,
-    targetRef,
     onActiveRouteChange,
     onClearSelectedItem: clearSelectedItem,
     onDraftTargetChange,
@@ -12715,8 +12726,6 @@ var useReviewController = ({
     reviewViewportPresets,
     ruler,
     adjustmentLabel,
-    sizeRef,
-    targetRef,
     onApplyPendingRestore: applyPendingRestore,
     onCancelReviewMode,
     onCloseRuler,
@@ -13001,12 +13010,12 @@ var copyReviewPrompt = async ({
 };
 var removeReviewItem = async ({
   activeAdapterEntry,
+  getCurrentSize,
+  getCurrentTarget,
   isRemoteSource,
   item,
   selectedItemIdRef,
-  sizeRef,
   source,
-  targetRef,
   onClearSelectedItem,
   onRefreshReviewData,
   onToast
@@ -13017,7 +13026,7 @@ var removeReviewItem = async ({
   await activeAdapterEntry.adapter.remove(item.id);
   if (selectedItemIdRef.current === item.id) {
     onClearSelectedItem();
-    updateShellUrl(targetRef.current, sizeRef.current, source);
+    updateShellUrl(getCurrentTarget(), getCurrentSize(), source);
   }
   await onRefreshReviewData();
   onToast?.("QA deleted");
@@ -13031,15 +13040,14 @@ function useReviewItemActions({
   remoteAdapterEntry,
   reviewPathPrefix,
   selectedItemIdRef,
-  sizeRef,
   source,
-  targetRef,
   viewportPresets,
   onClearSelectedItem,
   onCopiedPromptKeyChange,
   onRefreshReviewData,
   onToast
 }) {
+  const storeApi = useReviewShellStoreApi();
   const [mutatingItemIds, setMutatingItemIds] = useState8(
     () => /* @__PURE__ */ new Set()
   );
@@ -13140,12 +13148,12 @@ function useReviewItemActions({
         item.id,
         () => removeReviewItem({
           activeAdapterEntry,
+          getCurrentSize: () => storeApi.getState().size,
+          getCurrentTarget: () => storeApi.getState().target,
           isRemoteSource,
           item,
           selectedItemIdRef,
-          sizeRef,
           source,
-          targetRef,
           onClearSelectedItem,
           onRefreshReviewData,
           onToast
@@ -15081,27 +15089,6 @@ import {
   useCallback as useCallback16,
   useEffect as useEffect14
 } from "react";
-
-// src/react-shell/store/store.context.tsx
-import {
-  createContext as createContext2,
-  useContext as useContext2
-} from "react";
-import { useStore } from "zustand";
-var ReviewShellStoreContext = createContext2(null);
-var ReviewShellStoreProvider = ReviewShellStoreContext.Provider;
-var useReviewShellStoreApi = () => {
-  const store = useContext2(ReviewShellStoreContext);
-  if (!store) {
-    throw new Error(
-      "useReviewShellStore must be used within a ReviewShell provider"
-    );
-  }
-  return store;
-};
-var useReviewShellStore = (selector) => useStore(useReviewShellStoreApi(), selector);
-
-// src/react-shell/hooks/use.review.side.panel.ts
 var getAvailableSidePanel = (sidePanel, {
   isFigmaImageManagementEnabled,
   isSourceInspectorEnabled
@@ -15530,9 +15517,14 @@ var useReviewShellHotkeys = ({
 
 // src/react-shell/hooks/use.review.shell.state.ts
 import {
-  useMemo as useMemo10,
   useRef as useRef8,
   useState as useState15
+} from "react";
+
+// src/react-shell/store/shell.config.tsx
+import {
+  createContext as createContext3,
+  useContext as useContext3
 } from "react";
 
 // src/react-shell/adapters.ts
@@ -15700,39 +15692,75 @@ function normalizeWriteModes(value) {
   return [];
 }
 
-// src/react-shell/hooks/use.review.shell.state.ts
-var useReviewShellState = ({
+// src/react-shell/store/shell.config.tsx
+var createReviewShellConfig = ({
+  projectId,
+  pages,
   adapters,
-  presets,
-  reviewPathPrefix
+  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
+  reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX
 }) => {
   const viewportPresets = presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
-  const reviewViewportPresets = useMemo10(
-    () => toReviewViewportPresets(viewportPresets),
-    [viewportPresets]
+  const normalizedAdapters = normalizeReviewShellAdapters(adapters);
+  return {
+    projectId,
+    pages,
+    reviewPathPrefix,
+    viewportPresets,
+    reviewViewportPresets: toReviewViewportPresets(viewportPresets),
+    localAdapterEntry: normalizedAdapters.local,
+    remoteAdapterEntry: normalizedAdapters.remote,
+    sourceEntries: normalizedAdapters.sources,
+    showSourceSelect: normalizedAdapters.sources.length > 1
+  };
+};
+var ReviewShellConfigContext = createContext3(null);
+var ReviewShellConfigProvider = ReviewShellConfigContext.Provider;
+var useReviewShellConfig = () => {
+  const config = useContext3(ReviewShellConfigContext);
+  if (!config) {
+    throw new Error(
+      "useReviewShellConfig must be used within a ReviewShell provider"
+    );
+  }
+  return config;
+};
+
+// src/react-shell/hooks/use.review.shell.state.ts
+var useReviewShellState = () => {
+  const {
+    localAdapterEntry,
+    remoteAdapterEntry,
+    reviewViewportPresets,
+    showSourceSelect,
+    sourceEntries,
+    viewportPresets
+  } = useReviewShellConfig();
+  const activeRoute = useReviewShellStore((state) => state.activeRoute);
+  const draftTarget = useReviewShellStore((state) => state.draftTarget);
+  const size = useReviewShellStore((state) => state.size);
+  const source = useReviewShellStore((state) => state.source);
+  const target = useReviewShellStore((state) => state.target);
+  const targetOverlayState = useReviewShellStore(
+    (state) => state.targetOverlayState
   );
-  const normalizedAdapters = useMemo10(
-    () => normalizeReviewShellAdapters(adapters),
-    [adapters]
+  const setActiveRoute = useReviewShellStore((state) => state.setActiveRoute);
+  const setDraftTarget = useReviewShellStore((state) => state.setDraftTarget);
+  const setSize = useReviewShellStore((state) => state.setSize);
+  const setSource = useReviewShellStore((state) => state.setSource);
+  const setTarget = useReviewShellStore((state) => state.setTarget);
+  const setTargetOverlayState = useReviewShellStore(
+    (state) => state.setTargetOverlayState
   );
-  const localAdapterEntry = normalizedAdapters.local;
-  const remoteAdapterEntry = normalizedAdapters.remote;
-  const sourceEntries = normalizedAdapters.sources;
-  const defaultSource = sourceEntries[0]?.label ?? "local";
-  const initialItemId = getInitialItemId();
-  const [source, setSource] = useState15(() => {
-    const initialSource = getInitialSource(remoteAdapterEntry?.label);
-    return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
-  });
   const remoteSource = remoteAdapterEntry?.label ?? null;
   const activeAdapterEntry = sourceEntries.find((entry) => entry.label === source) ?? sourceEntries[0];
   const isRemoteSource = Boolean(
     remoteSource && activeAdapterEntry.label === remoteSource
   );
-  const showSourceSelect = sourceEntries.length > 1;
   const canWriteArea = activeAdapterEntry.writeModes.includes("area");
   const canWriteDom = activeAdapterEntry.writeModes.includes("dom");
   const adapter = activeAdapterEntry.adapter;
+  const initialItemId = getInitialItemId();
   const iframeRef = useRef8(null);
   const frameScrollRef = useRef8(null);
   const controllerRef = useRef8(null);
@@ -15741,31 +15769,13 @@ var useReviewShellState = ({
   const pendingInitialItemIdRef = useRef8(initialItemId);
   const selectedItemIdRef = useRef8(initialItemId);
   const hiddenOverlayItemIdListRef = useRef8([]);
-  const [target, setTarget] = useState15(
-    () => getInitialTarget(reviewPathPrefix)
-  );
-  const [draftTarget, setDraftTarget] = useState15(
-    () => getInitialTarget(reviewPathPrefix)
-  );
-  const [activeRoute, setActiveRoute] = useState15(
-    () => getTargetRouteKey(getInitialTarget(reviewPathPrefix), reviewPathPrefix)
-  );
-  const [size, setSize] = useState15(
-    () => getInitialSize(viewportPresets)
-  );
   const [mode, setMode] = useState15("idle");
-  const [targetOverlayState, setTargetOverlayState] = useState15({
-    grid: false,
-    figma: false
-  });
   const [selectedItemId, setSelectedItemId] = useState15(initialItemId);
   const [isSitemapOpen, setIsSitemapOpen] = useState15(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState15(false);
   const [copyLabel, setCopyLabel] = useState15("Copy URL");
   const [toastMessage, setToastMessage] = useState15("");
   const [copiedPromptKey, setCopiedPromptKey] = useState15(null);
-  const targetRef = useRef8(target);
-  const sizeRef = useRef8(size);
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
   return {
     activeAdapterEntry,
@@ -15807,12 +15817,10 @@ var useReviewShellState = ({
     setTargetOverlayState,
     showSourceSelect,
     size,
-    sizeRef,
     source,
     sourceEntries,
     target,
     targetOverlayState,
-    targetRef,
     toastMessage,
     viewportPresets,
     setToastMessage
@@ -16276,17 +16284,13 @@ function useReviewSourceInspector({
 }
 
 // src/react-shell/hooks/use.review.target.navigation.ts
-import {
-  useCallback as useCallback19
-} from "react";
+import { useCallback as useCallback19 } from "react";
 var useReviewTargetNavigation = ({
   activeAdapterEntry,
   draftTarget,
   reviewPathPrefix,
-  sizeRef,
   source,
   sourceEntries,
-  targetRef,
   viewportPresets,
   onActiveRouteChange,
   onAllQaVisibleChange,
@@ -16301,6 +16305,7 @@ var useReviewTargetNavigation = ({
   onSourceChange,
   onTargetChange
 }) => {
+  const storeApi = useReviewShellStoreApi();
   const getPageTarget = useCallback19(
     (href) => normalizeTarget(href, reviewPathPrefix),
     [reviewPathPrefix]
@@ -16313,13 +16318,14 @@ var useReviewTargetNavigation = ({
       reviewPathPrefix
     );
     const nextSource = parsedInput.source && sourceEntries.some((entry) => entry.label === parsedInput.source) ? parsedInput.source : source;
+    const currentSize = storeApi.getState().size;
     const nextSize = parsedInput.width && parsedInput.height ? findViewportPreset(
       viewportPresets,
       parsedInput.width,
       parsedInput.height
-    ) : sizeRef.current;
+    ) : currentSize;
     const nextAdapter = sourceEntries.find((entry) => entry.label === nextSource) ?? activeAdapterEntry;
-    const isCurrentTarget = targetRef.current === normalizedTarget && source === nextSource && sizeRef.current.width === nextSize.width && sizeRef.current.height === nextSize.height;
+    const isCurrentTarget = storeApi.getState().target === normalizedTarget && source === nextSource && currentSize.width === nextSize.width && currentSize.height === nextSize.height;
     if (parsedInput.itemId) {
       const item = await nextAdapter.adapter.get(parsedInput.itemId);
       if (item) {
@@ -16332,7 +16338,6 @@ var useReviewTargetNavigation = ({
     onClearSelectedItem();
     onAllQaVisibleChange(false);
     onSourceChange(nextSource);
-    targetRef.current = normalizedTarget;
     onActiveRouteChange(normalizedRoute);
     onDraftTargetChange(normalizedTarget);
     onSizeChange(nextSize);
@@ -16352,10 +16357,9 @@ var useReviewTargetNavigation = ({
     onSourceChange,
     onTargetChange,
     reviewPathPrefix,
-    sizeRef,
     source,
     sourceEntries,
-    targetRef,
+    storeApi,
     viewportPresets
   ]);
   const selectPage = useCallback19(
@@ -16367,11 +16371,10 @@ var useReviewTargetNavigation = ({
       );
       onClearSelectedItem();
       onAllQaVisibleChange(false);
-      targetRef.current = normalizedTarget;
       onActiveRouteChange(normalizedRoute);
       onDraftTargetChange(normalizedTarget);
       onTargetChange(normalizedTarget);
-      updateShellUrl(normalizedTarget, sizeRef.current, source);
+      updateShellUrl(normalizedTarget, storeApi.getState().size, source);
       onSitemapOpenChange(false);
     },
     [
@@ -16383,9 +16386,8 @@ var useReviewTargetNavigation = ({
       onSitemapOpenChange,
       onTargetChange,
       reviewPathPrefix,
-      sizeRef,
       source,
-      targetRef
+      storeApi
     ]
   );
   const selectAllQa = useCallback19(() => {
@@ -16394,8 +16396,9 @@ var useReviewTargetNavigation = ({
   }, [onAllQaVisibleChange, onSitemapOpenChange]);
   const clearSelectedReviewItem = useCallback19(() => {
     onClearSelectedItem();
-    updateShellUrl(targetRef.current, sizeRef.current, source);
-  }, [onClearSelectedItem, sizeRef, source, targetRef]);
+    const state = storeApi.getState();
+    updateShellUrl(state.target, state.size, source);
+  }, [onClearSelectedItem, source, storeApi]);
   const changeReviewSource = useCallback19(
     (nextSource) => {
       if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
@@ -16403,16 +16406,16 @@ var useReviewTargetNavigation = ({
       onClearSelectedItem();
       onClearItems();
       onSourceChange(nextSource);
-      updateShellUrl(targetRef.current, sizeRef.current, nextSource);
+      const state = storeApi.getState();
+      updateShellUrl(state.target, state.size, nextSource);
     },
     [
       onCancelReviewMode,
       onClearItems,
       onClearSelectedItem,
       onSourceChange,
-      sizeRef,
       sourceEntries,
-      targetRef
+      storeApi
     ]
   );
   return {
@@ -16438,22 +16441,63 @@ var createSidePanelSlice = (set) => ({
   setIsListVisible: (isListVisible) => set({ isListVisible })
 });
 
+// src/react-shell/store/target.slice.ts
+var getInitialTargetSliceState = (config) => {
+  const defaultSource = config.sourceEntries[0]?.label ?? "local";
+  const initialSource = getInitialSource(config.remoteAdapterEntry?.label);
+  const source = config.sourceEntries.some(
+    (entry) => entry.label === initialSource
+  ) ? initialSource : defaultSource;
+  const target = getInitialTarget(config.reviewPathPrefix);
+  return {
+    activeRoute: getTargetRouteKey(target, config.reviewPathPrefix),
+    draftTarget: target,
+    size: getInitialSize(config.viewportPresets),
+    source,
+    target,
+    targetOverlayState: {
+      grid: false,
+      figma: false
+    }
+  };
+};
+var createTargetSlice = (initialState) => (set) => ({
+  ...initialState,
+  setActiveRoute: (activeRoute) => set({ activeRoute }),
+  setDraftTarget: (draftTarget) => set({ draftTarget }),
+  setSize: (size) => set({ size }),
+  setSource: (source) => set({ source }),
+  setTarget: (target) => set({ target }),
+  setTargetOverlayState: (targetOverlayState) => set({ targetOverlayState })
+});
+
 // src/react-shell/store/create.review.shell.store.ts
-var createReviewShellStore = () => createStore()((...args) => ({
-  ...createSidePanelSlice(...args)
+var createReviewShellStore = (init) => createStore()((...args) => ({
+  ...createSidePanelSlice(...args),
+  ...createTargetSlice(init.target)(...args)
 }));
 
 // src/react-shell/review/shell.tsx
 import { jsx as jsx29, jsxs as jsxs26 } from "react/jsx-runtime";
 var ReviewShell = (props) => {
-  const [store] = useState17(() => createReviewShellStore());
-  return /* @__PURE__ */ jsx29(ReviewShellStoreProvider, { value: store, children: /* @__PURE__ */ jsx29(ReviewShellContent, { ...props }) });
+  const config = useMemo10(
+    () => createReviewShellConfig(props),
+    [
+      props.adapters,
+      props.pages,
+      props.presets,
+      props.projectId,
+      props.reviewPathPrefix
+    ]
+  );
+  const [store] = useState17(
+    () => createReviewShellStore({ target: getInitialTargetSliceState(config) })
+  );
+  return /* @__PURE__ */ jsx29(ReviewShellConfigProvider, { value: config, children: /* @__PURE__ */ jsx29(ReviewShellStoreProvider, { value: store, children: /* @__PURE__ */ jsx29(ReviewShellContent, { ...props }) }) });
 };
 var ReviewShellContent = ({
   projectId,
   pages,
-  adapters,
-  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
   ruler,
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
   adjustmentLabel,
@@ -16503,44 +16547,38 @@ var ReviewShellContent = ({
     setTargetOverlayState,
     showSourceSelect,
     size,
-    sizeRef,
     source,
     sourceEntries,
     target,
     targetOverlayState,
-    targetRef,
     toastMessage,
     viewportPresets,
     setToastMessage
-  } = useReviewShellState({
-    adapters,
-    presets,
-    reviewPathPrefix
-  });
+  } = useReviewShellState();
   const [targetFrameLoadVersion, setTargetFrameLoadVersion] = useState17(0);
   const [isAllQaVisible, setIsAllQaVisible] = useState17(false);
   const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] = useState17(false);
-  const resolvedReviewSourceOptions = useMemo11(
+  const resolvedReviewSourceOptions = useMemo10(
     () => resolveReviewSourceOptions({ sourceInspector, sourceRoot }),
     [sourceInspector, sourceRoot]
   );
   const resolvedSourceInspector = resolvedReviewSourceOptions.sourceInspector;
   const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
-  const sourceOpenOptions = useMemo11(
+  const sourceOpenOptions = useMemo10(
     () => ({
       ...resolvedSourceInspector,
       sourceRoot: resolvedSourceRoot
     }),
     [resolvedSourceInspector, resolvedSourceRoot]
   );
-  const sourceCandidateOptions = useMemo11(
+  const sourceCandidateOptions = useMemo10(
     () => ({
       ignore: resolvedSourceInspector?.ignore,
       includePlacer: resolvedSourceInspector?.includePlacer
     }),
     [resolvedSourceInspector]
   );
-  const sectionOutlineOptions = useMemo11(
+  const sectionOutlineOptions = useMemo10(
     () => ({
       includePlacer: resolvedSourceInspector?.includePlacer,
       ignore: resolvedSourceInspector?.ignore,
@@ -16550,7 +16588,7 @@ var ReviewShellContent = ({
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
   const isSourceTreeHoverOutlineEnabled = resolvedSourceInspector?.hoverOutline !== false;
-  const figmaImageStore = useMemo11(
+  const figmaImageStore = useMemo10(
     () => getReviewFigmaImageStore(figmaImages),
     [figmaImages]
   );
@@ -16611,7 +16649,7 @@ var ReviewShellContent = ({
     targetFrameLoadVersion,
     targetSrc
   });
-  const effectiveHiddenOverlayItemIdList = useMemo11(() => {
+  const effectiveHiddenOverlayItemIdList = useMemo10(() => {
     if (!isCommandKeyPressed) return hiddenOverlayItemIdList;
     const itemIds = new Set(hiddenOverlayItemIdList);
     activeItems.forEach((item) => itemIds.add(item.id));
@@ -16811,11 +16849,9 @@ var ReviewShellContent = ({
     adjustmentLabel,
     selectedItemIdRef,
     size,
-    sizeRef,
     source,
     target,
     targetOverlayState,
-    targetRef,
     viewportPresets,
     onActiveRouteChange: setActiveRoute,
     onCancelReviewMode: cancelReviewMode,
@@ -16894,10 +16930,8 @@ var ReviewShellContent = ({
     activeAdapterEntry,
     draftTarget,
     reviewPathPrefix,
-    sizeRef,
     source,
     sourceEntries,
-    targetRef,
     viewportPresets,
     onActiveRouteChange: setActiveRoute,
     onAllQaVisibleChange: setIsAllQaVisible,
@@ -17037,9 +17071,7 @@ var ReviewShellContent = ({
     remoteAdapterEntry,
     reviewPathPrefix,
     selectedItemIdRef,
-    sizeRef,
     source,
-    targetRef,
     viewportPresets,
     onClearSelectedItem: clearSelectedItem,
     onCopiedPromptKeyChange: setCopiedPromptKey,
@@ -17331,7 +17363,7 @@ var ReviewShellContent = ({
 // src/react-shell/figma/dev-overlay.tsx
 import React, {
   useEffect as useEffect18,
-  useMemo as useMemo12,
+  useMemo as useMemo11,
   useState as useState18
 } from "react";
 import { createRoot } from "react-dom/client";
@@ -17376,11 +17408,11 @@ var FigmaDevOverlayWidget = ({
   const figmaImageStore = getReviewFigmaImageStore(figmaImages);
   const viewport = useCurrentViewport();
   const currentPageUrl = useCurrentPageUrl(pageUrl, reviewPathPrefix);
-  const viewportBoundaries = useMemo12(
+  const viewportBoundaries = useMemo11(
     () => getFigmaDevViewportBoundaries(presets),
     [presets]
   );
-  const matchedViewportMatch = useMemo12(
+  const matchedViewportMatch = useMemo11(
     () => findBoundaryFigmaDevViewportMatch(presets, viewport.width),
     [presets, viewport.width]
   );
@@ -17415,7 +17447,7 @@ var FigmaDevOverlayWidget = ({
   const selectedOverlayState = selectedImage ? imageOverlayStates[selectedImage.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE : DEFAULT_FIGMA_IMAGE_LAYER_STATE;
   const selectedOpacityPercent = selectedImage ? getSnappedOpacityPercent(selectedOverlayState.opacity) : 0;
   const selectedOffsetYDraft = selectedImage ? offsetYDraftByImageId[selectedImage.id] ?? String(selectedOverlayState.offsetY) : "";
-  const figmaImageOverlays = useMemo12(
+  const figmaImageOverlays = useMemo11(
     () => createReviewTargetFigmaImageOverlays({
       imageOverlayStates,
       images

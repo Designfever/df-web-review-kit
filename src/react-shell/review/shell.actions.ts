@@ -95,12 +95,12 @@ interface CopyReviewPromptOptions {
 
 interface RemoveReviewItemOptions {
   activeAdapterEntry: NormalizedReviewShellAdapter;
+  getCurrentSize: () => ReviewShellViewportPreset;
+  getCurrentTarget: () => string;
   isRemoteSource: boolean;
   item: ReviewItem;
   selectedItemIdRef: MutableRefObject<string | null>;
-  sizeRef: MutableRefObject<ReviewShellViewportPreset>;
   source: ReviewSource;
-  targetRef: MutableRefObject<string>;
   onClearSelectedItem: () => void;
   onRefreshReviewData: () => Promise<void>;
   onToast?: (message: string) => void;
@@ -408,12 +408,12 @@ export const copyReviewPrompt = async ({
 
 export const removeReviewItem = async ({
   activeAdapterEntry,
+  getCurrentSize,
+  getCurrentTarget,
   isRemoteSource,
   item,
   selectedItemIdRef,
-  sizeRef,
   source,
-  targetRef,
   onClearSelectedItem,
   onRefreshReviewData,
   onToast,
@@ -429,7 +429,7 @@ export const removeReviewItem = async ({
   await activeAdapterEntry.adapter.remove(item.id);
   if (selectedItemIdRef.current === item.id) {
     onClearSelectedItem();
-    updateShellUrl(targetRef.current, sizeRef.current, source);
+    updateShellUrl(getCurrentTarget(), getCurrentSize(), source);
   }
   await onRefreshReviewData();
   onToast?.('QA deleted');

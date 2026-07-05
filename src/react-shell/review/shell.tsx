@@ -33,14 +33,7 @@ import {
 import {
   DEFAULT_INITIAL_REVIEW_PROMPT,
 } from '../constants';
-import {
-  DEFAULT_REVIEW_PATH_PREFIX,
-  getInitialItemId,
-  getShellUrlForItem,
-} from '../route';
-import {
-  DEFAULT_REVIEW_VIEWPORT_PRESETS,
-} from '../viewport';
+import { DEFAULT_REVIEW_PATH_PREFIX } from '../route';
 import {
   InitialPromptModal,
   PromptModal,
@@ -89,24 +82,41 @@ import {
 } from './shell.actions';
 import { getReviewModeWriteMode } from './shell.helpers';
 import { createReviewShellStore } from '../store/create.review.shell.store';
+import {
+  createReviewShellConfig,
+  ReviewShellConfigProvider,
+} from '../store/shell.config';
+import { getInitialTargetSliceState } from '../store/target.slice';
 import { ReviewShellStoreProvider } from '../store/store.context';
 
 // store 는 인스턴스마다 생성한다 (전역 아님). useState initializer 는 StrictMode 안전.
 export const ReviewShell = (props: ReviewShellProps) => {
-  const [store] = useState(() => createReviewShellStore());
+  const config = useMemo(
+    () => createReviewShellConfig(props),
+    [
+      props.adapters,
+      props.pages,
+      props.presets,
+      props.projectId,
+      props.reviewPathPrefix,
+    ]
+  );
+  const [store] = useState(() =>
+    createReviewShellStore({ target: getInitialTargetSliceState(config) })
+  );
 
   return (
-    <ReviewShellStoreProvider value={store}>
-      <ReviewShellContent {...props} />
-    </ReviewShellStoreProvider>
+    <ReviewShellConfigProvider value={config}>
+      <ReviewShellStoreProvider value={store}>
+        <ReviewShellContent {...props} />
+      </ReviewShellStoreProvider>
+    </ReviewShellConfigProvider>
   );
 };
 
 const ReviewShellContent = ({
   projectId,
   pages,
-  adapters,
-  presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
   ruler,
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
   adjustmentLabel,
@@ -156,20 +166,14 @@ const ReviewShellContent = ({
     setTargetOverlayState,
     showSourceSelect,
     size,
-    sizeRef,
     source,
     sourceEntries,
     target,
     targetOverlayState,
-    targetRef,
     toastMessage,
     viewportPresets,
     setToastMessage,
-  } = useReviewShellState({
-    adapters,
-    presets,
-    reviewPathPrefix,
-  });
+  } = useReviewShellState();
   const [targetFrameLoadVersion, setTargetFrameLoadVersion] = useState(0);
   const [isAllQaVisible, setIsAllQaVisible] = useState(false);
   const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] =
@@ -496,11 +500,9 @@ const ReviewShellContent = ({
     adjustmentLabel,
     selectedItemIdRef,
     size,
-    sizeRef,
     source,
     target,
     targetOverlayState,
-    targetRef,
     viewportPresets,
     onActiveRouteChange: setActiveRoute,
     onCancelReviewMode: cancelReviewMode,
@@ -597,10 +599,8 @@ const ReviewShellContent = ({
     activeAdapterEntry,
     draftTarget,
     reviewPathPrefix,
-    sizeRef,
     source,
     sourceEntries,
-    targetRef,
     viewportPresets,
     onActiveRouteChange: setActiveRoute,
     onAllQaVisibleChange: setIsAllQaVisible,
@@ -757,9 +757,7 @@ const ReviewShellContent = ({
     remoteAdapterEntry,
     reviewPathPrefix,
     selectedItemIdRef,
-    sizeRef,
     source,
-    targetRef,
     viewportPresets,
     onClearSelectedItem: clearSelectedItem,
     onCopiedPromptKeyChange: setCopiedPromptKey,

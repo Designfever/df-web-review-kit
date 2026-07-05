@@ -1,4 +1,3 @@
-import type { MutableRefObject } from 'react';
 import {
   getFrameRouteTarget,
   getTargetRouteKey,
@@ -6,10 +5,10 @@ import {
 } from '../route';
 
 interface BindReviewFrameNavigationOptions {
+  getCurrentTarget: () => string;
   pageTargets: ReadonlySet<string>;
   reviewPathPrefix: string;
   targetDocument: Document;
-  targetRef: MutableRefObject<string>;
   targetWindow: Window;
   onCancelReviewMode: () => boolean;
   onCloseRuler: () => boolean;
@@ -18,10 +17,10 @@ interface BindReviewFrameNavigationOptions {
 }
 
 export const bindReviewFrameNavigation = ({
+  getCurrentTarget,
   pageTargets,
   reviewPathPrefix,
   targetDocument,
-  targetRef,
   targetWindow,
   onCancelReviewMode,
   onCloseRuler,
@@ -32,7 +31,7 @@ export const bindReviewFrameNavigation = ({
     const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
     const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
     const currentRouteKey = getTargetRouteKey(
-      targetRef.current,
+      getCurrentTarget(),
       reviewPathPrefix
     );
     if (nextRouteKey === currentRouteKey) return;
@@ -66,7 +65,7 @@ export const bindReviewFrameNavigation = ({
     );
     const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
     const currentRouteKey = getTargetRouteKey(
-      targetRef.current,
+      getCurrentTarget(),
       reviewPathPrefix
     );
     if (nextRouteKey === currentRouteKey) return;

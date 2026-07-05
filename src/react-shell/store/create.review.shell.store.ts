@@ -5,12 +5,22 @@ import {
   createSidePanelSlice,
   type SidePanelSlice,
 } from './side.panel.slice';
+import {
+  createTargetSlice,
+  type TargetSlice,
+  type TargetSliceState,
+} from './target.slice';
 
-export type ReviewShellState = SidePanelSlice;
+export type ReviewShellState = SidePanelSlice & TargetSlice;
 
-export const createReviewShellStore = () =>
+export interface ReviewShellStoreInit {
+  target: TargetSliceState;
+}
+
+export const createReviewShellStore = (init: ReviewShellStoreInit) =>
   createStore<ReviewShellState>()((...args) => ({
     ...createSidePanelSlice(...args),
+    ...createTargetSlice(init.target)(...args),
   }));
 
 export type ReviewShellStore = ReturnType<typeof createReviewShellStore>;

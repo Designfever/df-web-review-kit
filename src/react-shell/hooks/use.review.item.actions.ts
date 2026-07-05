@@ -17,6 +17,7 @@ import type {
 import type { NormalizedReviewShellAdapter } from '../adapters';
 import { buildReviewItemPrompt } from '../prompt/prompt';
 import { getItemFrameTarget, getShellUrlForItem } from '../route';
+import { useReviewShellStoreApi } from '../store/store.context';
 import type { ReviewShellViewportPreset } from '../types';
 import { getRestoredSize } from '../viewport';
 import {
@@ -35,9 +36,7 @@ export function useReviewItemActions({
   remoteAdapterEntry,
   reviewPathPrefix,
   selectedItemIdRef,
-  sizeRef,
   source,
-  targetRef,
   viewportPresets,
   onClearSelectedItem,
   onCopiedPromptKeyChange,
@@ -50,15 +49,14 @@ export function useReviewItemActions({
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
   reviewPathPrefix: string;
   selectedItemIdRef: MutableRefObject<string | null>;
-  sizeRef: MutableRefObject<ReviewShellViewportPreset>;
   source: ReviewSource;
-  targetRef: MutableRefObject<string>;
   viewportPresets: ReviewShellViewportPreset[];
   onClearSelectedItem: () => void;
   onCopiedPromptKeyChange: Dispatch<SetStateAction<string | null>>;
   onRefreshReviewData: () => Promise<void>;
   onToast: (message: string) => void;
 }) {
+  const storeApi = useReviewShellStoreApi();
   const [mutatingItemIds, setMutatingItemIds] = useState<Set<string>>(
     () => new Set()
   );
@@ -177,12 +175,12 @@ export function useReviewItemActions({
       await withItemMutation(item.id, () =>
         removeReviewItem({
           activeAdapterEntry,
+          getCurrentSize: () => storeApi.getState().size,
+          getCurrentTarget: () => storeApi.getState().target,
           isRemoteSource,
           item,
           selectedItemIdRef,
-          sizeRef,
           source,
-          targetRef,
           onClearSelectedItem,
           onRefreshReviewData,
           onToast,

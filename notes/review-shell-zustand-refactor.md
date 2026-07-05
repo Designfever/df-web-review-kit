@@ -20,6 +20,33 @@ Use Zustand for shell-owned UI and domain state, split by feature.
 
 Do not move every value into the store. Keep imperative integration values in hooks/refs, especially anything tied to iframe DOM, core controller lifecycle, browser event binding, or request cancellation.
 
+### Store Architecture: Context-Scoped, Not Global
+
+This package is an npm library (`@designfever/web-review-kit`) consumed by host apps, not an app. A module-level global store (`create()`) would leak state across multiple `ReviewShell` mounts, across unmount/remount, and between tests.
+
+Use the vanilla `createStore` + Context provider pattern so each `ReviewShell` instance owns its store:
+
+```tsx
+const ReviewShellStoreContext = createContext<ReviewShellStore | null>(null);
+
+// Inside ReviewShell — useState initializer is StrictMode safe.
+const [store] = useState(() => createReviewShellStore({ ... }));
+```
+
+Expose a `useReviewShellStore(selector)` helper that reads the context and throws outside the provider.
+
+### Ref Mirrors Become getState() Reads
+
+`sizeRef`, `targetRef`, `selectedItemIdRef`, and `hiddenOverlayItemIdListRef` are not DOM/imperative refs — they are mirrors of React state kept for imperative reads in callbacks. Once the backing state moves into a slice, callbacks read `store.getState()` directly and these mirror refs are deleted. Removing the state↔ref double bookkeeping is one of the main wins of this refactor.
+
+Genuinely imperative refs (`iframeRef`, `controllerRef`, `cleanupTargetRef`, etc.) stay in hooks as listed below.
+
+### Config Props Access for Containers
+
+Feature containers stop receiving state through props, but they still need prop-derived config: `projectId`, normalized adapters (`activeAdapterEntry`, `sourceEntries`), `pages`, `reviewPathPrefix`, viewport presets.
+
+Decision: pass these through a separate lightweight config context (`ReviewShellConfigContext`) rather than syncing them into the store. They are effectively immutable per mount, so a context avoids prop→store sync effects. Only `source`-dependent derivations (`activeAdapterEntry`, `isRemoteSource`) combine config context with the `target` slice, via a small hook.
+
 ### Store in Zustand
 
 - Current route/source/target/viewport state.
@@ -33,13 +60,15 @@ Do not move every value into the store. Keep imperative integration values in ho
 
 ### Keep Outside Zustand
 
-- `iframeRef`, `frameScrollRef`, `controllerRef`, `targetRef`, `sizeRef`, `selectedItemIdRef`.
+- `iframeRef`, `frameScrollRef`, `controllerRef`.
 - `pendingInitialItemIdRef`, `pendingRestoreRef`, `cleanupTargetRef`.
 - Source inspector interaction refs and direct iframe shortcut binding.
 - Ruler overlay DOM refs and pointer-event wiring.
 - Core controller initialization/reload/restore functions.
 - Request race guards such as incrementing refresh ids.
 - Host adapter instances and store clients, unless they become stable app-level dependencies.
+
+Removed from this list vs the first draft: `targetRef`, `sizeRef`, `selectedItemIdRef`, `hiddenOverlayItemIdListRef` — these are state mirrors, deleted once their state moves into slices (see "Ref Mirrors Become getState() Reads").
 
 ## Proposed Slice Boundaries
 
@@ -82,6 +111,8 @@ Owns feature panel visibility.
 - `toggleSidePanel`
 
 This is low risk and a good first migration because it has little adapter/core coupling.
+
+Note: `getAvailableSidePanel` clamping depends on prop-derived flags (`isFigmaImageManagementEnabled`, `isSourceInspectorEnabled`). Decide in this step where the clamp lives — keep it in a wrapper hook that combines the slice with config context, so the slice itself stays prop-free. localStorage persistence stays in the wrapper hook as well.
 
 ### `settings` slice
 
@@ -142,16 +173,32 @@ Avoid making every tiny component call the store directly. Use store selectors a
 - Never call `useReviewShellStore()` without a selector in React components.
 - Export focused selectors or small feature hooks such as `useQaPanelView()`.
 - Prefer primitive or stable object selector outputs.
+- Never create new arrays/objects inside a selector (`filter`/`map`/spread). Zustand v5 uses `useSyncExternalStore`; an unstable snapshot re-renders every store change and can throw an infinite-loop error. Selectors only pick stored values.
+- Derived computation (filtered lists, counts, scope maps) lives in feature hooks with `useMemo` on top of primitive selections — the current `useReviewShellData` shape moves into container hooks.
 - Use shallow comparison only where a selector must return a grouped object.
-- Keep derived arrays/maps memoized, especially QA counts and filtered item lists.
+
+## Execution Sessions
+
+The migration runs as 3 work sessions, each ending with `pnpm typecheck && pnpm test && pnpm build` green and one commit. Sessions may be executed by different agents/AI sessions — this document is the single source of truth for scope and status. When resuming, check the status below and `git log` to find the current position.
+
+- [ ] **Session A — scaffold + sidePanel** (migration steps 1–2). Establishes the pattern: store directory layout, `createReviewShellStore`, Provider, `useReviewShellStore(selector)` helper, first slice. Later sessions replicate this pattern — do not deviate from it without updating this document.
+- [ ] **Session B — target slice** (migration step 3). Includes `ReviewShellConfigContext` and deleting `targetRef`/`sizeRef`.
+- [ ] **Session C — qa slice + selective rest** (migration steps 4–5). Largest diff: `ReviewQaPanel` container conversion, then selective settings/sourceTree/ruler moves.
+
+Rules for whoever executes a session:
+
+- Read this whole document first; the Direction decisions (Context-scoped store, getState() over mirror refs, config context, selector rules) are binding.
+- Do not start a session until the previous one is committed and its checkbox above is ticked.
+- Tick the checkbox and note the commit hash next to it when a session lands.
+- If a session ends mid-work (context/token limit), commit nothing partial to the branch; leave a short "handoff state" note under the session bullet instead.
 
 ## Migration Order
 
 ### 1. Add store scaffold
 
-- Add Zustand as a runtime dependency.
-- Create `src/react-shell/store/`.
-- Add `use.review.shell.store.ts` or feature-specific store modules.
+- Add Zustand to `dependencies` (not peer — it is ~1KB and host apps should not manage it). Confirm build externals still treat only react/react-dom as external.
+- Create `src/react-shell/store/` with per-slice files from the start (`target.slice.ts`, `qa.slice.ts`, ...) plus `create.review.shell.store.ts` and the provider/`useReviewShellStore(selector)` helper.
+- Keep store modules reachable only from the `./react-shell` entry; nothing under the core entry may import them.
 - Keep the public React shell API unchanged.
 
 Validation:
@@ -169,9 +216,29 @@ Validation:
 - QA panel, Source Tree panel, and Figma Images panel open/toggle behavior.
 - Local persistence behavior, if currently owned by the hook.
 
-### 3. Move QA panel state
+### 3. Move target/viewport shell state
+
+Target moves before QA because the QA derived lists depend on `activeRoute`/`target`/`size`. With `target` in the store first, the QA container reads them through selectors instead of a transitional mix of store and shell props.
+
+- Move target, draft target, source, viewport size, route, and overlay state into `target`.
+- Delete `targetRef` and `sizeRef`; callbacks read `store.getState()` instead.
+- Add the `ReviewShellConfigContext` for prop-derived config here if not done in step 1.
+- Keep core controller write-through actions in existing controller/navigation hooks.
+- Ensure URL sync remains one-way and predictable.
+
+Validation:
+
+- Page switch through sitemap.
+- Manual path entry.
+- Viewport preset change.
+- Target reload.
+- Overlay toggles.
+- Initial item restore from URL.
+
+### 4. Move QA panel state
 
 - Move raw QA state and filters into the `qa` slice.
+- Delete `selectedItemIdRef` and `hiddenOverlayItemIdListRef`; imperative readers use `store.getState()`.
 - Keep adapter mutations in `useReviewItemActions` at first.
 - Convert `ReviewQaPanel` to a feature container plus smaller presentational children.
 - Remove most QA props from `ReviewShell`.
@@ -185,21 +252,6 @@ Validation:
 - Status/assignee mutation.
 - Edit modal.
 - Copy prompt/link/remote issue path.
-
-### 4. Move target/viewport shell state
-
-- Move target, draft target, source, viewport size, route, and overlay state into `target`.
-- Keep core controller write-through actions in existing controller/navigation hooks.
-- Ensure URL sync remains one-way and predictable.
-
-Validation:
-
-- Page switch through sitemap.
-- Manual path entry.
-- Viewport preset change.
-- Target reload.
-- Overlay toggles.
-- Initial item restore from URL.
 
 ### 5. Move settings/source tree/ruler selectively
 
@@ -216,14 +268,17 @@ Validation:
 
 - Over-storing refs and imperative objects would make lifecycle bugs harder to debug.
 - Broad selectors can cause unnecessary re-renders and erase the performance benefit.
+- Selectors that build new arrays/objects per call cause re-render storms or `useSyncExternalStore` loop errors.
 - Moving derived state into the store can create stale duplicated state.
 - Letting leaf components mutate global state directly can make feature behavior hard to trace.
-- Introducing Zustand as a dependency affects the package runtime surface. It should be a direct dependency unless the store is intentionally exposed to host apps.
+- A module-level global store would leak state across multiple `ReviewShell` mounts in host apps — mitigated by the Context-scoped store decision above.
 
 ## Done Criteria
 
 - `ReviewShell` reads as a composition layer, not a state switchboard.
 - Feature panels no longer receive 20+ mixed props from `ReviewShell`.
+- State mirror refs (`targetRef`, `sizeRef`, `selectedItemIdRef`, `hiddenOverlayItemIdListRef`) are deleted, replaced by `store.getState()` reads.
+- The store is Context-scoped; mounting two `ReviewShell` instances does not share state.
 - Core controller and iframe lifecycle remain in hooks/refs.
 - Public package API remains compatible.
 - Typecheck, tests, and build pass:

@@ -57,7 +57,8 @@
     "typecheck:dev": "tsc --noEmit -p tsconfig.dev.json"
   },
   "dependencies": {
-    "html2canvas": "^1.4.1"
+    "html2canvas": "^1.4.1",
+    "zustand": "^5.0.14"
   },
   "peerDependencies": {
     "react": ">=18",

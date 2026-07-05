@@ -160,7 +160,7 @@ interface ReviewShellMountOptions extends ReviewShellProps {
     rootId?: string;
 }
 
-declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, adjustmentLabel, reviewPathPrefix, sourceRoot, sourceInspector, presence, figmaImages, }: ReviewShellProps) => react.JSX.Element;
+declare const ReviewShell: (props: ReviewShellProps) => react.JSX.Element;
 
 interface FigmaDevOverlayMountOptions {
     rootId?: string;

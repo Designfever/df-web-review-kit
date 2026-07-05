@@ -88,8 +88,21 @@ import {
   refreshReviewData as refreshReviewDataAction,
 } from './shell.actions';
 import { getReviewModeWriteMode } from './shell.helpers';
+import { createReviewShellStore } from '../store/create.review.shell.store';
+import { ReviewShellStoreProvider } from '../store/store.context';
 
-export const ReviewShell = ({
+// store 는 인스턴스마다 생성한다 (전역 아님). useState initializer 는 StrictMode 안전.
+export const ReviewShell = (props: ReviewShellProps) => {
+  const [store] = useState(() => createReviewShellStore());
+
+  return (
+    <ReviewShellStoreProvider value={store}>
+      <ReviewShellContent {...props} />
+    </ReviewShellStoreProvider>
+  );
+};
+
+const ReviewShellContent = ({
   projectId,
   pages,
   adapters,

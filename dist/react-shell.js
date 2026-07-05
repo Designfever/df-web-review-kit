@@ -5015,8 +5015,8 @@ function ensureReviewShellStyle() {
 
 // src/react-shell/review/shell.tsx
 import {
-  useCallback as useCallback18,
-  useEffect as useEffect16,
+  useCallback as useCallback20,
+  useEffect as useEffect17,
   useMemo as useMemo11,
   useRef as useRef10,
   useState as useState17
@@ -15076,8 +15076,116 @@ var useReviewSettings = ({
   };
 };
 
+// src/react-shell/hooks/use.review.side.panel.ts
+import {
+  useCallback as useCallback16,
+  useEffect as useEffect14
+} from "react";
+
+// src/react-shell/store/store.context.tsx
+import {
+  createContext as createContext2,
+  useContext as useContext2
+} from "react";
+import { useStore } from "zustand";
+var ReviewShellStoreContext = createContext2(null);
+var ReviewShellStoreProvider = ReviewShellStoreContext.Provider;
+var useReviewShellStoreApi = () => {
+  const store = useContext2(ReviewShellStoreContext);
+  if (!store) {
+    throw new Error(
+      "useReviewShellStore must be used within a ReviewShell provider"
+    );
+  }
+  return store;
+};
+var useReviewShellStore = (selector) => useStore(useReviewShellStoreApi(), selector);
+
+// src/react-shell/hooks/use.review.side.panel.ts
+var getAvailableSidePanel = (sidePanel, {
+  isFigmaImageManagementEnabled,
+  isSourceInspectorEnabled
+}) => {
+  if (sidePanel === "source" && !isSourceInspectorEnabled) return "qa";
+  if (sidePanel === "figma-images" && !isFigmaImageManagementEnabled) {
+    return "qa";
+  }
+  return sidePanel;
+};
+var useReviewSidePanel = ({
+  isFigmaImageManagementEnabled,
+  isSourceInspectorEnabled
+}) => {
+  const storeApi = useReviewShellStoreApi();
+  const rawSidePanel = useReviewShellStore((state) => state.sidePanel);
+  const isListVisible = useReviewShellStore((state) => state.isListVisible);
+  const sidePanel = getAvailableSidePanel(rawSidePanel, {
+    isFigmaImageManagementEnabled,
+    isSourceInspectorEnabled
+  });
+  const isQaPanelVisible = isListVisible && sidePanel === "qa";
+  const isSourceTreePanelVisible = isSourceInspectorEnabled && isListVisible && sidePanel === "source";
+  const isFigmaImagesPanelVisible = isFigmaImageManagementEnabled && isListVisible && sidePanel === "figma-images";
+  useEffect14(() => {
+    const state = storeApi.getState();
+    const availableSidePanel = getAvailableSidePanel(state.sidePanel, {
+      isFigmaImageManagementEnabled,
+      isSourceInspectorEnabled
+    });
+    if (availableSidePanel !== state.sidePanel) {
+      state.setSidePanel(availableSidePanel);
+    }
+  }, [isFigmaImageManagementEnabled, isSourceInspectorEnabled, storeApi]);
+  useEffect14(() => {
+    writeStoredReviewSidePanel(sidePanel);
+  }, [sidePanel]);
+  useEffect14(() => {
+    writeStoredReviewSidePanelVisible(isListVisible);
+  }, [isListVisible]);
+  const openSidePanel = useCallback16(
+    (nextSidePanel) => {
+      const state = storeApi.getState();
+      state.setSidePanel(
+        getAvailableSidePanel(nextSidePanel, {
+          isFigmaImageManagementEnabled,
+          isSourceInspectorEnabled
+        })
+      );
+      state.setIsListVisible(true);
+    },
+    [isFigmaImageManagementEnabled, isSourceInspectorEnabled, storeApi]
+  );
+  const toggleSidePanel = useCallback16(
+    (nextSidePanel) => {
+      const state = storeApi.getState();
+      const currentSidePanel = getAvailableSidePanel(state.sidePanel, {
+        isFigmaImageManagementEnabled,
+        isSourceInspectorEnabled
+      });
+      const availableSidePanel = getAvailableSidePanel(nextSidePanel, {
+        isFigmaImageManagementEnabled,
+        isSourceInspectorEnabled
+      });
+      state.setSidePanel(availableSidePanel);
+      state.setIsListVisible(
+        currentSidePanel === availableSidePanel ? !state.isListVisible : true
+      );
+    },
+    [isFigmaImageManagementEnabled, isSourceInspectorEnabled, storeApi]
+  );
+  return {
+    isFigmaImagesPanelVisible,
+    isListVisible,
+    isQaPanelVisible,
+    isSourceTreePanelVisible,
+    openSidePanel,
+    sidePanel,
+    toggleSidePanel
+  };
+};
+
 // src/react-shell/hooks/use.review.shell.data.ts
-import { useCallback as useCallback16, useMemo as useMemo9, useState as useState14 } from "react";
+import { useCallback as useCallback17, useMemo as useMemo9, useState as useState14 } from "react";
 var SITEMAP_STATUS_DONE = "done";
 var useReviewShellData = ({
   activeRoute,
@@ -15176,7 +15284,7 @@ var useReviewShellData = ({
     });
     return counts;
   }, [scopeFilteredNumberedActiveItems]);
-  const getItemPreset = useCallback16(
+  const getItemPreset = useCallback17(
     (item) => findViewportPreset(
       viewportPresets,
       item.viewport?.width ?? 0,
@@ -15184,11 +15292,11 @@ var useReviewShellData = ({
     ),
     [viewportPresets]
   );
-  const getItemPresetScope = useCallback16(
+  const getItemPresetScope = useCallback17(
     (item) => getViewportPresetKind(getItemPreset(item)),
     [getItemPreset]
   );
-  const getItemPresetColumn = useCallback16(
+  const getItemPresetColumn = useCallback17(
     (item) => {
       const preset = getItemPreset(item);
       const presetIndex = Math.max(0, viewportPresets.indexOf(preset));
@@ -15196,7 +15304,7 @@ var useReviewShellData = ({
     },
     [getItemPreset, viewportPresets]
   );
-  const getItemCountScope = useCallback16(
+  const getItemCountScope = useCallback17(
     (item) => item.scope === "dom" ? "dom" : getItemPresetScope(item),
     [getItemPresetScope]
   );
@@ -15215,7 +15323,7 @@ var useReviewShellData = ({
     return counts;
   }, [activeItems, getItemPresetScope]);
   const currentPresetScope = getViewportPresetKind(size);
-  const setQaStatusFilter = useCallback16((filter) => {
+  const setQaStatusFilter = useCallback17((filter) => {
     setQaStatusFilterState(filter);
     writeStoredReviewQaStatusFilter(filter);
   }, []);
@@ -15302,7 +15410,7 @@ var useReviewShellData = ({
 };
 
 // src/react-shell/hooks/use.review.shell.hotkeys.ts
-import { useEffect as useEffect14 } from "react";
+import { useEffect as useEffect15 } from "react";
 var useReviewShellHotkeys = ({
   isRailHotkeyBlocked,
   isFigmaSettingsOpen,
@@ -15323,7 +15431,7 @@ var useReviewShellHotkeys = ({
   onToggleRuler,
   onToggleTargetOverlay
 }) => {
-  useEffect14(() => {
+  useEffect15(() => {
     if (mode === "idle" && !isRulerVisible && !isInitialPromptOpen && !isSitemapOpen && !isFigmaSettingsOpen) {
       return;
     }
@@ -15367,7 +15475,7 @@ var useReviewShellHotkeys = ({
     onCloseRuler,
     onCloseSitemap
   ]);
-  useEffect14(() => {
+  useEffect15(() => {
     const handleHotkey = (event) => {
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
         return;
@@ -15396,7 +15504,7 @@ var useReviewShellHotkeys = ({
     onToggleRuler,
     onToggleTargetOverlay
   ]);
-  useEffect14(() => {
+  useEffect15(() => {
     const handleRailHotkey = (event) => {
       if (isRailHotkeyBlocked || isEditableEventTarget(event)) return;
       const actions = [
@@ -15612,7 +15720,6 @@ var useReviewShellState = ({
   const sourceEntries = normalizedAdapters.sources;
   const defaultSource = sourceEntries[0]?.label ?? "local";
   const initialItemId = getInitialItemId();
-  const initialSidePanel = getInitialReviewSidePanel();
   const [source, setSource] = useState15(() => {
     const initialSource = getInitialSource(remoteAdapterEntry?.label);
     return sourceEntries.some((entry) => entry.label === initialSource) ? initialSource : defaultSource;
@@ -15652,9 +15759,6 @@ var useReviewShellState = ({
     figma: false
   });
   const [selectedItemId, setSelectedItemId] = useState15(initialItemId);
-  const [isListVisible, setIsListVisible] = useState15(
-    () => Boolean(initialItemId || initialSidePanel) || getStoredReviewSidePanelVisible()
-  );
   const [isSitemapOpen, setIsSitemapOpen] = useState15(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState15(false);
   const [copyLabel, setCopyLabel] = useState15("Copy URL");
@@ -15679,7 +15783,6 @@ var useReviewShellState = ({
     iframeRef,
     isFigmaOverlayAvailable,
     isInitialPromptOpen,
-    isListVisible,
     isRemoteSource,
     isSitemapOpen,
     localAdapterEntry,
@@ -15695,7 +15798,6 @@ var useReviewShellState = ({
     setCopyLabel,
     setDraftTarget,
     setIsInitialPromptOpen,
-    setIsListVisible,
     setIsSitemapOpen,
     setMode,
     setSelectedItemId,
@@ -15718,7 +15820,7 @@ var useReviewShellState = ({
 };
 
 // src/react-shell/hooks/use.review.source.inspector.ts
-import { useCallback as useCallback17, useEffect as useEffect15, useRef as useRef9, useState as useState16 } from "react";
+import { useCallback as useCallback18, useEffect as useEffect16, useRef as useRef9, useState as useState16 } from "react";
 
 // src/react-shell/review/source.shortcut.style.ts
 function createSourceShortcutStyle(optionAttribute, fontOverlayAttribute) {
@@ -15807,11 +15909,11 @@ function useReviewSourceInspector({
   const sourceShortcutCleanupRef = useRef9(null);
   const sourceInspectorInteractionRef = useRef9(false);
   const [sourceInspectorState, setSourceInspectorState] = useState16(null);
-  const clearSourceInspector = useCallback17(() => {
+  const clearSourceInspector = useCallback18(() => {
     sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
-  const getSourceInspectorRect = useCallback17(
+  const getSourceInspectorRect = useCallback18(
     (element) => {
       const frame = iframeRef.current;
       if (!frame) return null;
@@ -15836,7 +15938,7 @@ function useReviewSourceInspector({
     },
     [iframeRef]
   );
-  const getSourceInspectorPanelPosition = useCallback17(
+  const getSourceInspectorPanelPosition = useCallback18(
     (rect) => {
       const margin = 12;
       const gap = 10;
@@ -15862,7 +15964,7 @@ function useReviewSourceInspector({
     },
     []
   );
-  const showSourceInspectorForTarget = useCallback17(
+  const showSourceInspectorForTarget = useCallback18(
     (target, isPinned = false) => {
       const candidates = getSourceCandidates(target, sourceCandidateOptions).map(
         (candidate) => ({
@@ -15898,7 +16000,7 @@ function useReviewSourceInspector({
       sourceOpenOptions
     ]
   );
-  const showSourceOutlineForTarget = useCallback17(
+  const showSourceOutlineForTarget = useCallback18(
     (target) => {
       const firstCandidate = getSourceCandidates(
         target,
@@ -15922,7 +16024,7 @@ function useReviewSourceInspector({
     },
     [getSourceInspectorRect, sourceCandidateOptions]
   );
-  const showSourceOutlineForElement = useCallback17(
+  const showSourceOutlineForElement = useCallback18(
     (element) => {
       if (!isSourceTreeHoverOutlineEnabled) return;
       const rect = getSourceInspectorRect(element);
@@ -15946,10 +16048,10 @@ function useReviewSourceInspector({
     },
     [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
   );
-  const clearSourceOutlineHover = useCallback17(() => {
+  const clearSourceOutlineHover = useCallback18(() => {
     setSourceInspectorState((current) => current?.isPinned ? current : null);
   }, []);
-  const openSourceCandidate = useCallback17(
+  const openSourceCandidate = useCallback18(
     (candidate) => {
       const didOpen = openSourceInEditor(candidate.source, {
         ...sourceOpenOptions,
@@ -15960,11 +16062,11 @@ function useReviewSourceInspector({
     },
     [clearSourceInspector, onToast, sourceOpenOptions]
   );
-  const cleanupSourceOpenShortcut = useCallback17(() => {
+  const cleanupSourceOpenShortcut = useCallback18(() => {
     sourceShortcutCleanupRef.current?.();
     sourceShortcutCleanupRef.current = null;
   }, []);
-  const bindSourceOpenShortcut = useCallback17(() => {
+  const bindSourceOpenShortcut = useCallback18(() => {
     cleanupSourceOpenShortcut();
     let frameDocument = null;
     try {
@@ -16155,10 +16257,10 @@ function useReviewSourceInspector({
     showSourceOutlineForTarget,
     showSourceInspectorForTarget
   ]);
-  useEffect15(() => {
+  useEffect16(() => {
     return cleanupSourceOpenShortcut;
   }, [cleanupSourceOpenShortcut]);
-  useEffect15(() => {
+  useEffect16(() => {
     const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
     return () => window.cancelAnimationFrame(frame);
   }, [bindSourceOpenShortcut, targetSrc]);
@@ -16173,9 +16275,181 @@ function useReviewSourceInspector({
   };
 }
 
+// src/react-shell/hooks/use.review.target.navigation.ts
+import {
+  useCallback as useCallback19
+} from "react";
+var useReviewTargetNavigation = ({
+  activeAdapterEntry,
+  draftTarget,
+  reviewPathPrefix,
+  sizeRef,
+  source,
+  sourceEntries,
+  targetRef,
+  viewportPresets,
+  onActiveRouteChange,
+  onAllQaVisibleChange,
+  onCancelReviewMode,
+  onClearItems,
+  onClearSelectedItem,
+  onDraftTargetChange,
+  onReloadTargetFrame,
+  onRestoreReviewItem,
+  onSitemapOpenChange,
+  onSizeChange,
+  onSourceChange,
+  onTargetChange
+}) => {
+  const getPageTarget = useCallback19(
+    (href) => normalizeTarget(href, reviewPathPrefix),
+    [reviewPathPrefix]
+  );
+  const applyTarget = useCallback19(async () => {
+    const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
+    const normalizedTarget = parsedInput.target;
+    const normalizedRoute = getTargetRouteKey(
+      normalizedTarget,
+      reviewPathPrefix
+    );
+    const nextSource = parsedInput.source && sourceEntries.some((entry) => entry.label === parsedInput.source) ? parsedInput.source : source;
+    const nextSize = parsedInput.width && parsedInput.height ? findViewportPreset(
+      viewportPresets,
+      parsedInput.width,
+      parsedInput.height
+    ) : sizeRef.current;
+    const nextAdapter = sourceEntries.find((entry) => entry.label === nextSource) ?? activeAdapterEntry;
+    const isCurrentTarget = targetRef.current === normalizedTarget && source === nextSource && sizeRef.current.width === nextSize.width && sizeRef.current.height === nextSize.height;
+    if (parsedInput.itemId) {
+      const item = await nextAdapter.adapter.get(parsedInput.itemId);
+      if (item) {
+        onAllQaVisibleChange(false);
+        onSourceChange(nextSource);
+        onRestoreReviewItem(item);
+        return;
+      }
+    }
+    onClearSelectedItem();
+    onAllQaVisibleChange(false);
+    onSourceChange(nextSource);
+    targetRef.current = normalizedTarget;
+    onActiveRouteChange(normalizedRoute);
+    onDraftTargetChange(normalizedTarget);
+    onSizeChange(nextSize);
+    onTargetChange(normalizedTarget);
+    updateShellUrl(normalizedTarget, nextSize, nextSource);
+    if (isCurrentTarget) onReloadTargetFrame();
+  }, [
+    activeAdapterEntry,
+    draftTarget,
+    onActiveRouteChange,
+    onAllQaVisibleChange,
+    onClearSelectedItem,
+    onDraftTargetChange,
+    onReloadTargetFrame,
+    onRestoreReviewItem,
+    onSizeChange,
+    onSourceChange,
+    onTargetChange,
+    reviewPathPrefix,
+    sizeRef,
+    source,
+    sourceEntries,
+    targetRef,
+    viewportPresets
+  ]);
+  const selectPage = useCallback19(
+    (href) => {
+      const normalizedTarget = getPageTarget(href);
+      const normalizedRoute = getTargetRouteKey(
+        normalizedTarget,
+        reviewPathPrefix
+      );
+      onClearSelectedItem();
+      onAllQaVisibleChange(false);
+      targetRef.current = normalizedTarget;
+      onActiveRouteChange(normalizedRoute);
+      onDraftTargetChange(normalizedTarget);
+      onTargetChange(normalizedTarget);
+      updateShellUrl(normalizedTarget, sizeRef.current, source);
+      onSitemapOpenChange(false);
+    },
+    [
+      getPageTarget,
+      onActiveRouteChange,
+      onAllQaVisibleChange,
+      onClearSelectedItem,
+      onDraftTargetChange,
+      onSitemapOpenChange,
+      onTargetChange,
+      reviewPathPrefix,
+      sizeRef,
+      source,
+      targetRef
+    ]
+  );
+  const selectAllQa = useCallback19(() => {
+    onAllQaVisibleChange(true);
+    onSitemapOpenChange(false);
+  }, [onAllQaVisibleChange, onSitemapOpenChange]);
+  const clearSelectedReviewItem = useCallback19(() => {
+    onClearSelectedItem();
+    updateShellUrl(targetRef.current, sizeRef.current, source);
+  }, [onClearSelectedItem, sizeRef, source, targetRef]);
+  const changeReviewSource = useCallback19(
+    (nextSource) => {
+      if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
+      onCancelReviewMode();
+      onClearSelectedItem();
+      onClearItems();
+      onSourceChange(nextSource);
+      updateShellUrl(targetRef.current, sizeRef.current, nextSource);
+    },
+    [
+      onCancelReviewMode,
+      onClearItems,
+      onClearSelectedItem,
+      onSourceChange,
+      sizeRef,
+      sourceEntries,
+      targetRef
+    ]
+  );
+  return {
+    applyTarget,
+    changeReviewSource,
+    clearSelectedReviewItem,
+    getPageTarget,
+    selectAllQa,
+    selectPage
+  };
+};
+
+// src/react-shell/store/create.review.shell.store.ts
+import { createStore } from "zustand";
+
+// src/react-shell/store/side.panel.slice.ts
+var getInitialSidePanel = () => getInitialReviewSidePanel() ?? (getInitialItemId() ? "qa" : getStoredReviewSidePanel());
+var getInitialIsListVisible = () => Boolean(getInitialItemId() || getInitialReviewSidePanel()) || getStoredReviewSidePanelVisible();
+var createSidePanelSlice = (set) => ({
+  sidePanel: getInitialSidePanel(),
+  isListVisible: getInitialIsListVisible(),
+  setSidePanel: (sidePanel) => set({ sidePanel }),
+  setIsListVisible: (isListVisible) => set({ isListVisible })
+});
+
+// src/react-shell/store/create.review.shell.store.ts
+var createReviewShellStore = () => createStore()((...args) => ({
+  ...createSidePanelSlice(...args)
+}));
+
 // src/react-shell/review/shell.tsx
 import { jsx as jsx29, jsxs as jsxs26 } from "react/jsx-runtime";
-var ReviewShell = ({
+var ReviewShell = (props) => {
+  const [store] = useState17(() => createReviewShellStore());
+  return /* @__PURE__ */ jsx29(ReviewShellStoreProvider, { value: store, children: /* @__PURE__ */ jsx29(ReviewShellContent, { ...props }) });
+};
+var ReviewShellContent = ({
   projectId,
   pages,
   adapters,
@@ -16205,7 +16479,6 @@ var ReviewShell = ({
     iframeRef,
     isFigmaOverlayAvailable: isViewportFigmaOverlayAvailable,
     isInitialPromptOpen,
-    isListVisible,
     isRemoteSource,
     isSitemapOpen,
     localAdapterEntry,
@@ -16221,7 +16494,6 @@ var ReviewShell = ({
     setCopyLabel,
     setDraftTarget,
     setIsInitialPromptOpen,
-    setIsListVisible,
     setIsSitemapOpen,
     setMode,
     setSelectedItemId,
@@ -16278,35 +16550,24 @@ var ReviewShell = ({
   );
   const isSourceInspectorEnabled = resolvedSourceInspector?.enabled !== false;
   const isSourceTreeHoverOutlineEnabled = resolvedSourceInspector?.hoverOutline !== false;
-  const [sidePanel, setSidePanel] = useState17(() => {
-    const initialSidePanel = getInitialReviewSidePanel();
-    if (initialSidePanel) return initialSidePanel;
-    if (getInitialItemId()) return "qa";
-    return isSourceInspectorEnabled ? getStoredReviewSidePanel() : "qa";
-  });
   const figmaImageStore = useMemo11(
     () => getReviewFigmaImageStore(figmaImages),
     [figmaImages]
   );
   const isFigmaImageManagementEnabled = Boolean(figmaImageStore);
   const figmaImageFormat = figmaImages?.imageFormat ?? DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT;
-  const isQaPanelVisible = isListVisible && sidePanel === "qa";
-  const isSourceTreePanelVisible = isSourceInspectorEnabled && isListVisible && sidePanel === "source";
-  const isFigmaImagesPanelVisible = isFigmaImageManagementEnabled && isListVisible && sidePanel === "figma-images";
-  useEffect16(() => {
-    if (isSourceInspectorEnabled || sidePanel !== "source") return;
-    setSidePanel("qa");
-  }, [isSourceInspectorEnabled, sidePanel]);
-  useEffect16(() => {
-    if (isFigmaImageManagementEnabled || sidePanel !== "figma-images") return;
-    setSidePanel("qa");
-  }, [isFigmaImageManagementEnabled, sidePanel]);
-  useEffect16(() => {
-    writeStoredReviewSidePanel(sidePanel);
-  }, [sidePanel]);
-  useEffect16(() => {
-    writeStoredReviewSidePanelVisible(isListVisible);
-  }, [isListVisible]);
+  const {
+    isFigmaImagesPanelVisible,
+    isListVisible,
+    isQaPanelVisible,
+    isSourceTreePanelVisible,
+    openSidePanel,
+    sidePanel,
+    toggleSidePanel
+  } = useReviewSidePanel({
+    isFigmaImageManagementEnabled,
+    isSourceInspectorEnabled
+  });
   const {
     activeItems,
     activeRemainingItemCount,
@@ -16387,7 +16648,7 @@ var ReviewShell = ({
   const targetFigmaConfig = targetFigmaState?.targetSrc === targetSrc ? targetFigmaState.config : null;
   const isFigmaOverlayAvailable = !isFigmaImageManagementEnabled && isViewportFigmaOverlayAvailable && Boolean(targetFigmaConfig);
   const initialPromptText = initialPrompt.trim();
-  const refreshItems = useCallback18(
+  const refreshItems = useCallback20(
     async () => {
       const requestId = ++itemRefreshIdRef.current;
       setIsItemsLoading(true);
@@ -16415,7 +16676,7 @@ var ReviewShell = ({
       setItems
     ]
   );
-  const refreshSitemapItems = useCallback18(
+  const refreshSitemapItems = useCallback20(
     () => refreshSitemapReviewItems({
       localAdapterEntry,
       projectId,
@@ -16424,27 +16685,27 @@ var ReviewShell = ({
     }),
     [localAdapterEntry, projectId, remoteAdapterEntry]
   );
-  const cancelReviewMode = useCallback18(() => {
+  const cancelReviewMode = useCallback20(() => {
     const controller = controllerRef.current;
     if (!controller || controller.getMode() === "idle") return false;
     controller.setMode("idle");
     setMode(controller.getMode());
     return true;
   }, []);
-  const closePromptModal = useCallback18(() => {
+  const closePromptModal = useCallback20(() => {
     setIsInitialPromptOpen(false);
   }, []);
-  const closeSitemap = useCallback18(() => {
+  const closeSitemap = useCallback20(() => {
     setIsSitemapOpen(false);
   }, []);
-  const reloadTargetFrame = useCallback18(() => {
+  const reloadTargetFrame = useCallback20(() => {
     try {
       iframeRef.current?.contentWindow?.location.reload();
     } catch {
       return;
     }
   }, []);
-  const showToast = useCallback18(
+  const showToast = useCallback20(
     (message) => {
       setToastMessage(message);
       window.setTimeout(() => {
@@ -16494,7 +16755,7 @@ var ReviewShell = ({
     size,
     source
   });
-  const closeRulerPanels = useCallback18(() => {
+  const closeRulerPanels = useCallback20(() => {
     closeSitemap();
     closeFigmaSettings();
   }, [closeFigmaSettings, closeSitemap]);
@@ -16567,7 +16828,7 @@ var ReviewShell = ({
     onTargetChange: setTarget,
     onTargetOverlayStateChange: setTargetOverlayState
   });
-  useEffect16(() => {
+  useEffect17(() => {
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
     const item = items.find(
@@ -16576,14 +16837,14 @@ var ReviewShell = ({
     if (!item) return;
     restoreReviewItem(item);
   }, [items, pendingInitialItemIdRef, restoreReviewItem]);
-  const refreshReviewData2 = useCallback18(() => {
+  const refreshReviewData2 = useCallback20(() => {
     return refreshReviewData({
       onRefreshItems: refreshItems,
       onRefreshSitemapItems: refreshSitemapItems,
       onReloadReviewKit: reloadReviewKit
     });
   }, [refreshItems, refreshSitemapItems, reloadReviewKit]);
-  const toggleItemOverlayVisibility = useCallback18((itemId) => {
+  const toggleItemOverlayVisibility = useCallback20((itemId) => {
     setHiddenOverlayItemIds((currentHiddenOverlayItemIds) => {
       const nextHiddenItemIds = new Set(currentHiddenOverlayItemIds);
       if (nextHiddenItemIds.has(itemId)) {
@@ -16594,17 +16855,17 @@ var ReviewShell = ({
       return nextHiddenItemIds;
     });
   }, []);
-  useEffect16(() => {
+  useEffect17(() => {
     void refreshItems();
   }, [refreshItems]);
-  useEffect16(() => {
+  useEffect17(() => {
     void refreshSitemapItems();
   }, [refreshSitemapItems]);
-  useEffect16(() => {
+  useEffect17(() => {
     if (!isSitemapOpen) return;
     void refreshSitemapItems();
   }, [isSitemapOpen, refreshSitemapItems]);
-  useEffect16(() => {
+  useEffect17(() => {
     const frameScroll = frameScrollRef.current;
     if (!frameScroll) return void 0;
     const centerFrameScroll = () => {
@@ -16622,80 +16883,54 @@ var ReviewShell = ({
       window.clearTimeout(transitionTimeout);
     };
   }, [isListVisible, size.height, size.width, syncTargetViewport, targetSrc]);
-  const applyTarget = async () => {
-    const parsedInput = parseReviewAddressInput(draftTarget, reviewPathPrefix);
-    const normalizedTarget = parsedInput.target;
-    const normalizedRoute = getTargetRouteKey(
-      normalizedTarget,
-      reviewPathPrefix
-    );
-    const nextSource = parsedInput.source && sourceEntries.some((entry) => entry.label === parsedInput.source) ? parsedInput.source : source;
-    const nextSize = parsedInput.width && parsedInput.height ? findViewportPreset(
-      viewportPresets,
-      parsedInput.width,
-      parsedInput.height
-    ) : sizeRef.current;
-    const nextAdapter = sourceEntries.find((entry) => entry.label === nextSource) ?? activeAdapterEntry;
-    const isCurrentTarget = targetRef.current === normalizedTarget && source === nextSource && sizeRef.current.width === nextSize.width && sizeRef.current.height === nextSize.height;
-    if (parsedInput.itemId) {
-      const item = await nextAdapter.adapter.get(parsedInput.itemId);
-      if (item) {
-        setIsAllQaVisible(false);
-        setSource(nextSource);
-        restoreReviewItem(item);
-        return;
-      }
-    }
-    clearSelectedItem();
-    setIsAllQaVisible(false);
-    setSource(nextSource);
-    targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedRoute);
-    setDraftTarget(normalizedTarget);
-    setSize(nextSize);
-    setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, nextSize, nextSource);
-    if (isCurrentTarget) reloadTargetFrame();
-  };
-  const selectPage = (href) => {
-    const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
-    const normalizedRoute = getTargetRouteKey(
-      normalizedTarget,
-      reviewPathPrefix
-    );
-    clearSelectedItem();
-    setIsAllQaVisible(false);
-    targetRef.current = normalizedTarget;
-    setActiveRoute(normalizedRoute);
-    setDraftTarget(normalizedTarget);
-    setTarget(normalizedTarget);
-    updateShellUrl(normalizedTarget, sizeRef.current, source);
-    setIsSitemapOpen(false);
-  };
-  const selectAllQa = () => {
-    setIsAllQaVisible(true);
-    setIsSitemapOpen(false);
-  };
+  const {
+    applyTarget,
+    changeReviewSource,
+    clearSelectedReviewItem,
+    getPageTarget,
+    selectAllQa,
+    selectPage
+  } = useReviewTargetNavigation({
+    activeAdapterEntry,
+    draftTarget,
+    reviewPathPrefix,
+    sizeRef,
+    source,
+    sourceEntries,
+    targetRef,
+    viewportPresets,
+    onActiveRouteChange: setActiveRoute,
+    onAllQaVisibleChange: setIsAllQaVisible,
+    onCancelReviewMode: cancelReviewMode,
+    onClearItems: () => setItems([]),
+    onClearSelectedItem: clearSelectedItem,
+    onDraftTargetChange: setDraftTarget,
+    onReloadTargetFrame: reloadTargetFrame,
+    onRestoreReviewItem: restoreReviewItem,
+    onSitemapOpenChange: setIsSitemapOpen,
+    onSizeChange: setSize,
+    onSourceChange: setSource,
+    onTargetChange: setTarget
+  });
   const setReviewMode = (nextMode) => {
     const writeMode = getReviewModeWriteMode(nextMode);
     if (writeMode && !activeAdapterEntry.writeModes.includes(writeMode)) return;
     closeRuler();
     if (writeMode && mode !== nextMode) {
-      setSidePanel("qa");
-      setIsListVisible(true);
+      openSidePanel("qa");
     }
     setControllerReviewMode(nextMode);
   };
   const copyCurrentUrl = () => copyCurrentReviewUrl({
     onCopyLabelChange: setCopyLabel
   });
-  const refreshTargetFigmaConfig = useCallback18(() => {
+  const refreshTargetFigmaConfig = useCallback20(() => {
     const config = getTargetFigmaFrameConfig(
       iframeRef.current?.contentWindow
     );
     setTargetFigmaState(config ? { targetSrc, config } : null);
   }, [iframeRef, targetSrc]);
-  useEffect16(() => {
+  useEffect17(() => {
     const targetDocument = iframeRef.current?.contentDocument;
     setTargetFigmaOverlayLocked(targetDocument, mode === "element");
     return () => {
@@ -16720,10 +16955,9 @@ var ReviewShell = ({
     onCancelReviewMode: cancelReviewMode,
     onToast: showToast
   });
-  const showQaPanel = useCallback18(() => {
-    setSidePanel("qa");
-    setIsListVisible(true);
-  }, [setIsListVisible]);
+  const showQaPanel = useCallback20(() => {
+    openSidePanel("qa");
+  }, [openSidePanel]);
   const {
     collapsedSectionOutlineIds,
     filteredSectionOutline,
@@ -16758,39 +16992,28 @@ var ReviewShell = ({
     onShowQaPanel: showQaPanel,
     onToast: showToast
   });
-  const toggleQaPanel = useCallback18(() => {
-    setSidePanel("qa");
-    setIsListVisible((current) => sidePanel === "qa" ? !current : true);
-  }, [setIsListVisible, sidePanel]);
-  const toggleSourceTreePanel = useCallback18(() => {
+  const toggleQaPanel = useCallback20(() => {
+    toggleSidePanel("qa");
+  }, [toggleSidePanel]);
+  const toggleSourceTreePanel = useCallback20(() => {
     if (!isSourceInspectorEnabled) return;
-    if (sidePanel === "source" && isListVisible) {
-      setIsListVisible(false);
-      return;
+    if (sidePanel !== "source" || !isListVisible) {
+      refreshCurrentSectionOutline(true);
     }
-    setSidePanel("source");
-    refreshCurrentSectionOutline(true);
-    setIsListVisible(true);
+    toggleSidePanel("source");
   }, [
     isListVisible,
     isSourceInspectorEnabled,
     refreshCurrentSectionOutline,
-    setIsListVisible,
-    sidePanel
+    sidePanel,
+    toggleSidePanel
   ]);
-  const toggleFigmaImagesPanel = useCallback18(() => {
+  const toggleFigmaImagesPanel = useCallback20(() => {
     if (!isFigmaImageManagementEnabled) return;
-    if (sidePanel === "figma-images" && isListVisible) {
-      setIsListVisible(false);
-      return;
-    }
-    setSidePanel("figma-images");
-    setIsListVisible(true);
+    toggleSidePanel("figma-images");
   }, [
     isFigmaImageManagementEnabled,
-    isListVisible,
-    setIsListVisible,
-    sidePanel
+    toggleSidePanel
   ]);
   const {
     changeItemAssignee,
@@ -16843,7 +17066,7 @@ var ReviewShell = ({
     onToggleRuler: toggleRuler,
     onToggleTargetOverlay: toggleTargetOverlay
   });
-  const loadTargetFrame = useCallback18(() => {
+  const loadTargetFrame = useCallback20(() => {
     setTargetFrameLoadVersion((currentVersion) => currentVersion + 1);
     initReviewKit();
     refreshTargetFigmaConfig();
@@ -16864,18 +17087,6 @@ var ReviewShell = ({
     refreshTargetFigmaConfig,
     refreshCurrentSectionOutline
   ]);
-  const clearSelectedReviewItem = useCallback18(() => {
-    clearSelectedItem();
-    updateShellUrl(targetRef.current, sizeRef.current, source);
-  }, [clearSelectedItem, sizeRef, source, targetRef]);
-  const changeReviewSource = (nextSource) => {
-    if (!sourceEntries.some((entry) => entry.label === nextSource)) return;
-    cancelReviewMode();
-    clearSelectedItem();
-    setItems([]);
-    setSource(nextSource);
-    updateShellUrl(targetRef.current, sizeRef.current, nextSource);
-  };
   const figmaImageOverlays = createReviewTargetFigmaImageOverlays({
     imageOverlayStates: figmaImageOverlayStates,
     images: figmaImageList
@@ -16918,7 +17129,7 @@ var ReviewShell = ({
             isAllQaVisible,
             pageQaCounts,
             pagePresenceUsers,
-            getPageTarget: (href) => normalizeTarget(href, reviewPathPrefix),
+            getPageTarget,
             onClose: () => setIsSitemapOpen(false),
             onSelectAllQa: selectAllQa,
             onSelectPage: selectPage
@@ -17119,7 +17330,7 @@ var ReviewShell = ({
 
 // src/react-shell/figma/dev-overlay.tsx
 import React, {
-  useEffect as useEffect17,
+  useEffect as useEffect18,
   useMemo as useMemo12,
   useState as useState18
 } from "react";
@@ -17211,7 +17422,7 @@ var FigmaDevOverlayWidget = ({
     }),
     [imageOverlayStates, images]
   );
-  useEffect17(() => {
+  useEffect18(() => {
     if (!isWidgetVisible || !matchedViewport) {
       removeTargetFigmaImageOverlays(document);
       return;
@@ -17228,13 +17439,13 @@ var FigmaDevOverlayWidget = ({
     matchedViewport,
     setImageOverlayOffsetY
   ]);
-  useEffect17(
+  useEffect18(
     () => () => {
       removeTargetFigmaImageOverlays(document);
     },
     []
   );
-  useEffect17(() => {
+  useEffect18(() => {
     const handleKeyDown = (event) => {
       if (!isHotkey(event, "Shift+F") || isEditableFigmaDevOverlayEventTarget(event)) {
         return;
@@ -17384,7 +17595,7 @@ function useCurrentPageUrl(pageUrl, reviewPathPrefix) {
   const [currentPageUrl, setCurrentPageUrl] = useState18(
     () => getFigmaDevOverlayPageUrl(pageUrl, reviewPathPrefix)
   );
-  useEffect17(() => {
+  useEffect18(() => {
     const updatePageUrl = () => {
       setCurrentPageUrl(getFigmaDevOverlayPageUrl(pageUrl, reviewPathPrefix));
     };
@@ -17406,7 +17617,7 @@ function isEditableFigmaDevOverlayEventTarget(event) {
 }
 function useCurrentViewport() {
   const [viewport, setViewport] = useState18(getCurrentViewportSize);
-  useEffect17(() => {
+  useEffect18(() => {
     const updateViewport = () => setViewport(getCurrentViewportSize());
     window.addEventListener("resize", updateViewport);
     window.addEventListener("orientationchange", updateViewport);

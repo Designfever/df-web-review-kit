@@ -1,14 +1,7 @@
-import {
-  useRef,
-  useState,
-} from 'react';
-import type {
-  ReviewItem,
-  ReviewMode,
-  WebReviewKitController,
-} from '../../types';
-import { getInitialItemId } from '../route';
+import { useState } from 'react';
+import type { ReviewMode } from '../../types';
 import { useReviewShellConfig } from '../store/shell.config';
+import { useReviewShellRefs } from '../store/shell.refs';
 import { useReviewShellStore } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
 import { getIsFigmaOverlayAvailable } from '../viewport';
@@ -55,18 +48,18 @@ export const useReviewShellState = () => {
     (state) => state.setCopiedPromptKey
   );
 
-  const initialItemId = getInitialItemId();
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const frameScrollRef = useRef<HTMLDivElement | null>(null);
-  const controllerRef = useRef<WebReviewKitController | null>(null);
-  const cleanupTargetRef = useRef<(() => void) | null>(null);
-  const pendingRestoreRef = useRef<ReviewItem | null>(null);
-  const pendingInitialItemIdRef = useRef(initialItemId);
+  const {
+    cleanupTargetRef,
+    controllerRef,
+    frameScrollRef,
+    iframeRef,
+    pendingInitialItemIdRef,
+    pendingRestoreRef,
+  } = useReviewShellRefs();
 
   const [mode, setMode] = useState<ReviewMode>('idle');
   const [isSitemapOpen, setIsSitemapOpen] = useState(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState(false);
-  const [copyLabel, setCopyLabel] = useState('Copy URL');
   const [toastMessage, setToastMessage] = useState('');
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
 
@@ -79,7 +72,6 @@ export const useReviewShellState = () => {
     cleanupTargetRef,
     controllerRef,
     copiedPromptKey,
-    copyLabel,
     draftTarget,
     frameScrollRef,
     iframeRef,
@@ -95,7 +87,6 @@ export const useReviewShellState = () => {
     reviewViewportPresets,
     setActiveRoute,
     setCopiedPromptKey,
-    setCopyLabel,
     setDraftTarget,
     setIsInitialPromptOpen,
     setIsSitemapOpen,

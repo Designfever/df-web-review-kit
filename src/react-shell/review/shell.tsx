@@ -1,15 +1,16 @@
-// 리뷰 셸의 최상위 컴포넌트. 상태 덩어리는 hooks/ 로 분리되어 있고
-// 여기서는 훅들을 조합해 topbar / 패널 / target frame / 오버레이를 배치한다.
+// 리뷰 셸의 최상위 컴포넌트. 상태는 store(slice)/config/refs context 로,
+// feature UI 는 container 로 분리되어 있고 여기서는 조합만 담당한다.
 //
-// 분리된 훅 지도:
-// - use.review.shell.state      셸 전역 상태 (target/size/source/mode 등)
-// - use.review.shell.data       아이템 목록/필터/카운트 파생 데이터
-// - use.review.side.panel       사이드 패널 선택/열림 상태
+// 구조 지도:
+// - store/                      zustand slice (sidePanel/target/qa) + config/refs context
+// - qa/panel.container          QA 패널 (아이템 목록/액션/수정 모달)
+// - review/section.outline.container  Source Tree 패널
+// - topbar.container            주소/뷰포트/복사/오버레이 토글 바
+// - use.review.shell.state      과도기 상태 레이어 (mode/모달 로컬 상태 + store 조합)
+// - use.review.shell.data       셸 공유 파생 데이터 (sitemap/topbar 카운트 등)
 // - use.review.target.navigation target/source/page 이동 액션
 // - use.review.command.key      ⌘ 누르는 동안 오버레이 숨김
 // - use.review.source.inspector 소스 인스펙터 + Alt 단축키 바인딩
-// - use.review.section.outline  Source Tree(컴포넌트 아웃라인) 패널
-// - use.review.item.actions     QA 아이템 mutation/복사 액션
 // - use.review.controller       코어 리뷰킷 컨트롤러 연결
 import {
   useCallback,
@@ -52,19 +53,18 @@ import type {
   SourceOpenOptions,
 } from '../source.open';
 import type { GetSectionOutlineOptions } from '../section.outline';
-import { SectionOutlinePanel } from './section.outline.panel';
+import { SectionOutlineContainer } from './section.outline.container';
 import { SourceInspectorOverlay } from './source.inspector.overlay';
 import { ReviewSideRail } from './side.rail';
 import { ReviewTargetFrame } from '../target/frame';
 import { createReviewTargetFigmaImageOverlays } from '../target/figma.image.overlay';
 import { setTargetFigmaOverlayLocked } from '../target/target';
-import { ReviewTopbar } from '../topbar';
+import { TopbarContainer } from '../topbar.container';
 import { useReviewCommandKey } from '../hooks/use.review.command.key';
 import { useReviewController } from '../hooks/use.review.controller';
 import { useReviewPresence } from '../hooks/use.review.presence';
 import { useReviewRuler } from '../hooks/use.review.ruler';
 import { useReviewFigmaImages } from '../hooks/use.review.figma.images';
-import { useReviewSectionOutline } from '../hooks/use.review.section.outline';
 import { useReviewSettings } from '../hooks/use.review.settings';
 import { useReviewSidePanel } from '../hooks/use.review.side.panel';
 import { useReviewShellData } from '../hooks/use.review.shell.data';
@@ -73,7 +73,6 @@ import { useReviewShellState } from '../hooks/use.review.shell.state';
 import { useReviewSourceInspector } from '../hooks/use.review.source.inspector';
 import { useReviewTargetNavigation } from '../hooks/use.review.target.navigation';
 import {
-  copyCurrentReviewUrl,
   copyReviewPrompt,
   refreshReviewItems,
   refreshSitemapReviewItems,
@@ -85,6 +84,10 @@ import {
   createReviewShellConfig,
   ReviewShellConfigProvider,
 } from '../store/shell.config';
+import {
+  createReviewShellRefs,
+  ReviewShellRefsProvider,
+} from '../store/shell.refs';
 import { getInitialTargetSliceState } from '../store/target.slice';
 import {
   ReviewShellStoreProvider,
@@ -107,11 +110,14 @@ export const ReviewShell = (props: ReviewShellProps) => {
   const [store] = useState(() =>
     createReviewShellStore({ target: getInitialTargetSliceState(config) })
   );
+  const [refs] = useState(createReviewShellRefs);
 
   return (
     <ReviewShellConfigProvider value={config}>
       <ReviewShellStoreProvider value={store}>
-        <ReviewShellContent {...props} />
+        <ReviewShellRefsProvider value={refs}>
+          <ReviewShellContent {...props} />
+        </ReviewShellRefsProvider>
       </ReviewShellStoreProvider>
     </ReviewShellConfigProvider>
   );
@@ -138,7 +144,6 @@ const ReviewShellContent = ({
     cleanupTargetRef,
     controllerRef,
     copiedPromptKey,
-    copyLabel,
     draftTarget,
     frameScrollRef,
     iframeRef,
@@ -154,7 +159,6 @@ const ReviewShellContent = ({
     reviewViewportPresets,
     setActiveRoute,
     setCopiedPromptKey,
-    setCopyLabel,
     setDraftTarget,
     setIsInitialPromptOpen,
     setIsSitemapOpen,
@@ -231,7 +235,6 @@ const ReviewShellContent = ({
     isQaPanelVisible,
     isSourceTreePanelVisible,
     openSidePanel,
-    sidePanel,
     toggleSidePanel,
   } = useReviewSidePanel({
     isFigmaImageManagementEnabled,
@@ -592,11 +595,6 @@ const ReviewShellContent = ({
     setControllerReviewMode(nextMode);
   };
 
-  const copyCurrentUrl = () =>
-    copyCurrentReviewUrl({
-      onCopyLabelChange: setCopyLabel,
-    });
-
   const refreshTargetFigmaConfig = useCallback(() => {
     const config = getTargetFigmaFrameConfig(
       iframeRef.current?.contentWindow
@@ -636,41 +634,6 @@ const ReviewShellContent = ({
     openSidePanel('qa');
   }, [openSidePanel]);
 
-  const {
-    collapsedSectionOutlineIds,
-    filteredSectionOutline,
-    filteredSectionOutlineCount,
-    isSectionOutlineFiltering,
-    openSectionData,
-    openSectionSource,
-    openSectionUsageSource,
-    refreshCurrentSectionOutline,
-    scrollToSection,
-    sectionOutline,
-    sectionOutlineFilter,
-    sectionOutlineMetaVisibility,
-    sectionOutlineTotalCount,
-    startSectionDomReview,
-    toggleSectionOutlineEntry,
-    updateSectionOutlineFilter,
-    updateSectionOutlineMetaVisibility,
-  } = useReviewSectionOutline({
-    canWriteDom,
-    controllerRef,
-    frameScrollRef,
-    iframeRef,
-    isPanelVisible: isSourceTreePanelVisible,
-    sectionOutlineOptions,
-    sourceOpenOptions,
-    targetFrameLoadVersion,
-    targetSrc,
-    onClearSourceInspector: clearSourceInspector,
-    onInitReviewKit: initReviewKit,
-    onModeChange: setMode,
-    onShowQaPanel: showQaPanel,
-    onToast: showToast,
-  });
-
   const toggleQaPanel = useCallback(() => {
     toggleSidePanel('qa');
   }, [toggleSidePanel]);
@@ -678,18 +641,8 @@ const ReviewShellContent = ({
   const toggleSourceTreePanel = useCallback(() => {
     if (!isSourceInspectorEnabled) return;
 
-    if (sidePanel !== 'source' || !isListVisible) {
-      refreshCurrentSectionOutline(true);
-    }
-
     toggleSidePanel('source');
-  }, [
-    isListVisible,
-    isSourceInspectorEnabled,
-    refreshCurrentSectionOutline,
-    sidePanel,
-    toggleSidePanel,
-  ]);
+  }, [isSourceInspectorEnabled, toggleSidePanel]);
 
   const toggleFigmaImagesPanel = useCallback(() => {
     if (!isFigmaImageManagementEnabled) return;
@@ -737,7 +690,8 @@ const ReviewShellContent = ({
     onToggleTargetOverlay: toggleTargetOverlay,
   });
 
-  /** target iframe 로드 완료 시 리뷰킷과 부가 기능을 다시 연결한다. */
+  /** target iframe 로드 완료 시 리뷰킷과 부가 기능을 다시 연결한다.
+      Source Tree 갱신은 아웃라인 훅이 targetFrameLoadVersion 을 보고 스스로 한다. */
   const loadTargetFrame = useCallback(() => {
     setTargetFrameLoadVersion((currentVersion) => currentVersion + 1);
     initReviewKit();
@@ -747,17 +701,12 @@ const ReviewShellContent = ({
       mode === 'element'
     );
     bindSourceOpenShortcut();
-    if (isSourceTreePanelVisible) {
-      refreshCurrentSectionOutline(true);
-    }
   }, [
     bindSourceOpenShortcut,
     iframeRef,
     initReviewKit,
-    isSourceTreePanelVisible,
     mode,
     refreshTargetFigmaConfig,
-    refreshCurrentSectionOutline,
   ]);
 
   const figmaImageOverlays = createReviewTargetFigmaImageOverlays({
@@ -771,15 +720,10 @@ const ReviewShellContent = ({
         isListVisible ? ' is-list-visible' : ''
       }`}
     >
-      <ReviewTopbar
-        draftTarget={draftTarget}
-        copyLabel={copyLabel}
-        viewportPresets={viewportPresets}
-        size={size}
+      <TopbarContainer
         presetScopeCounts={presetScopeCounts}
         isRulerAvailable={isRulerAvailable}
         isRulerVisible={isRulerVisible}
-        targetOverlayState={targetOverlayState}
         figmaOverlayUnavailableMessage={
           isFigmaImageManagementEnabled
             ? 'No Figma images on this viewport.'
@@ -795,11 +739,8 @@ const ReviewShellContent = ({
             ? figmaImageList.length > 0
             : isFigmaOverlayAvailable
         }
-        onDraftTargetChange={setDraftTarget}
         onApplyTarget={applyTarget}
         onOpenSitemap={() => setIsSitemapOpen(true)}
-        onCopyCurrentUrl={() => void copyCurrentUrl()}
-        onSizeChange={setSize}
         onToggleFigmaOverlay={
           isFigmaImageManagementEnabled
             ? toggleAllFigmaImageOverlayVisible
@@ -913,30 +854,18 @@ const ReviewShellContent = ({
       )}
 
       {isSourceInspectorEnabled && (
-        <SectionOutlinePanel
+        <SectionOutlineContainer
           isPanelVisible={isSourceTreePanelVisible}
-          isFiltering={isSectionOutlineFiltering}
-          filteredCount={filteredSectionOutlineCount}
-          totalCount={sectionOutlineTotalCount}
-          rootCount={sectionOutline?.length ?? 0}
-          filter={sectionOutlineFilter}
-          entries={filteredSectionOutline}
-          collapsedIds={collapsedSectionOutlineIds}
-          canWriteDom={canWriteDom}
-          isBoxMetaVisible={sectionOutlineMetaVisibility.box}
-          isFontMetaVisible={sectionOutlineMetaVisibility.font}
-          isMediaMetaVisible={sectionOutlineMetaVisibility.media}
-          isClassMetaVisible={sectionOutlineMetaVisibility.className}
-          onToggleMeta={updateSectionOutlineMetaVisibility}
-          onFilterChange={updateSectionOutlineFilter}
-          onToggleEntry={toggleSectionOutlineEntry}
-          onScrollToSection={scrollToSection}
-          onOpenData={openSectionData}
-          onOpenSource={openSectionSource}
-          onOpenUsageSource={openSectionUsageSource}
-          onStartDomReview={startSectionDomReview}
-          onHoverElement={showSourceOutlineForElement}
+          sectionOutlineOptions={sectionOutlineOptions}
+          sourceOpenOptions={sourceOpenOptions}
+          targetFrameLoadVersion={targetFrameLoadVersion}
           onClearHover={clearSourceOutlineHover}
+          onClearSourceInspector={clearSourceInspector}
+          onHoverElement={showSourceOutlineForElement}
+          onInitReviewKit={initReviewKit}
+          onModeChange={setMode}
+          onShowQaPanel={showQaPanel}
+          onToast={showToast}
         />
       )}
 

@@ -101,6 +101,7 @@ export class WebReviewKitView {
         highlightedItemId: state.highlightedItemId,
         environment: this.config.getEnvironment(),
         presets: this.config.options.viewports?.presets,
+        showCompactMarkers: this.config.options.ui?.markers !== 'external',
       })
     );
     if (state.isOpen && hasDismissableDraft && !shouldDockComposer) {

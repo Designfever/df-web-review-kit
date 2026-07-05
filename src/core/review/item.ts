@@ -12,7 +12,6 @@ import {
   resolveAnchorElement,
 } from '../dom.anchor';
 import {
-  getSelectionCenter,
   isRelativeSelection,
   isSelectionInViewport,
   roundPoint,
@@ -39,7 +38,7 @@ export function getBoundMarkerPoint(
   if (!marker) return undefined;
 
   // Prefer anchor-relative positions because absolute viewport points drift after layout changes.
-  if (item.kind !== 'area' && item.anchor && marker.relative) {
+  if (item.anchor && marker.relative) {
     const resolved = resolveAnchorElement(item.anchor, environment);
     const element = resolved?.element;
 
@@ -109,7 +108,7 @@ export function getReviewItemHighlightMode(
   return 'area';
 }
 
-/** Returns an explicit marker or derives one from the item's selection center. */
+/** Returns an explicit marker or derives one from the item's selection origin. */
 export function getItemMarker(item: ReviewItem): ReviewMarker | undefined {
   if (item.marker) return item.marker;
 
@@ -117,16 +116,25 @@ export function getItemMarker(item: ReviewItem): ReviewMarker | undefined {
   if (!selection?.viewport) return undefined;
 
   return {
-    viewport: roundPoint(getSelectionCenter(selection.viewport)),
+    viewport: roundPoint({
+      x: selection.viewport.x,
+      y: selection.viewport.y,
+    }),
     relative: selection.relative
-      ? roundPoint(getSelectionCenter(selection.relative))
+      ? roundPoint({
+          x: selection.relative.x,
+          y: selection.relative.y,
+        })
       : undefined,
   };
 }
 
 /** Normalizes current and legacy selection shapes into ReviewSelection. */
 export function getItemSelection(item: ReviewItem): ReviewSelection | undefined {
-  const value = item.selection as ReviewSelection | RelativeSelection | undefined;
+  const value = item.selection as
+    | ReviewSelection
+    | RelativeSelection
+    | undefined;
   if (!value) return undefined;
 
   if ('viewport' in value && isRelativeSelection(value.viewport)) {
@@ -150,17 +158,22 @@ export function shouldShowMarkerForScope(
   return scope === currentScope;
 }
 
-/** Creates a marker at the selection center and stores an anchor-relative fallback. */
-export function createSelectionCenterMarker(
+/** Creates a marker at the selection origin and stores an anchor-relative fallback. */
+export function createSelectionStartMarker(
   selection: ViewportSelection,
   anchor: DomAnchor | undefined,
   environment: ReviewEnvironment
 ): ReviewMarker {
-  const centerPoint = getSelectionCenter(selection);
+  const startPoint = {
+    x: selection.left,
+    y: selection.top,
+  };
 
   return {
-    viewport: roundPoint(centerPoint),
-    relative: anchor ? getRelativePoint(centerPoint, anchor, environment) : undefined,
+    viewport: roundPoint(startPoint),
+    relative: anchor
+      ? getRelativePoint(startPoint, anchor, environment)
+      : undefined,
   };
 }
 
@@ -169,7 +182,7 @@ function getBoundSelection(item: ReviewItem, environment: ReviewEnvironment) {
   if (!selection?.viewport) return undefined;
 
   // Rebuild the rectangle from the anchor when possible, then fall back to scroll offset.
-  if (item.kind !== 'area' && item.anchor && selection.relative) {
+  if (item.anchor && selection.relative) {
     const resolved = resolveAnchorElement(item.anchor, environment);
     const element = resolved?.element;
 

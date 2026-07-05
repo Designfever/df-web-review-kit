@@ -142,3 +142,7 @@ export const useReviewFigmaImages = ({
     updateImage,
   };
 };
+
+export type ReviewFigmaImagesController = ReturnType<
+  typeof useReviewFigmaImages
+>;

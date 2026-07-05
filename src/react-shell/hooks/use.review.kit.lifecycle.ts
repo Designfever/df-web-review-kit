@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   type MutableRefObject,
   type RefObject,
 } from 'react';
@@ -15,8 +16,8 @@ import type {
   WebReviewKitController,
 } from '../../types';
 import { createWebReviewKit } from '../../core/web.review.kit.app';
+import { useReviewShellStoreApi } from '../store/store.context';
 import { setTargetScrollbarHidden } from '../target/target';
-import type { ReviewShellViewportPreset } from '../types';
 import { getViewportPresetKind } from '../viewport';
 import { bindReviewFrameNavigation } from './review.frame.navigation';
 import { getReviewKitTarget } from './review.kit.target';
@@ -30,7 +31,6 @@ interface UseReviewKitLifecycleOptions {
   controllerRef: MutableRefObject<WebReviewKitController | null>;
   frameScrollRef: RefObject<HTMLDivElement | null>;
   hiddenOverlayItemIdList: string[];
-  hiddenOverlayItemIdListRef: MutableRefObject<string[]>;
   iframeRef: RefObject<HTMLIFrameElement | null>;
   pageTargets: ReadonlySet<string>;
   projectId: string;
@@ -39,8 +39,6 @@ interface UseReviewKitLifecycleOptions {
   reviewViewportPresets: ReviewViewportPreset[];
   ruler?: ReviewRulerConfig;
   adjustmentLabel?: string;
-  sizeRef: MutableRefObject<ReviewShellViewportPreset>;
-  targetRef: MutableRefObject<string>;
   onApplyPendingRestore: () => void;
   onCancelReviewMode: () => boolean;
   onCloseRuler: () => boolean;
@@ -63,7 +61,6 @@ export const useReviewKitLifecycle = ({
   controllerRef,
   frameScrollRef,
   hiddenOverlayItemIdList,
-  hiddenOverlayItemIdListRef,
   iframeRef,
   pageTargets,
   projectId,
@@ -72,8 +69,6 @@ export const useReviewKitLifecycle = ({
   reviewViewportPresets,
   ruler,
   adjustmentLabel,
-  sizeRef,
-  targetRef,
   onApplyPendingRestore,
   onCancelReviewMode,
   onCloseRuler,
@@ -86,6 +81,10 @@ export const useReviewKitLifecycle = ({
   onSyncShellTarget,
   onSyncTargetViewport,
 }: UseReviewKitLifecycleOptions) => {
+  const storeApi = useReviewShellStoreApi();
+  // 숨김 목록은 상태필터/⌘키가 합쳐진 파생값이라 store 에 없다.
+  // initReviewKit 재실행(리뷰킷 재초기화)을 피하기 위해 ref 로 최신값만 유지한다.
+  const hiddenOverlayItemIdListRef = useRef(hiddenOverlayItemIdList);
   const destroyReviewKit = useCallback(() => {
     cleanupTargetRef.current?.();
     cleanupTargetRef.current = null;
@@ -102,10 +101,10 @@ export const useReviewKitLifecycle = ({
     if (!iframe || !targetWindow || !targetDocument) return;
 
     cleanupTargetRef.current = bindReviewFrameNavigation({
+      getCurrentTarget: () => storeApi.getState().target,
       pageTargets,
       reviewPathPrefix,
       targetDocument,
-      targetRef,
       targetWindow,
       onCancelReviewMode,
       onCloseRuler,
@@ -140,6 +139,7 @@ export const useReviewKitLifecycle = ({
       onModeChange,
       ui: {
         panel: false,
+        markers: 'external',
       },
       modules: {
         qa: true,
@@ -155,7 +155,7 @@ export const useReviewKitLifecycle = ({
     onRefreshTargetOverlayState();
     setTargetScrollbarHidden(
       targetDocument,
-      getViewportPresetKind(sizeRef.current) === 'mobile'
+      getViewportPresetKind(storeApi.getState().size) === 'mobile'
     );
   }, [
     adapter,
@@ -186,8 +186,7 @@ export const useReviewKitLifecycle = ({
     reviewViewportPresets,
     ruler,
     adjustmentLabel,
-    sizeRef,
-    targetRef,
+    storeApi,
   ]);
 
   const reloadReviewKit = useCallback(async () => {
@@ -213,7 +212,7 @@ export const useReviewKitLifecycle = ({
   useEffect(() => {
     hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
     controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
-  }, [controllerRef, hiddenOverlayItemIdList, hiddenOverlayItemIdListRef]);
+  }, [controllerRef, hiddenOverlayItemIdList]);
 
   return {
     destroyReviewKit,

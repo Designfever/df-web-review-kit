@@ -92,10 +92,10 @@ export const reviewShellFigmaImagesStyle = `
     display: inline-grid;
     place-items: center;
     justify-self: end;
-    width: 26px;
-    min-width: 26px;
-    height: 26px;
-    min-height: 26px;
+    width: 30px;
+    min-width: 30px;
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
     border: 0;
     border-radius: 0;
     padding: 0;
@@ -118,8 +118,8 @@ export const reviewShellFigmaImagesStyle = `
   }
 
   .df-review-figma-image-header-button svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;

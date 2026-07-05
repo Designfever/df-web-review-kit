@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  type MutableRefObject,
   type RefObject,
 } from 'react';
 import type { ReviewSource } from '../../types';
@@ -11,6 +10,7 @@ import {
   updateShellUrl,
   updateShellUrlForItem,
 } from '../route';
+import { useReviewShellStoreApi } from '../store/store.context';
 import { setTargetScrollbarHidden } from '../target/target';
 import type { ReviewShellViewportPreset } from '../types';
 import { getViewportPresetKind } from '../viewport';
@@ -18,12 +18,9 @@ import { getViewportPresetKind } from '../viewport';
 interface UseReviewTargetSyncOptions {
   iframeRef: RefObject<HTMLIFrameElement | null>;
   reviewPathPrefix: string;
-  selectedItemIdRef: MutableRefObject<string | null>;
   size: ReviewShellViewportPreset;
-  sizeRef: MutableRefObject<ReviewShellViewportPreset>;
   source: ReviewSource;
   target: string;
-  targetRef: MutableRefObject<string>;
   onActiveRouteChange: (target: string) => void;
   onClearSelectedItem: () => void;
   onDraftTargetChange: (target: string) => void;
@@ -34,18 +31,16 @@ interface UseReviewTargetSyncOptions {
 export const useReviewTargetSync = ({
   iframeRef,
   reviewPathPrefix,
-  selectedItemIdRef,
   size,
-  sizeRef,
   source,
   target,
-  targetRef,
   onActiveRouteChange,
   onClearSelectedItem,
   onDraftTargetChange,
   onSyncTargetViewport,
   onTargetChange,
 }: UseReviewTargetSyncOptions) => {
+  const storeApi = useReviewShellStoreApi();
   const syncShellTarget = useCallback(
     (nextTarget: string) => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
@@ -54,23 +49,23 @@ export const useReviewTargetSync = ({
         reviewPathPrefix
       );
 
-      if (normalizedTarget !== targetRef.current) {
+      if (normalizedTarget !== storeApi.getState().target) {
         onClearSelectedItem();
-        targetRef.current = normalizedTarget;
         onTargetChange(normalizedTarget);
         onDraftTargetChange(normalizedTarget);
         onActiveRouteChange(nextRouteKey);
       }
 
-      if (selectedItemIdRef.current) {
+      const { size: currentSize, selectedItemId } = storeApi.getState();
+      if (selectedItemId) {
         updateShellUrlForItem(
           normalizedTarget,
-          sizeRef.current,
-          selectedItemIdRef.current,
+          currentSize,
+          selectedItemId,
           source
         );
       } else {
-        updateShellUrl(normalizedTarget, sizeRef.current, source);
+        updateShellUrl(normalizedTarget, currentSize, source);
       }
     },
     [
@@ -79,29 +74,21 @@ export const useReviewTargetSync = ({
       onDraftTargetChange,
       onTargetChange,
       reviewPathPrefix,
-      selectedItemIdRef,
-      sizeRef,
       source,
-      targetRef,
+      storeApi,
     ]
   );
 
   useEffect(() => {
-    targetRef.current = target;
     onActiveRouteChange(getTargetRouteKey(target, reviewPathPrefix));
-  }, [onActiveRouteChange, reviewPathPrefix, target, targetRef]);
+  }, [onActiveRouteChange, reviewPathPrefix, target]);
 
   useEffect(() => {
-    sizeRef.current = size;
-    if (selectedItemIdRef.current) {
-      updateShellUrlForItem(
-        targetRef.current,
-        size,
-        selectedItemIdRef.current,
-        source
-      );
+    const { target: currentTarget, selectedItemId } = storeApi.getState();
+    if (selectedItemId) {
+      updateShellUrlForItem(currentTarget, size, selectedItemId, source);
     } else {
-      updateShellUrl(targetRef.current, size, source);
+      updateShellUrl(currentTarget, size, source);
     }
     onSyncTargetViewport();
     setTargetScrollbarHidden(
@@ -111,11 +98,9 @@ export const useReviewTargetSync = ({
   }, [
     iframeRef,
     onSyncTargetViewport,
-    selectedItemIdRef,
     size,
-    sizeRef,
     source,
-    targetRef,
+    storeApi,
   ]);
 
   return {

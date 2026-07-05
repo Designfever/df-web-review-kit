@@ -1,4 +1,7 @@
-import type { ReviewItemScope } from '../types';
+import type {
+  ReviewItemScope,
+  ReviewWorkflowStatus,
+} from '../types';
 import type { ReviewQaFilter, ReviewShellTheme } from './types';
 
 export const REVIEW_QA_FILTERS: Array<{
@@ -12,6 +15,21 @@ export const REVIEW_QA_FILTERS: Array<{
   { key: 'desktop', label: 'Desktop', scope: 'desktop' },
   { key: 'wide', label: 'Wide', scope: 'wide' },
 ];
+
+export const REVIEW_QA_STATUS_FILTERS = [
+  'todo',
+  'doing',
+  'review',
+  'hold',
+  'done',
+] as const satisfies readonly ReviewWorkflowStatus[];
+
+export const DEFAULT_REVIEW_QA_STATUS_FILTERS = [
+  'todo',
+  'doing',
+  'review',
+  'hold',
+] as const satisfies readonly ReviewWorkflowStatus[];
 
 export const FIGMA_OVERLAY_UNAVAILABLE_MESSAGE =
   '피그마 오버레이 디버깅이 안되는 해상도';

@@ -304,6 +304,36 @@ export function createStyleElement() {
       --dfwr-item-color-rgb: 255, 143, 97;
     }
 
+    .dfwr-item-target-highlight.is-scope-mobile,
+    .dfwr-item-target-label.is-scope-mobile {
+      --dfwr-item-color: #7cc7ff;
+      --dfwr-item-color-rgb: 124, 199, 255;
+    }
+
+    .dfwr-item-target-highlight.is-scope-tablet,
+    .dfwr-item-target-label.is-scope-tablet {
+      --dfwr-item-color: #63d7c7;
+      --dfwr-item-color-rgb: 99, 215, 199;
+    }
+
+    .dfwr-item-target-highlight.is-scope-desktop,
+    .dfwr-item-target-label.is-scope-desktop {
+      --dfwr-item-color: #f3b75f;
+      --dfwr-item-color-rgb: 243, 183, 95;
+    }
+
+    .dfwr-item-target-highlight.is-scope-wide,
+    .dfwr-item-target-label.is-scope-wide {
+      --dfwr-item-color: #c99cff;
+      --dfwr-item-color-rgb: 201, 156, 255;
+    }
+
+    .dfwr-item-target-highlight.is-scope-dom,
+    .dfwr-item-target-label.is-scope-dom {
+      --dfwr-item-color: #ff8f61;
+      --dfwr-item-color-rgb: 255, 143, 97;
+    }
+
     .dfwr-item-target-highlight {
       position: fixed;
       z-index: 2;
@@ -312,7 +342,6 @@ export function createStyleElement() {
       background: rgba(var(--dfwr-item-color-rgb), 0.08);
       box-shadow:
         0 0 0 1px rgba(31, 36, 40, 0.78),
-        0 0 0 9999px rgba(0, 0, 0, 0.08),
         0 12px 30px rgba(0, 0, 0, 0.24);
       pointer-events: none;
     }

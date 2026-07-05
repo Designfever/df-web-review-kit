@@ -19,6 +19,7 @@ import {
   getItemTarget,
   updateShellUrlForItem,
 } from '../route';
+import { useReviewShellStoreApi } from '../store/store.context';
 import type { ReviewShellViewportPreset } from '../types';
 import { getRestoredSize } from '../viewport';
 
@@ -29,9 +30,7 @@ interface UseReviewItemRestoreOptions {
   pendingInitialItemIdRef: MutableRefObject<string | null>;
   pendingRestoreRef: MutableRefObject<ReviewItem | null>;
   reviewPathPrefix: string;
-  selectedItemIdRef: MutableRefObject<string | null>;
   source: ReviewSource;
-  targetRef: MutableRefObject<string>;
   viewportPresets: ReviewShellViewportPreset[];
   onActiveRouteChange: (target: string) => void;
   onDraftTargetChange: (target: string) => void;
@@ -140,9 +139,7 @@ export const useReviewItemRestore = ({
   pendingInitialItemIdRef,
   pendingRestoreRef,
   reviewPathPrefix,
-  selectedItemIdRef,
   source,
-  targetRef,
   viewportPresets,
   onActiveRouteChange,
   onDraftTargetChange,
@@ -151,38 +148,31 @@ export const useReviewItemRestore = ({
   onSyncTargetViewport,
   onTargetChange,
 }: UseReviewItemRestoreOptions) => {
+  const storeApi = useReviewShellStoreApi();
   const clearSelectedItem = useCallback(() => {
     pendingRestoreRef.current = null;
-    selectedItemIdRef.current = null;
     onSelectedItemIdChange(null);
     controllerRef.current?.highlightItem(undefined);
   }, [
     controllerRef,
     onSelectedItemIdChange,
     pendingRestoreRef,
-    selectedItemIdRef,
   ]);
 
   const applyItemScroll = useCallback(
     async (item: ReviewItem) => {
-      if (selectedItemIdRef.current !== item.id) return false;
+      if (storeApi.getState().selectedItemId !== item.id) return false;
 
       const targetWindow = iframeRef.current?.contentWindow;
       const targetDocument = iframeRef.current?.contentDocument;
       if (!targetWindow || !targetDocument) return false;
 
       const isCurrentRestore = () =>
-        selectedItemIdRef.current === item.id &&
+        storeApi.getState().selectedItemId === item.id &&
         iframeRef.current?.contentDocument === targetDocument;
-      const anchorElement = await waitForRestoreAnchor(
-        targetWindow,
-        targetDocument,
-        item,
-        isCurrentRestore
-      );
-      if (!isCurrentRestore()) return false;
+      highlightControllerItem(item, controllerRef.current, isCurrentRestore);
 
-      const applyScrollPosition = () => {
+      const applyScrollPosition = (anchorElement?: Element) => {
         if (!isCurrentRestore()) return false;
         const currentAnchorElement =
           queryReviewItemAnchorElement(targetDocument, item) ?? anchorElement;
@@ -203,18 +193,31 @@ export const useReviewItemRestore = ({
         return true;
       };
 
-      if (!applyScrollPosition()) return false;
-      controllerRef.current?.highlightItem(item.id);
+      if (!applyScrollPosition(queryReviewItemAnchorElement(targetDocument, item))) {
+        return false;
+      }
+      highlightControllerItem(item, controllerRef.current, isCurrentRestore);
+
+      const anchorElement = await waitForRestoreAnchor(
+        targetWindow,
+        targetDocument,
+        item,
+        isCurrentRestore
+      );
+      if (!isCurrentRestore()) return false;
+
+      if (!applyScrollPosition(anchorElement)) return false;
+      highlightControllerItem(item, controllerRef.current, isCurrentRestore);
 
       for (const delay of RESTORE_SCROLL_RECHECK_DELAYS_MS) {
         await waitForTargetTimeout(targetWindow, delay);
-        if (!applyScrollPosition()) return false;
-        controllerRef.current?.highlightItem(item.id);
+        if (!applyScrollPosition(anchorElement)) return false;
+        highlightControllerItem(item, controllerRef.current, isCurrentRestore);
       }
 
       return true;
     },
-    [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
+    [controllerRef, iframeRef, onSyncTargetViewport, storeApi]
   );
 
   const applyPendingRestore = useCallback(() => {
@@ -236,14 +239,13 @@ export const useReviewItemRestore = ({
 
       pendingInitialItemIdRef.current = null;
       pendingRestoreRef.current = item;
-      selectedItemIdRef.current = item.id;
       onSelectedItemIdChange(item.id);
       onActiveRouteChange(nextRoute);
       onDraftTargetChange(nextTarget);
       onSizeChange(nextSize);
       updateShellUrlForItem(nextTarget, nextSize, item.id, source);
 
-      if (targetRef.current !== nextTarget) {
+      if (storeApi.getState().target !== nextTarget) {
         onTargetChange(nextTarget);
         return;
       }
@@ -260,9 +262,8 @@ export const useReviewItemRestore = ({
       pendingRestoreRef,
       pendingInitialItemIdRef,
       reviewPathPrefix,
-      selectedItemIdRef,
       source,
-      targetRef,
+      storeApi,
       viewportPresets,
     ]
   );
@@ -288,3 +289,24 @@ export const useReviewItemRestore = ({
     restoreReviewItem,
   };
 };
+
+function highlightControllerItem(
+  item: ReviewItem,
+  controller: WebReviewKitController | null | undefined,
+  isCurrent: () => boolean
+) {
+  if (!controller) return;
+  if (controller.getItems().some((currentItem) => currentItem.id === item.id)) {
+    controller.highlightItem(item.id);
+    return;
+  }
+
+  void controller
+    .reload()
+    .then(() => {
+      if (isCurrent()) {
+        controller.highlightItem(item.id);
+      }
+    })
+    .catch(() => undefined);
+}

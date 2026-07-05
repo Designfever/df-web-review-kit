@@ -1,4 +1,4 @@
-import { f as ReviewItemScope, z as ReviewSource, v as ReviewMode, W as WebReviewKitAdapter, F as ReviewFieldsConfig, a as ReviewItemStatus, k as ReviewAssigneeOption, e as ReviewItem, x as ReviewRulerConfig } from './types-DHU1jtXD.js';
+import { f as ReviewItemScope, z as ReviewSource, v as ReviewMode, W as WebReviewKitAdapter, F as ReviewFieldsConfig, a as ReviewItemStatus, k as ReviewAssigneeOption, e as ReviewItem, x as ReviewRulerConfig } from './types-BM8E7BFV.js';
 import { R as ReviewFigmaImageStore, a as ReviewFigmaImageFormat } from './image.types-BmzkFSPX.js';
 import * as react from 'react';
 
@@ -160,7 +160,7 @@ interface ReviewShellMountOptions extends ReviewShellProps {
     rootId?: string;
 }
 
-declare const ReviewShell: ({ projectId, pages, adapters, presets, ruler, initialPrompt, adjustmentLabel, reviewPathPrefix, sourceRoot, sourceInspector, presence, figmaImages, }: ReviewShellProps) => react.JSX.Element;
+declare const ReviewShell: (props: ReviewShellProps) => react.JSX.Element;
 
 interface FigmaDevOverlayMountOptions {
     rootId?: string;

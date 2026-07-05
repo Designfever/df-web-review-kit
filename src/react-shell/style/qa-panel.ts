@@ -122,7 +122,7 @@ export const reviewShellQaPanelStyle = `
 		    white-space: nowrap;
 		  }
 
-			  .df-review-list-meta strong {
+		  .df-review-list-meta strong {
 			    flex: 0 0 auto;
 			    color: #fff;
 			    font-size: var(--df-review-font-size-xs);
@@ -133,11 +133,12 @@ export const reviewShellQaPanelStyle = `
   .df-review-list-controls {
     display: flex;
     align-items: center;
-    gap: 4px;
+    justify-content: flex-end;
+    gap: 6px;
+    min-width: 0;
   }
 
-  .df-review-source-select,
-  .df-review-status-filter-select {
+  .df-review-source-select {
     height: var(--df-review-control-height-md);
     min-height: var(--df-review-control-height-md);
     border: 1px solid var(--df-review-line-soft);
@@ -154,29 +155,110 @@ export const reviewShellQaPanelStyle = `
     width: 104px;
   }
 
-  .df-review-status-filter-select {
-    width: 124px;
-  }
-
   .df-review-source-refresh {
     position: relative;
 		    display: inline-grid;
 		    place-items: center;
-		    width: var(--df-review-control-height-md);
-		    min-width: var(--df-review-control-height-md);
+		    width: 30px;
+		    min-width: 30px;
 		    height: var(--df-review-control-height-md);
-		    border: 1px solid var(--df-review-line-soft);
-		    border-radius: var(--df-review-radius-sm);
+		    border: 0;
+		    border-radius: 0;
 		    padding: 0;
 		    color: var(--df-review-muted);
-		    background: var(--df-review-control);
-		    box-shadow: var(--df-review-shadow-control);
+		    background: transparent;
+		    box-shadow: none;
 		  }
+
+  .df-review-source-refresh:hover:not(:disabled) {
+    color: var(--df-review-text);
+  }
 
 		  .df-review-source-refresh svg {
 		    width: 16px;
 		    height: 16px;
 		  }
+
+  .df-review-status-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .df-review-status-toggle-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .df-review-status-toggle {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 28px;
+    min-width: 0;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 9px;
+    color: var(--df-review-subtle);
+    background: transparent;
+    font-size: var(--df-review-font-size-xs);
+    font-weight: var(--df-review-font-weight-normal);
+    white-space: nowrap;
+  }
+
+  .df-review-status-toggle:hover {
+    border-color: var(--df-review-line);
+    color: var(--df-review-text);
+  }
+
+  .df-review-status-toggle strong {
+    color: currentColor;
+    font-size: var(--df-review-font-size-3xs);
+    font-weight: var(--df-review-font-weight-normal);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    opacity: 0.72;
+  }
+
+  .df-review-status-toggle.is-active {
+    color: var(--df-review-text);
+  }
+
+  .df-review-status-toggle.is-status-todo.is-active {
+    border-color: var(--df-review-line);
+    color: var(--df-review-muted);
+    background: var(--df-review-line-soft);
+  }
+
+  .df-review-status-toggle.is-status-doing.is-active {
+    border-color: rgba(124, 199, 255, 0.34);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-status-toggle.is-status-review.is-active {
+    border-color: rgba(243, 183, 95, 0.34);
+    color: var(--df-review-warning);
+    background: var(--df-review-warning-soft);
+  }
+
+  .df-review-status-toggle.is-status-hold.is-active {
+    border-color: rgba(179, 149, 255, 0.32);
+    color: var(--df-review-purple);
+    background: var(--df-review-purple-soft);
+  }
+
+  .df-review-status-toggle.is-status-done.is-active {
+    border-color: rgba(99, 215, 199, 0.34);
+    color: var(--df-review-area);
+    background: var(--df-review-area-soft);
+  }
 
 			  .df-review-filter-tabs {
     display: flex;
@@ -316,6 +398,11 @@ export const reviewShellQaPanelStyle = `
 
   .df-review-item-card:not(.is-dim):hover {
     border-color: var(--df-review-line);
+  }
+
+  .df-review-item-card:focus {
+    outline: 2px solid var(--df-review-accent);
+    outline-offset: 2px;
   }
 
   .df-review-item-card.is-active {

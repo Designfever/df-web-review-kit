@@ -42,7 +42,7 @@ import {
   getRouteKey,
 } from './location';
 import { getReviewViewportScope } from './review/scope';
-import { createSelectionCenterMarker } from './review/item';
+import { createSelectionStartMarker } from './review/item';
 import type {
   AreaDraft,
   DomDraft,
@@ -432,6 +432,14 @@ class WebReviewKitApp {
       };
       const overlayRect = target.getOverlayRect?.() ?? rect;
       const composerHost = target.getComposerHost?.();
+      const scaleX =
+        target.window.innerWidth > 0
+          ? rect.width / target.window.innerWidth
+          : 1;
+      const scaleY =
+        target.window.innerHeight > 0
+          ? rect.height / target.window.innerHeight
+          : 1;
 
       return {
         window: target.window,
@@ -442,6 +450,8 @@ class WebReviewKitApp {
           width: rect.width,
           height: rect.height,
         },
+        scaleX,
+        scaleY,
         overlayRect: {
           left: overlayRect.left,
           top: overlayRect.top,
@@ -619,17 +629,30 @@ class WebReviewKitApp {
       const viewport = getViewportSize(environment);
 
       this.areaDraft = await this.withOverlayHidden(() => {
-        const marker = createSelectionCenterMarker(
+        const anchorPoint = clampPoint(
+          getSelectionCenter(selection),
+          environment
+        );
+        const anchor = getDomAnchorFromPoint(
+          anchorPoint,
+          this.options.anchors?.attribute,
+          environment
+        );
+        const marker = createSelectionStartMarker(
           selection,
-          undefined,
+          anchor,
           environment
         );
         const reviewSelection: ReviewSelection = {
           viewport: toPublicSelection(selection),
+          relative: anchor
+            ? getRelativeSelection(selection, anchor, environment)
+            : undefined,
         };
 
         return {
           viewport,
+          anchor,
           marker,
           selection: reviewSelection,
         };

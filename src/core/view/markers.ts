@@ -86,6 +86,7 @@ function createItemHighlightElements(
   environment: ReviewEnvironment,
   item: ReviewItem,
   label: string,
+  scope: ReviewItemScope,
   isBound: boolean,
   isHighlighted: boolean
 ) {
@@ -95,6 +96,7 @@ function createItemHighlightElements(
   highlight.className = [
     'dfwr-item-target-highlight',
     `is-mode-${mode}`,
+    `is-scope-${scope}`,
     isBound ? 'is-bound' : 'is-fallback',
     isHighlighted ? 'is-highlighted' : '',
   ]
@@ -110,6 +112,7 @@ function createItemHighlightElements(
   labelElement.className = [
     'dfwr-item-target-label',
     `is-mode-${mode}`,
+    `is-scope-${scope}`,
     isHighlighted ? 'is-highlighted' : '',
   ]
     .filter(Boolean)
@@ -132,11 +135,13 @@ export function createMarkerLayer({
   highlightedItemId,
   environment,
   presets,
+  showCompactMarkers = true,
 }: {
   items: ReviewItem[];
   highlightedItemId?: string;
   environment: ReviewEnvironment | undefined;
   presets?: ReviewViewportPreset[];
+  showCompactMarkers?: boolean;
 }) {
   const layer = document.createElement('div');
   layer.className = 'dfwr-marker-layer';
@@ -155,7 +160,7 @@ export function createMarkerLayer({
     }
 
     const isHighlighted = item.id === highlightedItemId;
-    if (!highlightedItemId || isHighlighted) {
+    if (isHighlighted) {
       const selection = getItemHighlightSelection(item, environment);
       if (selection) {
         layer.append(
@@ -164,12 +169,17 @@ export function createMarkerLayer({
             environment,
             item,
             displayLabel,
+            scope,
             selection.isBound,
             isHighlighted
           )
         );
         return;
       }
+    }
+
+    if (!showCompactMarkers && !isHighlighted) {
+      return;
     }
 
     const point = getBoundMarkerPoint(item, environment);

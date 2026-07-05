@@ -9,9 +9,7 @@ import {
   useMemo,
   useRef,
   useState,
-  type RefObject,
 } from 'react';
-import type { ReviewMode, WebReviewKitController } from '../../types';
 import {
   centerFrameScrollOnElement,
   filterSectionOutlineEntries,
@@ -22,9 +20,9 @@ import {
   waitForFrame,
   waitForMs,
 } from '../review/shell.helpers';
+import { buildTargetSrc } from '../route';
 import {
   getSectionOutline,
-  type GetSectionOutlineOptions,
   type SectionOutlineEntry,
 } from '../section.outline';
 import {
@@ -34,7 +32,15 @@ import {
   writeStoredSourceTreeMetaVisibility,
   type StoredSourceTreeMetaVisibility,
 } from '../settings';
-import { openSourceInEditor, type SourceOpenOptions } from '../source.open';
+import { openSourceInEditor } from '../source.open';
+import { useReviewShellConfig } from '../store/shell.config';
+import { useReviewShellRefs } from '../store/shell.refs';
+import {
+  useReviewShellStore,
+  useReviewShellStoreApi,
+} from '../store/store.context';
+import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
+import { useReviewToast } from './use.review.toast';
 
 type SourceTreeMetaVisibilityKey = keyof StoredSourceTreeMetaVisibility;
 
@@ -42,38 +48,27 @@ type SourceTreeMetaVisibilityKey = keyof StoredSourceTreeMetaVisibility;
 const SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
 
 export function useReviewSectionOutline({
-  canWriteDom,
-  controllerRef,
-  frameScrollRef,
-  iframeRef,
-  isPanelVisible,
-  sectionOutlineOptions,
-  sourceOpenOptions,
-  targetFrameLoadVersion,
-  targetSrc,
   onClearSourceInspector,
   onInitReviewKit,
-  onModeChange,
-  onShowQaPanel,
-  onToast,
 }: {
-  canWriteDom: boolean;
-  controllerRef: RefObject<WebReviewKitController | null>;
-  frameScrollRef: RefObject<HTMLDivElement | null>;
-  iframeRef: RefObject<HTMLIFrameElement | null>;
-  /** Source Tree 패널이 실제로 열려 있는지 (열려 있을 때만 갱신 비용을 쓴다). */
-  isPanelVisible: boolean;
-  sectionOutlineOptions: GetSectionOutlineOptions;
-  sourceOpenOptions: SourceOpenOptions;
-  targetFrameLoadVersion: number;
-  targetSrc: string;
   onClearSourceInspector: () => void;
   onInitReviewKit: () => void;
-  onModeChange: (mode: ReviewMode) => void;
-  /** DOM QA 시작 시 QA 패널을 열기 위한 콜백. */
-  onShowQaPanel: () => void;
-  onToast: (message: string) => void;
 }) {
+  const { sectionOutlineOptions, sourceOpenOptions } =
+    useReviewShellConfig();
+  const { controllerRef, frameScrollRef, iframeRef } = useReviewShellRefs();
+  const { canWriteDom } = useReviewShellAdapterState();
+  const storeApi = useReviewShellStoreApi();
+  const isListVisible = useReviewShellStore((state) => state.isListVisible);
+  const sidePanel = useReviewShellStore((state) => state.sidePanel);
+  const target = useReviewShellStore((state) => state.target);
+  const targetFrameLoadVersion = useReviewShellStore(
+    (state) => state.targetFrameLoadVersion
+  );
+  const setMode = useReviewShellStore((state) => state.setMode);
+  const showToast = useReviewToast();
+  const isPanelVisible = isListVisible && sidePanel === 'source';
+  const targetSrc = useMemo(() => buildTargetSrc(target), [target]);
   const sectionOutlineCountRef = useRef(0);
   const [sectionOutline, setSectionOutline] = useState<
     SectionOutlineEntry[] | null
@@ -261,9 +256,9 @@ export function useReviewSectionOutline({
         ...sourceOpenOptions,
         omitPosition: true,
       });
-      onToast(didOpen ? 'Source opened' : 'Source root required');
+      showToast(didOpen ? 'Source opened' : 'Source root required');
     },
-    [onToast, sourceOpenOptions]
+    [showToast, sourceOpenOptions]
   );
 
   const openSectionUsageSource = useCallback(
@@ -272,17 +267,17 @@ export function useReviewSectionOutline({
         entry.metadata.usage?.source,
         sourceOpenOptions
       );
-      onToast(didOpen ? 'Usage opened' : 'Usage source not found');
+      showToast(didOpen ? 'Usage opened' : 'Usage source not found');
     },
-    [onToast, sourceOpenOptions]
+    [showToast, sourceOpenOptions]
   );
 
   const openSectionData = useCallback(
     (entry: SectionOutlineEntry) => {
       const didOpen = openSourceInEditor(entry.data, sourceOpenOptions);
-      onToast(didOpen ? 'Data opened' : 'Data hint not found');
+      showToast(didOpen ? 'Data opened' : 'Data hint not found');
     },
-    [onToast, sourceOpenOptions]
+    [showToast, sourceOpenOptions]
   );
 
   /**
@@ -293,18 +288,20 @@ export function useReviewSectionOutline({
   const startSectionDomReview = useCallback(
     (entry: SectionOutlineEntry) => {
       if (!canWriteDom) {
-        onToast('DOM QA unavailable');
+        showToast('DOM QA unavailable');
         return;
       }
 
       const rect = entry.element.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) {
-        onToast('Component has no visible area here');
+        showToast('Component has no visible area here');
         return;
       }
 
       onClearSourceInspector();
-      onShowQaPanel();
+      const state = storeApi.getState();
+      state.setSidePanel('qa');
+      state.setIsListVisible(true);
 
       let targetWindow: Window | null = null;
       try {
@@ -322,7 +319,7 @@ export function useReviewSectionOutline({
           await waitForFrame(targetWindow);
           const controller = controllerRef.current;
           if (!controller) {
-            onToast('DOM QA unavailable');
+            showToast('DOM QA unavailable');
             return;
           }
 
@@ -336,10 +333,10 @@ export function useReviewSectionOutline({
           await waitForFrame(targetWindow);
           await controller.startElementReview(entry.element);
           await waitForFrame(targetWindow);
-          onModeChange(controller.getMode());
+          setMode(controller.getMode());
         })
         .catch(() => {
-          onModeChange(controllerRef.current?.getMode() ?? 'idle');
+          setMode(controllerRef.current?.getMode() ?? 'idle');
         });
     },
     [
@@ -349,16 +346,18 @@ export function useReviewSectionOutline({
       iframeRef,
       onClearSourceInspector,
       onInitReviewKit,
-      onModeChange,
-      onShowQaPanel,
-      onToast,
+      setMode,
+      showToast,
+      storeApi,
     ]
   );
 
   return {
+    canWriteDom,
     collapsedSectionOutlineIds,
     filteredSectionOutline,
     filteredSectionOutlineCount,
+    isPanelVisible,
     isSectionOutlineFiltering,
     openSectionData,
     openSectionSource,

@@ -1,17 +1,16 @@
 import {
   useCallback,
   useEffect,
-  useState,
 } from 'react';
-import { getInitialItemId } from '../route';
 import {
-  getInitialReviewSidePanel,
-  getStoredReviewSidePanel,
-  getStoredReviewSidePanelVisible,
   writeStoredReviewSidePanel,
   writeStoredReviewSidePanelVisible,
   type StoredReviewSidePanel,
 } from '../settings';
+import {
+  useReviewShellStore,
+  useReviewShellStoreApi,
+} from '../store/store.context';
 
 interface UseReviewSidePanelOptions {
   isFigmaImageManagementEnabled: boolean;
@@ -32,25 +31,18 @@ const getAvailableSidePanel = (
   return sidePanel;
 };
 
+// slice 는 raw 상태만 갖는다. prop 의존 클램프/localStorage 저장은 이 훅이 담당.
 export const useReviewSidePanel = ({
   isFigmaImageManagementEnabled,
   isSourceInspectorEnabled,
 }: UseReviewSidePanelOptions) => {
-  const [sidePanel, setSidePanel] = useState<StoredReviewSidePanel>(() => {
-    const initialSidePanel = getInitialReviewSidePanel();
-    const nextSidePanel =
-      initialSidePanel ??
-      (getInitialItemId() ? 'qa' : getStoredReviewSidePanel());
-    return getAvailableSidePanel(nextSidePanel, {
-      isFigmaImageManagementEnabled,
-      isSourceInspectorEnabled,
-    });
+  const storeApi = useReviewShellStoreApi();
+  const rawSidePanel = useReviewShellStore((state) => state.sidePanel);
+  const isListVisible = useReviewShellStore((state) => state.isListVisible);
+  const sidePanel = getAvailableSidePanel(rawSidePanel, {
+    isFigmaImageManagementEnabled,
+    isSourceInspectorEnabled,
   });
-  const [isListVisible, setIsListVisible] = useState(
-    () =>
-      Boolean(getInitialItemId() || getInitialReviewSidePanel()) ||
-      getStoredReviewSidePanelVisible()
-  );
   const isQaPanelVisible = isListVisible && sidePanel === 'qa';
   const isSourceTreePanelVisible =
     isSourceInspectorEnabled && isListVisible && sidePanel === 'source';
@@ -60,13 +52,15 @@ export const useReviewSidePanel = ({
     sidePanel === 'figma-images';
 
   useEffect(() => {
-    setSidePanel((currentSidePanel) =>
-      getAvailableSidePanel(currentSidePanel, {
-        isFigmaImageManagementEnabled,
-        isSourceInspectorEnabled,
-      })
-    );
-  }, [isFigmaImageManagementEnabled, isSourceInspectorEnabled]);
+    const state = storeApi.getState();
+    const availableSidePanel = getAvailableSidePanel(state.sidePanel, {
+      isFigmaImageManagementEnabled,
+      isSourceInspectorEnabled,
+    });
+    if (availableSidePanel !== state.sidePanel) {
+      state.setSidePanel(availableSidePanel);
+    }
+  }, [isFigmaImageManagementEnabled, isSourceInspectorEnabled, storeApi]);
 
   useEffect(() => {
     writeStoredReviewSidePanel(sidePanel);
@@ -78,29 +72,35 @@ export const useReviewSidePanel = ({
 
   const openSidePanel = useCallback(
     (nextSidePanel: StoredReviewSidePanel) => {
-      setSidePanel(
+      const state = storeApi.getState();
+      state.setSidePanel(
         getAvailableSidePanel(nextSidePanel, {
           isFigmaImageManagementEnabled,
           isSourceInspectorEnabled,
         })
       );
-      setIsListVisible(true);
+      state.setIsListVisible(true);
     },
-    [isFigmaImageManagementEnabled, isSourceInspectorEnabled]
+    [isFigmaImageManagementEnabled, isSourceInspectorEnabled, storeApi]
   );
 
   const toggleSidePanel = useCallback(
     (nextSidePanel: StoredReviewSidePanel) => {
+      const state = storeApi.getState();
+      const currentSidePanel = getAvailableSidePanel(state.sidePanel, {
+        isFigmaImageManagementEnabled,
+        isSourceInspectorEnabled,
+      });
       const availableSidePanel = getAvailableSidePanel(nextSidePanel, {
         isFigmaImageManagementEnabled,
         isSourceInspectorEnabled,
       });
-      setSidePanel(availableSidePanel);
-      setIsListVisible((currentVisible) =>
-        sidePanel === availableSidePanel ? !currentVisible : true
+      state.setSidePanel(availableSidePanel);
+      state.setIsListVisible(
+        currentSidePanel === availableSidePanel ? !state.isListVisible : true
       );
     },
-    [isFigmaImageManagementEnabled, isSourceInspectorEnabled, sidePanel]
+    [isFigmaImageManagementEnabled, isSourceInspectorEnabled, storeApi]
   );
 
   return {

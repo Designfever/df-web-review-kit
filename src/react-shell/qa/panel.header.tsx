@@ -1,17 +1,16 @@
+import { RefreshCw as RefreshCwIcon } from 'lucide-react';
 import {
-  ListFilter as ListFilterIcon,
-  RefreshCw as RefreshCwIcon,
-} from 'lucide-react';
+  REVIEW_WORKFLOW_STATUS_OPTIONS,
+  normalizeReviewItemStatus,
+} from '../../status';
 import type { ReviewSource } from '../../types';
-import { normalizeReviewItemStatus } from '../../status';
 import type { NormalizedReviewShellAdapter } from '../adapters';
-import { REVIEW_QA_FILTERS } from '../constants';
-import { ReviewScopeIcon } from '../review/item.icons';
+import { REVIEW_QA_STATUS_FILTERS } from '../constants';
 import type {
-  ReviewQaFilter,
   ReviewQaStatusFilter,
   ReviewShellStatusOption,
 } from '../types';
+import { isDefaultReviewQaStatusFilters } from './status.filter';
 
 interface QaPanelHeaderProps {
   activeItemCount: number;
@@ -20,17 +19,14 @@ interface QaPanelHeaderProps {
   isAllQaVisible: boolean;
   isLoading: boolean;
   label: ReviewSource;
-  qaFilter: ReviewQaFilter;
-  qaFilterCounts: ReadonlyMap<ReviewQaFilter, number>;
-  qaStatusFilter: ReviewQaStatusFilter;
+  qaStatusFilters: readonly ReviewQaStatusFilter[];
   qaStatusFilterCounts: ReadonlyMap<ReviewQaStatusFilter, number>;
   showSourceSelect: boolean;
   source: ReviewSource;
   sourceEntries: NormalizedReviewShellAdapter[];
   statusOptions: readonly ReviewShellStatusOption[];
   onChangeReviewSource: (nextSource: ReviewSource) => void;
-  onQaFilterChange: (filter: ReviewQaFilter) => void;
-  onQaStatusFilterChange: (filter: ReviewQaStatusFilter) => void;
+  onQaStatusFilterToggle: (filter: ReviewQaStatusFilter) => void;
   onRefreshReviewData: () => Promise<void>;
 }
 
@@ -41,21 +37,18 @@ export const QaPanelHeader = ({
   isAllQaVisible,
   isLoading,
   label,
-  qaFilter,
-  qaFilterCounts,
-  qaStatusFilter,
+  qaStatusFilters,
   qaStatusFilterCounts,
   showSourceSelect,
   source,
   sourceEntries,
   statusOptions,
   onChangeReviewSource,
-  onQaFilterChange,
-  onQaStatusFilterChange,
+  onQaStatusFilterToggle,
   onRefreshReviewData,
 }: QaPanelHeaderProps) => {
   const statusFilterOptions = getStatusFilterOptions(statusOptions);
-  const hasActiveFilter = qaFilter !== 'all' || qaStatusFilter !== 'all';
+  const hasActiveFilter = !isDefaultReviewQaStatusFilters(qaStatusFilters);
   const displayLabel = getQaSourceDisplayLabel(label);
 
   return (
@@ -75,35 +68,6 @@ export const QaPanelHeader = ({
               : `${filteredItemCount}/${activeItemCount}`}
           </strong>
         </span>
-        <div className="df-review-filter-tabs" aria-label="QA filters">
-          {REVIEW_QA_FILTERS.map((filter) => {
-            const count = qaFilterCounts.get(filter.key) ?? 0;
-            const isActive = qaFilter === filter.key;
-
-            return (
-              <button
-                key={filter.key}
-                aria-label={`${filter.label} QA (${count})`}
-                aria-pressed={isActive}
-                className={`df-review-filter-tab${
-                  isActive ? ' is-active' : ''
-                }`}
-                type="button"
-                onClick={() => onQaFilterChange(filter.key)}
-              >
-                <span className="df-review-filter-icon">
-                  {filter.scope ? (
-                    <ReviewScopeIcon scope={filter.scope} />
-                  ) : (
-                    <ListFilterIcon aria-hidden="true" />
-                  )}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <div className="df-review-list-toolbar">
         <div className="df-review-list-controls">
           {showSourceSelect && (
             <select
@@ -134,27 +98,31 @@ export const QaPanelHeader = ({
             <RefreshCwIcon aria-hidden="true" />
           </button>
         </div>
-        <select
-          aria-label="QA status filter"
-          className="df-review-status-filter-select"
-          value={qaStatusFilter}
-          onChange={(event) =>
-            onQaStatusFilterChange(
-              event.currentTarget.value as ReviewQaStatusFilter
-            )
-          }
-        >
-          <option value="all">
-            {`All status (${qaStatusFilterCounts.get('all') ?? 0})`}
-          </option>
-          {statusFilterOptions.map((statusOption) => (
-            <option key={statusOption.value} value={statusOption.value}>
-              {`${statusOption.label} (${
-                qaStatusFilterCounts.get(statusOption.value) ?? 0
-              })`}
-            </option>
-          ))}
-        </select>
+      </div>
+      <div
+        className="df-review-status-toggle-row"
+        aria-label="QA status filters"
+      >
+        {statusFilterOptions.map((statusOption) => {
+          const isActive = qaStatusFilters.includes(statusOption.value);
+          const count = qaStatusFilterCounts.get(statusOption.value) ?? 0;
+
+          return (
+            <button
+              key={statusOption.value}
+              aria-label={`${statusOption.label} QA (${count})`}
+              aria-pressed={isActive}
+              className={`df-review-status-toggle is-status-${statusOption.value}${
+                isActive ? ' is-active' : ''
+              }`}
+              type="button"
+              onClick={() => onQaStatusFilterToggle(statusOption.value)}
+            >
+              <span>{statusOption.label}</span>
+              <strong>{count}</strong>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -167,16 +135,19 @@ function getQaSourceDisplayLabel(label: ReviewSource) {
 function getStatusFilterOptions(
   statusOptions: readonly ReviewShellStatusOption[]
 ) {
-  const seen = new Set<ReviewQaStatusFilter>();
+  const labelByValue = new Map<ReviewQaStatusFilter, string>();
 
-  return statusOptions.flatMap((statusOption) => {
-    const value = normalizeReviewItemStatus(statusOption.value);
-    if (seen.has(value)) return [];
-
-    seen.add(value);
-    return [{
-      value,
-      label: statusOption.label,
-    }];
+  REVIEW_WORKFLOW_STATUS_OPTIONS.forEach((statusOption) => {
+    labelByValue.set(statusOption.value, statusOption.label);
   });
+  statusOptions.forEach((statusOption) => {
+    const value = normalizeReviewItemStatus(statusOption.value);
+    if (!REVIEW_QA_STATUS_FILTERS.includes(value)) return;
+    labelByValue.set(value, statusOption.label);
+  });
+
+  return REVIEW_QA_STATUS_FILTERS.map((value) => ({
+    value,
+    label: labelByValue.get(value) ?? value,
+  }));
 }

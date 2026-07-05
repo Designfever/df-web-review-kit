@@ -1,29 +1,18 @@
-import type { RefObject } from 'react';
-import type {
-  ReviewRulerMeasure,
-  ReviewRulerPoint,
-  ReviewShellViewportPreset,
-} from '../types';
+import { useReviewRulerState } from '../store/ruler.context';
+import { useReviewShellRefs } from '../store/shell.refs';
+import { useReviewShellStore } from '../store/store.context';
 
-interface RulerOverlayProps {
-  iframeRef: RefObject<HTMLIFrameElement | null>;
-  isRulerDragging: boolean;
-  rulerHover: ReviewRulerPoint | null;
-  rulerMeasure: ReviewRulerMeasure | undefined;
-  rulerMeasureLabel: string;
-  rulerOverlayRef: RefObject<HTMLDivElement | null>;
-  size: ReviewShellViewportPreset;
-}
+export const RulerOverlay = () => {
+  const { iframeRef } = useReviewShellRefs();
+  const size = useReviewShellStore((state) => state.size);
+  const {
+    isRulerDragging,
+    rulerHover,
+    rulerMeasure,
+    rulerMeasureLabel,
+    rulerOverlayRef,
+  } = useReviewRulerState();
 
-export const RulerOverlay = ({
-  iframeRef,
-  isRulerDragging,
-  rulerHover,
-  rulerMeasure,
-  rulerMeasureLabel,
-  rulerOverlayRef,
-  size,
-}: RulerOverlayProps) => {
   return (
     <div
       ref={rulerOverlayRef}

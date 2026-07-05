@@ -118,20 +118,104 @@ The default local adapter is for draft/local review work. Supabase is optional h
 
 React shell should call the core controller instead of duplicating target overlay logic.
 
+### React Shell Runtime Map
+
+`review/shell.tsx` is the React shell entrypoint. It creates instance-scoped
+config, refs, and zustand store objects, then delegates runtime wiring and layout
+assembly to smaller modules.
+
+```mermaid
+flowchart TD
+  Shell["review/shell.tsx"]
+  Config["store/shell.config.ts"]
+  Store["store/create.review.shell.store.ts"]
+  Refs["store/shell.refs.ts"]
+  Runtime["hooks/use.review.shell.runtime.ts"]
+  Providers["review/shell.providers.tsx"]
+  FrameContainer["review/shell.frame.container.tsx"]
+  Frame["review/shell.frame.tsx"]
+  Containers["feature *.container.tsx"]
+  Views["presentational UI components"]
+
+  Shell --> Config
+  Shell --> Store
+  Shell --> Refs
+  Shell --> Runtime
+  Runtime --> Providers
+  Providers --> FrameContainer
+  FrameContainer --> Frame
+  Frame --> Containers
+  Containers --> Views
+```
+
+The store is created once per mounted `ReviewShell` instance. There is no
+module-level shell store, so a host app using zustand does not share this state.
+
+### State Ownership
+
+| Layer | Files | Owns |
+|---|---|---|
+| Shell config | `store/shell.config.ts` | Normalized props and mostly static shell options |
+| Shell refs | `store/shell.refs.ts` | iframe, frame scroll, controller, and one-shot pending refs |
+| Zustand store | `store/*.slice.ts` | Target, QA, side panel, and local UI state |
+| Runtime hooks | `hooks/use.review.shell.*`, feature hooks | Effects, adapter refresh, core controller wiring, and action composition |
+| Runtime contexts | `review/shell.providers.tsx`, `*.context.tsx` | Non-store controllers consumed by feature containers |
+| Containers | `*.container.tsx` | Read store/context and bind actions to views |
+| Presentational views | non-container `.tsx` components | Render UI from explicit props |
+
+### Container Pattern
+
+Feature UI should not receive long prop chains from `ReviewShell`. Containers
+read the closest state source directly, then pass only render-ready props to
+presentational components.
+
+```mermaid
+flowchart LR
+  Store["zustand store"]
+  Config["config/ref contexts"]
+  RuntimeContext["runtime contexts"]
+  Container["feature container"]
+  View["presentational view"]
+
+  Store --> Container
+  Config --> Container
+  RuntimeContext --> Container
+  Container --> View
+```
+
+When adding shell behavior, prefer this flow:
+
+1. Put persistent UI state in the matching zustand slice.
+2. Put instance config in `shell.config.ts`.
+3. Put DOM/controller refs in `shell.refs.ts`.
+4. Put side effects and adapter/core orchestration in a focused hook.
+5. Expose cross-feature commands through `ReviewShellActions` only when multiple
+   containers need the same command.
+
 ### Shell Hook Decomposition
 
-`review/shell.tsx` composes feature hooks instead of owning all state itself. When adding shell behavior, extend the matching hook (or add one) rather than growing the component:
+`hooks/use.review.shell.runtime.ts` is the runtime assembler. It composes smaller
+hooks and returns provider values; it should not become a render component.
 
-- `hooks/use.review.shell.state.ts`: global shell state — target, size, source, mode, refs.
-- `hooks/use.review.shell.data.ts`: item list, filters, counts, and derived view data.
-- `hooks/use.review.side.panel.ts`: side panel selection, visibility, availability fallback, and browser-local persistence.
-- `hooks/use.review.target.navigation.ts`: address parsing, page/source switching, selected-item clearing, and shell URL sync.
+- `hooks/use.review.shell.state.ts`: bridge from zustand/config/refs into runtime hook inputs.
+- `hooks/use.review.shell.data.ts`: item list, filters, counts, target URL, and derived view data.
+- `hooks/use.review.shell.refresh.ts`: adapter refresh for current route and sitemap counts.
+- `hooks/use.review.shell.effects.ts`: shell-level effects such as pending restore, frame recentering, and Figma pointer lock.
+- `hooks/use.review.shell.runtime.actions.ts`: local command builders for transient UI, mode, panels, and iframe load.
+- `hooks/use.review.shell.actions.value.ts`: final `ReviewShellActions` context value.
 - `hooks/use.review.controller.ts`: core runtime wiring (init/reload/restore/mode).
-- `hooks/use.review.item.actions.ts`: QA item mutations (status/assignee/edit/submit/remove) and prompt/link copy actions, with per-item mutation tracking.
-- `hooks/use.review.source.inspector.ts`: source inspector panel state and the Alt(Option) source-select shortcut bound into the target iframe.
-- `hooks/use.review.section.outline.ts`: Source Tree outline extraction, filter/collapse state, refresh scheduling (load retries + MutationObserver), and entry actions.
-- `hooks/use.review.command.key.ts`: hide-all-overlays-while-⌘-held tracking across host and iframe.
-- `review/side.rail.tsx`: right-side rail (panel toggles, prompt/settings/about, presence).
+- `hooks/use.review.item.actions.ts`: QA item mutations and prompt/link copy actions.
+- `hooks/use.review.side.panel.ts`: side panel selection, availability fallback, and browser-local persistence.
+- `hooks/use.review.target.navigation.ts`: address parsing, page/source switching, selected-item clearing, and shell URL sync.
+- `hooks/use.review.source.inspector.ts`: source inspector state and target-iframe shortcut binding.
+- `hooks/use.review.section.outline.ts`: Source Tree outline extraction, filter/collapse state, refresh scheduling, and entry actions.
+- `hooks/use.review.command.key.ts`: hide-all-overlays-while-command-held tracking across host and iframe.
+
+### Comment Policy
+
+Prefer comments only at module boundaries or non-obvious runtime contracts. Avoid
+file-wide restatements of import names, prop-by-prop explanations, or comments
+that duplicate what a function name already says.
 
 ## Figma Overlay Direction
 

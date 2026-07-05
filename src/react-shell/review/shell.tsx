@@ -138,7 +138,6 @@ const ReviewShellContent = ({
     copyLabel,
     draftTarget,
     frameScrollRef,
-    hiddenOverlayItemIdListRef,
     iframeRef,
     isFigmaOverlayAvailable: isViewportFigmaOverlayAvailable,
     isInitialPromptOpen,
@@ -150,8 +149,6 @@ const ReviewShellContent = ({
     pendingRestoreRef,
     remoteAdapterEntry,
     reviewViewportPresets,
-    selectedItemId,
-    selectedItemIdRef,
     setActiveRoute,
     setCopiedPromptKey,
     setCopyLabel,
@@ -174,8 +171,15 @@ const ReviewShellContent = ({
     viewportPresets,
     setToastMessage,
   } = useReviewShellState();
+  const storeApi = useReviewShellStoreApi();
+  const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
+  const setIsAllQaVisible = useReviewShellStore(
+    (state) => state.setIsAllQaVisible
+  );
+  const isItemEditing = useReviewShellStore((state) =>
+    Boolean(state.editingItem)
+  );
   const [targetFrameLoadVersion, setTargetFrameLoadVersion] = useState(0);
-  const [isAllQaVisible, setIsAllQaVisible] = useState(false);
   const [isInitialPromptScriptOpen, setIsInitialPromptScriptOpen] =
     useState(false);
 
@@ -234,42 +238,16 @@ const ReviewShellContent = ({
 
   const {
     activeItems,
-    activeRemainingItemCount,
     allQaCount,
-    currentPresetScope,
-    filteredNumberedActiveItems,
-    getItemPresetScope,
     hiddenOverlayItemIdList,
-    hiddenOverlayItemIds,
     items,
     pageQaCounts,
     pageTargets,
     presetScopeCounts,
-    qaFilter,
-    qaFilterCounts,
-    qaStatusFilter,
-    qaStatusFilterCounts,
     selectedNumberedItem,
-    setHiddenOverlayItemIds,
-    setItems,
-    setQaFilter,
-    setQaStatusFilter,
-    setSitemapItems,
     targetSrc,
-  } = useReviewShellData({
-    activeRoute,
-    isAllQaVisible,
-    isRemoteSource,
-    pages,
-    reviewPathPrefix,
-    reviewViewportPresets,
-    selectedItemId,
-    size,
-    target,
-    viewportPresets,
-  });
+  } = useReviewShellData();
   const itemRefreshIdRef = useRef(0);
-  const [isItemsLoading, setIsItemsLoading] = useState(false);
 
   // ⌘ 를 누르는 동안 모든 QA 오버레이를 잠시 숨긴다 (원본 비교용).
   const isCommandKeyPressed = useReviewCommandKey({
@@ -326,7 +304,7 @@ const ReviewShellContent = ({
     async () => {
       // 응답 역전 방지: 마지막 요청만 로딩 상태를 해제할 수 있다.
       const requestId = ++itemRefreshIdRef.current;
-      setIsItemsLoading(true);
+      storeApi.getState().setIsItemsLoading(true);
 
       try {
         return await refreshReviewItems({
@@ -335,11 +313,11 @@ const ReviewShellContent = ({
           isRemoteSource,
           pageId: activeAdapterEntry.pageId,
           projectId,
-          onItemsChange: setItems,
+          onItemsChange: storeApi.getState().setItems,
         });
       } finally {
         if (itemRefreshIdRef.current === requestId) {
-          setIsItemsLoading(false);
+          storeApi.getState().setIsItemsLoading(false);
         }
       }
     },
@@ -349,7 +327,7 @@ const ReviewShellContent = ({
       adapter,
       isRemoteSource,
       projectId,
-      setItems,
+      storeApi,
     ]
   );
 
@@ -359,9 +337,9 @@ const ReviewShellContent = ({
         localAdapterEntry,
         projectId,
         remoteAdapterEntry,
-        onSitemapItemsChange: setSitemapItems,
+        onSitemapItemsChange: storeApi.getState().setSitemapItems,
       }),
-    [localAdapterEntry, projectId, remoteAdapterEntry]
+    [localAdapterEntry, projectId, remoteAdapterEntry, storeApi]
   );
 
   const cancelReviewMode = useCallback(() => {
@@ -486,7 +464,6 @@ const ReviewShellContent = ({
     controllerRef,
     frameScrollRef,
     hiddenOverlayItemIdList: effectiveHiddenOverlayItemIdList,
-    hiddenOverlayItemIdListRef,
     iframeRef,
     isFigmaOverlayAvailable,
     pageTargets,
@@ -498,7 +475,6 @@ const ReviewShellContent = ({
     reviewViewportPresets,
     ruler,
     adjustmentLabel,
-    selectedItemIdRef,
     size,
     source,
     target,
@@ -537,19 +513,6 @@ const ReviewShellContent = ({
       onReloadReviewKit: reloadReviewKit,
     });
   }, [refreshItems, refreshSitemapItems, reloadReviewKit]);
-
-  const toggleItemOverlayVisibility = useCallback((itemId: string) => {
-    setHiddenOverlayItemIds((currentHiddenOverlayItemIds) => {
-      const nextHiddenItemIds = new Set(currentHiddenOverlayItemIds);
-      if (nextHiddenItemIds.has(itemId)) {
-        nextHiddenItemIds.delete(itemId);
-      } else {
-        nextHiddenItemIds.add(itemId);
-      }
-
-      return nextHiddenItemIds;
-    });
-  }, []);
 
   useEffect(() => {
     void refreshItems();
@@ -605,7 +568,7 @@ const ReviewShellContent = ({
     onActiveRouteChange: setActiveRoute,
     onAllQaVisibleChange: setIsAllQaVisible,
     onCancelReviewMode: cancelReviewMode,
-    onClearItems: () => setItems([]),
+    onClearItems: () => storeApi.getState().setItems([]),
     onClearSelectedItem: clearSelectedItem,
     onDraftTargetChange: setDraftTarget,
     onReloadTargetFrame: reloadTargetFrame,
@@ -735,35 +698,16 @@ const ReviewShellContent = ({
     toggleSidePanel,
   ]);
 
-  const {
-    changeItemAssignee,
-    changeItemStatus,
-    clearEditingItem,
-    copyItemLabel,
-    copyItemLink,
-    copyItemPrompt,
-    copyPrompt,
-    copyRemoteIssuePath,
-    editingItem,
-    mutatingItemIds,
-    removeItem,
-    saveItemDetails,
-    setEditingItem,
-    submitItem,
-  } = useReviewItemActions({
-    activeAdapterEntry,
-    isRemoteSource,
-    localAdapterEntry,
-    remoteAdapterEntry,
-    reviewPathPrefix,
-    selectedItemIdRef,
-    source,
-    viewportPresets,
-    onClearSelectedItem: clearSelectedItem,
-    onCopiedPromptKeyChange: setCopiedPromptKey,
-    onRefreshReviewData: refreshReviewData,
-    onToast: showToast,
-  });
+  const copyInitialPrompt = useCallback(
+    (value: string, key: string) =>
+      copyReviewPrompt({
+        key,
+        value,
+        onCopiedPromptKeyChange: setCopiedPromptKey,
+        onToast: showToast,
+      }),
+    [setCopiedPromptKey, showToast]
+  );
 
   useReviewShellHotkeys({
     isRailHotkeyBlocked:
@@ -771,7 +715,7 @@ const ReviewShellContent = ({
       isInitialPromptOpen ||
       isInitialPromptScriptOpen ||
       isSitemapOpen ||
-      Boolean(editingItem),
+      isItemEditing,
     isFigmaSettingsOpen,
     isInitialPromptOpen,
     isRulerAvailable,
@@ -908,16 +852,7 @@ const ReviewShellContent = ({
           initialPromptText={initialPromptText}
           copiedPromptKey={copiedPromptKey}
           onClose={() => setIsInitialPromptScriptOpen(false)}
-          onCopyPrompt={(text, key) => void copyPrompt(text, key)}
-        />
-      )}
-
-      {editingItem && (
-        <QaItemEditModal
-          fields={activeAdapterEntry.fields}
-          item={editingItem}
-          onClose={clearEditingItem}
-          onSave={saveItemDetails}
+          onCopyPrompt={(text, key) => void copyInitialPrompt(text, key)}
         />
       )}
 
@@ -943,47 +878,13 @@ const ReviewShellContent = ({
         onToggleSourceTreePanel={toggleSourceTreePanel}
       />
 
-      <ReviewQaPanel
-        activeAdapterEntry={activeAdapterEntry}
-        activeItems={activeItems}
-        activeRemainingItemCount={activeRemainingItemCount}
-        currentPresetScope={currentPresetScope}
-        filteredNumberedActiveItems={filteredNumberedActiveItems}
-        getItemPresetScope={getItemPresetScope}
-        hiddenOverlayItemIds={hiddenOverlayItemIds}
+      <QaPanelContainer
         isListVisible={isQaPanelVisible}
-        isAllQaVisible={isAllQaVisible}
-        isLoading={isItemsLoading}
-        isRemoteSource={isRemoteSource}
-        mutatingItemIds={mutatingItemIds}
-        copiedPromptKey={copiedPromptKey}
-        qaFilter={qaFilter}
-        qaFilterCounts={qaFilterCounts}
-        qaStatusFilter={qaStatusFilter}
-        qaStatusFilterCounts={qaStatusFilterCounts}
-        remoteAdapterEntry={remoteAdapterEntry}
-        selectedItemId={selectedItemId}
-        showSourceSelect={showSourceSelect}
-        source={source}
-        sourceEntries={sourceEntries}
-        fields={activeAdapterEntry.fields}
-        assigneeTitle={activeAdapterEntry.assigneeTitle}
-        onChangeItemStatus={changeItemStatus}
-        onClearSelectedItem={clearSelectedReviewItem}
-        onChangeItemAssignee={changeItemAssignee}
         onChangeReviewSource={changeReviewSource}
-        onCopyItemLabel={(numberedItem) => void copyItemLabel(numberedItem)}
-        onCopyItemLink={(numberedItem) => void copyItemLink(numberedItem)}
-        onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
-        onCopyRemoteIssuePath={copyRemoteIssuePath}
-        onEditItem={setEditingItem}
-        onQaFilterChange={setQaFilter}
-        onQaStatusFilterChange={setQaStatusFilter}
+        onClearSelectedItem={clearSelectedReviewItem}
         onRefreshReviewData={refreshReviewData}
-        onRemoveItem={removeItem}
         onRestoreReviewItem={restoreReviewItem}
-        onSubmitItem={submitItem}
-        onToggleItemOverlayVisibility={toggleItemOverlayVisibility}
+        onToast={showToast}
       />
 
       {isFigmaImageManagementEnabled && (

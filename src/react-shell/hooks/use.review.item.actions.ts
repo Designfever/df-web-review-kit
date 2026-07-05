@@ -1,24 +1,20 @@
-// shell.tsx 에서 분리한 QA 아이템 액션 훅.
+// QA 아이템 액션 훅. QA 패널 컨테이너에서 인스턴스화한다.
 // 상태 변경/담당자/수정/제출/삭제 mutation 과 프롬프트·링크 복사 액션을 모은다.
-// mutation 중인 아이템 id 집합을 추적해 UI 가 개별 스피너를 표시할 수 있게 한다.
-import {
-  useCallback,
-  useState,
-  type Dispatch,
-  type MutableRefObject,
-  type SetStateAction,
-} from 'react';
+// mutation 중인 아이템 id 집합(store)으로 UI 가 개별 스피너를 표시한다.
+import { useCallback } from 'react';
 import type {
   NumberedReviewItem,
   ReviewItem,
   ReviewItemStatus,
-  ReviewSource,
 } from '../../types';
-import type { NormalizedReviewShellAdapter } from '../adapters';
 import { buildReviewItemPrompt } from '../prompt/prompt';
 import { getItemFrameTarget, getShellUrlForItem } from '../route';
-import { useReviewShellStoreApi } from '../store/store.context';
-import type { ReviewShellViewportPreset } from '../types';
+import { useReviewShellConfig } from '../store/shell.config';
+import {
+  useReviewShellStore,
+  useReviewShellStoreApi,
+} from '../store/store.context';
+import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
 import { getRestoredSize } from '../viewport';
 import {
   copyReviewPrompt,
@@ -30,57 +26,43 @@ import {
 } from '../review/shell.actions';
 
 export function useReviewItemActions({
-  activeAdapterEntry,
-  isRemoteSource,
-  localAdapterEntry,
-  remoteAdapterEntry,
-  reviewPathPrefix,
-  selectedItemIdRef,
-  source,
-  viewportPresets,
   onClearSelectedItem,
-  onCopiedPromptKeyChange,
   onRefreshReviewData,
   onToast,
 }: {
-  activeAdapterEntry: NormalizedReviewShellAdapter;
-  isRemoteSource: boolean;
-  localAdapterEntry: NormalizedReviewShellAdapter | null;
-  remoteAdapterEntry: NormalizedReviewShellAdapter | null;
-  reviewPathPrefix: string;
-  selectedItemIdRef: MutableRefObject<string | null>;
-  source: ReviewSource;
-  viewportPresets: ReviewShellViewportPreset[];
   onClearSelectedItem: () => void;
-  onCopiedPromptKeyChange: Dispatch<SetStateAction<string | null>>;
   onRefreshReviewData: () => Promise<void>;
   onToast: (message: string) => void;
 }) {
+  const { reviewPathPrefix, viewportPresets } = useReviewShellConfig();
+  const {
+    activeAdapterEntry,
+    isRemoteSource,
+    localAdapterEntry,
+    remoteAdapterEntry,
+    source,
+  } = useReviewShellAdapterState();
   const storeApi = useReviewShellStoreApi();
-  const [mutatingItemIds, setMutatingItemIds] = useState<Set<string>>(
-    () => new Set()
+  const mutatingItemIds = useReviewShellStore(
+    (state) => state.mutatingItemIds
   );
-  const [editingItem, setEditingItem] = useState<ReviewItem | null>(null);
+  const editingItem = useReviewShellStore((state) => state.editingItem);
+  const setEditingItem = useReviewShellStore((state) => state.setEditingItem);
+  const setCopiedPromptKey = useReviewShellStore(
+    (state) => state.setCopiedPromptKey
+  );
 
   /** 액션 실행 동안 해당 아이템을 mutation 중으로 표시한다. */
   const withItemMutation = async <T,>(
     itemId: string,
     action: () => Promise<T>
   ) => {
-    setMutatingItemIds((currentIds) => {
-      const nextIds = new Set(currentIds);
-      nextIds.add(itemId);
-      return nextIds;
-    });
+    storeApi.getState().addMutatingItemId(itemId);
 
     try {
       return await action();
     } finally {
-      setMutatingItemIds((currentIds) => {
-        const nextIds = new Set(currentIds);
-        nextIds.delete(itemId);
-        return nextIds;
-      });
+      storeApi.getState().removeMutatingItemId(itemId);
     }
   };
 
@@ -156,10 +138,10 @@ export function useReviewItemActions({
     try {
       await withItemMutation(numberedItem.item.id, () =>
         submitReviewItem({
+          getSelectedItemId: () => storeApi.getState().selectedItemId,
           localAdapterEntry,
           numberedItem,
           remoteAdapterEntry,
-          selectedItemIdRef,
           onClearSelectedItem,
           onRefreshReviewData,
           onToast,
@@ -177,9 +159,9 @@ export function useReviewItemActions({
           activeAdapterEntry,
           getCurrentSize: () => storeApi.getState().size,
           getCurrentTarget: () => storeApi.getState().target,
+          getSelectedItemId: () => storeApi.getState().selectedItemId,
           isRemoteSource,
           item,
-          selectedItemIdRef,
           source,
           onClearSelectedItem,
           onRefreshReviewData,
@@ -202,7 +184,7 @@ export function useReviewItemActions({
       key,
       toastMessage,
       value,
-      onCopiedPromptKeyChange,
+      onCopiedPromptKeyChange: setCopiedPromptKey,
       onToast,
     });
 
@@ -244,7 +226,10 @@ export function useReviewItemActions({
     return copyPrompt(path, `remote-link:${item.id}`, 'QA path copied');
   };
 
-  const clearEditingItem = useCallback(() => setEditingItem(null), []);
+  const clearEditingItem = useCallback(
+    () => setEditingItem(null),
+    [setEditingItem]
+  );
 
   return {
     changeItemAssignee,

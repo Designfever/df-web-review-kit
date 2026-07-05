@@ -2,6 +2,10 @@
 // (라이브러리 특성상 한 페이지에 ReviewShell 이 여러 번 mount 될 수 있다)
 import { createStore } from 'zustand';
 import {
+  createQaSlice,
+  type QaSlice,
+} from './qa.slice';
+import {
   createSidePanelSlice,
   type SidePanelSlice,
 } from './side.panel.slice';
@@ -11,7 +15,7 @@ import {
   type TargetSliceState,
 } from './target.slice';
 
-export type ReviewShellState = SidePanelSlice & TargetSlice;
+export type ReviewShellState = SidePanelSlice & TargetSlice & QaSlice;
 
 export interface ReviewShellStoreInit {
   target: TargetSliceState;
@@ -21,6 +25,7 @@ export const createReviewShellStore = (init: ReviewShellStoreInit) =>
   createStore<ReviewShellState>()((...args) => ({
     ...createSidePanelSlice(...args),
     ...createTargetSlice(init.target)(...args),
+    ...createQaSlice(...args),
   }));
 
 export type ReviewShellStore = ReturnType<typeof createReviewShellStore>;

@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  type MutableRefObject,
   type RefObject,
 } from 'react';
 import type { ReviewSource } from '../../types';
@@ -19,7 +18,6 @@ import { getViewportPresetKind } from '../viewport';
 interface UseReviewTargetSyncOptions {
   iframeRef: RefObject<HTMLIFrameElement | null>;
   reviewPathPrefix: string;
-  selectedItemIdRef: MutableRefObject<string | null>;
   size: ReviewShellViewportPreset;
   source: ReviewSource;
   target: string;
@@ -33,7 +31,6 @@ interface UseReviewTargetSyncOptions {
 export const useReviewTargetSync = ({
   iframeRef,
   reviewPathPrefix,
-  selectedItemIdRef,
   size,
   source,
   target,
@@ -59,12 +56,12 @@ export const useReviewTargetSync = ({
         onActiveRouteChange(nextRouteKey);
       }
 
-      const currentSize = storeApi.getState().size;
-      if (selectedItemIdRef.current) {
+      const { size: currentSize, selectedItemId } = storeApi.getState();
+      if (selectedItemId) {
         updateShellUrlForItem(
           normalizedTarget,
           currentSize,
-          selectedItemIdRef.current,
+          selectedItemId,
           source
         );
       } else {
@@ -77,7 +74,6 @@ export const useReviewTargetSync = ({
       onDraftTargetChange,
       onTargetChange,
       reviewPathPrefix,
-      selectedItemIdRef,
       source,
       storeApi,
     ]
@@ -88,15 +84,11 @@ export const useReviewTargetSync = ({
   }, [onActiveRouteChange, reviewPathPrefix, target]);
 
   useEffect(() => {
-    if (selectedItemIdRef.current) {
-      updateShellUrlForItem(
-        storeApi.getState().target,
-        size,
-        selectedItemIdRef.current,
-        source
-      );
+    const { target: currentTarget, selectedItemId } = storeApi.getState();
+    if (selectedItemId) {
+      updateShellUrlForItem(currentTarget, size, selectedItemId, source);
     } else {
-      updateShellUrl(storeApi.getState().target, size, source);
+      updateShellUrl(currentTarget, size, source);
     }
     onSyncTargetViewport();
     setTargetScrollbarHidden(
@@ -106,7 +98,6 @@ export const useReviewTargetSync = ({
   }, [
     iframeRef,
     onSyncTargetViewport,
-    selectedItemIdRef,
     size,
     source,
     storeApi,

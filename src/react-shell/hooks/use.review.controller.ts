@@ -32,7 +32,6 @@ interface UseReviewControllerOptions {
   controllerRef: MutableRefObject<WebReviewKitController | null>;
   frameScrollRef: RefObject<HTMLDivElement | null>;
   hiddenOverlayItemIdList: string[];
-  hiddenOverlayItemIdListRef: MutableRefObject<string[]>;
   iframeRef: RefObject<HTMLIFrameElement | null>;
   isFigmaOverlayAvailable: boolean;
   pageTargets: ReadonlySet<string>;
@@ -44,7 +43,6 @@ interface UseReviewControllerOptions {
   reviewViewportPresets: ReviewViewportPreset[];
   ruler?: ReviewRulerConfig;
   adjustmentLabel?: string;
-  selectedItemIdRef: MutableRefObject<string | null>;
   size: ReviewShellViewportPreset;
   source: ReviewSource;
   target: string;
@@ -71,7 +69,6 @@ export const useReviewController = ({
   controllerRef,
   frameScrollRef,
   hiddenOverlayItemIdList,
-  hiddenOverlayItemIdListRef,
   iframeRef,
   isFigmaOverlayAvailable,
   pageTargets,
@@ -83,7 +80,6 @@ export const useReviewController = ({
   reviewViewportPresets,
   ruler,
   adjustmentLabel,
-  selectedItemIdRef,
   size,
   source,
   target,
@@ -125,7 +121,6 @@ export const useReviewController = ({
     pendingInitialItemIdRef,
     pendingRestoreRef,
     reviewPathPrefix,
-    selectedItemIdRef,
     source,
     viewportPresets,
     onActiveRouteChange,
@@ -138,7 +133,6 @@ export const useReviewController = ({
   const { syncShellTarget } = useReviewTargetSync({
     iframeRef,
     reviewPathPrefix,
-    selectedItemIdRef,
     size,
     source,
     target,
@@ -161,7 +155,6 @@ export const useReviewController = ({
     controllerRef,
     frameScrollRef,
     hiddenOverlayItemIdList,
-    hiddenOverlayItemIdListRef,
     iframeRef,
     pageTargets,
     projectId,

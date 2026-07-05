@@ -10,24 +10,29 @@ import type {
 import { getInitialItemId } from '../route';
 import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellStore } from '../store/store.context';
+import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
 import { getIsFigmaOverlayAvailable } from '../viewport';
 
-// target/source/size/route/overlay 상태는 target slice 로 이동했다.
+// target/source/size/route/overlay/QA 상태는 store slice 로 이동했다.
 // 이 훅은 config + store 를 조합해 기존 반환 shape 을 유지하는 과도기 레이어다.
 export const useReviewShellState = () => {
+  const { reviewViewportPresets, viewportPresets } = useReviewShellConfig();
   const {
+    activeAdapterEntry,
+    adapter,
+    canWriteArea,
+    canWriteDom,
+    isRemoteSource,
     localAdapterEntry,
     remoteAdapterEntry,
-    reviewViewportPresets,
     showSourceSelect,
+    source,
     sourceEntries,
-    viewportPresets,
-  } = useReviewShellConfig();
+  } = useReviewShellAdapterState();
 
   const activeRoute = useReviewShellStore((state) => state.activeRoute);
   const draftTarget = useReviewShellStore((state) => state.draftTarget);
   const size = useReviewShellStore((state) => state.size);
-  const source = useReviewShellStore((state) => state.source);
   const target = useReviewShellStore((state) => state.target);
   const targetOverlayState = useReviewShellStore(
     (state) => state.targetOverlayState
@@ -40,16 +45,15 @@ export const useReviewShellState = () => {
   const setTargetOverlayState = useReviewShellStore(
     (state) => state.setTargetOverlayState
   );
-
-  const remoteSource = remoteAdapterEntry?.label ?? null;
-  const activeAdapterEntry =
-    sourceEntries.find((entry) => entry.label === source) ?? sourceEntries[0]!;
-  const isRemoteSource = Boolean(
-    remoteSource && activeAdapterEntry.label === remoteSource
+  const setSelectedItemId = useReviewShellStore(
+    (state) => state.setSelectedItemId
   );
-  const canWriteArea = activeAdapterEntry.writeModes.includes('area');
-  const canWriteDom = activeAdapterEntry.writeModes.includes('dom');
-  const adapter = activeAdapterEntry.adapter;
+  const copiedPromptKey = useReviewShellStore(
+    (state) => state.copiedPromptKey
+  );
+  const setCopiedPromptKey = useReviewShellStore(
+    (state) => state.setCopiedPromptKey
+  );
 
   const initialItemId = getInitialItemId();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -58,16 +62,12 @@ export const useReviewShellState = () => {
   const cleanupTargetRef = useRef<(() => void) | null>(null);
   const pendingRestoreRef = useRef<ReviewItem | null>(null);
   const pendingInitialItemIdRef = useRef(initialItemId);
-  const selectedItemIdRef = useRef(initialItemId);
-  const hiddenOverlayItemIdListRef = useRef<string[]>([]);
 
   const [mode, setMode] = useState<ReviewMode>('idle');
-  const [selectedItemId, setSelectedItemId] = useState(initialItemId);
   const [isSitemapOpen, setIsSitemapOpen] = useState(false);
   const [isInitialPromptOpen, setIsInitialPromptOpen] = useState(false);
   const [copyLabel, setCopyLabel] = useState('Copy URL');
   const [toastMessage, setToastMessage] = useState('');
-  const [copiedPromptKey, setCopiedPromptKey] = useState<string | null>(null);
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
 
   return {
@@ -82,7 +82,6 @@ export const useReviewShellState = () => {
     copyLabel,
     draftTarget,
     frameScrollRef,
-    hiddenOverlayItemIdListRef,
     iframeRef,
     isFigmaOverlayAvailable,
     isInitialPromptOpen,
@@ -94,8 +93,6 @@ export const useReviewShellState = () => {
     pendingRestoreRef,
     remoteAdapterEntry,
     reviewViewportPresets,
-    selectedItemId,
-    selectedItemIdRef,
     setActiveRoute,
     setCopiedPromptKey,
     setCopyLabel,

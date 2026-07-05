@@ -1,4 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+// 셸 레벨에서 공유되는 파생 데이터 (topbar 카운트/sitemap 카운트/오버레이 id 목록 등).
+// QA 패널 전용 파생값은 qa/use.review.qa.panel.data.ts 가 담당한다.
+import { useCallback, useMemo } from 'react';
 import {
   getNumberedReviewItems,
 } from '../../core/review/scope';
@@ -6,7 +8,6 @@ import type {
   ReviewItem,
   ReviewItemScope,
   ReviewWorkflowStatus,
-  ReviewViewportPreset,
 } from '../../types';
 import { normalizeReviewItemStatus } from '../../status';
 import {
@@ -14,21 +15,15 @@ import {
   getItemTarget,
   normalizeTarget,
 } from '../route';
-import type {
-  ReviewQaFilter,
-  ReviewQaStatusFilter,
-  ReviewShellPage,
-  ReviewShellViewportKind,
-  ReviewShellViewportPreset,
-} from '../types';
+import { getActiveReviewItems } from '../qa/derive';
+import { useReviewShellConfig } from '../store/shell.config';
+import { useReviewShellStore } from '../store/store.context';
+import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
+import type { ReviewShellViewportKind } from '../types';
 import {
   findViewportPreset,
   getViewportPresetKind,
 } from '../viewport';
-import {
-  getStoredReviewQaStatusFilter,
-  writeStoredReviewQaStatusFilter,
-} from '../settings';
 import type { SitemapQaCount } from '../sitemap/tree';
 import {
   addSitemapQaCounts,
@@ -36,49 +31,22 @@ import {
   createSitemapViewportColumn,
 } from '../sitemap/tree';
 
-export type SitemapItemsBySource = {
-  local: ReviewItem[];
-  remote: ReviewItem[];
-};
-
-interface UseReviewShellDataOptions {
-  activeRoute: string;
-  pages: ReviewShellPage[];
-  isAllQaVisible: boolean;
-  isRemoteSource: boolean;
-  reviewPathPrefix: string;
-  reviewViewportPresets: ReviewViewportPreset[];
-  selectedItemId: string | null;
-  size: ReviewShellViewportPreset;
-  target: string;
-  viewportPresets: ReviewShellViewportPreset[];
-}
-
 const SITEMAP_STATUS_DONE: ReviewWorkflowStatus = 'done';
 
-export const useReviewShellData = ({
-  activeRoute,
-  isAllQaVisible,
-  isRemoteSource,
-  pages,
-  reviewPathPrefix,
-  reviewViewportPresets,
-  selectedItemId,
-  size,
-  target,
-  viewportPresets,
-}: UseReviewShellDataOptions) => {
-  const [items, setItems] = useState<ReviewItem[]>([]);
-  const [hiddenOverlayItemIds, setHiddenOverlayItemIds] = useState<Set<string>>(
-    () => new Set()
+export const useReviewShellData = () => {
+  const { pages, reviewPathPrefix, reviewViewportPresets, viewportPresets } =
+    useReviewShellConfig();
+  const { isRemoteSource } = useReviewShellAdapterState();
+  const activeRoute = useReviewShellStore((state) => state.activeRoute);
+  const target = useReviewShellStore((state) => state.target);
+  const items = useReviewShellStore((state) => state.items);
+  const sitemapItems = useReviewShellStore((state) => state.sitemapItems);
+  const hiddenOverlayItemIds = useReviewShellStore(
+    (state) => state.hiddenOverlayItemIds
   );
-  const [qaFilter, setQaFilter] = useState<ReviewQaFilter>('all');
-  const [qaStatusFilter, setQaStatusFilterState] =
-    useState<ReviewQaStatusFilter>(getStoredReviewQaStatusFilter);
-  const [sitemapItems, setSitemapItems] = useState<SitemapItemsBySource>(() => ({
-    local: [],
-    remote: [],
-  }));
+  const qaStatusFilter = useReviewShellStore((state) => state.qaStatusFilter);
+  const selectedItemId = useReviewShellStore((state) => state.selectedItemId);
+  const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
 
   const targetSrc = useMemo(() => buildTargetSrc(target), [target]);
   const pageTargets = useMemo(
@@ -93,53 +61,19 @@ export const useReviewShellData = ({
     [isRemoteSource, sitemapItems]
   );
   const activeItems = useMemo(
-    () => {
-      const sourceItems = isAllQaVisible
-        ? sitemapSourceItems
-        : items.filter(
-            (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
-          );
-
-      return [...sourceItems].sort((a, b) =>
-        b.createdAt.localeCompare(a.createdAt)
-      );
-    },
+    () =>
+      getActiveReviewItems({
+        activeRoute,
+        isAllQaVisible,
+        items,
+        reviewPathPrefix,
+        sitemapSourceItems,
+      }),
     [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
   );
   const numberedActiveItems = useMemo(
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
     [activeItems, reviewViewportPresets]
-  );
-  const scopeFilteredNumberedActiveItems = useMemo(
-    () =>
-      qaFilter === 'all'
-        ? numberedActiveItems
-        : numberedActiveItems.filter(
-            (numberedItem) => numberedItem.scope === qaFilter
-          ),
-    [numberedActiveItems, qaFilter]
-  );
-  const statusFilteredNumberedActiveItems = useMemo(
-    () =>
-      qaStatusFilter === 'all'
-        ? numberedActiveItems
-        : numberedActiveItems.filter(
-            (numberedItem) =>
-              normalizeReviewItemStatus(numberedItem.item.status) ===
-              qaStatusFilter
-          ),
-    [numberedActiveItems, qaStatusFilter]
-  );
-  const filteredNumberedActiveItems = useMemo(
-    () =>
-      qaStatusFilter === 'all'
-        ? scopeFilteredNumberedActiveItems
-        : scopeFilteredNumberedActiveItems.filter(
-            (numberedItem) =>
-              normalizeReviewItemStatus(numberedItem.item.status) ===
-              qaStatusFilter
-          ),
-    [qaStatusFilter, scopeFilteredNumberedActiveItems]
   );
   const hiddenOverlayItemIdList = useMemo(
     () => {
@@ -157,23 +91,6 @@ export const useReviewShellData = ({
     },
     [activeItems, hiddenOverlayItemIds, qaStatusFilter]
   );
-  const qaFilterCounts = useMemo(() => {
-    const counts = new Map<ReviewQaFilter, number>();
-    counts.set('all', statusFilteredNumberedActiveItems.length);
-    statusFilteredNumberedActiveItems.forEach((numberedItem) => {
-      counts.set(numberedItem.scope, (counts.get(numberedItem.scope) ?? 0) + 1);
-    });
-    return counts;
-  }, [statusFilteredNumberedActiveItems]);
-  const qaStatusFilterCounts = useMemo(() => {
-    const counts = new Map<ReviewQaStatusFilter, number>();
-    counts.set('all', scopeFilteredNumberedActiveItems.length);
-    scopeFilteredNumberedActiveItems.forEach((numberedItem) => {
-      const status = normalizeReviewItemStatus(numberedItem.item.status);
-      counts.set(status, (counts.get(status) ?? 0) + 1);
-    });
-    return counts;
-  }, [scopeFilteredNumberedActiveItems]);
   const getItemPreset = useCallback(
     (item: ReviewItem) =>
       findViewportPreset(
@@ -201,13 +118,6 @@ export const useReviewShellData = ({
       item.scope === 'dom' ? 'dom' : getItemPresetScope(item),
     [getItemPresetScope]
   );
-  const activeRemainingItemCount = useMemo(
-    () =>
-      activeItems.filter(
-        (item) => normalizeReviewItemStatus(item.status) !== SITEMAP_STATUS_DONE
-      ).length,
-    [activeItems]
-  );
   const presetScopeCounts = useMemo(() => {
     const counts = new Map<ReviewShellViewportKind, number>();
     activeItems.forEach((item) => {
@@ -216,15 +126,10 @@ export const useReviewShellData = ({
     });
     return counts;
   }, [activeItems, getItemPresetScope]);
-  const currentPresetScope = getViewportPresetKind(size);
-  const setQaStatusFilter = useCallback((filter: ReviewQaStatusFilter) => {
-    setQaStatusFilterState(filter);
-    writeStoredReviewQaStatusFilter(filter);
-  }, []);
   const pageQaCounts = useMemo(() => {
     const counts = new Map<string, SitemapQaCount>();
     const addItems = (
-      sourceKey: keyof SitemapItemsBySource,
+      sourceKey: 'local' | 'remote',
       sourceItems: ReviewItem[]
     ) => {
       sourceItems.forEach((item) => {
@@ -295,27 +200,13 @@ export const useReviewShellData = ({
 
   return {
     activeItems,
-    activeRemainingItemCount,
     allQaCount,
-    currentPresetScope,
-    filteredNumberedActiveItems,
-    getItemPresetScope,
     hiddenOverlayItemIdList,
-    hiddenOverlayItemIds,
     items,
     pageQaCounts,
     pageTargets,
     presetScopeCounts,
-    qaFilter,
-    qaFilterCounts,
-    qaStatusFilter,
-    qaStatusFilterCounts,
     selectedNumberedItem,
-    setHiddenOverlayItemIds,
-    setItems,
-    setQaFilter,
-    setQaStatusFilter,
-    setSitemapItems,
     targetSrc,
   };
 };

@@ -30,7 +30,6 @@ interface UseReviewItemRestoreOptions {
   pendingInitialItemIdRef: MutableRefObject<string | null>;
   pendingRestoreRef: MutableRefObject<ReviewItem | null>;
   reviewPathPrefix: string;
-  selectedItemIdRef: MutableRefObject<string | null>;
   source: ReviewSource;
   viewportPresets: ReviewShellViewportPreset[];
   onActiveRouteChange: (target: string) => void;
@@ -140,7 +139,6 @@ export const useReviewItemRestore = ({
   pendingInitialItemIdRef,
   pendingRestoreRef,
   reviewPathPrefix,
-  selectedItemIdRef,
   source,
   viewportPresets,
   onActiveRouteChange,
@@ -153,26 +151,24 @@ export const useReviewItemRestore = ({
   const storeApi = useReviewShellStoreApi();
   const clearSelectedItem = useCallback(() => {
     pendingRestoreRef.current = null;
-    selectedItemIdRef.current = null;
     onSelectedItemIdChange(null);
     controllerRef.current?.highlightItem(undefined);
   }, [
     controllerRef,
     onSelectedItemIdChange,
     pendingRestoreRef,
-    selectedItemIdRef,
   ]);
 
   const applyItemScroll = useCallback(
     async (item: ReviewItem) => {
-      if (selectedItemIdRef.current !== item.id) return false;
+      if (storeApi.getState().selectedItemId !== item.id) return false;
 
       const targetWindow = iframeRef.current?.contentWindow;
       const targetDocument = iframeRef.current?.contentDocument;
       if (!targetWindow || !targetDocument) return false;
 
       const isCurrentRestore = () =>
-        selectedItemIdRef.current === item.id &&
+        storeApi.getState().selectedItemId === item.id &&
         iframeRef.current?.contentDocument === targetDocument;
       const anchorElement = await waitForRestoreAnchor(
         targetWindow,
@@ -214,7 +210,7 @@ export const useReviewItemRestore = ({
 
       return true;
     },
-    [controllerRef, iframeRef, onSyncTargetViewport, selectedItemIdRef]
+    [controllerRef, iframeRef, onSyncTargetViewport, storeApi]
   );
 
   const applyPendingRestore = useCallback(() => {
@@ -236,7 +232,6 @@ export const useReviewItemRestore = ({
 
       pendingInitialItemIdRef.current = null;
       pendingRestoreRef.current = item;
-      selectedItemIdRef.current = item.id;
       onSelectedItemIdChange(item.id);
       onActiveRouteChange(nextRoute);
       onDraftTargetChange(nextTarget);
@@ -260,7 +255,6 @@ export const useReviewItemRestore = ({
       pendingRestoreRef,
       pendingInitialItemIdRef,
       reviewPathPrefix,
-      selectedItemIdRef,
       source,
       storeApi,
       viewportPresets,

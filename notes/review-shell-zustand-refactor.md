@@ -183,7 +183,7 @@ The migration runs as 3 work sessions, each ending with `pnpm typecheck && pnpm 
 
 - [x] **Session A — scaffold + sidePanel** (migration steps 1–2). Establishes the pattern: store directory layout, `createReviewShellStore`, Provider, `useReviewShellStore(selector)` helper, first slice. Later sessions replicate this pattern — do not deviate from it without updating this document. Landed in `f665cbe`. Pattern established: `src/react-shell/store/` with `create.review.shell.store.ts` (per-instance store), `store.context.tsx` (Provider + `useReviewShellStoreApi` + selector-required `useReviewShellStore`), `side.panel.slice.ts` (`StateCreator<ReviewShellState, [], [], SliceType>`, type-only circular import for `ReviewShellState` is intended). `ReviewShell` is now a thin provider wrapper around `ReviewShellContent`. Clamp/persistence stayed in `useReviewSidePanel`; the hook clamps at read time and uses `storeApi.getState()` in callbacks.
 - [x] **Session B — target slice** (migration step 3). Includes `ReviewShellConfigContext` and deleting `targetRef`/`sizeRef`. Landed in `a9448fb`. Notes for Session C: config lives in `store/shell.config.tsx` (`createReviewShellConfig` + provider, built in the `ReviewShell` wrapper); target slice init flows through `createReviewShellStore({ target: getInitialTargetSliceState(config) })`. Hooks read fresh values via `useReviewShellStoreApi().getState()`; pure modules (`review.frame.navigation`, `shell.actions.removeReviewItem`) take getter functions instead. `useReviewShellState` still returns the old shape (reading config + selectors) as a transitional layer — Session C shrinks it further when qa state moves.
-- [ ] **Session C — qa slice + selective rest** (migration steps 4–5). Largest diff: `ReviewQaPanel` container conversion, then selective settings/sourceTree/ruler moves.
+- [x] **Session C — qa slice + selective rest** (migration steps 4–5). Landed in `cce6447` + `266d655`. qa slice owns raw QA state (items, sitemapItems, filters, hidden overlay ids, selectedItemId, isItemsLoading, isAllQaVisible, copiedPromptKey, editingItem, mutatingItemIds); `selectedItemIdRef` is deleted and `hiddenOverlayItemIdListRef` became an internal ref of `useReviewKitLifecycle` (it mirrors a derived list — status filter + ⌘ key — kept only to avoid re-running initReviewKit). `QaPanelContainer` (`qa/panel.container.tsx`) reads store/config via `useReviewQaPanelData` + `useReviewShellAdapterState` and instantiates `useReviewItemActions` (options shrank to 3 callbacks); `ReviewShell` passes it 6 props. Shared derived logic lives in `qa/derive.ts`; shell-level derived (sitemap/topbar counts, presence, overlay id list) stays in the slimmed `useReviewShellData()`. **Step 5 decision: settings/sourceTree/ruler state stays in their hooks** — their props flow shell→panel one level only, so slices would add indirection without deleting any prop chain. Revisit only if a second consumer appears.
 
 Rules for whoever executes a session:
 
@@ -275,12 +275,14 @@ Validation:
 
 ## Done Criteria
 
-- `ReviewShell` reads as a composition layer, not a state switchboard.
-- Feature panels no longer receive 20+ mixed props from `ReviewShell`.
-- State mirror refs (`targetRef`, `sizeRef`, `selectedItemIdRef`, `hiddenOverlayItemIdListRef`) are deleted, replaced by `store.getState()` reads.
-- The store is Context-scoped; mounting two `ReviewShell` instances does not share state.
-- Core controller and iframe lifecycle remain in hooks/refs.
-- Public package API remains compatible.
+All met as of `266d655` (2026-07-05):
+
+- [x] `ReviewShell` reads as a composition layer, not a state switchboard.
+- [x] Feature panels no longer receive 20+ mixed props from `ReviewShell` (`QaPanelContainer` receives 6 controller-coupled callbacks).
+- [x] State mirror refs (`targetRef`, `sizeRef`, `selectedItemIdRef`) are deleted, replaced by `store.getState()` reads. `hiddenOverlayItemIdListRef` survives as an internal ref of `useReviewKitLifecycle` because it mirrors a derived list, not state.
+- [x] The store is Context-scoped; mounting two `ReviewShell` instances does not share state (unit-tested).
+- [x] Core controller and iframe lifecycle remain in hooks/refs.
+- [x] Public package API remains compatible.
 - Typecheck, tests, and build pass:
 
 ```bash

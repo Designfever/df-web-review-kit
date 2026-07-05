@@ -1,104 +1,88 @@
 import {
   useCallback,
-  type MutableRefObject,
-  type RefObject,
+  useMemo,
 } from 'react';
 import type {
-  ReviewAssigneeOption,
-  ReviewFieldsConfig,
   ReviewItem,
-  ReviewMode,
   ReviewRulerConfig,
-  ReviewSource,
-  ReviewViewportPreset,
-  WebReviewKitAdapter,
-  WebReviewKitController,
 } from '../../types';
-import type {
-  ReviewShellViewportPreset,
-  TargetOverlayState,
-} from '../types';
+import { useReviewShellConfig } from '../store/shell.config';
+import { useReviewShellRefs } from '../store/shell.refs';
+import { useReviewShellStore } from '../store/store.context';
+import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
+import { normalizeTarget } from '../route';
 import { useReviewItemRestore } from './use.review.item.restore';
 import { useReviewKitLifecycle } from './use.review.kit.lifecycle';
 import { useReviewTargetOverlay } from './use.review.target.overlay';
 import { useReviewTargetSync } from './use.review.target.sync';
 
 interface UseReviewControllerOptions {
-  adapter: WebReviewKitAdapter;
-  fields: Required<Pick<ReviewFieldsConfig, 'title'>>;
-  assigneeTitle: string;
-  assigneeOptions: readonly ReviewAssigneeOption[];
-  cleanupTargetRef: MutableRefObject<(() => void) | null>;
-  controllerRef: MutableRefObject<WebReviewKitController | null>;
-  frameScrollRef: RefObject<HTMLDivElement | null>;
   hiddenOverlayItemIdList: string[];
-  iframeRef: RefObject<HTMLIFrameElement | null>;
   isFigmaOverlayAvailable: boolean;
-  pageTargets: ReadonlySet<string>;
-  pendingInitialItemIdRef: MutableRefObject<string | null>;
-  pendingRestoreRef: MutableRefObject<ReviewItem | null>;
-  projectId: string;
-  reviewPathPrefix: string;
   reviewUserId: string;
-  reviewViewportPresets: ReviewViewportPreset[];
   ruler?: ReviewRulerConfig;
   adjustmentLabel?: string;
-  size: ReviewShellViewportPreset;
-  source: ReviewSource;
-  target: string;
-  targetOverlayState: TargetOverlayState;
-  viewportPresets: ReviewShellViewportPreset[];
-  onActiveRouteChange: (target: string) => void;
   onCancelReviewMode: () => boolean;
-  onDraftTargetChange: (target: string) => void;
   onItemsRefresh: () => Promise<ReviewItem[]>;
-  onModeChange: (mode: ReviewMode) => void;
-  onSelectedItemIdChange: (itemId: string | null) => void;
-  onSizeChange: (size: ReviewShellViewportPreset) => void;
-  onTargetChange: (target: string) => void;
-  onTargetOverlayStateChange: (state: TargetOverlayState) => void;
   onCloseRuler: () => boolean;
 }
 
 export const useReviewController = ({
-  adapter,
-  fields,
-  assigneeTitle,
-  assigneeOptions,
-  cleanupTargetRef,
-  controllerRef,
-  frameScrollRef,
   hiddenOverlayItemIdList,
-  iframeRef,
   isFigmaOverlayAvailable,
-  pageTargets,
-  pendingInitialItemIdRef,
-  pendingRestoreRef,
-  projectId,
-  reviewPathPrefix,
   reviewUserId,
-  reviewViewportPresets,
   ruler,
   adjustmentLabel,
-  size,
-  source,
-  target,
-  targetOverlayState,
-  viewportPresets,
-  onActiveRouteChange,
   onCancelReviewMode,
-  onDraftTargetChange,
   onItemsRefresh,
-  onModeChange,
-  onSelectedItemIdChange,
-  onSizeChange,
-  onTargetChange,
-  onTargetOverlayStateChange,
   onCloseRuler,
 }: UseReviewControllerOptions) => {
+  const {
+    pages,
+    projectId,
+    reviewPathPrefix,
+    reviewViewportPresets,
+    viewportPresets,
+  } = useReviewShellConfig();
+  const {
+    activeAdapterEntry,
+    adapter,
+    source,
+  } = useReviewShellAdapterState();
+  const {
+    cleanupTargetRef,
+    controllerRef,
+    frameScrollRef,
+    iframeRef,
+    pendingInitialItemIdRef,
+    pendingRestoreRef,
+  } = useReviewShellRefs();
+  const size = useReviewShellStore((state) => state.size);
+  const target = useReviewShellStore((state) => state.target);
+  const targetOverlayState = useReviewShellStore(
+    (state) => state.targetOverlayState
+  );
+  const setActiveRoute = useReviewShellStore((state) => state.setActiveRoute);
+  const setDraftTarget = useReviewShellStore((state) => state.setDraftTarget);
+  const setMode = useReviewShellStore((state) => state.setMode);
+  const setSelectedItemId = useReviewShellStore(
+    (state) => state.setSelectedItemId
+  );
+  const setSize = useReviewShellStore((state) => state.setSize);
+  const setTarget = useReviewShellStore((state) => state.setTarget);
+  const setTargetOverlayState = useReviewShellStore(
+    (state) => state.setTargetOverlayState
+  );
   const syncTargetViewport = useCallback(() => {
     window.dispatchEvent(new Event('resize'));
   }, []);
+  const pageTargets = useMemo(
+    () =>
+      new Set(
+        pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
+      ),
+    [pages, reviewPathPrefix]
+  );
   const {
     closeTargetOverlay,
     refreshTargetOverlayState,
@@ -107,7 +91,7 @@ export const useReviewController = ({
     iframeRef,
     isFigmaOverlayAvailable,
     targetOverlayState,
-    onTargetOverlayStateChange,
+    onTargetOverlayStateChange: setTargetOverlayState,
   });
   const {
     applyPendingRestore,
@@ -123,12 +107,12 @@ export const useReviewController = ({
     reviewPathPrefix,
     source,
     viewportPresets,
-    onActiveRouteChange,
-    onDraftTargetChange,
-    onSelectedItemIdChange,
-    onSizeChange,
+    onActiveRouteChange: setActiveRoute,
+    onDraftTargetChange: setDraftTarget,
+    onSelectedItemIdChange: setSelectedItemId,
+    onSizeChange: setSize,
     onSyncTargetViewport: syncTargetViewport,
-    onTargetChange,
+    onTargetChange: setTarget,
   });
   const { syncShellTarget } = useReviewTargetSync({
     iframeRef,
@@ -136,11 +120,11 @@ export const useReviewController = ({
     size,
     source,
     target,
-    onActiveRouteChange,
+    onActiveRouteChange: setActiveRoute,
     onClearSelectedItem: clearSelectedItem,
-    onDraftTargetChange,
+    onDraftTargetChange: setDraftTarget,
     onSyncTargetViewport: syncTargetViewport,
-    onTargetChange,
+    onTargetChange: setTarget,
   });
   const {
     initReviewKit,
@@ -148,9 +132,6 @@ export const useReviewController = ({
     setControllerReviewMode,
   } = useReviewKitLifecycle({
     adapter,
-    fields,
-    assigneeTitle,
-    assigneeOptions,
     cleanupTargetRef,
     controllerRef,
     frameScrollRef,
@@ -161,6 +142,9 @@ export const useReviewController = ({
     reviewPathPrefix,
     reviewUserId,
     reviewViewportPresets,
+    fields: activeAdapterEntry.fields,
+    assigneeTitle: activeAdapterEntry.assigneeTitle,
+    assigneeOptions: activeAdapterEntry.assigneeOptions,
     ruler,
     adjustmentLabel,
     onApplyPendingRestore: applyPendingRestore,
@@ -168,7 +152,7 @@ export const useReviewController = ({
     onCloseRuler,
     onCreateItem: restoreReviewItem,
     onItemsRefresh,
-    onModeChange,
+    onModeChange: setMode,
     onRefreshTargetOverlayState: refreshTargetOverlayState,
     onRestoreInitialItem: restoreInitialItem,
     onRestoreReviewItem: restoreReviewItem,

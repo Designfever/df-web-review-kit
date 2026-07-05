@@ -1,75 +1,43 @@
-import type { RefObject } from 'react';
-import type { ReviewMode } from '../../types';
-import type {
-  ReviewRulerMeasure,
-  ReviewRulerPoint,
-  ReviewShellViewportPreset,
-} from '../types';
+import {
+  useMemo,
+} from 'react';
+import { useReviewFigmaImagesState } from '../figma/images.context';
+import { buildTargetSrc } from '../route';
 import { ReviewModeToolbar } from '../review/mode.toolbar';
 import { RulerGutters } from '../ruler/gutters';
 import { RulerOverlay } from '../ruler/overlay';
+import { useReviewRulerState } from '../store/ruler.context';
+import { useReviewShellActions } from '../store/shell.actions.context';
+import { useReviewShellRefs } from '../store/shell.refs';
+import { useReviewShellStore } from '../store/store.context';
+import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
 import {
   useTargetFigmaImageOverlays,
-  type ReviewTargetFigmaImageOverlay,
 } from './figma.image.overlay';
 
-interface ReviewTargetFrameProps {
-  canWriteArea: boolean;
-  canWriteDom: boolean;
-  figmaImageOverlays: ReviewTargetFigmaImageOverlay[];
-  frameScrollRef: RefObject<HTMLDivElement | null>;
-  iframeRef: RefObject<HTMLIFrameElement | null>;
-  isRulerAvailable: boolean;
-  isRulerDragging: boolean;
-  isRulerVisible: boolean;
-  mode: ReviewMode;
-  rulerHover: ReviewRulerPoint | null;
-  rulerMeasure: ReviewRulerMeasure | undefined;
-  rulerMeasureLabel: string;
-  rulerOverlayRef: RefObject<HTMLDivElement | null>;
-  rulerScaleX: number;
-  rulerScaleY: number;
-  rulerUnit: string;
-  size: ReviewShellViewportPreset;
-  targetSrc: string;
-  onLoadTarget: () => void;
-  onSetFigmaImageOverlayOffsetY?: (id: string, offsetY: number) => void;
-  onSetReviewMode: (mode: ReviewMode) => void;
-}
-
-export const ReviewTargetFrame = ({
-  canWriteArea,
-  canWriteDom,
-  figmaImageOverlays,
-  frameScrollRef,
-  iframeRef,
-  isRulerAvailable,
-  isRulerDragging,
-  isRulerVisible,
-  mode,
-  rulerHover,
-  rulerMeasure,
-  rulerMeasureLabel,
-  rulerOverlayRef,
-  rulerScaleX,
-  rulerScaleY,
-  rulerUnit,
-  size,
-  targetSrc,
-  onLoadTarget,
-  onSetFigmaImageOverlayOffsetY,
-  onSetReviewMode,
-}: ReviewTargetFrameProps) => {
+export const ReviewTargetFrame = () => {
+  const {
+    figmaImageOverlays,
+    setImageOverlayOffsetY,
+  } = useReviewFigmaImagesState();
+  const { loadTargetFrame, setReviewMode } = useReviewShellActions();
+  const { frameScrollRef, iframeRef } = useReviewShellRefs();
+  const { isRulerAvailable, isRulerVisible } = useReviewRulerState();
+  const { canWriteArea, canWriteDom } = useReviewShellAdapterState();
+  const mode = useReviewShellStore((state) => state.mode);
+  const size = useReviewShellStore((state) => state.size);
+  const target = useReviewShellStore((state) => state.target);
+  const targetSrc = useMemo(() => buildTargetSrc(target), [target]);
   const showRuler = isRulerVisible && isRulerAvailable;
   const syncTargetFigmaImageOverlays = useTargetFigmaImageOverlays({
     figmaImageOverlays,
     iframeRef,
-    onSetOverlayOffsetY: onSetFigmaImageOverlayOffsetY,
+    onSetOverlayOffsetY: setImageOverlayOffsetY,
     size,
     targetSrc,
   });
   const handleLoadTarget = () => {
-    onLoadTarget();
+    loadTargetFrame();
     syncTargetFigmaImageOverlays();
     window.requestAnimationFrame(syncTargetFigmaImageOverlays);
   };
@@ -85,15 +53,7 @@ export const ReviewTargetFrame = ({
                   showRuler ? ' is-ruler' : ''
                 }`}
               >
-                {showRuler && (
-                  <RulerGutters
-                    rulerHover={rulerHover}
-                    rulerScaleX={rulerScaleX}
-                    rulerScaleY={rulerScaleY}
-                    rulerUnit={rulerUnit}
-                    size={size}
-                  />
-                )}
+                {showRuler && <RulerGutters />}
                 <div
                   className="df-review-device"
                   style={{
@@ -112,17 +72,7 @@ export const ReviewTargetFrame = ({
                     title="Review target"
                     onLoad={handleLoadTarget}
                   />
-                  {showRuler && (
-                    <RulerOverlay
-                      iframeRef={iframeRef}
-                      isRulerDragging={isRulerDragging}
-                      rulerHover={rulerHover}
-                      rulerMeasure={rulerMeasure}
-                      rulerMeasureLabel={rulerMeasureLabel}
-                      rulerOverlayRef={rulerOverlayRef}
-                      size={size}
-                    />
-                  )}
+                  {showRuler && <RulerOverlay />}
                 </div>
               </div>
             </div>
@@ -133,7 +83,7 @@ export const ReviewTargetFrame = ({
             canWriteArea={canWriteArea}
             canWriteDom={canWriteDom}
             mode={mode}
-            onSetReviewMode={onSetReviewMode}
+            onSetReviewMode={setReviewMode}
           />
         </div>
       </div>

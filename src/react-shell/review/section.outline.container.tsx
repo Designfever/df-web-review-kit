@@ -1,52 +1,23 @@
-// Source Tree feature container. 아웃라인 훅과 패널 JSX 를 소유하고
-// 셸에서는 소스 인스펙터/컨트롤러 결합 콜백만 props 로 받는다.
-import { useMemo } from 'react';
-import type { ReviewMode } from '../../types';
+// Source Tree feature container. 아웃라인 훅과 패널 JSX 를 소유한다.
 import { useReviewSectionOutline } from '../hooks/use.review.section.outline';
-import { buildTargetSrc } from '../route';
-import type { GetSectionOutlineOptions } from '../section.outline';
-import type { SourceOpenOptions } from '../source.open';
-import { useReviewShellRefs } from '../store/shell.refs';
-import { useReviewShellStore } from '../store/store.context';
-import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
+import { useReviewShellActions } from '../store/shell.actions.context';
+import { useReviewShellConfig } from '../store/shell.config';
 import { SectionOutlinePanel } from './section.outline.panel';
 
-interface SectionOutlineContainerProps {
-  isPanelVisible: boolean;
-  sectionOutlineOptions: GetSectionOutlineOptions;
-  sourceOpenOptions: SourceOpenOptions;
-  targetFrameLoadVersion: number;
-  onClearHover: () => void;
-  onClearSourceInspector: () => void;
-  onHoverElement: (element: Element) => void;
-  onInitReviewKit: () => void;
-  onModeChange: (mode: ReviewMode) => void;
-  onShowQaPanel: () => void;
-  onToast: (message: string) => void;
-}
-
-export const SectionOutlineContainer = ({
-  isPanelVisible,
-  sectionOutlineOptions,
-  sourceOpenOptions,
-  targetFrameLoadVersion,
-  onClearHover,
-  onClearSourceInspector,
-  onHoverElement,
-  onInitReviewKit,
-  onModeChange,
-  onShowQaPanel,
-  onToast,
-}: SectionOutlineContainerProps) => {
-  const { controllerRef, frameScrollRef, iframeRef } = useReviewShellRefs();
-  const { canWriteDom } = useReviewShellAdapterState();
-  const target = useReviewShellStore((state) => state.target);
-  const targetSrc = useMemo(() => buildTargetSrc(target), [target]);
-
+export const SectionOutlineContainer = () => {
+  const { isSourceInspectorEnabled } = useReviewShellConfig();
   const {
+    clearSourceInspector,
+    clearSourceOutlineHover,
+    initReviewKit,
+    showSourceOutlineForElement,
+  } = useReviewShellActions();
+  const {
+    canWriteDom,
     collapsedSectionOutlineIds,
     filteredSectionOutline,
     filteredSectionOutlineCount,
+    isPanelVisible,
     isSectionOutlineFiltering,
     openSectionData,
     openSectionSource,
@@ -61,21 +32,11 @@ export const SectionOutlineContainer = ({
     updateSectionOutlineFilter,
     updateSectionOutlineMetaVisibility,
   } = useReviewSectionOutline({
-    canWriteDom,
-    controllerRef,
-    frameScrollRef,
-    iframeRef,
-    isPanelVisible,
-    sectionOutlineOptions,
-    sourceOpenOptions,
-    targetFrameLoadVersion,
-    targetSrc,
-    onClearSourceInspector,
-    onInitReviewKit,
-    onModeChange,
-    onShowQaPanel,
-    onToast,
+    onClearSourceInspector: clearSourceInspector,
+    onInitReviewKit: initReviewKit,
   });
+
+  if (!isSourceInspectorEnabled) return null;
 
   return (
     <SectionOutlinePanel
@@ -100,8 +61,8 @@ export const SectionOutlineContainer = ({
       onOpenSource={openSectionSource}
       onOpenUsageSource={openSectionUsageSource}
       onStartDomReview={startSectionDomReview}
-      onHoverElement={onHoverElement}
-      onClearHover={onClearHover}
+      onHoverElement={showSourceOutlineForElement}
+      onClearHover={clearSourceOutlineHover}
     />
   );
 };

@@ -167,3 +167,5 @@ export const useReviewSettings = ({
     setReviewUserIdDraft,
   };
 };
+
+export type ReviewSettingsController = ReturnType<typeof useReviewSettings>;

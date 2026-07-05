@@ -1,6 +1,3 @@
-import { useState } from 'react';
-import type { ReviewMode } from '../../types';
-import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellRefs } from '../store/shell.refs';
 import { useReviewShellStore } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
@@ -9,37 +6,20 @@ import { getIsFigmaOverlayAvailable } from '../viewport';
 // target/source/size/route/overlay/QA 상태는 store slice 로 이동했다.
 // 이 훅은 config + store 를 조합해 기존 반환 shape 을 유지하는 과도기 레이어다.
 export const useReviewShellState = () => {
-  const { reviewViewportPresets, viewportPresets } = useReviewShellConfig();
   const {
     activeAdapterEntry,
     adapter,
-    canWriteArea,
-    canWriteDom,
     isRemoteSource,
     localAdapterEntry,
     remoteAdapterEntry,
-    showSourceSelect,
     source,
-    sourceEntries,
   } = useReviewShellAdapterState();
 
   const activeRoute = useReviewShellStore((state) => state.activeRoute);
-  const draftTarget = useReviewShellStore((state) => state.draftTarget);
   const size = useReviewShellStore((state) => state.size);
   const target = useReviewShellStore((state) => state.target);
   const targetOverlayState = useReviewShellStore(
     (state) => state.targetOverlayState
-  );
-  const setActiveRoute = useReviewShellStore((state) => state.setActiveRoute);
-  const setDraftTarget = useReviewShellStore((state) => state.setDraftTarget);
-  const setSize = useReviewShellStore((state) => state.setSize);
-  const setSource = useReviewShellStore((state) => state.setSource);
-  const setTarget = useReviewShellStore((state) => state.setTarget);
-  const setTargetOverlayState = useReviewShellStore(
-    (state) => state.setTargetOverlayState
-  );
-  const setSelectedItemId = useReviewShellStore(
-    (state) => state.setSelectedItemId
   );
   const copiedPromptKey = useReviewShellStore(
     (state) => state.copiedPromptKey
@@ -47,9 +27,33 @@ export const useReviewShellState = () => {
   const setCopiedPromptKey = useReviewShellStore(
     (state) => state.setCopiedPromptKey
   );
+  const isInitialPromptOpen = useReviewShellStore(
+    (state) => state.isInitialPromptOpen
+  );
+  const isInitialPromptScriptOpen = useReviewShellStore(
+    (state) => state.isInitialPromptScriptOpen
+  );
+  const isSitemapOpen = useReviewShellStore((state) => state.isSitemapOpen);
+  const mode = useReviewShellStore((state) => state.mode);
+  const targetFrameLoadVersion = useReviewShellStore(
+    (state) => state.targetFrameLoadVersion
+  );
+  const toastMessage = useReviewShellStore((state) => state.toastMessage);
+  const bumpTargetFrameLoadVersion = useReviewShellStore(
+    (state) => state.bumpTargetFrameLoadVersion
+  );
+  const setIsInitialPromptOpen = useReviewShellStore(
+    (state) => state.setIsInitialPromptOpen
+  );
+  const setIsInitialPromptScriptOpen = useReviewShellStore(
+    (state) => state.setIsInitialPromptScriptOpen
+  );
+  const setIsSitemapOpen = useReviewShellStore(
+    (state) => state.setIsSitemapOpen
+  );
+  const setMode = useReviewShellStore((state) => state.setMode);
 
   const {
-    cleanupTargetRef,
     controllerRef,
     frameScrollRef,
     iframeRef,
@@ -57,26 +61,20 @@ export const useReviewShellState = () => {
     pendingRestoreRef,
   } = useReviewShellRefs();
 
-  const [mode, setMode] = useState<ReviewMode>('idle');
-  const [isSitemapOpen, setIsSitemapOpen] = useState(false);
-  const [isInitialPromptOpen, setIsInitialPromptOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const isFigmaOverlayAvailable = getIsFigmaOverlayAvailable(size);
 
   return {
     activeAdapterEntry,
     activeRoute,
     adapter,
-    canWriteArea,
-    canWriteDom,
-    cleanupTargetRef,
     controllerRef,
     copiedPromptKey,
-    draftTarget,
     frameScrollRef,
     iframeRef,
+    bumpTargetFrameLoadVersion,
     isFigmaOverlayAvailable,
     isInitialPromptOpen,
+    isInitialPromptScriptOpen,
     isRemoteSource,
     isSitemapOpen,
     localAdapterEntry,
@@ -84,26 +82,16 @@ export const useReviewShellState = () => {
     pendingInitialItemIdRef,
     pendingRestoreRef,
     remoteAdapterEntry,
-    reviewViewportPresets,
-    setActiveRoute,
     setCopiedPromptKey,
-    setDraftTarget,
     setIsInitialPromptOpen,
+    setIsInitialPromptScriptOpen,
     setIsSitemapOpen,
     setMode,
-    setSelectedItemId,
-    setSize,
-    setSource,
-    setTarget,
-    setTargetOverlayState,
-    showSourceSelect,
     size,
     source,
-    sourceEntries,
     target,
+    targetFrameLoadVersion,
     targetOverlayState,
     toastMessage,
-    viewportPresets,
-    setToastMessage,
   };
 };

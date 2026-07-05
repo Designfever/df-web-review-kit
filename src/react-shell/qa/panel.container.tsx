@@ -1,32 +1,21 @@
 // QA 패널 feature container. store/config 를 selector 로 읽고
 // presentational 컴포넌트(ReviewQaPanel/QaItemEditModal)에 좁은 props 를 내려준다.
 // 컨트롤러/셸 결합 액션(restore/refresh/toast 등)만 셸에서 props 로 받는다.
-import type { ReviewItem } from '../../types';
 import { useReviewItemActions } from '../hooks/use.review.item.actions';
+import { useReviewShellActions } from '../store/shell.actions.context';
 import { useReviewShellStore } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
-import type { ReviewSource } from '../../types';
 import { QaItemEditModal } from './item.edit.modal';
 import { ReviewQaPanel } from './panel';
 import { useReviewQaPanelData } from './use.review.qa.panel.data';
 
-interface QaPanelContainerProps {
-  isListVisible: boolean;
-  onChangeReviewSource: (nextSource: ReviewSource) => void;
-  onClearSelectedItem: () => void;
-  onRefreshReviewData: () => Promise<void>;
-  onRestoreReviewItem: (item: ReviewItem) => void;
-  onToast: (message: string) => void;
-}
-
-export const QaPanelContainer = ({
-  isListVisible,
-  onChangeReviewSource,
-  onClearSelectedItem,
-  onRefreshReviewData,
-  onRestoreReviewItem,
-  onToast,
-}: QaPanelContainerProps) => {
+export const QaPanelContainer = () => {
+  const {
+    changeReviewSource,
+    clearSelectedReviewItem,
+    refreshReviewData,
+    restoreReviewItem,
+  } = useReviewShellActions();
   const {
     activeAdapterEntry,
     isRemoteSource,
@@ -49,6 +38,9 @@ export const QaPanelContainer = ({
   const setQaFilter = useReviewShellStore((state) => state.setQaFilter);
   const toggleHiddenOverlayItemId = useReviewShellStore(
     (state) => state.toggleHiddenOverlayItemId
+  );
+  const isListVisible = useReviewShellStore(
+    (state) => state.isListVisible && state.sidePanel === 'qa'
   );
 
   const {
@@ -77,9 +69,8 @@ export const QaPanelContainer = ({
     setEditingItem,
     submitItem,
   } = useReviewItemActions({
-    onClearSelectedItem,
-    onRefreshReviewData,
-    onToast,
+    onClearSelectedItem: clearSelectedReviewItem,
+    onRefreshReviewData: refreshReviewData,
   });
 
   return (
@@ -119,9 +110,9 @@ export const QaPanelContainer = ({
         fields={activeAdapterEntry.fields}
         assigneeTitle={activeAdapterEntry.assigneeTitle}
         onChangeItemStatus={changeItemStatus}
-        onClearSelectedItem={onClearSelectedItem}
+        onClearSelectedItem={clearSelectedReviewItem}
         onChangeItemAssignee={changeItemAssignee}
-        onChangeReviewSource={onChangeReviewSource}
+        onChangeReviewSource={changeReviewSource}
         onCopyItemLabel={(numberedItem) => void copyItemLabel(numberedItem)}
         onCopyItemLink={(numberedItem) => void copyItemLink(numberedItem)}
         onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
@@ -129,9 +120,9 @@ export const QaPanelContainer = ({
         onEditItem={setEditingItem}
         onQaFilterChange={setQaFilter}
         onQaStatusFilterChange={setQaStatusFilter}
-        onRefreshReviewData={onRefreshReviewData}
+        onRefreshReviewData={refreshReviewData}
         onRemoveItem={removeItem}
-        onRestoreReviewItem={onRestoreReviewItem}
+        onRestoreReviewItem={restoreReviewItem}
         onSubmitItem={submitItem}
         onToggleItemOverlayVisibility={toggleHiddenOverlayItemId}
       />

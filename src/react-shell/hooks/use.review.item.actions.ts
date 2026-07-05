@@ -15,6 +15,7 @@ import {
   useReviewShellStoreApi,
 } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
+import { useReviewToast } from './use.review.toast';
 import { getRestoredSize } from '../viewport';
 import {
   copyReviewPrompt,
@@ -28,11 +29,9 @@ import {
 export function useReviewItemActions({
   onClearSelectedItem,
   onRefreshReviewData,
-  onToast,
 }: {
   onClearSelectedItem: () => void;
   onRefreshReviewData: () => Promise<void>;
-  onToast: (message: string) => void;
 }) {
   const { reviewPathPrefix, viewportPresets } = useReviewShellConfig();
   const {
@@ -51,6 +50,7 @@ export function useReviewItemActions({
   const setCopiedPromptKey = useReviewShellStore(
     (state) => state.setCopiedPromptKey
   );
+  const showToast = useReviewToast();
 
   /** 액션 실행 동안 해당 아이템을 mutation 중으로 표시한다. */
   const withItemMutation = async <T,>(
@@ -67,7 +67,7 @@ export function useReviewItemActions({
   };
 
   const showItemMutationError = (error: unknown, fallback: string) => {
-    onToast(
+    showToast(
       error instanceof Error && error.message ? error.message : fallback
     );
   };
@@ -83,7 +83,7 @@ export function useReviewItemActions({
           item,
           nextStatus,
           onRefreshReviewData,
-          onToast,
+          onToast: showToast,
         })
       );
     } catch (error) {
@@ -102,7 +102,7 @@ export function useReviewItemActions({
           item,
           assigneeId,
           onRefreshReviewData,
-          onToast,
+          onToast: showToast,
         })
       );
     } catch (error) {
@@ -122,7 +122,7 @@ export function useReviewItemActions({
           item,
           ...patch,
           onRefreshReviewData,
-          onToast,
+          onToast: showToast,
         })
       );
       setEditingItem(null);
@@ -144,7 +144,7 @@ export function useReviewItemActions({
           remoteAdapterEntry,
           onClearSelectedItem,
           onRefreshReviewData,
-          onToast,
+          onToast: showToast,
         })
       );
     } catch (error) {
@@ -165,7 +165,7 @@ export function useReviewItemActions({
           source,
           onClearSelectedItem,
           onRefreshReviewData,
-          onToast,
+          onToast: showToast,
         })
       );
     } catch (error) {
@@ -185,7 +185,7 @@ export function useReviewItemActions({
       toastMessage,
       value,
       onCopiedPromptKeyChange: setCopiedPromptKey,
-      onToast,
+      onToast: showToast,
     });
 
   const copyItemPrompt = (numberedItem: NumberedReviewItem) =>
@@ -219,7 +219,7 @@ export function useReviewItemActions({
   const copyRemoteIssuePath = (item: ReviewItem) => {
     const path = getUrlPathWithoutOrigin(item.externalIssueUrl);
     if (!path) {
-      onToast('QA link not found');
+      showToast('QA link not found');
       return Promise.resolve();
     }
 

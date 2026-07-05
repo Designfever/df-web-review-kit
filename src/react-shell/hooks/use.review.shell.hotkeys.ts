@@ -1,22 +1,18 @@
 import { useEffect } from 'react';
 import { getHotkeyActionKey, isHotkey } from '../../core/hotkey';
 import type { ReviewMode } from '../../types';
+import { useReviewShellStore } from '../store/store.context';
 import { isEditableEventTarget } from '../target/target';
 import type { TargetOverlayKey } from '../types';
 
 interface UseReviewShellHotkeysOptions {
   isRailHotkeyBlocked: boolean;
   isFigmaSettingsOpen: boolean;
-  isInitialPromptOpen: boolean;
   isRulerAvailable: boolean;
   isRulerVisible: boolean;
-  isSitemapOpen: boolean;
-  mode: ReviewMode;
   onCancelReviewMode: () => boolean;
   onCloseFigmaSettings: () => void;
-  onCloseInitialPrompt: () => void;
   onCloseRuler: () => boolean;
-  onCloseSitemap: () => void;
   onSetReviewMode: (mode: ReviewMode) => void;
   onToggleComponentListPanel: () => void;
   onToggleFigmaImagesPanel: () => void;
@@ -28,16 +24,11 @@ interface UseReviewShellHotkeysOptions {
 export const useReviewShellHotkeys = ({
   isRailHotkeyBlocked,
   isFigmaSettingsOpen,
-  isInitialPromptOpen,
   isRulerAvailable,
   isRulerVisible,
-  isSitemapOpen,
-  mode,
   onCancelReviewMode,
   onCloseFigmaSettings,
-  onCloseInitialPrompt,
   onCloseRuler,
-  onCloseSitemap,
   onSetReviewMode,
   onToggleComponentListPanel,
   onToggleFigmaImagesPanel,
@@ -45,6 +36,18 @@ export const useReviewShellHotkeys = ({
   onToggleRuler,
   onToggleTargetOverlay,
 }: UseReviewShellHotkeysOptions) => {
+  const isInitialPromptOpen = useReviewShellStore(
+    (state) => state.isInitialPromptOpen
+  );
+  const isSitemapOpen = useReviewShellStore((state) => state.isSitemapOpen);
+  const mode = useReviewShellStore((state) => state.mode);
+  const setIsInitialPromptOpen = useReviewShellStore(
+    (state) => state.setIsInitialPromptOpen
+  );
+  const setIsSitemapOpen = useReviewShellStore(
+    (state) => state.setIsSitemapOpen
+  );
+
   useEffect(() => {
     if (
       mode === 'idle' &&
@@ -72,14 +75,14 @@ export const useReviewShellHotkeys = ({
       }
 
       if (isInitialPromptOpen) {
-        onCloseInitialPrompt();
+        setIsInitialPromptOpen(false);
         event.preventDefault();
         event.stopPropagation();
         return;
       }
 
       if (isSitemapOpen) {
-        onCloseSitemap();
+        setIsSitemapOpen(false);
         return;
       }
 
@@ -98,9 +101,9 @@ export const useReviewShellHotkeys = ({
     mode,
     onCancelReviewMode,
     onCloseFigmaSettings,
-    onCloseInitialPrompt,
     onCloseRuler,
-    onCloseSitemap,
+    setIsInitialPromptOpen,
+    setIsSitemapOpen,
   ]);
 
   useEffect(() => {

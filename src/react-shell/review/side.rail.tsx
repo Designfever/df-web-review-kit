@@ -1,6 +1,4 @@
-// shell.tsx 에서 분리한 우측 사이드 레일.
-// 패널 토글(Figma 이미지/QA/컴포넌트 트리)과 하단 액션(프롬프트/설정/About),
-// 현재 페이지 presence 아바타를 담는다. 상태는 전부 셸이 소유한다.
+// 우측 사이드 레일의 presentational UI.
 import {
   Bot as BotIcon,
   ListChecks as QaListIcon,

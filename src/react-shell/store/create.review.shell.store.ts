@@ -14,8 +14,12 @@ import {
   type TargetSlice,
   type TargetSliceState,
 } from './target.slice';
+import {
+  createUiSlice,
+  type UiSlice,
+} from './ui.slice';
 
-export type ReviewShellState = SidePanelSlice & TargetSlice & QaSlice;
+export type ReviewShellState = SidePanelSlice & TargetSlice & QaSlice & UiSlice;
 
 export interface ReviewShellStoreInit {
   target: TargetSliceState;
@@ -26,6 +30,7 @@ export const createReviewShellStore = (init: ReviewShellStoreInit) =>
     ...createSidePanelSlice(...args),
     ...createTargetSlice(init.target)(...args),
     ...createQaSlice(...args),
+    ...createUiSlice(...args),
   }));
 
 export type ReviewShellStore = ReturnType<typeof createReviewShellStore>;

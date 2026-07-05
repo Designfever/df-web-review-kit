@@ -19,6 +19,7 @@ import {
   type SourceOpenOptions,
 } from '../source.open';
 import { setTargetFigmaSourceSelectLocked } from '../target/target';
+import { useReviewToast } from './use.review.toast';
 
 const SOURCE_PANEL_MAX_WIDTH = 440;
 const SOURCE_PANEL_MIN_WIDTH = 240;
@@ -32,7 +33,6 @@ export function useReviewSourceInspector({
   sourceOpenOptions,
   targetSrc,
   onCancelReviewMode,
-  onToast,
 }: {
   iframeRef: RefObject<HTMLIFrameElement | null>;
   isSourceInspectorEnabled: boolean;
@@ -42,8 +42,8 @@ export function useReviewSourceInspector({
   /** target 주소가 바뀌면 새 문서에 단축키를 다시 바인딩한다. */
   targetSrc: string;
   onCancelReviewMode: () => boolean;
-  onToast: (message: string) => void;
 }) {
+  const showToast = useReviewToast();
   const sourceShortcutCleanupRef = useRef<(() => void) | null>(null);
   // 인스펙터 팝업 내부를 조작 중인지 여부. 팝업 클릭이 "바깥 클릭으로 닫힘"
   // 처리에 걸리지 않게 하는 플래그.
@@ -235,10 +235,10 @@ export function useReviewSourceInspector({
         ...sourceOpenOptions,
         omitPosition: !candidate.usesPosition,
       });
-      onToast(didOpen ? 'Source opened' : 'Source root required');
+      showToast(didOpen ? 'Source opened' : 'Source root required');
       clearSourceInspector();
     },
-    [clearSourceInspector, onToast, sourceOpenOptions]
+    [clearSourceInspector, showToast, sourceOpenOptions]
   );
 
   const cleanupSourceOpenShortcut = useCallback(() => {
@@ -405,7 +405,7 @@ export function useReviewSourceInspector({
 
       const candidates = showSourceInspectorForTarget(event.target, true);
       if (!candidates.length) {
-        onToast('Source hint not found');
+        showToast('Source hint not found');
         isSourcePanelPinned = false;
         setSourceSelecting(false);
         return;
@@ -490,7 +490,7 @@ export function useReviewSourceInspector({
     cleanupSourceOpenShortcut,
     iframeRef,
     isSourceInspectorEnabled,
-    onToast,
+    showToast,
     sourceCandidateOptions,
     showSourceOutlineForTarget,
     showSourceInspectorForTarget,
@@ -517,3 +517,7 @@ export function useReviewSourceInspector({
     sourceInspectorState,
   };
 }
+
+export type ReviewSourceInspectorController = ReturnType<
+  typeof useReviewSourceInspector
+>;

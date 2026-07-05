@@ -8,7 +8,14 @@ import {
   normalizeReviewShellAdapters,
   type NormalizedReviewShellAdapter,
 } from '../adapters';
+import { DEFAULT_INITIAL_REVIEW_PROMPT } from '../constants';
+import { resolveReviewSourceOptions } from '../env';
 import { DEFAULT_REVIEW_PATH_PREFIX } from '../route';
+import type { GetSectionOutlineOptions } from '../section.outline';
+import type {
+  GetSourceCandidatesOptions,
+  SourceOpenOptions,
+} from '../source.open';
 import type {
   ReviewShellPage,
   ReviewShellProps,
@@ -20,6 +27,7 @@ import {
 } from '../viewport';
 
 export interface ReviewShellConfig {
+  initialPrompt: string;
   projectId: string;
   pages: ReviewShellPage[];
   reviewPathPrefix: string;
@@ -27,22 +35,38 @@ export interface ReviewShellConfig {
   reviewViewportPresets: ReviewViewportPreset[];
   localAdapterEntry: NormalizedReviewShellAdapter | null;
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
+  sectionOutlineOptions: GetSectionOutlineOptions;
   sourceEntries: NormalizedReviewShellAdapter[];
+  sourceCandidateOptions: GetSourceCandidatesOptions;
+  sourceOpenOptions: SourceOpenOptions;
   showSourceSelect: boolean;
+  isSourceInspectorEnabled: boolean;
+  isSourceTreeHoverOutlineEnabled: boolean;
 }
 
 export const createReviewShellConfig = ({
   projectId,
   pages,
   adapters,
+  initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
   presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
+  sourceInspector,
+  sourceRoot,
 }: ReviewShellProps): ReviewShellConfig => {
   const viewportPresets =
     presets.length > 0 ? presets : DEFAULT_REVIEW_VIEWPORT_PRESETS;
   const normalizedAdapters = normalizeReviewShellAdapters(adapters);
+  const resolvedReviewSourceOptions = resolveReviewSourceOptions({
+    sourceInspector,
+    sourceRoot,
+  });
+  const resolvedSourceInspector =
+    resolvedReviewSourceOptions.sourceInspector;
+  const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
 
   return {
+    initialPrompt,
     projectId,
     pages,
     reviewPathPrefix,
@@ -50,8 +74,24 @@ export const createReviewShellConfig = ({
     reviewViewportPresets: toReviewViewportPresets(viewportPresets),
     localAdapterEntry: normalizedAdapters.local,
     remoteAdapterEntry: normalizedAdapters.remote,
+    sectionOutlineOptions: {
+      includePlacer: resolvedSourceInspector?.includePlacer,
+      ignore: resolvedSourceInspector?.ignore,
+      maxDepth: resolvedSourceInspector?.maxDepth,
+    },
     sourceEntries: normalizedAdapters.sources,
+    sourceCandidateOptions: {
+      ignore: resolvedSourceInspector?.ignore,
+      includePlacer: resolvedSourceInspector?.includePlacer,
+    },
+    sourceOpenOptions: {
+      ...resolvedSourceInspector,
+      sourceRoot: resolvedSourceRoot,
+    },
     showSourceSelect: normalizedAdapters.sources.length > 1,
+    isSourceInspectorEnabled: resolvedSourceInspector?.enabled !== false,
+    isSourceTreeHoverOutlineEnabled:
+      resolvedSourceInspector?.hoverOutline !== false,
   };
 };
 

@@ -1,21 +1,16 @@
 import type { CSSProperties } from 'react';
-import type { ReviewRulerPoint, ReviewShellViewportPreset } from '../types';
+import { useReviewRulerState } from '../store/ruler.context';
+import { useReviewShellStore } from '../store/store.context';
 
-interface RulerGuttersProps {
-  rulerHover: ReviewRulerPoint | null;
-  rulerScaleX: number;
-  rulerScaleY: number;
-  rulerUnit: string;
-  size: ReviewShellViewportPreset;
-}
+export const RulerGutters = () => {
+  const size = useReviewShellStore((state) => state.size);
+  const {
+    rulerHover,
+    rulerScaleX,
+    rulerScaleY,
+    rulerUnit,
+  } = useReviewRulerState();
 
-export const RulerGutters = ({
-  rulerHover,
-  rulerScaleX,
-  rulerScaleY,
-  rulerUnit,
-  size,
-}: RulerGuttersProps) => {
   return (
     <>
       <div className="df-review-ruler-corner" aria-hidden="true" />

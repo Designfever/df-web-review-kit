@@ -93,4 +93,25 @@ describe('createReviewShellStore', () => {
     expect(state.size.width).toBe(1440);
     expect(state.targetOverlayState.grid).toBe(true);
   });
+
+  it('updates ui state through slice actions', () => {
+    const store = createReviewShellStore(createTestInit());
+
+    store.getState().setMode('element');
+    store.getState().setIsSitemapOpen(true);
+    store
+      .getState()
+      .setIsSitemapOpen((current) => !current);
+    store.getState().setToastMessage('Copied');
+    store
+      .getState()
+      .setToastMessage((current) => (current === 'Copied' ? '' : current));
+    store.getState().bumpTargetFrameLoadVersion();
+
+    const state = store.getState();
+    expect(state.mode).toBe('element');
+    expect(state.isSitemapOpen).toBe(false);
+    expect(state.toastMessage).toBe('');
+    expect(state.targetFrameLoadVersion).toBe(1);
+  });
 });

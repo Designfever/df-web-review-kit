@@ -1,40 +1,31 @@
-// Topbar feature container. 주소/뷰포트/URL 복사 상태를 store/config 에서 직접 읽고
-// ruler·figma overlay·sitemap 등 셸 결합 콜백만 props 로 받는다.
+// Topbar feature container. 주소/뷰포트/URL 복사 상태를 store/config 에서 직접 읽는다.
 import { useState } from 'react';
-import type { ReviewItemScope } from '../index';
+import { useReviewShellData } from './hooks/use.review.shell.data';
 import { copyCurrentReviewUrl } from './review/shell.actions';
+import { useReviewFigmaOverlayState } from './store/figma.overlay.context';
+import { useReviewRulerState } from './store/ruler.context';
+import { useReviewShellActions } from './store/shell.actions.context';
 import { useReviewShellConfig } from './store/shell.config';
 import { useReviewShellStore } from './store/store.context';
 import { ReviewTopbar } from './topbar';
-import type { TargetOverlayKey } from './types';
 
-interface TopbarContainerProps {
-  figmaOverlayUnavailableMessage?: string;
-  isFigmaOverlayActive: boolean;
-  isFigmaOverlayAvailable: boolean;
-  isRulerAvailable: boolean;
-  isRulerVisible: boolean;
-  presetScopeCounts: ReadonlyMap<ReviewItemScope, number>;
-  onApplyTarget: () => void;
-  onOpenSitemap: () => void;
-  onToggleFigmaOverlay: () => void;
-  onToggleRuler: () => void;
-  onToggleTargetOverlay: (key: TargetOverlayKey) => void;
-}
-
-export const TopbarContainer = ({
-  figmaOverlayUnavailableMessage,
-  isFigmaOverlayActive,
-  isFigmaOverlayAvailable,
-  isRulerAvailable,
-  isRulerVisible,
-  presetScopeCounts,
-  onApplyTarget,
-  onOpenSitemap,
-  onToggleFigmaOverlay,
-  onToggleRuler,
-  onToggleTargetOverlay,
-}: TopbarContainerProps) => {
+export const TopbarContainer = () => {
+  const {
+    applyTarget,
+    toggleTargetOverlay,
+  } = useReviewShellActions();
+  const {
+    isRulerAvailable,
+    isRulerVisible,
+    toggleRuler,
+  } = useReviewRulerState();
+  const {
+    figmaOverlayUnavailableMessage,
+    isFigmaOverlayActive,
+    isFigmaOverlayAvailable,
+    toggleFigmaOverlay,
+  } = useReviewFigmaOverlayState();
+  const { presetScopeCounts } = useReviewShellData();
   const { viewportPresets } = useReviewShellConfig();
   const draftTarget = useReviewShellStore((state) => state.draftTarget);
   const size = useReviewShellStore((state) => state.size);
@@ -42,6 +33,9 @@ export const TopbarContainer = ({
     (state) => state.targetOverlayState
   );
   const setDraftTarget = useReviewShellStore((state) => state.setDraftTarget);
+  const setIsSitemapOpen = useReviewShellStore(
+    (state) => state.setIsSitemapOpen
+  );
   const setSize = useReviewShellStore((state) => state.setSize);
   const [copyLabel, setCopyLabel] = useState('Copy URL');
 
@@ -64,13 +58,13 @@ export const TopbarContainer = ({
       isFigmaOverlayActive={isFigmaOverlayActive}
       isFigmaOverlayAvailable={isFigmaOverlayAvailable}
       onDraftTargetChange={setDraftTarget}
-      onApplyTarget={onApplyTarget}
-      onOpenSitemap={onOpenSitemap}
+      onApplyTarget={applyTarget}
+      onOpenSitemap={() => setIsSitemapOpen(true)}
       onCopyCurrentUrl={() => void copyCurrentUrl()}
       onSizeChange={setSize}
-      onToggleFigmaOverlay={onToggleFigmaOverlay}
-      onToggleRuler={onToggleRuler}
-      onToggleTargetOverlay={onToggleTargetOverlay}
+      onToggleFigmaOverlay={toggleFigmaOverlay}
+      onToggleRuler={toggleRuler}
+      onToggleTargetOverlay={toggleTargetOverlay}
     />
   );
 };

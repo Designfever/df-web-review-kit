@@ -11,11 +11,13 @@ interface ReviewShellFrameContainerProps {
 export const ReviewShellFrameContainer = ({
   slots,
 }: ReviewShellFrameContainerProps) => {
-  const { effectiveReviewTheme } = useReviewSettingsState();
+  const { areTooltipsEnabled, effectiveReviewTheme } =
+    useReviewSettingsState();
   const isListVisible = useReviewShellStore((state) => state.isListVisible);
 
   return (
     <ReviewShellFrame
+      areTooltipsEnabled={areTooltipsEnabled}
       effectiveReviewTheme={effectiveReviewTheme}
       isListVisible={isListVisible}
       slots={slots}

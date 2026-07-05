@@ -1,20 +1,7 @@
 import type {
-  ReviewItemScope,
   ReviewWorkflowStatus,
 } from '../types';
-import type { ReviewQaFilter, ReviewShellTheme } from './types';
-
-export const REVIEW_QA_FILTERS: Array<{
-  key: ReviewQaFilter;
-  label: string;
-  scope?: ReviewItemScope;
-}> = [
-  { key: 'all', label: 'All' },
-  { key: 'mobile', label: 'Mobile', scope: 'mobile' },
-  { key: 'tablet', label: 'Tablet', scope: 'tablet' },
-  { key: 'desktop', label: 'Desktop', scope: 'desktop' },
-  { key: 'wide', label: 'Wide', scope: 'wide' },
-];
+import type { ReviewShellTheme } from './types';
 
 export const REVIEW_QA_STATUS_FILTERS = [
   'todo',
@@ -45,7 +32,9 @@ export const REVIEW_SOURCE_TREE_META_STORAGE_KEY =
   'df-review-source-tree-meta-visibility';
 export const REVIEW_QA_STATUS_FILTER_STORAGE_KEY =
   'df-review-qa-status-filter';
+export const REVIEW_TOOLTIP_STORAGE_KEY = 'df-review-tooltips-enabled';
 export const DEFAULT_REVIEW_THEME: ReviewShellTheme = 'dark';
+export const DEFAULT_REVIEW_TOOLTIPS_ENABLED = true;
 export const FIGMA_TOKEN_GUIDE_ID = 'df-review-figma-token-guide';
 export const DEFAULT_INITIAL_REVIEW_PROMPT =
   'You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, DOM metadata, coordinates, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.';

@@ -8,8 +8,10 @@ import {
 } from 'lucide-react';
 import {
   DEFAULT_REVIEW_THEME,
+  DEFAULT_REVIEW_TOOLTIPS_ENABLED,
   FIGMA_TOKEN_GUIDE_ID,
   FIGMA_TOKEN_STORAGE_KEY,
+  REVIEW_TOOLTIP_STORAGE_KEY,
   REVIEW_THEME_OPTIONS,
   REVIEW_THEME_STORAGE_KEY,
   REVIEW_USER_ID_STORAGE_KEY,
@@ -27,6 +29,7 @@ interface ReviewSettingsModalProps {
   figmaTokenDraft: string;
   reviewUserIdDraft: string;
   reviewThemeDraft: ReviewShellTheme;
+  areTooltipsEnabledDraft: boolean;
   figmaSettingsStatus: string;
   isFigmaTokenVisible: boolean;
   isFigmaTokenGuideOpen: boolean;
@@ -34,13 +37,15 @@ interface ReviewSettingsModalProps {
   onFigmaTokenDraftChange: (value: string) => void;
   onReviewUserIdDraftChange: (value: string) => void;
   onReviewThemeDraftChange: (value: ReviewShellTheme) => void;
+  onTooltipsEnabledDraftChange: (value: boolean) => void;
   onClearStatus: () => void;
   onToggleFigmaTokenVisible: () => void;
   onToggleFigmaTokenGuide: () => void;
   onSave: (
     figmaToken: string,
     reviewUserId: string,
-    reviewTheme: ReviewShellTheme
+    reviewTheme: ReviewShellTheme,
+    tooltipsEnabled: boolean
   ) => void;
 }
 
@@ -48,6 +53,7 @@ export const ReviewSettingsModal = ({
   figmaTokenDraft,
   reviewUserIdDraft,
   reviewThemeDraft,
+  areTooltipsEnabledDraft,
   figmaSettingsStatus,
   isFigmaTokenVisible,
   isFigmaTokenGuideOpen,
@@ -55,6 +61,7 @@ export const ReviewSettingsModal = ({
   onFigmaTokenDraftChange,
   onReviewUserIdDraftChange,
   onReviewThemeDraftChange,
+  onTooltipsEnabledDraftChange,
   onClearStatus,
   onToggleFigmaTokenVisible,
   onToggleFigmaTokenGuide,
@@ -77,7 +84,12 @@ export const ReviewSettingsModal = ({
         className="df-review-settings-dialog"
         onSubmit={(event) => {
           event.preventDefault();
-          onSave(figmaTokenDraft, reviewUserIdDraft, reviewThemeDraft);
+          onSave(
+            figmaTokenDraft,
+            reviewUserIdDraft,
+            reviewThemeDraft,
+            areTooltipsEnabledDraft
+          );
         }}
       >
         <div className="df-review-settings-header">
@@ -85,7 +97,7 @@ export const ReviewSettingsModal = ({
             <strong>Settings</strong>
             <span>
               {FIGMA_TOKEN_STORAGE_KEY} / {REVIEW_USER_ID_STORAGE_KEY} /{' '}
-              {REVIEW_THEME_STORAGE_KEY}
+              {REVIEW_THEME_STORAGE_KEY} / {REVIEW_TOOLTIP_STORAGE_KEY}
             </span>
           </div>
           <div className="df-review-settings-header-actions">
@@ -122,6 +134,21 @@ export const ReviewSettingsModal = ({
                 );
               })}
             </div>
+          </div>
+          <div className="df-review-settings-row">
+            <span>Tooltips</span>
+            <label className="df-review-settings-toggle">
+              <input
+                aria-label="Show tooltips"
+                checked={areTooltipsEnabledDraft}
+                type="checkbox"
+                onChange={(event) => {
+                  onTooltipsEnabledDraftChange(event.target.checked);
+                  onClearStatus();
+                }}
+              />
+              <span>Show</span>
+            </label>
           </div>
           <div className="df-review-settings-field">
             <div className="df-review-settings-label-row">
@@ -216,7 +243,14 @@ export const ReviewSettingsModal = ({
           <div className="df-review-settings-actions">
             <button
               type="button"
-              onClick={() => onSave('', '', DEFAULT_REVIEW_THEME)}
+              onClick={() =>
+                onSave(
+                  '',
+                  '',
+                  DEFAULT_REVIEW_THEME,
+                  DEFAULT_REVIEW_TOOLTIPS_ENABLED
+                )
+              }
             >
               Clear
             </button>

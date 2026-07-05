@@ -19,7 +19,7 @@
 - Source Tree가 component hierarchy를 더 잘 보여주도록 root 수집과 기본 표시 depth를 보정했다.
 - dev review fixture를 page/section/card/component 단위로 나눠 Source Tree와 후보 매칭을 검증하기 쉽게 만들었다.
 - Option source selection 중 Figma image overlay hit layer가 target hit-test를 가로채지 않도록 pointer lock을 분리했다.
-- icon-only control에 hover/focus tooltip을 추가해 버튼 기능을 바로 확인할 수 있게 했다.
+- icon-only control에 hover/focus tooltip을 추가하고 Settings에서 표시 여부를 끌 수 있게 했다.
 - keyboard shortcut matching이 한글 입력 상태의 물리 키를 함께 인식한다.
 - DF logo help modal에 shortcut list를 추가하고 prompt/help modal shell을 공통 component로 정리했다.
 
@@ -110,6 +110,8 @@ Option source selection과 Figma overlay의 hit-test 충돌을 막았다.
 
 - topbar action, overlay toggle, side rail, QA card action, Source Tree action, Figma image action에 기능명을 표시한다.
 - tooltip은 `hover`와 `focus-visible`에서 표시되어 마우스와 키보드 탐색 모두에서 확인할 수 있다.
+- Settings의 Tooltips 옵션으로 custom tooltip과 해당 control의 native `title` tooltip을 함께 끌 수 있다.
+- tooltip 표시 여부는 `df-review-tooltips-enabled` localStorage key에 browser-local UI preference로 저장된다.
 
 ### Shortcuts and Help
 
@@ -168,6 +170,6 @@ Option source selection과 Figma overlay의 hit-test 충돌을 막았다.
 - source candidate 반복 카드가 `#1/3`, `#2/3`, `#3/3`으로 구분되는지 확인했다.
 - Source Tree가 `/`, `/components/`, `/long-form/` fixture에서 depth 있는 hierarchy와 `used in` parent usage를 보여주는지 확인했다.
 - viewport capture가 WebP attachment와 renderer metadata를 생성하는지 확인했다.
-- icon-only control hover 시 tooltip이 표시되는지 확인했다.
+- icon-only control hover 시 tooltip이 표시되고 Settings에서 끄면 사라지는지 확인했다.
 - 한글 키 synthetic event로 shell shortcut이 처리되는지 확인했다.
 - DF logo help modal에서 shortcut list 13개와 modal layout을 확인했다.

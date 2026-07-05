@@ -154,6 +154,33 @@ export const reviewShellModalStyle = `
 		    outline-offset: 1px;
 		  }
 
+      .df-review-settings-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        min-height: 30px;
+        color: var(--df-review-text);
+        font-size: var(--df-review-font-size-sm);
+        font-weight: var(--df-review-font-weight-normal);
+      }
+
+      .df-review-settings-toggle input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: var(--df-review-accent);
+      }
+
+      .df-review-settings-toggle input:focus-visible {
+        outline: 2px solid var(--df-review-focus-ring);
+        outline-offset: 2px;
+      }
+
+      .df-review-settings-toggle span {
+        color: inherit;
+      }
+
 		  .df-review-settings-label-row {
 		    display: flex;
 		    align-items: center;

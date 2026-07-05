@@ -80,6 +80,10 @@ export const reviewShellToolbarStyle = `
     white-space: nowrap;
   }
 
+  .df-review-shell.is-tooltips-disabled [data-review-tooltip]::before {
+    display: none;
+  }
+
   [data-review-tooltip]:hover::before,
   [data-review-tooltip]:focus-visible::before {
     opacity: 1;

@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DEFAULT_REVIEW_THEME } from '../constants';
+import {
+  DEFAULT_REVIEW_THEME,
+  DEFAULT_REVIEW_TOOLTIPS_ENABLED,
+} from '../constants';
 import {
   getStoredFigmaToken,
+  getStoredReviewTooltipsEnabled,
   getStoredReviewTheme,
   getStoredReviewUserId,
   getSystemReviewTheme,
   normalizeReviewTheme,
   writeStoredFigmaToken,
+  writeStoredReviewTooltipsEnabled,
   writeStoredReviewTheme,
   writeStoredReviewUserId,
 } from '../settings';
@@ -37,6 +42,12 @@ export const useReviewSettings = ({
   const [reviewTheme, setReviewTheme] = useState(getStoredReviewTheme);
   const [reviewThemeDraft, setReviewThemeDraft] =
     useState(getStoredReviewTheme);
+  const [areTooltipsEnabled, setAreTooltipsEnabled] = useState(
+    getStoredReviewTooltipsEnabled
+  );
+  const [areTooltipsEnabledDraft, setAreTooltipsEnabledDraft] = useState(
+    getStoredReviewTooltipsEnabled
+  );
   const [systemReviewTheme, setSystemReviewTheme] =
     useState(getSystemReviewTheme);
   const [figmaSettingsStatus, setFigmaSettingsStatus] = useState('');
@@ -60,6 +71,7 @@ export const useReviewSettings = ({
     setFigmaTokenDraft(getStoredFigmaToken());
     setReviewUserIdDraft(getStoredReviewUserId(defaultReviewUserId));
     setReviewThemeDraft(reviewTheme);
+    setAreTooltipsEnabledDraft(areTooltipsEnabled);
     setFigmaSettingsStatus('');
     setIsFigmaTokenVisible(false);
     setIsFigmaTokenGuideOpen(false);
@@ -69,11 +81,17 @@ export const useReviewSettings = ({
     onCloseInitialPrompt,
     onCloseSitemap,
     defaultReviewUserId,
+    areTooltipsEnabled,
     reviewTheme,
   ]);
 
   const saveReviewSettings = useCallback(
-    (token: string, userId: string, theme: ReviewShellTheme) => {
+    (
+      token: string,
+      userId: string,
+      theme: ReviewShellTheme,
+      tooltipsEnabled: boolean
+    ) => {
       const nextToken = token.trim();
       const nextUserId = userId.trim();
       const nextTheme = normalizeReviewTheme(theme);
@@ -82,13 +100,19 @@ export const useReviewSettings = ({
       writeStoredFigmaToken(nextToken);
       writeStoredReviewUserId(nextUserId);
       writeStoredReviewTheme(nextTheme);
+      writeStoredReviewTooltipsEnabled(tooltipsEnabled);
       setFigmaTokenDraft(nextToken);
       setReviewUserId(nextUserId);
       setReviewUserIdDraft(nextUserId);
       setReviewTheme(nextTheme);
       setReviewThemeDraft(nextTheme);
+      setAreTooltipsEnabled(tooltipsEnabled);
+      setAreTooltipsEnabledDraft(tooltipsEnabled);
       setFigmaSettingsStatus(
-        nextToken || nextUserId || nextTheme !== DEFAULT_REVIEW_THEME
+        nextToken ||
+          nextUserId ||
+          nextTheme !== DEFAULT_REVIEW_THEME ||
+          tooltipsEnabled !== DEFAULT_REVIEW_TOOLTIPS_ENABLED
           ? 'Saved'
           : 'Cleared'
       );
@@ -147,6 +171,8 @@ export const useReviewSettings = ({
   }, [effectiveReviewTheme]);
 
   return {
+    areTooltipsEnabled,
+    areTooltipsEnabledDraft,
     closeFigmaSettings,
     effectiveReviewTheme,
     figmaSettingsStatus,
@@ -159,6 +185,7 @@ export const useReviewSettings = ({
     reviewUserId,
     reviewUserIdDraft,
     saveReviewSettings,
+    setAreTooltipsEnabledDraft,
     setFigmaSettingsStatus,
     setFigmaTokenDraft,
     setIsFigmaTokenGuideOpen,

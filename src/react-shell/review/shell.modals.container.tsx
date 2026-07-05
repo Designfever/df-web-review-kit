@@ -23,6 +23,7 @@ export const ReviewShellModalsContainer = () => {
   } = useReviewShellActions();
   const { pagePresenceUsers } = useReviewPresenceState();
   const {
+    areTooltipsEnabledDraft,
     closeFigmaSettings,
     figmaSettingsStatus,
     figmaTokenDraft,
@@ -32,6 +33,7 @@ export const ReviewShellModalsContainer = () => {
     reviewThemeDraft,
     reviewUserIdDraft,
     saveReviewSettings,
+    setAreTooltipsEnabledDraft,
     setFigmaSettingsStatus,
     setFigmaTokenDraft,
     setIsFigmaTokenGuideOpen,
@@ -99,6 +101,7 @@ export const ReviewShellModalsContainer = () => {
 
       {isFigmaSettingsOpen && (
         <ReviewSettingsModal
+          areTooltipsEnabledDraft={areTooltipsEnabledDraft}
           figmaSettingsStatus={figmaSettingsStatus}
           figmaTokenDraft={figmaTokenDraft}
           isFigmaTokenGuideOpen={isFigmaTokenGuideOpen}
@@ -111,6 +114,7 @@ export const ReviewShellModalsContainer = () => {
           onReviewThemeDraftChange={setReviewThemeDraft}
           onReviewUserIdDraftChange={setReviewUserIdDraft}
           onSave={saveReviewSettings}
+          onTooltipsEnabledDraftChange={setAreTooltipsEnabledDraft}
           onToggleFigmaTokenGuide={() =>
             setIsFigmaTokenGuideOpen((current) => !current)
           }

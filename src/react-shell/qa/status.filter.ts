@@ -9,8 +9,6 @@ import {
 } from '../constants';
 import type { ReviewQaStatusFilter } from '../types';
 
-const DONE_STATUS: ReviewQaStatusFilter = 'done';
-
 export function isReviewQaStatusFilter(
   value: unknown
 ): value is ReviewQaStatusFilter {
@@ -60,8 +58,4 @@ export function matchesReviewQaStatusFilters(
   const normalizedStatus = normalizeReviewItemStatus(status);
 
   return normalizeReviewQaStatusFilters(filters).includes(normalizedStatus);
-}
-
-export function isDoneQaStatus(status: ReviewItemStatus | undefined) {
-  return normalizeReviewItemStatus(status) === DONE_STATUS;
 }

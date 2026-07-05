@@ -1070,6 +1070,33 @@ var reviewShellModalStyle = `
 		    outline-offset: 1px;
 		  }
 
+      .df-review-settings-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        min-height: 30px;
+        color: var(--df-review-text);
+        font-size: var(--df-review-font-size-sm);
+        font-weight: var(--df-review-font-weight-normal);
+      }
+
+      .df-review-settings-toggle input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: var(--df-review-accent);
+      }
+
+      .df-review-settings-toggle input:focus-visible {
+        outline: 2px solid var(--df-review-focus-ring);
+        outline-offset: 2px;
+      }
+
+      .df-review-settings-toggle span {
+        color: inherit;
+      }
+
 		  .df-review-settings-label-row {
 		    display: flex;
 		    align-items: center;
@@ -1695,6 +1722,10 @@ var reviewShellToolbarStyle = `
     transform: translate(-50%, 2px);
     transition: opacity 120ms ease, transform 120ms ease;
     white-space: nowrap;
+  }
+
+  .df-review-shell.is-tooltips-disabled [data-review-tooltip]::before {
+    display: none;
   }
 
   [data-review-tooltip]:hover::before,
@@ -7754,7 +7785,9 @@ var REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY = "df-review-side-panel-visible";
 var REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY = "df-review-source-tree-filter";
 var REVIEW_SOURCE_TREE_META_STORAGE_KEY = "df-review-source-tree-meta-visibility";
 var REVIEW_QA_STATUS_FILTER_STORAGE_KEY = "df-review-qa-status-filter";
+var REVIEW_TOOLTIP_STORAGE_KEY = "df-review-tooltips-enabled";
 var DEFAULT_REVIEW_THEME = "dark";
+var DEFAULT_REVIEW_TOOLTIPS_ENABLED = true;
 var FIGMA_TOKEN_GUIDE_ID = "df-review-figma-token-guide";
 var DEFAULT_INITIAL_REVIEW_PROMPT = "You are fixing QA issues collected with df-web-review-kit. Use the copied QA prompt as the source of truth for page, viewport, selector, DOM metadata, coordinates, and user comment. Make the smallest code or CSS change that fixes the issue, preserve unrelated behavior, then verify the target viewport again.";
 var REVIEW_THEME_OPTIONS = [
@@ -9570,6 +9603,27 @@ var writeStoredReviewTheme = (theme) => {
       window.localStorage.removeItem(REVIEW_THEME_STORAGE_KEY);
     } else {
       window.localStorage.setItem(REVIEW_THEME_STORAGE_KEY, theme);
+    }
+  } catch {
+    return;
+  }
+};
+var getStoredReviewTooltipsEnabled = () => {
+  if (typeof window === "undefined") return DEFAULT_REVIEW_TOOLTIPS_ENABLED;
+  try {
+    const value = window.localStorage.getItem(REVIEW_TOOLTIP_STORAGE_KEY);
+    return value === null ? DEFAULT_REVIEW_TOOLTIPS_ENABLED : value !== "false";
+  } catch {
+    return DEFAULT_REVIEW_TOOLTIPS_ENABLED;
+  }
+};
+var writeStoredReviewTooltipsEnabled = (isEnabled) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (isEnabled === DEFAULT_REVIEW_TOOLTIPS_ENABLED) {
+      window.localStorage.removeItem(REVIEW_TOOLTIP_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(REVIEW_TOOLTIP_STORAGE_KEY, "false");
     }
   } catch {
     return;
@@ -11768,28 +11822,81 @@ var ReviewSideRailContainer = () => {
 };
 
 // src/react-shell/review/shell.frame.tsx
+import {
+  useEffect as useEffect6,
+  useRef as useRef5
+} from "react";
 import { jsxs as jsxs16 } from "react/jsx-runtime";
+var getTooltipElements = (root) => Array.from(root.querySelectorAll("[data-review-tooltip]"));
+var restoreNativeTooltipTitles = (root) => {
+  getTooltipElements(root).forEach((element) => {
+    const storedTitle = element.dataset.reviewTooltipTitle;
+    if (storedTitle === void 0) return;
+    element.setAttribute("title", storedTitle);
+    delete element.dataset.reviewTooltipTitle;
+  });
+};
+var syncNativeTooltipTitles = (root, areTooltipsEnabled) => {
+  getTooltipElements(root).forEach((element) => {
+    if (areTooltipsEnabled) {
+      const storedTitle = element.dataset.reviewTooltipTitle;
+      if (storedTitle === void 0) return;
+      if (!element.getAttribute("title")) {
+        element.setAttribute("title", storedTitle);
+      }
+      delete element.dataset.reviewTooltipTitle;
+      return;
+    }
+    const title = element.getAttribute("title");
+    if (title === null) return;
+    element.dataset.reviewTooltipTitle = title;
+    element.removeAttribute("title");
+  });
+};
 var ReviewShellFrame = ({
+  areTooltipsEnabled,
   effectiveReviewTheme,
   isListVisible,
   slots
-}) => /* @__PURE__ */ jsxs16(
-  "div",
-  {
-    className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}`,
-    children: [
-      slots.topbar,
-      slots.modals,
-      slots.toast,
-      slots.sideRail,
-      slots.qaPanel,
-      slots.figmaImagesPanel,
-      slots.sourceTreePanel,
-      slots.targetFrame,
-      slots.sourceInspector
-    ]
-  }
-);
+}) => {
+  const rootRef = useRef5(null);
+  useEffect6(() => {
+    const root = rootRef.current;
+    if (!root) return void 0;
+    syncNativeTooltipTitles(root, areTooltipsEnabled);
+    const observer = new MutationObserver(() => {
+      syncNativeTooltipTitles(root, areTooltipsEnabled);
+    });
+    observer.observe(root, {
+      attributeFilter: ["data-review-tooltip", "title"],
+      attributes: true,
+      childList: true,
+      subtree: true
+    });
+    return () => {
+      observer.disconnect();
+      restoreNativeTooltipTitles(root);
+    };
+  }, [areTooltipsEnabled]);
+  return /* @__PURE__ */ jsxs16(
+    "div",
+    {
+      className: `df-review-shell is-theme-${effectiveReviewTheme}${isListVisible ? " is-list-visible" : ""}${areTooltipsEnabled ? "" : " is-tooltips-disabled"}`,
+      ref: rootRef,
+      children: [
+        slots.topbar,
+        slots.modals,
+        slots.toast,
+        slots.sideRail,
+        slots.qaPanel,
+        slots.figmaImagesPanel,
+        slots.sourceTreePanel,
+        slots.targetFrame,
+        slots.sourceInspector
+      ]
+    }
+  );
+};
 
 // src/react-shell/review/settings.context.tsx
 import {
@@ -11813,11 +11920,12 @@ import { jsx as jsx22 } from "react/jsx-runtime";
 var ReviewShellFrameContainer = ({
   slots
 }) => {
-  const { effectiveReviewTheme } = useReviewSettingsState();
+  const { areTooltipsEnabled, effectiveReviewTheme } = useReviewSettingsState();
   const isListVisible = useReviewShellStore((state) => state.isListVisible);
   return /* @__PURE__ */ jsx22(
     ReviewShellFrame,
     {
+      areTooltipsEnabled,
       effectiveReviewTheme,
       isListVisible,
       slots
@@ -12013,6 +12121,7 @@ var ReviewSettingsModal = ({
   figmaTokenDraft,
   reviewUserIdDraft,
   reviewThemeDraft,
+  areTooltipsEnabledDraft,
   figmaSettingsStatus,
   isFigmaTokenVisible,
   isFigmaTokenGuideOpen,
@@ -12020,6 +12129,7 @@ var ReviewSettingsModal = ({
   onFigmaTokenDraftChange,
   onReviewUserIdDraftChange,
   onReviewThemeDraftChange,
+  onTooltipsEnabledDraftChange,
   onClearStatus,
   onToggleFigmaTokenVisible,
   onToggleFigmaTokenGuide,
@@ -12048,7 +12158,12 @@ var ReviewSettingsModal = ({
             className: "df-review-settings-dialog",
             onSubmit: (event) => {
               event.preventDefault();
-              onSave(figmaTokenDraft, reviewUserIdDraft, reviewThemeDraft);
+              onSave(
+                figmaTokenDraft,
+                reviewUserIdDraft,
+                reviewThemeDraft,
+                areTooltipsEnabledDraft
+              );
             },
             children: [
               /* @__PURE__ */ jsxs20("div", { className: "df-review-settings-header", children: [
@@ -12060,7 +12175,9 @@ var ReviewSettingsModal = ({
                     REVIEW_USER_ID_STORAGE_KEY,
                     " /",
                     " ",
-                    REVIEW_THEME_STORAGE_KEY
+                    REVIEW_THEME_STORAGE_KEY,
+                    " / ",
+                    REVIEW_TOOLTIP_STORAGE_KEY
                   ] })
                 ] }),
                 /* @__PURE__ */ jsx26("div", { className: "df-review-settings-header-actions", children: /* @__PURE__ */ jsx26("button", { "aria-label": "Close settings", type: "button", onClick: onClose, children: "x" }) })
@@ -12090,6 +12207,24 @@ var ReviewSettingsModal = ({
                       option.value
                     );
                   }) })
+                ] }),
+                /* @__PURE__ */ jsxs20("div", { className: "df-review-settings-row", children: [
+                  /* @__PURE__ */ jsx26("span", { children: "Tooltips" }),
+                  /* @__PURE__ */ jsxs20("label", { className: "df-review-settings-toggle", children: [
+                    /* @__PURE__ */ jsx26(
+                      "input",
+                      {
+                        "aria-label": "Show tooltips",
+                        checked: areTooltipsEnabledDraft,
+                        type: "checkbox",
+                        onChange: (event) => {
+                          onTooltipsEnabledDraftChange(event.target.checked);
+                          onClearStatus();
+                        }
+                      }
+                    ),
+                    /* @__PURE__ */ jsx26("span", { children: "Show" })
+                  ] })
                 ] }),
                 /* @__PURE__ */ jsxs20("div", { className: "df-review-settings-field", children: [
                   /* @__PURE__ */ jsxs20("div", { className: "df-review-settings-label-row", children: [
@@ -12179,7 +12314,12 @@ var ReviewSettingsModal = ({
                     "button",
                     {
                       type: "button",
-                      onClick: () => onSave("", "", DEFAULT_REVIEW_THEME),
+                      onClick: () => onSave(
+                        "",
+                        "",
+                        DEFAULT_REVIEW_THEME,
+                        DEFAULT_REVIEW_TOOLTIPS_ENABLED
+                      ),
                       children: "Clear"
                     }
                   ),
@@ -12915,6 +13055,7 @@ var ReviewShellModalsContainer = () => {
   } = useReviewShellActions();
   const { pagePresenceUsers } = useReviewPresenceState();
   const {
+    areTooltipsEnabledDraft,
     closeFigmaSettings,
     figmaSettingsStatus,
     figmaTokenDraft,
@@ -12924,6 +13065,7 @@ var ReviewShellModalsContainer = () => {
     reviewThemeDraft,
     reviewUserIdDraft,
     saveReviewSettings,
+    setAreTooltipsEnabledDraft,
     setFigmaSettingsStatus,
     setFigmaTokenDraft,
     setIsFigmaTokenGuideOpen,
@@ -12989,6 +13131,7 @@ var ReviewShellModalsContainer = () => {
     isFigmaSettingsOpen && /* @__PURE__ */ jsx28(
       ReviewSettingsModal,
       {
+        areTooltipsEnabledDraft,
         figmaSettingsStatus,
         figmaTokenDraft,
         isFigmaTokenGuideOpen,
@@ -13001,6 +13144,7 @@ var ReviewShellModalsContainer = () => {
         onReviewThemeDraftChange: setReviewThemeDraft,
         onReviewUserIdDraftChange: setReviewUserIdDraft,
         onSave: saveReviewSettings,
+        onTooltipsEnabledDraftChange: setAreTooltipsEnabledDraft,
         onToggleFigmaTokenGuide: () => setIsFigmaTokenGuideOpen((current) => !current),
         onToggleFigmaTokenVisible: () => setIsFigmaTokenVisible((current) => !current)
       }
@@ -13360,7 +13504,7 @@ var RulerOverlay = () => {
 };
 
 // src/react-shell/target/figma.image.overlay.ts
-import { useCallback as useCallback9, useEffect as useEffect6, useRef as useRef5 } from "react";
+import { useCallback as useCallback9, useEffect as useEffect7, useRef as useRef6 } from "react";
 
 // src/react-shell/target/target.ts
 var HIDE_SCROLLBAR_STYLE_ID = "df-review-hide-scrollbar";
@@ -13550,7 +13694,7 @@ var useTargetFigmaImageOverlays = ({
   size,
   targetSrc
 }) => {
-  const targetDocumentRef = useRef5(null);
+  const targetDocumentRef = useRef6(null);
   const overlaySignature = createTargetFigmaImageOverlaySignature(
     figmaImageOverlays
   );
@@ -13579,10 +13723,10 @@ var useTargetFigmaImageOverlays = ({
     size,
     targetSrc
   ]);
-  useEffect6(() => {
+  useEffect7(() => {
     syncTargetFigmaImageOverlays();
   }, [syncTargetFigmaImageOverlays]);
-  useEffect6(() => {
+  useEffect7(() => {
     return () => {
       if (!targetDocumentRef.current) return;
       removeTargetFigmaImageOverlays(targetDocumentRef.current);
@@ -13793,9 +13937,9 @@ function normalizeTargetFigmaImageOffsetY(value) {
 
 // src/react-shell/target/outside.markers.tsx
 import {
-  useEffect as useEffect7,
+  useEffect as useEffect8,
   useMemo as useMemo8,
-  useRef as useRef6,
+  useRef as useRef7,
   useState as useState8
 } from "react";
 import { jsx as jsx35 } from "react/jsx-runtime";
@@ -13853,8 +13997,8 @@ var ReviewOutsideMarkers = () => {
   );
   const setSidePanel = useReviewShellStore((state) => state.setSidePanel);
   const [layoutVersion, setLayoutVersion] = useState8(0);
-  const frameUpdateRef = useRef6(null);
-  useEffect7(() => {
+  const frameUpdateRef = useRef7(null);
+  useEffect8(() => {
     const targetWindow = iframeRef.current?.contentWindow;
     const frameScroll = frameScrollRef.current;
     if (!targetWindow) return void 0;
@@ -14304,7 +14448,7 @@ import {
 } from "react";
 
 // src/react-shell/hooks/use.review.command.key.ts
-import { useEffect as useEffect8, useState as useState10 } from "react";
+import { useEffect as useEffect9, useState as useState10 } from "react";
 var isCommandModifierKeyEvent = (event) => event.key === "Meta" || event.code === "MetaLeft" || event.code === "MetaRight";
 var isCommandKeyDownEvent = (event) => isCommandModifierKeyEvent(event) || event.metaKey;
 function useReviewCommandKey({
@@ -14313,7 +14457,7 @@ function useReviewCommandKey({
   targetSrc
 }) {
   const [isCommandKeyPressed, setIsCommandKeyPressed] = useState10(false);
-  useEffect8(() => {
+  useEffect9(() => {
     const targetDocument = iframeRef.current?.contentDocument;
     const targetWindow = iframeRef.current?.contentWindow;
     const setCommandKeyPressed = (pressed) => {
@@ -14576,8 +14720,8 @@ function highlightControllerItem(item, controller, isCurrent) {
 // src/react-shell/hooks/use.review.kit.lifecycle.ts
 import {
   useCallback as useCallback11,
-  useEffect as useEffect9,
-  useRef as useRef7
+  useEffect as useEffect10,
+  useRef as useRef8
 } from "react";
 
 // src/react-shell/hooks/review.frame.navigation.ts
@@ -15239,7 +15383,7 @@ var useReviewKitLifecycle = ({
   onSyncTargetViewport
 }) => {
   const storeApi = useReviewShellStoreApi();
-  const hiddenOverlayItemIdListRef = useRef7(hiddenOverlayItemIdList);
+  const hiddenOverlayItemIdListRef = useRef8(hiddenOverlayItemIdList);
   const destroyReviewKit = useCallback11(() => {
     cleanupTargetRef.current?.();
     cleanupTargetRef.current = null;
@@ -15349,13 +15493,13 @@ var useReviewKitLifecycle = ({
     },
     [controllerRef, onModeChange]
   );
-  useEffect9(() => destroyReviewKit, [destroyReviewKit]);
-  useEffect9(() => {
+  useEffect10(() => destroyReviewKit, [destroyReviewKit]);
+  useEffect10(() => {
     const frameDocument = iframeRef.current?.contentDocument;
     if (!frameDocument || frameDocument.readyState !== "complete") return;
     initReviewKit();
   }, [iframeRef, initReviewKit]);
-  useEffect9(() => {
+  useEffect10(() => {
     hiddenOverlayItemIdListRef.current = hiddenOverlayItemIdList;
     controllerRef.current?.setHiddenItemIds(hiddenOverlayItemIdList);
   }, [controllerRef, hiddenOverlayItemIdList]);
@@ -15368,7 +15512,7 @@ var useReviewKitLifecycle = ({
 };
 
 // src/react-shell/hooks/use.review.target.overlay.ts
-import { useCallback as useCallback12, useEffect as useEffect10, useRef as useRef8 } from "react";
+import { useCallback as useCallback12, useEffect as useEffect11, useRef as useRef9 } from "react";
 var TARGET_OVERLAY_REFRESH_DELAYS = [80, 240, 600];
 var useReviewTargetOverlay = ({
   iframeRef,
@@ -15376,7 +15520,7 @@ var useReviewTargetOverlay = ({
   targetOverlayState,
   onTargetOverlayStateChange
 }) => {
-  const refreshTimersRef = useRef8([]);
+  const refreshTimersRef = useRef9([]);
   const clearRefreshTimers = useCallback12(() => {
     refreshTimersRef.current.forEach((timer) => window.clearTimeout(timer));
     refreshTimersRef.current = [];
@@ -15439,11 +15583,11 @@ var useReviewTargetOverlay = ({
     },
     [dispatchTargetOverlayHotkey, updateTargetOverlayState]
   );
-  useEffect10(() => {
+  useEffect11(() => {
     if (isFigmaOverlayAvailable || !targetOverlayState.figma) return;
     closeTargetOverlay("figma");
   }, [closeTargetOverlay, isFigmaOverlayAvailable, targetOverlayState.figma]);
-  useEffect10(() => clearRefreshTimers, [clearRefreshTimers]);
+  useEffect11(() => clearRefreshTimers, [clearRefreshTimers]);
   return {
     closeTargetOverlay,
     refreshTargetOverlayState,
@@ -15454,7 +15598,7 @@ var useReviewTargetOverlay = ({
 // src/react-shell/hooks/use.review.target.sync.ts
 import {
   useCallback as useCallback13,
-  useEffect as useEffect11
+  useEffect as useEffect12
 } from "react";
 var useReviewTargetSync = ({
   iframeRef,
@@ -15504,10 +15648,10 @@ var useReviewTargetSync = ({
       storeApi
     ]
   );
-  useEffect11(() => {
+  useEffect12(() => {
     onActiveRouteChange(getTargetRouteKey(target, reviewPathPrefix));
   }, [onActiveRouteChange, reviewPathPrefix, target]);
-  useEffect11(() => {
+  useEffect12(() => {
     const { target: currentTarget, selectedItemId } = storeApi.getState();
     if (selectedItemId) {
       updateShellUrlForItem(currentTarget, size, selectedItemId, source);
@@ -15678,16 +15822,16 @@ var useReviewController = ({
 // src/react-shell/hooks/use.review.ruler.ts
 import {
   useCallback as useCallback16,
-  useEffect as useEffect13,
+  useEffect as useEffect14,
   useState as useState12
 } from "react";
 
 // src/react-shell/hooks/use.review.ruler.drag.ts
 import {
   useCallback as useCallback15,
-  useEffect as useEffect12,
+  useEffect as useEffect13,
   useMemo as useMemo11,
-  useRef as useRef9,
+  useRef as useRef10,
   useState as useState11
 } from "react";
 
@@ -15718,10 +15862,10 @@ var useReviewRulerDrag = ({
   size,
   targetSrc
 }) => {
-  const rulerOverlayRef = useRef9(null);
-  const rulerDragRectRef = useRef9(null);
-  const isRulerDraggingRef = useRef9(false);
-  const sizeRef = useRef9(size);
+  const rulerOverlayRef = useRef10(null);
+  const rulerDragRectRef = useRef10(null);
+  const isRulerDraggingRef = useRef10(false);
+  const sizeRef = useRef10(size);
   const [rulerStart, setRulerStart] = useState11(null);
   const [rulerPoint, setRulerPoint] = useState11(null);
   const [rulerHover, setRulerHover] = useState11(null);
@@ -15757,10 +15901,10 @@ var useReviewRulerDrag = ({
     },
     []
   );
-  useEffect12(() => {
+  useEffect13(() => {
     sizeRef.current = size;
   }, [size]);
-  useEffect12(() => {
+  useEffect13(() => {
     if (!isRulerVisible || !isRulerAvailable) return void 0;
     const getRulerEventClientPoint = (event) => {
       const frame2 = iframeRef.current;
@@ -15874,7 +16018,7 @@ var useReviewRulerDrag = ({
     isRulerVisible,
     startRulerDrag
   ]);
-  useEffect12(() => {
+  useEffect13(() => {
     clearRulerMeasure();
   }, [clearRulerMeasure, size.height, size.width, targetSrc]);
   return {
@@ -15934,7 +16078,7 @@ var useReviewRuler = ({
     onCancelReviewMode,
     onCloseTransientPanels
   ]);
-  useEffect13(() => {
+  useEffect14(() => {
     if (!isRulerVisible || isRulerAvailable) return;
     closeRuler();
   }, [closeRuler, isRulerAvailable, isRulerVisible]);
@@ -16031,7 +16175,7 @@ var useReviewShellActionsValue = ({
 
 // src/react-shell/hooks/use.review.shell.effects.ts
 import {
-  useEffect as useEffect14
+  useEffect as useEffect15
 } from "react";
 var useReviewShellEffects = ({
   frameScrollRef,
@@ -16045,7 +16189,7 @@ var useReviewShellEffects = ({
   syncTargetViewport,
   targetSrc
 }) => {
-  useEffect14(() => {
+  useEffect15(() => {
     const itemId = pendingInitialItemIdRef.current;
     if (!itemId) return;
     const item = items.find(
@@ -16054,7 +16198,7 @@ var useReviewShellEffects = ({
     if (!item) return;
     restoreReviewItem(item);
   }, [items, pendingInitialItemIdRef, restoreReviewItem]);
-  useEffect14(() => {
+  useEffect15(() => {
     const frameScroll = frameScrollRef.current;
     if (!frameScroll) return void 0;
     const centerFrameScroll = () => {
@@ -16079,7 +16223,7 @@ var useReviewShellEffects = ({
     syncTargetViewport,
     targetSrc
   ]);
-  useEffect14(() => {
+  useEffect15(() => {
     const targetDocument = iframeRef.current?.contentDocument;
     setTargetFigmaOverlayLocked(targetDocument, mode === "element");
     return () => {
@@ -16296,9 +16440,9 @@ import { useMemo as useMemo16 } from "react";
 // src/react-shell/hooks/use.review.presence.ts
 import {
   useCallback as useCallback18,
-  useEffect as useEffect15,
+  useEffect as useEffect16,
   useMemo as useMemo15,
-  useRef as useRef10,
+  useRef as useRef11,
   useState as useState13
 } from "react";
 
@@ -16515,7 +16659,7 @@ var useReviewPresence = ({
   size,
   source
 }) => {
-  const presenceSessionRef = useRef10(null);
+  const presenceSessionRef = useRef11(null);
   const [presenceUsers, setPresenceUsers] = useState13([]);
   const [presenceSessionVersion, setPresenceSessionVersion] = useState13(0);
   const presenceSessionId = useMemo15(getReviewPresenceSessionId, []);
@@ -16596,9 +16740,9 @@ var useReviewPresence = ({
       source
     ]
   );
-  const getCurrentPresenceStateRef = useRef10(getCurrentPresenceState);
+  const getCurrentPresenceStateRef = useRef11(getCurrentPresenceState);
   getCurrentPresenceStateRef.current = getCurrentPresenceState;
-  useEffect15(() => {
+  useEffect16(() => {
     if (!presence || !normalizedReviewUserId) {
       const session = presenceSessionRef.current;
       presenceSessionRef.current = null;
@@ -16648,7 +16792,7 @@ var useReviewPresence = ({
     presenceSessionId,
     projectId
   ]);
-  useEffect15(() => {
+  useEffect16(() => {
     const session = presenceSessionRef.current;
     if (!session || !normalizedReviewUserId) return;
     void session.update(getCurrentPresenceState());
@@ -16706,7 +16850,7 @@ var useReviewShellPresenceState = ({
 };
 
 // src/react-shell/hooks/use.review.settings.ts
-import { useCallback as useCallback19, useEffect as useEffect16, useState as useState14 } from "react";
+import { useCallback as useCallback19, useEffect as useEffect17, useState as useState14 } from "react";
 var useReviewSettings = ({
   defaultReviewUserId = "",
   onCancelReviewMode,
@@ -16723,6 +16867,12 @@ var useReviewSettings = ({
   );
   const [reviewTheme, setReviewTheme] = useState14(getStoredReviewTheme);
   const [reviewThemeDraft, setReviewThemeDraft] = useState14(getStoredReviewTheme);
+  const [areTooltipsEnabled, setAreTooltipsEnabled] = useState14(
+    getStoredReviewTooltipsEnabled
+  );
+  const [areTooltipsEnabledDraft, setAreTooltipsEnabledDraft] = useState14(
+    getStoredReviewTooltipsEnabled
+  );
   const [systemReviewTheme, setSystemReviewTheme] = useState14(getSystemReviewTheme);
   const [figmaSettingsStatus, setFigmaSettingsStatus] = useState14("");
   const [isFigmaSettingsOpen, setIsFigmaSettingsOpen] = useState14(false);
@@ -16742,6 +16892,7 @@ var useReviewSettings = ({
     setFigmaTokenDraft(getStoredFigmaToken());
     setReviewUserIdDraft(getStoredReviewUserId(defaultReviewUserId));
     setReviewThemeDraft(reviewTheme);
+    setAreTooltipsEnabledDraft(areTooltipsEnabled);
     setFigmaSettingsStatus("");
     setIsFigmaTokenVisible(false);
     setIsFigmaTokenGuideOpen(false);
@@ -16751,10 +16902,11 @@ var useReviewSettings = ({
     onCloseInitialPrompt,
     onCloseSitemap,
     defaultReviewUserId,
+    areTooltipsEnabled,
     reviewTheme
   ]);
   const saveReviewSettings = useCallback19(
-    (token, userId, theme) => {
+    (token, userId, theme, tooltipsEnabled) => {
       const nextToken = token.trim();
       const nextUserId = userId.trim();
       const nextTheme = normalizeReviewTheme(theme);
@@ -16762,13 +16914,16 @@ var useReviewSettings = ({
       writeStoredFigmaToken(nextToken);
       writeStoredReviewUserId(nextUserId);
       writeStoredReviewTheme(nextTheme);
+      writeStoredReviewTooltipsEnabled(tooltipsEnabled);
       setFigmaTokenDraft(nextToken);
       setReviewUserId(nextUserId);
       setReviewUserIdDraft(nextUserId);
       setReviewTheme(nextTheme);
       setReviewThemeDraft(nextTheme);
+      setAreTooltipsEnabled(tooltipsEnabled);
+      setAreTooltipsEnabledDraft(tooltipsEnabled);
       setFigmaSettingsStatus(
-        nextToken || nextUserId || nextTheme !== DEFAULT_REVIEW_THEME ? "Saved" : "Cleared"
+        nextToken || nextUserId || nextTheme !== DEFAULT_REVIEW_THEME || tooltipsEnabled !== DEFAULT_REVIEW_TOOLTIPS_ENABLED ? "Saved" : "Cleared"
       );
       if (shouldReload) {
         onReloadTargetFrame();
@@ -16777,13 +16932,13 @@ var useReviewSettings = ({
     },
     [closeFigmaSettings, onReloadTargetFrame]
   );
-  useEffect16(() => {
+  useEffect17(() => {
     if (getStoredReviewUserId()) return;
     const nextDefaultUserId = defaultReviewUserId.trim();
     setReviewUserId(nextDefaultUserId);
     setReviewUserIdDraft(nextDefaultUserId);
   }, [defaultReviewUserId]);
-  useEffect16(() => {
+  useEffect17(() => {
     if (typeof window === "undefined" || !window.matchMedia) return void 0;
     const query = window.matchMedia("(prefers-color-scheme: light)");
     const syncSystemTheme = () => {
@@ -16797,7 +16952,7 @@ var useReviewSettings = ({
     query.addListener(syncSystemTheme);
     return () => query.removeListener(syncSystemTheme);
   }, []);
-  useEffect16(() => {
+  useEffect17(() => {
     document.body.classList.toggle(
       "df-review-theme-light",
       effectiveReviewTheme === "light"
@@ -16814,6 +16969,8 @@ var useReviewSettings = ({
     };
   }, [effectiveReviewTheme]);
   return {
+    areTooltipsEnabled,
+    areTooltipsEnabledDraft,
     closeFigmaSettings,
     effectiveReviewTheme,
     figmaSettingsStatus,
@@ -16826,6 +16983,7 @@ var useReviewSettings = ({
     reviewUserId,
     reviewUserIdDraft,
     saveReviewSettings,
+    setAreTooltipsEnabledDraft,
     setFigmaSettingsStatus,
     setFigmaTokenDraft,
     setIsFigmaTokenGuideOpen,
@@ -16948,7 +17106,7 @@ var useReviewShellLoadTargetFrame = ({
 ]);
 
 // src/react-shell/hooks/use.review.shell.hotkeys.ts
-import { useEffect as useEffect17 } from "react";
+import { useEffect as useEffect18 } from "react";
 var useReviewShellHotkeys = ({
   isRailHotkeyBlocked,
   isFigmaSettingsOpen,
@@ -16977,7 +17135,7 @@ var useReviewShellHotkeys = ({
   const setIsSitemapOpen = useReviewShellStore(
     (state) => state.setIsSitemapOpen
   );
-  useEffect17(() => {
+  useEffect18(() => {
     if (mode === "idle" && !isRulerVisible && !isInitialPromptOpen && !isSitemapOpen && !isFigmaSettingsOpen) {
       return;
     }
@@ -17021,7 +17179,7 @@ var useReviewShellHotkeys = ({
     setIsInitialPromptOpen,
     setIsSitemapOpen
   ]);
-  useEffect17(() => {
+  useEffect18(() => {
     const handleHotkey = (event) => {
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
         return;
@@ -17054,7 +17212,7 @@ var useReviewShellHotkeys = ({
     onToggleRuler,
     onToggleTargetOverlay
   ]);
-  useEffect17(() => {
+  useEffect18(() => {
     const handleRailHotkey = (event) => {
       if (isRailHotkeyBlocked || isEditableEventTarget(event)) return;
       const actions = [
@@ -17081,8 +17239,8 @@ var useReviewShellHotkeys = ({
 // src/react-shell/hooks/use.review.shell.refresh.ts
 import {
   useCallback as useCallback21,
-  useEffect as useEffect18,
-  useRef as useRef11
+  useEffect as useEffect19,
+  useRef as useRef12
 } from "react";
 var useReviewShellRefresh = ({
   activeAdapterEntry,
@@ -17095,7 +17253,7 @@ var useReviewShellRefresh = ({
   remoteAdapterEntry,
   storeApi
 }) => {
-  const itemRefreshIdRef = useRef11(0);
+  const itemRefreshIdRef = useRef12(0);
   const refreshItems = useCallback21(
     async () => {
       const requestId = ++itemRefreshIdRef.current;
@@ -17133,13 +17291,13 @@ var useReviewShellRefresh = ({
     }),
     [localAdapterEntry, projectId, remoteAdapterEntry, storeApi]
   );
-  useEffect18(() => {
+  useEffect19(() => {
     void refreshItems();
   }, [refreshItems]);
-  useEffect18(() => {
+  useEffect19(() => {
     void refreshSitemapItems();
   }, [refreshSitemapItems]);
-  useEffect18(() => {
+  useEffect19(() => {
     if (!isSitemapOpen) return;
     void refreshSitemapItems();
   }, [isSitemapOpen, refreshSitemapItems]);
@@ -17266,7 +17424,7 @@ var useReviewShellTargetFigma = ({
 // src/react-shell/hooks/use.review.side.panel.ts
 import {
   useCallback as useCallback23,
-  useEffect as useEffect19
+  useEffect as useEffect20
 } from "react";
 var getAvailableSidePanel = (sidePanel, {
   isFigmaImageManagementEnabled,
@@ -17292,7 +17450,7 @@ var useReviewSidePanel = ({
   const isQaPanelVisible = isListVisible && sidePanel === "qa";
   const isSourceTreePanelVisible = isSourceInspectorEnabled && isListVisible && sidePanel === "source";
   const isFigmaImagesPanelVisible = isFigmaImageManagementEnabled && isListVisible && sidePanel === "figma-images";
-  useEffect19(() => {
+  useEffect20(() => {
     const state = storeApi.getState();
     const availableSidePanel = getAvailableSidePanel(state.sidePanel, {
       isFigmaImageManagementEnabled,
@@ -17302,10 +17460,10 @@ var useReviewSidePanel = ({
       state.setSidePanel(availableSidePanel);
     }
   }, [isFigmaImageManagementEnabled, isSourceInspectorEnabled, storeApi]);
-  useEffect19(() => {
+  useEffect20(() => {
     writeStoredReviewSidePanel(sidePanel);
   }, [sidePanel]);
-  useEffect19(() => {
+  useEffect20(() => {
     writeStoredReviewSidePanelVisible(isListVisible);
   }, [isListVisible]);
   const openSidePanel = useCallback23(
@@ -17351,7 +17509,7 @@ var useReviewSidePanel = ({
 };
 
 // src/react-shell/hooks/use.review.source.inspector.ts
-import { useCallback as useCallback24, useEffect as useEffect20, useRef as useRef12, useState as useState16 } from "react";
+import { useCallback as useCallback24, useEffect as useEffect21, useRef as useRef13, useState as useState16 } from "react";
 
 // src/react-shell/review/source.shortcut.style.ts
 function createSourceShortcutStyle(optionAttribute, fontOverlayAttribute) {
@@ -17437,8 +17595,8 @@ function useReviewSourceInspector({
   onCancelReviewMode
 }) {
   const showToast = useReviewToast();
-  const sourceShortcutCleanupRef = useRef12(null);
-  const sourceInspectorInteractionRef = useRef12(false);
+  const sourceShortcutCleanupRef = useRef13(null);
+  const sourceInspectorInteractionRef = useRef13(false);
   const [sourceInspectorState, setSourceInspectorState] = useState16(null);
   const clearSourceInspector = useCallback24(() => {
     sourceInspectorInteractionRef.current = false;
@@ -17788,10 +17946,10 @@ function useReviewSourceInspector({
     showSourceOutlineForTarget,
     showSourceInspectorForTarget
   ]);
-  useEffect20(() => {
+  useEffect21(() => {
     return cleanupSourceOpenShortcut;
   }, [cleanupSourceOpenShortcut]);
-  useEffect20(() => {
+  useEffect21(() => {
     const frame = window.requestAnimationFrame(bindSourceOpenShortcut);
     return () => window.cancelAnimationFrame(frame);
   }, [bindSourceOpenShortcut, targetSrc]);
@@ -18408,7 +18566,7 @@ var ReviewShellContent = (props) => {
 
 // src/react-shell/figma/dev-overlay.tsx
 import React, {
-  useEffect as useEffect21,
+  useEffect as useEffect22,
   useMemo as useMemo19,
   useState as useState18
 } from "react";
@@ -18500,7 +18658,7 @@ var FigmaDevOverlayWidget = ({
     }),
     [imageOverlayStates, images]
   );
-  useEffect21(() => {
+  useEffect22(() => {
     if (!isWidgetVisible || !matchedViewport) {
       removeTargetFigmaImageOverlays(document);
       return;
@@ -18517,13 +18675,13 @@ var FigmaDevOverlayWidget = ({
     matchedViewport,
     setImageOverlayOffsetY
   ]);
-  useEffect21(
+  useEffect22(
     () => () => {
       removeTargetFigmaImageOverlays(document);
     },
     []
   );
-  useEffect21(() => {
+  useEffect22(() => {
     const handleKeyDown = (event) => {
       if (!isHotkey(event, "Shift+F") || isEditableFigmaDevOverlayEventTarget(event)) {
         return;
@@ -18673,7 +18831,7 @@ function useCurrentPageUrl(pageUrl, reviewPathPrefix) {
   const [currentPageUrl, setCurrentPageUrl] = useState18(
     () => getFigmaDevOverlayPageUrl(pageUrl, reviewPathPrefix)
   );
-  useEffect21(() => {
+  useEffect22(() => {
     const updatePageUrl = () => {
       setCurrentPageUrl(getFigmaDevOverlayPageUrl(pageUrl, reviewPathPrefix));
     };
@@ -18695,7 +18853,7 @@ function isEditableFigmaDevOverlayEventTarget(event) {
 }
 function useCurrentViewport() {
   const [viewport, setViewport] = useState18(getCurrentViewportSize);
-  useEffect21(() => {
+  useEffect22(() => {
     const updateViewport = () => setViewport(getCurrentViewportSize());
     window.addEventListener("resize", updateViewport);
     window.addEventListener("orientationchange", updateViewport);

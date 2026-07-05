@@ -1,5 +1,6 @@
 import type { ReviewShellTheme } from './types';
 import {
+  DEFAULT_REVIEW_TOOLTIPS_ENABLED,
   DEFAULT_REVIEW_THEME,
   FIGMA_TOKEN_STORAGE_KEY,
   REVIEW_QA_STATUS_FILTERS,
@@ -8,6 +9,7 @@ import {
   REVIEW_SOURCE_TREE_META_STORAGE_KEY,
   REVIEW_SIDE_PANEL_STORAGE_KEY,
   REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY,
+  REVIEW_TOOLTIP_STORAGE_KEY,
   REVIEW_THEME_STORAGE_KEY,
   REVIEW_USER_ID_STORAGE_KEY,
 } from './constants';
@@ -182,6 +184,31 @@ export const writeStoredReviewTheme = (theme: ReviewShellTheme) => {
       window.localStorage.removeItem(REVIEW_THEME_STORAGE_KEY);
     } else {
       window.localStorage.setItem(REVIEW_THEME_STORAGE_KEY, theme);
+    }
+  } catch {
+    return;
+  }
+};
+
+export const getStoredReviewTooltipsEnabled = () => {
+  if (typeof window === 'undefined') return DEFAULT_REVIEW_TOOLTIPS_ENABLED;
+
+  try {
+    const value = window.localStorage.getItem(REVIEW_TOOLTIP_STORAGE_KEY);
+    return value === null ? DEFAULT_REVIEW_TOOLTIPS_ENABLED : value !== 'false';
+  } catch {
+    return DEFAULT_REVIEW_TOOLTIPS_ENABLED;
+  }
+};
+
+export const writeStoredReviewTooltipsEnabled = (isEnabled: boolean) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    if (isEnabled === DEFAULT_REVIEW_TOOLTIPS_ENABLED) {
+      window.localStorage.removeItem(REVIEW_TOOLTIP_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(REVIEW_TOOLTIP_STORAGE_KEY, 'false');
     }
   } catch {
     return;

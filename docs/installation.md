@@ -272,7 +272,7 @@ Set `sourceInspector.enabled` to `false` when source code opening should be unav
 
 Use this only in dev/review builds. Source paths are written into the browser DOM and can be persisted with QA items.
 
-Source Tree filter/options, side panel state, and QA status filter are browser-local UI preferences. They are stored in localStorage and are not sent through the adapter.
+Source Tree filter/options, side panel state, QA status filter, and tooltip visibility are browser-local UI preferences. They are stored in localStorage and are not sent through the adapter.
 
 In React shell mode, DOM/area draft composers dock into the QA panel when the shell provides a composer host. This keeps mobile Safari keyboard/viewport resize from moving a floating composer layer over the target frame.
 

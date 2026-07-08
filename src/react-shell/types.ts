@@ -206,6 +206,7 @@ export interface ReviewShellProps {
   presets?: ReviewShellViewportPreset[];
   ruler?: ReviewRulerConfig;
   initialPrompt?: string;
+  qaPrompt?: string;
   adjustmentLabel?: string;
   reviewPathPrefix?: string;
   sourceRoot?: string;

@@ -44,6 +44,7 @@ export const ReviewShell = (props: ReviewShellProps) => {
     [
       props.adapters,
       props.initialPrompt,
+      props.qaPrompt,
       props.pages,
       props.presets,
       props.projectId,

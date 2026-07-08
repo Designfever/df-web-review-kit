@@ -16,6 +16,7 @@ import {
 } from '../viewport';
 import { getActiveReviewItems } from './derive';
 import {
+  getDefaultReviewQaStatusFilters,
   matchesReviewQaStatusFilters,
   normalizeReviewQaStatusFilters,
 } from './status.filter';
@@ -114,6 +115,11 @@ export const useReviewQaPanelData = () => {
     },
     [qaStatusFilters, setQaStatusFiltersState]
   );
+  const showActiveQaStatusFilters = useCallback(() => {
+    const defaultFilters = getDefaultReviewQaStatusFilters();
+    setQaStatusFiltersState(defaultFilters);
+    writeStoredReviewQaStatusFilters(defaultFilters);
+  }, [setQaStatusFiltersState]);
   const currentPresetScope = getViewportPresetKind(size);
 
   return {
@@ -123,6 +129,7 @@ export const useReviewQaPanelData = () => {
     filteredNumberedActiveItems,
     getItemPresetScope,
     qaStatusFilterCounts,
+    showActiveQaStatusFilters,
     toggleQaStatusFilter,
   };
 };

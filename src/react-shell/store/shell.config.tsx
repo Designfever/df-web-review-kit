@@ -28,6 +28,7 @@ import {
 
 export interface ReviewShellConfig {
   initialPrompt: string;
+  qaPrompt: string;
   projectId: string;
   pages: ReviewShellPage[];
   reviewPathPrefix: string;
@@ -49,6 +50,7 @@ export const createReviewShellConfig = ({
   pages,
   adapters,
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
+  qaPrompt = '',
   presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
   sourceInspector,
@@ -70,6 +72,7 @@ export const createReviewShellConfig = ({
 
   return {
     initialPrompt,
+    qaPrompt,
     projectId,
     pages,
     reviewPathPrefix,

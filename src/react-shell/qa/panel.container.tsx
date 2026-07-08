@@ -48,6 +48,7 @@ export const QaPanelContainer = () => {
     filteredNumberedActiveItems,
     getItemPresetScope,
     qaStatusFilterCounts,
+    showActiveQaStatusFilters,
     toggleQaStatusFilter,
   } = useReviewQaPanelData();
 
@@ -113,6 +114,7 @@ export const QaPanelContainer = () => {
         onCopyItemPrompt={(numberedItem) => void copyItemPrompt(numberedItem)}
         onCopyRemoteIssuePath={copyRemoteIssuePath}
         onEditItem={setEditingItem}
+        onEnableActiveQaStatusFilters={showActiveQaStatusFilters}
         onQaStatusFilterToggle={toggleQaStatusFilter}
         onRefreshReviewData={refreshReviewData}
         onRemoveItem={removeItem}

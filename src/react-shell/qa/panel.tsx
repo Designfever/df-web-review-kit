@@ -55,6 +55,7 @@ interface ReviewQaPanelProps {
   onCopyItemPrompt: (numberedItem: NumberedReviewItem) => void;
   onCopyRemoteIssuePath: (item: ReviewItem) => Promise<void>;
   onEditItem: (item: ReviewItem) => void;
+  onEnableActiveQaStatusFilters: () => void;
   onQaStatusFilterToggle: (filter: ReviewQaStatusFilter) => void;
   onRefreshReviewData: () => Promise<void>;
   onRemoveItem: (item: ReviewItem) => Promise<void>;
@@ -95,6 +96,7 @@ export const ReviewQaPanel = ({
   onCopyItemPrompt,
   onCopyRemoteIssuePath,
   onEditItem,
+  onEnableActiveQaStatusFilters,
   onQaStatusFilterToggle,
   onRefreshReviewData,
   onRemoveItem,
@@ -141,6 +143,7 @@ export const ReviewQaPanel = ({
             sourceEntries={sourceEntries}
             statusOptions={activeAdapterEntry.statusOptions}
             onChangeReviewSource={onChangeReviewSource}
+            onEnableActiveQaStatusFilters={onEnableActiveQaStatusFilters}
             onQaStatusFilterToggle={onQaStatusFilterToggle}
             onRefreshReviewData={onRefreshReviewData}
           />

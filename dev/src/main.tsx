@@ -132,6 +132,11 @@ const initialPrompt = [
   'Use the selected item route, viewport, marker, anchor, and comment to verify review shell behavior before adding package features.',
 ].join('\n');
 
+const qaPrompt = [
+  'You are fixing a QA item in the df-web-review-kit local dev fixture.',
+  'Start from the saved selector, source hint, viewport, and comment before changing implementation code.',
+].join('\n');
+
 function mountDevReviewShell() {
   seedDevExternalLinksFixtureItem();
 
@@ -146,6 +151,7 @@ function mountDevReviewShell() {
       imageFormat: 'webp',
     },
     initialPrompt,
+    qaPrompt,
     reviewPathPrefix: REVIEW_PATH_PREFIX,
     ruler: { enabled: true, unit: 'px' },
   });

@@ -28,6 +28,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
+- [0.8.2](release-notes-0.8.2.md): Figma image layer edit/delete tooltip removal.
 - [0.8.1](release-notes-0.8.1.md): QA prompt prefix, QA filtering, counters, tooltip, long-content, and outside marker fixes.
 - [0.8.0](release-notes-0.8.0.md): next minor release notes for QA attachments, adapter contract, capture, source inspector, and dev fixture changes.
 - [0.7.3](release-notes-0.7.3.md): endpoint Figma image store API and validation scope.

@@ -7298,9 +7298,7 @@ var FigmaImagesPanel = ({
                       {
                         "aria-label": `Edit ${imageLabel} label`,
                         className: "df-review-figma-image-icon-button",
-                        "data-review-tooltip": "Edit label",
                         disabled: isMutating,
-                        title: "Edit label",
                         type: "button",
                         onClick: (event) => {
                           event.stopPropagation();
@@ -7319,7 +7317,6 @@ var FigmaImagesPanel = ({
                       {
                         "aria-label": "Delete Figma image",
                         className: "df-review-figma-image-icon-button is-danger",
-                        "data-review-tooltip": "Delete Figma image",
                         disabled: isMutating,
                         type: "button",
                         onClick: (event) => {

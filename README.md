@@ -30,7 +30,7 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, and extension boundaries.
 - [Figma overlay](docs/figma-overlay.md): how the shell toggles a host Figma overlay.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.8.1](docs/release-notes-0.8.1.md): QA prompt prefix, QA filtering, counters, tooltip, long-content, and outside marker fixes.
+- [Release notes 0.8.2](docs/release-notes-0.8.2.md): Figma image layer edit/delete tooltip removal.
 
 ## Quick Start
 

@@ -120,6 +120,8 @@ export const useReviewShellData = () => {
   const presetScopeCounts = useMemo(() => {
     const counts = new Map<ReviewShellViewportKind, number>();
     activeItems.forEach((item) => {
+      if (normalizeReviewItemStatus(item.status) === SITEMAP_STATUS_DONE) return;
+
       const scope = getItemPresetScope(item);
       counts.set(scope, (counts.get(scope) ?? 0) + 1);
     });

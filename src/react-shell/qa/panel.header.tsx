@@ -1,4 +1,7 @@
-import { RefreshCw as RefreshCwIcon } from 'lucide-react';
+import {
+  CheckCheck as CheckCheckIcon,
+  RefreshCw as RefreshCwIcon,
+} from 'lucide-react';
 import {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   normalizeReviewItemStatus,
@@ -26,6 +29,7 @@ interface QaPanelHeaderProps {
   sourceEntries: NormalizedReviewShellAdapter[];
   statusOptions: readonly ReviewShellStatusOption[];
   onChangeReviewSource: (nextSource: ReviewSource) => void;
+  onEnableActiveQaStatusFilters: () => void;
   onQaStatusFilterToggle: (filter: ReviewQaStatusFilter) => void;
   onRefreshReviewData: () => Promise<void>;
 }
@@ -44,6 +48,7 @@ export const QaPanelHeader = ({
   sourceEntries,
   statusOptions,
   onChangeReviewSource,
+  onEnableActiveQaStatusFilters,
   onQaStatusFilterToggle,
   onRefreshReviewData,
 }: QaPanelHeaderProps) => {
@@ -103,6 +108,19 @@ export const QaPanelHeader = ({
         className="df-review-status-toggle-row"
         aria-label="QA status filters"
       >
+        <button
+          aria-label="Show all non-done QA"
+          aria-pressed={!hasActiveFilter}
+          className={`df-review-status-toggle df-review-status-preset-toggle${
+            !hasActiveFilter ? ' is-active' : ''
+          }`}
+          data-review-tooltip="Show all non-done QA"
+          title="Show all non-done QA"
+          type="button"
+          onClick={onEnableActiveQaStatusFilters}
+        >
+          <CheckCheckIcon aria-hidden="true" />
+        </button>
         {statusFilterOptions.map((statusOption) => {
           const isActive = qaStatusFilters.includes(statusOption.value);
           const count = qaStatusFilterCounts.get(statusOption.value) ?? 0;

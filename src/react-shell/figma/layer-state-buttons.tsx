@@ -48,6 +48,7 @@ export const FigmaImageLayerStateButtons = ({
           overlayState.isVisible ? ' is-active' : ''
         }`}
         data-review-tooltip={overlayState.isVisible ? 'Hide overlay' : 'Show overlay'}
+        data-review-tooltip-placement="left"
         title={overlayState.isVisible ? 'Hide overlay' : 'Show overlay'}
         type="button"
         onClick={(event) => {
@@ -72,6 +73,7 @@ export const FigmaImageLayerStateButtons = ({
           overlayState.isLocked ? ' is-active' : ''
         }`}
         data-review-tooltip={overlayState.isLocked ? 'Unlock' : 'Lock'}
+        data-review-tooltip-placement="left"
         title={overlayState.isLocked ? 'Unlock' : 'Lock'}
         type="button"
         onClick={(event) => {
@@ -96,6 +98,7 @@ export const FigmaImageLayerStateButtons = ({
           overlayState.mode === 'invert' ? ' is-active' : ''
         }`}
         data-review-tooltip="Invert"
+        data-review-tooltip-placement="left"
         title="Invert"
         type="button"
         onClick={(event) => {

@@ -87,10 +87,12 @@ const formatPromptSourceHint = (item: ReviewItem) => {
 
 export const buildReviewItemPrompt = (
   numberedItem: NumberedReviewItem,
-  reviewPathPrefix: string
+  reviewPathPrefix: string,
+  qaPrompt = ''
 ) => {
   const { item } = numberedItem;
   const anchor = item.anchor;
+  const qaPromptText = qaPrompt.trim();
   const candidates = getPromptAnchorCandidates(item);
   const candidateLines =
     candidates.length > 0
@@ -109,6 +111,7 @@ export const buildReviewItemPrompt = (
       : '(none)';
 
   return [
+    ...(qaPromptText ? [qaPromptText, ''] : []),
     'Fix this df-web-review-kit QA issue.',
     '',
     `Page: ${getItemTarget(item, reviewPathPrefix)}`,

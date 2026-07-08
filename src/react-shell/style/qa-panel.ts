@@ -182,7 +182,9 @@ export const reviewShellQaPanelStyle = `
   .df-review-status-toggle-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 6px;
+    width: 100%;
     min-width: 0;
     overflow-x: auto;
     overflow-y: hidden;
@@ -226,8 +228,29 @@ export const reviewShellQaPanelStyle = `
     opacity: 0.72;
   }
 
+  .df-review-status-preset-toggle {
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+  }
+
+  .df-review-status-preset-toggle svg {
+    width: 14px;
+    height: 14px;
+  }
+
   .df-review-status-toggle.is-active {
     color: var(--df-review-text);
+  }
+
+  .df-review-status-preset-toggle.is-active {
+    border-color: var(--df-review-line);
+    color: var(--df-review-muted);
+    background: var(--df-review-line-soft);
+  }
+
+  .df-review-status-toggle.is-status-todo {
+    flex: 1 1 auto;
   }
 
   .df-review-status-toggle.is-status-todo.is-active {
@@ -254,10 +277,15 @@ export const reviewShellQaPanelStyle = `
     background: var(--df-review-purple-soft);
   }
 
+  .df-review-status-toggle.is-status-done {
+    margin-right: var(--df-review-space-2);
+    color: var(--df-review-muted);
+  }
+
   .df-review-status-toggle.is-status-done.is-active {
-    border-color: rgba(99, 215, 199, 0.34);
-    color: var(--df-review-area);
-    background: var(--df-review-area-soft);
+    border-color: var(--df-review-line);
+    color: var(--df-review-muted);
+    background: var(--df-review-line-soft);
   }
 
 			  .df-review-filter-tabs {
@@ -411,7 +439,8 @@ export const reviewShellQaPanelStyle = `
 	    box-shadow: inset 0 0 0 1px var(--df-review-accent-hover), 0 0 0 3px rgba(124, 199, 255, 0.12);
 	  }
 
-  .df-review-item-card.is-overlay-hidden .df-review-item-main {
+  .df-review-item-card.is-overlay-hidden .df-review-item-main,
+  .df-review-item-card.is-overlay-hidden .df-review-item-body {
     opacity: 0.68;
   }
 
@@ -423,7 +452,8 @@ export const reviewShellQaPanelStyle = `
     min-width: 0;
   }
 
-  .df-review-item-main {
+  .df-review-item-main,
+  .df-review-item-body {
     display: grid;
     gap: 4px;
     min-width: 0;
@@ -435,7 +465,7 @@ export const reviewShellQaPanelStyle = `
 	  }
 
   .df-review-item-main strong,
-  .df-review-item-main p {
+  .df-review-item-body p {
     margin: 0;
   }
 
@@ -457,6 +487,73 @@ export const reviewShellQaPanelStyle = `
     font-size: var(--df-review-font-size-sm);
     line-height: 1.45;
     white-space: pre-wrap;
+  }
+
+  .df-review-item-comment-shell {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .df-review-item-comment-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    min-width: 0;
+    min-height: 37px;
+    border: 0;
+    padding: 10px 0 7px;
+    color: var(--df-review-muted);
+    background: transparent;
+    cursor: pointer;
+    font-size: var(--df-review-font-size-xs);
+    font-weight: var(--df-review-font-weight-normal);
+    line-height: 1;
+    transition: color 140ms ease;
+  }
+
+  .df-review-item-comment-more::before,
+  .df-review-item-comment-more::after {
+    content: '';
+    flex: 1 1 auto;
+    height: 1px;
+    border-radius: var(--df-review-radius-pill);
+    background: var(--df-review-line-soft);
+  }
+
+  .df-review-item-comment-more span {
+    flex: 0 0 auto;
+  }
+
+  .df-review-item-comment-more:hover,
+  .df-review-item-comment-more:focus-visible {
+    color: var(--df-review-accent);
+    outline: none;
+  }
+
+  .df-review-item-comment-more svg {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+  }
+
+  .df-review-item-comment.is-collapsed {
+    max-height: 140px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .df-review-item-comment.is-expanded {
+    max-height: none;
+    overflow: visible;
   }
 
   .df-review-item-comment.is-primary {
@@ -520,7 +617,7 @@ export const reviewShellQaPanelStyle = `
     white-space: nowrap;
   }
 
-	  .df-review-item-main small {
+	  .df-review-item-body small {
 	    color: var(--df-review-subtle);
 	    font-size: var(--df-review-font-size-xs);
 	  }

@@ -75,11 +75,17 @@ export const reviewShellStageStyle = `
 
   .df-review-outside-marker {
     --df-review-outside-marker-color: #7cc7ff;
+    --df-review-outside-marker-connector-top: 10px;
+    --df-review-outside-marker-connector-stem-top: 10px;
+    --df-review-outside-marker-connector-stem-height: 0px;
+    --df-review-outside-marker-z-index: 1;
     position: absolute;
     right: 10px;
+    z-index: var(--df-review-outside-marker-z-index);
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: max-content;
     min-width: 28px;
     height: 22px;
     padding: 0 6px;
@@ -91,19 +97,31 @@ export const reviewShellStageStyle = `
     font-size: var(--df-review-font-size-2xs);
     font-weight: var(--df-review-font-weight-emphasis);
     line-height: 1;
+    white-space: nowrap;
     pointer-events: auto;
   }
 
+  .df-review-outside-marker::before,
   .df-review-outside-marker::after {
     content: "";
     position: absolute;
-    left: 100%;
-    top: 10px;
-    width: 10px;
-    height: 1px;
     background: var(--df-review-outside-marker-color);
     opacity: 0.72;
     pointer-events: none;
+  }
+
+  .df-review-outside-marker::before {
+    left: 100%;
+    top: var(--df-review-outside-marker-connector-stem-top);
+    width: 1px;
+    height: var(--df-review-outside-marker-connector-stem-height);
+  }
+
+  .df-review-outside-marker::after {
+    left: 100%;
+    top: var(--df-review-outside-marker-connector-top);
+    width: 10px;
+    height: 1px;
   }
 
   .df-review-outside-marker.is-scope-tablet {

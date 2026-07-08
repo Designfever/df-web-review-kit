@@ -1,5 +1,12 @@
 import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import {
   Bot as BotIcon,
+  ChevronDown as ChevronDownIcon,
+  ChevronUp as ChevronUpIcon,
   Copy as CopyIcon,
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
@@ -173,6 +180,37 @@ export const QaItemCard = ({
   const itemMeta = [formatItemCardDate(item.createdAt), itemAuthor]
     .filter(Boolean)
     .join(' | ');
+  const commentRef = useRef<HTMLParagraphElement | null>(null);
+  const [isCommentExpanded, setIsCommentExpanded] = useState(false);
+  const [isCommentOverflowing, setIsCommentOverflowing] = useState(false);
+  const showCommentToggle = isCommentExpanded || isCommentOverflowing;
+
+  useEffect(() => {
+    setIsCommentExpanded(false);
+    setIsCommentOverflowing(false);
+  }, [item.id, itemComment]);
+
+  useEffect(() => {
+    if (isCommentExpanded) return undefined;
+
+    const element = commentRef.current;
+    if (!element) return undefined;
+
+    const updateCommentOverflow = () => {
+      setIsCommentOverflowing(
+        element.scrollHeight > element.clientHeight + 1
+      );
+    };
+    updateCommentOverflow();
+
+    const ResizeObserverClass =
+      element.ownerDocument.defaultView?.ResizeObserver;
+    if (!ResizeObserverClass) return undefined;
+
+    const observer = new ResizeObserverClass(updateCommentOverflow);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [isCommentExpanded, itemComment]);
 
   return (
     <article
@@ -228,27 +266,6 @@ export const QaItemCard = ({
           </span>
           {itemTitle && (
             <strong className="df-review-item-title">{itemTitle}</strong>
-          )}
-          <p
-            className={`df-review-item-comment${
-              itemTitle ? '' : ' is-primary'
-            }`}
-          >
-            {itemComment}
-          </p>
-          {item.attachments && (
-            <QaItemAttachments attachments={item.attachments} />
-          )}
-          {!isRemoteSource && <QaItemExternalLinks item={item} />}
-          <small className="df-review-item-meta">{itemMeta}</small>
-          {isMutating && (
-            <small className="df-review-item-saving" aria-live="polite">
-              <span className="df-review-spinner" aria-hidden="true" />
-              Saving QA...
-            </small>
-          )}
-          {item.submitError && (
-            <small className="df-review-item-error">{item.submitError}</small>
           )}
         </div>
         <div
@@ -308,6 +325,60 @@ export const QaItemCard = ({
             </button>
           )}
         </div>
+      </div>
+      <div className="df-review-item-body">
+        <div
+          className={`df-review-item-comment-shell${
+            showCommentToggle ? ' has-toggle' : ''
+          }${isCommentExpanded ? ' is-expanded' : ' is-collapsed'}`}
+        >
+          <p
+            className={`df-review-item-comment${
+              itemTitle ? '' : ' is-primary'
+            }${isCommentExpanded ? ' is-expanded' : ' is-collapsed'}`}
+            ref={commentRef}
+          >
+            {itemComment}
+          </p>
+          {showCommentToggle && (
+            <button
+              aria-expanded={isCommentExpanded}
+              aria-label={
+                isCommentExpanded ? 'Collapse QA content' : 'Expand QA content'
+              }
+              className="df-review-item-comment-more"
+              title={
+                isCommentExpanded ? 'Collapse QA content' : 'Expand QA content'
+              }
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setIsCommentExpanded((current) => !current);
+              }}
+            >
+              <span>{isCommentExpanded ? 'Less' : 'More'}</span>
+              {isCommentExpanded ? (
+                <ChevronUpIcon aria-hidden="true" />
+              ) : (
+                <ChevronDownIcon aria-hidden="true" />
+              )}
+            </button>
+          )}
+        </div>
+        {item.attachments && (
+          <QaItemAttachments attachments={item.attachments} />
+        )}
+        {!isRemoteSource && <QaItemExternalLinks item={item} />}
+        <small className="df-review-item-meta">{itemMeta}</small>
+        {isMutating && (
+          <small className="df-review-item-saving" aria-live="polite">
+            <span className="df-review-spinner" aria-hidden="true" />
+            Saving QA...
+          </small>
+        )}
+        {item.submitError && (
+          <small className="df-review-item-error">{item.submitError}</small>
+        )}
       </div>
       <div className="df-review-item-actions">
         <div className="df-review-item-workflow-actions">

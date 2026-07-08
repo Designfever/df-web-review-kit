@@ -1,4 +1,5 @@
 import {
+  type CSSProperties,
   useEffect,
   useMemo,
   useRef,
@@ -32,10 +33,107 @@ interface OutsideMarker {
   item: ReviewItem;
   label: string;
   scope: NumberedReviewItem['scope'];
+  anchorTop: number;
   top: number;
+  connectorTop: number;
+  connectorStemTop: number;
+  connectorStemHeight: number;
 }
 
 const OUTSIDE_MARKER_HEIGHT = 22;
+const OUTSIDE_MARKER_CONNECTOR_TOP = 10;
+const OUTSIDE_MARKER_GAP = 6;
+const OUTSIDE_MARKER_SPACING = OUTSIDE_MARKER_HEIGHT + OUTSIDE_MARKER_GAP;
+
+interface OutsideMarkerAnchor {
+  anchorTop: number;
+}
+
+interface OutsideMarkerLayout {
+  anchorTop: number;
+  top: number;
+  connectorTop: number;
+  connectorStemTop: number;
+  connectorStemHeight: number;
+}
+
+const clampMarkerTop = (top: number, maxTop: number) =>
+  Math.max(0, Math.min(maxTop, top));
+
+const toMarkerPixel = (value: number) => Math.round(value * 100) / 100;
+
+export const arrangeOutsideMarkerLayout = <T extends OutsideMarkerAnchor>(
+  markers: readonly T[],
+  viewportHeight: number
+): Array<T & OutsideMarkerLayout> => {
+  if (markers.length === 0) return [];
+
+  const maxTop = Math.max(0, viewportHeight - OUTSIDE_MARKER_HEIGHT);
+  const sorted = markers
+    .map((marker, index) => ({
+      marker,
+      index,
+      anchorTop: clampMarkerTop(marker.anchorTop, maxTop),
+      top: clampMarkerTop(marker.anchorTop, maxTop),
+    }))
+    .sort(
+      (a, b) => a.anchorTop - b.anchorTop || a.index - b.index
+    );
+
+  for (let index = 1; index < sorted.length; index += 1) {
+    sorted[index].top = Math.max(
+      sorted[index].top,
+      sorted[index - 1].top + OUTSIDE_MARKER_SPACING
+    );
+  }
+
+  if (sorted[sorted.length - 1].top > maxTop) {
+    sorted[sorted.length - 1].top = maxTop;
+
+    for (let index = sorted.length - 2; index >= 0; index -= 1) {
+      sorted[index].top = Math.min(
+        sorted[index].top,
+        sorted[index + 1].top - OUTSIDE_MARKER_SPACING
+      );
+    }
+  }
+
+  if (sorted[0].top < 0) {
+    const spacing =
+      sorted.length > 1 ? maxTop / (sorted.length - 1) : 0;
+    sorted.forEach((marker, index) => {
+      marker.top = index * spacing;
+    });
+  }
+
+  return sorted
+    .map(({ marker, index, anchorTop, top }) => {
+      const safeTop = clampMarkerTop(top, maxTop);
+      const connectorTop =
+        anchorTop - safeTop + OUTSIDE_MARKER_CONNECTOR_TOP;
+      const connectorStemTop = Math.min(
+        OUTSIDE_MARKER_CONNECTOR_TOP,
+        connectorTop
+      );
+      const connectorStemHeight = Math.abs(
+        connectorTop - OUTSIDE_MARKER_CONNECTOR_TOP
+      );
+
+      return {
+        index,
+        marker: {
+          ...marker,
+          anchorTop: toMarkerPixel(anchorTop),
+          top: toMarkerPixel(safeTop),
+          connectorTop: toMarkerPixel(connectorTop),
+          connectorStemTop: toMarkerPixel(connectorStemTop),
+          connectorStemHeight: toMarkerPixel(connectorStemHeight),
+        } as T & OutsideMarkerLayout,
+      };
+    })
+    .sort((a, b) => a.index - b.index)
+    .map(({ marker }) => marker);
+};
 
 const createTargetEnvironment = (
   iframe: HTMLIFrameElement | null
@@ -141,29 +239,29 @@ export const ReviewOutsideMarkers = () => {
     const hiddenItemIds = new Set(hiddenOverlayItemIdList);
     const currentScope = getReviewViewportScope(size, reviewViewportPresets);
 
-    return getNumberedReviewItems(activeItems, reviewViewportPresets).flatMap(
-      (numberedItem) => {
-        const { item, scope, displayLabel } = numberedItem;
-        if (hiddenItemIds.has(item.id)) return [];
-        if (!shouldShowMarkerForScope(scope, currentScope)) return [];
+    const rawMarkers = getNumberedReviewItems(
+      activeItems,
+      reviewViewportPresets
+    ).flatMap((numberedItem) => {
+      const { item, scope, displayLabel } = numberedItem;
+      if (hiddenItemIds.has(item.id)) return [];
+      if (!shouldShowMarkerForScope(scope, currentScope)) return [];
 
-        const top = getOutsideMarkerTop(item, environment);
-        if (typeof top !== 'number') return [];
-        const hostTop = toHostPoint({ x: 0, y: top }, environment).y;
+      const top = getOutsideMarkerTop(item, environment);
+      if (typeof top !== 'number') return [];
+      const hostTop = toHostPoint({ x: 0, y: top }, environment).y;
 
-        return {
-          item,
-          label: displayLabel,
-          scope,
-          top: Math.max(
-            0,
-            Math.min(
-              environment.viewportRect.height - OUTSIDE_MARKER_HEIGHT,
-              hostTop
-            )
-          ),
-        };
-      }
+      return {
+        item,
+        label: displayLabel,
+        scope,
+        anchorTop: hostTop,
+      };
+    });
+
+    return arrangeOutsideMarkerLayout(
+      rawMarkers,
+      environment.viewportRect.height
     );
   }, [
     activeItems,
@@ -178,26 +276,37 @@ export const ReviewOutsideMarkers = () => {
 
   return (
     <div className="df-review-outside-marker-layer" aria-label="QA markers">
-      {markers.map((marker) => (
-        <button
-          key={marker.item.id}
-          aria-label={`Focus ${marker.label}`}
-          className={`df-review-outside-marker is-scope-${marker.scope}${
-            marker.item.id === selectedItemId ? ' is-active' : ''
-          }`}
-          style={{ top: `${marker.top}px` }}
-          type="button"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            setSidePanel('qa');
-            setIsListVisible(true);
-            restoreReviewItem(marker.item);
-          }}
-        >
-          {marker.label}
-        </button>
-      ))}
+      {markers.map((marker) => {
+        const isActive = marker.item.id === selectedItemId;
+        const style = {
+          top: `${marker.top}px`,
+          '--df-review-outside-marker-connector-top': `${marker.connectorTop}px`,
+          '--df-review-outside-marker-connector-stem-top': `${marker.connectorStemTop}px`,
+          '--df-review-outside-marker-connector-stem-height': `${marker.connectorStemHeight}px`,
+          '--df-review-outside-marker-z-index': isActive ? 2 : 1,
+        } as CSSProperties & Record<string, string | number>;
+
+        return (
+          <button
+            key={marker.item.id}
+            aria-label={`Focus ${marker.label}`}
+            className={`df-review-outside-marker is-scope-${marker.scope}${
+              isActive ? ' is-active' : ''
+            }`}
+            style={style}
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setSidePanel('qa');
+              setIsListVisible(true);
+              restoreReviewItem(marker.item);
+            }}
+          >
+            {marker.label}
+          </button>
+        );
+      })}
     </div>
   );
 };

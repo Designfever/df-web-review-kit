@@ -109,6 +109,29 @@ mountReviewShell({
 
 If omitted, the default label is `Responsive CSS px adjustments`. This option only changes the label before the generated `x`, `y`, and `scale` values.
 
+## Prompt Handoff
+
+Use `initialPrompt` for the global review handoff modal, and `qaPrompt` for the custom instruction prepended to every copied QA item prompt.
+
+```tsx
+mountReviewShell({
+  projectId: REVIEW_PROJECT_ID,
+  pages,
+  adapters,
+  initialPrompt: [
+    'You are fixing QA issues in this project.',
+    'Read AGENTS.md and the project README before editing.',
+  ].join('\n'),
+  qaPrompt: [
+    'Follow this project coding style before touching the selected QA item.',
+    'Keep the fix limited to the target route and viewport unless the bug is shared.',
+  ].join('\n'),
+  reviewPathPrefix: REVIEW_PATH_PREFIX,
+});
+```
+
+If `qaPrompt` is omitted, copied QA prompts keep the package default header.
+
 ## Supabase Adapter
 
 Host projects that choose Supabase create the client themselves and pass it into the package adapter.

@@ -33,7 +33,8 @@ export function useReviewItemActions({
   onClearSelectedItem: () => void;
   onRefreshReviewData: () => Promise<void>;
 }) {
-  const { reviewPathPrefix, viewportPresets } = useReviewShellConfig();
+  const { qaPrompt, reviewPathPrefix, viewportPresets } =
+    useReviewShellConfig();
   const {
     activeAdapterEntry,
     isRemoteSource,
@@ -190,7 +191,7 @@ export function useReviewItemActions({
 
   const copyItemPrompt = (numberedItem: NumberedReviewItem) =>
     copyPrompt(
-      buildReviewItemPrompt(numberedItem, reviewPathPrefix),
+      buildReviewItemPrompt(numberedItem, reviewPathPrefix, qaPrompt),
       `qa:${numberedItem.item.id}`,
       'QA prompt copied'
     );

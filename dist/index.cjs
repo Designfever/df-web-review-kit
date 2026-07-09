@@ -4622,6 +4622,12 @@ function createDomDraftLayer(context, draft, options = {}) {
   pin.setAttribute("aria-label", "Move DOM point");
   pin.style.left = `${hostPoint.x}px`;
   pin.style.top = `${hostPoint.y}px`;
+  if (draft.isSelectionOnly) {
+    pin.classList.add("is-selection-only");
+    pin.tabIndex = -1;
+    group.append(pin);
+    return { layer: group, composer: void 0 };
+  }
   const popover = document.createElement("div");
   const position = getPopoverPosition(hostPoint, environment);
   popover.className = [
@@ -4744,7 +4750,7 @@ function createDomDraftLayer(context, draft, options = {}) {
       attachments: currentDraft.attachments
     });
   };
-  const adjustmentControls = isElementDraft ? createAdjustmentControls(context, {
+  const adjustmentControls = isElementDraft && !options.dockComposer ? createAdjustmentControls(context, {
     draft,
     pin,
     popover,
@@ -5411,8 +5417,11 @@ var WebReviewKitView = class {
     shadow.replaceChildren();
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
-    const hasDismissableDraft = Boolean(state.domDraft || state.areaDraft);
-    const shouldDockComposer = this.config.options.ui?.panel === false && hasDismissableDraft && Boolean(this.getShellComposerHost());
+    const hasSelectionOnlyDraft = state.domDraft?.isSelectionOnly === true;
+    const hasDismissableDraft = Boolean(
+      state.domDraft && !hasSelectionOnlyDraft || state.areaDraft
+    );
+    const shouldDockComposer = this.config.options.ui?.panel === false && hasDismissableDraft && !hasSelectionOnlyDraft && Boolean(this.getShellComposerHost());
     let dockedComposer;
     const shell = document.createElement("div");
     shell.className = [
@@ -5553,6 +5562,8 @@ function createWebReviewKit(options) {
     toggle: () => app.toggle(),
     setMode: (mode) => app.setMode(mode),
     startElementReview: (element, comment) => app.startElementReview(element, comment),
+    selectElement: (element) => app.selectElement(element),
+    adjustElementSelection: (delta) => app.adjustElementSelection(delta),
     getMode: () => app.getMode(),
     highlightItem: (itemId) => app.highlightItem(itemId),
     setHiddenItemIds: (itemIds) => app.setHiddenItemIds(itemIds),
@@ -5697,6 +5708,32 @@ var WebReviewKitApp = class {
     this.clearDrafts();
     this.isSelectingArea = false;
     await this.bindElementDraftToElement(element, { comment });
+  }
+  async selectElement(element) {
+    if (!this.isOpen) {
+      this.isOpen = true;
+    }
+    this.setModeState("element");
+    this.clearDrafts();
+    this.isSelectingArea = false;
+    await this.bindElementDraftToElement(element, {
+      isSelectionOnly: true
+    });
+  }
+  adjustElementSelection(delta) {
+    if (!this.domDraft?.selection) return false;
+    const current = this.domDraft.adjustment;
+    this.domDraft = {
+      ...this.domDraft,
+      adjustment: {
+        x: (current?.x ?? 0) + (delta.x ?? 0),
+        y: (current?.y ?? 0) + (delta.y ?? 0),
+        scale: (current?.scale ?? 0) + (delta.scale ?? 0),
+        isActive: true
+      }
+    };
+    this.render();
+    return true;
   }
   getMode() {
     return this.mode;
@@ -6247,6 +6284,11 @@ function createNoopController() {
     setMode() {
     },
     async startElementReview() {
+    },
+    async selectElement() {
+    },
+    adjustElementSelection() {
+      return false;
     },
     getMode() {
       return "idle";

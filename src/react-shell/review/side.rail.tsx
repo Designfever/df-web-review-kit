@@ -15,7 +15,7 @@ export const ReviewSideRail = ({
   isFigmaImageManagementEnabled,
   isFigmaImagesPanelVisible,
   isQaPanelVisible,
-  isSourceInspectorEnabled,
+  isSourceTreeEnabled,
   isSourceTreePanelVisible,
   presenceSessionId,
   onOpenAbout,
@@ -29,7 +29,7 @@ export const ReviewSideRail = ({
   isFigmaImageManagementEnabled: boolean;
   isFigmaImagesPanelVisible: boolean;
   isQaPanelVisible: boolean;
-  isSourceInspectorEnabled: boolean;
+  isSourceTreeEnabled: boolean;
   isSourceTreePanelVisible: boolean;
   presenceSessionId: string;
   onOpenAbout: () => void;
@@ -79,7 +79,7 @@ export const ReviewSideRail = ({
           <QaListIcon />
         </span>
       </button>
-      {isSourceInspectorEnabled && (
+      {isSourceTreeEnabled && (
         <button
           aria-controls="df-review-section-outline"
           aria-label={

@@ -5,7 +5,7 @@ export const reviewShellQaPanelStyle = `
 	    position: relative;
 	    z-index: 600;
 	    display: grid;
-	    grid-template-rows: minmax(0, 1fr) auto;
+	    grid-template-rows: minmax(0, 1fr);
 	    min-width: 0;
 	    min-height: 0;
 	    overflow: hidden;
@@ -15,8 +15,11 @@ export const reviewShellQaPanelStyle = `
 	  }
 
   .df-review-qa-draft-host {
+    grid-column: 2;
+    grid-row: 1 / span 3;
     position: relative;
-    z-index: 2;
+    z-index: 720;
+    align-self: end;
     display: none;
     justify-self: end;
     width: calc(100% - var(--df-review-space-4));
@@ -28,17 +31,17 @@ export const reviewShellQaPanelStyle = `
     display: block;
   }
 
-  .df-review-qa-panel[data-has-draft-composer="true"] .df-review-panel-body {
-    opacity: 0.36;
-    pointer-events: none;
-  }
-
 	  .df-review-shell:not(.is-list-visible) .df-review-qa-panel,
   .df-review-qa-panel[aria-hidden="true"] {
 	    visibility: hidden;
 	    border-left: 0;
     pointer-events: none;
 	  }
+
+  .df-review-shell:not(.is-list-visible) .df-review-qa-draft-host {
+    visibility: hidden;
+    pointer-events: none;
+  }
 
   .df-review-source-tree-panel {
     grid-column: 2;

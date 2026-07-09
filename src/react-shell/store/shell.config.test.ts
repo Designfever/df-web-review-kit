@@ -33,17 +33,32 @@ const createConfig = (sourceRoot?: string) =>
   });
 
 describe('createReviewShellConfig', () => {
-  it('disables the source inspector when sourceRoot is missing', () => {
+  it('keeps the source tree enabled when sourceRoot is missing', () => {
     const config = createConfig();
 
     expect(config.isSourceInspectorEnabled).toBe(false);
-    expect(config.isSourceTreeHoverOutlineEnabled).toBe(false);
+    expect(config.isSourceTreeEnabled).toBe(true);
+    expect(config.isSourceTreeHoverOutlineEnabled).toBe(true);
   });
 
-  it('enables the source inspector when sourceRoot is available', () => {
+  it('enables the source inspector shortcut when sourceRoot is available', () => {
     const config = createConfig('/Users/designfever/project');
 
     expect(config.isSourceInspectorEnabled).toBe(true);
+    expect(config.isSourceTreeEnabled).toBe(true);
     expect(config.isSourceTreeHoverOutlineEnabled).toBe(true);
+  });
+
+  it('disables source tree features when sourceInspector is disabled', () => {
+    const config = createReviewShellConfig({
+      projectId: 'test',
+      pages: [{ href: '/' }],
+      adapters: { local: adapter },
+      sourceInspector: { enabled: false },
+    });
+
+    expect(config.isSourceInspectorEnabled).toBe(false);
+    expect(config.isSourceTreeEnabled).toBe(false);
+    expect(config.isSourceTreeHoverOutlineEnabled).toBe(false);
   });
 });

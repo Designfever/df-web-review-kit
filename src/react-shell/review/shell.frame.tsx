@@ -102,6 +102,7 @@ export const ReviewShellFrame = ({
       {slots.qaPanel}
       {slots.figmaImagesPanel}
       {slots.sourceTreePanel}
+      <div className="df-review-qa-draft-host" />
       {slots.targetFrame}
       {slots.sourceInspector}
     </div>

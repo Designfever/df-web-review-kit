@@ -94,6 +94,13 @@ export function createDomDraftLayer(
   pin.style.left = `${hostPoint.x}px`;
   pin.style.top = `${hostPoint.y}px`;
 
+  if (draft.isSelectionOnly) {
+    pin.classList.add('is-selection-only');
+    pin.tabIndex = -1;
+    group.append(pin);
+    return { layer: group, composer: undefined };
+  }
+
   const popover = document.createElement('div');
   const position = getPopoverPosition(hostPoint, environment);
 
@@ -237,7 +244,7 @@ export function createDomDraftLayer(
     });
   };
 
-  const adjustmentControls = isElementDraft
+  const adjustmentControls = isElementDraft && !options.dockComposer
     ? createAdjustmentControls(context, {
         draft,
         pin,

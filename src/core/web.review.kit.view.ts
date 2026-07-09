@@ -69,11 +69,15 @@ export class WebReviewKitView {
     shadow.append(createStyleElement());
     shadow.append(hiddenItemsStyle);
 
-    const hasDismissableDraft = Boolean(state.domDraft || state.areaDraft);
+    const hasSelectionOnlyDraft = state.domDraft?.isSelectionOnly === true;
+    const hasDismissableDraft = Boolean(
+      (state.domDraft && !hasSelectionOnlyDraft) || state.areaDraft
+    );
     // 셸 모드(panel: false)에서 composerHost 가 준비돼 있으면 폼을 패널에 도킹.
     const shouldDockComposer =
       this.config.options.ui?.panel === false &&
       hasDismissableDraft &&
+      !hasSelectionOnlyDraft &&
       Boolean(this.getShellComposerHost());
     let dockedComposer: HTMLElement | undefined;
     const shell = document.createElement('div');

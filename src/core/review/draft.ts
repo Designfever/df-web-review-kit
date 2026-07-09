@@ -45,6 +45,8 @@ export interface AreaDraft extends ReviewDraftComposer {
 
 /** In-progress DOM item before it is persisted through the adapter. */
 export interface DomDraft extends ReviewDraftComposer {
+  /** Selection-only drafts do not show the QA composer or create review items. */
+  isSelectionOnly?: boolean;
   viewport: ViewportSize;
   anchor?: DomAnchor;
   marker: ReviewMarker;

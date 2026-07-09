@@ -64,10 +64,14 @@ export const useReviewController = ({
   );
   const setActiveRoute = useReviewShellStore((state) => state.setActiveRoute);
   const setDraftTarget = useReviewShellStore((state) => state.setDraftTarget);
+  const setIsListVisible = useReviewShellStore(
+    (state) => state.setIsListVisible
+  );
   const setMode = useReviewShellStore((state) => state.setMode);
   const setSelectedItemId = useReviewShellStore(
     (state) => state.setSelectedItemId
   );
+  const setSidePanel = useReviewShellStore((state) => state.setSidePanel);
   const setSize = useReviewShellStore((state) => state.setSize);
   const setTarget = useReviewShellStore((state) => state.setTarget);
   const setTargetOverlayState = useReviewShellStore(
@@ -114,6 +118,18 @@ export const useReviewController = ({
     onSyncTargetViewport: syncTargetViewport,
     onTargetChange: setTarget,
   });
+  const restoreCreatedReviewItem = useCallback(
+    (item: ReviewItem) => {
+      setSidePanel('qa');
+      setIsListVisible(true);
+      restoreReviewItem(item);
+    },
+    [
+      restoreReviewItem,
+      setIsListVisible,
+      setSidePanel,
+    ]
+  );
   const { syncShellTarget } = useReviewTargetSync({
     iframeRef,
     reviewPathPrefix,
@@ -150,7 +166,7 @@ export const useReviewController = ({
     onApplyPendingRestore: applyPendingRestore,
     onCancelReviewMode,
     onCloseRuler,
-    onCreateItem: restoreReviewItem,
+    onCreateItem: restoreCreatedReviewItem,
     onItemsRefresh,
     onModeChange: setMode,
     onRefreshTargetOverlayState: refreshTargetOverlayState,

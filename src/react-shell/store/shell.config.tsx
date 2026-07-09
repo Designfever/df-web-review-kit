@@ -42,6 +42,7 @@ export interface ReviewShellConfig {
   sourceOpenOptions: SourceOpenOptions;
   showSourceSelect: boolean;
   isSourceInspectorEnabled: boolean;
+  isSourceTreeEnabled: boolean;
   isSourceTreeHoverOutlineEnabled: boolean;
 }
 
@@ -66,9 +67,9 @@ export const createReviewShellConfig = ({
   const resolvedSourceInspector =
     resolvedReviewSourceOptions.sourceInspector;
   const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
+  const isSourceTreeEnabled = resolvedSourceInspector?.enabled !== false;
   const isSourceInspectorEnabled =
-    resolvedSourceInspector?.enabled !== false &&
-    Boolean(resolvedSourceRoot?.trim());
+    isSourceTreeEnabled && Boolean(resolvedSourceRoot?.trim());
 
   return {
     initialPrompt,
@@ -96,9 +97,9 @@ export const createReviewShellConfig = ({
     },
     showSourceSelect: normalizedAdapters.sources.length > 1,
     isSourceInspectorEnabled,
+    isSourceTreeEnabled,
     isSourceTreeHoverOutlineEnabled:
-      isSourceInspectorEnabled &&
-      resolvedSourceInspector?.hoverOutline !== false,
+      isSourceTreeEnabled && resolvedSourceInspector?.hoverOutline !== false,
   };
 };
 

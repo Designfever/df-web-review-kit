@@ -64,6 +64,8 @@ const ROOT_ID = 'df-web-review-kit-root';
 type DraftItemFields = Partial<
   Pick<ReviewItem, 'title' | 'comment' | 'assigneeId' | 'assigneeName'>
 >;
+type ElementDraftFields = DraftItemFields &
+  Partial<Pick<DomDraft, 'adjustment' | 'isSelectionOnly'>>;
 
 type CaptureDraftInput = Pick<
   AreaDraft,
@@ -102,6 +104,8 @@ export function createWebReviewKit(
     setMode: (mode) => app.setMode(mode),
     startElementReview: (element, comment) =>
       app.startElementReview(element, comment),
+    selectElement: (element) => app.selectElement(element),
+    adjustElementSelection: (delta) => app.adjustElementSelection(delta),
     getMode: () => app.getMode(),
     highlightItem: (itemId) => app.highlightItem(itemId),
     setHiddenItemIds: (itemIds) => app.setHiddenItemIds(itemIds),
@@ -254,6 +258,36 @@ class WebReviewKitApp {
     this.clearDrafts();
     this.isSelectingArea = false;
     await this.bindElementDraftToElement(element, { comment });
+  }
+
+  async selectElement(element: Element) {
+    if (!this.isOpen) {
+      this.isOpen = true;
+    }
+
+    this.setModeState('element');
+    this.clearDrafts();
+    this.isSelectingArea = false;
+    await this.bindElementDraftToElement(element, {
+      isSelectionOnly: true,
+    });
+  }
+
+  adjustElementSelection(delta: { x?: number; y?: number; scale?: number }) {
+    if (!this.domDraft?.selection) return false;
+
+    const current = this.domDraft.adjustment;
+    this.domDraft = {
+      ...this.domDraft,
+      adjustment: {
+        x: (current?.x ?? 0) + (delta.x ?? 0),
+        y: (current?.y ?? 0) + (delta.y ?? 0),
+        scale: (current?.scale ?? 0) + (delta.scale ?? 0),
+        isActive: true,
+      },
+    };
+    this.render();
+    return true;
   }
 
   getMode() {
@@ -563,7 +597,7 @@ class WebReviewKitApp {
 
   private async bindElementDraftToElement(
     element: Element,
-    fields: DraftItemFields = {}
+    fields: ElementDraftFields = {}
   ) {
     const environment = this.getEnvironment();
     if (!environment || element.ownerDocument !== environment.document) return;
@@ -974,6 +1008,10 @@ function createNoopController(): WebReviewKitController {
     toggle() {},
     setMode() {},
     async startElementReview() {},
+    async selectElement() {},
+    adjustElementSelection() {
+      return false;
+    },
     getMode() {
       return 'idle';
     },

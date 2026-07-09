@@ -26,6 +26,7 @@ const SOURCE_PANEL_MIN_WIDTH = 240;
 const SOURCE_PANEL_MAX_HEIGHT = 260;
 
 export function useReviewSourceInspector({
+  frameScrollRef,
   iframeRef,
   isSourceInspectorEnabled,
   isSourceTreeHoverOutlineEnabled,
@@ -33,7 +34,9 @@ export function useReviewSourceInspector({
   sourceOpenOptions,
   targetSrc,
   onCancelReviewMode,
+  onRequestSourceTreeFocus,
 }: {
+  frameScrollRef: RefObject<HTMLDivElement | null>;
   iframeRef: RefObject<HTMLIFrameElement | null>;
   isSourceInspectorEnabled: boolean;
   isSourceTreeHoverOutlineEnabled: boolean;
@@ -42,6 +45,7 @@ export function useReviewSourceInspector({
   /** target 주소가 바뀌면 새 문서에 단축키를 다시 바인딩한다. */
   targetSrc: string;
   onCancelReviewMode: () => boolean;
+  onRequestSourceTreeFocus?: (element: Element) => void;
 }) {
   const showToast = useReviewToast();
   const sourceShortcutCleanupRef = useRef<(() => void) | null>(null);
@@ -152,6 +156,7 @@ export function useReviewSourceInspector({
         panelRight: right,
         panelTop: top,
         rect,
+        targetElement: firstCandidate.element,
       });
       return candidates;
     },
@@ -187,6 +192,7 @@ export function useReviewSourceInspector({
         panelRight: null,
         panelTop: 0,
         rect,
+        targetElement: firstCandidate.element,
       });
       return firstCandidate;
     },
@@ -218,10 +224,36 @@ export function useReviewSourceInspector({
               panelRight: null,
               panelTop: 0,
               rect,
+              targetElement: element,
             }
       );
     },
     [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
+  );
+
+  /** Source Tree 선택 상태용: 패널 없이 아웃라인만 고정한다. */
+  const pinSourceOutlineForElement = useCallback(
+    (element: Element) => {
+      const rect = getSourceInspectorRect(element);
+
+      if (!rect) {
+        setSourceInspectorState(null);
+        return false;
+      }
+
+      setSourceInspectorState({
+        candidates: [],
+        isPinned: true,
+        panelLeft: 0,
+        panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
+        panelRight: null,
+        panelTop: 0,
+        rect,
+        targetElement: element,
+      });
+      return true;
+    },
+    [getSourceInspectorRect]
   );
 
   const clearSourceOutlineHover = useCallback(() => {
@@ -229,8 +261,80 @@ export function useReviewSourceInspector({
     setSourceInspectorState((current) => (current?.isPinned ? current : null));
   }, []);
 
+  const sourceInspectorTargetElement =
+    sourceInspectorState?.targetElement ?? null;
+
+  useEffect(() => {
+    if (!sourceInspectorTargetElement) return undefined;
+
+    const targetWindow =
+      sourceInspectorTargetElement.ownerDocument.defaultView ??
+      iframeRef.current?.contentWindow ??
+      null;
+    const frameScroll = frameScrollRef.current;
+    if (!targetWindow) return undefined;
+
+    let frameId: number | null = null;
+    const scheduleUpdate = () => {
+      if (frameId !== null) targetWindow.cancelAnimationFrame(frameId);
+      frameId = targetWindow.requestAnimationFrame(() => {
+        frameId = null;
+        setSourceInspectorState((current) => {
+          if (!current) return current;
+
+          const rect = getSourceInspectorRect(current.targetElement);
+          if (!rect) return null;
+
+          if (current.candidates.length === 0) {
+            return { ...current, rect };
+          }
+
+          const { left, maxWidth, right, top } =
+            getSourceInspectorPanelPosition(rect);
+          return {
+            ...current,
+            panelLeft: left,
+            panelMaxWidth: maxWidth,
+            panelRight: right,
+            panelTop: top,
+            rect,
+          };
+        });
+      });
+    };
+
+    targetWindow.addEventListener('scroll', scheduleUpdate, { passive: true });
+    targetWindow.addEventListener('resize', scheduleUpdate);
+    frameScroll?.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+    scheduleUpdate();
+
+    return () => {
+      if (frameId !== null) {
+        targetWindow.cancelAnimationFrame(frameId);
+        frameId = null;
+      }
+      targetWindow.removeEventListener('scroll', scheduleUpdate);
+      targetWindow.removeEventListener('resize', scheduleUpdate);
+      frameScroll?.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+    };
+  }, [
+    frameScrollRef,
+    getSourceInspectorPanelPosition,
+    getSourceInspectorRect,
+    iframeRef,
+    sourceInspectorTargetElement,
+  ]);
+
   const openSourceCandidate = useCallback(
     (candidate: SourceInspectorCandidate) => {
+      if (candidate.kind !== 'data') {
+        onRequestSourceTreeFocus?.(candidate.element);
+        clearSourceInspector();
+        return;
+      }
+
       const didOpen = openSourceInEditor(candidate.source, {
         ...sourceOpenOptions,
         omitPosition: !candidate.usesPosition,
@@ -238,7 +342,12 @@ export function useReviewSourceInspector({
       showToast(didOpen ? 'Source opened' : 'Source root required');
       clearSourceInspector();
     },
-    [clearSourceInspector, showToast, sourceOpenOptions]
+    [
+      clearSourceInspector,
+      onRequestSourceTreeFocus,
+      showToast,
+      sourceOpenOptions,
+    ]
   );
 
   const cleanupSourceOpenShortcut = useCallback(() => {
@@ -376,7 +485,7 @@ export function useReviewSourceInspector({
       }
     };
 
-    const handleMouseMove = (event: MouseEvent) => {
+    const handleTargetPointerMove = (event: MouseEvent | PointerEvent) => {
       // 팝업이 고정된 동안에는 마우스 이동으로 target 을 다시 추적하지 않는다.
       // (닫기/다른 곳 클릭 전까지 고정 유지)
       if (isSourcePanelPinned) return;
@@ -396,7 +505,7 @@ export function useReviewSourceInspector({
       setHoveredElement(isSourceSelecting ? sourceElement : null);
     };
 
-    const handleClick = (event: MouseEvent) => {
+    const pinSourceSelection = (event: MouseEvent | PointerEvent) => {
       if (!isSourceSelecting && !event.altKey) return;
 
       event.preventDefault();
@@ -412,7 +521,16 @@ export function useReviewSourceInspector({
       }
 
       isSourcePanelPinned = true;
+      onRequestSourceTreeFocus?.(candidates[0].element);
       setSourceSelecting(false);
+    };
+
+    const handleTargetPointerDown = (event: PointerEvent) => {
+      pinSourceSelection(event);
+    };
+
+    const handleClick = (event: MouseEvent) => {
+      pinSourceSelection(event);
     };
 
     const isOptionKeyEvent = (event: KeyboardEvent) =>
@@ -461,7 +579,9 @@ export function useReviewSourceInspector({
       clearSourceInspector();
     };
 
-    frameDocument.addEventListener('mousemove', handleMouseMove, true);
+    frameDocument.addEventListener('mousemove', handleTargetPointerMove, true);
+    frameDocument.addEventListener('pointermove', handleTargetPointerMove, true);
+    frameDocument.addEventListener('pointerdown', handleTargetPointerDown, true);
     frameDocument.addEventListener('click', handleClick, true);
     frameDocument.addEventListener('keydown', handleKeyDown, true);
     frameDocument.addEventListener('keyup', handleKeyUp, true);
@@ -471,7 +591,21 @@ export function useReviewSourceInspector({
     window.addEventListener('pointerdown', handleWindowPointerDown, true);
 
     sourceShortcutCleanupRef.current = () => {
-      frameDocument.removeEventListener('mousemove', handleMouseMove, true);
+      frameDocument.removeEventListener(
+        'mousemove',
+        handleTargetPointerMove,
+        true
+      );
+      frameDocument.removeEventListener(
+        'pointermove',
+        handleTargetPointerMove,
+        true
+      );
+      frameDocument.removeEventListener(
+        'pointerdown',
+        handleTargetPointerDown,
+        true
+      );
       frameDocument.removeEventListener('click', handleClick, true);
       frameDocument.removeEventListener('keydown', handleKeyDown, true);
       frameDocument.removeEventListener('keyup', handleKeyUp, true);
@@ -490,6 +624,7 @@ export function useReviewSourceInspector({
     cleanupSourceOpenShortcut,
     iframeRef,
     isSourceInspectorEnabled,
+    onRequestSourceTreeFocus,
     showToast,
     sourceCandidateOptions,
     showSourceOutlineForTarget,
@@ -512,6 +647,7 @@ export function useReviewSourceInspector({
     clearSourceInspector,
     clearSourceOutlineHover,
     openSourceCandidate,
+    pinSourceOutlineForElement,
     showSourceOutlineForElement,
     sourceInspectorInteractionRef,
     sourceInspectorState,

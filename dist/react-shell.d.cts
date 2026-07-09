@@ -1,4 +1,4 @@
-import { f as ReviewItemScope, z as ReviewSource, v as ReviewMode, W as WebReviewKitAdapter, F as ReviewFieldsConfig, a as ReviewItemStatus, k as ReviewAssigneeOption, e as ReviewItem, x as ReviewRulerConfig } from './types-BM8E7BFV.cjs';
+import { f as ReviewItemScope, z as ReviewSource, v as ReviewMode, W as WebReviewKitAdapter, F as ReviewFieldsConfig, a as ReviewItemStatus, k as ReviewAssigneeOption, e as ReviewItem, x as ReviewRulerConfig } from './types-l1H0Azxt.cjs';
 import { R as ReviewFigmaImageStore, a as ReviewFigmaImageFormat } from './image.types-BmzkFSPX.cjs';
 import * as react from 'react';
 

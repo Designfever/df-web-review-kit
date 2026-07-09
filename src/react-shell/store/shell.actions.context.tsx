@@ -21,6 +21,7 @@ export interface ReviewShellActions {
   openAbout: () => void;
   openInitialPrompt: () => void;
   openSettings: () => void;
+  pinSourceOutlineForElement: (element: Element) => boolean;
   refreshReviewData: () => Promise<void>;
   restoreReviewItem: (item: ReviewItem) => void;
   selectAllQa: () => void;

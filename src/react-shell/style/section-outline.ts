@@ -235,15 +235,21 @@ export const reviewShellSectionOutlineStyle = `
     background: var(--df-review-accent-soft);
   }
 
+  .df-review-section-outline-entry-body.is-selected {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
 
   .df-review-section-outline-row {
     display: grid;
-    grid-template-columns: 18px minmax(0, 1fr) auto;
-    align-items: center;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: start;
     gap: 7px;
     border-radius: var(--df-review-radius-sm);
-    min-height: 42px;
-    padding: 6px 7px 6px 6px;
+    min-height: 62px;
+    padding: 8px 7px 7px 6px;
   }
 
   .df-review-section-outline-toggle {
@@ -282,6 +288,20 @@ export const reviewShellSectionOutlineStyle = `
     pointer-events: none;
   }
 
+  .df-review-section-outline-main {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+  }
+
+  .df-review-section-outline-title {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 6px;
+    min-width: 0;
+  }
+
   .df-review-section-outline-name {
     display: grid;
     gap: 2px;
@@ -293,6 +313,7 @@ export const reviewShellSectionOutlineStyle = `
     background: transparent;
     font-size: var(--df-review-font-size-sm);
     font-weight: var(--df-review-font-weight-normal);
+    line-height: 1.25;
     text-align: left;
     white-space: normal;
     cursor: pointer;
@@ -300,17 +321,18 @@ export const reviewShellSectionOutlineStyle = `
 
   .df-review-section-outline-name span {
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .df-review-section-outline-name span {
+    overflow-wrap: anywhere;
     color: var(--df-review-section-outline-name-color);
+    white-space: normal;
   }
 
   .df-review-section-outline-name:hover {
     color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-row.is-selected .df-review-section-outline-name span {
+    color: var(--df-review-warning);
+    font-weight: var(--df-review-font-weight-emphasis);
   }
 
   .df-review-section-outline-meta {
@@ -430,11 +452,27 @@ export const reviewShellSectionOutlineStyle = `
     line-height: 1;
   }
 
-  .df-review-section-outline-links {
+  .df-review-section-outline-action-group {
     display: inline-flex;
     align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .df-review-section-outline-action-group.is-left {
+    justify-content: flex-start;
+  }
+
+  .df-review-section-outline-action-group.is-right {
     justify-content: flex-end;
-    gap: 1px;
+  }
+
+  .df-review-section-outline-actions {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
   }
 
   .df-review-section-outline-divider {
@@ -466,21 +504,54 @@ export const reviewShellSectionOutlineStyle = `
       color 140ms ease, opacity 140ms ease;
   }
 
-  .df-review-section-outline-link.is-dom-select {
+  .df-review-section-outline-link.is-dom-adjust,
+  .df-review-section-outline-link.is-dom-select,
+  .df-review-section-outline-link.is-dom-reset,
+  .df-review-section-outline-link.is-copy-name {
     width: 24px;
     min-width: 24px;
     padding: 0;
   }
 
-  .df-review-section-outline-link.is-dom-select svg {
+  .df-review-section-outline-link.is-dom-adjust svg,
+  .df-review-section-outline-link.is-dom-select svg,
+  .df-review-section-outline-link.is-dom-reset svg,
+  .df-review-section-outline-link.is-copy-name svg {
     width: 16px;
     height: 16px;
+  }
+
+  .df-review-section-outline-adjust-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    color: var(--df-review-muted);
+    font-family: var(--df-review-font-mono);
+    font-size: var(--df-review-font-size-2xs);
+    line-height: 1;
+    white-space: nowrap;
   }
 
   .df-review-section-outline-link:hover {
     border-color: rgba(124, 199, 255, 0.34);
     color: var(--df-review-accent);
     background: var(--df-review-accent-soft);
+  }
+
+  .df-review-section-outline-link.is-active,
+  .df-review-section-outline-link.is-copied {
+    color: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-link.is-active {
+    border-color: rgba(124, 199, 255, 0.42);
+    background: var(--df-review-accent-soft);
+  }
+
+  .df-review-section-outline-link.is-copied {
+    border-color: rgba(243, 183, 95, 0.42);
+    color: var(--df-review-warning);
+    background: rgba(243, 183, 95, 0.1);
   }
 
   .df-review-section-outline-link svg {

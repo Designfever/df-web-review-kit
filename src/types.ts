@@ -295,6 +295,12 @@ export interface WebReviewKitController {
   toggle(): void;
   setMode(mode: ReviewMode): void;
   startElementReview(element: Element, comment?: string): Promise<void>;
+  selectElement(element: Element): Promise<void>;
+  adjustElementSelection(delta: {
+    x?: number;
+    y?: number;
+    scale?: number;
+  }): boolean;
   getMode(): ReviewMode;
   highlightItem(itemId?: string): void;
   setHiddenItemIds(itemIds?: string[]): void;

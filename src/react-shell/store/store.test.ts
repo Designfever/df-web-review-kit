@@ -106,12 +106,17 @@ describe('createReviewShellStore', () => {
     store
       .getState()
       .setToastMessage((current) => (current === 'Copied' ? '' : current));
+    const element = document.createElement('section');
+    store.getState().setSourceTreeFocusRequest(element);
+    store.getState().setSourceTreeFocusRequest(element);
     store.getState().bumpTargetFrameLoadVersion();
 
     const state = store.getState();
     expect(state.mode).toBe('element');
     expect(state.isSitemapOpen).toBe(false);
     expect(state.toastMessage).toBe('');
+    expect(state.sourceTreeFocusRequest?.element).toBe(element);
+    expect(state.sourceTreeFocusRequest?.version).toBe(2);
     expect(state.targetFrameLoadVersion).toBe(1);
   });
 });

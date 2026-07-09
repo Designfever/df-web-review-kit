@@ -210,7 +210,6 @@ export const ReviewQaPanel = ({
           </div>
         </section>
       </div>
-      <div className="df-review-qa-draft-host" />
     </aside>
   );
 };

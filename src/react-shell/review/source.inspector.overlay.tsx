@@ -20,6 +20,7 @@ export type SourceInspectorState = {
   panelRight: number | null;
   panelTop: number;
   rect: SourceInspectorRect;
+  targetElement: Element;
 };
 
 type SourceInspectorOverlayProps = {

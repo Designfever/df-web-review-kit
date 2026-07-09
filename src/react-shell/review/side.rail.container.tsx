@@ -20,7 +20,7 @@ export const ReviewSideRailContainer = () => {
   } = useReviewPresenceState();
   const { isEnabled: isFigmaImageManagementEnabled } =
     useReviewFigmaImagesState();
-  const { isSourceInspectorEnabled } = useReviewShellConfig();
+  const { isSourceTreeEnabled } = useReviewShellConfig();
   const isListVisible = useReviewShellStore((state) => state.isListVisible);
   const sidePanel = useReviewShellStore((state) => state.sidePanel);
 
@@ -34,9 +34,9 @@ export const ReviewSideRailContainer = () => {
         sidePanel === 'figma-images'
       }
       isQaPanelVisible={isListVisible && sidePanel === 'qa'}
-      isSourceInspectorEnabled={isSourceInspectorEnabled}
+      isSourceTreeEnabled={isSourceTreeEnabled}
       isSourceTreePanelVisible={
-        isSourceInspectorEnabled && isListVisible && sidePanel === 'source'
+        isSourceTreeEnabled && isListVisible && sidePanel === 'source'
       }
       presenceSessionId={presenceSessionId}
       onOpenAbout={openAbout}

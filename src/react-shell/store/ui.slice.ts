@@ -8,6 +8,7 @@ export interface UiSlice {
   isInitialPromptScriptOpen: boolean;
   isSitemapOpen: boolean;
   mode: ReviewMode;
+  sourceTreeFocusRequest: SourceTreeFocusRequest | null;
   targetFrameLoadVersion: number;
   toastMessage: string;
   bumpTargetFrameLoadVersion: () => void;
@@ -15,8 +16,14 @@ export interface UiSlice {
   setIsInitialPromptScriptOpen: (value: SetStateAction<boolean>) => void;
   setIsSitemapOpen: (value: SetStateAction<boolean>) => void;
   setMode: (mode: ReviewMode) => void;
+  setSourceTreeFocusRequest: (element: Element | null) => void;
   setToastMessage: (value: SetStateAction<string>) => void;
 }
+
+type SourceTreeFocusRequest = {
+  element: Element;
+  version: number;
+};
 
 const resolveSetStateAction = <T,>(value: SetStateAction<T>, current: T): T =>
   typeof value === 'function'
@@ -33,6 +40,7 @@ export const createUiSlice: StateCreator<
   isInitialPromptScriptOpen: false,
   isSitemapOpen: false,
   mode: 'idle',
+  sourceTreeFocusRequest: null,
   targetFrameLoadVersion: 0,
   toastMessage: '',
   bumpTargetFrameLoadVersion: () =>
@@ -58,6 +66,15 @@ export const createUiSlice: StateCreator<
       isSitemapOpen: resolveSetStateAction(value, state.isSitemapOpen),
     })),
   setMode: (mode) => set({ mode }),
+  setSourceTreeFocusRequest: (element) =>
+    set((state) => ({
+      sourceTreeFocusRequest: element
+        ? {
+            element,
+            version: (state.sourceTreeFocusRequest?.version ?? 0) + 1,
+          }
+        : null,
+    })),
   setToastMessage: (value) =>
     set((state) => ({
       toastMessage: resolveSetStateAction(value, state.toastMessage),

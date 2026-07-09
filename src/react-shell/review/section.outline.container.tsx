@@ -5,28 +5,37 @@ import { useReviewShellConfig } from '../store/shell.config';
 import { SectionOutlinePanel } from './section.outline.panel';
 
 export const SectionOutlineContainer = () => {
-  const { isSourceInspectorEnabled } = useReviewShellConfig();
+  const { isSourceTreeEnabled } = useReviewShellConfig();
   const {
     clearSourceInspector,
     clearSourceOutlineHover,
     initReviewKit,
+    pinSourceOutlineForElement,
     showSourceOutlineForElement,
   } = useReviewShellActions();
   const {
+    activeDomAdjustmentEntryId,
     canWriteDom,
     collapsedSectionOutlineIds,
+    copiedSectionOutlineId,
+    copySectionOutlineName,
+    domAdjustmentByEntryId,
     filteredSectionOutline,
     filteredSectionOutlineCount,
     isPanelVisible,
+    isDomAdjustmentEmpty,
     isSectionOutlineFiltering,
     openSectionData,
     openSectionSource,
     openSectionUsageSource,
-    scrollToSection,
     sectionOutline,
     sectionOutlineFilter,
     sectionOutlineMetaVisibility,
     sectionOutlineTotalCount,
+    selectedSectionOutlineId,
+    selectSectionOutlineEntry,
+    resetSectionDomAdjustment,
+    startSectionDomAdjustment,
     startSectionDomReview,
     toggleSectionOutlineEntry,
     updateSectionOutlineFilter,
@@ -34,9 +43,10 @@ export const SectionOutlineContainer = () => {
   } = useReviewSectionOutline({
     onClearSourceInspector: clearSourceInspector,
     onInitReviewKit: initReviewKit,
+    onPinSourceOutlineForElement: pinSourceOutlineForElement,
   });
 
-  if (!isSourceInspectorEnabled) return null;
+  if (!isSourceTreeEnabled) return null;
 
   return (
     <SectionOutlinePanel
@@ -48,6 +58,10 @@ export const SectionOutlineContainer = () => {
       filter={sectionOutlineFilter}
       entries={filteredSectionOutline}
       collapsedIds={collapsedSectionOutlineIds}
+      selectedEntryId={selectedSectionOutlineId}
+      copiedEntryId={copiedSectionOutlineId}
+      activeDomAdjustmentEntryId={activeDomAdjustmentEntryId}
+      domAdjustmentByEntryId={domAdjustmentByEntryId}
       canWriteDom={canWriteDom}
       isFontMetaVisible={sectionOutlineMetaVisibility.font}
       isMediaMetaVisible={sectionOutlineMetaVisibility.media}
@@ -55,7 +69,11 @@ export const SectionOutlineContainer = () => {
       onToggleMeta={updateSectionOutlineMetaVisibility}
       onFilterChange={updateSectionOutlineFilter}
       onToggleEntry={toggleSectionOutlineEntry}
-      onScrollToSection={scrollToSection}
+      onSelectEntry={selectSectionOutlineEntry}
+      onCopyEntryName={(entry) => void copySectionOutlineName(entry)}
+      onResetDomAdjustment={resetSectionDomAdjustment}
+      isDomAdjustmentEmpty={isDomAdjustmentEmpty}
+      onStartDomAdjustment={startSectionDomAdjustment}
       onOpenData={openSectionData}
       onOpenSource={openSectionSource}
       onOpenUsageSource={openSectionUsageSource}

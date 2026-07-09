@@ -80,6 +80,7 @@ export const useReviewShellRuntime = ({
   );
   const {
     isSourceInspectorEnabled,
+    isSourceTreeEnabled,
     isSourceTreeHoverOutlineEnabled,
     sourceCandidateOptions,
     sourceOpenOptions,
@@ -101,7 +102,7 @@ export const useReviewShellRuntime = ({
     toggleSidePanel,
   } = useReviewSidePanel({
     isFigmaImageManagementEnabled,
-    isSourceInspectorEnabled,
+    isSourceTreeEnabled,
   });
 
   const {
@@ -146,6 +147,16 @@ export const useReviewShellRuntime = ({
     setIsSitemapOpen,
     setMode,
   });
+
+  const requestSourceTreeFocus = useCallback(
+    (element: Element) => {
+      const state = storeApi.getState();
+      state.setSidePanel('source');
+      state.setIsListVisible(true);
+      state.setSourceTreeFocusRequest(element);
+    },
+    [storeApi]
+  );
 
   const reviewSettings = useReviewSettings({
     defaultReviewUserId: activeAdapterEntry.defaultUserId,
@@ -251,6 +262,7 @@ export const useReviewShellRuntime = ({
 
   const setReviewMode = useReviewShellModeSetter({
     closeRuler,
+    isListVisible,
     mode,
     openSidePanel,
     setControllerReviewMode,
@@ -271,6 +283,7 @@ export const useReviewShellRuntime = ({
   });
 
   const sourceInspector = useReviewSourceInspector({
+    frameScrollRef,
     iframeRef,
     isSourceInspectorEnabled,
     isSourceTreeHoverOutlineEnabled,
@@ -278,11 +291,13 @@ export const useReviewShellRuntime = ({
     sourceOpenOptions,
     targetSrc,
     onCancelReviewMode: cancelReviewMode,
+    onRequestSourceTreeFocus: requestSourceTreeFocus,
   });
   const {
     bindSourceOpenShortcut,
     clearSourceInspector,
     clearSourceOutlineHover,
+    pinSourceOutlineForElement,
     showSourceOutlineForElement,
   } = sourceInspector;
 
@@ -292,7 +307,7 @@ export const useReviewShellRuntime = ({
     toggleSourceTreePanel,
   } = useReviewShellPanelActions({
     isFigmaImageManagementEnabled,
-    isSourceInspectorEnabled,
+    isSourceTreeEnabled,
     toggleSidePanel,
   });
 
@@ -346,6 +361,7 @@ export const useReviewShellRuntime = ({
     initReviewKit,
     loadTargetFrame,
     openFigmaSettings,
+    pinSourceOutlineForElement,
     refreshReviewData,
     restoreReviewItem,
     selectAllQa,

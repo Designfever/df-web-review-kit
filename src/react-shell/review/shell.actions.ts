@@ -138,7 +138,7 @@ const writeClipboardTextFallback = (value: string) => {
   }
 };
 
-const writeClipboardText = async (value: string) => {
+export const writeClipboardText = async (value: string) => {
   try {
     writeClipboardTextFallback(value);
     return;

@@ -61,13 +61,13 @@ export const useReviewShellTransientActions = ({
 
 interface UseReviewShellPanelActionsOptions {
   isFigmaImageManagementEnabled: boolean;
-  isSourceInspectorEnabled: boolean;
+  isSourceTreeEnabled: boolean;
   toggleSidePanel: (sidePanel: StoredReviewSidePanel) => void;
 }
 
 export const useReviewShellPanelActions = ({
   isFigmaImageManagementEnabled,
-  isSourceInspectorEnabled,
+  isSourceTreeEnabled,
   toggleSidePanel,
 }: UseReviewShellPanelActionsOptions) => {
   const toggleQaPanel = useCallback(() => {
@@ -75,10 +75,10 @@ export const useReviewShellPanelActions = ({
   }, [toggleSidePanel]);
 
   const toggleSourceTreePanel = useCallback(() => {
-    if (!isSourceInspectorEnabled) return;
+    if (!isSourceTreeEnabled) return;
 
     toggleSidePanel('source');
-  }, [isSourceInspectorEnabled, toggleSidePanel]);
+  }, [isSourceTreeEnabled, toggleSidePanel]);
 
   const toggleFigmaImagesPanel = useCallback(() => {
     if (!isFigmaImageManagementEnabled) return;
@@ -98,6 +98,7 @@ export const useReviewShellPanelActions = ({
 
 interface UseReviewShellModeSetterOptions {
   closeRuler: () => void;
+  isListVisible: boolean;
   mode: ReviewMode;
   openSidePanel: (sidePanel: StoredReviewSidePanel) => void;
   setControllerReviewMode: (mode: ReviewMode) => void;
@@ -106,6 +107,7 @@ interface UseReviewShellModeSetterOptions {
 
 export const useReviewShellModeSetter = ({
   closeRuler,
+  isListVisible,
   mode,
   openSidePanel,
   setControllerReviewMode,
@@ -116,13 +118,14 @@ export const useReviewShellModeSetter = ({
       const writeMode = getReviewModeWriteMode(nextMode);
       if (writeMode && !writeModes.includes(writeMode)) return;
       closeRuler();
-      if (writeMode && mode !== nextMode) {
+      if (writeMode && mode !== nextMode && !isListVisible) {
         openSidePanel('qa');
       }
       setControllerReviewMode(nextMode);
     },
     [
       closeRuler,
+      isListVisible,
       mode,
       openSidePanel,
       setControllerReviewMode,

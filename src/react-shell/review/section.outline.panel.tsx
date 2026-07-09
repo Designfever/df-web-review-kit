@@ -2,9 +2,11 @@ import React from 'react';
 import {
   ChevronDown as ChevronDownIcon,
   Code2 as Code2Icon,
+  Copy as CopyIcon,
   CornerUpRight as UsageIcon,
   Database as DatabaseIcon,
   Image as ImageIcon,
+  Move as MoveIcon,
   Search as SearchIcon,
   SquareMousePointer as SquareMousePointerIcon,
   Type as TypeIcon,
@@ -14,6 +16,11 @@ import type { SectionOutlineEntry } from '../section.outline';
 import type { StoredSourceTreeMetaVisibility } from '../settings';
 
 type SourceTreeMetaVisibilityKey = keyof StoredSourceTreeMetaVisibility;
+type DomAdjustmentPosition = {
+  x: number;
+  y: number;
+  scale: number;
+};
 
 type SectionOutlinePanelProps = {
   isPanelVisible: boolean;
@@ -24,6 +31,10 @@ type SectionOutlinePanelProps = {
   filter: string;
   entries: SectionOutlineEntry[];
   collapsedIds: Set<string>;
+  selectedEntryId: string | null;
+  copiedEntryId: string | null;
+  activeDomAdjustmentEntryId: string | null;
+  domAdjustmentByEntryId: Record<string, DomAdjustmentPosition>;
   canWriteDom: boolean;
   isFontMetaVisible: boolean;
   isMediaMetaVisible: boolean;
@@ -31,7 +42,11 @@ type SectionOutlinePanelProps = {
   onToggleMeta: (key: SourceTreeMetaVisibilityKey) => void;
   onFilterChange: (value: string) => void;
   onToggleEntry: (entryId: string) => void;
-  onScrollToSection: (entry: SectionOutlineEntry) => void;
+  onSelectEntry: (entry: SectionOutlineEntry) => void;
+  onCopyEntryName: (entry: SectionOutlineEntry) => void;
+  onResetDomAdjustment: (entry: SectionOutlineEntry) => void;
+  isDomAdjustmentEmpty: (position: DomAdjustmentPosition) => boolean;
+  onStartDomAdjustment: (entry: SectionOutlineEntry) => void;
   onOpenData: (entry: SectionOutlineEntry) => void;
   onOpenSource: (entry: SectionOutlineEntry) => void;
   onOpenUsageSource: (entry: SectionOutlineEntry) => void;
@@ -49,6 +64,10 @@ export const SectionOutlinePanel = ({
   filter,
   entries,
   collapsedIds,
+  selectedEntryId,
+  copiedEntryId,
+  activeDomAdjustmentEntryId,
+  domAdjustmentByEntryId,
   canWriteDom,
   isFontMetaVisible,
   isMediaMetaVisible,
@@ -56,7 +75,11 @@ export const SectionOutlinePanel = ({
   onToggleMeta,
   onFilterChange,
   onToggleEntry,
-  onScrollToSection,
+  onSelectEntry,
+  onCopyEntryName,
+  onResetDomAdjustment,
+  isDomAdjustmentEmpty,
+  onStartDomAdjustment,
   onOpenData,
   onOpenSource,
   onOpenUsageSource,
@@ -64,6 +87,15 @@ export const SectionOutlinePanel = ({
   onHoverElement,
   onClearHover,
 }: SectionOutlinePanelProps) => {
+  const selectedEntryRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    selectedEntryRef.current?.scrollIntoView({
+      block: 'nearest',
+      inline: 'nearest',
+    });
+  }, [selectedEntryId]);
+
   const renderMeta = (entry: SectionOutlineEntry) => {
     const { metadata } = entry;
     const rows: React.ReactNode[] = [];
@@ -191,6 +223,15 @@ export const SectionOutlinePanel = ({
   const renderEntry = (entry: SectionOutlineEntry): React.ReactNode => {
     const hasChildren = entry.children.length > 0;
     const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
+    const isSelected = selectedEntryId === entry.id;
+    const isDomAdjusting = activeDomAdjustmentEntryId === entry.id;
+    const domAdjustmentPosition = domAdjustmentByEntryId[entry.id] ?? {
+      x: 0,
+      y: 0,
+      scale: 0,
+    };
+    const shouldShowDomAdjustment =
+      isDomAdjusting || !isDomAdjustmentEmpty(domAdjustmentPosition);
 
     return (
       <div
@@ -198,7 +239,9 @@ export const SectionOutlinePanel = ({
         key={entry.id}
       >
         <div
-          className="df-review-section-outline-entry-body"
+          className={`df-review-section-outline-entry-body${
+            isSelected ? ' is-selected' : ''
+          }`}
           onMouseEnter={() => onHoverElement(entry.element)}
           onMouseLeave={onClearHover}
           onMouseOver={() => onHoverElement(entry.element)}
@@ -215,7 +258,10 @@ export const SectionOutlinePanel = ({
           onPointerLeave={onClearHover}
         >
           <div
-            className="df-review-section-outline-row"
+            ref={isSelected ? selectedEntryRef : undefined}
+            className={`df-review-section-outline-row${
+              isSelected ? ' is-selected' : ''
+            }`}
             style={{ paddingLeft: '6px' }}
           >
             {hasChildren ? (
@@ -241,66 +287,125 @@ export const SectionOutlinePanel = ({
                 className="df-review-section-outline-toggle is-placeholder"
               />
             )}
-            <button
-              className="df-review-section-outline-name"
-              title={entry.filePath}
-              type="button"
-              onClick={() => onScrollToSection(entry)}
-            >
-              <span>{entry.label}</span>
-            </button>
-            <span className="df-review-section-outline-links">
-              <button
-                aria-label={`Open ${entry.label} data`}
-                className="df-review-section-outline-link"
-                data-review-tooltip="Open data"
-                title="Open data"
-                type="button"
-                disabled={!entry.data?.file}
-                onClick={() => onOpenData(entry)}
-              >
-                <DatabaseIcon aria-hidden="true" />
-              </button>
-              <button
-                aria-label={`Open ${entry.label} source`}
-                className="df-review-section-outline-link"
-                data-review-tooltip="Open source"
-                title="Open source"
-                type="button"
-                disabled={!entry.source?.file}
-                onClick={() => onOpenSource(entry)}
-              >
-                <Code2Icon aria-hidden="true" />
-              </button>
-              <button
-                aria-label={`Open ${entry.label} usage`}
-                className="df-review-section-outline-link"
-                data-review-tooltip="Open parent usage"
-                title="Open parent usage"
-                type="button"
-                disabled={!entry.metadata.usage?.source.file}
-                onClick={() => onOpenUsageSource(entry)}
-              >
-                <UsageIcon aria-hidden="true" />
-              </button>
-              <span
-                aria-hidden="true"
-                className="df-review-section-outline-divider"
-              >
-                |
-              </span>
-              <button
-                aria-label={`Start DOM QA for ${entry.label}`}
-                className="df-review-section-outline-link is-dom-select"
-                data-review-tooltip="DOM select"
-                title="DOM select"
-                type="button"
-                disabled={!canWriteDom}
-                onClick={() => onStartDomReview(entry)}
-              >
-                <SquareMousePointerIcon aria-hidden="true" />
-              </button>
-            </span>
+            <div className="df-review-section-outline-main">
+              <div className="df-review-section-outline-title">
+                <button
+                  className="df-review-section-outline-name"
+                  title={entry.filePath}
+                  type="button"
+                  onClick={() => onSelectEntry(entry)}
+                >
+                  <span>{entry.label}</span>
+                </button>
+                <button
+                  aria-label={`Copy ${entry.label} name`}
+                  className={`df-review-section-outline-link is-copy-name${
+                    copiedEntryId === entry.id ? ' is-copied' : ''
+                  }`}
+                  data-review-tooltip={
+                    copiedEntryId === entry.id ? 'Copied' : 'Copy name'
+                  }
+                  title={copiedEntryId === entry.id ? 'Copied' : 'Copy name'}
+                  type="button"
+                  onClick={() => onCopyEntryName(entry)}
+                >
+                  <CopyIcon aria-hidden="true" />
+                </button>
+              </div>
+              <div className="df-review-section-outline-actions">
+                <span className="df-review-section-outline-action-group is-left">
+                  <button
+                    aria-label={`Move ${entry.label} DOM`}
+                    className={`df-review-section-outline-link is-dom-adjust${
+                      isDomAdjusting ? ' is-active' : ''
+                    }`}
+                    data-review-tooltip={
+                      isDomAdjusting ? 'Moving DOM' : 'Move DOM'
+                    }
+                    title={isDomAdjusting ? 'Moving DOM' : 'Move DOM'}
+                    type="button"
+                    disabled={!canWriteDom}
+                    onClick={() => onStartDomAdjustment(entry)}
+                  >
+                    <MoveIcon aria-hidden="true" />
+                  </button>
+                  {shouldShowDomAdjustment ? (
+                    <span
+                      className="df-review-section-outline-adjust-status"
+                      aria-label={`DOM adjustment position x ${domAdjustmentPosition.x}, y ${domAdjustmentPosition.y}, scale ${domAdjustmentPosition.scale}`}
+                    >
+                      x: {domAdjustmentPosition.x} / y:{' '}
+                      {domAdjustmentPosition.y} / scale:{' '}
+                      {domAdjustmentPosition.scale}
+                    </span>
+                  ) : null}
+                  {shouldShowDomAdjustment ? (
+                    <button
+                      aria-label={`Reset ${entry.label} DOM adjustment`}
+                      className="df-review-section-outline-link is-dom-reset"
+                      data-review-tooltip="Reset move"
+                      title="Reset move"
+                      type="button"
+                      onClick={() => onResetDomAdjustment(entry)}
+                    >
+                      <XIcon aria-hidden="true" />
+                    </button>
+                  ) : null}
+                </span>
+                <span className="df-review-section-outline-action-group is-right">
+                  <button
+                    aria-label={`Open ${entry.label} data`}
+                    className="df-review-section-outline-link"
+                    data-review-tooltip="Open data"
+                    title="Open data"
+                    type="button"
+                    disabled={!entry.data?.file}
+                    onClick={() => onOpenData(entry)}
+                  >
+                    <DatabaseIcon aria-hidden="true" />
+                  </button>
+                  <button
+                    aria-label={`Open ${entry.label} source`}
+                    className="df-review-section-outline-link"
+                    data-review-tooltip="Open source"
+                    title="Open source"
+                    type="button"
+                    disabled={!entry.source?.file}
+                    onClick={() => onOpenSource(entry)}
+                  >
+                    <Code2Icon aria-hidden="true" />
+                  </button>
+                  <button
+                    aria-label={`Open ${entry.label} usage`}
+                    className="df-review-section-outline-link"
+                    data-review-tooltip="Open parent usage"
+                    title="Open parent usage"
+                    type="button"
+                    disabled={!entry.metadata.usage?.source.file}
+                    onClick={() => onOpenUsageSource(entry)}
+                  >
+                    <UsageIcon aria-hidden="true" />
+                  </button>
+                  <span
+                    aria-hidden="true"
+                    className="df-review-section-outline-divider"
+                  >
+                    |
+                  </span>
+                  <button
+                    aria-label={`Start DOM QA for ${entry.label}`}
+                    className="df-review-section-outline-link is-dom-select"
+                    data-review-tooltip="DOM QA"
+                    title="DOM QA"
+                    type="button"
+                    disabled={!canWriteDom}
+                    onClick={() => onStartDomReview(entry)}
+                  >
+                    <SquareMousePointerIcon aria-hidden="true" />
+                  </button>
+                </span>
+              </div>
+            </div>
           </div>
           {renderMeta(entry)}
         </div>

@@ -62,6 +62,7 @@ export class DraftPreviewController {
       element.style.visibility = 'hidden';
     }
 
+    syncDraftPreviewCloneRect(this.snapshot.clone, element);
     const metrics = this.config.getMetrics(draft);
     const translate = `translate(${toCssNumber(metrics.cssX)}px, ${toCssNumber(
       metrics.cssY
@@ -110,16 +111,11 @@ function positionDraftPreviewClone(
   element: ReviewDraftPreviewElement,
   computedStyle: CSSStyleDeclaration
 ) {
-  const rect = element.getBoundingClientRect();
   clone.setAttribute('data-dfwr-adjust-preview', 'true');
   clone.setAttribute('aria-hidden', 'true');
   clone.style.position = 'fixed';
-  clone.style.left = `${toCssNumber(rect.left)}px`;
-  clone.style.top = `${toCssNumber(rect.top)}px`;
   clone.style.right = 'auto';
   clone.style.bottom = 'auto';
-  clone.style.width = `${toCssNumber(rect.width)}px`;
-  clone.style.height = `${toCssNumber(rect.height)}px`;
   clone.style.maxWidth = 'none';
   clone.style.maxHeight = 'none';
   clone.style.margin = '0';
@@ -131,6 +127,18 @@ function positionDraftPreviewClone(
   clone.style.willChange = 'transform';
   clone.style.transformOrigin = 'top left';
   clone.style.transform = 'none';
+  syncDraftPreviewCloneRect(clone, element);
+}
+
+function syncDraftPreviewCloneRect(
+  clone: ReviewDraftPreviewElement,
+  element: ReviewDraftPreviewElement
+) {
+  const rect = element.getBoundingClientRect();
+  clone.style.left = `${toCssNumber(rect.left)}px`;
+  clone.style.top = `${toCssNumber(rect.top)}px`;
+  clone.style.width = `${toCssNumber(rect.width)}px`;
+  clone.style.height = `${toCssNumber(rect.height)}px`;
 }
 
 function getDraftPreviewDisplay(display: string) {

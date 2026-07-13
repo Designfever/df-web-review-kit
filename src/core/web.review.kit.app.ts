@@ -60,6 +60,7 @@ import {
 } from './web.review.kit.view';
 
 const ROOT_ID = 'df-web-review-kit-root';
+const VIEWPORT_SCROLL_OPTIONS = { capture: true, passive: true } as const;
 
 type DraftItemFields = Partial<
   Pick<ReviewItem, 'title' | 'comment' | 'assigneeId' | 'assigneeName'>
@@ -133,6 +134,7 @@ class WebReviewKitApp {
   private highlightedItemId?: string;
   private hiddenItemIds?: Set<string>;
   private renderFrame?: number;
+  private targetViewportWindow?: Window;
 
   constructor(private readonly options: WebReviewKitOptions) {
     this.adapter = options.adapter ?? localAdapter();
@@ -194,8 +196,24 @@ class WebReviewKitApp {
     this.shadow = this.root.attachShadow({ mode: 'open' });
     document.body.appendChild(this.root);
     document.addEventListener('keydown', this.handleKeyDown, true);
-    window.addEventListener('scroll', this.handleViewportChange, true);
+    window.addEventListener(
+      'scroll',
+      this.handleViewportChange,
+      VIEWPORT_SCROLL_OPTIONS
+    );
     window.addEventListener('resize', this.handleViewportChange);
+    this.targetViewportWindow = this.getEnvironment()?.window;
+    if (this.targetViewportWindow && this.targetViewportWindow !== window) {
+      this.targetViewportWindow.addEventListener(
+        'scroll',
+        this.handleViewportChange,
+        VIEWPORT_SCROLL_OPTIONS
+      );
+      this.targetViewportWindow.addEventListener(
+        'resize',
+        this.handleViewportChange
+      );
+    }
 
     this.render();
   }
@@ -204,8 +222,24 @@ class WebReviewKitApp {
     this.view.clearDraftPreview();
     this.clearDrafts();
     document.removeEventListener('keydown', this.handleKeyDown, true);
-    window.removeEventListener('scroll', this.handleViewportChange, true);
+    window.removeEventListener(
+      'scroll',
+      this.handleViewportChange,
+      VIEWPORT_SCROLL_OPTIONS
+    );
     window.removeEventListener('resize', this.handleViewportChange);
+    if (this.targetViewportWindow && this.targetViewportWindow !== window) {
+      this.targetViewportWindow.removeEventListener(
+        'scroll',
+        this.handleViewportChange,
+        VIEWPORT_SCROLL_OPTIONS
+      );
+      this.targetViewportWindow.removeEventListener(
+        'resize',
+        this.handleViewportChange
+      );
+    }
+    this.targetViewportWindow = undefined;
     if (this.renderFrame) {
       window.cancelAnimationFrame(this.renderFrame);
       this.renderFrame = undefined;
@@ -417,9 +451,45 @@ class WebReviewKitApp {
     this.renderFrame = window.requestAnimationFrame(() => {
       this.renderFrame = undefined;
       if (this.isDraftComposerFocused()) return;
+      this.syncDomDraftViewportGeometry();
       this.render();
     });
   };
+
+  private syncDomDraftViewportGeometry() {
+    const draft = this.domDraft;
+    const element = draft?.previewElement;
+    const environment = this.getEnvironment();
+    if (
+      !draft?.selection ||
+      !element?.isConnected ||
+      !environment ||
+      element.ownerDocument !== environment.document
+    ) {
+      return;
+    }
+
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    const selection: ViewportSelection = {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+    this.domDraft = {
+      ...draft,
+      marker: {
+        ...draft.marker,
+        viewport: roundPoint({ x: rect.left, y: rect.top }),
+      },
+      selection: {
+        ...draft.selection,
+        viewport: toPublicSelection(selection),
+      },
+    };
+  }
 
   private isDraftComposerFocused() {
     if (!this.domDraft && !this.areaDraft) return false;

@@ -100,6 +100,8 @@ function getSectionOutlineRoots(
 ) {
   return Array.from(root.querySelectorAll(SECTION_OUTLINE_ROOT_SELECTOR)).filter(
     (element) => {
+      if (element.closest('[data-dfwr-adjust-preview="true"]')) return false;
+
       const source = getSourceHintFromElement(element);
       const label = getOutlineLabel(element, source, '');
       return (

@@ -1321,6 +1321,7 @@ var DraftPreviewController = class {
       };
       element.style.visibility = "hidden";
     }
+    syncDraftPreviewCloneRect(this.snapshot.clone, element);
     const metrics = this.config.getMetrics(draft);
     const translate = `translate(${toCssNumber(metrics.cssX)}px, ${toCssNumber(
       metrics.cssY
@@ -1345,16 +1346,11 @@ var DraftPreviewController = class {
   }
 };
 function positionDraftPreviewClone(clone, element, computedStyle) {
-  const rect = element.getBoundingClientRect();
   clone.setAttribute("data-dfwr-adjust-preview", "true");
   clone.setAttribute("aria-hidden", "true");
   clone.style.position = "fixed";
-  clone.style.left = `${toCssNumber(rect.left)}px`;
-  clone.style.top = `${toCssNumber(rect.top)}px`;
   clone.style.right = "auto";
   clone.style.bottom = "auto";
-  clone.style.width = `${toCssNumber(rect.width)}px`;
-  clone.style.height = `${toCssNumber(rect.height)}px`;
   clone.style.maxWidth = "none";
   clone.style.maxHeight = "none";
   clone.style.margin = "0";
@@ -1366,6 +1362,14 @@ function positionDraftPreviewClone(clone, element, computedStyle) {
   clone.style.willChange = "transform";
   clone.style.transformOrigin = "top left";
   clone.style.transform = "none";
+  syncDraftPreviewCloneRect(clone, element);
+}
+function syncDraftPreviewCloneRect(clone, element) {
+  const rect = element.getBoundingClientRect();
+  clone.style.left = `${toCssNumber(rect.left)}px`;
+  clone.style.top = `${toCssNumber(rect.top)}px`;
+  clone.style.width = `${toCssNumber(rect.width)}px`;
+  clone.style.height = `${toCssNumber(rect.height)}px`;
 }
 function getDraftPreviewDisplay(display) {
   if (display === "inline" || display === "contents") return "inline-block";
@@ -4438,6 +4442,7 @@ var WebReviewKitView = class {
 
 // src/core/web.review.kit.app.ts
 var ROOT_ID = "df-web-review-kit-root";
+var VIEWPORT_SCROLL_OPTIONS = { capture: true, passive: true };
 function isEditableEventTarget(event) {
   const path = event.composedPath?.() ?? [];
   const element = path[0] ?? event.target;
@@ -4493,6 +4498,7 @@ var WebReviewKitApp = class {
       this.renderFrame = window.requestAnimationFrame(() => {
         this.renderFrame = void 0;
         if (this.isDraftComposerFocused()) return;
+        this.syncDomDraftViewportGeometry();
         this.render();
       });
     };
@@ -4550,16 +4556,48 @@ var WebReviewKitApp = class {
     this.shadow = this.root.attachShadow({ mode: "open" });
     document.body.appendChild(this.root);
     document.addEventListener("keydown", this.handleKeyDown, true);
-    window.addEventListener("scroll", this.handleViewportChange, true);
+    window.addEventListener(
+      "scroll",
+      this.handleViewportChange,
+      VIEWPORT_SCROLL_OPTIONS
+    );
     window.addEventListener("resize", this.handleViewportChange);
+    this.targetViewportWindow = this.getEnvironment()?.window;
+    if (this.targetViewportWindow && this.targetViewportWindow !== window) {
+      this.targetViewportWindow.addEventListener(
+        "scroll",
+        this.handleViewportChange,
+        VIEWPORT_SCROLL_OPTIONS
+      );
+      this.targetViewportWindow.addEventListener(
+        "resize",
+        this.handleViewportChange
+      );
+    }
     this.render();
   }
   destroy() {
     this.view.clearDraftPreview();
     this.clearDrafts();
     document.removeEventListener("keydown", this.handleKeyDown, true);
-    window.removeEventListener("scroll", this.handleViewportChange, true);
+    window.removeEventListener(
+      "scroll",
+      this.handleViewportChange,
+      VIEWPORT_SCROLL_OPTIONS
+    );
     window.removeEventListener("resize", this.handleViewportChange);
+    if (this.targetViewportWindow && this.targetViewportWindow !== window) {
+      this.targetViewportWindow.removeEventListener(
+        "scroll",
+        this.handleViewportChange,
+        VIEWPORT_SCROLL_OPTIONS
+      );
+      this.targetViewportWindow.removeEventListener(
+        "resize",
+        this.handleViewportChange
+      );
+    }
+    this.targetViewportWindow = void 0;
     if (this.renderFrame) {
       window.cancelAnimationFrame(this.renderFrame);
       this.renderFrame = void 0;
@@ -4708,6 +4746,33 @@ var WebReviewKitApp = class {
     this.isSelectingArea = false;
     this.render();
     return true;
+  }
+  syncDomDraftViewportGeometry() {
+    const draft = this.domDraft;
+    const element = draft?.previewElement;
+    const environment = this.getEnvironment();
+    if (!draft?.selection || !element?.isConnected || !environment || element.ownerDocument !== environment.document) {
+      return;
+    }
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const selection = {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height
+    };
+    this.domDraft = {
+      ...draft,
+      marker: {
+        ...draft.marker,
+        viewport: roundPoint({ x: rect.left, y: rect.top })
+      },
+      selection: {
+        ...draft.selection,
+        viewport: toPublicSelection(selection)
+      }
+    };
   }
   isDraftComposerFocused() {
     if (!this.domDraft && !this.areaDraft) return false;
@@ -5226,4 +5291,4 @@ export {
   reviewTypographyTokens,
   createWebReviewKit
 };
-//# sourceMappingURL=chunk-SYDQFXWL.js.map
+//# sourceMappingURL=chunk-5ND6ON67.js.map

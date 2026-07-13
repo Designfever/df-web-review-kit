@@ -20,6 +20,7 @@ export const SectionOutlineContainer = () => {
     copiedSectionOutlineId,
     copySectionOutlineName,
     domAdjustmentByEntryId,
+    finishSectionDomAdjustment,
     filteredSectionOutline,
     filteredSectionOutlineCount,
     isPanelVisible,
@@ -71,6 +72,7 @@ export const SectionOutlineContainer = () => {
       onToggleEntry={toggleSectionOutlineEntry}
       onSelectEntry={selectSectionOutlineEntry}
       onCopyEntryName={(entry) => void copySectionOutlineName(entry)}
+      onFinishDomAdjustment={finishSectionDomAdjustment}
       onResetDomAdjustment={resetSectionDomAdjustment}
       isDomAdjustmentEmpty={isDomAdjustmentEmpty}
       onStartDomAdjustment={startSectionDomAdjustment}

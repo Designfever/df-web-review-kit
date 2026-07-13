@@ -47,13 +47,11 @@ type SourceTreeMetaVisibilityKey = keyof StoredSourceTreeMetaVisibility;
 type DomAdjustmentPosition = {
   x: number;
   y: number;
-  scale: number;
 };
 
 const EMPTY_DOM_ADJUSTMENT_POSITION: DomAdjustmentPosition = {
   x: 0,
   y: 0,
-  scale: 0,
 };
 
 /** 패널이 닫히는 애니메이션을 기다린 뒤 DOM QA 를 시작하기 위한 지연. */
@@ -65,8 +63,6 @@ const getSectionDomAdjustmentKeyDelta = (event: KeyboardEvent) => {
   if (event.key === 'ArrowRight') return { x: step };
   if (event.key === 'ArrowUp') return { y: -step };
   if (event.key === 'ArrowDown') return { y: step };
-  if (event.key.toLowerCase() === 'w') return { scale: step };
-  if (event.key.toLowerCase() === 's') return { scale: -step };
   return null;
 };
 
@@ -76,11 +72,10 @@ const addDomAdjustmentDelta = (
 ): DomAdjustmentPosition => ({
   x: (current?.x ?? 0) + (delta.x ?? 0),
   y: (current?.y ?? 0) + (delta.y ?? 0),
-  scale: (current?.scale ?? 0) + (delta.scale ?? 0),
 });
 
 const isDomAdjustmentEmpty = (position: DomAdjustmentPosition) =>
-  position.x === 0 && position.y === 0 && position.scale === 0;
+  position.x === 0 && position.y === 0;
 
 const isEditableKeyTarget = (target: EventTarget | null) => {
   if (!(target instanceof HTMLElement)) return false;
@@ -175,6 +170,20 @@ export function useReviewSectionOutline({
     setActiveDomAdjustmentEntryId(null);
     setDomAdjustmentByEntryId({});
   }, []);
+
+  const finishActiveDomAdjustment = useCallback(() => {
+    if (!activeDomAdjustmentEntryId) return;
+
+    const controller = controllerRef.current;
+    controller?.setMode('idle');
+    clearActiveDomAdjustment();
+    setMode(controller?.getMode() ?? 'idle');
+  }, [
+    activeDomAdjustmentEntryId,
+    clearActiveDomAdjustment,
+    controllerRef,
+    setMode,
+  ]);
 
   const updateSectionOutlineFilter = useCallback((nextFilter: string) => {
     setSectionOutlineFilter(nextFilter);
@@ -408,11 +417,12 @@ export function useReviewSectionOutline({
 
   const selectSectionOutlineEntry = useCallback(
     (entry: SectionOutlineEntry) => {
+      finishActiveDomAdjustment();
       scrollToSection(entry);
       onPinSourceOutlineForElement(entry.element);
       setSelectedSectionOutlineId(entry.id);
     },
-    [onPinSourceOutlineForElement, scrollToSection]
+    [finishActiveDomAdjustment, onPinSourceOutlineForElement, scrollToSection]
   );
 
   const copySectionOutlineName = useCallback(
@@ -698,6 +708,15 @@ export function useReviewSectionOutline({
     ]
   );
 
+  const finishSectionDomAdjustment = useCallback(
+    (entry: SectionOutlineEntry) => {
+      if (activeDomAdjustmentEntryId === entry.id) {
+        finishActiveDomAdjustment();
+      }
+    },
+    [activeDomAdjustmentEntryId, finishActiveDomAdjustment]
+  );
+
   return {
     canWriteDom,
     collapsedSectionOutlineIds,
@@ -717,6 +736,7 @@ export function useReviewSectionOutline({
     copiedSectionOutlineId,
     copySectionOutlineName,
     domAdjustmentByEntryId,
+    finishSectionDomAdjustment,
     isDomAdjustmentEmpty,
     resetSectionDomAdjustment,
     selectedSectionOutlineId,

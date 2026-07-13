@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Check as CheckIcon,
   ChevronDown as ChevronDownIcon,
   Code2 as Code2Icon,
   Copy as CopyIcon,
@@ -7,6 +8,7 @@ import {
   Database as DatabaseIcon,
   Image as ImageIcon,
   Move as MoveIcon,
+  RotateCcw as ResetIcon,
   Search as SearchIcon,
   SquareMousePointer as SquareMousePointerIcon,
   Type as TypeIcon,
@@ -19,7 +21,6 @@ type SourceTreeMetaVisibilityKey = keyof StoredSourceTreeMetaVisibility;
 type DomAdjustmentPosition = {
   x: number;
   y: number;
-  scale: number;
 };
 
 type SectionOutlinePanelProps = {
@@ -44,6 +45,7 @@ type SectionOutlinePanelProps = {
   onToggleEntry: (entryId: string) => void;
   onSelectEntry: (entry: SectionOutlineEntry) => void;
   onCopyEntryName: (entry: SectionOutlineEntry) => void;
+  onFinishDomAdjustment: (entry: SectionOutlineEntry) => void;
   onResetDomAdjustment: (entry: SectionOutlineEntry) => void;
   isDomAdjustmentEmpty: (position: DomAdjustmentPosition) => boolean;
   onStartDomAdjustment: (entry: SectionOutlineEntry) => void;
@@ -77,6 +79,7 @@ export const SectionOutlinePanel = ({
   onToggleEntry,
   onSelectEntry,
   onCopyEntryName,
+  onFinishDomAdjustment,
   onResetDomAdjustment,
   isDomAdjustmentEmpty,
   onStartDomAdjustment,
@@ -228,7 +231,6 @@ export const SectionOutlinePanel = ({
     const domAdjustmentPosition = domAdjustmentByEntryId[entry.id] ?? {
       x: 0,
       y: 0,
-      scale: 0,
     };
     const shouldShowDomAdjustment =
       isDomAdjusting || !isDomAdjustmentEmpty(domAdjustmentPosition);
@@ -332,11 +334,16 @@ export const SectionOutlinePanel = ({
                   {shouldShowDomAdjustment ? (
                     <span
                       className="df-review-section-outline-adjust-status"
-                      aria-label={`DOM adjustment position x ${domAdjustmentPosition.x}, y ${domAdjustmentPosition.y}, scale ${domAdjustmentPosition.scale}`}
+                      aria-label={`DOM adjustment position x ${domAdjustmentPosition.x}, y ${domAdjustmentPosition.y}`}
                     >
-                      x: {domAdjustmentPosition.x} / y:{' '}
-                      {domAdjustmentPosition.y} / scale:{' '}
-                      {domAdjustmentPosition.scale}
+                      <span className="df-review-section-outline-adjust-metric">
+                        <b>x</b>
+                        <code>{domAdjustmentPosition.x}</code>
+                      </span>
+                      <span className="df-review-section-outline-adjust-metric">
+                        <b>y</b>
+                        <code>{domAdjustmentPosition.y}</code>
+                      </span>
                     </span>
                   ) : null}
                   {shouldShowDomAdjustment ? (
@@ -348,7 +355,19 @@ export const SectionOutlinePanel = ({
                       type="button"
                       onClick={() => onResetDomAdjustment(entry)}
                     >
-                      <XIcon aria-hidden="true" />
+                      <ResetIcon aria-hidden="true" />
+                    </button>
+                  ) : null}
+                  {isDomAdjusting ? (
+                    <button
+                      aria-label={`Finish ${entry.label} DOM adjustment`}
+                      className="df-review-section-outline-link is-dom-finish"
+                      data-review-tooltip="Finish move"
+                      title="Finish move"
+                      type="button"
+                      onClick={() => onFinishDomAdjustment(entry)}
+                    >
+                      <CheckIcon aria-hidden="true" />
                     </button>
                   ) : null}
                 </span>

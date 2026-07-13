@@ -469,7 +469,7 @@ export const reviewShellSectionOutlineStyle = `
 
   .df-review-section-outline-actions {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) max-content;
     align-items: center;
     gap: 8px;
     min-width: 0;
@@ -504,32 +504,65 @@ export const reviewShellSectionOutlineStyle = `
       color 140ms ease, opacity 140ms ease;
   }
 
-  .df-review-section-outline-link.is-dom-adjust,
   .df-review-section-outline-link.is-dom-select,
-  .df-review-section-outline-link.is-dom-reset,
   .df-review-section-outline-link.is-copy-name {
     width: 24px;
     min-width: 24px;
     padding: 0;
   }
 
-  .df-review-section-outline-link.is-dom-adjust svg,
   .df-review-section-outline-link.is-dom-select svg,
-  .df-review-section-outline-link.is-dom-reset svg,
   .df-review-section-outline-link.is-copy-name svg {
     width: 16px;
     height: 16px;
   }
 
+  .df-review-section-outline-link.is-dom-adjust,
+  .df-review-section-outline-link.is-dom-reset,
+  .df-review-section-outline-link.is-dom-finish {
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0;
+  }
+
+  .df-review-section-outline-link.is-dom-adjust svg,
+  .df-review-section-outline-link.is-dom-reset svg,
+  .df-review-section-outline-link.is-dom-finish svg {
+    width: 14px;
+    height: 14px;
+  }
+
   .df-review-section-outline-adjust-status {
     display: inline-flex;
     align-items: center;
-    min-height: 24px;
-    color: var(--df-review-muted);
+    gap: 8px;
+    min-width: 0;
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
     line-height: 1;
     white-space: nowrap;
+  }
+
+  .df-review-section-outline-adjust-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--df-review-muted);
+  }
+
+  .df-review-section-outline-adjust-metric b {
+    color: var(--df-review-subtle);
+    font-weight: var(--df-review-font-weight-normal);
+  }
+
+  .df-review-section-outline-adjust-metric code {
+    color: inherit;
+    font: inherit;
+  }
+
+  .df-review-section-outline-link.is-dom-finish {
+    color: var(--df-review-accent);
   }
 
   .df-review-section-outline-link:hover {

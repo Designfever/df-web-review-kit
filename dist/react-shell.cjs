@@ -4985,7 +4985,7 @@ var reviewShellSectionOutlineStyle = `
 
   .df-review-section-outline-actions {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) max-content;
     align-items: center;
     gap: 8px;
     min-width: 0;
@@ -5020,32 +5020,65 @@ var reviewShellSectionOutlineStyle = `
       color 140ms ease, opacity 140ms ease;
   }
 
-  .df-review-section-outline-link.is-dom-adjust,
   .df-review-section-outline-link.is-dom-select,
-  .df-review-section-outline-link.is-dom-reset,
   .df-review-section-outline-link.is-copy-name {
     width: 24px;
     min-width: 24px;
     padding: 0;
   }
 
-  .df-review-section-outline-link.is-dom-adjust svg,
   .df-review-section-outline-link.is-dom-select svg,
-  .df-review-section-outline-link.is-dom-reset svg,
   .df-review-section-outline-link.is-copy-name svg {
     width: 16px;
     height: 16px;
   }
 
+  .df-review-section-outline-link.is-dom-adjust,
+  .df-review-section-outline-link.is-dom-reset,
+  .df-review-section-outline-link.is-dom-finish {
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0;
+  }
+
+  .df-review-section-outline-link.is-dom-adjust svg,
+  .df-review-section-outline-link.is-dom-reset svg,
+  .df-review-section-outline-link.is-dom-finish svg {
+    width: 14px;
+    height: 14px;
+  }
+
   .df-review-section-outline-adjust-status {
     display: inline-flex;
     align-items: center;
-    min-height: 24px;
-    color: var(--df-review-muted);
+    gap: 8px;
+    min-width: 0;
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
     line-height: 1;
     white-space: nowrap;
+  }
+
+  .df-review-section-outline-adjust-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--df-review-muted);
+  }
+
+  .df-review-section-outline-adjust-metric b {
+    color: var(--df-review-subtle);
+    font-weight: var(--df-review-font-weight-normal);
+  }
+
+  .df-review-section-outline-adjust-metric code {
+    color: inherit;
+    font: inherit;
+  }
+
+  .df-review-section-outline-link.is-dom-finish {
+    color: var(--df-review-accent);
   }
 
   .df-review-section-outline-link:hover {
@@ -5587,73 +5620,77 @@ var __iconNode2 = [
 ];
 var CheckCheck = createLucideIcon("check-check", __iconNode2);
 
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/check.mjs
+var __iconNode3 = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
+var Check = createLucideIcon("check", __iconNode3);
+
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/chevron-down.mjs
-var __iconNode3 = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-var ChevronDown = createLucideIcon("chevron-down", __iconNode3);
+var __iconNode4 = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+var ChevronDown = createLucideIcon("chevron-down", __iconNode4);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/chevron-right.mjs
-var __iconNode4 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-var ChevronRight = createLucideIcon("chevron-right", __iconNode4);
+var __iconNode5 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+var ChevronRight = createLucideIcon("chevron-right", __iconNode5);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/chevron-up.mjs
-var __iconNode5 = [["path", { d: "m18 15-6-6-6 6", key: "153udz" }]];
-var ChevronUp = createLucideIcon("chevron-up", __iconNode5);
+var __iconNode6 = [["path", { d: "m18 15-6-6-6 6", key: "153udz" }]];
+var ChevronUp = createLucideIcon("chevron-up", __iconNode6);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/circle-question-mark.mjs
-var __iconNode6 = [
+var __iconNode7 = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3", key: "1u773s" }],
   ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-var CircleQuestionMark = createLucideIcon("circle-question-mark", __iconNode6);
+var CircleQuestionMark = createLucideIcon("circle-question-mark", __iconNode7);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/code-xml.mjs
-var __iconNode7 = [
+var __iconNode8 = [
   ["path", { d: "m18 16 4-4-4-4", key: "1inbqp" }],
   ["path", { d: "m6 8-4 4 4 4", key: "15zrgr" }],
   ["path", { d: "m14.5 4-5 16", key: "e7oirm" }]
 ];
-var CodeXml = createLucideIcon("code-xml", __iconNode7);
+var CodeXml = createLucideIcon("code-xml", __iconNode8);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/contrast.mjs
-var __iconNode8 = [
+var __iconNode9 = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "M12 18a6 6 0 0 0 0-12v12z", key: "j4l70d" }]
 ];
-var Contrast = createLucideIcon("contrast", __iconNode8);
+var Contrast = createLucideIcon("contrast", __iconNode9);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/copy.mjs
-var __iconNode9 = [
+var __iconNode10 = [
   ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
   ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
 ];
-var Copy = createLucideIcon("copy", __iconNode9);
+var Copy = createLucideIcon("copy", __iconNode10);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/corner-up-right.mjs
-var __iconNode10 = [
+var __iconNode11 = [
   ["path", { d: "m15 14 5-5-5-5", key: "12vg1m" }],
   ["path", { d: "M4 20v-7a4 4 0 0 1 4-4h12", key: "1lu4f8" }]
 ];
-var CornerUpRight = createLucideIcon("corner-up-right", __iconNode10);
+var CornerUpRight = createLucideIcon("corner-up-right", __iconNode11);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/database.mjs
-var __iconNode11 = [
+var __iconNode12 = [
   ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
   ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
   ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-var Database = createLucideIcon("database", __iconNode11);
+var Database = createLucideIcon("database", __iconNode12);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/external-link.mjs
-var __iconNode12 = [
+var __iconNode13 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "M10 14 21 3", key: "gplh6r" }],
   ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
 ];
-var ExternalLink = createLucideIcon("external-link", __iconNode12);
+var ExternalLink = createLucideIcon("external-link", __iconNode13);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye-off.mjs
-var __iconNode13 = [
+var __iconNode14 = [
   [
     "path",
     {
@@ -5671,10 +5708,10 @@ var __iconNode13 = [
   ],
   ["path", { d: "m2 2 20 20", key: "1ooewy" }]
 ];
-var EyeOff = createLucideIcon("eye-off", __iconNode13);
+var EyeOff = createLucideIcon("eye-off", __iconNode14);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/eye.mjs
-var __iconNode14 = [
+var __iconNode15 = [
   [
     "path",
     {
@@ -5684,59 +5721,59 @@ var __iconNode14 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Eye = createLucideIcon("eye", __iconNode14);
+var Eye = createLucideIcon("eye", __iconNode15);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/image.mjs
-var __iconNode15 = [
+var __iconNode16 = [
   ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
   ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
   ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
 ];
-var Image2 = createLucideIcon("image", __iconNode15);
+var Image2 = createLucideIcon("image", __iconNode16);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/layout-grid.mjs
-var __iconNode16 = [
+var __iconNode17 = [
   ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
   ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
   ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
   ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
 ];
-var LayoutGrid = createLucideIcon("layout-grid", __iconNode16);
+var LayoutGrid = createLucideIcon("layout-grid", __iconNode17);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/link-2.mjs
-var __iconNode17 = [
+var __iconNode18 = [
   ["path", { d: "M9 17H7A5 5 0 0 1 7 7h2", key: "8i5ue5" }],
   ["path", { d: "M15 7h2a5 5 0 1 1 0 10h-2", key: "1b9ql8" }],
   ["line", { x1: "8", x2: "16", y1: "12", y2: "12", key: "1jonct" }]
 ];
-var Link2 = createLucideIcon("link-2", __iconNode17);
+var Link2 = createLucideIcon("link-2", __iconNode18);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/list-checks.mjs
-var __iconNode18 = [
+var __iconNode19 = [
   ["path", { d: "M13 5h8", key: "a7qcls" }],
   ["path", { d: "M13 12h8", key: "h98zly" }],
   ["path", { d: "M13 19h8", key: "c3s6r1" }],
   ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
   ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }]
 ];
-var ListChecks = createLucideIcon("list-checks", __iconNode18);
+var ListChecks = createLucideIcon("list-checks", __iconNode19);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/lock-open.mjs
-var __iconNode19 = [
+var __iconNode20 = [
   ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
   ["path", { d: "M7 11V7a5 5 0 0 1 9.9-1", key: "1mm8w8" }]
 ];
-var LockOpen = createLucideIcon("lock-open", __iconNode19);
+var LockOpen = createLucideIcon("lock-open", __iconNode20);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/lock.mjs
-var __iconNode20 = [
+var __iconNode21 = [
   ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
   ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
 ];
-var Lock = createLucideIcon("lock", __iconNode20);
+var Lock = createLucideIcon("lock", __iconNode21);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/map.mjs
-var __iconNode21 = [
+var __iconNode22 = [
   [
     "path",
     {
@@ -5747,27 +5784,27 @@ var __iconNode21 = [
   ["path", { d: "M15 5.764v15", key: "1pn4in" }],
   ["path", { d: "M9 3.236v15", key: "1uimfh" }]
 ];
-var Map2 = createLucideIcon("map", __iconNode21);
+var Map2 = createLucideIcon("map", __iconNode22);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/maximize-2.mjs
-var __iconNode22 = [
+var __iconNode23 = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "m21 3-7 7", key: "1l2asr" }],
   ["path", { d: "m3 21 7-7", key: "tjx5ai" }],
   ["path", { d: "M9 21H3v-6", key: "wtvkvv" }]
 ];
-var Maximize2 = createLucideIcon("maximize-2", __iconNode22);
+var Maximize2 = createLucideIcon("maximize-2", __iconNode23);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/monitor.mjs
-var __iconNode23 = [
+var __iconNode24 = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
   ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
 ];
-var Monitor = createLucideIcon("monitor", __iconNode23);
+var Monitor = createLucideIcon("monitor", __iconNode24);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/moon.mjs
-var __iconNode24 = [
+var __iconNode25 = [
   [
     "path",
     {
@@ -5776,18 +5813,18 @@ var __iconNode24 = [
     }
   ]
 ];
-var Moon = createLucideIcon("moon", __iconNode24);
+var Moon = createLucideIcon("moon", __iconNode25);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/move-vertical.mjs
-var __iconNode25 = [
+var __iconNode26 = [
   ["path", { d: "M12 2v20", key: "t6zp3m" }],
   ["path", { d: "m8 18 4 4 4-4", key: "bh5tu3" }],
   ["path", { d: "m8 6 4-4 4 4", key: "ybng9g" }]
 ];
-var MoveVertical = createLucideIcon("move-vertical", __iconNode25);
+var MoveVertical = createLucideIcon("move-vertical", __iconNode26);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/move.mjs
-var __iconNode26 = [
+var __iconNode27 = [
   ["path", { d: "M12 2v20", key: "t6zp3m" }],
   ["path", { d: "m15 19-3 3-3-3", key: "11eu04" }],
   ["path", { d: "m19 9 3 3-3 3", key: "1mg7y2" }],
@@ -5795,20 +5832,20 @@ var __iconNode26 = [
   ["path", { d: "m5 9-3 3 3 3", key: "j64kie" }],
   ["path", { d: "m9 5 3-3 3 3", key: "l8vdw6" }]
 ];
-var Move = createLucideIcon("move", __iconNode26);
+var Move = createLucideIcon("move", __iconNode27);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/network.mjs
-var __iconNode27 = [
+var __iconNode28 = [
   ["rect", { x: "16", y: "16", width: "6", height: "6", rx: "1", key: "4q2zg0" }],
   ["rect", { x: "2", y: "16", width: "6", height: "6", rx: "1", key: "8cvhb9" }],
   ["rect", { x: "9", y: "2", width: "6", height: "6", rx: "1", key: "1egb70" }],
   ["path", { d: "M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3", key: "1jsf9p" }],
   ["path", { d: "M12 12V8", key: "2874zd" }]
 ];
-var Network = createLucideIcon("network", __iconNode27);
+var Network = createLucideIcon("network", __iconNode28);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/pencil.mjs
-var __iconNode28 = [
+var __iconNode29 = [
   [
     "path",
     {
@@ -5818,32 +5855,39 @@ var __iconNode28 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-var Pencil = createLucideIcon("pencil", __iconNode28);
+var Pencil = createLucideIcon("pencil", __iconNode29);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/plus.mjs
-var __iconNode29 = [
+var __iconNode30 = [
   ["path", { d: "M5 12h14", key: "1ays0h" }],
   ["path", { d: "M12 5v14", key: "s699le" }]
 ];
-var Plus = createLucideIcon("plus", __iconNode29);
+var Plus = createLucideIcon("plus", __iconNode30);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rectangle-horizontal.mjs
-var __iconNode30 = [
+var __iconNode31 = [
   ["rect", { width: "20", height: "12", x: "2", y: "6", rx: "2", key: "9lu3g6" }]
 ];
-var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode30);
+var RectangleHorizontal = createLucideIcon("rectangle-horizontal", __iconNode31);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/refresh-cw.mjs
-var __iconNode31 = [
+var __iconNode32 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
   ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
   ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode31);
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode32);
+
+// node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/rotate-ccw.mjs
+var __iconNode33 = [
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
+];
+var RotateCcw = createLucideIcon("rotate-ccw", __iconNode33);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/ruler.mjs
-var __iconNode32 = [
+var __iconNode34 = [
   [
     "path",
     {
@@ -5856,26 +5900,26 @@ var __iconNode32 = [
   ["path", { d: "m8.5 6.5 2-2", key: "vc6u1g" }],
   ["path", { d: "m17.5 15.5 2-2", key: "wo5hmg" }]
 ];
-var Ruler = createLucideIcon("ruler", __iconNode32);
+var Ruler = createLucideIcon("ruler", __iconNode34);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/scan.mjs
-var __iconNode33 = [
+var __iconNode35 = [
   ["path", { d: "M3 7V5a2 2 0 0 1 2-2h2", key: "aa7l1z" }],
   ["path", { d: "M17 3h2a2 2 0 0 1 2 2v2", key: "4qcy5o" }],
   ["path", { d: "M21 17v2a2 2 0 0 1-2 2h-2", key: "6vwrx8" }],
   ["path", { d: "M7 21H5a2 2 0 0 1-2-2v-2", key: "ioqczr" }]
 ];
-var Scan = createLucideIcon("scan", __iconNode33);
+var Scan = createLucideIcon("scan", __iconNode35);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/search.mjs
-var __iconNode34 = [
+var __iconNode36 = [
   ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-var Search = createLucideIcon("search", __iconNode34);
+var Search = createLucideIcon("search", __iconNode36);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/settings.mjs
-var __iconNode35 = [
+var __iconNode37 = [
   [
     "path",
     {
@@ -5885,17 +5929,17 @@ var __iconNode35 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-var Settings = createLucideIcon("settings", __iconNode35);
+var Settings = createLucideIcon("settings", __iconNode37);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/smartphone.mjs
-var __iconNode36 = [
+var __iconNode38 = [
   ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
   ["path", { d: "M12 18h.01", key: "mhygvu" }]
 ];
-var Smartphone = createLucideIcon("smartphone", __iconNode36);
+var Smartphone = createLucideIcon("smartphone", __iconNode38);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/square-mouse-pointer.mjs
-var __iconNode37 = [
+var __iconNode39 = [
   [
     "path",
     {
@@ -5905,10 +5949,10 @@ var __iconNode37 = [
   ],
   ["path", { d: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6", key: "14rsvq" }]
 ];
-var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode37);
+var SquareMousePointer = createLucideIcon("square-mouse-pointer", __iconNode39);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/sun.mjs
-var __iconNode38 = [
+var __iconNode40 = [
   ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
   ["path", { d: "M12 2v2", key: "tus03m" }],
   ["path", { d: "M12 20v2", key: "1lh1kg" }],
@@ -5919,40 +5963,40 @@ var __iconNode38 = [
   ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
   ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
 ];
-var Sun = createLucideIcon("sun", __iconNode38);
+var Sun = createLucideIcon("sun", __iconNode40);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/trash-2.mjs
-var __iconNode39 = [
+var __iconNode41 = [
   ["path", { d: "M10 11v6", key: "nco0om" }],
   ["path", { d: "M14 11v6", key: "outv1u" }],
   ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
   ["path", { d: "M3 6h18", key: "d0wm0j" }],
   ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
 ];
-var Trash2 = createLucideIcon("trash-2", __iconNode39);
+var Trash2 = createLucideIcon("trash-2", __iconNode41);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/type.mjs
-var __iconNode40 = [
+var __iconNode42 = [
   ["path", { d: "M12 4v16", key: "1654pz" }],
   ["path", { d: "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2", key: "e0r10z" }],
   ["path", { d: "M9 20h6", key: "s66wpe" }]
 ];
-var Type = createLucideIcon("type", __iconNode40);
+var Type = createLucideIcon("type", __iconNode42);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/upload.mjs
-var __iconNode41 = [
+var __iconNode43 = [
   ["path", { d: "M12 3v12", key: "1x0j5s" }],
   ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
 ];
-var Upload = createLucideIcon("upload", __iconNode41);
+var Upload = createLucideIcon("upload", __iconNode43);
 
 // node_modules/.pnpm/lucide-react@1.20.0_react@19.2.7/node_modules/lucide-react/dist/esm/icons/x.mjs
-var __iconNode42 = [
+var __iconNode44 = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-var X = createLucideIcon("x", __iconNode42);
+var X = createLucideIcon("x", __iconNode44);
 
 // src/react-shell/figma/image.overlay.controller.ts
 var import_react7 = require("react");
@@ -10861,6 +10905,7 @@ var getSectionOutline = (root, options) => {
 function getSectionOutlineRoots(root, options) {
   return Array.from(root.querySelectorAll(SECTION_OUTLINE_ROOT_SELECTOR)).filter(
     (element) => {
+      if (element.closest('[data-dfwr-adjust-preview="true"]')) return false;
       const source = getSourceHintFromElement(element);
       const label = getOutlineLabel(element, source, "");
       return !isSkippedOutlineNode(label, source?.file, options) && !hasSectionOutlineRootAncestor(element, root, options);
@@ -11415,8 +11460,7 @@ var useReviewShellRefs = () => {
 // src/react-shell/hooks/use.review.section.outline.ts
 var EMPTY_DOM_ADJUSTMENT_POSITION = {
   x: 0,
-  y: 0,
-  scale: 0
+  y: 0
 };
 var SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
 var getSectionDomAdjustmentKeyDelta = (event) => {
@@ -11425,16 +11469,13 @@ var getSectionDomAdjustmentKeyDelta = (event) => {
   if (event.key === "ArrowRight") return { x: step };
   if (event.key === "ArrowUp") return { y: -step };
   if (event.key === "ArrowDown") return { y: step };
-  if (event.key.toLowerCase() === "w") return { scale: step };
-  if (event.key.toLowerCase() === "s") return { scale: -step };
   return null;
 };
 var addDomAdjustmentDelta = (current, delta) => ({
   x: (current?.x ?? 0) + (delta.x ?? 0),
-  y: (current?.y ?? 0) + (delta.y ?? 0),
-  scale: (current?.scale ?? 0) + (delta.scale ?? 0)
+  y: (current?.y ?? 0) + (delta.y ?? 0)
 });
-var isDomAdjustmentEmpty = (position) => position.x === 0 && position.y === 0 && position.scale === 0;
+var isDomAdjustmentEmpty = (position) => position.x === 0 && position.y === 0;
 var isEditableKeyTarget = (target) => {
   if (!(target instanceof HTMLElement)) return false;
   const tagName = target.tagName;
@@ -11495,6 +11536,18 @@ function useReviewSectionOutline({
     setActiveDomAdjustmentEntryId(null);
     setDomAdjustmentByEntryId({});
   }, []);
+  const finishActiveDomAdjustment = (0, import_react18.useCallback)(() => {
+    if (!activeDomAdjustmentEntryId) return;
+    const controller = controllerRef.current;
+    controller?.setMode("idle");
+    clearActiveDomAdjustment();
+    setMode(controller?.getMode() ?? "idle");
+  }, [
+    activeDomAdjustmentEntryId,
+    clearActiveDomAdjustment,
+    controllerRef,
+    setMode
+  ]);
   const updateSectionOutlineFilter = (0, import_react18.useCallback)((nextFilter) => {
     setSectionOutlineFilter(nextFilter);
     writeStoredSourceTreeFilter(nextFilter);
@@ -11686,11 +11739,12 @@ function useReviewSectionOutline({
   );
   const selectSectionOutlineEntry = (0, import_react18.useCallback)(
     (entry) => {
+      finishActiveDomAdjustment();
       scrollToSection(entry);
       onPinSourceOutlineForElement(entry.element);
       setSelectedSectionOutlineId(entry.id);
     },
-    [onPinSourceOutlineForElement, scrollToSection]
+    [finishActiveDomAdjustment, onPinSourceOutlineForElement, scrollToSection]
   );
   const copySectionOutlineName = (0, import_react18.useCallback)(
     async (entry) => {
@@ -11927,6 +11981,14 @@ function useReviewSectionOutline({
       setMode
     ]
   );
+  const finishSectionDomAdjustment = (0, import_react18.useCallback)(
+    (entry) => {
+      if (activeDomAdjustmentEntryId === entry.id) {
+        finishActiveDomAdjustment();
+      }
+    },
+    [activeDomAdjustmentEntryId, finishActiveDomAdjustment]
+  );
   return {
     canWriteDom,
     collapsedSectionOutlineIds,
@@ -11946,6 +12008,7 @@ function useReviewSectionOutline({
     copiedSectionOutlineId,
     copySectionOutlineName,
     domAdjustmentByEntryId,
+    finishSectionDomAdjustment,
     isDomAdjustmentEmpty,
     resetSectionDomAdjustment,
     selectedSectionOutlineId,
@@ -11983,6 +12046,7 @@ var SectionOutlinePanel = ({
   onToggleEntry,
   onSelectEntry,
   onCopyEntryName,
+  onFinishDomAdjustment,
   onResetDomAdjustment,
   isDomAdjustmentEmpty: isDomAdjustmentEmpty2,
   onStartDomAdjustment,
@@ -12133,8 +12197,7 @@ var SectionOutlinePanel = ({
     const isDomAdjusting = activeDomAdjustmentEntryId === entry.id;
     const domAdjustmentPosition = domAdjustmentByEntryId[entry.id] ?? {
       x: 0,
-      y: 0,
-      scale: 0
+      y: 0
     };
     const shouldShowDomAdjustment = isDomAdjusting || !isDomAdjustmentEmpty2(domAdjustmentPosition);
     return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
@@ -12227,16 +12290,16 @@ var SectionOutlinePanel = ({
                               "span",
                               {
                                 className: "df-review-section-outline-adjust-status",
-                                "aria-label": `DOM adjustment position x ${domAdjustmentPosition.x}, y ${domAdjustmentPosition.y}, scale ${domAdjustmentPosition.scale}`,
+                                "aria-label": `DOM adjustment position x ${domAdjustmentPosition.x}, y ${domAdjustmentPosition.y}`,
                                 children: [
-                                  "x: ",
-                                  domAdjustmentPosition.x,
-                                  " / y:",
-                                  " ",
-                                  domAdjustmentPosition.y,
-                                  " / scale:",
-                                  " ",
-                                  domAdjustmentPosition.scale
+                                  /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "df-review-section-outline-adjust-metric", children: [
+                                    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("b", { children: "x" }),
+                                    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("code", { children: domAdjustmentPosition.x })
+                                  ] }),
+                                  /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "df-review-section-outline-adjust-metric", children: [
+                                    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("b", { children: "y" }),
+                                    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("code", { children: domAdjustmentPosition.y })
+                                  ] })
                                 ]
                               }
                             ) : null,
@@ -12249,7 +12312,19 @@ var SectionOutlinePanel = ({
                                 title: "Reset move",
                                 type: "button",
                                 onClick: () => onResetDomAdjustment(entry),
-                                children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(X, { "aria-hidden": "true" })
+                                children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(RotateCcw, { "aria-hidden": "true" })
+                              }
+                            ) : null,
+                            isDomAdjusting ? /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+                              "button",
+                              {
+                                "aria-label": `Finish ${entry.label} DOM adjustment`,
+                                className: "df-review-section-outline-link is-dom-finish",
+                                "data-review-tooltip": "Finish move",
+                                title: "Finish move",
+                                type: "button",
+                                onClick: () => onFinishDomAdjustment(entry),
+                                children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Check, { "aria-hidden": "true" })
                               }
                             ) : null
                           ] }),
@@ -12436,6 +12511,7 @@ var SectionOutlineContainer = () => {
     copiedSectionOutlineId,
     copySectionOutlineName,
     domAdjustmentByEntryId,
+    finishSectionDomAdjustment,
     filteredSectionOutline,
     filteredSectionOutlineCount,
     isPanelVisible,
@@ -12486,6 +12562,7 @@ var SectionOutlineContainer = () => {
       onToggleEntry: toggleSectionOutlineEntry,
       onSelectEntry: selectSectionOutlineEntry,
       onCopyEntryName: (entry) => void copySectionOutlineName(entry),
+      onFinishDomAdjustment: finishSectionDomAdjustment,
       onResetDomAdjustment: resetSectionDomAdjustment,
       isDomAdjustmentEmpty: isDomAdjustmentEmpty2,
       onStartDomAdjustment: startSectionDomAdjustment,
@@ -16756,6 +16833,7 @@ var DraftPreviewController = class {
       };
       element.style.visibility = "hidden";
     }
+    syncDraftPreviewCloneRect(this.snapshot.clone, element);
     const metrics = this.config.getMetrics(draft);
     const translate = `translate(${toCssNumber(metrics.cssX)}px, ${toCssNumber(
       metrics.cssY
@@ -16780,16 +16858,11 @@ var DraftPreviewController = class {
   }
 };
 function positionDraftPreviewClone(clone, element, computedStyle) {
-  const rect = element.getBoundingClientRect();
   clone.setAttribute("data-dfwr-adjust-preview", "true");
   clone.setAttribute("aria-hidden", "true");
   clone.style.position = "fixed";
-  clone.style.left = `${toCssNumber(rect.left)}px`;
-  clone.style.top = `${toCssNumber(rect.top)}px`;
   clone.style.right = "auto";
   clone.style.bottom = "auto";
-  clone.style.width = `${toCssNumber(rect.width)}px`;
-  clone.style.height = `${toCssNumber(rect.height)}px`;
   clone.style.maxWidth = "none";
   clone.style.maxHeight = "none";
   clone.style.margin = "0";
@@ -16801,6 +16874,14 @@ function positionDraftPreviewClone(clone, element, computedStyle) {
   clone.style.willChange = "transform";
   clone.style.transformOrigin = "top left";
   clone.style.transform = "none";
+  syncDraftPreviewCloneRect(clone, element);
+}
+function syncDraftPreviewCloneRect(clone, element) {
+  const rect = element.getBoundingClientRect();
+  clone.style.left = `${toCssNumber(rect.left)}px`;
+  clone.style.top = `${toCssNumber(rect.top)}px`;
+  clone.style.width = `${toCssNumber(rect.width)}px`;
+  clone.style.height = `${toCssNumber(rect.height)}px`;
 }
 function getDraftPreviewDisplay(display) {
   if (display === "inline" || display === "contents") return "inline-block";
@@ -19854,6 +19935,7 @@ var WebReviewKitView = class {
 
 // src/core/web.review.kit.app.ts
 var ROOT_ID = "df-web-review-kit-root";
+var VIEWPORT_SCROLL_OPTIONS = { capture: true, passive: true };
 function isEditableEventTarget2(event) {
   const path = event.composedPath?.() ?? [];
   const element = path[0] ?? event.target;
@@ -19909,6 +19991,7 @@ var WebReviewKitApp = class {
       this.renderFrame = window.requestAnimationFrame(() => {
         this.renderFrame = void 0;
         if (this.isDraftComposerFocused()) return;
+        this.syncDomDraftViewportGeometry();
         this.render();
       });
     };
@@ -19966,16 +20049,48 @@ var WebReviewKitApp = class {
     this.shadow = this.root.attachShadow({ mode: "open" });
     document.body.appendChild(this.root);
     document.addEventListener("keydown", this.handleKeyDown, true);
-    window.addEventListener("scroll", this.handleViewportChange, true);
+    window.addEventListener(
+      "scroll",
+      this.handleViewportChange,
+      VIEWPORT_SCROLL_OPTIONS
+    );
     window.addEventListener("resize", this.handleViewportChange);
+    this.targetViewportWindow = this.getEnvironment()?.window;
+    if (this.targetViewportWindow && this.targetViewportWindow !== window) {
+      this.targetViewportWindow.addEventListener(
+        "scroll",
+        this.handleViewportChange,
+        VIEWPORT_SCROLL_OPTIONS
+      );
+      this.targetViewportWindow.addEventListener(
+        "resize",
+        this.handleViewportChange
+      );
+    }
     this.render();
   }
   destroy() {
     this.view.clearDraftPreview();
     this.clearDrafts();
     document.removeEventListener("keydown", this.handleKeyDown, true);
-    window.removeEventListener("scroll", this.handleViewportChange, true);
+    window.removeEventListener(
+      "scroll",
+      this.handleViewportChange,
+      VIEWPORT_SCROLL_OPTIONS
+    );
     window.removeEventListener("resize", this.handleViewportChange);
+    if (this.targetViewportWindow && this.targetViewportWindow !== window) {
+      this.targetViewportWindow.removeEventListener(
+        "scroll",
+        this.handleViewportChange,
+        VIEWPORT_SCROLL_OPTIONS
+      );
+      this.targetViewportWindow.removeEventListener(
+        "resize",
+        this.handleViewportChange
+      );
+    }
+    this.targetViewportWindow = void 0;
     if (this.renderFrame) {
       window.cancelAnimationFrame(this.renderFrame);
       this.renderFrame = void 0;
@@ -20124,6 +20239,33 @@ var WebReviewKitApp = class {
     this.isSelectingArea = false;
     this.render();
     return true;
+  }
+  syncDomDraftViewportGeometry() {
+    const draft = this.domDraft;
+    const element = draft?.previewElement;
+    const environment = this.getEnvironment();
+    if (!draft?.selection || !element?.isConnected || !environment || element.ownerDocument !== environment.document) {
+      return;
+    }
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const selection = {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height
+    };
+    this.domDraft = {
+      ...draft,
+      marker: {
+        ...draft.marker,
+        viewport: roundPoint({ x: rect.left, y: rect.top })
+      },
+      selection: {
+        ...draft.selection,
+        viewport: toPublicSelection(selection)
+      }
+    };
   }
   isDraftComposerFocused() {
     if (!this.domDraft && !this.areaDraft) return false;
@@ -25463,6 +25605,7 @@ lucide-react/dist/esm/Icon.mjs:
 lucide-react/dist/esm/createLucideIcon.mjs:
 lucide-react/dist/esm/icons/bot.mjs:
 lucide-react/dist/esm/icons/check-check.mjs:
+lucide-react/dist/esm/icons/check.mjs:
 lucide-react/dist/esm/icons/chevron-down.mjs:
 lucide-react/dist/esm/icons/chevron-right.mjs:
 lucide-react/dist/esm/icons/chevron-up.mjs:
@@ -25492,6 +25635,7 @@ lucide-react/dist/esm/icons/pencil.mjs:
 lucide-react/dist/esm/icons/plus.mjs:
 lucide-react/dist/esm/icons/rectangle-horizontal.mjs:
 lucide-react/dist/esm/icons/refresh-cw.mjs:
+lucide-react/dist/esm/icons/rotate-ccw.mjs:
 lucide-react/dist/esm/icons/ruler.mjs:
 lucide-react/dist/esm/icons/scan.mjs:
 lucide-react/dist/esm/icons/search.mjs:

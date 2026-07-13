@@ -29,27 +29,26 @@ const createConfig = (sourceRoot?: string) =>
     pages: [{ href: '/' }],
     adapters: { local: adapter },
     sourceRoot,
-    sourceInspector: { enabled: true },
   });
 
 describe('createReviewShellConfig', () => {
-  it('keeps the source tree enabled when sourceRoot is missing', () => {
+  it('keeps source tools independent from sourceRoot', () => {
     const config = createConfig();
 
-    expect(config.isSourceInspectorEnabled).toBe(false);
-    expect(config.isSourceTreeEnabled).toBe(true);
+    expect(config.sourceOpenOptions.sourceRoot).toBeUndefined();
     expect(config.isSourceTreeHoverOutlineEnabled).toBe(true);
   });
 
-  it('enables the source inspector shortcut when sourceRoot is available', () => {
+  it('uses sourceRoot only to resolve source paths', () => {
     const config = createConfig('/Users/designfever/project');
 
-    expect(config.isSourceInspectorEnabled).toBe(true);
-    expect(config.isSourceTreeEnabled).toBe(true);
+    expect(config.sourceOpenOptions.sourceRoot).toBe(
+      '/Users/designfever/project'
+    );
     expect(config.isSourceTreeHoverOutlineEnabled).toBe(true);
   });
 
-  it('disables source tree features when sourceInspector is disabled', () => {
+  it('does not create source feature availability gates', () => {
     const config = createReviewShellConfig({
       projectId: 'test',
       pages: [{ href: '/' }],
@@ -57,8 +56,8 @@ describe('createReviewShellConfig', () => {
       sourceInspector: { enabled: false },
     });
 
-    expect(config.isSourceInspectorEnabled).toBe(false);
-    expect(config.isSourceTreeEnabled).toBe(false);
-    expect(config.isSourceTreeHoverOutlineEnabled).toBe(false);
+    expect(config).not.toHaveProperty('isSourceInspectorEnabled');
+    expect(config).not.toHaveProperty('isSourceTreeEnabled');
+    expect(config.isSourceTreeHoverOutlineEnabled).toBe(true);
   });
 });

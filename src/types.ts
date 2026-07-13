@@ -300,7 +300,7 @@ export interface WebReviewKitController {
     x?: number;
     y?: number;
     scale?: number;
-  }): boolean;
+  }, options?: { preview?: boolean }): boolean;
   getMode(): ReviewMode;
   highlightItem(itemId?: string): void;
   setHiddenItemIds(itemIds?: string[]): void;

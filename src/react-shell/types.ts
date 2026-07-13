@@ -35,6 +35,7 @@ export type ReviewShellGlobEntries = Record<string, unknown>;
 export type ReviewSourceEditor = 'vscode' | 'cursor' | 'webstorm' | 'custom';
 
 export type ReviewSourceInspectorOptions = {
+  /** @deprecated Source Tree와 Option 소스 추적은 Review Shell에서 항상 활성화된다. */
   enabled?: boolean;
   editor?: ReviewSourceEditor;
   urlTemplate?: string;

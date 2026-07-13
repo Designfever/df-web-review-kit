@@ -15,7 +15,6 @@ export const ReviewSideRail = ({
   isFigmaImageManagementEnabled,
   isFigmaImagesPanelVisible,
   isQaPanelVisible,
-  isSourceTreeEnabled,
   isSourceTreePanelVisible,
   presenceSessionId,
   onOpenAbout,
@@ -29,7 +28,6 @@ export const ReviewSideRail = ({
   isFigmaImageManagementEnabled: boolean;
   isFigmaImagesPanelVisible: boolean;
   isQaPanelVisible: boolean;
-  isSourceTreeEnabled: boolean;
   isSourceTreePanelVisible: boolean;
   presenceSessionId: string;
   onOpenAbout: () => void;
@@ -79,29 +77,27 @@ export const ReviewSideRail = ({
           <QaListIcon />
         </span>
       </button>
-      {isSourceTreeEnabled && (
-        <button
-          aria-controls="df-review-section-outline"
-          aria-label={
-            isSourceTreePanelVisible
-              ? 'Hide component list'
-              : 'Show component list'
-          }
-          aria-pressed={isSourceTreePanelVisible}
-          className={`df-review-side-toggle${
-            isSourceTreePanelVisible ? ' is-active' : ''
-          }`}
-          data-review-tooltip="Component List"
-          data-review-tooltip-placement="left"
-          type="button"
-          onClick={onToggleSourceTreePanel}
-          title="Component List"
-        >
-          <span aria-hidden="true">
-            <ComponentTreeIcon />
-          </span>
-        </button>
-      )}
+      <button
+        aria-controls="df-review-section-outline"
+        aria-label={
+          isSourceTreePanelVisible
+            ? 'Hide component list'
+            : 'Show component list'
+        }
+        aria-pressed={isSourceTreePanelVisible}
+        className={`df-review-side-toggle${
+          isSourceTreePanelVisible ? ' is-active' : ''
+        }`}
+        data-review-tooltip="Component List"
+        data-review-tooltip-placement="left"
+        type="button"
+        onClick={onToggleSourceTreePanel}
+        title="Component List"
+      >
+        <span aria-hidden="true">
+          <ComponentTreeIcon />
+        </span>
+      </button>
       <div className="df-review-side-actions">
         <button
           aria-label="Open initial prompt"

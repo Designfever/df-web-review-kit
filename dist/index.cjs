@@ -5400,7 +5400,7 @@ var WebReviewKitView = class {
     this.draftPreview = new DraftPreviewController({
       getEnvironment: () => this.config.getEnvironment(),
       getMetrics: (draft) => getDraftAdjustmentMetrics(draft, presets()),
-      hasAdjustment: (draft) => hasDraftAdjustment(draft, presets())
+      hasAdjustment: (draft) => draft.adjustment?.preview !== false && hasDraftAdjustment(draft, presets())
     });
     this.draftContext = {
       config: this.config,
@@ -5568,7 +5568,7 @@ function createWebReviewKit(options) {
     setMode: (mode) => app.setMode(mode),
     startElementReview: (element, comment) => app.startElementReview(element, comment),
     selectElement: (element) => app.selectElement(element),
-    adjustElementSelection: (delta) => app.adjustElementSelection(delta),
+    adjustElementSelection: (delta, adjustmentOptions) => app.adjustElementSelection(delta, adjustmentOptions),
     getMode: () => app.getMode(),
     highlightItem: (itemId) => app.highlightItem(itemId),
     setHiddenItemIds: (itemIds) => app.setHiddenItemIds(itemIds),
@@ -5758,7 +5758,7 @@ var WebReviewKitApp = class {
       isSelectionOnly: true
     });
   }
-  adjustElementSelection(delta) {
+  adjustElementSelection(delta, options) {
     if (!this.domDraft?.selection) return false;
     const current = this.domDraft.adjustment;
     this.domDraft = {
@@ -5767,7 +5767,8 @@ var WebReviewKitApp = class {
         x: (current?.x ?? 0) + (delta.x ?? 0),
         y: (current?.y ?? 0) + (delta.y ?? 0),
         scale: (current?.scale ?? 0) + (delta.scale ?? 0),
-        isActive: true
+        isActive: true,
+        preview: options?.preview ?? current?.preview
       }
     };
     this.render();

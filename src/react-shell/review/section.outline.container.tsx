@@ -1,16 +1,13 @@
 // Source Tree feature container. 아웃라인 훅과 패널 JSX 를 소유한다.
 import { useReviewSectionOutline } from '../hooks/use.review.section.outline';
 import { useReviewShellActions } from '../store/shell.actions.context';
-import { useReviewShellConfig } from '../store/shell.config';
 import { SectionOutlinePanel } from './section.outline.panel';
 
 export const SectionOutlineContainer = () => {
-  const { isSourceTreeEnabled } = useReviewShellConfig();
   const {
     clearSourceInspector,
     clearSourceOutlineHover,
     initReviewKit,
-    pinSourceOutlineForElement,
     showSourceOutlineForElement,
   } = useReviewShellActions();
   const {
@@ -24,7 +21,6 @@ export const SectionOutlineContainer = () => {
     filteredSectionOutline,
     filteredSectionOutlineCount,
     isPanelVisible,
-    isDomAdjustmentEmpty,
     isSectionOutlineFiltering,
     openSectionData,
     openSectionSource,
@@ -35,7 +31,7 @@ export const SectionOutlineContainer = () => {
     sectionOutlineTotalCount,
     selectedSectionOutlineId,
     selectSectionOutlineEntry,
-    resetSectionDomAdjustment,
+    clearSectionDomAdjustment,
     startSectionDomAdjustment,
     startSectionDomReview,
     toggleSectionOutlineEntry,
@@ -44,10 +40,7 @@ export const SectionOutlineContainer = () => {
   } = useReviewSectionOutline({
     onClearSourceInspector: clearSourceInspector,
     onInitReviewKit: initReviewKit,
-    onPinSourceOutlineForElement: pinSourceOutlineForElement,
   });
-
-  if (!isSourceTreeEnabled) return null;
 
   return (
     <SectionOutlinePanel
@@ -73,8 +66,7 @@ export const SectionOutlineContainer = () => {
       onSelectEntry={selectSectionOutlineEntry}
       onCopyEntryName={(entry) => void copySectionOutlineName(entry)}
       onFinishDomAdjustment={finishSectionDomAdjustment}
-      onResetDomAdjustment={resetSectionDomAdjustment}
-      isDomAdjustmentEmpty={isDomAdjustmentEmpty}
+      onClearDomAdjustment={clearSectionDomAdjustment}
       onStartDomAdjustment={startSectionDomAdjustment}
       onOpenData={openSectionData}
       onOpenSource={openSectionSource}

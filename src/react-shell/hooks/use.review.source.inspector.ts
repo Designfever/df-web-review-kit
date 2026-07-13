@@ -1,47 +1,35 @@
 // shell.tsx 에서 분리한 소스 인스펙터 훅.
 // 담당 범위:
-// - 인스펙터 패널 상태(위치/후보 목록/고정 여부) 계산
+// - 소스 탐색 hover outline 상태와 위치 계산
 // - Alt(Option) 단축키로 target iframe 안에서 소스 후보를 추적/클릭하는
 //   바인딩 (bindSourceOpenShortcut) — 폰트 힌트 오버레이 포함
 // - Source Tree 패널 hover 시 요소 아웃라인 표시
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { createSourceShortcutStyle } from '../review/source.shortcut.style';
 import type {
-  SourceInspectorCandidate,
   SourceInspectorRect,
   SourceInspectorState,
 } from '../review/source.inspector.overlay';
 import {
   getSourceCandidates,
-  getSourceOpenUrl,
-  openSourceInEditor,
   type GetSourceCandidatesOptions,
-  type SourceOpenOptions,
 } from '../source.open';
 import { setTargetFigmaSourceSelectLocked } from '../target/target';
 import { useReviewToast } from './use.review.toast';
 
-const SOURCE_PANEL_MAX_WIDTH = 440;
-const SOURCE_PANEL_MIN_WIDTH = 240;
-const SOURCE_PANEL_MAX_HEIGHT = 260;
-
 export function useReviewSourceInspector({
   frameScrollRef,
   iframeRef,
-  isSourceInspectorEnabled,
   isSourceTreeHoverOutlineEnabled,
   sourceCandidateOptions,
-  sourceOpenOptions,
   targetSrc,
   onCancelReviewMode,
   onRequestSourceTreeFocus,
 }: {
   frameScrollRef: RefObject<HTMLDivElement | null>;
   iframeRef: RefObject<HTMLIFrameElement | null>;
-  isSourceInspectorEnabled: boolean;
   isSourceTreeHoverOutlineEnabled: boolean;
   sourceCandidateOptions: GetSourceCandidatesOptions;
-  sourceOpenOptions: SourceOpenOptions;
   /** target 주소가 바뀌면 새 문서에 단축키를 다시 바인딩한다. */
   targetSrc: string;
   onCancelReviewMode: () => boolean;
@@ -49,14 +37,10 @@ export function useReviewSourceInspector({
 }) {
   const showToast = useReviewToast();
   const sourceShortcutCleanupRef = useRef<(() => void) | null>(null);
-  // 인스펙터 팝업 내부를 조작 중인지 여부. 팝업 클릭이 "바깥 클릭으로 닫힘"
-  // 처리에 걸리지 않게 하는 플래그.
-  const sourceInspectorInteractionRef = useRef(false);
   const [sourceInspectorState, setSourceInspectorState] =
     useState<SourceInspectorState | null>(null);
 
   const clearSourceInspector = useCallback(() => {
-    sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
 
@@ -89,85 +73,6 @@ export function useReviewSourceInspector({
     [iframeRef]
   );
 
-  /** 패널을 대상 오른쪽에, 공간이 없으면 왼쪽에 배치. */
-  const getSourceInspectorPanelPosition = useCallback(
-    (rect: SourceInspectorRect) => {
-      const margin = 12;
-      const gap = 10;
-      const preferredLeft = rect.left + rect.width + gap;
-      const rightSpace = window.innerWidth - preferredLeft - margin;
-      const leftSpace = rect.left - gap - margin;
-      const canOpenRight = rightSpace >= SOURCE_PANEL_MIN_WIDTH;
-      const canOpenLeft = leftSpace >= SOURCE_PANEL_MIN_WIDTH;
-      const left = canOpenRight || !canOpenLeft ? preferredLeft : margin;
-      const right = canOpenRight || !canOpenLeft
-        ? null
-        : Math.max(margin, window.innerWidth - (rect.left - gap));
-      const maxWidth = Math.min(
-        SOURCE_PANEL_MAX_WIDTH,
-        Math.max(
-          SOURCE_PANEL_MIN_WIDTH,
-          canOpenRight
-            ? rightSpace
-            : canOpenLeft
-              ? leftSpace
-              : window.innerWidth - margin * 2
-        )
-      );
-      const top = Math.min(
-        Math.max(margin, rect.top),
-        Math.max(margin, window.innerHeight - SOURCE_PANEL_MAX_HEIGHT - margin)
-      );
-
-      return { left, maxWidth, right, top };
-    },
-    []
-  );
-
-  /** 클릭 지점의 소스 후보 목록으로 인스펙터 패널을 연다. */
-  const showSourceInspectorForTarget = useCallback(
-    (target: EventTarget | null, isPinned = false) => {
-      const candidates = getSourceCandidates(target, sourceCandidateOptions).map(
-        (candidate) => ({
-          ...candidate,
-          openUrl: getSourceOpenUrl(candidate.source, {
-            ...sourceOpenOptions,
-            omitPosition: !candidate.usesPosition,
-          }),
-        })
-      );
-      const firstCandidate = candidates[0];
-      const rect = firstCandidate
-        ? getSourceInspectorRect(firstCandidate.element)
-        : null;
-
-      if (!firstCandidate || !rect) {
-        setSourceInspectorState(null);
-        return [];
-      }
-
-      const { left, maxWidth, right, top } =
-        getSourceInspectorPanelPosition(rect);
-      setSourceInspectorState({
-        candidates,
-        isPinned,
-        panelLeft: left,
-        panelMaxWidth: maxWidth,
-        panelRight: right,
-        panelTop: top,
-        rect,
-        targetElement: firstCandidate.element,
-      });
-      return candidates;
-    },
-    [
-      getSourceInspectorPanelPosition,
-      getSourceInspectorRect,
-      sourceCandidateOptions,
-      sourceOpenOptions,
-    ]
-  );
-
   /** hover 추적용: 패널 없이 아웃라인 사각형만 표시. */
   const showSourceOutlineForTarget = useCallback(
     (target: EventTarget | null) => {
@@ -185,12 +90,6 @@ export function useReviewSourceInspector({
       }
 
       setSourceInspectorState({
-        candidates: [],
-        isPinned: false,
-        panelLeft: 0,
-        panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
-        panelRight: null,
-        panelTop: 0,
         rect,
         targetElement: firstCandidate.element,
       });
@@ -207,58 +106,17 @@ export function useReviewSourceInspector({
       const rect = getSourceInspectorRect(element);
 
       if (!rect) {
-        setSourceInspectorState((current) =>
-          current?.isPinned ? current : null
-        );
+        setSourceInspectorState(null);
         return;
       }
 
-      setSourceInspectorState((current) =>
-        current?.isPinned
-          ? current
-          : {
-              candidates: [],
-              isPinned: false,
-              panelLeft: 0,
-              panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
-              panelRight: null,
-              panelTop: 0,
-              rect,
-              targetElement: element,
-            }
-      );
+      setSourceInspectorState({ rect, targetElement: element });
     },
     [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
   );
 
-  /** Source Tree 선택 상태용: 패널 없이 아웃라인만 고정한다. */
-  const pinSourceOutlineForElement = useCallback(
-    (element: Element) => {
-      const rect = getSourceInspectorRect(element);
-
-      if (!rect) {
-        setSourceInspectorState(null);
-        return false;
-      }
-
-      setSourceInspectorState({
-        candidates: [],
-        isPinned: true,
-        panelLeft: 0,
-        panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
-        panelRight: null,
-        panelTop: 0,
-        rect,
-        targetElement: element,
-      });
-      return true;
-    },
-    [getSourceInspectorRect]
-  );
-
   const clearSourceOutlineHover = useCallback(() => {
-    // 고정(pinned)된 패널은 hover 해제로 닫지 않는다.
-    setSourceInspectorState((current) => (current?.isPinned ? current : null));
+    setSourceInspectorState(null);
   }, []);
 
   const sourceInspectorTargetElement =
@@ -285,20 +143,7 @@ export function useReviewSourceInspector({
           const rect = getSourceInspectorRect(current.targetElement);
           if (!rect) return null;
 
-          if (current.candidates.length === 0) {
-            return { ...current, rect };
-          }
-
-          const { left, maxWidth, right, top } =
-            getSourceInspectorPanelPosition(rect);
-          return {
-            ...current,
-            panelLeft: left,
-            panelMaxWidth: maxWidth,
-            panelRight: right,
-            panelTop: top,
-            rect,
-          };
+          return { ...current, rect };
         });
       });
     };
@@ -321,34 +166,10 @@ export function useReviewSourceInspector({
     };
   }, [
     frameScrollRef,
-    getSourceInspectorPanelPosition,
     getSourceInspectorRect,
     iframeRef,
     sourceInspectorTargetElement,
   ]);
-
-  const openSourceCandidate = useCallback(
-    (candidate: SourceInspectorCandidate) => {
-      if (candidate.kind !== 'data') {
-        onRequestSourceTreeFocus?.(candidate.element);
-        clearSourceInspector();
-        return;
-      }
-
-      const didOpen = openSourceInEditor(candidate.source, {
-        ...sourceOpenOptions,
-        omitPosition: !candidate.usesPosition,
-      });
-      showToast(didOpen ? 'Source opened' : 'Source root required');
-      clearSourceInspector();
-    },
-    [
-      clearSourceInspector,
-      onRequestSourceTreeFocus,
-      showToast,
-      sourceOpenOptions,
-    ]
-  );
 
   const cleanupSourceOpenShortcut = useCallback(() => {
     sourceShortcutCleanupRef.current?.();
@@ -358,8 +179,8 @@ export function useReviewSourceInspector({
   /**
    * target iframe 문서에 Alt(Option) 소스 선택 모드를 바인딩한다.
    * - Alt 누름: hover 요소의 소스 아웃라인 + data-font 힌트 오버레이 표시
-   * - Alt+클릭: 후보 패널을 고정(pin) 상태로 오픈
-   * - Escape/바깥 클릭/blur: 선택 모드와 패널 해제
+   * - Alt+클릭: 가장 가까운 컴포넌트를 Source Tree 에서 바로 선택
+   * - Escape/바깥 클릭/blur: 선택 모드 해제
    * iframe 이 새 문서로 바뀔 때마다 다시 호출해야 한다 (loadTargetFrame).
    */
   const bindSourceOpenShortcut = useCallback(() => {
@@ -372,7 +193,7 @@ export function useReviewSourceInspector({
       return;
     }
 
-    if (!frameDocument || !isSourceInspectorEnabled) return;
+    if (!frameDocument) return;
 
     const frameRoot = frameDocument.head ?? frameDocument.documentElement;
     const frameBody = frameDocument.body ?? frameDocument.documentElement;
@@ -397,7 +218,6 @@ export function useReviewSourceInspector({
     let hoveredElement: Element | null = null;
     let lastSourceTarget: EventTarget | null = null;
     let isSourceSelecting = false;
-    let isSourcePanelPinned = false;
 
     // 요소와 하위의 data-font 값을 수집해 폰트 힌트로 보여준다.
     const getFontHints = (element: Element | null) => {
@@ -470,7 +290,6 @@ export function useReviewSourceInspector({
       isSourceSelecting = isSelecting;
       setTargetFigmaSourceSelectLocked(frameDocument, isSelecting);
       if (isSelecting) {
-        isSourcePanelPinned = false;
         frameDocument.documentElement.setAttribute(optionAttribute, 'true');
         const candidate = showSourceOutlineForTarget(lastSourceTarget);
         setHoveredElement(candidate?.element ?? hoveredElement);
@@ -480,57 +299,54 @@ export function useReviewSourceInspector({
       setHoveredElement(null);
       fontOverlay.hidden = true;
       frameDocument.documentElement.removeAttribute(optionAttribute);
-      if (!isSourcePanelPinned && !sourceInspectorInteractionRef.current) {
-        clearSourceInspector();
-      }
+      clearSourceInspector();
     };
 
     const handleTargetPointerMove = (event: MouseEvent | PointerEvent) => {
-      // 팝업이 고정된 동안에는 마우스 이동으로 target 을 다시 추적하지 않는다.
-      // (닫기/다른 곳 클릭 전까지 고정 유지)
-      if (isSourcePanelPinned) return;
-
       lastSourceTarget = event.target;
-      const candidates = getSourceCandidates(event.target, sourceCandidateOptions);
+      const candidates = getSourceCandidates(
+        event.target,
+        sourceCandidateOptions
+      );
       const sourceElement = candidates[0]?.element ?? null;
 
       if (event.altKey && !isSourceSelecting) {
         setSourceSelecting(true);
       }
 
-      if (isSourceSelecting && !isSourcePanelPinned) {
+      if (isSourceSelecting) {
         showSourceOutlineForTarget(event.target);
       }
 
       setHoveredElement(isSourceSelecting ? sourceElement : null);
     };
 
-    const pinSourceSelection = (event: MouseEvent | PointerEvent) => {
+    const selectSourceTreeEntry = (event: MouseEvent) => {
       if (!isSourceSelecting && !event.altKey) return;
 
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
 
-      const candidates = showSourceInspectorForTarget(event.target, true);
-      if (!candidates.length) {
+      const candidates = getSourceCandidates(
+        event.target,
+        sourceCandidateOptions
+      );
+      const candidate = candidates
+        .filter((item) => item.kind !== 'data')
+        .sort((a, b) => a.depth - b.depth)[0] ?? candidates[0];
+      if (!candidate) {
         showToast('Source hint not found');
-        isSourcePanelPinned = false;
         setSourceSelecting(false);
         return;
       }
 
-      isSourcePanelPinned = true;
-      onRequestSourceTreeFocus?.(candidates[0].element);
+      onRequestSourceTreeFocus?.(candidate.element);
       setSourceSelecting(false);
     };
 
-    const handleTargetPointerDown = (event: PointerEvent) => {
-      pinSourceSelection(event);
-    };
-
     const handleClick = (event: MouseEvent) => {
-      pinSourceSelection(event);
+      selectSourceTreeEntry(event);
     };
 
     const isOptionKeyEvent = (event: KeyboardEvent) =>
@@ -541,14 +357,11 @@ export function useReviewSourceInspector({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        isSourcePanelPinned = false;
         setSourceSelecting(false);
         clearSourceInspector();
         return;
       }
       if (!isOptionKeyEvent(event)) return;
-      // 팝업 고정 중에는 Option 키(반복 입력 포함)로 다시 추적하지 않는다.
-      if (isSourcePanelPinned) return;
 
       onCancelReviewMode();
       setSourceSelecting(true);
@@ -559,29 +372,15 @@ export function useReviewSourceInspector({
     };
 
     const handleBlur = () => {
-      isSourcePanelPinned = false;
       setSourceSelecting(false);
     };
 
-    const handleWindowPointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (
-        target instanceof Element &&
-        target.closest('.df-review-source-popover')
-      ) {
-        sourceInspectorInteractionRef.current = true;
-        return;
-      }
-
-      isSourcePanelPinned = false;
-      sourceInspectorInteractionRef.current = false;
+    const handleWindowPointerDown = () => {
       setSourceSelecting(false);
-      clearSourceInspector();
     };
 
     frameDocument.addEventListener('mousemove', handleTargetPointerMove, true);
     frameDocument.addEventListener('pointermove', handleTargetPointerMove, true);
-    frameDocument.addEventListener('pointerdown', handleTargetPointerDown, true);
     frameDocument.addEventListener('click', handleClick, true);
     frameDocument.addEventListener('keydown', handleKeyDown, true);
     frameDocument.addEventListener('keyup', handleKeyUp, true);
@@ -601,11 +400,6 @@ export function useReviewSourceInspector({
         handleTargetPointerMove,
         true
       );
-      frameDocument.removeEventListener(
-        'pointerdown',
-        handleTargetPointerDown,
-        true
-      );
       frameDocument.removeEventListener('click', handleClick, true);
       frameDocument.removeEventListener('keydown', handleKeyDown, true);
       frameDocument.removeEventListener('keyup', handleKeyUp, true);
@@ -613,7 +407,6 @@ export function useReviewSourceInspector({
       window.removeEventListener('keyup', handleKeyUp, true);
       window.removeEventListener('blur', handleBlur);
       window.removeEventListener('pointerdown', handleWindowPointerDown, true);
-      isSourcePanelPinned = false;
       setSourceSelecting(false);
       style.remove();
       fontOverlay.remove();
@@ -623,12 +416,10 @@ export function useReviewSourceInspector({
     clearSourceInspector,
     cleanupSourceOpenShortcut,
     iframeRef,
-    isSourceInspectorEnabled,
     onRequestSourceTreeFocus,
     showToast,
     sourceCandidateOptions,
     showSourceOutlineForTarget,
-    showSourceInspectorForTarget,
   ]);
 
   // 언마운트 시 iframe 문서에 남은 리스너/스타일을 정리한다.
@@ -646,10 +437,7 @@ export function useReviewSourceInspector({
     bindSourceOpenShortcut,
     clearSourceInspector,
     clearSourceOutlineHover,
-    openSourceCandidate,
-    pinSourceOutlineForElement,
     showSourceOutlineForElement,
-    sourceInspectorInteractionRef,
     sourceInspectorState,
   };
 }

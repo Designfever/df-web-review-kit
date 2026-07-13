@@ -4371,146 +4371,6 @@ var reviewShellSourceInspectorStyle = `
       0 0 0 5px rgba(124, 199, 255, 0.16);
   }
 
-  .df-review-source-outline.is-pinned {
-    border-color: var(--df-review-warning);
-    box-shadow:
-      0 0 0 1px rgba(15, 18, 24, 0.58),
-      0 0 0 5px rgba(243, 183, 95, 0.16);
-  }
-
-  .df-review-source-popover {
-    --df-review-source-popover-line: rgba(226, 233, 245, 0.16);
-    --df-review-source-popover-text: #edf3fb;
-    --df-review-source-popover-muted: rgba(237, 243, 251, 0.68);
-    --df-review-source-popover-subtle: rgba(237, 243, 251, 0.5);
-    --df-review-source-popover-data: #f3b75f;
-    --df-review-source-popover-data-muted: rgba(243, 183, 95, 0.78);
-    --df-review-source-popover-data-subtle: rgba(243, 183, 95, 0.62);
-    --df-review-source-popover-hover: rgba(124, 199, 255, 0.14);
-    position: fixed;
-    z-index: 890;
-    display: grid;
-    width: fit-content;
-    min-width: min(240px, calc(100vw - 24px));
-    max-width: min(440px, calc(100vw - 24px));
-    max-height: 260px;
-    overflow: hidden;
-    border: 1px solid var(--df-review-source-popover-line);
-    border-radius: var(--df-review-radius-md);
-    padding: 6px;
-    color: var(--df-review-source-popover-text);
-    color-scheme: dark;
-    background: rgba(19, 24, 33, 0.96);
-    box-shadow: var(--df-review-shadow-panel);
-    backdrop-filter: blur(10px);
-  }
-
-  .df-review-source-popover-close {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    z-index: 1;
-  }
-
-  .df-review-source-popover-close button {
-    display: grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
-    border: 1px solid transparent;
-    border-radius: var(--df-review-radius-sm);
-    padding: 0;
-    color: var(--df-review-source-popover-subtle);
-    background: transparent;
-    font-size: var(--df-review-font-size-xl);
-    font-weight: var(--df-review-font-weight-normal);
-    line-height: 1;
-  }
-
-  .df-review-source-popover-close button:hover {
-    border-color: var(--df-review-source-popover-line);
-    color: var(--df-review-source-popover-text);
-    background: var(--df-review-source-popover-hover);
-  }
-
-  .df-review-source-candidate-list {
-    display: grid;
-    gap: 0;
-    max-height: min(220px, calc(100vh - 96px));
-    min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding-right: 2px;
-    scrollbar-gutter: stable;
-  }
-
-  .df-review-source-candidate {
-    display: grid;
-    width: 100%;
-    border: 0;
-    border-top: 1px solid transparent;
-    border-radius: var(--df-review-radius-sm);
-    padding: 9px 30px 9px 8px;
-    color: var(--df-review-source-popover-text);
-    background: transparent;
-    text-align: left;
-  }
-
-  .df-review-source-candidate + .df-review-source-candidate {
-    border-top-color: var(--df-review-source-popover-line);
-  }
-
-  .df-review-source-candidate:hover {
-    background: var(--df-review-source-popover-hover);
-  }
-
-  .df-review-source-candidate-main {
-    display: grid;
-    gap: 1px;
-    min-width: 0;
-  }
-
-  .df-review-source-candidate-main strong,
-  .df-review-source-candidate-main small {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .df-review-source-candidate-main strong {
-    font-size: var(--df-review-font-size-xs);
-    font-weight: var(--df-review-font-weight-emphasis);
-    line-height: 1.2;
-  }
-
-  .df-review-source-candidate-main span {
-    overflow-wrap: anywhere;
-    color: var(--df-review-source-popover-muted);
-    font-family: var(--df-review-font-mono);
-    font-size: var(--df-review-font-size-2xs);
-    line-height: 1.24;
-    white-space: normal;
-  }
-
-  .df-review-source-candidate-main small {
-    color: var(--df-review-source-popover-subtle);
-    font-family: var(--df-review-font-mono);
-    font-size: var(--df-review-font-size-2xs);
-    line-height: 1.2;
-  }
-
-  .df-review-source-candidate.is-data .df-review-source-candidate-main strong {
-    color: var(--df-review-source-popover-data);
-  }
-
-  .df-review-source-candidate.is-data .df-review-source-candidate-main span {
-    color: var(--df-review-source-popover-data-muted);
-  }
-
-  .df-review-source-candidate.is-data .df-review-source-candidate-main small {
-    color: var(--df-review-source-popover-data-subtle);
-  }
-
 `;
 
 // src/react-shell/style/section-outline.ts
@@ -8150,8 +8010,6 @@ var createReviewShellConfig = ({
   });
   const resolvedSourceInspector = resolvedReviewSourceOptions.sourceInspector;
   const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
-  const isSourceTreeEnabled = resolvedSourceInspector?.enabled !== false;
-  const isSourceInspectorEnabled = isSourceTreeEnabled && Boolean(resolvedSourceRoot?.trim());
   return {
     initialPrompt,
     qaPrompt,
@@ -8177,9 +8035,7 @@ var createReviewShellConfig = ({
       sourceRoot: resolvedSourceRoot
     },
     showSourceSelect: normalizedAdapters.sources.length > 1,
-    isSourceInspectorEnabled,
-    isSourceTreeEnabled,
-    isSourceTreeHoverOutlineEnabled: isSourceTreeEnabled && resolvedSourceInspector?.hoverOutline !== false
+    isSourceTreeHoverOutlineEnabled: resolvedSourceInspector?.hoverOutline !== false
   };
 };
 var ReviewShellConfigContext = (0, import_react9.createContext)(null);
@@ -11124,6 +10980,64 @@ function isPlacerOutlineNode(label, file) {
   return isPlacerSourceNode(label, file);
 }
 
+// src/core/draft.metrics.ts
+function getDraftViewportScale(viewport, presets) {
+  const preset = findReviewViewportPreset(viewport, presets);
+  const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : viewport.width;
+  const scale = designWidth > 0 ? viewport.width / designWidth : 1;
+  return { scale, designWidth, presetLabel: preset.label };
+}
+function getDraftAdjustmentMetrics(draft, presets) {
+  const adjustment = draft.adjustment;
+  const x = adjustment?.x ?? 0;
+  const y = adjustment?.y ?? 0;
+  const scale = adjustment?.scale ?? 0;
+  const {
+    scale: viewportScale,
+    designWidth,
+    presetLabel
+  } = getDraftViewportScale(draft.viewport, presets);
+  const selection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
+  const scaleCssDelta = scale * viewportScale;
+  const scaleFactor = selection && selection.width > 0 ? Math.max(
+    1 / selection.width,
+    (selection.width + scaleCssDelta) / selection.width
+  ) : 1;
+  return {
+    x,
+    y,
+    scale,
+    cssX: x * viewportScale,
+    cssY: y * viewportScale,
+    scaleFactor,
+    viewportScale,
+    designWidth,
+    presetLabel,
+    viewportWidth: draft.viewport.width
+  };
+}
+function hasDraftAdjustment(draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return metrics.x !== 0 || metrics.y !== 0 || metrics.scale !== 0;
+}
+function getAdjustedDraftPoint(point, draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return {
+    x: point.x + metrics.cssX,
+    y: point.y + metrics.cssY
+  };
+}
+function getAdjustedDraftSelection(selection, draft, presets) {
+  const metrics = getDraftAdjustmentMetrics(draft, presets);
+  return {
+    ...selection,
+    left: selection.left + metrics.cssX,
+    top: selection.top + metrics.cssY,
+    width: selection.width * metrics.scaleFactor,
+    height: selection.height * metrics.scaleFactor
+  };
+}
+
 // src/react-shell/source.open.ts
 var getSourceCandidates = (target, options) => {
   const startElement = getEventElement(target);
@@ -11457,6 +11371,180 @@ var useReviewShellRefs = () => {
   return refs;
 };
 
+// src/react-shell/target/dom-adjustment.layer.ts
+var SOURCE_HIDDEN_ATTRIBUTE = "data-dfwr-move-source-hidden";
+var LAYER_ROOT_ATTRIBUTE = "data-dfwr-move-layer-root";
+var DomAdjustmentLayerManager = class {
+  constructor({
+    document: document2,
+    onClear,
+    renderElement = renderDomElementToCanvas
+  }) {
+    this.layers = /* @__PURE__ */ new Map();
+    this.pending = /* @__PURE__ */ new Map();
+    this.document = document2;
+    this.onClear = onClear;
+    this.renderElement = renderElement;
+    this.root = createLayerRoot(document2);
+    this.style = createLayerStyle(document2);
+    document2.head?.appendChild(this.style);
+    document2.documentElement.appendChild(this.root);
+  }
+  belongsTo(document2) {
+    return this.document === document2;
+  }
+  async create(entryId, label, element, position, viewportScale) {
+    const existing = this.layers.get(entryId);
+    if (existing) {
+      existing.position = position;
+      syncLayerPosition(existing.wrapper, position, viewportScale);
+      return true;
+    }
+    const HTMLElementConstructor = element.ownerDocument.defaultView?.HTMLElement;
+    if (!HTMLElementConstructor || !(element instanceof HTMLElementConstructor)) {
+      return false;
+    }
+    const token = Symbol(entryId);
+    this.pending.set(entryId, token);
+    const rect = element.getBoundingClientRect();
+    const canvas = await this.renderElement(element);
+    if (this.pending.get(entryId) !== token) return false;
+    this.pending.delete(entryId);
+    const wrapper = createLayerWrapper(this.document, entryId, label, canvas);
+    wrapper.style.left = `${roundCss(rect.left + (this.document.defaultView?.scrollX ?? 0))}px`;
+    wrapper.style.top = `${roundCss(rect.top + (this.document.defaultView?.scrollY ?? 0))}px`;
+    wrapper.style.width = `${roundCss(rect.width)}px`;
+    wrapper.style.height = `${roundCss(rect.height)}px`;
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    syncLayerPosition(wrapper, position, viewportScale);
+    const hiddenAttributeValue = element.getAttribute(SOURCE_HIDDEN_ATTRIBUTE);
+    element.setAttribute(SOURCE_HIDDEN_ATTRIBUTE, "true");
+    wrapper.querySelector("button")?.addEventListener("click", () => {
+      this.clear(entryId);
+    });
+    this.root.appendChild(wrapper);
+    this.layers.set(entryId, {
+      element,
+      hiddenAttributeValue,
+      position,
+      wrapper
+    });
+    return true;
+  }
+  adjust(entryId, delta, viewportScale) {
+    const layer = this.layers.get(entryId);
+    if (!layer) return null;
+    layer.position = {
+      x: layer.position.x + (delta.x ?? 0),
+      y: layer.position.y + (delta.y ?? 0)
+    };
+    syncLayerPosition(layer.wrapper, layer.position, viewportScale);
+    return layer.position;
+  }
+  clear(entryId, notify = true) {
+    this.pending.delete(entryId);
+    const layer = this.layers.get(entryId);
+    if (!layer) {
+      if (notify) this.onClear(entryId);
+      return;
+    }
+    layer.wrapper.remove();
+    if (layer.hiddenAttributeValue === null) {
+      layer.element.removeAttribute(SOURCE_HIDDEN_ATTRIBUTE);
+    } else {
+      layer.element.setAttribute(
+        SOURCE_HIDDEN_ATTRIBUTE,
+        layer.hiddenAttributeValue
+      );
+    }
+    this.layers.delete(entryId);
+    if (notify) this.onClear(entryId);
+  }
+  destroy() {
+    this.pending.clear();
+    [...this.layers.keys()].forEach((entryId) => this.clear(entryId, false));
+    this.root.remove();
+    this.style.remove();
+  }
+};
+async function renderDomElementToCanvas(element) {
+  const html2canvas = (await import("html2canvas")).default;
+  return html2canvas(element, {
+    allowTaint: false,
+    backgroundColor: null,
+    imageTimeout: 5e3,
+    logging: false,
+    removeContainer: true,
+    scale: element.ownerDocument.defaultView?.devicePixelRatio ?? 1,
+    useCORS: true
+  });
+}
+function createLayerRoot(document2) {
+  const root = document2.createElement("div");
+  root.setAttribute(LAYER_ROOT_ATTRIBUTE, "true");
+  root.style.position = "absolute";
+  root.style.inset = "0 auto auto 0";
+  root.style.width = "0";
+  root.style.height = "0";
+  root.style.zIndex = "2147483645";
+  root.style.pointerEvents = "none";
+  return root;
+}
+function createLayerStyle(document2) {
+  const style = document2.createElement("style");
+  style.textContent = `
+    [${SOURCE_HIDDEN_ATTRIBUTE}='true'] {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+  `;
+  return style;
+}
+function createLayerWrapper(document2, entryId, label, canvas) {
+  const wrapper = document2.createElement("div");
+  wrapper.dataset.dfwrMoveEntryId = entryId;
+  wrapper.style.position = "absolute";
+  wrapper.style.transformOrigin = "top left";
+  wrapper.style.pointerEvents = "none";
+  wrapper.style.willChange = "transform";
+  canvas.setAttribute("aria-hidden", "true");
+  canvas.style.display = "block";
+  canvas.style.pointerEvents = "none";
+  const clear = document2.createElement("button");
+  clear.type = "button";
+  clear.title = `Clear ${label} move`;
+  clear.setAttribute("aria-label", `Clear ${label} move`);
+  clear.setAttribute("data-dfwr-source-open-shortcut", "true");
+  clear.style.position = "absolute";
+  clear.style.top = "4px";
+  clear.style.right = "4px";
+  clear.style.width = "22px";
+  clear.style.height = "22px";
+  clear.style.display = "grid";
+  clear.style.placeItems = "center";
+  clear.style.padding = "0";
+  clear.style.border = "1px solid rgba(255, 255, 255, 0.35)";
+  clear.style.borderRadius = "50%";
+  clear.style.background = "rgba(18, 23, 31, 0.88)";
+  clear.style.color = "#edf3fb";
+  clear.style.font = "16px/1 system-ui, sans-serif";
+  clear.style.cursor = "pointer";
+  clear.style.pointerEvents = "auto";
+  const clearIcon = document2.createElement("span");
+  clearIcon.textContent = "\xD7";
+  clearIcon.style.transform = "translateY(-1px)";
+  clear.appendChild(clearIcon);
+  wrapper.append(canvas, clear);
+  return wrapper;
+}
+function syncLayerPosition(wrapper, position, viewportScale) {
+  wrapper.style.transform = `translate(${roundCss(position.x * viewportScale)}px, ${roundCss(position.y * viewportScale)}px)`;
+}
+function roundCss(value) {
+  return Math.round(value * 1e3) / 1e3;
+}
+
 // src/react-shell/hooks/use.review.section.outline.ts
 var EMPTY_DOM_ADJUSTMENT_POSITION = {
   x: 0,
@@ -11471,10 +11559,6 @@ var getSectionDomAdjustmentKeyDelta = (event) => {
   if (event.key === "ArrowDown") return { y: step };
   return null;
 };
-var addDomAdjustmentDelta = (current, delta) => ({
-  x: (current?.x ?? 0) + (delta.x ?? 0),
-  y: (current?.y ?? 0) + (delta.y ?? 0)
-});
 var isDomAdjustmentEmpty = (position) => position.x === 0 && position.y === 0;
 var isEditableKeyTarget = (target) => {
   if (!(target instanceof HTMLElement)) return false;
@@ -11495,23 +11579,22 @@ var findSectionOutlinePathForElement = (entries, element) => {
 };
 function useReviewSectionOutline({
   onClearSourceInspector,
-  onInitReviewKit,
-  onPinSourceOutlineForElement
+  onInitReviewKit
 }) {
-  const { sectionOutlineOptions, sourceOpenOptions } = useReviewShellConfig();
+  const { reviewViewportPresets, sectionOutlineOptions, sourceOpenOptions } = useReviewShellConfig();
   const { controllerRef, frameScrollRef, iframeRef } = useReviewShellRefs();
   const { canWriteDom } = useReviewShellAdapterState();
   const storeApi = useReviewShellStoreApi();
   const isListVisible = useReviewShellStore((state) => state.isListVisible);
   const sidePanel = useReviewShellStore((state) => state.sidePanel);
   const target = useReviewShellStore((state) => state.target);
+  const size = useReviewShellStore((state) => state.size);
   const targetFrameLoadVersion = useReviewShellStore(
     (state) => state.targetFrameLoadVersion
   );
   const sourceTreeFocusRequest = useReviewShellStore(
     (state) => state.sourceTreeFocusRequest
   );
-  const mode = useReviewShellStore((state) => state.mode);
   const setMode = useReviewShellStore((state) => state.setMode);
   const showToast = useReviewToast();
   const isPanelVisible = isListVisible && sidePanel === "source";
@@ -11529,25 +11612,53 @@ function useReviewSectionOutline({
   const [domAdjustmentByEntryId, setDomAdjustmentByEntryId] = (0, import_react18.useState)({});
   const copiedSectionOutlineTimeoutRef = (0, import_react18.useRef)(null);
   const handledSourceTreeFocusVersionRef = (0, import_react18.useRef)(0);
+  const domAdjustmentManagerRef = (0, import_react18.useRef)(null);
+  const domAdjustmentRequestVersionRef = (0, import_react18.useRef)(0);
+  const handleDomAdjustmentCleared = (0, import_react18.useCallback)((entryId) => {
+    setActiveDomAdjustmentEntryId(
+      (current) => current === entryId ? null : current
+    );
+    setDomAdjustmentByEntryId((current) => {
+      if (!current[entryId]) return current;
+      const next = { ...current };
+      delete next[entryId];
+      return next;
+    });
+  }, []);
+  const getDomAdjustmentManager = (0, import_react18.useCallback)(() => {
+    const frameDocument = iframeRef.current?.contentDocument;
+    if (!frameDocument?.documentElement || !frameDocument.body) return null;
+    const current = domAdjustmentManagerRef.current;
+    if (current?.belongsTo(frameDocument)) return current;
+    current?.destroy();
+    const next = new DomAdjustmentLayerManager({
+      document: frameDocument,
+      onClear: handleDomAdjustmentCleared
+    });
+    domAdjustmentManagerRef.current = next;
+    return next;
+  }, [handleDomAdjustmentCleared, iframeRef]);
+  const domAdjustmentViewportScale = (0, import_react18.useMemo)(
+    () => getDraftViewportScale(
+      { width: size.width, height: size.height },
+      reviewViewportPresets
+    ).scale,
+    [reviewViewportPresets, size.height, size.width]
+  );
   const clearActiveDomAdjustment = (0, import_react18.useCallback)(() => {
     setActiveDomAdjustmentEntryId(null);
   }, []);
   const clearDomAdjustments = (0, import_react18.useCallback)(() => {
+    domAdjustmentRequestVersionRef.current += 1;
+    domAdjustmentManagerRef.current?.destroy();
+    domAdjustmentManagerRef.current = null;
     setActiveDomAdjustmentEntryId(null);
     setDomAdjustmentByEntryId({});
   }, []);
   const finishActiveDomAdjustment = (0, import_react18.useCallback)(() => {
     if (!activeDomAdjustmentEntryId) return;
-    const controller = controllerRef.current;
-    controller?.setMode("idle");
     clearActiveDomAdjustment();
-    setMode(controller?.getMode() ?? "idle");
-  }, [
-    activeDomAdjustmentEntryId,
-    clearActiveDomAdjustment,
-    controllerRef,
-    setMode
-  ]);
+  }, [activeDomAdjustmentEntryId, clearActiveDomAdjustment]);
   const updateSectionOutlineFilter = (0, import_react18.useCallback)((nextFilter) => {
     setSectionOutlineFilter(nextFilter);
     writeStoredSourceTreeFilter(nextFilter);
@@ -11595,36 +11706,41 @@ function useReviewSectionOutline({
     setSelectedSectionOutlineId(null);
     clearDomAdjustments();
     setSectionOutline(null);
-  }, [clearDomAdjustments, onClearSourceInspector, targetSrc]);
+  }, [
+    clearDomAdjustments,
+    onClearSourceInspector,
+    targetFrameLoadVersion,
+    targetSrc
+  ]);
   (0, import_react18.useEffect)(() => {
     if (!activeDomAdjustmentEntryId) return void 0;
     const handleKeyDown = (event) => {
       if (isEditableKeyTarget(event.target)) return;
       const delta = getSectionDomAdjustmentKeyDelta(event);
       if (!delta) return;
-      const didAdjust = controllerRef.current?.adjustElementSelection(delta) ?? false;
-      if (!didAdjust) {
+      const position = domAdjustmentManagerRef.current?.adjust(
+        activeDomAdjustmentEntryId,
+        delta,
+        domAdjustmentViewportScale
+      );
+      if (!position) {
         clearActiveDomAdjustment();
         return;
       }
       setDomAdjustmentByEntryId((current) => ({
         ...current,
-        [activeDomAdjustmentEntryId]: addDomAdjustmentDelta(
-          current[activeDomAdjustmentEntryId],
-          delta
-        )
+        [activeDomAdjustmentEntryId]: position
       }));
       event.preventDefault();
       event.stopPropagation();
     };
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [activeDomAdjustmentEntryId, clearActiveDomAdjustment, controllerRef]);
-  (0, import_react18.useEffect)(() => {
-    if (mode !== "element") {
-      clearActiveDomAdjustment();
-    }
-  }, [clearActiveDomAdjustment, mode]);
+  }, [
+    activeDomAdjustmentEntryId,
+    clearActiveDomAdjustment,
+    domAdjustmentViewportScale
+  ]);
   const getCurrentSectionOutline = (0, import_react18.useCallback)(
     () => {
       let frameDocument = null;
@@ -11741,10 +11857,9 @@ function useReviewSectionOutline({
     (entry) => {
       finishActiveDomAdjustment();
       scrollToSection(entry);
-      onPinSourceOutlineForElement(entry.element);
       setSelectedSectionOutlineId(entry.id);
     },
-    [finishActiveDomAdjustment, onPinSourceOutlineForElement, scrollToSection]
+    [finishActiveDomAdjustment, scrollToSection]
   );
   const copySectionOutlineName = (0, import_react18.useCallback)(
     async (entry) => {
@@ -11864,7 +11979,7 @@ function useReviewSectionOutline({
         await waitForFrame(targetWindow);
         await controller.startElementReview(entry.element);
         if (position && !isDomAdjustmentEmpty(position)) {
-          controller.adjustElementSelection(position);
+          controller.adjustElementSelection(position, { preview: false });
         }
         await waitForFrame(targetWindow);
         setMode(controller.getMode());
@@ -11898,7 +12013,8 @@ function useReviewSectionOutline({
         return;
       }
       selectSectionOutlineEntry(entry);
-      onInitReviewKit();
+      const requestVersion = domAdjustmentRequestVersionRef.current + 1;
+      domAdjustmentRequestVersionRef.current = requestVersion;
       let targetWindow = null;
       try {
         targetWindow = entry.element.ownerDocument.defaultView ?? iframeRef.current?.contentWindow ?? null;
@@ -11906,80 +12022,56 @@ function useReviewSectionOutline({
         targetWindow = null;
       }
       void waitForFrame(targetWindow).then(async () => {
-        const controller = controllerRef.current;
-        if (!controller) {
-          showToast("DOM select unavailable");
-          return;
-        }
         const position = domAdjustmentByEntryId[entry.id] ?? EMPTY_DOM_ADJUSTMENT_POSITION;
-        await controller.selectElement(entry.element);
-        const didActivateAdjustment = controller.adjustElementSelection(position);
-        if (!didActivateAdjustment) {
-          showToast("DOM select unavailable");
+        const manager = getDomAdjustmentManager();
+        if (!manager) {
+          showToast("DOM move unavailable");
           return;
         }
-        setActiveDomAdjustmentEntryId(entry.id);
+        const didCreate = await manager.create(
+          entry.id,
+          entry.label,
+          entry.element,
+          position,
+          domAdjustmentViewportScale
+        );
+        if (!didCreate) {
+          showToast("DOM move unavailable");
+          return;
+        }
         setDomAdjustmentByEntryId((current) => ({
           ...current,
           [entry.id]: position
         }));
-        await waitForFrame(targetWindow);
-        setMode(controller.getMode());
+        if (domAdjustmentRequestVersionRef.current === requestVersion) {
+          setActiveDomAdjustmentEntryId(entry.id);
+        }
       }).catch(() => {
         clearActiveDomAdjustment();
-        setMode(controllerRef.current?.getMode() ?? "idle");
+        showToast("DOM move unavailable");
       });
     },
     [
       canWriteDom,
       clearActiveDomAdjustment,
-      controllerRef,
       domAdjustmentByEntryId,
+      domAdjustmentViewportScale,
+      getDomAdjustmentManager,
       iframeRef,
-      onInitReviewKit,
       selectSectionOutlineEntry,
-      setMode,
       showToast
     ]
   );
-  const resetSectionDomAdjustment = (0, import_react18.useCallback)(
+  const clearSectionDomAdjustment = (0, import_react18.useCallback)(
     (entry) => {
-      setDomAdjustmentByEntryId((current) => {
-        if (!current[entry.id]) return current;
-        const next = { ...current };
-        delete next[entry.id];
-        return next;
-      });
-      if (activeDomAdjustmentEntryId !== entry.id) return;
-      const controller = controllerRef.current;
-      if (!controller) {
-        clearActiveDomAdjustment();
+      const manager = domAdjustmentManagerRef.current;
+      if (manager) {
+        manager.clear(entry.id);
         return;
       }
-      void controller.selectElement(entry.element).then(() => {
-        const didActivateAdjustment = controller.adjustElementSelection(
-          EMPTY_DOM_ADJUSTMENT_POSITION
-        );
-        if (!didActivateAdjustment) {
-          clearActiveDomAdjustment();
-          return;
-        }
-        setDomAdjustmentByEntryId((current) => ({
-          ...current,
-          [entry.id]: EMPTY_DOM_ADJUSTMENT_POSITION
-        }));
-        setMode(controller.getMode());
-      }).catch(() => {
-        clearActiveDomAdjustment();
-        setMode(controllerRef.current?.getMode() ?? "idle");
-      });
+      handleDomAdjustmentCleared(entry.id);
     },
-    [
-      activeDomAdjustmentEntryId,
-      clearActiveDomAdjustment,
-      controllerRef,
-      setMode
-    ]
+    [handleDomAdjustmentCleared]
   );
   const finishSectionDomAdjustment = (0, import_react18.useCallback)(
     (entry) => {
@@ -12009,8 +12101,7 @@ function useReviewSectionOutline({
     copySectionOutlineName,
     domAdjustmentByEntryId,
     finishSectionDomAdjustment,
-    isDomAdjustmentEmpty,
-    resetSectionDomAdjustment,
+    clearSectionDomAdjustment,
     selectedSectionOutlineId,
     selectSectionOutlineEntry,
     startSectionDomAdjustment,
@@ -12047,8 +12138,7 @@ var SectionOutlinePanel = ({
   onSelectEntry,
   onCopyEntryName,
   onFinishDomAdjustment,
-  onResetDomAdjustment,
-  isDomAdjustmentEmpty: isDomAdjustmentEmpty2,
+  onClearDomAdjustment,
   onStartDomAdjustment,
   onOpenData,
   onOpenSource,
@@ -12195,11 +12285,15 @@ var SectionOutlinePanel = ({
     const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
     const isSelected = selectedEntryId === entry.id;
     const isDomAdjusting = activeDomAdjustmentEntryId === entry.id;
+    const hasDomAdjustment = Object.prototype.hasOwnProperty.call(
+      domAdjustmentByEntryId,
+      entry.id
+    );
     const domAdjustmentPosition = domAdjustmentByEntryId[entry.id] ?? {
       x: 0,
       y: 0
     };
-    const shouldShowDomAdjustment = isDomAdjusting || !isDomAdjustmentEmpty2(domAdjustmentPosition);
+    const shouldShowDomAdjustment = isDomAdjusting || hasDomAdjustment;
     return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
       "div",
       {
@@ -12306,12 +12400,12 @@ var SectionOutlinePanel = ({
                             shouldShowDomAdjustment ? /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                               "button",
                               {
-                                "aria-label": `Reset ${entry.label} DOM adjustment`,
+                                "aria-label": `Clear ${entry.label} DOM adjustment`,
                                 className: "df-review-section-outline-link is-dom-reset",
-                                "data-review-tooltip": "Reset move",
-                                title: "Reset move",
+                                "data-review-tooltip": "Clear move",
+                                title: "Clear move",
                                 type: "button",
-                                onClick: () => onResetDomAdjustment(entry),
+                                onClick: () => onClearDomAdjustment(entry),
                                 children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(RotateCcw, { "aria-hidden": "true" })
                               }
                             ) : null,
@@ -12496,12 +12590,10 @@ var SectionOutlinePanel = ({
 // src/react-shell/review/section.outline.container.tsx
 var import_jsx_runtime16 = require("react/jsx-runtime");
 var SectionOutlineContainer = () => {
-  const { isSourceTreeEnabled } = useReviewShellConfig();
   const {
     clearSourceInspector,
     clearSourceOutlineHover,
     initReviewKit,
-    pinSourceOutlineForElement,
     showSourceOutlineForElement
   } = useReviewShellActions();
   const {
@@ -12515,7 +12607,6 @@ var SectionOutlineContainer = () => {
     filteredSectionOutline,
     filteredSectionOutlineCount,
     isPanelVisible,
-    isDomAdjustmentEmpty: isDomAdjustmentEmpty2,
     isSectionOutlineFiltering,
     openSectionData,
     openSectionSource,
@@ -12526,7 +12617,7 @@ var SectionOutlineContainer = () => {
     sectionOutlineTotalCount,
     selectedSectionOutlineId,
     selectSectionOutlineEntry,
-    resetSectionDomAdjustment,
+    clearSectionDomAdjustment,
     startSectionDomAdjustment,
     startSectionDomReview,
     toggleSectionOutlineEntry,
@@ -12534,10 +12625,8 @@ var SectionOutlineContainer = () => {
     updateSectionOutlineMetaVisibility
   } = useReviewSectionOutline({
     onClearSourceInspector: clearSourceInspector,
-    onInitReviewKit: initReviewKit,
-    onPinSourceOutlineForElement: pinSourceOutlineForElement
+    onInitReviewKit: initReviewKit
   });
-  if (!isSourceTreeEnabled) return null;
   return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
     SectionOutlinePanel,
     {
@@ -12563,8 +12652,7 @@ var SectionOutlineContainer = () => {
       onSelectEntry: selectSectionOutlineEntry,
       onCopyEntryName: (entry) => void copySectionOutlineName(entry),
       onFinishDomAdjustment: finishSectionDomAdjustment,
-      onResetDomAdjustment: resetSectionDomAdjustment,
-      isDomAdjustmentEmpty: isDomAdjustmentEmpty2,
+      onClearDomAdjustment: clearSectionDomAdjustment,
       onStartDomAdjustment: startSectionDomAdjustment,
       onOpenData: openSectionData,
       onOpenSource: openSectionSource,
@@ -12741,7 +12829,6 @@ var ReviewSideRail = ({
   isFigmaImageManagementEnabled,
   isFigmaImagesPanelVisible,
   isQaPanelVisible,
-  isSourceTreeEnabled,
   isSourceTreePanelVisible,
   presenceSessionId,
   onOpenAbout,
@@ -12780,7 +12867,7 @@ var ReviewSideRail = ({
         children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(ListChecks, {}) })
       }
     ),
-    isSourceTreeEnabled && /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
       "button",
       {
         "aria-controls": "df-review-section-outline",
@@ -12863,7 +12950,6 @@ var ReviewSideRailContainer = () => {
     presenceSessionId
   } = useReviewPresenceState();
   const { isEnabled: isFigmaImageManagementEnabled } = useReviewFigmaImagesState();
-  const { isSourceTreeEnabled } = useReviewShellConfig();
   const isListVisible = useReviewShellStore((state) => state.isListVisible);
   const sidePanel = useReviewShellStore((state) => state.sidePanel);
   return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
@@ -12873,8 +12959,7 @@ var ReviewSideRailContainer = () => {
       isFigmaImageManagementEnabled,
       isFigmaImagesPanelVisible: isFigmaImageManagementEnabled && isListVisible && sidePanel === "figma-images",
       isQaPanelVisible: isListVisible && sidePanel === "qa",
-      isSourceTreeEnabled,
-      isSourceTreePanelVisible: isSourceTreeEnabled && isListVisible && sidePanel === "source",
+      isSourceTreePanelVisible: isListVisible && sidePanel === "source",
       presenceSessionId,
       onOpenAbout: openAbout,
       onOpenInitialPrompt: openInitialPrompt,
@@ -14278,97 +14363,28 @@ var ReviewShellProviders = ({
 // src/react-shell/review/source.inspector.overlay.tsx
 var import_jsx_runtime31 = require("react/jsx-runtime");
 var SourceInspectorOverlay = ({
-  state,
-  interactionRef,
-  onClear,
-  onOpenCandidate
+  state
 }) => {
   if (!state) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)(import_jsx_runtime31.Fragment, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(
-      "div",
-      {
-        className: `df-review-source-outline${state.isPinned ? " is-pinned" : ""}`,
-        style: {
-          height: `${state.rect.height}px`,
-          left: `${state.rect.left}px`,
-          top: `${state.rect.top}px`,
-          width: `${state.rect.width}px`
-        }
+  return /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(
+    "div",
+    {
+      className: "df-review-source-outline",
+      style: {
+        height: `${state.rect.height}px`,
+        left: `${state.rect.left}px`,
+        top: `${state.rect.top}px`,
+        width: `${state.rect.width}px`
       }
-    ),
-    state.candidates.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)(
-      "div",
-      {
-        className: `df-review-source-popover${state.isPinned ? " is-pinned" : ""}`,
-        style: {
-          left: state.panelRight === null ? `${state.panelLeft}px` : void 0,
-          maxWidth: `${state.panelMaxWidth}px`,
-          right: state.panelRight === null ? void 0 : `${state.panelRight}px`,
-          top: `${state.panelTop}px`
-        },
-        onPointerDown: () => {
-          interactionRef.current = true;
-        },
-        onPointerEnter: () => {
-          interactionRef.current = true;
-        },
-        onPointerLeave: () => {
-          interactionRef.current = false;
-        },
-        onClick: (event) => event.stopPropagation(),
-        children: [
-          /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("div", { className: "df-review-source-popover-close", children: /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(
-            "button",
-            {
-              "aria-label": "Close source candidates",
-              type: "button",
-              onClick: onClear,
-              children: "\xD7"
-            }
-          ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("div", { className: "df-review-source-candidate-list", children: state.candidates.map((candidate) => /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(
-            "button",
-            {
-              className: `df-review-source-candidate is-${candidate.kind}`,
-              type: "button",
-              onClick: (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                onOpenCandidate(candidate);
-              },
-              children: /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)("span", { className: "df-review-source-candidate-main", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("strong", { children: candidate.label }),
-                /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("span", { children: candidate.filePath }),
-                /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("small", { children: [candidate.positionLabel || "-:-", candidate.detail].filter(Boolean).join(" \xB7 ") })
-              ] })
-            },
-            candidate.id
-          )) })
-        ]
-      }
-    )
-  ] });
+    }
+  );
 };
 
 // src/react-shell/review/source.inspector.overlay.container.tsx
 var import_jsx_runtime32 = require("react/jsx-runtime");
 var SourceInspectorOverlayContainer = () => {
-  const {
-    clearSourceInspector,
-    openSourceCandidate,
-    sourceInspectorInteractionRef,
-    sourceInspectorState
-  } = useReviewSourceInspectorState();
-  return /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(
-    SourceInspectorOverlay,
-    {
-      interactionRef: sourceInspectorInteractionRef,
-      state: sourceInspectorState,
-      onClear: clearSourceInspector,
-      onOpenCandidate: openSourceCandidate
-    }
-  );
+  const { sourceInspectorState } = useReviewSourceInspectorState();
+  return /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(SourceInspectorOverlay, { state: sourceInspectorState });
 };
 
 // src/react-shell/target/frame.tsx
@@ -16733,64 +16749,6 @@ function getPublicSearch(location) {
   INTERNAL_QUERY_PARAMS.forEach((key) => params.delete(key));
   const value = params.toString();
   return value ? `?${value}` : "";
-}
-
-// src/core/draft.metrics.ts
-function getDraftViewportScale(viewport, presets) {
-  const preset = findReviewViewportPreset(viewport, presets);
-  const designWidth = typeof preset.designWidth === "number" && preset.designWidth > 0 ? preset.designWidth : viewport.width;
-  const scale = designWidth > 0 ? viewport.width / designWidth : 1;
-  return { scale, designWidth, presetLabel: preset.label };
-}
-function getDraftAdjustmentMetrics(draft, presets) {
-  const adjustment = draft.adjustment;
-  const x = adjustment?.x ?? 0;
-  const y = adjustment?.y ?? 0;
-  const scale = adjustment?.scale ?? 0;
-  const {
-    scale: viewportScale,
-    designWidth,
-    presetLabel
-  } = getDraftViewportScale(draft.viewport, presets);
-  const selection = draft.selection ? toViewportSelection(draft.selection.viewport) : void 0;
-  const scaleCssDelta = scale * viewportScale;
-  const scaleFactor = selection && selection.width > 0 ? Math.max(
-    1 / selection.width,
-    (selection.width + scaleCssDelta) / selection.width
-  ) : 1;
-  return {
-    x,
-    y,
-    scale,
-    cssX: x * viewportScale,
-    cssY: y * viewportScale,
-    scaleFactor,
-    viewportScale,
-    designWidth,
-    presetLabel,
-    viewportWidth: draft.viewport.width
-  };
-}
-function hasDraftAdjustment(draft, presets) {
-  const metrics = getDraftAdjustmentMetrics(draft, presets);
-  return metrics.x !== 0 || metrics.y !== 0 || metrics.scale !== 0;
-}
-function getAdjustedDraftPoint(point, draft, presets) {
-  const metrics = getDraftAdjustmentMetrics(draft, presets);
-  return {
-    x: point.x + metrics.cssX,
-    y: point.y + metrics.cssY
-  };
-}
-function getAdjustedDraftSelection(selection, draft, presets) {
-  const metrics = getDraftAdjustmentMetrics(draft, presets);
-  return {
-    ...selection,
-    left: selection.left + metrics.cssX,
-    top: selection.top + metrics.cssY,
-    width: selection.width * metrics.scaleFactor,
-    height: selection.height * metrics.scaleFactor
-  };
 }
 
 // src/core/draft.preview.ts
@@ -19788,7 +19746,7 @@ var WebReviewKitView = class {
     this.draftPreview = new DraftPreviewController({
       getEnvironment: () => this.config.getEnvironment(),
       getMetrics: (draft) => getDraftAdjustmentMetrics(draft, presets()),
-      hasAdjustment: (draft) => hasDraftAdjustment(draft, presets())
+      hasAdjustment: (draft) => draft.adjustment?.preview !== false && hasDraftAdjustment(draft, presets())
     });
     this.draftContext = {
       config: this.config,
@@ -19956,7 +19914,7 @@ function createWebReviewKit(options) {
     setMode: (mode) => app.setMode(mode),
     startElementReview: (element, comment) => app.startElementReview(element, comment),
     selectElement: (element) => app.selectElement(element),
-    adjustElementSelection: (delta) => app.adjustElementSelection(delta),
+    adjustElementSelection: (delta, adjustmentOptions) => app.adjustElementSelection(delta, adjustmentOptions),
     getMode: () => app.getMode(),
     highlightItem: (itemId) => app.highlightItem(itemId),
     setHiddenItemIds: (itemIds) => app.setHiddenItemIds(itemIds),
@@ -20146,7 +20104,7 @@ var WebReviewKitApp = class {
       isSelectionOnly: true
     });
   }
-  adjustElementSelection(delta) {
+  adjustElementSelection(delta, options) {
     if (!this.domDraft?.selection) return false;
     const current = this.domDraft.adjustment;
     this.domDraft = {
@@ -20155,7 +20113,8 @@ var WebReviewKitApp = class {
         x: (current?.x ?? 0) + (delta.x ?? 0),
         y: (current?.y ?? 0) + (delta.y ?? 0),
         scale: (current?.scale ?? 0) + (delta.scale ?? 0),
-        isActive: true
+        isActive: true,
+        preview: options?.preview ?? current?.preview
       }
     };
     this.render();
@@ -22150,7 +22109,6 @@ var useReviewShellActionsValue = ({
   initReviewKit,
   loadTargetFrame,
   openFigmaSettings,
-  pinSourceOutlineForElement,
   refreshReviewData: refreshReviewData2,
   restoreReviewItem,
   selectAllQa,
@@ -22178,7 +22136,6 @@ var useReviewShellActionsValue = ({
     openAbout: () => setIsInitialPromptOpen(true),
     openInitialPrompt: () => setIsInitialPromptScriptOpen(true),
     openSettings: openFigmaSettings,
-    pinSourceOutlineForElement,
     refreshReviewData: refreshReviewData2,
     restoreReviewItem,
     selectAllQa,
@@ -22200,7 +22157,6 @@ var useReviewShellActionsValue = ({
     initReviewKit,
     loadTargetFrame,
     openFigmaSettings,
-    pinSourceOutlineForElement,
     refreshReviewData2,
     restoreReviewItem,
     selectAllQa,
@@ -23066,16 +23022,14 @@ var useReviewShellTransientActions = ({
 };
 var useReviewShellPanelActions = ({
   isFigmaImageManagementEnabled,
-  isSourceTreeEnabled,
   toggleSidePanel
 }) => {
   const toggleQaPanel = (0, import_react49.useCallback)(() => {
     toggleSidePanel("qa");
   }, [toggleSidePanel]);
   const toggleSourceTreePanel = (0, import_react49.useCallback)(() => {
-    if (!isSourceTreeEnabled) return;
     toggleSidePanel("source");
-  }, [isSourceTreeEnabled, toggleSidePanel]);
+  }, [toggleSidePanel]);
   const toggleFigmaImagesPanel = (0, import_react49.useCallback)(() => {
     if (!isFigmaImageManagementEnabled) return;
     toggleSidePanel("figma-images");
@@ -23452,39 +23406,34 @@ var useReviewShellTargetFigma = ({
 // src/react-shell/hooks/use.review.side.panel.ts
 var import_react53 = require("react");
 var getAvailableSidePanel = (sidePanel, {
-  isFigmaImageManagementEnabled,
-  isSourceTreeEnabled
+  isFigmaImageManagementEnabled
 }) => {
-  if (sidePanel === "source" && !isSourceTreeEnabled) return "qa";
   if (sidePanel === "figma-images" && !isFigmaImageManagementEnabled) {
     return "qa";
   }
   return sidePanel;
 };
 var useReviewSidePanel = ({
-  isFigmaImageManagementEnabled,
-  isSourceTreeEnabled
+  isFigmaImageManagementEnabled
 }) => {
   const storeApi = useReviewShellStoreApi();
   const rawSidePanel = useReviewShellStore((state) => state.sidePanel);
   const isListVisible = useReviewShellStore((state) => state.isListVisible);
   const sidePanel = getAvailableSidePanel(rawSidePanel, {
-    isFigmaImageManagementEnabled,
-    isSourceTreeEnabled
+    isFigmaImageManagementEnabled
   });
   const isQaPanelVisible = isListVisible && sidePanel === "qa";
-  const isSourceTreePanelVisible = isSourceTreeEnabled && isListVisible && sidePanel === "source";
+  const isSourceTreePanelVisible = isListVisible && sidePanel === "source";
   const isFigmaImagesPanelVisible = isFigmaImageManagementEnabled && isListVisible && sidePanel === "figma-images";
   (0, import_react53.useEffect)(() => {
     const state = storeApi.getState();
     const availableSidePanel = getAvailableSidePanel(state.sidePanel, {
-      isFigmaImageManagementEnabled,
-      isSourceTreeEnabled
+      isFigmaImageManagementEnabled
     });
     if (availableSidePanel !== state.sidePanel) {
       state.setSidePanel(availableSidePanel);
     }
-  }, [isFigmaImageManagementEnabled, isSourceTreeEnabled, storeApi]);
+  }, [isFigmaImageManagementEnabled, storeApi]);
   (0, import_react53.useEffect)(() => {
     writeStoredReviewSidePanel(sidePanel);
   }, [sidePanel]);
@@ -23496,31 +23445,28 @@ var useReviewSidePanel = ({
       const state = storeApi.getState();
       state.setSidePanel(
         getAvailableSidePanel(nextSidePanel, {
-          isFigmaImageManagementEnabled,
-          isSourceTreeEnabled
+          isFigmaImageManagementEnabled
         })
       );
       state.setIsListVisible(true);
     },
-    [isFigmaImageManagementEnabled, isSourceTreeEnabled, storeApi]
+    [isFigmaImageManagementEnabled, storeApi]
   );
   const toggleSidePanel = (0, import_react53.useCallback)(
     (nextSidePanel) => {
       const state = storeApi.getState();
       const currentSidePanel = getAvailableSidePanel(state.sidePanel, {
-        isFigmaImageManagementEnabled,
-        isSourceTreeEnabled
+        isFigmaImageManagementEnabled
       });
       const availableSidePanel = getAvailableSidePanel(nextSidePanel, {
-        isFigmaImageManagementEnabled,
-        isSourceTreeEnabled
+        isFigmaImageManagementEnabled
       });
       state.setSidePanel(availableSidePanel);
       state.setIsListVisible(
         currentSidePanel === availableSidePanel ? !state.isListVisible : true
       );
     },
-    [isFigmaImageManagementEnabled, isSourceTreeEnabled, storeApi]
+    [isFigmaImageManagementEnabled, storeApi]
   );
   return {
     isFigmaImagesPanelVisible,
@@ -23607,26 +23553,19 @@ function createSourceShortcutStyle(optionAttribute, fontOverlayAttribute) {
 }
 
 // src/react-shell/hooks/use.review.source.inspector.ts
-var SOURCE_PANEL_MAX_WIDTH = 440;
-var SOURCE_PANEL_MIN_WIDTH = 240;
-var SOURCE_PANEL_MAX_HEIGHT = 260;
 function useReviewSourceInspector({
   frameScrollRef,
   iframeRef,
-  isSourceInspectorEnabled,
   isSourceTreeHoverOutlineEnabled,
   sourceCandidateOptions,
-  sourceOpenOptions,
   targetSrc,
   onCancelReviewMode,
   onRequestSourceTreeFocus
 }) {
   const showToast = useReviewToast();
   const sourceShortcutCleanupRef = (0, import_react54.useRef)(null);
-  const sourceInspectorInteractionRef = (0, import_react54.useRef)(false);
   const [sourceInspectorState, setSourceInspectorState] = (0, import_react54.useState)(null);
   const clearSourceInspector = (0, import_react54.useCallback)(() => {
-    sourceInspectorInteractionRef.current = false;
     setSourceInspectorState(null);
   }, []);
   const getSourceInspectorRect = (0, import_react54.useCallback)(
@@ -23654,69 +23593,6 @@ function useReviewSourceInspector({
     },
     [iframeRef]
   );
-  const getSourceInspectorPanelPosition = (0, import_react54.useCallback)(
-    (rect) => {
-      const margin = 12;
-      const gap = 10;
-      const preferredLeft = rect.left + rect.width + gap;
-      const rightSpace = window.innerWidth - preferredLeft - margin;
-      const leftSpace = rect.left - gap - margin;
-      const canOpenRight = rightSpace >= SOURCE_PANEL_MIN_WIDTH;
-      const canOpenLeft = leftSpace >= SOURCE_PANEL_MIN_WIDTH;
-      const left = canOpenRight || !canOpenLeft ? preferredLeft : margin;
-      const right = canOpenRight || !canOpenLeft ? null : Math.max(margin, window.innerWidth - (rect.left - gap));
-      const maxWidth = Math.min(
-        SOURCE_PANEL_MAX_WIDTH,
-        Math.max(
-          SOURCE_PANEL_MIN_WIDTH,
-          canOpenRight ? rightSpace : canOpenLeft ? leftSpace : window.innerWidth - margin * 2
-        )
-      );
-      const top = Math.min(
-        Math.max(margin, rect.top),
-        Math.max(margin, window.innerHeight - SOURCE_PANEL_MAX_HEIGHT - margin)
-      );
-      return { left, maxWidth, right, top };
-    },
-    []
-  );
-  const showSourceInspectorForTarget = (0, import_react54.useCallback)(
-    (target, isPinned = false) => {
-      const candidates = getSourceCandidates(target, sourceCandidateOptions).map(
-        (candidate) => ({
-          ...candidate,
-          openUrl: getSourceOpenUrl(candidate.source, {
-            ...sourceOpenOptions,
-            omitPosition: !candidate.usesPosition
-          })
-        })
-      );
-      const firstCandidate = candidates[0];
-      const rect = firstCandidate ? getSourceInspectorRect(firstCandidate.element) : null;
-      if (!firstCandidate || !rect) {
-        setSourceInspectorState(null);
-        return [];
-      }
-      const { left, maxWidth, right, top } = getSourceInspectorPanelPosition(rect);
-      setSourceInspectorState({
-        candidates,
-        isPinned,
-        panelLeft: left,
-        panelMaxWidth: maxWidth,
-        panelRight: right,
-        panelTop: top,
-        rect,
-        targetElement: firstCandidate.element
-      });
-      return candidates;
-    },
-    [
-      getSourceInspectorPanelPosition,
-      getSourceInspectorRect,
-      sourceCandidateOptions,
-      sourceOpenOptions
-    ]
-  );
   const showSourceOutlineForTarget = (0, import_react54.useCallback)(
     (target) => {
       const firstCandidate = getSourceCandidates(
@@ -23729,12 +23605,6 @@ function useReviewSourceInspector({
         return null;
       }
       setSourceInspectorState({
-        candidates: [],
-        isPinned: false,
-        panelLeft: 0,
-        panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
-        panelRight: null,
-        panelTop: 0,
         rect,
         targetElement: firstCandidate.element
       });
@@ -23747,49 +23617,15 @@ function useReviewSourceInspector({
       if (!isSourceTreeHoverOutlineEnabled) return;
       const rect = getSourceInspectorRect(element);
       if (!rect) {
-        setSourceInspectorState(
-          (current) => current?.isPinned ? current : null
-        );
+        setSourceInspectorState(null);
         return;
       }
-      setSourceInspectorState(
-        (current) => current?.isPinned ? current : {
-          candidates: [],
-          isPinned: false,
-          panelLeft: 0,
-          panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
-          panelRight: null,
-          panelTop: 0,
-          rect,
-          targetElement: element
-        }
-      );
+      setSourceInspectorState({ rect, targetElement: element });
     },
     [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
   );
-  const pinSourceOutlineForElement = (0, import_react54.useCallback)(
-    (element) => {
-      const rect = getSourceInspectorRect(element);
-      if (!rect) {
-        setSourceInspectorState(null);
-        return false;
-      }
-      setSourceInspectorState({
-        candidates: [],
-        isPinned: true,
-        panelLeft: 0,
-        panelMaxWidth: SOURCE_PANEL_MAX_WIDTH,
-        panelRight: null,
-        panelTop: 0,
-        rect,
-        targetElement: element
-      });
-      return true;
-    },
-    [getSourceInspectorRect]
-  );
   const clearSourceOutlineHover = (0, import_react54.useCallback)(() => {
-    setSourceInspectorState((current) => current?.isPinned ? current : null);
+    setSourceInspectorState(null);
   }, []);
   const sourceInspectorTargetElement = sourceInspectorState?.targetElement ?? null;
   (0, import_react54.useEffect)(() => {
@@ -23806,18 +23642,7 @@ function useReviewSourceInspector({
           if (!current) return current;
           const rect = getSourceInspectorRect(current.targetElement);
           if (!rect) return null;
-          if (current.candidates.length === 0) {
-            return { ...current, rect };
-          }
-          const { left, maxWidth, right, top } = getSourceInspectorPanelPosition(rect);
-          return {
-            ...current,
-            panelLeft: left,
-            panelMaxWidth: maxWidth,
-            panelRight: right,
-            panelTop: top,
-            rect
-          };
+          return { ...current, rect };
         });
       });
     };
@@ -23838,32 +23663,10 @@ function useReviewSourceInspector({
     };
   }, [
     frameScrollRef,
-    getSourceInspectorPanelPosition,
     getSourceInspectorRect,
     iframeRef,
     sourceInspectorTargetElement
   ]);
-  const openSourceCandidate = (0, import_react54.useCallback)(
-    (candidate) => {
-      if (candidate.kind !== "data") {
-        onRequestSourceTreeFocus?.(candidate.element);
-        clearSourceInspector();
-        return;
-      }
-      const didOpen = openSourceInEditor(candidate.source, {
-        ...sourceOpenOptions,
-        omitPosition: !candidate.usesPosition
-      });
-      showToast(didOpen ? "Source opened" : "Source root required");
-      clearSourceInspector();
-    },
-    [
-      clearSourceInspector,
-      onRequestSourceTreeFocus,
-      showToast,
-      sourceOpenOptions
-    ]
-  );
   const cleanupSourceOpenShortcut = (0, import_react54.useCallback)(() => {
     sourceShortcutCleanupRef.current?.();
     sourceShortcutCleanupRef.current = null;
@@ -23876,7 +23679,7 @@ function useReviewSourceInspector({
     } catch {
       return;
     }
-    if (!frameDocument || !isSourceInspectorEnabled) return;
+    if (!frameDocument) return;
     const frameRoot = frameDocument.head ?? frameDocument.documentElement;
     const frameBody = frameDocument.body ?? frameDocument.documentElement;
     if (!frameRoot || !frameBody) return;
@@ -23896,7 +23699,6 @@ function useReviewSourceInspector({
     let hoveredElement = null;
     let lastSourceTarget = null;
     let isSourceSelecting = false;
-    let isSourcePanelPinned = false;
     const getFontHints = (element) => {
       if (!element) return [];
       const values = [];
@@ -23954,7 +23756,6 @@ function useReviewSourceInspector({
       isSourceSelecting = isSelecting;
       setTargetFigmaSourceSelectLocked(frameDocument, isSelecting);
       if (isSelecting) {
-        isSourcePanelPinned = false;
         frameDocument.documentElement.setAttribute(optionAttribute, "true");
         const candidate = showSourceOutlineForTarget(lastSourceTarget);
         setHoveredElement(candidate?.element ?? hoveredElement);
@@ -23963,55 +23764,52 @@ function useReviewSourceInspector({
       setHoveredElement(null);
       fontOverlay.hidden = true;
       frameDocument.documentElement.removeAttribute(optionAttribute);
-      if (!isSourcePanelPinned && !sourceInspectorInteractionRef.current) {
-        clearSourceInspector();
-      }
+      clearSourceInspector();
     };
     const handleTargetPointerMove = (event) => {
-      if (isSourcePanelPinned) return;
       lastSourceTarget = event.target;
-      const candidates = getSourceCandidates(event.target, sourceCandidateOptions);
+      const candidates = getSourceCandidates(
+        event.target,
+        sourceCandidateOptions
+      );
       const sourceElement = candidates[0]?.element ?? null;
       if (event.altKey && !isSourceSelecting) {
         setSourceSelecting(true);
       }
-      if (isSourceSelecting && !isSourcePanelPinned) {
+      if (isSourceSelecting) {
         showSourceOutlineForTarget(event.target);
       }
       setHoveredElement(isSourceSelecting ? sourceElement : null);
     };
-    const pinSourceSelection = (event) => {
+    const selectSourceTreeEntry = (event) => {
       if (!isSourceSelecting && !event.altKey) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
-      const candidates = showSourceInspectorForTarget(event.target, true);
-      if (!candidates.length) {
+      const candidates = getSourceCandidates(
+        event.target,
+        sourceCandidateOptions
+      );
+      const candidate = candidates.filter((item) => item.kind !== "data").sort((a, b) => a.depth - b.depth)[0] ?? candidates[0];
+      if (!candidate) {
         showToast("Source hint not found");
-        isSourcePanelPinned = false;
         setSourceSelecting(false);
         return;
       }
-      isSourcePanelPinned = true;
-      onRequestSourceTreeFocus?.(candidates[0].element);
+      onRequestSourceTreeFocus?.(candidate.element);
       setSourceSelecting(false);
     };
-    const handleTargetPointerDown = (event) => {
-      pinSourceSelection(event);
-    };
     const handleClick = (event) => {
-      pinSourceSelection(event);
+      selectSourceTreeEntry(event);
     };
     const isOptionKeyEvent = (event) => event.key === "Alt" || event.code === "AltLeft" || event.code === "AltRight" || event.altKey;
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
-        isSourcePanelPinned = false;
         setSourceSelecting(false);
         clearSourceInspector();
         return;
       }
       if (!isOptionKeyEvent(event)) return;
-      if (isSourcePanelPinned) return;
       onCancelReviewMode();
       setSourceSelecting(true);
     };
@@ -24019,23 +23817,13 @@ function useReviewSourceInspector({
       if (isOptionKeyEvent(event) || !event.altKey) setSourceSelecting(false);
     };
     const handleBlur = () => {
-      isSourcePanelPinned = false;
       setSourceSelecting(false);
     };
-    const handleWindowPointerDown = (event) => {
-      const target = event.target;
-      if (target instanceof Element && target.closest(".df-review-source-popover")) {
-        sourceInspectorInteractionRef.current = true;
-        return;
-      }
-      isSourcePanelPinned = false;
-      sourceInspectorInteractionRef.current = false;
+    const handleWindowPointerDown = () => {
       setSourceSelecting(false);
-      clearSourceInspector();
     };
     frameDocument.addEventListener("mousemove", handleTargetPointerMove, true);
     frameDocument.addEventListener("pointermove", handleTargetPointerMove, true);
-    frameDocument.addEventListener("pointerdown", handleTargetPointerDown, true);
     frameDocument.addEventListener("click", handleClick, true);
     frameDocument.addEventListener("keydown", handleKeyDown, true);
     frameDocument.addEventListener("keyup", handleKeyUp, true);
@@ -24054,11 +23842,6 @@ function useReviewSourceInspector({
         handleTargetPointerMove,
         true
       );
-      frameDocument.removeEventListener(
-        "pointerdown",
-        handleTargetPointerDown,
-        true
-      );
       frameDocument.removeEventListener("click", handleClick, true);
       frameDocument.removeEventListener("keydown", handleKeyDown, true);
       frameDocument.removeEventListener("keyup", handleKeyUp, true);
@@ -24066,7 +23849,6 @@ function useReviewSourceInspector({
       window.removeEventListener("keyup", handleKeyUp, true);
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("pointerdown", handleWindowPointerDown, true);
-      isSourcePanelPinned = false;
       setSourceSelecting(false);
       style.remove();
       fontOverlay.remove();
@@ -24076,12 +23858,10 @@ function useReviewSourceInspector({
     clearSourceInspector,
     cleanupSourceOpenShortcut,
     iframeRef,
-    isSourceInspectorEnabled,
     onRequestSourceTreeFocus,
     showToast,
     sourceCandidateOptions,
-    showSourceOutlineForTarget,
-    showSourceInspectorForTarget
+    showSourceOutlineForTarget
   ]);
   (0, import_react54.useEffect)(() => {
     return cleanupSourceOpenShortcut;
@@ -24094,10 +23874,7 @@ function useReviewSourceInspector({
     bindSourceOpenShortcut,
     clearSourceInspector,
     clearSourceOutlineHover,
-    openSourceCandidate,
-    pinSourceOutlineForElement,
     showSourceOutlineForElement,
-    sourceInspectorInteractionRef,
     sourceInspectorState
   };
 }
@@ -24263,11 +24040,8 @@ var useReviewShellRuntime = ({
     (state) => Boolean(state.editingItem)
   );
   const {
-    isSourceInspectorEnabled,
-    isSourceTreeEnabled,
     isSourceTreeHoverOutlineEnabled,
-    sourceCandidateOptions,
-    sourceOpenOptions
+    sourceCandidateOptions
   } = useReviewShellConfig();
   const {
     figmaImagesController,
@@ -24284,8 +24058,7 @@ var useReviewShellRuntime = ({
     openSidePanel,
     toggleSidePanel
   } = useReviewSidePanel({
-    isFigmaImageManagementEnabled,
-    isSourceTreeEnabled
+    isFigmaImageManagementEnabled
   });
   const {
     activeItems,
@@ -24452,10 +24225,8 @@ var useReviewShellRuntime = ({
   const sourceInspector = useReviewSourceInspector({
     frameScrollRef,
     iframeRef,
-    isSourceInspectorEnabled,
     isSourceTreeHoverOutlineEnabled,
     sourceCandidateOptions,
-    sourceOpenOptions,
     targetSrc,
     onCancelReviewMode: cancelReviewMode,
     onRequestSourceTreeFocus: requestSourceTreeFocus
@@ -24464,7 +24235,6 @@ var useReviewShellRuntime = ({
     bindSourceOpenShortcut,
     clearSourceInspector,
     clearSourceOutlineHover,
-    pinSourceOutlineForElement,
     showSourceOutlineForElement
   } = sourceInspector;
   const {
@@ -24473,7 +24243,6 @@ var useReviewShellRuntime = ({
     toggleSourceTreePanel
   } = useReviewShellPanelActions({
     isFigmaImageManagementEnabled,
-    isSourceTreeEnabled,
     toggleSidePanel
   });
   const figmaOverlayState = useReviewShellFigmaOverlay({
@@ -24518,7 +24287,6 @@ var useReviewShellRuntime = ({
     initReviewKit,
     loadTargetFrame,
     openFigmaSettings,
-    pinSourceOutlineForElement,
     refreshReviewData: refreshReviewData2,
     restoreReviewItem,
     selectAllQa,

@@ -11,6 +11,7 @@ export type ReviewDraftPreviewElement = HTMLElement | SVGElement;
 
 interface ReviewAdjustmentDraft extends ReviewPoint {
   isActive?: boolean;
+  preview?: boolean;
   scale?: number;
 }
 

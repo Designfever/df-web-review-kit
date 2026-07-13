@@ -48,6 +48,7 @@ declare const reviewFigmaImageStore: (options?: ReviewFigmaImageStorePluginOptio
 
 type SourceLocatorPattern = string | RegExp;
 interface ReviewSourceLocatorOptions {
+    /** @deprecated Dev server에서 자동 활성화되고 production build에서는 비활성화된다. */
     enabled?: boolean;
     root?: string;
     include?: readonly SourceLocatorPattern[];
@@ -59,6 +60,7 @@ interface ReviewSourceLocatorOptions {
 }
 declare const reviewSourceLocator: (options?: ReviewSourceLocatorOptions) => Plugin;
 interface ReviewDataLocatorOptions {
+    /** @deprecated Dev server에서 자동 활성화되고 production build에서는 비활성화된다. */
     enabled?: boolean;
     root?: string;
     include?: readonly SourceLocatorPattern[];

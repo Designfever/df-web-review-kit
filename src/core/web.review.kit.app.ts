@@ -106,7 +106,8 @@ export function createWebReviewKit(
     startElementReview: (element, comment) =>
       app.startElementReview(element, comment),
     selectElement: (element) => app.selectElement(element),
-    adjustElementSelection: (delta) => app.adjustElementSelection(delta),
+    adjustElementSelection: (delta, adjustmentOptions) =>
+      app.adjustElementSelection(delta, adjustmentOptions),
     getMode: () => app.getMode(),
     highlightItem: (itemId) => app.highlightItem(itemId),
     setHiddenItemIds: (itemIds) => app.setHiddenItemIds(itemIds),
@@ -307,7 +308,10 @@ class WebReviewKitApp {
     });
   }
 
-  adjustElementSelection(delta: { x?: number; y?: number; scale?: number }) {
+  adjustElementSelection(
+    delta: { x?: number; y?: number; scale?: number },
+    options?: { preview?: boolean }
+  ) {
     if (!this.domDraft?.selection) return false;
 
     const current = this.domDraft.adjustment;
@@ -318,6 +322,7 @@ class WebReviewKitApp {
         y: (current?.y ?? 0) + (delta.y ?? 0),
         scale: (current?.scale ?? 0) + (delta.scale ?? 0),
         isActive: true,
+        preview: options?.preview ?? current?.preview,
       },
     };
     this.render();

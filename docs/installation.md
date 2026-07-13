@@ -246,12 +246,10 @@ import {
 export default defineConfig({
   plugins: [
     reviewSourceLocator({
-      enabled: true,
       include: ['src'],
       filePath: 'absolute',
     }),
     reviewDataLocator({
-      enabled: true,
       include: ['src/data'],
       filePath: 'absolute',
     }),
@@ -259,9 +257,9 @@ export default defineConfig({
 });
 ```
 
-Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, and `data-wrk-source-column`. When TypeScript is available in the host toolchain, the source locator parses TSX/JSX and also adds `data-wrk-source-component` to intrinsic JSX nodes. For function component render paths, it records the parent JSX call site as `data-wrk-source-parent-*` hints so Source Tree can open the file that used the component. Data locator injects `__wrkDataFile` and `__wrkDataLine` props into page data section objects so the shell can expose matching `data-wrk-data-*` hints when host components forward those props to section wrappers.
+The locator plugins run automatically on the Vite dev server and stay disabled in production builds. Source Tree and the `Option` shortcut stay available without `sourceRoot` or an `enabled` option; `sourceRoot` is only needed to open relative source paths. Captured DOM nodes will include `data-wrk-source-file`, `data-wrk-source-line`, and `data-wrk-source-column`. When TypeScript is available in the host toolchain, the source locator parses TSX/JSX and also adds `data-wrk-source-component` to intrinsic JSX nodes. For function component render paths, it records the parent JSX call site as `data-wrk-source-parent-*` hints so Source Tree can open the file that used the component. Data locator injects `__wrkDataFile` and `__wrkDataLine` props into page data section objects so the shell can expose matching `data-wrk-data-*` hints when host components forward those props to section wrappers.
 
-In the review shell, hold `Option` over the target iframe to show source candidates from the DOM ancestry. Click the target to pin the candidate list, then choose which file to open. The side rail Source Tree panel lists section/source/data candidates and can scroll to a section or open its source/data file. When parent usage hints exist, each row shows `used in` with the parent component and call-site file/position, plus an action to open that usage source. It can also show live box metrics, text/font metadata, media URLs, and class tags for each node. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
+In the review shell, hold `Option` over the target iframe to show its source outline, then click the target to open the closest component in Source Tree. The side rail Source Tree panel lists section/source/data candidates and can scroll to a section or open its source/data file. When parent usage hints exist, each row shows `used in` with the parent component and call-site file/position, plus an action to open that usage source. It can also show live box metrics, text/font metadata, media URLs, and class tags for each node. If the file path is absolute, it opens directly. If the plugin stores relative paths, pass `sourceRoot` when mounting the shell.
 
 Source opening reads these optional host env values from `.env.local`:
 
@@ -291,7 +289,7 @@ mountReviewShell({
 });
 ```
 
-Set `sourceInspector.enabled` to `false` when source code opening should be unavailable. Use `sourceInspector.ignore` to hide infrastructure files from source candidates and the Source Tree. Use `sourceInspector.maxDepth` to cap Source Tree traversal depth. Set `sourceInspector.hoverOutline` to `false` to disable iframe target outlines while hovering Source Tree items. Set `sourceInspector.includePlacer` to `true` when primitive Placer nodes should appear in Source Tree or source candidate lists. The `data-font` overlay still belongs to the target project markup and is not required for source opening.
+Use `sourceInspector.ignore` to hide infrastructure files from source matching and the Source Tree. Use `sourceInspector.maxDepth` to cap Source Tree traversal depth. Set `sourceInspector.hoverOutline` to `false` to disable iframe target outlines while hovering Source Tree items. Set `sourceInspector.includePlacer` to `true` when primitive Placer nodes should appear in Source Tree or Option source matching. The `data-font` overlay still belongs to the target project markup and is not required for source opening.
 
 Use this only in dev/review builds. Source paths are written into the browser DOM and can be persisted with QA items.
 

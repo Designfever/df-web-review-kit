@@ -79,11 +79,8 @@ export const useReviewShellRuntime = ({
     Boolean(state.editingItem)
   );
   const {
-    isSourceInspectorEnabled,
-    isSourceTreeEnabled,
     isSourceTreeHoverOutlineEnabled,
     sourceCandidateOptions,
-    sourceOpenOptions,
   } = useReviewShellConfig();
 
   const {
@@ -102,7 +99,6 @@ export const useReviewShellRuntime = ({
     toggleSidePanel,
   } = useReviewSidePanel({
     isFigmaImageManagementEnabled,
-    isSourceTreeEnabled,
   });
 
   const {
@@ -285,10 +281,8 @@ export const useReviewShellRuntime = ({
   const sourceInspector = useReviewSourceInspector({
     frameScrollRef,
     iframeRef,
-    isSourceInspectorEnabled,
     isSourceTreeHoverOutlineEnabled,
     sourceCandidateOptions,
-    sourceOpenOptions,
     targetSrc,
     onCancelReviewMode: cancelReviewMode,
     onRequestSourceTreeFocus: requestSourceTreeFocus,
@@ -297,7 +291,6 @@ export const useReviewShellRuntime = ({
     bindSourceOpenShortcut,
     clearSourceInspector,
     clearSourceOutlineHover,
-    pinSourceOutlineForElement,
     showSourceOutlineForElement,
   } = sourceInspector;
 
@@ -307,7 +300,6 @@ export const useReviewShellRuntime = ({
     toggleSourceTreePanel,
   } = useReviewShellPanelActions({
     isFigmaImageManagementEnabled,
-    isSourceTreeEnabled,
     toggleSidePanel,
   });
 
@@ -361,7 +353,6 @@ export const useReviewShellRuntime = ({
     initReviewKit,
     loadTargetFrame,
     openFigmaSettings,
-    pinSourceOutlineForElement,
     refreshReviewData,
     restoreReviewItem,
     selectAllQa,

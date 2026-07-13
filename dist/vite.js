@@ -23,6 +23,9 @@ import {
   requireReviewFigmaToken
 } from "./chunk-UNDQZ4Y2.js";
 
+// src/vite/review-locator.mode.ts
+var isReviewLocatorEnabled = (command) => command === "serve";
+
 // src/vite/figma-image-store.ts
 import path3 from "path";
 import { loadEnv } from "vite";
@@ -906,16 +909,21 @@ var reviewSourceLocator = (options = {}) => {
       return createJsxDevRuntime(runtimeOptions);
     },
     async transform(code, id) {
+      if (!runtimeOptions.enabled) return null;
       const injectedCode = injectReviewSourceEnv(code, sourceEnvReplacements);
       const inputCode = injectedCode ?? code;
-      const componentInjectedCode = runtimeOptions.enabled ? await injectReviewSourceComponentHints(inputCode, id, runtimeOptions) : null;
+      const componentInjectedCode = await injectReviewSourceComponentHints(
+        inputCode,
+        id,
+        runtimeOptions
+      );
       return injectedCode || componentInjectedCode ? { code: componentInjectedCode ?? inputCode, map: null } : null;
     }
   };
 };
 var reviewDataLocator = (options = {}) => {
   let root = normalizePath(options.root ?? "");
-  let enabled = options.enabled ?? false;
+  let enabled = false;
   let sourceEnvReplacements = createReviewSourceEnvReplacements();
   const include = (options.include ?? []).map(createRuntimeMatcher);
   const exclude = (options.exclude ?? ["node_modules", "dist"]).map(
@@ -930,16 +938,16 @@ var reviewDataLocator = (options = {}) => {
     enforce: "pre",
     configResolved(config) {
       root = normalizePath(options.root ?? config.root ?? "");
-      enabled = options.enabled ?? config.command === "serve";
+      enabled = isReviewLocatorEnabled(config.command);
       sourceEnvReplacements = createReviewSourceEnvReplacements(config.env);
     },
     transform(code, id) {
+      if (!enabled) return null;
       const envInjectedCode = injectReviewSourceEnv(
         code,
         sourceEnvReplacements
       );
       const inputCode = envInjectedCode ?? code;
-      if (!enabled) return null;
       const file = normalizePath(id.split("?")[0]);
       const relativeFile = root && file.startsWith(root + "/") ? file.slice(root.length + 1) : file;
       if (include.length > 0 && !include.some((m) => matchesPath(m, file, relativeFile)))
@@ -1082,7 +1090,7 @@ function createRuntimeOptions(options, config) {
     ""
   );
   const root = normalizePath(options.root ?? config?.root ?? "");
-  const enabled = options.enabled ?? config?.command === "serve";
+  const enabled = config ? isReviewLocatorEnabled(config.command) : false;
   return {
     enabled,
     root,

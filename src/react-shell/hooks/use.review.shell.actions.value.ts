@@ -19,7 +19,6 @@ interface UseReviewShellActionsValueOptions {
   initReviewKit: () => void;
   loadTargetFrame: () => void;
   openFigmaSettings: () => void;
-  pinSourceOutlineForElement: (element: Element) => boolean;
   refreshReviewData: () => Promise<void>;
   restoreReviewItem: (item: ReviewItem) => void;
   selectAllQa: () => void;
@@ -44,7 +43,6 @@ export const useReviewShellActionsValue = ({
   initReviewKit,
   loadTargetFrame,
   openFigmaSettings,
-  pinSourceOutlineForElement,
   refreshReviewData,
   restoreReviewItem,
   selectAllQa,
@@ -73,7 +71,6 @@ export const useReviewShellActionsValue = ({
       openAbout: () => setIsInitialPromptOpen(true),
       openInitialPrompt: () => setIsInitialPromptScriptOpen(true),
       openSettings: openFigmaSettings,
-      pinSourceOutlineForElement,
       refreshReviewData,
       restoreReviewItem,
       selectAllQa,
@@ -95,7 +92,6 @@ export const useReviewShellActionsValue = ({
       initReviewKit,
       loadTargetFrame,
       openFigmaSettings,
-      pinSourceOutlineForElement,
       refreshReviewData,
       restoreReviewItem,
       selectAllQa,

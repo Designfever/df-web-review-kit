@@ -46,8 +46,7 @@ type SectionOutlinePanelProps = {
   onSelectEntry: (entry: SectionOutlineEntry) => void;
   onCopyEntryName: (entry: SectionOutlineEntry) => void;
   onFinishDomAdjustment: (entry: SectionOutlineEntry) => void;
-  onResetDomAdjustment: (entry: SectionOutlineEntry) => void;
-  isDomAdjustmentEmpty: (position: DomAdjustmentPosition) => boolean;
+  onClearDomAdjustment: (entry: SectionOutlineEntry) => void;
   onStartDomAdjustment: (entry: SectionOutlineEntry) => void;
   onOpenData: (entry: SectionOutlineEntry) => void;
   onOpenSource: (entry: SectionOutlineEntry) => void;
@@ -80,8 +79,7 @@ export const SectionOutlinePanel = ({
   onSelectEntry,
   onCopyEntryName,
   onFinishDomAdjustment,
-  onResetDomAdjustment,
-  isDomAdjustmentEmpty,
+  onClearDomAdjustment,
   onStartDomAdjustment,
   onOpenData,
   onOpenSource,
@@ -228,12 +226,15 @@ export const SectionOutlinePanel = ({
     const isCollapsed = !isFiltering && collapsedIds.has(entry.id);
     const isSelected = selectedEntryId === entry.id;
     const isDomAdjusting = activeDomAdjustmentEntryId === entry.id;
+    const hasDomAdjustment = Object.prototype.hasOwnProperty.call(
+      domAdjustmentByEntryId,
+      entry.id
+    );
     const domAdjustmentPosition = domAdjustmentByEntryId[entry.id] ?? {
       x: 0,
       y: 0,
     };
-    const shouldShowDomAdjustment =
-      isDomAdjusting || !isDomAdjustmentEmpty(domAdjustmentPosition);
+    const shouldShowDomAdjustment = isDomAdjusting || hasDomAdjustment;
 
     return (
       <div
@@ -348,12 +349,12 @@ export const SectionOutlinePanel = ({
                   ) : null}
                   {shouldShowDomAdjustment ? (
                     <button
-                      aria-label={`Reset ${entry.label} DOM adjustment`}
+                      aria-label={`Clear ${entry.label} DOM adjustment`}
                       className="df-review-section-outline-link is-dom-reset"
-                      data-review-tooltip="Reset move"
-                      title="Reset move"
+                      data-review-tooltip="Clear move"
+                      title="Clear move"
                       type="button"
-                      onClick={() => onResetDomAdjustment(entry)}
+                      onClick={() => onClearDomAdjustment(entry)}
                     >
                       <ResetIcon aria-hidden="true" />
                     </button>

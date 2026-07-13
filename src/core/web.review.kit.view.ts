@@ -42,6 +42,7 @@ export class WebReviewKitView {
       getMetrics: (draft) =>
         draftMetrics.getDraftAdjustmentMetrics(draft, presets()),
       hasAdjustment: (draft) =>
+        draft.adjustment?.preview !== false &&
         draftMetrics.hasDraftAdjustment(draft, presets()),
     });
     // draft 레이어 모듈들이 공유하는 컨텍스트. config 외에 뷰 인스턴스가

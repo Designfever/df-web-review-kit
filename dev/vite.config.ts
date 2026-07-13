@@ -6,7 +6,6 @@ export default defineConfig({
   envDir: '..',
   plugins: [
     reviewSourceLocator({
-      enabled: true,
       filePath: 'absolute',
       include: ['src'],
     }),

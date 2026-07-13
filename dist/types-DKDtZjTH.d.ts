@@ -240,6 +240,8 @@ interface WebReviewKitController {
         x?: number;
         y?: number;
         scale?: number;
+    }, options?: {
+        preview?: boolean;
     }): boolean;
     getMode(): ReviewMode;
     highlightItem(itemId?: string): void;

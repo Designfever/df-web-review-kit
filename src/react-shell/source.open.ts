@@ -103,7 +103,7 @@ export const getSourceCandidates = (
   return takeVisibleSourceCandidates(visible);
 };
 
-export const getSourceOpenUrl = (
+const getSourceOpenUrl = (
   source: DomSourceHint | undefined,
   options?: string | SourceOpenOptions
 ) => {

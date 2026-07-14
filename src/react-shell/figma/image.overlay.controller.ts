@@ -378,83 +378,64 @@ export const useReviewFigmaImageOverlayController = ({
     });
   }, [images, updateState]);
 
+  const updateSelectedOverlayState = useCallback(
+    (
+      updater: (
+        itemState: ReviewFigmaImageOverlayItemState
+      ) => ReviewFigmaImageOverlayItemState
+    ) => {
+      updateState((currentState) => ({
+        ...currentState,
+        imageStates: updateSelectedReviewFigmaImageOverlayItemState(
+          currentState,
+          updater
+        ),
+      }));
+    },
+    [updateState]
+  );
+
   const setOverlayOpacity = useCallback((opacity: number) => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          opacity: clampReviewFigmaImageOverlayOpacity(opacity),
-        })
-      ),
+    updateSelectedOverlayState((itemState) => ({
+      ...itemState,
+      opacity: clampReviewFigmaImageOverlayOpacity(opacity),
     }));
-  }, [updateState]);
+  }, [updateSelectedOverlayState]);
 
   const setOverlayLocked = useCallback((isLocked: boolean) => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          isLocked,
-        })
-      ),
+    updateSelectedOverlayState((itemState) => ({
+      ...itemState,
+      isLocked,
     }));
-  }, [updateState]);
+  }, [updateSelectedOverlayState]);
 
   const toggleOverlayLocked = useCallback(() => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          isLocked: !itemState.isLocked,
-        })
-      ),
+    updateSelectedOverlayState((itemState) => ({
+      ...itemState,
+      isLocked: !itemState.isLocked,
     }));
-  }, [updateState]);
+  }, [updateSelectedOverlayState]);
 
   const setOverlayMode = useCallback((mode: ReviewFigmaImageOverlayMode) => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          mode: normalizeReviewFigmaImageOverlayMode(mode),
-        })
-      ),
+    updateSelectedOverlayState((itemState) => ({
+      ...itemState,
+      mode: normalizeReviewFigmaImageOverlayMode(mode),
     }));
-  }, [updateState]);
+  }, [updateSelectedOverlayState]);
 
   const toggleOverlayMode = useCallback(() => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          mode: itemState.mode === 'invert' ? 'normal' : 'invert',
-        })
-      ),
+    updateSelectedOverlayState((itemState) => ({
+      ...itemState,
+      mode: itemState.mode === 'invert' ? 'normal' : 'invert',
     }));
-  }, [updateState]);
+  }, [updateSelectedOverlayState]);
 
   const setOverlayOffsetY = useCallback((offsetY: number) => {
-    updateState((currentState) => ({
-      ...currentState,
-      imageStates: updateSelectedReviewFigmaImageOverlayItemState(
-        currentState,
-        (itemState) => ({
-          ...itemState,
-          offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY),
-        })
-      ),
+    updateSelectedOverlayState((itemState) => ({
+      ...itemState,
+      offsetY: normalizeReviewFigmaImageOverlayOffsetY(offsetY),
     }));
-  }, [updateState]);
+  }, [updateSelectedOverlayState]);
 
   const resetOverlay = useCallback(() => {
     updateState((currentState) => ({

@@ -130,7 +130,7 @@ function normalizeItemForSupabaseCreate(
   const normalizedStatus = normalizeReviewItemStatus(item.status);
   const routeKey = item.routeKey || item.normalizedPath || '/';
   const viewport = item.viewport ?? { width: 390, height: 720 };
-  const nextItem: ReviewItem = {
+  return {
     ...item,
     id,
     reviewNumber: undefined,
@@ -150,13 +150,6 @@ function normalizeItemForSupabaseCreate(
     submitStatus: item.submitStatus ?? 'submitted',
     createdAt: now,
     updatedAt: now,
-  };
-
-  return {
-    ...nextItem,
-    externalIssueUrl:
-      nextItem.externalIssueUrl ??
-      buildSupabaseReviewUrl(nextItem, source, options),
   };
 }
 

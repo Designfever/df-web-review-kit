@@ -182,7 +182,7 @@ function createSourceCandidate(
   const position = line ? `:${line}${column ? `:${column}` : ''}` : '';
 
   return {
-    id: `${kind}:${getSourceCandidateKey(source)}:${repeatInfo?.index ?? 0}:${depth}`,
+    id: `${kind}:${getSourceCandidateDedupeKey(source)}:${repeatInfo?.index ?? 0}:${depth}`,
     depth,
     element,
     filePath: getDisplaySourcePath(source.file) ?? fileName,
@@ -216,19 +216,6 @@ function takeVisibleSourceCandidates(candidates: SourceCandidate[]) {
   }
 
   return visible;
-}
-
-function getSourceCandidateKey(source: DomSourceHint) {
-  return [
-    source.file,
-    source.component,
-    source.line,
-    source.column,
-    source.sectionId,
-    source.sectionIndex,
-  ]
-    .filter(Boolean)
-    .join('|');
 }
 
 function getSourceCandidateDedupeKey(source: DomSourceHint) {

@@ -166,6 +166,36 @@ export const reviewShellSitemapStyle = `
     height: 15px;
   }
 
+  .df-review-sitemap-status-filters {
+    display: inline-flex;
+    gap: 4px;
+    flex: 0 0 auto;
+  }
+
+  .df-review-sitemap-status-filter {
+    min-height: 34px;
+    border: 1px solid var(--df-review-line-soft);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 10px;
+    color: var(--df-review-muted);
+    background: var(--df-review-control);
+    box-shadow: var(--df-review-shadow-control);
+    font-size: var(--df-review-font-size-xs);
+    font-weight: var(--df-review-font-weight-emphasis);
+  }
+
+  .df-review-sitemap-status-filter:hover {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-text);
+    background: var(--df-review-control-hover);
+  }
+
+  .df-review-sitemap-status-filter.is-active {
+    border-color: var(--df-review-accent);
+    color: var(--df-review-accent);
+    background: var(--df-review-accent-soft);
+  }
+
   .df-review-sitemap-search-count {
     flex: 0 0 auto;
     color: var(--df-review-muted);

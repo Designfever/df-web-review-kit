@@ -15,10 +15,18 @@ import type {
 } from '../types';
 import {
   createSitemapRows,
+  SITEMAP_STATUS_FILTERS,
   type SitemapQaCount,
   type SitemapSortDirection,
   type SitemapSortKey,
+  type SitemapStatusFilter,
 } from './tree';
+
+const STATUS_FILTER_LABELS: Record<SitemapStatusFilter, string> = {
+  todo: 'Todo',
+  review: 'Review',
+  hold: 'Hold',
+};
 
 interface SitemapModalProps {
   isOpen: boolean;
@@ -112,7 +120,11 @@ export const SitemapModal = ({
     () => new Set()
   );
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilters, setStatusFilters] = useState<Set<SitemapStatusFilter>>(
+    () => new Set()
+  );
   const trimmedSearchQuery = searchQuery.trim();
+  const isFiltering = Boolean(trimmedSearchQuery) || statusFilters.size > 0;
   const allQaUsers = useMemo(
     () => mergePresenceUsers(Array.from(pagePresenceUsers.values()).flat()),
     [pagePresenceUsers]
@@ -128,6 +140,7 @@ export const SitemapModal = ({
       searchQuery: trimmedSearchQuery,
       sortKey: sort.key,
       sortDirection: sort.direction,
+      statusFilters,
     }
   );
   const matchingPageCount = sitemapRows.filter((row) => row.isPage).length;
@@ -146,6 +159,17 @@ export const SitemapModal = ({
       key,
       direction: getNextSortDirection(current, key),
     }));
+  };
+  const toggleStatusFilter = (status: SitemapStatusFilter) => {
+    setStatusFilters((currentFilters) => {
+      const nextFilters = new Set(currentFilters);
+      if (nextFilters.has(status)) {
+        nextFilters.delete(status);
+      } else {
+        nextFilters.add(status);
+      }
+      return nextFilters;
+    });
   };
   const toggleFolder = (href: string) => {
     setCollapsedFolderHrefs((currentHrefs) => {
@@ -207,8 +231,28 @@ export const SitemapModal = ({
               <XIcon aria-hidden="true" />
             </button>
           )}
+          <div
+            aria-label="Filter pages by QA status"
+            className="df-review-sitemap-status-filters"
+            role="group"
+          >
+            {SITEMAP_STATUS_FILTERS.map((status) => (
+              <button
+                key={status}
+                aria-pressed={statusFilters.has(status)}
+                className={`df-review-sitemap-status-filter${
+                  statusFilters.has(status) ? ' is-active' : ''
+                }`}
+                title={`Show pages with ${STATUS_FILTER_LABELS[status]} QA`}
+                type="button"
+                onClick={() => toggleStatusFilter(status)}
+              >
+                {STATUS_FILTER_LABELS[status]}
+              </button>
+            ))}
+          </div>
           <span className="df-review-sitemap-search-count">
-            {trimmedSearchQuery
+            {isFiltering
               ? `${matchingPageCount} matches`
               : `${pages.length} pages`}
           </span>

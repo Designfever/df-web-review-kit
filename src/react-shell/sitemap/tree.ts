@@ -48,6 +48,10 @@ type SitemapTreeRow = {
   users: ReviewPresenceUser[];
 };
 
+export const SITEMAP_STATUS_FILTERS = ['todo', 'review', 'hold'] as const;
+
+export type SitemapStatusFilter = (typeof SITEMAP_STATUS_FILTERS)[number];
+
 export type SitemapSortDirection = 'asc' | 'desc';
 
 export type SitemapSortKey =
@@ -198,11 +202,14 @@ export const createSitemapRows = (
     searchQuery?: string;
     sortKey?: SitemapSortKey;
     sortDirection?: SitemapSortDirection;
+    statusFilters?: ReadonlySet<SitemapStatusFilter>;
   } = {}
 ) => {
   const collapsedFolderHrefs =
     options.collapsedFolderHrefs ?? new Set<string>();
   const searchQuery = normalizeSitemapSearchQuery(options.searchQuery);
+  const statusFilters = options.statusFilters ?? new Set<SitemapStatusFilter>();
+  const isStatusFiltering = statusFilters.size > 0;
   const sortKey = options.sortKey ?? 'page';
   const sortDirection = options.sortDirection ?? 'asc';
   const root = createSitemapNode('/', '/', false);
@@ -321,6 +328,22 @@ export const createSitemapRows = (
 
     return summary.children.some(summaryMatchesSearch);
   };
+  const countMatchesStatusFilters = (count: SitemapQaCount) =>
+    Array.from(statusFilters).some((status) => count.status[status] > 0);
+  // 페이지 자신의 count 로 판단하고, folder 는 매칭되는 하위 페이지가 있으면 남긴다.
+  const summaryMatchesStatusFilters = (
+    summary: SitemapTreeSummary
+  ): boolean => {
+    if (!isStatusFiltering) return true;
+    if (
+      summary.node.isPage &&
+      countMatchesStatusFilters(summary.directCount)
+    ) {
+      return true;
+    }
+
+    return summary.children.some(summaryMatchesStatusFilters);
+  };
 
   const rows: SitemapTreeRow[] = [];
 
@@ -337,13 +360,16 @@ export const createSitemapRows = (
     const visibleChildren = sortSummaries(
       summary.children.filter(
         (child) =>
-          !searchQuery || nodeMatchesSearch || summaryMatchesSearch(child)
+          (!searchQuery || nodeMatchesSearch || summaryMatchesSearch(child)) &&
+          summaryMatchesStatusFilters(child)
       )
     );
     const hasChildren = visibleChildren.length > 0;
     const isExpanded =
       hasChildren &&
-      (Boolean(searchQuery) || !collapsedFolderHrefs.has(node.href));
+      (Boolean(searchQuery) ||
+        isStatusFiltering ||
+        !collapsedFolderHrefs.has(node.href));
 
     if (node.isPage || hasChildren || depth > 0) {
       const pageTarget = node.isPage ? getPageTarget(node.href) : null;
@@ -368,11 +394,15 @@ export const createSitemapRows = (
     });
   };
 
+  const rootDirectCount = getDirectCount(root);
+
   if (
     root.isPage &&
-    (!searchQuery || sitemapNodeMatchesSearch(root, searchQuery, getPageTarget))
+    (!searchQuery ||
+      sitemapNodeMatchesSearch(root, searchQuery, getPageTarget)) &&
+    (!isStatusFiltering || countMatchesStatusFilters(rootDirectCount))
   ) {
-    const directCount = getDirectCount(root);
+    const directCount = rootDirectCount;
     const directUsers = getDirectUsers(root);
 
     rows.push({
@@ -391,7 +421,11 @@ export const createSitemapRows = (
   const rootSummaries = sortSummaries(
     Array.from(root.children.values())
       .map(createNodeSummary)
-      .filter(summaryMatchesSearch)
+      .filter(
+        (summary) =>
+          summaryMatchesSearch(summary) &&
+          summaryMatchesStatusFilters(summary)
+      )
   );
 
   rootSummaries.forEach((summary) => {

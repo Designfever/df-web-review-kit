@@ -135,9 +135,12 @@ export const useReviewFigmaImageOverlayController = ({
         (imageId) => nextImageIds.has(imageId)
       );
 
+      // imageStates/lastVisibleImageIds 는 현재 값의 부분집합이므로
+      // 개수가 같으면 내용도 같다. 그대로면 상태를 갈아끼우지 않는다.
       if (
         selectedImageId === currentState.selectedImageId &&
-        imageStates === currentState.imageStates &&
+        Object.keys(imageStates).length ===
+          Object.keys(currentState.imageStates).length &&
         lastVisibleImageIds.length === currentState.lastVisibleImageIds.length
       ) {
         return currentState;

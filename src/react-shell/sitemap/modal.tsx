@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useMemo,
   useState,
   type CSSProperties,
@@ -201,8 +202,23 @@ export const SitemapModal = ({
           <div>
             <strong>Sitemap</strong>
             <span>
-              {pages.length} pages · {allQaCount.status.todo} todo ·{' '}
-              {allQaCount.status.review} review · {allQaCount.status.hold} hold
+              {pages.length} pages
+              {SITEMAP_STATUS_FILTERS.map((status) => (
+                <Fragment key={status}>
+                  {' · '}
+                  <button
+                    aria-pressed={statusFilters.has(status)}
+                    className={`df-review-sitemap-summary-filter${
+                      statusFilters.has(status) ? ' is-active' : ''
+                    }`}
+                    title={`Show pages with ${STATUS_FILTER_LABELS[status]} QA`}
+                    type="button"
+                    onClick={() => toggleStatusFilter(status)}
+                  >
+                    {allQaCount.status[status]} {status}
+                  </button>
+                </Fragment>
+              ))}
             </span>
           </div>
           <button aria-label="Close sitemap" type="button" onClick={onClose}>
@@ -231,26 +247,6 @@ export const SitemapModal = ({
               <XIcon aria-hidden="true" />
             </button>
           )}
-          <div
-            aria-label="Filter pages by QA status"
-            className="df-review-sitemap-status-filters"
-            role="group"
-          >
-            {SITEMAP_STATUS_FILTERS.map((status) => (
-              <button
-                key={status}
-                aria-pressed={statusFilters.has(status)}
-                className={`df-review-sitemap-status-filter${
-                  statusFilters.has(status) ? ' is-active' : ''
-                }`}
-                title={`Show pages with ${STATUS_FILTER_LABELS[status]} QA`}
-                type="button"
-                onClick={() => toggleStatusFilter(status)}
-              >
-                {STATUS_FILTER_LABELS[status]}
-              </button>
-            ))}
-          </div>
           <span className="df-review-sitemap-search-count">
             {isFiltering
               ? `${matchingPageCount} matches`

@@ -65,7 +65,7 @@ export const reviewShellSitemapStyle = `
 	    font-weight: var(--df-review-font-weight-normal);
 	  }
 
-  .df-review-sitemap-header button {
+  .df-review-sitemap-header > button {
     display: grid;
     place-items: center;
 	    width: 34px;
@@ -79,10 +79,35 @@ export const reviewShellSitemapStyle = `
 	    font-weight: var(--df-review-font-weight-normal);
 	  }
 
-	  .df-review-sitemap-header button:hover {
+	  .df-review-sitemap-header > button:hover {
 	    border-color: var(--df-review-accent);
 	    background: var(--df-review-control-hover);
 	  }
+
+  /* 헤더 요약 카운트를 그대로 status filter 토글로 쓴다. */
+  .df-review-sitemap-summary-filter {
+    display: inline;
+    border: 0;
+    padding: 0;
+    background: none;
+    color: var(--df-review-muted);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .df-review-sitemap-summary-filter:hover,
+  .df-review-sitemap-summary-filter:focus-visible {
+    color: var(--df-review-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    outline: none;
+  }
+
+  .df-review-sitemap-summary-filter.is-active {
+    color: var(--df-review-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 
   .df-review-sitemap-controls {
     display: flex;
@@ -164,36 +189,6 @@ export const reviewShellSitemapStyle = `
   .df-review-sitemap-search-clear svg {
     width: 15px;
     height: 15px;
-  }
-
-  .df-review-sitemap-status-filters {
-    display: inline-flex;
-    gap: 4px;
-    flex: 0 0 auto;
-  }
-
-  .df-review-sitemap-status-filter {
-    min-height: 34px;
-    border: 1px solid var(--df-review-line-soft);
-    border-radius: var(--df-review-radius-sm);
-    padding: 0 10px;
-    color: var(--df-review-muted);
-    background: var(--df-review-control);
-    box-shadow: var(--df-review-shadow-control);
-    font-size: var(--df-review-font-size-xs);
-    font-weight: var(--df-review-font-weight-emphasis);
-  }
-
-  .df-review-sitemap-status-filter:hover {
-    border-color: var(--df-review-accent);
-    color: var(--df-review-text);
-    background: var(--df-review-control-hover);
-  }
-
-  .df-review-sitemap-status-filter.is-active {
-    border-color: var(--df-review-accent);
-    color: var(--df-review-accent);
-    background: var(--df-review-accent-soft);
   }
 
   .df-review-sitemap-search-count {

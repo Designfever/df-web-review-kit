@@ -15,7 +15,7 @@
 ## 개선
 
 - Sitemap modal을 닫아도 unmount 하지 않고 숨겨서, 다시 열면 검색어·정렬·폴더 접힘·목록 스크롤이 마지막 상태 그대로 복원된다. 첫 오픈 전에는 기존처럼 mount 하지 않는다.
-- Sitemap에 Todo/Review/Hold status filter chip을 추가했다. 켜진 상태끼리는 OR, 검색어와는 AND로 동작하고, 해당 status QA가 있는 페이지만 표시한다. 필터 중에는 tree 대신 매칭 페이지를 전체 경로의 평평한 목록으로 보여준다.
+- Sitemap header의 요약 카운트(`N todo · N review · N hold`)를 클릭하면 해당 status QA가 있는 페이지만 필터링한다. 켜진 status끼리는 OR, 검색어와는 AND로 동작하고, 활성 필터는 색상과 밑줄로 표시한다. 필터 중에는 tree 대신 매칭 페이지를 전체 경로의 평평한 목록으로 보여준다.
 
 ## 내부 정리
 

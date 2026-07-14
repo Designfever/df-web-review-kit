@@ -132,7 +132,10 @@ export const isEditableEventTarget = (event: KeyboardEvent) => {
   if (!element || typeof element.tagName !== 'string') return false;
   const tag = element.tagName;
   return (
-    tag === 'INPUT' || tag === 'TEXTAREA' || element.isContentEditable === true
+    tag === 'INPUT' ||
+    tag === 'TEXTAREA' ||
+    tag === 'SELECT' ||
+    element.isContentEditable === true
   );
 };
 

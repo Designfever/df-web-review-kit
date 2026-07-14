@@ -11315,6 +11315,10 @@ function useReviewSectionOutline({
   const domAdjustmentManagerRef = useRef5(null);
   const domAdjustmentRequestVersionRef = useRef5(0);
   const clearSectionOutlineSelection = useCallback6(() => {
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLElement && activeElement.closest(".df-review-section-outline-entry-body")) {
+      activeElement.blur();
+    }
     setSelectedSectionOutlineId(null);
     onClearSourceSelection();
   }, [onClearSourceSelection]);
@@ -17258,6 +17262,14 @@ var useReviewShellEffects = ({
       if (isReviewSelectionAction(event.target)) return;
       clearSelectedReviewItem();
     };
+    const clearOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+      const activeElement = document.activeElement;
+      if (activeElement instanceof HTMLElement && activeElement.closest("[data-review-qa-item-id]")) {
+        activeElement.blur();
+      }
+      clearSelectedReviewItem();
+    };
     frameScroll?.addEventListener(
       "pointerdown",
       clearOnWorkspacePointerDown,
@@ -17268,6 +17280,8 @@ var useReviewShellEffects = ({
       clearOnWorkspacePointerDown,
       true
     );
+    frameDocument?.addEventListener("keydown", clearOnEscape, true);
+    window.addEventListener("keydown", clearOnEscape, true);
     return () => {
       frameScroll?.removeEventListener(
         "pointerdown",
@@ -17279,6 +17293,8 @@ var useReviewShellEffects = ({
         clearOnWorkspacePointerDown,
         true
       );
+      frameDocument?.removeEventListener("keydown", clearOnEscape, true);
+      window.removeEventListener("keydown", clearOnEscape, true);
     };
   }, [
     clearSelectedReviewItem,

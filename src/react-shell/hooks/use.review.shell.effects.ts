@@ -127,6 +127,18 @@ export const useReviewShellEffects = ({
       if (isReviewSelectionAction(event.target)) return;
       clearSelectedReviewItem();
     };
+    const clearOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+
+      const activeElement = document.activeElement;
+      if (
+        activeElement instanceof HTMLElement &&
+        activeElement.closest('[data-review-qa-item-id]')
+      ) {
+        activeElement.blur();
+      }
+      clearSelectedReviewItem();
+    };
 
     frameScroll?.addEventListener(
       'pointerdown',
@@ -138,6 +150,8 @@ export const useReviewShellEffects = ({
       clearOnWorkspacePointerDown,
       true
     );
+    frameDocument?.addEventListener('keydown', clearOnEscape, true);
+    window.addEventListener('keydown', clearOnEscape, true);
     return () => {
       frameScroll?.removeEventListener(
         'pointerdown',
@@ -149,6 +163,8 @@ export const useReviewShellEffects = ({
         clearOnWorkspacePointerDown,
         true
       );
+      frameDocument?.removeEventListener('keydown', clearOnEscape, true);
+      window.removeEventListener('keydown', clearOnEscape, true);
     };
   }, [
     clearSelectedReviewItem,

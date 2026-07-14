@@ -175,6 +175,13 @@ export function useReviewSectionOutline({
   const domAdjustmentRequestVersionRef = useRef(0);
 
   const clearSectionOutlineSelection = useCallback(() => {
+    const activeElement = document.activeElement;
+    if (
+      activeElement instanceof HTMLElement &&
+      activeElement.closest('.df-review-section-outline-entry-body')
+    ) {
+      activeElement.blur();
+    }
     setSelectedSectionOutlineId(null);
     onClearSourceSelection();
   }, [onClearSourceSelection]);

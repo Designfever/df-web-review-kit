@@ -29,6 +29,8 @@ export const reviewShellQaPanelStyle = `
 
   .df-review-qa-draft-host[data-has-draft-composer="true"] {
     display: block;
+    /* Source Tree 패널(z 900) 위로 올려 draft composer 가 가려지지 않게 한다. */
+    z-index: 950;
   }
 
 	  .df-review-shell:not(.is-list-visible) .df-review-qa-panel,

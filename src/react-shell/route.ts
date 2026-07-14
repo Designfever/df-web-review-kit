@@ -139,7 +139,11 @@ export const updateShellUrl = (
   }
   url.searchParams.delete('item');
   url.searchParams.delete('panel');
-  window.history.replaceState(null, '', `${url.pathname}${url.search}`);
+  window.history.replaceState(
+    null,
+    '',
+    `${url.pathname}${url.search}${url.hash}`
+  );
 };
 
 export const updateShellUrlForItem = (
@@ -149,7 +153,11 @@ export const updateShellUrlForItem = (
   source: ReviewSource
 ) => {
   const url = getShellUrlForItem(target, size, itemId, source);
-  window.history.replaceState(null, '', `${url.pathname}${url.search}`);
+  window.history.replaceState(
+    null,
+    '',
+    `${url.pathname}${url.search}${url.hash}`
+  );
 };
 
 export const getShellUrlForItem = (

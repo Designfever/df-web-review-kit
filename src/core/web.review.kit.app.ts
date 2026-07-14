@@ -438,6 +438,15 @@ class WebReviewKitApp {
 
   private readonly handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && this.cancelMode()) {
+      const activeElement = document.activeElement;
+      if (
+        activeElement instanceof HTMLButtonElement &&
+        activeElement.matches(
+          '.df-review-mode-button, .df-review-section-outline-link.is-dom-select'
+        )
+      ) {
+        activeElement.blur();
+      }
       event.preventDefault();
       event.stopPropagation();
       return;

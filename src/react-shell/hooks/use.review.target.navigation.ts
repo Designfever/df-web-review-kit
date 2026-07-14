@@ -69,6 +69,9 @@ export const useReviewTargetNavigation = ({
       source === nextSource &&
       currentSize.width === nextSize.width &&
       currentSize.height === nextSize.height;
+    const shouldNavigateFrame =
+      state.target !== normalizedTarget ||
+      state.frameTarget !== normalizedTarget;
 
     if (parsedInput.itemId) {
       const item = await nextAdapter.adapter.get(parsedInput.itemId);
@@ -87,8 +90,11 @@ export const useReviewTargetNavigation = ({
     state.setDraftTarget(normalizedTarget);
     state.setSize(nextSize);
     state.setTarget(normalizedTarget);
+    if (shouldNavigateFrame) {
+      state.navigateFrameTarget(normalizedTarget);
+    }
     updateShellUrl(normalizedTarget, nextSize, nextSource);
-    if (isCurrentTarget) onReloadTargetFrame();
+    if (isCurrentTarget && !shouldNavigateFrame) onReloadTargetFrame();
   }, [
     activeAdapterEntry,
     onClearSelectedItem,
@@ -110,10 +116,16 @@ export const useReviewTargetNavigation = ({
       );
       onClearSelectedItem();
       const state = storeApi.getState();
+      const shouldNavigateFrame =
+        state.target !== normalizedTarget ||
+        state.frameTarget !== normalizedTarget;
       state.setIsAllQaVisible(false);
       state.setActiveRoute(normalizedRoute);
       state.setDraftTarget(normalizedTarget);
       state.setTarget(normalizedTarget);
+      if (shouldNavigateFrame) {
+        state.navigateFrameTarget(normalizedTarget);
+      }
       updateShellUrl(normalizedTarget, state.size, source);
       state.setIsSitemapOpen(false);
     },

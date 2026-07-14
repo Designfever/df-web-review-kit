@@ -7,17 +7,16 @@ export const SectionOutlineContainer = () => {
   const {
     clearSourceInspector,
     clearSourceOutlineHover,
+    clearSourceOutlineSelection,
     initReviewKit,
+    selectSourceOutlineForElement,
     showSourceOutlineForElement,
   } = useReviewShellActions();
   const {
     activeDomAdjustmentEntryId,
     canWriteDom,
     collapsedSectionOutlineIds,
-    copiedSectionOutlineId,
-    copySectionOutlineName,
     domAdjustmentByEntryId,
-    finishSectionDomAdjustment,
     filteredSectionOutline,
     filteredSectionOutlineCount,
     isPanelVisible,
@@ -31,6 +30,7 @@ export const SectionOutlineContainer = () => {
     sectionOutlineTotalCount,
     selectedSectionOutlineId,
     selectSectionOutlineEntry,
+    clearSectionOutlineSelection,
     clearSectionDomAdjustment,
     startSectionDomAdjustment,
     startSectionDomReview,
@@ -39,7 +39,9 @@ export const SectionOutlineContainer = () => {
     updateSectionOutlineMetaVisibility,
   } = useReviewSectionOutline({
     onClearSourceInspector: clearSourceInspector,
+    onClearSourceSelection: clearSourceOutlineSelection,
     onInitReviewKit: initReviewKit,
+    onSelectSourceElement: selectSourceOutlineForElement,
   });
 
   return (
@@ -53,7 +55,6 @@ export const SectionOutlineContainer = () => {
       entries={filteredSectionOutline}
       collapsedIds={collapsedSectionOutlineIds}
       selectedEntryId={selectedSectionOutlineId}
-      copiedEntryId={copiedSectionOutlineId}
       activeDomAdjustmentEntryId={activeDomAdjustmentEntryId}
       domAdjustmentByEntryId={domAdjustmentByEntryId}
       canWriteDom={canWriteDom}
@@ -64,8 +65,7 @@ export const SectionOutlineContainer = () => {
       onFilterChange={updateSectionOutlineFilter}
       onToggleEntry={toggleSectionOutlineEntry}
       onSelectEntry={selectSectionOutlineEntry}
-      onCopyEntryName={(entry) => void copySectionOutlineName(entry)}
-      onFinishDomAdjustment={finishSectionDomAdjustment}
+      onClearSelection={clearSectionOutlineSelection}
       onClearDomAdjustment={clearSectionDomAdjustment}
       onStartDomAdjustment={startSectionDomAdjustment}
       onOpenData={openSectionData}

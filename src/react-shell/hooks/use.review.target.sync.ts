@@ -24,6 +24,7 @@ interface UseReviewTargetSyncOptions {
   onActiveRouteChange: (target: string) => void;
   onClearSelectedItem: () => void;
   onDraftTargetChange: (target: string) => void;
+  onFrameTargetChange: (target: string) => void;
   onSyncTargetViewport: () => void;
   onTargetChange: (target: string) => void;
 }
@@ -37,12 +38,13 @@ export const useReviewTargetSync = ({
   onActiveRouteChange,
   onClearSelectedItem,
   onDraftTargetChange,
+  onFrameTargetChange,
   onSyncTargetViewport,
   onTargetChange,
 }: UseReviewTargetSyncOptions) => {
   const storeApi = useReviewShellStoreApi();
   const syncShellTarget = useCallback(
-    (nextTarget: string) => {
+    (nextTarget: string, navigation: 'hard' | 'soft') => {
       const normalizedTarget = normalizeTarget(nextTarget, reviewPathPrefix);
       const nextRouteKey = getTargetRouteKey(
         normalizedTarget,
@@ -54,6 +56,9 @@ export const useReviewTargetSync = ({
         onTargetChange(normalizedTarget);
         onDraftTargetChange(normalizedTarget);
         onActiveRouteChange(nextRouteKey);
+        if (navigation === 'hard') {
+          onFrameTargetChange(normalizedTarget);
+        }
       }
 
       const { size: currentSize, selectedItemId } = storeApi.getState();
@@ -72,6 +77,7 @@ export const useReviewTargetSync = ({
       onActiveRouteChange,
       onClearSelectedItem,
       onDraftTargetChange,
+      onFrameTargetChange,
       onTargetChange,
       reviewPathPrefix,
       source,

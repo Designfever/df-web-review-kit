@@ -14,6 +14,7 @@ interface UseReviewShellActionsValueOptions {
   changeReviewSource: (nextSource: ReviewSource) => void;
   clearSourceInspector: () => void;
   clearSourceOutlineHover: () => void;
+  clearSourceOutlineSelection: () => void;
   clearSelectedReviewItem: () => void;
   getPageTarget: (href: string) => string;
   initReviewKit: () => void;
@@ -23,6 +24,7 @@ interface UseReviewShellActionsValueOptions {
   restoreReviewItem: (item: ReviewItem) => void;
   selectAllQa: () => void;
   selectPage: (href: string) => void;
+  selectSourceOutlineForElement: (element: Element) => void;
   setIsInitialPromptOpen: (isOpen: boolean) => void;
   setIsInitialPromptScriptOpen: (isOpen: boolean) => void;
   setReviewMode: (mode: ReviewMode) => void;
@@ -38,6 +40,7 @@ export const useReviewShellActionsValue = ({
   changeReviewSource,
   clearSourceInspector,
   clearSourceOutlineHover,
+  clearSourceOutlineSelection,
   clearSelectedReviewItem,
   getPageTarget,
   initReviewKit,
@@ -47,6 +50,7 @@ export const useReviewShellActionsValue = ({
   restoreReviewItem,
   selectAllQa,
   selectPage,
+  selectSourceOutlineForElement,
   setIsInitialPromptOpen,
   setIsInitialPromptScriptOpen,
   setReviewMode,
@@ -64,6 +68,7 @@ export const useReviewShellActionsValue = ({
       changeReviewSource,
       clearSourceInspector,
       clearSourceOutlineHover,
+      clearSourceOutlineSelection,
       clearSelectedReviewItem,
       getPageTarget,
       initReviewKit,
@@ -75,6 +80,7 @@ export const useReviewShellActionsValue = ({
       restoreReviewItem,
       selectAllQa,
       selectPage,
+      selectSourceOutlineForElement,
       setReviewMode,
       showSourceOutlineForElement,
       toggleFigmaImagesPanel,
@@ -87,6 +93,7 @@ export const useReviewShellActionsValue = ({
       changeReviewSource,
       clearSourceInspector,
       clearSourceOutlineHover,
+      clearSourceOutlineSelection,
       clearSelectedReviewItem,
       getPageTarget,
       initReviewKit,
@@ -96,6 +103,7 @@ export const useReviewShellActionsValue = ({
       restoreReviewItem,
       selectAllQa,
       selectPage,
+      selectSourceOutlineForElement,
       setIsInitialPromptOpen,
       setIsInitialPromptScriptOpen,
       setReviewMode,

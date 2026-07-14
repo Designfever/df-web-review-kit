@@ -12,7 +12,10 @@ interface BindReviewFrameNavigationOptions {
   targetWindow: Window;
   onCancelReviewMode: () => boolean;
   onCloseRuler: () => boolean;
-  onSyncShellTarget: (target: string) => void;
+  onSyncShellTarget: (
+    target: string,
+    navigation: 'hard' | 'soft'
+  ) => void;
   onSyncTargetViewport: () => void;
 }
 
@@ -27,7 +30,7 @@ export const bindReviewFrameNavigation = ({
   onSyncShellTarget,
   onSyncTargetViewport,
 }: BindReviewFrameNavigationOptions) => {
-  const syncRouteFromFrame = () => {
+  const syncRouteFromFrame = (navigation: 'hard' | 'soft') => {
     const nextTarget = getFrameRouteTarget(targetWindow, reviewPathPrefix);
     const nextRouteKey = getTargetRouteKey(nextTarget, reviewPathPrefix);
     const currentRouteKey = getTargetRouteKey(
@@ -39,7 +42,7 @@ export const bindReviewFrameNavigation = ({
       return;
     }
 
-    onSyncShellTarget(nextTarget);
+    onSyncShellTarget(nextTarget, navigation);
   };
 
   const handleClick = (event: MouseEvent) => {
@@ -72,7 +75,7 @@ export const bindReviewFrameNavigation = ({
     if (!pageTargets.has(nextRouteKey)) return;
 
     event.preventDefault();
-    onSyncShellTarget(nextTarget);
+    onSyncShellTarget(nextTarget, 'hard');
   };
 
   const handleFrameKeyDown = (event: KeyboardEvent) => {
@@ -89,28 +92,30 @@ export const bindReviewFrameNavigation = ({
 
   history.pushState = (...args: Parameters<History['pushState']>) => {
     originalPushState(...args);
-    syncRouteFromFrame();
+    syncRouteFromFrame('soft');
   };
   history.replaceState = (...args: Parameters<History['replaceState']>) => {
     originalReplaceState(...args);
-    syncRouteFromFrame();
+    syncRouteFromFrame('soft');
   };
 
-  syncRouteFromFrame();
-  targetWindow.addEventListener('popstate', syncRouteFromFrame);
-  targetWindow.addEventListener('hashchange', syncRouteFromFrame);
+  const syncHardRouteFromFrame = () => syncRouteFromFrame('hard');
+
+  syncRouteFromFrame('soft');
+  targetWindow.addEventListener('popstate', syncHardRouteFromFrame);
+  targetWindow.addEventListener('hashchange', syncHardRouteFromFrame);
   targetWindow.addEventListener('keydown', handleFrameKeyDown, true);
-  targetDocument.addEventListener('click', handleClick, true);
+  targetDocument.addEventListener('click', handleClick);
   targetWindow.addEventListener('scroll', onSyncTargetViewport, true);
   targetWindow.addEventListener('resize', onSyncTargetViewport);
 
   return () => {
     history.pushState = originalPushState;
     history.replaceState = originalReplaceState;
-    targetWindow.removeEventListener('popstate', syncRouteFromFrame);
-    targetWindow.removeEventListener('hashchange', syncRouteFromFrame);
+    targetWindow.removeEventListener('popstate', syncHardRouteFromFrame);
+    targetWindow.removeEventListener('hashchange', syncHardRouteFromFrame);
     targetWindow.removeEventListener('keydown', handleFrameKeyDown, true);
-    targetDocument.removeEventListener('click', handleClick, true);
+    targetDocument.removeEventListener('click', handleClick);
     targetWindow.removeEventListener('scroll', onSyncTargetViewport, true);
     targetWindow.removeEventListener('resize', onSyncTargetViewport);
   };

@@ -11,7 +11,28 @@ import type {
 import { setTargetFigmaOverlayLocked } from '../target/target';
 import type { ReviewShellViewportPreset } from '../types';
 
+const REVIEW_SELECTION_ACTION_SELECTOR = [
+  'a',
+  'button',
+  'input',
+  'select',
+  'summary',
+  'textarea',
+  '[contenteditable="true"]',
+  '[data-dfwr-move-entry-id]',
+  '[role="button"]',
+].join(', ');
+
+const isReviewSelectionAction = (target: EventTarget | null) => {
+  const element = target as Element | null;
+  return (
+    typeof element?.closest === 'function' &&
+    Boolean(element.closest(REVIEW_SELECTION_ACTION_SELECTOR))
+  );
+};
+
 interface UseReviewShellEffectsOptions {
+  clearSelectedReviewItem: () => void;
   frameScrollRef: MutableRefObject<HTMLDivElement | null>;
   iframeRef: MutableRefObject<HTMLIFrameElement | null>;
   isListVisible: boolean;
@@ -19,12 +40,15 @@ interface UseReviewShellEffectsOptions {
   mode: ReviewMode;
   pendingInitialItemIdRef: MutableRefObject<string | null>;
   restoreReviewItem: (item: ReviewItem) => void;
+  selectedItemId: string | null;
   size: ReviewShellViewportPreset;
   syncTargetViewport: () => void;
+  targetFrameLoadVersion: number;
   targetSrc: string;
 }
 
 export const useReviewShellEffects = ({
+  clearSelectedReviewItem,
   frameScrollRef,
   iframeRef,
   isListVisible,
@@ -32,8 +56,10 @@ export const useReviewShellEffects = ({
   mode,
   pendingInitialItemIdRef,
   restoreReviewItem,
+  selectedItemId,
   size,
   syncTargetViewport,
+  targetFrameLoadVersion,
   targetSrc,
 }: UseReviewShellEffectsOptions) => {
   useEffect(() => {
@@ -85,4 +111,50 @@ export const useReviewShellEffects = ({
       setTargetFigmaOverlayLocked(targetDocument, false);
     };
   }, [iframeRef, mode, targetSrc]);
+
+  useEffect(() => {
+    if (!selectedItemId) return undefined;
+
+    const frameScroll = frameScrollRef.current;
+    let frameDocument: Document | null = null;
+    try {
+      frameDocument = iframeRef.current?.contentDocument ?? null;
+    } catch {
+      frameDocument = null;
+    }
+
+    const clearOnWorkspacePointerDown = (event: PointerEvent) => {
+      if (isReviewSelectionAction(event.target)) return;
+      clearSelectedReviewItem();
+    };
+
+    frameScroll?.addEventListener(
+      'pointerdown',
+      clearOnWorkspacePointerDown,
+      true
+    );
+    frameDocument?.addEventListener(
+      'pointerdown',
+      clearOnWorkspacePointerDown,
+      true
+    );
+    return () => {
+      frameScroll?.removeEventListener(
+        'pointerdown',
+        clearOnWorkspacePointerDown,
+        true
+      );
+      frameDocument?.removeEventListener(
+        'pointerdown',
+        clearOnWorkspacePointerDown,
+        true
+      );
+    };
+  }, [
+    clearSelectedReviewItem,
+    frameScrollRef,
+    iframeRef,
+    selectedItemId,
+    targetFrameLoadVersion,
+  ]);
 };

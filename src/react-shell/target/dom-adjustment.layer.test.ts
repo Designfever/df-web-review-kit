@@ -44,6 +44,11 @@ describe('DomAdjustmentLayerManager', () => {
     expect(layer?.style.top).toBe('20px');
     expect(layer?.style.transform).toBe('translate(2px, -1px)');
 
+    manager.setActive('entry');
+    expect(layer?.dataset.dfwrMoveActive).toBe('true');
+    manager.setActive(null);
+    expect(layer?.dataset.dfwrMoveActive).toBeUndefined();
+
     expect(manager.adjust('entry', { x: 6, y: 2 }, 0.5)).toEqual({
       x: 10,
       y: 0,

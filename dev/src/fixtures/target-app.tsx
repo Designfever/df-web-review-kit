@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { ComponentsFixture } from './components/components.fixture';
 import { HomeFixture } from './home/home.fixture';
 import { LongFormFixture } from './long-form/long-form.fixture';
@@ -10,11 +11,21 @@ interface TargetAppProps {
 }
 
 export function TargetApp({ reviewPathPrefix }: TargetAppProps) {
-  const activePage = getActivePage(window.location.pathname);
+  const [activePage, setActivePage] = useState(() =>
+    getActivePage(window.location.pathname)
+  );
+  const navigatePage = useCallback((href: string) => {
+    window.history.pushState({}, '', href);
+    setActivePage(getActivePage(href));
+  }, []);
 
   return (
     <main className="dev-page" data-page={activePage}>
-      <DevNav activePage={activePage} reviewPathPrefix={reviewPathPrefix} />
+      <DevNav
+        activePage={activePage}
+        reviewPathPrefix={reviewPathPrefix}
+        onNavigate={navigatePage}
+      />
       <div className="dev-page-body" data-qa-id="fixture-page-body">
         {activePage === '/' ? <HomeFixture /> : null}
         {activePage === '/components/' ? <ComponentsFixture /> : null}

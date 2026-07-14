@@ -21,7 +21,7 @@ import {
   readReviewFigmaToken,
   renderReviewFigmaImage,
   requireReviewFigmaToken
-} from "./chunk-UNDQZ4Y2.js";
+} from "./chunk-XP2IACXL.js";
 
 // src/vite/review-locator.mode.ts
 var isReviewLocatorEnabled = (command) => command === "serve";

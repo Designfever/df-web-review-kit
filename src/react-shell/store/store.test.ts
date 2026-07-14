@@ -12,6 +12,8 @@ const createTestInit = (): ReviewShellStoreInit => ({
   target: {
     activeRoute: '/',
     draftTarget: '/',
+    frameNavigationVersion: 0,
+    frameTarget: '/',
     size: { label: 'MO', width: 390, height: 844 },
     source: 'local',
     target: '/',
@@ -79,6 +81,9 @@ describe('createReviewShellStore', () => {
     const store = createReviewShellStore(createTestInit());
 
     store.getState().setTarget('/pricing');
+    expect(store.getState().frameTarget).toBe('/');
+
+    store.getState().navigateFrameTarget('/pricing');
     store.getState().setDraftTarget('/pricing');
     store.getState().setActiveRoute('/pricing');
     store.getState().setSource('remote');
@@ -87,11 +92,16 @@ describe('createReviewShellStore', () => {
 
     const state = store.getState();
     expect(state.target).toBe('/pricing');
+    expect(state.frameTarget).toBe('/pricing');
+    expect(state.frameNavigationVersion).toBe(1);
     expect(state.draftTarget).toBe('/pricing');
     expect(state.activeRoute).toBe('/pricing');
     expect(state.source).toBe('remote');
     expect(state.size.width).toBe(1440);
     expect(state.targetOverlayState.grid).toBe(true);
+
+    store.getState().navigateFrameTarget('/pricing');
+    expect(store.getState().frameNavigationVersion).toBe(2);
   });
 
   it('updates ui state through slice actions', () => {

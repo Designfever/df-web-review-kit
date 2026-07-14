@@ -14,6 +14,7 @@ export interface ReviewShellActions {
   changeReviewSource: (nextSource: ReviewSource) => void;
   clearSourceInspector: () => void;
   clearSourceOutlineHover: () => void;
+  clearSourceOutlineSelection: () => void;
   clearSelectedReviewItem: () => void;
   getPageTarget: (href: string) => string;
   initReviewKit: () => void;
@@ -25,6 +26,7 @@ export interface ReviewShellActions {
   restoreReviewItem: (item: ReviewItem) => void;
   selectAllQa: () => void;
   selectPage: (href: string) => void;
+  selectSourceOutlineForElement: (element: Element) => void;
   setReviewMode: (mode: ReviewMode) => void;
   showSourceOutlineForElement: (element: Element) => void;
   toggleFigmaImagesPanel: () => void;

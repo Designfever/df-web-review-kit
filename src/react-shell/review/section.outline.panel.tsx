@@ -1,9 +1,7 @@
 import React from 'react';
 import {
-  Check as CheckIcon,
   ChevronDown as ChevronDownIcon,
   Code2 as Code2Icon,
-  Copy as CopyIcon,
   CornerUpRight as UsageIcon,
   Database as DatabaseIcon,
   Image as ImageIcon,
@@ -23,6 +21,9 @@ type DomAdjustmentPosition = {
   y: number;
 };
 
+const ENTRY_ACTION_SELECTOR =
+  'a, button, input, select, textarea, [role="button"]';
+
 type SectionOutlinePanelProps = {
   isPanelVisible: boolean;
   isFiltering: boolean;
@@ -33,7 +34,6 @@ type SectionOutlinePanelProps = {
   entries: SectionOutlineEntry[];
   collapsedIds: Set<string>;
   selectedEntryId: string | null;
-  copiedEntryId: string | null;
   activeDomAdjustmentEntryId: string | null;
   domAdjustmentByEntryId: Record<string, DomAdjustmentPosition>;
   canWriteDom: boolean;
@@ -44,8 +44,7 @@ type SectionOutlinePanelProps = {
   onFilterChange: (value: string) => void;
   onToggleEntry: (entryId: string) => void;
   onSelectEntry: (entry: SectionOutlineEntry) => void;
-  onCopyEntryName: (entry: SectionOutlineEntry) => void;
-  onFinishDomAdjustment: (entry: SectionOutlineEntry) => void;
+  onClearSelection: () => void;
   onClearDomAdjustment: (entry: SectionOutlineEntry) => void;
   onStartDomAdjustment: (entry: SectionOutlineEntry) => void;
   onOpenData: (entry: SectionOutlineEntry) => void;
@@ -66,7 +65,6 @@ export const SectionOutlinePanel = ({
   entries,
   collapsedIds,
   selectedEntryId,
-  copiedEntryId,
   activeDomAdjustmentEntryId,
   domAdjustmentByEntryId,
   canWriteDom,
@@ -77,8 +75,7 @@ export const SectionOutlinePanel = ({
   onFilterChange,
   onToggleEntry,
   onSelectEntry,
-  onCopyEntryName,
-  onFinishDomAdjustment,
+  onClearSelection,
   onClearDomAdjustment,
   onStartDomAdjustment,
   onOpenData,
@@ -245,6 +242,20 @@ export const SectionOutlinePanel = ({
           className={`df-review-section-outline-entry-body${
             isSelected ? ' is-selected' : ''
           }`}
+          onClick={(event) => {
+            if (
+              event.target instanceof Element &&
+              event.target.closest(ENTRY_ACTION_SELECTOR)
+            ) {
+              return;
+            }
+            event.currentTarget
+              .querySelector<HTMLButtonElement>(
+                '.df-review-section-outline-name'
+              )
+              ?.focus();
+            onSelectEntry(entry);
+          }}
           onMouseEnter={() => onHoverElement(entry.element)}
           onMouseLeave={onClearHover}
           onMouseOver={() => onHoverElement(entry.element)}
@@ -300,20 +311,6 @@ export const SectionOutlinePanel = ({
                 >
                   <span>{entry.label}</span>
                 </button>
-                <button
-                  aria-label={`Copy ${entry.label} name`}
-                  className={`df-review-section-outline-link is-copy-name${
-                    copiedEntryId === entry.id ? ' is-copied' : ''
-                  }`}
-                  data-review-tooltip={
-                    copiedEntryId === entry.id ? 'Copied' : 'Copy name'
-                  }
-                  title={copiedEntryId === entry.id ? 'Copied' : 'Copy name'}
-                  type="button"
-                  onClick={() => onCopyEntryName(entry)}
-                >
-                  <CopyIcon aria-hidden="true" />
-                </button>
               </div>
               <div className="df-review-section-outline-actions">
                 <span className="df-review-section-outline-action-group is-left">
@@ -337,14 +334,9 @@ export const SectionOutlinePanel = ({
                       className="df-review-section-outline-adjust-status"
                       aria-label={`DOM adjustment position x ${domAdjustmentPosition.x}, y ${domAdjustmentPosition.y}`}
                     >
-                      <span className="df-review-section-outline-adjust-metric">
-                        <b>x</b>
-                        <code>{domAdjustmentPosition.x}</code>
-                      </span>
-                      <span className="df-review-section-outline-adjust-metric">
-                        <b>y</b>
-                        <code>{domAdjustmentPosition.y}</code>
-                      </span>
+                      <code>{domAdjustmentPosition.x}</code>
+                      <span aria-hidden="true">:</span>
+                      <code>{domAdjustmentPosition.y}</code>
                     </span>
                   ) : null}
                   {shouldShowDomAdjustment ? (
@@ -357,18 +349,6 @@ export const SectionOutlinePanel = ({
                       onClick={() => onClearDomAdjustment(entry)}
                     >
                       <ResetIcon aria-hidden="true" />
-                    </button>
-                  ) : null}
-                  {isDomAdjusting ? (
-                    <button
-                      aria-label={`Finish ${entry.label} DOM adjustment`}
-                      className="df-review-section-outline-link is-dom-finish"
-                      data-review-tooltip="Finish move"
-                      title="Finish move"
-                      type="button"
-                      onClick={() => onFinishDomAdjustment(entry)}
-                    >
-                      <CheckIcon aria-hidden="true" />
                     </button>
                   ) : null}
                 </span>
@@ -522,7 +502,17 @@ export const SectionOutlinePanel = ({
           </div>
         </div>
         {entries.length > 0 ? (
-          <div className="df-review-section-outline-list">
+          <div
+            className="df-review-section-outline-list"
+            onPointerDown={(event) => {
+              if (
+                event.target instanceof Element &&
+                !event.target.closest('.df-review-section-outline-entry-body')
+              ) {
+                onClearSelection();
+              }
+            }}
+          >
             {entries.map(renderEntry)}
           </div>
         ) : (

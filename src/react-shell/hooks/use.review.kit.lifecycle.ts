@@ -48,7 +48,10 @@ interface UseReviewKitLifecycleOptions {
   onRefreshTargetOverlayState: () => void;
   onRestoreInitialItem: () => Promise<void>;
   onRestoreReviewItem: (item: ReviewItem) => void;
-  onSyncShellTarget: (target: string) => void;
+  onSyncShellTarget: (
+    target: string,
+    navigation: 'hard' | 'soft'
+  ) => void;
   onSyncTargetViewport: () => void;
 }
 

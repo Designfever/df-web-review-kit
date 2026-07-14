@@ -47,7 +47,7 @@ export const reviewShellQaPanelStyle = `
     grid-column: 2;
     grid-row: 1 / span 3;
     position: relative;
-    z-index: 600;
+    z-index: 900;
     display: grid;
     min-width: 0;
     min-height: 0;

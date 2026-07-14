@@ -26,9 +26,17 @@ export const ReviewTargetFrame = () => {
   const { isRulerAvailable, isRulerVisible } = useReviewRulerState();
   const { canWriteArea, canWriteDom } = useReviewShellAdapterState();
   const mode = useReviewShellStore((state) => state.mode);
+  const frameNavigationVersion = useReviewShellStore(
+    (state) => state.frameNavigationVersion
+  );
+  const frameTarget = useReviewShellStore((state) => state.frameTarget);
   const size = useReviewShellStore((state) => state.size);
   const target = useReviewShellStore((state) => state.target);
   const targetSrc = useMemo(() => buildTargetSrc(target), [target]);
+  const frameTargetSrc = useMemo(
+    () => buildTargetSrc(frameTarget),
+    [frameTarget]
+  );
   const showRuler = isRulerVisible && isRulerAvailable;
   const syncTargetFigmaImageOverlays = useTargetFigmaImageOverlays({
     figmaImageOverlays,
@@ -66,11 +74,11 @@ export const ReviewTargetFrame = () => {
                   }}
                 >
                   <iframe
-                    key={targetSrc}
+                    key={`${frameTargetSrc}:${frameNavigationVersion}`}
                     ref={iframeRef}
                     width={size.width}
                     height={size.height}
-                    src={targetSrc}
+                    src={frameTargetSrc}
                     title="Review target"
                     onLoad={handleLoadTarget}
                   />

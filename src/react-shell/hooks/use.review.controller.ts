@@ -64,6 +64,9 @@ export const useReviewController = ({
   );
   const setActiveRoute = useReviewShellStore((state) => state.setActiveRoute);
   const setDraftTarget = useReviewShellStore((state) => state.setDraftTarget);
+  const navigateFrameTarget = useReviewShellStore(
+    (state) => state.navigateFrameTarget
+  );
   const setIsListVisible = useReviewShellStore(
     (state) => state.setIsListVisible
   );
@@ -76,6 +79,13 @@ export const useReviewController = ({
   const setTarget = useReviewShellStore((state) => state.setTarget);
   const setTargetOverlayState = useReviewShellStore(
     (state) => state.setTargetOverlayState
+  );
+  const setHardTarget = useCallback(
+    (nextTarget: string) => {
+      setTarget(nextTarget);
+      navigateFrameTarget(nextTarget);
+    },
+    [navigateFrameTarget, setTarget]
   );
   const syncTargetViewport = useCallback(() => {
     window.dispatchEvent(new Event('resize'));
@@ -116,7 +126,7 @@ export const useReviewController = ({
     onSelectedItemIdChange: setSelectedItemId,
     onSizeChange: setSize,
     onSyncTargetViewport: syncTargetViewport,
-    onTargetChange: setTarget,
+    onTargetChange: setHardTarget,
   });
   const restoreCreatedReviewItem = useCallback(
     (item: ReviewItem) => {
@@ -139,6 +149,7 @@ export const useReviewController = ({
     onActiveRouteChange: setActiveRoute,
     onClearSelectedItem: clearSelectedItem,
     onDraftTargetChange: setDraftTarget,
+    onFrameTargetChange: navigateFrameTarget,
     onSyncTargetViewport: syncTargetViewport,
     onTargetChange: setTarget,
   });

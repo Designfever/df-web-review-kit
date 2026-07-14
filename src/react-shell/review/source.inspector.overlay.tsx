@@ -11,23 +11,43 @@ export type SourceInspectorState = {
 };
 
 type SourceInspectorOverlayProps = {
+  componentSelectionState: SourceInspectorState | null;
   state: SourceInspectorState | null;
 };
 
 export const SourceInspectorOverlay = ({
+  componentSelectionState,
   state,
 }: SourceInspectorOverlayProps) => {
-  if (!state) return null;
+  const hoverState =
+    state?.targetElement === componentSelectionState?.targetElement
+      ? null
+      : state;
 
   return (
-    <div
-      className="df-review-source-outline"
-      style={{
-        height: `${state.rect.height}px`,
-        left: `${state.rect.left}px`,
-        top: `${state.rect.top}px`,
-        width: `${state.rect.width}px`,
-      }}
-    />
+    <>
+      {componentSelectionState ? (
+        <div
+          className="df-review-source-outline is-component-selection"
+          style={{
+            height: `${componentSelectionState.rect.height}px`,
+            left: `${componentSelectionState.rect.left}px`,
+            top: `${componentSelectionState.rect.top}px`,
+            width: `${componentSelectionState.rect.width}px`,
+          }}
+        />
+      ) : null}
+      {hoverState ? (
+        <div
+          className="df-review-source-outline is-hover"
+          style={{
+            height: `${hoverState.rect.height}px`,
+            left: `${hoverState.rect.left}px`,
+            top: `${hoverState.rect.top}px`,
+            width: `${hoverState.rect.width}px`,
+          }}
+        />
+      ) : null}
+    </>
   );
 };

@@ -227,12 +227,18 @@ export const reviewShellSectionOutlineStyle = `
     display: grid;
     border: 1px solid transparent;
     border-radius: var(--df-review-radius-sm);
+    cursor: pointer;
     transition: border-color 140ms ease, background 140ms ease;
   }
 
   .df-review-section-outline-entry-body:hover {
     border-color: rgba(124, 199, 255, 0.2);
     background: var(--df-review-accent-soft);
+  }
+
+  .df-review-section-outline-entry-body:has(.df-review-section-outline-name:focus) {
+    outline: 2px solid var(--df-review-dom);
+    outline-offset: 1px;
   }
 
   .df-review-section-outline-entry-body.is-selected {
@@ -330,8 +336,12 @@ export const reviewShellSectionOutlineStyle = `
     color: var(--df-review-accent);
   }
 
+  .df-review-section-outline-name:focus {
+    outline: 0;
+  }
+
   .df-review-section-outline-row.is-selected .df-review-section-outline-name span {
-    color: var(--df-review-warning);
+    color: var(--df-review-dom);
     font-weight: var(--df-review-font-weight-emphasis);
   }
 
@@ -504,22 +514,19 @@ export const reviewShellSectionOutlineStyle = `
       color 140ms ease, opacity 140ms ease;
   }
 
-  .df-review-section-outline-link.is-dom-select,
-  .df-review-section-outline-link.is-copy-name {
+  .df-review-section-outline-link.is-dom-select {
     width: 24px;
     min-width: 24px;
     padding: 0;
   }
 
-  .df-review-section-outline-link.is-dom-select svg,
-  .df-review-section-outline-link.is-copy-name svg {
+  .df-review-section-outline-link.is-dom-select svg {
     width: 16px;
     height: 16px;
   }
 
   .df-review-section-outline-link.is-dom-adjust,
-  .df-review-section-outline-link.is-dom-reset,
-  .df-review-section-outline-link.is-dom-finish {
+  .df-review-section-outline-link.is-dom-reset {
     width: 20px;
     min-width: 20px;
     height: 20px;
@@ -527,8 +534,7 @@ export const reviewShellSectionOutlineStyle = `
   }
 
   .df-review-section-outline-link.is-dom-adjust svg,
-  .df-review-section-outline-link.is-dom-reset svg,
-  .df-review-section-outline-link.is-dom-finish svg {
+  .df-review-section-outline-link.is-dom-reset svg {
     width: 14px;
     height: 14px;
   }
@@ -536,39 +542,37 @@ export const reviewShellSectionOutlineStyle = `
   .df-review-section-outline-adjust-status {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 3px;
     min-width: 0;
+    color: var(--df-review-muted);
     font-family: var(--df-review-font-mono);
     font-size: var(--df-review-font-size-2xs);
+    font-variant-numeric: tabular-nums;
     line-height: 1;
     white-space: nowrap;
   }
 
-  .df-review-section-outline-adjust-metric {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    color: var(--df-review-muted);
-  }
-
-  .df-review-section-outline-adjust-metric b {
+  .df-review-section-outline-adjust-status > span {
     color: var(--df-review-subtle);
-    font-weight: var(--df-review-font-weight-normal);
   }
 
-  .df-review-section-outline-adjust-metric code {
+  .df-review-section-outline-adjust-status code {
+    display: inline-block;
+    width: 5ch;
     color: inherit;
     font: inherit;
-  }
-
-  .df-review-section-outline-link.is-dom-finish {
-    color: var(--df-review-accent);
+    text-align: right;
   }
 
   .df-review-section-outline-link:hover {
-    border-color: rgba(124, 199, 255, 0.34);
+    border-color: transparent;
     color: var(--df-review-accent);
-    background: var(--df-review-accent-soft);
+    background: transparent;
+  }
+
+  .df-review-section-outline-link:focus-visible {
+    outline: 2px solid var(--df-review-focus-ring);
+    outline-offset: 1px;
   }
 
   .df-review-section-outline-link.is-active,
@@ -577,8 +581,20 @@ export const reviewShellSectionOutlineStyle = `
   }
 
   .df-review-section-outline-link.is-active {
-    border-color: rgba(124, 199, 255, 0.42);
-    background: var(--df-review-accent-soft);
+    border-color: var(--df-review-accent);
+    color: var(--df-review-accent-contrast);
+    background: var(--df-review-accent);
+  }
+
+  .df-review-section-outline-link.is-dom-adjust:hover,
+  .df-review-section-outline-link.is-dom-reset:hover {
+    color: var(--df-review-dom);
+  }
+
+  .df-review-section-outline-link.is-dom-adjust.is-active {
+    border-color: var(--df-review-dom);
+    color: var(--df-review-dom-contrast);
+    background: var(--df-review-dom);
   }
 
   .df-review-section-outline-link.is-copied {

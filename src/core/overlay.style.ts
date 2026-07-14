@@ -30,11 +30,11 @@ export function createStyleElement() {
       --df-review-color-text: #f7f7f2;
       --df-review-color-text-muted: rgba(247, 247, 242, 0.62);
       --df-review-color-text-subtle: rgba(247, 247, 242, 0.46);
-      --df-review-color-accent: #d7ff5f;
+      --df-review-color-accent: #7cc7ff;
       --df-review-color-accent-contrast: #171b1e;
-      --df-review-color-accent-soft: rgba(215, 255, 95, 0.16);
-      --df-review-color-accent-ring: rgba(215, 255, 95, 0.6);
-      --df-review-color-area: #63d7c7;
+      --df-review-color-accent-soft: rgba(124, 199, 255, 0.16);
+      --df-review-color-accent-ring: rgba(124, 199, 255, 0.6);
+      --df-review-color-area: #7cc7ff;
       --df-review-color-error: #ffb7a7;
       --df-review-shadow-panel: 0 18px 48px rgba(0, 0, 0, 0.34);
       --df-review-shadow-popover: 0 16px 38px rgba(0, 0, 0, 0.32);
@@ -220,9 +220,9 @@ export function createStyleElement() {
     .dfwr-selection-highlight {
       position: fixed;
       z-index: 1;
-      border: 2px solid #d7ff5f;
+      border: 2px solid #7cc7ff;
       border-radius: var(--df-review-radius-xs);
-      background: rgba(215, 255, 95, 0.08);
+      background: rgba(124, 199, 255, 0.08);
       box-shadow:
         0 0 0 1px rgba(31, 36, 40, 0.72),
         0 0 0 9999px rgba(0, 0, 0, 0.12),
@@ -231,8 +231,8 @@ export function createStyleElement() {
     }
 
     .dfwr-selection-highlight.is-draft {
-      border-color: #63d7c7;
-      background: rgba(99, 215, 199, 0.1);
+      border-color: #7cc7ff;
+      background: rgba(124, 199, 255, 0.1);
       box-shadow:
         0 0 0 1px rgba(31, 36, 40, 0.72),
         0 0 0 9999px rgba(0, 0, 0, 0.08),
@@ -243,9 +243,9 @@ export function createStyleElement() {
     .dfwr-dom-hover {
       position: fixed;
       z-index: 2;
-      border: 1px solid #d7ff5f;
+      border: 1px solid #7cc7ff;
       border-radius: var(--df-review-radius-xs);
-      background: rgba(215, 255, 95, 0.1);
+      background: rgba(124, 199, 255, 0.1);
       box-shadow:
         0 0 0 1px rgba(31, 36, 40, 0.72),
         0 0 0 9999px rgba(0, 0, 0, 0.08);
@@ -426,12 +426,12 @@ export function createStyleElement() {
     }
 
     .dfwr-area-preview-layer .dfwr-bound-marker {
-      border-color: #63d7c7;
+      border-color: #7cc7ff;
       background: var(--df-review-color-panel);
       box-shadow:
-        0 0 0 5px rgba(99, 215, 199, 0.2),
+        0 0 0 5px rgba(124, 199, 255, 0.2),
         0 12px 26px rgba(0, 0, 0, 0.3);
-      color: #63d7c7;
+      color: #7cc7ff;
     }
 
     .dfwr-bound-marker-icon {
@@ -514,7 +514,7 @@ export function createStyleElement() {
       border-radius: var(--df-review-radius-pill);
       background: var(--df-review-color-accent);
       box-shadow:
-        0 0 0 4px rgba(215, 255, 95, 0.22),
+        0 0 0 4px rgba(124, 199, 255, 0.22),
         0 8px 18px rgba(0, 0, 0, 0.28);
       cursor: grab;
       pointer-events: auto;
@@ -532,7 +532,7 @@ export function createStyleElement() {
       pointer-events: auto;
       color: var(--df-review-color-text);
       background: var(--df-review-color-panel);
-      border: 1px solid rgba(215, 255, 95, 0.56);
+      border: 1px solid rgba(124, 199, 255, 0.56);
       border-radius: var(--df-review-radius-md);
       box-shadow: var(--df-review-shadow-popover);
     }
@@ -541,7 +541,7 @@ export function createStyleElement() {
     .dfwr-area-draft.is-composer {
       max-height: min(360px, calc(100vh - 32px));
       overflow: auto;
-      border-color: rgba(99, 215, 199, 0.56);
+      border-color: rgba(124, 199, 255, 0.56);
     }
 
     .dfwr-shell.is-docked-composer .dfwr-dom-popover.is-docked-composer,
@@ -578,7 +578,7 @@ export function createStyleElement() {
 
     .dfwr-draft-drag-handle:hover,
     .dfwr-draft-drag-handle:focus-visible {
-      background: rgba(215, 255, 95, 0.62);
+      background: rgba(124, 199, 255, 0.62);
     }
 
     .dfwr-draft-drag-handle:active {
@@ -597,7 +597,7 @@ export function createStyleElement() {
       pointer-events: auto;
       color: var(--df-review-color-text);
       background: var(--df-review-color-panel);
-      border: 1px solid rgba(215, 255, 95, 0.56);
+      border: 1px solid rgba(124, 199, 255, 0.56);
       border-radius: var(--df-review-radius-md);
       box-shadow: var(--df-review-shadow-popover);
     }
@@ -816,7 +816,7 @@ export function createStyleElement() {
     }
 
     .dfwr-adjust-panel.is-active {
-      border-color: rgba(215, 255, 95, 0.5);
+      border-color: rgba(124, 199, 255, 0.5);
       background: var(--df-review-color-accent-soft);
     }
 
@@ -855,7 +855,7 @@ export function createStyleElement() {
     .dfwr-adjust-toggle:hover,
     .dfwr-adjust-toggle:focus-visible,
     .dfwr-adjust-toggle.is-active {
-      border-color: rgba(215, 255, 95, 0.68);
+      border-color: rgba(124, 199, 255, 0.68);
       background: var(--df-review-color-accent-soft);
       outline: none;
     }
@@ -918,7 +918,7 @@ export function createStyleElement() {
     }
 
     .dfwr-item:focus-visible {
-      outline: 2px solid rgba(215, 255, 95, 0.72);
+      outline: 2px solid rgba(124, 199, 255, 0.72);
       outline-offset: 4px;
     }
 
@@ -1028,8 +1028,8 @@ export function createStyleElement() {
       z-index: 2;
       width: 0;
       height: 0;
-      border: 1px solid #d7ff5f;
-      background: rgba(215, 255, 95, 0.16);
+      border: 1px solid #7cc7ff;
+      background: rgba(124, 199, 255, 0.16);
       box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.18);
     }
 

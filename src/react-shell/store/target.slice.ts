@@ -16,6 +16,8 @@ import type { ReviewShellState } from './create.review.shell.store';
 export interface TargetSliceState {
   activeRoute: string;
   draftTarget: string;
+  frameNavigationVersion: number;
+  frameTarget: string;
   size: ReviewShellViewportPreset;
   source: ReviewSource;
   target: string;
@@ -23,6 +25,7 @@ export interface TargetSliceState {
 }
 
 export interface TargetSlice extends TargetSliceState {
+  navigateFrameTarget: (frameTarget: string) => void;
   setActiveRoute: (activeRoute: string) => void;
   setDraftTarget: (draftTarget: string) => void;
   setSize: (size: ReviewShellViewportPreset) => void;
@@ -46,6 +49,8 @@ export const getInitialTargetSliceState = (
   return {
     activeRoute: getTargetRouteKey(target, config.reviewPathPrefix),
     draftTarget: target,
+    frameNavigationVersion: 0,
+    frameTarget: target,
     size: getInitialSize(config.viewportPresets),
     source,
     target,
@@ -60,6 +65,11 @@ export const createTargetSlice = (
   initialState: TargetSliceState
 ): StateCreator<ReviewShellState, [], [], TargetSlice> => (set) => ({
   ...initialState,
+  navigateFrameTarget: (frameTarget) =>
+    set((state) => ({
+      frameNavigationVersion: state.frameNavigationVersion + 1,
+      frameTarget,
+    })),
   setActiveRoute: (activeRoute) => set({ activeRoute }),
   setDraftTarget: (draftTarget) => set({ draftTarget }),
   setSize: (size) => set({ size }),

@@ -625,38 +625,69 @@ async function createClientRenderedFigmaAsset(figmaUrl, token, options, fetchOpt
   const requestFetch = fetchOption ?? globalThis.fetch;
   if (!requestFetch) throw new Error("Figma client rendering requires fetch.");
   const renderFormat = options.renderFormat ?? "png";
-  const response = await requestFetch(
-    createReviewFigmaImageApiUrl({
-      apiBaseUrl: options.apiBaseUrl,
-      fileKey: ref.fileKey,
-      nodeId: ref.nodeId,
-      format: renderFormat,
-      scale: options.renderScale,
-      useAbsoluteBounds: options.useAbsoluteBounds
-    }),
-    {
-      headers: {
-        "X-Figma-Token": token
+  const timeoutMs = options.timeoutMs ?? 1e4;
+  const imageUrl = await withStageTimeout(
+    async (signal) => {
+      const response = await requestFetch(
+        createReviewFigmaImageApiUrl({
+          apiBaseUrl: options.apiBaseUrl,
+          fileKey: ref.fileKey,
+          nodeId: ref.nodeId,
+          format: renderFormat,
+          scale: options.renderScale,
+          useAbsoluteBounds: options.useAbsoluteBounds
+        }),
+        {
+          headers: {
+            "X-Figma-Token": token
+          },
+          signal
+        }
+      );
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(
+          body?.err || `Figma image render failed with ${response.status}`
+        );
       }
-    }
+      const nextImageUrl = body?.images?.[ref.nodeId];
+      if (!nextImageUrl) {
+        throw new Error(
+          `Figma image render returned no URL for ${ref.nodeId}.`
+        );
+      }
+      return nextImageUrl;
+    },
+    timeoutMs,
+    "Figma API request timed out."
   );
-  const body = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(body?.err || `Figma image render failed with ${response.status}`);
-  }
-  const imageUrl = body?.images?.[ref.nodeId];
-  if (!imageUrl) throw new Error(`Figma image render returned no URL for ${ref.nodeId}.`);
-  const imageResponse = await requestFetch(imageUrl);
-  if (!imageResponse.ok) {
-    throw new Error(`Figma image download failed with ${imageResponse.status}`);
-  }
-  const originalBlob = await imageResponse.blob();
+  const originalBlob = await withStageTimeout(
+    async (signal) => {
+      const imageResponse = await requestFetch(imageUrl, { signal });
+      if (!imageResponse.ok) {
+        throw new Error(
+          `Figma image download failed with ${imageResponse.status}`
+        );
+      }
+      return imageResponse.blob();
+    },
+    timeoutMs,
+    "Figma image download timed out."
+  );
+  return withStageTimeout(
+    () => createProcessedFigmaAsset(originalBlob, renderFormat, options),
+    timeoutMs,
+    "Figma image processing timed out."
+  );
+}
+async function createProcessedFigmaAsset(originalBlob, renderFormat, options) {
   const originalMimeType = normalizeClientImageMimeType(originalBlob.type) ?? getReviewFigmaImageMimeType(renderFormat === "jpg" ? "jpg" : "png");
   const originalFormat = getReviewFigmaImageFormatFromMimeType(originalMimeType) ?? (renderFormat === "jpg" ? "jpg" : "png");
-  const dimensions = await readImageBlobDimensions(originalBlob);
+  const image = await loadImageBlob(originalBlob);
+  const dimensions = readImageDimensions(image);
   const shouldConvertToWebp = options.convertToWebp ?? true;
-  const convertedBlob = shouldConvertToWebp ? await convertImageBlobToWebp(
-    originalBlob,
+  const convertedBlob = shouldConvertToWebp ? await convertImageToWebp(
+    image,
     options.webpQuality ?? 0.9,
     dimensions
   ).catch(() => null) : null;
@@ -678,22 +709,17 @@ function createReviewFigmaClientRenderedAsset({
   token,
   ...options
 }) {
-  return withTimeout(
-    createClientRenderedFigmaAsset(figmaUrl, token, options, fetchOption),
-    options.timeoutMs ?? 1e4
-  );
+  return createClientRenderedFigmaAsset(figmaUrl, token, options, fetchOption);
 }
-async function readImageBlobDimensions(blob) {
-  const image = await loadImageBlob(blob);
+function readImageDimensions(image) {
   return {
     width: image.naturalWidth || image.width,
     height: image.naturalHeight || image.height
   };
 }
-async function convertImageBlobToWebp(blob, quality, dimensions) {
+async function convertImageToWebp(image, quality, dimensions) {
   if (typeof document === "undefined") return null;
   if (!dimensions.width || !dimensions.height) return null;
-  const image = await loadImageBlob(blob);
   const canvas = document.createElement("canvas");
   canvas.width = dimensions.width;
   canvas.height = dimensions.height;
@@ -745,18 +771,26 @@ function normalizeClientImageMimeType(value) {
   }
   return null;
 }
-async function withTimeout(promise, timeoutMs) {
+async function withStageTimeout(run, timeoutMs, message) {
+  const controller = new AbortController();
+  let didTimeout = false;
   let timeoutId;
   try {
-    return await Promise.race([
-      promise,
-      new Promise((_, reject) => {
-        timeoutId = setTimeout(
-          () => reject(new Error("Figma client rendering timed out.")),
-          timeoutMs
-        );
-      })
-    ]);
+    try {
+      return await Promise.race([
+        run(controller.signal),
+        new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            didTimeout = true;
+            controller.abort();
+            reject(new Error(message));
+          }, timeoutMs);
+        })
+      ]);
+    } catch (error) {
+      if (didTimeout) throw new Error(message);
+      throw error;
+    }
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
   }
@@ -962,7 +996,7 @@ async function uploadFigmaAsset({
   const requestFetch = fetchOption ?? globalThis.fetch;
   if (!requestFetch) throw new Error("Figma asset upload requires fetch.");
   const { blob, mimeType } = decodeAssetDataUrl(asset);
-  const response = await withTimeout2(
+  const response = await withTimeout(
     requestFetch(
       createAssetUploadUrl(endpoint, {
         imageFormat: asset.imageFormat,
@@ -1091,7 +1125,7 @@ function decodeAssetDataUrl(asset) {
     mimeType
   };
 }
-async function withTimeout2(promise, timeoutMs, message) {
+async function withTimeout(promise, timeoutMs, message) {
   let timeoutId;
   try {
     return await Promise.race([
@@ -2550,11 +2584,11 @@ function createStyleElement() {
       --df-review-color-text: #f7f7f2;
       --df-review-color-text-muted: rgba(247, 247, 242, 0.62);
       --df-review-color-text-subtle: rgba(247, 247, 242, 0.46);
-      --df-review-color-accent: #d7ff5f;
+      --df-review-color-accent: #7cc7ff;
       --df-review-color-accent-contrast: #171b1e;
-      --df-review-color-accent-soft: rgba(215, 255, 95, 0.16);
-      --df-review-color-accent-ring: rgba(215, 255, 95, 0.6);
-      --df-review-color-area: #63d7c7;
+      --df-review-color-accent-soft: rgba(124, 199, 255, 0.16);
+      --df-review-color-accent-ring: rgba(124, 199, 255, 0.6);
+      --df-review-color-area: #7cc7ff;
       --df-review-color-error: #ffb7a7;
       --df-review-shadow-panel: 0 18px 48px rgba(0, 0, 0, 0.34);
       --df-review-shadow-popover: 0 16px 38px rgba(0, 0, 0, 0.32);
@@ -2740,9 +2774,9 @@ function createStyleElement() {
     .dfwr-selection-highlight {
       position: fixed;
       z-index: 1;
-      border: 2px solid #d7ff5f;
+      border: 2px solid #7cc7ff;
       border-radius: var(--df-review-radius-xs);
-      background: rgba(215, 255, 95, 0.08);
+      background: rgba(124, 199, 255, 0.08);
       box-shadow:
         0 0 0 1px rgba(31, 36, 40, 0.72),
         0 0 0 9999px rgba(0, 0, 0, 0.12),
@@ -2751,8 +2785,8 @@ function createStyleElement() {
     }
 
     .dfwr-selection-highlight.is-draft {
-      border-color: #63d7c7;
-      background: rgba(99, 215, 199, 0.1);
+      border-color: #7cc7ff;
+      background: rgba(124, 199, 255, 0.1);
       box-shadow:
         0 0 0 1px rgba(31, 36, 40, 0.72),
         0 0 0 9999px rgba(0, 0, 0, 0.08),
@@ -2763,9 +2797,9 @@ function createStyleElement() {
     .dfwr-dom-hover {
       position: fixed;
       z-index: 2;
-      border: 1px solid #d7ff5f;
+      border: 1px solid #7cc7ff;
       border-radius: var(--df-review-radius-xs);
-      background: rgba(215, 255, 95, 0.1);
+      background: rgba(124, 199, 255, 0.1);
       box-shadow:
         0 0 0 1px rgba(31, 36, 40, 0.72),
         0 0 0 9999px rgba(0, 0, 0, 0.08);
@@ -2946,12 +2980,12 @@ function createStyleElement() {
     }
 
     .dfwr-area-preview-layer .dfwr-bound-marker {
-      border-color: #63d7c7;
+      border-color: #7cc7ff;
       background: var(--df-review-color-panel);
       box-shadow:
-        0 0 0 5px rgba(99, 215, 199, 0.2),
+        0 0 0 5px rgba(124, 199, 255, 0.2),
         0 12px 26px rgba(0, 0, 0, 0.3);
-      color: #63d7c7;
+      color: #7cc7ff;
     }
 
     .dfwr-bound-marker-icon {
@@ -3034,7 +3068,7 @@ function createStyleElement() {
       border-radius: var(--df-review-radius-pill);
       background: var(--df-review-color-accent);
       box-shadow:
-        0 0 0 4px rgba(215, 255, 95, 0.22),
+        0 0 0 4px rgba(124, 199, 255, 0.22),
         0 8px 18px rgba(0, 0, 0, 0.28);
       cursor: grab;
       pointer-events: auto;
@@ -3052,7 +3086,7 @@ function createStyleElement() {
       pointer-events: auto;
       color: var(--df-review-color-text);
       background: var(--df-review-color-panel);
-      border: 1px solid rgba(215, 255, 95, 0.56);
+      border: 1px solid rgba(124, 199, 255, 0.56);
       border-radius: var(--df-review-radius-md);
       box-shadow: var(--df-review-shadow-popover);
     }
@@ -3061,7 +3095,7 @@ function createStyleElement() {
     .dfwr-area-draft.is-composer {
       max-height: min(360px, calc(100vh - 32px));
       overflow: auto;
-      border-color: rgba(99, 215, 199, 0.56);
+      border-color: rgba(124, 199, 255, 0.56);
     }
 
     .dfwr-shell.is-docked-composer .dfwr-dom-popover.is-docked-composer,
@@ -3098,7 +3132,7 @@ function createStyleElement() {
 
     .dfwr-draft-drag-handle:hover,
     .dfwr-draft-drag-handle:focus-visible {
-      background: rgba(215, 255, 95, 0.62);
+      background: rgba(124, 199, 255, 0.62);
     }
 
     .dfwr-draft-drag-handle:active {
@@ -3117,7 +3151,7 @@ function createStyleElement() {
       pointer-events: auto;
       color: var(--df-review-color-text);
       background: var(--df-review-color-panel);
-      border: 1px solid rgba(215, 255, 95, 0.56);
+      border: 1px solid rgba(124, 199, 255, 0.56);
       border-radius: var(--df-review-radius-md);
       box-shadow: var(--df-review-shadow-popover);
     }
@@ -3336,7 +3370,7 @@ function createStyleElement() {
     }
 
     .dfwr-adjust-panel.is-active {
-      border-color: rgba(215, 255, 95, 0.5);
+      border-color: rgba(124, 199, 255, 0.5);
       background: var(--df-review-color-accent-soft);
     }
 
@@ -3375,7 +3409,7 @@ function createStyleElement() {
     .dfwr-adjust-toggle:hover,
     .dfwr-adjust-toggle:focus-visible,
     .dfwr-adjust-toggle.is-active {
-      border-color: rgba(215, 255, 95, 0.68);
+      border-color: rgba(124, 199, 255, 0.68);
       background: var(--df-review-color-accent-soft);
       outline: none;
     }
@@ -3438,7 +3472,7 @@ function createStyleElement() {
     }
 
     .dfwr-item:focus-visible {
-      outline: 2px solid rgba(215, 255, 95, 0.72);
+      outline: 2px solid rgba(124, 199, 255, 0.72);
       outline-offset: 4px;
     }
 
@@ -3548,8 +3582,8 @@ function createStyleElement() {
       z-index: 2;
       width: 0;
       height: 0;
-      border: 1px solid #d7ff5f;
-      background: rgba(215, 255, 95, 0.16);
+      border: 1px solid #7cc7ff;
+      background: rgba(124, 199, 255, 0.16);
       box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.18);
     }
 
@@ -5589,6 +5623,12 @@ var WebReviewKitApp = class {
     this.isSelectingArea = false;
     this.handleKeyDown = (event) => {
       if (event.key === "Escape" && this.cancelMode()) {
+        const activeElement = document.activeElement;
+        if (activeElement instanceof HTMLButtonElement && activeElement.matches(
+          ".df-review-mode-button, .df-review-section-outline-link.is-dom-select"
+        )) {
+          activeElement.blur();
+        }
         event.preventDefault();
         event.stopPropagation();
         return;

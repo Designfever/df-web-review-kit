@@ -78,6 +78,7 @@ export const useReviewShellRuntime = ({
   const isItemEditing = useReviewShellStore((state) =>
     Boolean(state.editingItem)
   );
+  const selectedItemId = useReviewShellStore((state) => state.selectedItemId);
   const {
     isSourceTreeHoverOutlineEnabled,
     sourceCandidateOptions,
@@ -266,6 +267,7 @@ export const useReviewShellRuntime = ({
   });
 
   useReviewShellEffects({
+    clearSelectedReviewItem,
     frameScrollRef,
     iframeRef,
     isListVisible,
@@ -273,8 +275,10 @@ export const useReviewShellRuntime = ({
     mode,
     pendingInitialItemIdRef,
     restoreReviewItem,
+    selectedItemId,
     size,
     syncTargetViewport,
+    targetFrameLoadVersion,
     targetSrc,
   });
 
@@ -291,6 +295,8 @@ export const useReviewShellRuntime = ({
     bindSourceOpenShortcut,
     clearSourceInspector,
     clearSourceOutlineHover,
+    clearSourceOutlineSelection,
+    selectSourceOutlineForElement,
     showSourceOutlineForElement,
   } = sourceInspector;
 
@@ -348,6 +354,7 @@ export const useReviewShellRuntime = ({
     changeReviewSource,
     clearSourceInspector,
     clearSourceOutlineHover,
+    clearSourceOutlineSelection,
     clearSelectedReviewItem,
     getPageTarget,
     initReviewKit,
@@ -357,6 +364,7 @@ export const useReviewShellRuntime = ({
     restoreReviewItem,
     selectAllQa,
     selectPage,
+    selectSourceOutlineForElement,
     setIsInitialPromptOpen,
     setIsInitialPromptScriptOpen,
     setReviewMode,

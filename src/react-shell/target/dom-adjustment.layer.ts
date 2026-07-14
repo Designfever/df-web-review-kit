@@ -115,6 +115,16 @@ export class DomAdjustmentLayerManager {
     return layer.position;
   }
 
+  setActive(entryId: string | null) {
+    this.layers.forEach(({ wrapper }, id) => {
+      if (id === entryId) {
+        wrapper.dataset.dfwrMoveActive = 'true';
+      } else {
+        delete wrapper.dataset.dfwrMoveActive;
+      }
+    });
+  }
+
   clear(entryId: string, notify = true) {
     this.pending.delete(entryId);
     const layer = this.layers.get(entryId);
@@ -175,6 +185,17 @@ function createLayerStyle(document: Document) {
     [${SOURCE_HIDDEN_ATTRIBUTE}='true'] {
       opacity: 0 !important;
       pointer-events: none !important;
+    }
+
+    [data-dfwr-move-entry-id] {
+      box-sizing: border-box;
+      outline: 1px dashed rgba(215, 255, 95, 0.62);
+      outline-offset: 2px;
+    }
+
+    [data-dfwr-move-entry-id][data-dfwr-move-active='true'] {
+      outline-color: #d7ff5f;
+      outline-width: 2px;
     }
   `;
   return style;

@@ -112,7 +112,14 @@ export const ReviewQaPanel = ({
       : 'No QA on this page.';
 
   useEffect(() => {
-    if (!isListVisible || !selectedItemId) return;
+    if (!isListVisible) return;
+
+    if (!selectedItemId) {
+      listRef.current
+        ?.querySelector<HTMLElement>('[data-review-qa-item-id]:focus')
+        ?.blur();
+      return;
+    }
 
     const selectedCard = Array.from(
       listRef.current?.querySelectorAll<HTMLElement>(

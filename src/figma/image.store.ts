@@ -171,48 +171,87 @@ async function createClientRenderedFigmaAsset(
   if (!requestFetch) throw new Error('Figma client rendering requires fetch.');
 
   const renderFormat = options.renderFormat ?? 'png';
-  const response = await requestFetch(
-    createReviewFigmaImageApiUrl({
-      apiBaseUrl: options.apiBaseUrl,
-      fileKey: ref.fileKey,
-      nodeId: ref.nodeId,
-      format: renderFormat,
-      scale: options.renderScale,
-      useAbsoluteBounds: options.useAbsoluteBounds,
-    }),
-    {
-      headers: {
-        'X-Figma-Token': token,
-      },
-    }
+  const timeoutMs = options.timeoutMs ?? 10000;
+  const imageUrl = await withStageTimeout(
+    async (signal) => {
+      const response = await requestFetch(
+        createReviewFigmaImageApiUrl({
+          apiBaseUrl: options.apiBaseUrl,
+          fileKey: ref.fileKey,
+          nodeId: ref.nodeId,
+          format: renderFormat,
+          scale: options.renderScale,
+          useAbsoluteBounds: options.useAbsoluteBounds,
+        }),
+        {
+          headers: {
+            'X-Figma-Token': token,
+          },
+          signal,
+        }
+      );
+      const body = (await response.json().catch(() => null)) as
+        | {
+            err?: string | null;
+            images?: Record<string, string | null | undefined>;
+          }
+        | null;
+      if (!response.ok) {
+        throw new Error(
+          body?.err || `Figma image render failed with ${response.status}`
+        );
+      }
+
+      const nextImageUrl = body?.images?.[ref.nodeId];
+      if (!nextImageUrl) {
+        throw new Error(
+          `Figma image render returned no URL for ${ref.nodeId}.`
+        );
+      }
+      return nextImageUrl;
+    },
+    timeoutMs,
+    'Figma API request timed out.'
   );
-  const body = (await response.json().catch(() => null)) as
-    | { err?: string | null; images?: Record<string, string | null | undefined> }
-    | null;
-  if (!response.ok) {
-    throw new Error(body?.err || `Figma image render failed with ${response.status}`);
-  }
 
-  const imageUrl = body?.images?.[ref.nodeId];
-  if (!imageUrl) throw new Error(`Figma image render returned no URL for ${ref.nodeId}.`);
+  const originalBlob = await withStageTimeout(
+    async (signal) => {
+      const imageResponse = await requestFetch(imageUrl, { signal });
+      if (!imageResponse.ok) {
+        throw new Error(
+          `Figma image download failed with ${imageResponse.status}`
+        );
+      }
+      return imageResponse.blob();
+    },
+    timeoutMs,
+    'Figma image download timed out.'
+  );
 
-  const imageResponse = await requestFetch(imageUrl);
-  if (!imageResponse.ok) {
-    throw new Error(`Figma image download failed with ${imageResponse.status}`);
-  }
+  return withStageTimeout(
+    () => createProcessedFigmaAsset(originalBlob, renderFormat, options),
+    timeoutMs,
+    'Figma image processing timed out.'
+  );
+}
 
-  const originalBlob = await imageResponse.blob();
+async function createProcessedFigmaAsset(
+  originalBlob: Blob,
+  renderFormat: Extract<ReviewFigmaRenderFormat, 'png' | 'jpg'>,
+  options: ReviewFigmaImageClientRenderOptions
+): Promise<ReviewFigmaImageAssetInput> {
   const originalMimeType =
     normalizeClientImageMimeType(originalBlob.type) ??
     getReviewFigmaImageMimeType(renderFormat === 'jpg' ? 'jpg' : 'png');
   const originalFormat =
     getReviewFigmaImageFormatFromMimeType(originalMimeType) ??
     (renderFormat === 'jpg' ? 'jpg' : 'png');
-  const dimensions = await readImageBlobDimensions(originalBlob);
+  const image = await loadImageBlob(originalBlob);
+  const dimensions = readImageDimensions(image);
   const shouldConvertToWebp = options.convertToWebp ?? true;
   const convertedBlob = shouldConvertToWebp
-    ? await convertImageBlobToWebp(
-        originalBlob,
+    ? await convertImageToWebp(
+        image,
         options.webpQuality ?? 0.9,
         dimensions
       ).catch(() => null)
@@ -240,29 +279,24 @@ export function createReviewFigmaClientRenderedAsset({
   token,
   ...options
 }: CreateReviewFigmaClientRenderedAssetOptions): Promise<ReviewFigmaImageAssetInput> {
-  return withTimeout(
-    createClientRenderedFigmaAsset(figmaUrl, token, options, fetchOption),
-    options.timeoutMs ?? 10000
-  );
+  return createClientRenderedFigmaAsset(figmaUrl, token, options, fetchOption);
 }
 
-async function readImageBlobDimensions(blob: Blob) {
-  const image = await loadImageBlob(blob);
+function readImageDimensions(image: HTMLImageElement) {
   return {
     width: image.naturalWidth || image.width,
     height: image.naturalHeight || image.height,
   };
 }
 
-async function convertImageBlobToWebp(
-  blob: Blob,
+async function convertImageToWebp(
+  image: HTMLImageElement,
   quality: number,
   dimensions: { width: number; height: number }
 ) {
   if (typeof document === 'undefined') return null;
   if (!dimensions.width || !dimensions.height) return null;
 
-  const image = await loadImageBlob(blob);
   const canvas = document.createElement('canvas');
   canvas.width = dimensions.width;
   canvas.height = dimensions.height;
@@ -325,18 +359,30 @@ function normalizeClientImageMimeType(value: string | null | undefined) {
   return null;
 }
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
+async function withStageTimeout<T>(
+  run: (signal: AbortSignal) => Promise<T>,
+  timeoutMs: number,
+  message: string
+) {
+  const controller = new AbortController();
+  let didTimeout = false;
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        timeoutId = setTimeout(
-          () => reject(new Error('Figma client rendering timed out.')),
-          timeoutMs
-        );
-      }),
-    ]);
+    try {
+      return await Promise.race([
+        run(controller.signal),
+        new Promise<T>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            didTimeout = true;
+            controller.abort();
+            reject(new Error(message));
+          }, timeoutMs);
+        }),
+      ]);
+    } catch (error) {
+      if (didTimeout) throw new Error(message);
+      throw error;
+    }
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
   }

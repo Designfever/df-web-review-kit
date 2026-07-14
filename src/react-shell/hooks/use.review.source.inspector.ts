@@ -37,6 +37,8 @@ export function useReviewSourceInspector({
 }) {
   const showToast = useReviewToast();
   const sourceShortcutCleanupRef = useRef<(() => void) | null>(null);
+  const [componentSelectionState, setComponentSelectionState] =
+    useState<SourceInspectorState | null>(null);
   const [sourceInspectorState, setSourceInspectorState] =
     useState<SourceInspectorState | null>(null);
 
@@ -115,18 +117,37 @@ export function useReviewSourceInspector({
     [getSourceInspectorRect, isSourceTreeHoverOutlineEnabled]
   );
 
+  const selectSourceOutlineForElement = useCallback(
+    (element: Element) => {
+      const rect = getSourceInspectorRect(element);
+
+      setComponentSelectionState(
+        rect ? { rect, targetElement: element } : null
+      );
+    },
+    [getSourceInspectorRect]
+  );
+
+  const clearSourceOutlineSelection = useCallback(() => {
+    setComponentSelectionState(null);
+  }, []);
+
   const clearSourceOutlineHover = useCallback(() => {
     setSourceInspectorState(null);
   }, []);
 
   const sourceInspectorTargetElement =
     sourceInspectorState?.targetElement ?? null;
+  const componentSelectionTargetElement =
+    componentSelectionState?.targetElement ?? null;
 
   useEffect(() => {
-    if (!sourceInspectorTargetElement) return undefined;
+    const trackedElement =
+      sourceInspectorTargetElement ?? componentSelectionTargetElement;
+    if (!trackedElement) return undefined;
 
     const targetWindow =
-      sourceInspectorTargetElement.ownerDocument.defaultView ??
+      trackedElement.ownerDocument.defaultView ??
       iframeRef.current?.contentWindow ??
       null;
     const frameScroll = frameScrollRef.current;
@@ -138,6 +159,14 @@ export function useReviewSourceInspector({
       frameId = targetWindow.requestAnimationFrame(() => {
         frameId = null;
         setSourceInspectorState((current) => {
+          if (!current) return current;
+
+          const rect = getSourceInspectorRect(current.targetElement);
+          if (!rect) return null;
+
+          return { ...current, rect };
+        });
+        setComponentSelectionState((current) => {
           if (!current) return current;
 
           const rect = getSourceInspectorRect(current.targetElement);
@@ -165,6 +194,7 @@ export function useReviewSourceInspector({
       window.removeEventListener('resize', scheduleUpdate);
     };
   }, [
+    componentSelectionTargetElement,
     frameScrollRef,
     getSourceInspectorRect,
     iframeRef,
@@ -185,6 +215,7 @@ export function useReviewSourceInspector({
    */
   const bindSourceOpenShortcut = useCallback(() => {
     cleanupSourceOpenShortcut();
+    setComponentSelectionState(null);
 
     let frameDocument: Document | null = null;
     try {
@@ -355,10 +386,28 @@ export function useReviewSourceInspector({
       event.code === 'AltRight' ||
       event.altKey;
 
+    const getActiveDomSelectButton = () => {
+      const activeElement = document.activeElement;
+      return (
+        activeElement instanceof HTMLButtonElement &&
+        activeElement.matches(
+          '.df-review-section-outline-link.is-dom-select'
+        )
+          ? activeElement
+          : null
+      );
+    };
+
+    const blurDomSelectButton = () => {
+      getActiveDomSelectButton()?.blur();
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        onCancelReviewMode();
         setSourceSelecting(false);
         clearSourceInspector();
+        blurDomSelectButton();
         return;
       }
       if (!isOptionKeyEvent(event)) return;
@@ -375,8 +424,24 @@ export function useReviewSourceInspector({
       setSourceSelecting(false);
     };
 
-    const handleWindowPointerDown = () => {
+    const handleWindowPointerDown = (event: PointerEvent) => {
       setSourceSelecting(false);
+
+      const activeElement = getActiveDomSelectButton();
+      if (!activeElement || event.composedPath().includes(activeElement)) {
+        return;
+      }
+
+      const isComposerClick = event.composedPath().some((target) => {
+        if (!(target instanceof Element)) return false;
+        return Boolean(
+          target.closest('.df-review-qa-draft-host, .dfwr-dom-popover')
+        );
+      });
+      if (isComposerClick) return;
+
+      onCancelReviewMode();
+      activeElement.blur();
     };
 
     frameDocument.addEventListener('mousemove', handleTargetPointerMove, true);
@@ -384,6 +449,11 @@ export function useReviewSourceInspector({
     frameDocument.addEventListener('click', handleClick, true);
     frameDocument.addEventListener('keydown', handleKeyDown, true);
     frameDocument.addEventListener('keyup', handleKeyUp, true);
+    frameDocument.addEventListener(
+      'pointerdown',
+      handleWindowPointerDown,
+      true
+    );
     window.addEventListener('keydown', handleKeyDown, true);
     window.addEventListener('keyup', handleKeyUp, true);
     window.addEventListener('blur', handleBlur);
@@ -403,11 +473,17 @@ export function useReviewSourceInspector({
       frameDocument.removeEventListener('click', handleClick, true);
       frameDocument.removeEventListener('keydown', handleKeyDown, true);
       frameDocument.removeEventListener('keyup', handleKeyUp, true);
+      frameDocument.removeEventListener(
+        'pointerdown',
+        handleWindowPointerDown,
+        true
+      );
       window.removeEventListener('keydown', handleKeyDown, true);
       window.removeEventListener('keyup', handleKeyUp, true);
       window.removeEventListener('blur', handleBlur);
       window.removeEventListener('pointerdown', handleWindowPointerDown, true);
       setSourceSelecting(false);
+      blurDomSelectButton();
       style.remove();
       fontOverlay.remove();
     };
@@ -437,6 +513,9 @@ export function useReviewSourceInspector({
     bindSourceOpenShortcut,
     clearSourceInspector,
     clearSourceOutlineHover,
+    clearSourceOutlineSelection,
+    componentSelectionState,
+    selectSourceOutlineForElement,
     showSourceOutlineForElement,
     sourceInspectorState,
   };

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { getHotkeyActionKey, isHotkey } from '../../core/hotkey';
 import type { ReviewMode } from '../../types';
 import { useReviewShellStore } from '../store/store.context';
-import { isEditableEventTarget } from '../target/target';
+import { isEditableEventTarget } from '../../core/hotkey';
 import type { TargetOverlayKey } from '../types';
 
 interface UseReviewShellHotkeysOptions {

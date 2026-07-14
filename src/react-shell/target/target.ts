@@ -126,19 +126,6 @@ export const setTargetFigmaSourceSelectLocked = (
   );
 };
 
-export const isEditableEventTarget = (event: KeyboardEvent) => {
-  const path = event.composedPath?.() ?? [];
-  const element = (path[0] ?? event.target) as HTMLElement | null;
-  if (!element || typeof element.tagName !== 'string') return false;
-  const tag = element.tagName;
-  return (
-    tag === 'INPUT' ||
-    tag === 'TEXTAREA' ||
-    tag === 'SELECT' ||
-    element.isContentEditable === true
-  );
-};
-
 const TRUE_STORAGE_VALUES = new Set([
   '1',
   'true',

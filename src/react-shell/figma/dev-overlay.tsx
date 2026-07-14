@@ -10,7 +10,7 @@ import {
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
 } from '../../figma/image.types';
-import { isHotkey } from '../../core/hotkey';
+import { isEditableEventTarget, isHotkey } from '../../core/hotkey';
 import { normalizeTarget } from '../route';
 import type {
   ReviewShellFigmaImagesOptions,
@@ -205,10 +205,7 @@ const FigmaDevOverlayWidget = ({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        !isHotkey(event, 'Shift+F') ||
-        isEditableFigmaDevOverlayEventTarget(event)
-      ) {
+      if (!isHotkey(event, 'Shift+F') || isEditableEventTarget(event)) {
         return;
       }
 
@@ -404,20 +401,6 @@ function useCurrentPageUrl(
   }, [pageUrl, reviewPathPrefix]);
 
   return currentPageUrl;
-}
-
-function isEditableFigmaDevOverlayEventTarget(event: KeyboardEvent) {
-  const path = event.composedPath?.() ?? [];
-  const element = (path[0] ?? event.target) as HTMLElement | null;
-  if (!element || typeof element.tagName !== 'string') return false;
-
-  const tagName = element.tagName;
-  return (
-    tagName === 'INPUT' ||
-    tagName === 'TEXTAREA' ||
-    tagName === 'SELECT' ||
-    element.isContentEditable === true
-  );
 }
 
 function useCurrentViewport() {

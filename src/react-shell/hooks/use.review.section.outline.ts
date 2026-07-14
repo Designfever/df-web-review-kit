@@ -26,6 +26,7 @@ import {
   type SectionOutlineEntry,
 } from '../section.outline';
 import { getDraftViewportScale } from '../../core/draft.metrics';
+import { isEditableEventTarget } from '../../core/hotkey';
 import {
   getStoredSourceTreeFilter,
   getStoredSourceTreeMetaVisibility,
@@ -68,17 +69,6 @@ const getSectionDomAdjustmentKeyDelta = (event: KeyboardEvent) => {
 
 const isDomAdjustmentEmpty = (position: DomAdjustmentPosition) =>
   position.x === 0 && position.y === 0;
-
-const isEditableKeyTarget = (target: EventTarget | null) => {
-  if (!(target instanceof HTMLElement)) return false;
-  const tagName = target.tagName;
-  return (
-    tagName === 'INPUT' ||
-    tagName === 'TEXTAREA' ||
-    tagName === 'SELECT' ||
-    target.isContentEditable
-  );
-};
 
 const COMPONENT_SELECTION_ACTION_SELECTOR = [
   'a',
@@ -301,7 +291,7 @@ export function useReviewSectionOutline({
     if (!activeDomAdjustmentEntryId) return undefined;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (isEditableKeyTarget(event.target)) return;
+      if (isEditableEventTarget(event)) return;
 
       const delta = getSectionDomAdjustmentKeyDelta(event);
       if (!delta) return;

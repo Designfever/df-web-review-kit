@@ -27,6 +27,21 @@ const HOTKEY_KEY_ALIASES: Record<string, string[]> = {
   m: ['ㅡ'],
 };
 
+/** True when the key event originated from a text-editing element. */
+export function isEditableEventTarget(event: KeyboardEvent) {
+  const path = event.composedPath?.() ?? [];
+  const element = (path[0] ?? event.target) as HTMLElement | null;
+  if (!element || typeof element.tagName !== 'string') return false;
+
+  const tag = element.tagName;
+  return (
+    tag === 'INPUT' ||
+    tag === 'TEXTAREA' ||
+    tag === 'SELECT' ||
+    element.isContentEditable === true
+  );
+}
+
 /** Matches configured hotkeys while supporting common Korean keyboard aliases. */
 export function isHotkey(event: KeyboardEvent, hotkey: string) {
   const parts = hotkey

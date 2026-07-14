@@ -21,6 +21,7 @@ import {
 } from './tree';
 
 interface SitemapModalProps {
+  isOpen: boolean;
   pages: ReviewShellPage[];
   activeRoute: string;
   allQaCount: SitemapQaCount;
@@ -91,6 +92,7 @@ const mergePresenceUsers = (users: ReviewPresenceUser[]) => {
 };
 
 export const SitemapModal = ({
+  isOpen,
   pages,
   activeRoute,
   allQaCount,
@@ -161,7 +163,7 @@ export const SitemapModal = ({
     <div
       aria-label="Sitemap"
       aria-modal="true"
-      className="df-review-sitemap-modal"
+      className={`df-review-sitemap-modal${isOpen ? '' : ' is-hidden'}`}
       role="dialog"
     >
       <button

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   InitialPromptModal,
   PromptModal,
@@ -70,6 +70,11 @@ export const ReviewShellModalsContainer = () => {
     (state) => state.setIsSitemapOpen
   );
   const showToast = useReviewToast();
+  // 첫 오픈 후에는 unmount 하지 않고 숨겨서 검색/정렬/접힘 상태를 유지한다.
+  const [hasSitemapOpened, setHasSitemapOpened] = useState(false);
+  useEffect(() => {
+    if (isSitemapOpen) setHasSitemapOpened(true);
+  }, [isSitemapOpen]);
   const initialPromptText = initialPrompt.trim();
   const copyInitialPrompt = useCallback(
     (value: string, key: string) =>
@@ -84,8 +89,9 @@ export const ReviewShellModalsContainer = () => {
 
   return (
     <>
-      {isSitemapOpen && (
+      {hasSitemapOpened && (
         <SitemapModal
+          isOpen={isSitemapOpen}
           activeRoute={activeRoute}
           allQaCount={allQaCount}
           getPageTarget={getPageTarget}

@@ -8,6 +8,11 @@ export const reviewShellSitemapStyle = `
 				    padding: 18px;
   }
 
+  /* 닫아도 unmount 하지 않고 숨긴다. visibility 는 리스트 스크롤 위치를 보존한다. */
+  .df-review-sitemap-modal.is-hidden {
+    visibility: hidden;
+  }
+
 	  .df-review-sitemap-backdrop {
 	    position: absolute;
 	    inset: 0;

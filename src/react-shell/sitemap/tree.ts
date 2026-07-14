@@ -288,19 +288,25 @@ export const createSitemapRows = (
     };
   };
 
-  const getSortValue = (summary: SitemapTreeSummary) => {
-    if (sortKey === 'page') return summary.node.label;
-    if (sortKey === 'todo') return summary.count.status.todo;
-    if (sortKey === 'review') return summary.count.status.review;
-    if (sortKey === 'hold') return summary.count.status.hold;
-    if (sortKey === 'online') return summary.users.length;
+  const getSortValueFor = (
+    label: string,
+    count: SitemapQaCount,
+    users: ReviewPresenceUser[]
+  ) => {
+    if (sortKey === 'page') return label;
+    if (sortKey === 'todo') return count.status.todo;
+    if (sortKey === 'review') return count.status.review;
+    if (sortKey === 'hold') return count.status.hold;
+    if (sortKey === 'online') return users.length;
     if (sortKey.startsWith('viewport:')) {
       const viewportKey = sortKey.slice('viewport:'.length);
-      return summary.count.viewport[viewportKey]?.remaining ?? 0;
+      return count.viewport[viewportKey]?.remaining ?? 0;
     }
 
     return 0;
   };
+  const getSortValue = (summary: SitemapTreeSummary) =>
+    getSortValueFor(summary.node.label, summary.count, summary.users);
 
   const sortSummaries = (summaries: SitemapTreeSummary[]) => {
     return [...summaries].sort((a, b) => {
@@ -330,20 +336,73 @@ export const createSitemapRows = (
   };
   const countMatchesStatusFilters = (count: SitemapQaCount) =>
     Array.from(statusFilters).some((status) => count.status[status] > 0);
-  // 페이지 자신의 count 로 판단하고, folder 는 매칭되는 하위 페이지가 있으면 남긴다.
-  const summaryMatchesStatusFilters = (
-    summary: SitemapTreeSummary
-  ): boolean => {
-    if (!isStatusFiltering) return true;
-    if (
-      summary.node.isPage &&
-      countMatchesStatusFilters(summary.directCount)
-    ) {
-      return true;
-    }
 
-    return summary.children.some(summaryMatchesStatusFilters);
-  };
+  // status filter 중에는 tree 대신 매칭 페이지만 전체 경로로 평평하게 보여준다.
+  if (isStatusFiltering) {
+    const flatEntries: {
+      node: SitemapTreeNode;
+      count: SitemapQaCount;
+      users: ReviewPresenceUser[];
+    }[] = [];
+
+    const collectMatchingPages = (node: SitemapTreeNode) => {
+      if (node.isPage) {
+        const directCount = getDirectCount(node);
+        if (
+          countMatchesStatusFilters(directCount) &&
+          (!searchQuery ||
+            sitemapNodeMatchesSearch(node, searchQuery, getPageTarget))
+        ) {
+          flatEntries.push({
+            node,
+            count: directCount,
+            users: getDirectUsers(node),
+          });
+        }
+      }
+
+      node.children.forEach(collectMatchingPages);
+    };
+
+    collectMatchingPages(root);
+
+    return flatEntries
+      .sort((a, b) => {
+        const firstValue = getSortValueFor(
+          normalizeSitemapHref(a.node.href),
+          a.count,
+          a.users
+        );
+        const secondValue = getSortValueFor(
+          normalizeSitemapHref(b.node.href),
+          b.count,
+          b.users
+        );
+        const valueDiff =
+          typeof firstValue === 'string' && typeof secondValue === 'string'
+            ? firstValue.localeCompare(secondValue)
+            : Number(firstValue) - Number(secondValue);
+
+        if (valueDiff !== 0) {
+          return sortDirection === 'asc' ? valueDiff : -valueDiff;
+        }
+
+        const remainingDiff = b.count.remaining - a.count.remaining;
+        if (remainingDiff !== 0) return remainingDiff;
+        return a.node.href.localeCompare(b.node.href);
+      })
+      .map((entry): SitemapTreeRow => ({
+        href: entry.node.href,
+        label: normalizeSitemapHref(entry.node.href),
+        depth: 0,
+        hasChildren: false,
+        isExpanded: false,
+        isPage: true,
+        isActive: getPageTarget(entry.node.href) === activeRoute,
+        qaCount: entry.count,
+        users: entry.users,
+      }));
+  }
 
   const rows: SitemapTreeRow[] = [];
 
@@ -360,16 +419,13 @@ export const createSitemapRows = (
     const visibleChildren = sortSummaries(
       summary.children.filter(
         (child) =>
-          (!searchQuery || nodeMatchesSearch || summaryMatchesSearch(child)) &&
-          summaryMatchesStatusFilters(child)
+          !searchQuery || nodeMatchesSearch || summaryMatchesSearch(child)
       )
     );
     const hasChildren = visibleChildren.length > 0;
     const isExpanded =
       hasChildren &&
-      (Boolean(searchQuery) ||
-        isStatusFiltering ||
-        !collapsedFolderHrefs.has(node.href));
+      (Boolean(searchQuery) || !collapsedFolderHrefs.has(node.href));
 
     if (node.isPage || hasChildren || depth > 0) {
       const pageTarget = node.isPage ? getPageTarget(node.href) : null;
@@ -394,15 +450,11 @@ export const createSitemapRows = (
     });
   };
 
-  const rootDirectCount = getDirectCount(root);
-
   if (
     root.isPage &&
-    (!searchQuery ||
-      sitemapNodeMatchesSearch(root, searchQuery, getPageTarget)) &&
-    (!isStatusFiltering || countMatchesStatusFilters(rootDirectCount))
+    (!searchQuery || sitemapNodeMatchesSearch(root, searchQuery, getPageTarget))
   ) {
-    const directCount = rootDirectCount;
+    const directCount = getDirectCount(root);
     const directUsers = getDirectUsers(root);
 
     rows.push({
@@ -421,11 +473,7 @@ export const createSitemapRows = (
   const rootSummaries = sortSummaries(
     Array.from(root.children.values())
       .map(createNodeSummary)
-      .filter(
-        (summary) =>
-          summaryMatchesSearch(summary) &&
-          summaryMatchesStatusFilters(summary)
-      )
+      .filter(summaryMatchesSearch)
   );
 
   rootSummaries.forEach((summary) => {

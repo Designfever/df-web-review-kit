@@ -782,51 +782,35 @@ class WebReviewKitApp {
     }
   }
 
-  private async captureDomDraft(input: CaptureDraftInput) {
-    if (this.isCapturingViewport) return;
-
-    const environment = this.getEnvironment();
-    const draft = this.domDraft;
-    if (!draft) return;
-    if (!environment?.captureViewport) {
-      this.draftError = 'Viewport capture helper is not available.';
-      this.render();
-      return;
-    }
-
-    const captureInput = this.createViewportCaptureInput(
-      environment,
+  private captureDomDraft(input: CaptureDraftInput) {
+    return this.captureDraft(
       input,
-      input.selection?.viewport
+      () => this.domDraft,
+      (draft) => {
+        this.domDraft = draft;
+      }
     );
-    this.draftError = '';
-    this.isCapturingViewport = true;
-    this.render();
-
-    try {
-      const result = await environment.captureViewport(captureInput);
-      const attachment = this.createCaptureDraftAttachment(result, captureInput);
-      const currentDraft = this.domDraft ?? draft;
-      this.domDraft = {
-        ...currentDraft,
-        attachments: [...(currentDraft.attachments ?? []), attachment],
-      };
-    } catch (error) {
-      this.draftError = this.getErrorMessage(
-        error,
-        'Failed to capture viewport.'
-      );
-    } finally {
-      this.isCapturingViewport = false;
-      this.render();
-    }
   }
 
-  private async captureAreaDraft(input: CaptureDraftInput) {
+  private captureAreaDraft(input: CaptureDraftInput) {
+    return this.captureDraft(
+      input,
+      () => this.areaDraft,
+      (draft) => {
+        this.areaDraft = draft;
+      }
+    );
+  }
+
+  private async captureDraft<T extends DomDraft | AreaDraft>(
+    input: CaptureDraftInput,
+    getDraft: () => T | undefined,
+    setDraft: (draft: T) => void
+  ) {
     if (this.isCapturingViewport) return;
 
     const environment = this.getEnvironment();
-    const draft = this.areaDraft;
+    const draft = getDraft();
     if (!draft) return;
     if (!environment?.captureViewport) {
       this.draftError = 'Viewport capture helper is not available.';
@@ -846,11 +830,11 @@ class WebReviewKitApp {
     try {
       const result = await environment.captureViewport(captureInput);
       const attachment = this.createCaptureDraftAttachment(result, captureInput);
-      const currentDraft = this.areaDraft ?? draft;
-      this.areaDraft = {
+      const currentDraft = getDraft() ?? draft;
+      setDraft({
         ...currentDraft,
         attachments: [...(currentDraft.attachments ?? []), attachment],
-      };
+      });
     } catch (error) {
       this.draftError = this.getErrorMessage(
         error,

@@ -43,6 +43,32 @@ const REVIEW_QA_STATUS_FILTER_VALUES = new Set([
   'done',
 ]);
 
+/** SSR 이거나 storage 접근이 막혀 있으면 null. */
+const readStorage = (key: string) => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+/** null 을 넘기면 키를 제거한다. storage 접근 실패는 무시한다. */
+const writeStorage = (key: string, value: string | null) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    if (value === null) {
+      window.localStorage.removeItem(key);
+    } else {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    return;
+  }
+};
+
 export const normalizeReviewTheme = (value: string | null): ReviewShellTheme =>
   value === 'light' || value === 'system' || value === 'dark'
     ? value
@@ -112,120 +138,48 @@ const normalizeStoredSourceTreeMetaVisibility = (
   };
 };
 
-export const getStoredFigmaToken = () => {
-  if (typeof window === 'undefined') return '';
-
-  try {
-    return window.localStorage.getItem(FIGMA_TOKEN_STORAGE_KEY) ?? '';
-  } catch {
-    return '';
-  }
-};
+export const getStoredFigmaToken = () =>
+  readStorage(FIGMA_TOKEN_STORAGE_KEY) ?? '';
 
 export const writeStoredFigmaToken = (token: string) => {
-  if (typeof window === 'undefined') return;
-
-  try {
-    if (token) {
-      window.localStorage.setItem(FIGMA_TOKEN_STORAGE_KEY, token);
-    } else {
-      window.localStorage.removeItem(FIGMA_TOKEN_STORAGE_KEY);
-    }
-  } catch {
-    return;
-  }
+  writeStorage(FIGMA_TOKEN_STORAGE_KEY, token || null);
 };
 
 export const getStoredReviewUserId = (fallback = '') => {
   const normalizedFallback = fallback.trim();
-  if (typeof window === 'undefined') return normalizedFallback;
-
-  try {
-    return (
-      window.localStorage.getItem(REVIEW_USER_ID_STORAGE_KEY)?.trim() ||
-      normalizedFallback
-    );
-  } catch {
-    return normalizedFallback;
-  }
+  return (
+    readStorage(REVIEW_USER_ID_STORAGE_KEY)?.trim() || normalizedFallback
+  );
 };
 
 export const writeStoredReviewUserId = (userId: string) => {
-  if (typeof window === 'undefined') return;
-
-  try {
-    if (userId) {
-      window.localStorage.setItem(REVIEW_USER_ID_STORAGE_KEY, userId);
-    } else {
-      window.localStorage.removeItem(REVIEW_USER_ID_STORAGE_KEY);
-    }
-  } catch {
-    return;
-  }
+  writeStorage(REVIEW_USER_ID_STORAGE_KEY, userId || null);
 };
 
-export const getStoredReviewTheme = () => {
-  if (typeof window === 'undefined') return DEFAULT_REVIEW_THEME;
-
-  try {
-    return normalizeReviewTheme(
-      window.localStorage.getItem(REVIEW_THEME_STORAGE_KEY)
-    );
-  } catch {
-    return DEFAULT_REVIEW_THEME;
-  }
-};
+export const getStoredReviewTheme = () =>
+  normalizeReviewTheme(readStorage(REVIEW_THEME_STORAGE_KEY));
 
 export const writeStoredReviewTheme = (theme: ReviewShellTheme) => {
-  if (typeof window === 'undefined') return;
-
-  try {
-    if (theme === DEFAULT_REVIEW_THEME) {
-      window.localStorage.removeItem(REVIEW_THEME_STORAGE_KEY);
-    } else {
-      window.localStorage.setItem(REVIEW_THEME_STORAGE_KEY, theme);
-    }
-  } catch {
-    return;
-  }
+  writeStorage(
+    REVIEW_THEME_STORAGE_KEY,
+    theme === DEFAULT_REVIEW_THEME ? null : theme
+  );
 };
 
 export const getStoredReviewTooltipsEnabled = () => {
-  if (typeof window === 'undefined') return DEFAULT_REVIEW_TOOLTIPS_ENABLED;
-
-  try {
-    const value = window.localStorage.getItem(REVIEW_TOOLTIP_STORAGE_KEY);
-    return value === null ? DEFAULT_REVIEW_TOOLTIPS_ENABLED : value !== 'false';
-  } catch {
-    return DEFAULT_REVIEW_TOOLTIPS_ENABLED;
-  }
+  const value = readStorage(REVIEW_TOOLTIP_STORAGE_KEY);
+  return value === null ? DEFAULT_REVIEW_TOOLTIPS_ENABLED : value !== 'false';
 };
 
 export const writeStoredReviewTooltipsEnabled = (isEnabled: boolean) => {
-  if (typeof window === 'undefined') return;
-
-  try {
-    if (isEnabled === DEFAULT_REVIEW_TOOLTIPS_ENABLED) {
-      window.localStorage.removeItem(REVIEW_TOOLTIP_STORAGE_KEY);
-    } else {
-      window.localStorage.setItem(REVIEW_TOOLTIP_STORAGE_KEY, 'false');
-    }
-  } catch {
-    return;
-  }
+  writeStorage(
+    REVIEW_TOOLTIP_STORAGE_KEY,
+    isEnabled === DEFAULT_REVIEW_TOOLTIPS_ENABLED ? null : 'false'
+  );
 };
 
-export const getStoredReviewSidePanel = () => {
-  if (typeof window === 'undefined') return 'qa';
-
-  try {
-    return normalizeStoredReviewSidePanel(
-      window.localStorage.getItem(REVIEW_SIDE_PANEL_STORAGE_KEY)
-    );
-  } catch {
-    return 'qa';
-  }
-};
+export const getStoredReviewSidePanel = () =>
+  normalizeStoredReviewSidePanel(readStorage(REVIEW_SIDE_PANEL_STORAGE_KEY));
 
 export const getInitialReviewSidePanel = () => {
   if (typeof window === 'undefined') return null;
@@ -242,110 +196,53 @@ export const getInitialReviewSidePanel = () => {
 export const writeStoredReviewSidePanel = (
   sidePanel: StoredReviewSidePanel
 ) => {
-  if (typeof window === 'undefined') return;
-
-  try {
-    window.localStorage.setItem(
-      REVIEW_SIDE_PANEL_STORAGE_KEY,
-      normalizeStoredReviewSidePanel(sidePanel)
-    );
-  } catch {
-    return;
-  }
+  writeStorage(
+    REVIEW_SIDE_PANEL_STORAGE_KEY,
+    normalizeStoredReviewSidePanel(sidePanel)
+  );
 };
 
 export const getStoredReviewSidePanelVisible = () => {
-  if (typeof window === 'undefined') return true;
-
-  try {
-    const value = window.localStorage.getItem(
-      REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY
-    );
-    return value === null ? true : value === 'true';
-  } catch {
-    return true;
-  }
+  const value = readStorage(REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY);
+  return value === null ? true : value === 'true';
 };
 
 export const writeStoredReviewSidePanelVisible = (isVisible: boolean) => {
-  if (typeof window === 'undefined') return;
-
-  try {
-    window.localStorage.setItem(
-      REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY,
-      isVisible ? 'true' : 'false'
-    );
-  } catch {
-    return;
-  }
+  writeStorage(
+    REVIEW_SIDE_PANEL_VISIBLE_STORAGE_KEY,
+    isVisible ? 'true' : 'false'
+  );
 };
 
-export const getStoredReviewQaStatusFilters = () => {
-  if (typeof window === 'undefined') return getDefaultReviewQaStatusFilters();
-
-  try {
-    return normalizeStoredReviewQaStatusFilters(
-      window.localStorage.getItem(REVIEW_QA_STATUS_FILTER_STORAGE_KEY)
-    );
-  } catch {
-    return getDefaultReviewQaStatusFilters();
-  }
-};
+export const getStoredReviewQaStatusFilters = () =>
+  normalizeStoredReviewQaStatusFilters(
+    readStorage(REVIEW_QA_STATUS_FILTER_STORAGE_KEY)
+  );
 
 export const writeStoredReviewQaStatusFilters = (
   filters: readonly ReviewQaStatusFilter[]
 ) => {
-  if (typeof window === 'undefined') return;
-
-  try {
-    const normalizedFilters = normalizeReviewQaStatusFilters(filters);
-    if (isDefaultReviewQaStatusFilters(normalizedFilters)) {
-      window.localStorage.removeItem(REVIEW_QA_STATUS_FILTER_STORAGE_KEY);
-    } else {
-      window.localStorage.setItem(
-        REVIEW_QA_STATUS_FILTER_STORAGE_KEY,
-        JSON.stringify(normalizedFilters)
-      );
-    }
-  } catch {
-    return;
-  }
+  const normalizedFilters = normalizeReviewQaStatusFilters(filters);
+  writeStorage(
+    REVIEW_QA_STATUS_FILTER_STORAGE_KEY,
+    isDefaultReviewQaStatusFilters(normalizedFilters)
+      ? null
+      : JSON.stringify(normalizedFilters)
+  );
 };
 
-export const getStoredSourceTreeFilter = () => {
-  if (typeof window === 'undefined') return '';
-
-  try {
-    return (
-      window.localStorage.getItem(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY) ?? ''
-    );
-  } catch {
-    return '';
-  }
-};
+export const getStoredSourceTreeFilter = () =>
+  readStorage(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY) ?? '';
 
 export const writeStoredSourceTreeFilter = (filter: string) => {
-  if (typeof window === 'undefined') return;
-
-  try {
-    if (filter) {
-      window.localStorage.setItem(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY, filter);
-    } else {
-      window.localStorage.removeItem(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY);
-    }
-  } catch {
-    return;
-  }
+  writeStorage(REVIEW_SOURCE_TREE_FILTER_STORAGE_KEY, filter || null);
 };
 
 export const getStoredSourceTreeMetaVisibility = () => {
-  if (typeof window === 'undefined') return DEFAULT_SOURCE_TREE_META_VISIBILITY;
+  const value = readStorage(REVIEW_SOURCE_TREE_META_STORAGE_KEY);
+  if (!value) return DEFAULT_SOURCE_TREE_META_VISIBILITY;
 
   try {
-    const value = window.localStorage.getItem(
-      REVIEW_SOURCE_TREE_META_STORAGE_KEY
-    );
-    if (!value) return DEFAULT_SOURCE_TREE_META_VISIBILITY;
     return normalizeStoredSourceTreeMetaVisibility(JSON.parse(value));
   } catch {
     return DEFAULT_SOURCE_TREE_META_VISIBILITY;
@@ -355,16 +252,10 @@ export const getStoredSourceTreeMetaVisibility = () => {
 export const writeStoredSourceTreeMetaVisibility = (
   metaVisibility: StoredSourceTreeMetaVisibility
 ) => {
-  if (typeof window === 'undefined') return;
-
-  try {
-    window.localStorage.setItem(
-      REVIEW_SOURCE_TREE_META_STORAGE_KEY,
-      JSON.stringify(normalizeStoredSourceTreeMetaVisibility(metaVisibility))
-    );
-  } catch {
-    return;
-  }
+  writeStorage(
+    REVIEW_SOURCE_TREE_META_STORAGE_KEY,
+    JSON.stringify(normalizeStoredSourceTreeMetaVisibility(metaVisibility))
+  );
 };
 
 export const getSystemReviewTheme = (): Exclude<ReviewShellTheme, 'system'> => {

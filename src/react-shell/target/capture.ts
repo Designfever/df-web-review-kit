@@ -5,6 +5,7 @@ import type {
   ViewportSize,
 } from '../../types';
 import type { Options as Html2CanvasOptions } from 'html2canvas';
+import { getErrorMessage } from '../../core/error';
 
 const CAPTURE_MIME = 'image/webp';
 const CAPTURE_QUALITY = 0.86;
@@ -41,7 +42,7 @@ export async function captureIframeViewport(
       );
     } catch (error) {
       throw new Error(
-        `Selected region capture failed: ${getUnknownErrorMessage(error)}`
+        `Selected region capture failed: ${getCaptureErrorMessage(error)}`
       );
     }
   }
@@ -55,7 +56,7 @@ export async function captureIframeViewport(
       input
     );
   } catch (error) {
-    errors.push(`html2canvas: ${getUnknownErrorMessage(error)}`);
+    errors.push(`html2canvas: ${getCaptureErrorMessage(error)}`);
   }
 
   const svg = createViewportSvg(targetDocument, targetWindow, viewport, input);
@@ -71,7 +72,7 @@ export async function captureIframeViewport(
       input
     );
   } catch (error) {
-    errors.push(`svg-canvas: ${getUnknownErrorMessage(error)}`);
+    errors.push(`svg-canvas: ${getCaptureErrorMessage(error)}`);
   }
 
   return {
@@ -677,15 +678,6 @@ function formatCaptureTimestamp(timestamp: string) {
   return timestamp.replace(/[^0-9A-Za-z]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function getUnknownErrorMessage(error: unknown) {
-  if (error instanceof Error) return error.message;
-  if (
-    error &&
-    typeof error === 'object' &&
-    'message' in error &&
-    typeof error.message === 'string'
-  ) {
-    return error.message;
-  }
-  return 'Capture was saved as SVG fallback.';
+function getCaptureErrorMessage(error: unknown) {
+  return getErrorMessage(error, 'Capture was saved as SVG fallback.');
 }

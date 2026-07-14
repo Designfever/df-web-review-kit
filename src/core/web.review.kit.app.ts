@@ -22,6 +22,7 @@ import {
   getRelativePoint,
   getRelativeSelection,
 } from './dom.anchor';
+import { getErrorMessage } from './error';
 import {
   createId,
 } from './id';
@@ -836,10 +837,7 @@ class WebReviewKitApp {
         attachments: [...(currentDraft.attachments ?? []), attachment],
       });
     } catch (error) {
-      this.draftError = this.getErrorMessage(
-        error,
-        'Failed to capture viewport.'
-      );
+      this.draftError = getErrorMessage(error, 'Failed to capture viewport.');
     } finally {
       this.isCapturingViewport = false;
       this.render();
@@ -1006,7 +1004,7 @@ class WebReviewKitApp {
     error: unknown,
     wasUploadingAttachments: boolean
   ) {
-    const message = this.getErrorMessage(error, 'Failed to save QA.');
+    const message = getErrorMessage(error, 'Failed to save QA.');
     const reason =
       error && typeof error === 'object' && 'reason' in error &&
       typeof error.reason === 'string'
@@ -1015,19 +1013,6 @@ class WebReviewKitApp {
     return wasUploadingAttachments && reason
       ? `Attachment upload failed${reason}: ${message}`
       : message;
-  }
-
-  private getErrorMessage(error: unknown, fallback: string) {
-    if (error instanceof Error) return error.message;
-    if (
-      error &&
-      typeof error === 'object' &&
-      'message' in error &&
-      typeof error.message === 'string'
-    ) {
-      return error.message;
-    }
-    return fallback;
   }
 
   private async restoreItem(item: ReviewItem) {

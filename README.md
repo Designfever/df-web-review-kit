@@ -27,10 +27,10 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Testing](docs/testing.md): Vitest adapter contract tests and local verification commands.
 - [Custom adapter sample](docs/adaptor.sample.ts): starting point for host-owned remote adapters.
 - [DB setup](docs/db-setup.md): optional Supabase `review_items` setup, RLS, presence notes, and validation.
-- [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, and extension boundaries.
-- [Figma overlay](docs/figma-overlay.md): how the shell toggles a host Figma overlay.
+- [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, sitemap, and feature ownership boundaries.
+- [Figma overlay](docs/figma-overlay.md): host helper behavior and package-managed image overlay state.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.8.2](docs/release-notes-0.8.2.md): Figma image layer edit/delete tooltip removal.
+- [Release notes 0.8.3](docs/release-notes-0.8.3.md): code-review bug fixes, sitemap state persistence and status filtering.
 
 ## Quick Start
 

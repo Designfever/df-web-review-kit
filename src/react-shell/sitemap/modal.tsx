@@ -5,8 +5,6 @@ import {
   type CSSProperties,
 } from 'react';
 import {
-  ChevronDown as ChevronDownIcon,
-  ChevronRight as ChevronRightIcon,
   Search as SearchIcon,
   X as XIcon,
 } from 'lucide-react';
@@ -22,6 +20,7 @@ import {
   type SitemapSortKey,
   type SitemapStatusFilter,
 } from './tree';
+import { SitemapRowContent } from './row';
 
 const STATUS_FILTER_LABELS: Record<SitemapStatusFilter, string> = {
   todo: 'Todo',
@@ -69,18 +68,6 @@ const getSortIndicator = (sort: SortState, key: SitemapSortKey) => {
 
   return sort.direction === 'desc' ? '↓' : '↑';
 };
-
-const getCountCellClassName = (
-  status: 'todo' | 'review' | 'hold',
-  count: number
-) =>
-  [
-    'df-review-sitemap-cell',
-    `is-${status}`,
-    count === 0 ? 'is-zero' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
 
 const mergePresenceUsers = (users: ReviewPresenceUser[]) => {
   const userByKey = new Map<string, ReviewPresenceUser>();
@@ -362,84 +349,3 @@ export const SitemapModal = ({
     </div>
   );
 };
-
-const SitemapRowContent = ({
-  depth,
-  hasChildren,
-  isExpanded,
-  isPage,
-  label,
-  qaCount,
-  users,
-  onToggleFolder,
-}: {
-  depth: number;
-  hasChildren: boolean;
-  isExpanded: boolean;
-  isPage: boolean;
-  label: string;
-  qaCount: SitemapQaCount;
-  users: ReviewPresenceUser[];
-  onToggleFolder?: () => void;
-}) => (
-  <>
-    <span
-      className="df-review-sitemap-path"
-      style={{ '--df-review-sitemap-depth': depth } as CSSProperties}
-    >
-      {hasChildren ? (
-        <button
-          aria-expanded={isExpanded}
-          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${label}`}
-          className="df-review-sitemap-tree-toggle"
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onToggleFolder?.();
-          }}
-        >
-          {isExpanded ? (
-            <ChevronDownIcon aria-hidden="true" />
-          ) : (
-            <ChevronRightIcon aria-hidden="true" />
-          )}
-        </button>
-      ) : (
-        <span className="df-review-sitemap-tree-spacer" aria-hidden="true" />
-      )}
-      {isPage ? (
-        <span className="df-review-sitemap-page-label">
-          {label}
-        </span>
-      ) : (
-        <span className="df-review-sitemap-label">{label}</span>
-      )}
-    </span>
-    <span className={getCountCellClassName('todo', qaCount.status.todo)}>
-      <strong>{qaCount.status.todo}</strong>
-    </span>
-    <span className={getCountCellClassName('review', qaCount.status.review)}>
-      {qaCount.status.review}
-    </span>
-    <span className={getCountCellClassName('hold', qaCount.status.hold)}>
-      {qaCount.status.hold}
-    </span>
-    <span className="df-review-sitemap-cell is-online">
-      {users.length > 0 ? (
-        <span className="df-review-sitemap-users">
-          {users.map((user) => (
-            <span
-              key={user.sessionId}
-              className="df-review-sitemap-user"
-              style={{
-                '--df-review-presence-color': user.color,
-              } as CSSProperties}
-            >
-              {user.userId}
-            </span>
-          ))}
-        </span>
-      ) : null}
-    </span>
-  </>
-);

@@ -22,13 +22,13 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 - `testing.md`: Vitest adapter contract and core pure-function unit coverage, plus local verification commands.
 - `adaptor.sample.ts`: copyable starting point for host-owned remote adapters.
 - `db-setup.md`: optional Supabase review item table/RPC/RLS/presence setup.
-- `architecture.md`: core/runtime, React shell, coordinate, anchor, and feature boundary notes.
-- `figma-overlay.md`: host requirements for the Figma overlay toggle.
+- `architecture.md`: core/runtime, React shell, coordinate, anchor, sitemap, and feature ownership boundaries.
+- `figma-overlay.md`: host helper requirements plus package image overlay state and interaction rules.
 - `grid-overlay.md`: host requirements for the grid/helper overlay toggle.
 
 ## Release History
 
-- [0.8.3](release-notes-0.8.3.md): code-review bug fixes (hidden draft composer, select hotkeys, overlay state writes, url hash), sitemap state persistence, and internal dedup.
+- [0.8.3](release-notes-0.8.3.md): code-review bug fixes (hidden draft composer, select hotkeys, overlay state writes, URL hash), sitemap state persistence/filtering, tests, and feature-module cleanup.
 - [0.8.2](release-notes-0.8.2.md): Figma image layer edit/delete tooltip removal.
 - [0.8.1](release-notes-0.8.1.md): QA prompt prefix, QA filtering, counters, tooltip, long-content, and outside marker fixes.
 - [0.8.0](release-notes-0.8.0.md): next minor release notes for QA attachments, adapter contract, capture, source inspector, and dev fixture changes.

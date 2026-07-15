@@ -88,6 +88,30 @@ overlays into the iframe instead. Those overlays use:
 - `#df-review-figma-image-target-root`
 - `.df-review-figma-image-target-overlay`
 
+## Image Overlay State
+
+Package-managed image overlay controls are stored separately for each project,
+page, viewport, and optional slot. The localStorage key starts with:
+
+```txt
+df-review-figma-image-overlay-state:
+```
+
+Each target stores the selected image, per-image visibility, opacity, lock,
+normal/invert mode, vertical offset, and the images that were visible before a
+hide-all action. Default state removes the storage entry instead of leaving an
+empty route key behind. Storage events keep another tab on the same origin in
+sync.
+
+`src/react-shell/figma/image.overlay.state.ts` owns the storage shape,
+normalization, and the legacy flat-state migration. The React effects and user
+commands stay in `image.overlay.controller.ts`; iframe DOM creation and drag
+behavior stay in `src/react-shell/target/figma.image.overlay.ts`.
+
+When the store refreshes its image list, removed image IDs are pruned. If the
+effective state did not change, the controller preserves the existing state
+identity so it does not rewrite the same localStorage value.
+
 The image overlay hit layer is interactive only when the image can be dragged.
 During element review mode or `Option` source selection, the shell temporarily
 locks both host helper layers and package image overlays with

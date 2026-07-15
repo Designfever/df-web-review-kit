@@ -211,28 +211,54 @@ hooks and returns provider values; it should not become a render component.
 - `hooks/use.review.section.outline.ts`: Source Tree outline extraction, filter/collapse state, refresh scheduling, and entry actions.
 - `hooks/use.review.command.key.ts`: hide-all-overlays-while-command-held tracking across host and iframe.
 
+### Sitemap Feature Boundary
+
+Sitemap state and row derivation are intentionally separate:
+
+- `sitemap/modal.tsx`: owns search, sort, status filters, and collapsed-folder UI state.
+- `sitemap/tree.ts`: converts the page list into visible tree or flat result rows.
+- `sitemap/count.ts`: owns the QA count shape, viewport column keys, and count aggregation.
+- `sitemap/row.tsx`: renders the shared page, folder, and All QA row content.
+
+The modal mounts on first open and is hidden instead of unmounted on close. This
+preserves search, sort, collapsed folders, active status filters, and scroll
+position while the review shell remains mounted.
+
+Page rows show only that page's direct QA count. Folder rows aggregate their
+descendant pages. Enabled status filters use OR with each other and AND with the
+search query; while status filtering is active, only matching pages are shown
+as flat full paths so a parent folder aggregate cannot look like a match.
+
 ### Comment Policy
 
 Prefer comments only at module boundaries or non-obvious runtime contracts. Avoid
 file-wide restatements of import names, prop-by-prop explanations, or comments
 that duplicate what a function name already says.
 
-## Figma Overlay Direction
+## Figma Image Feature Boundary
 
 Figma overlay work should stay outside core unless it needs target runtime primitives.
 
-Preferred direction:
+Current ownership:
 
 ```txt
 src/react-shell/figma/
-  controls.tsx
-  sync.ts
-  overlay.state.ts
+  image.controller.ts          # image store list and mutations
+  image.overlay.controller.ts  # React effects and overlay commands
+  image.overlay.state.ts       # route-keyed localStorage and migration
+  images.panel*.tsx            # shell panel UI
+
+src/react-shell/target/
+  figma.image.overlay.ts       # iframe DOM rendering and drag behavior
 
 src/figma/
-  matching.ts
-  types.ts
+  image.types.ts               # public image/store contracts
 ```
+
+`image.overlay.controller.ts` re-exports the overlay types used by existing
+shell modules, but persistence and normalization live in
+`image.overlay.state.ts`. Keep storage migrations and default-value cleanup out
+of the React controller.
 
 Shared coordinate math can reuse `core/geometry.ts` or move to a future shared module if both core and Figma need it heavily.
 

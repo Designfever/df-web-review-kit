@@ -8,35 +8,29 @@ import type {
   ReviewFigmaImage,
   ReviewFigmaRouteTarget,
 } from '../../figma/image.types';
-import { createReviewFigmaImageTargetKey } from './image.controller';
+import {
+  clampReviewFigmaImageOverlayOpacity,
+  createReviewFigmaImageOverlayStorageKey,
+  DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE,
+  DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE,
+  getReviewFigmaImageOverlayItemState,
+  normalizeReviewFigmaImageOverlayMode,
+  normalizeReviewFigmaImageOverlayOffsetY,
+  readStoredReviewFigmaImageOverlayState,
+  updateReviewFigmaImageOverlayItemState,
+  updateSelectedReviewFigmaImageOverlayItemState,
+  writeStoredReviewFigmaImageOverlayState,
+  type ReviewFigmaImageOverlayItemState,
+  type ReviewFigmaImageOverlayMode,
+  type ReviewFigmaImageOverlayState,
+} from './image.overlay.state';
 
-export const DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY = 0.48;
-const REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX =
-  'df-review-figma-image-overlay-state:';
-const REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION = 2;
-const DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE = 'normal';
-
-export type ReviewFigmaImageOverlayMode = 'normal' | 'invert';
-
-export type ReviewFigmaImageOverlayItemState = {
-  isVisible: boolean;
-  opacity: number;
-  isLocked: boolean;
-  mode: ReviewFigmaImageOverlayMode;
-  offsetY: number;
-};
-
-export type ReviewFigmaImageOverlayState = {
-  selectedImageId: string | null;
-  imageStates: Record<string, ReviewFigmaImageOverlayItemState>;
-  lastVisibleImageIds: string[];
-};
-
-type StoredReviewFigmaImageOverlayState = Partial<
-  ReviewFigmaImageOverlayState & ReviewFigmaImageOverlayItemState
-> & {
-  version?: number;
-};
+export {
+  DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
+  type ReviewFigmaImageOverlayItemState,
+  type ReviewFigmaImageOverlayMode,
+  type ReviewFigmaImageOverlayState,
+} from './image.overlay.state';
 
 interface UseReviewFigmaImageOverlayControllerOptions {
   images: ReviewFigmaImage[];
@@ -78,9 +72,19 @@ export const useReviewFigmaImageOverlayController = ({
           currentContainer.storageKey === storageKey
             ? currentContainer.state
             : readStoredReviewFigmaImageOverlayState(storageKey);
+        const nextState = updater(currentState);
+
+        // 같은 route의 no-op update는 container identity도 유지해야
+        // 아래 storage effect가 동일 상태를 다시 저장하지 않는다.
+        if (
+          currentContainer.storageKey === storageKey &&
+          nextState === currentState
+        ) {
+          return currentContainer;
+        }
 
         return {
-          state: updater(currentState),
+          state: nextState,
           storageKey,
         };
       });
@@ -480,196 +484,3 @@ export const useReviewFigmaImageOverlayController = ({
     toggleOverlayVisible,
   };
 };
-
-function createReviewFigmaImageOverlayStorageKey(
-  target: ReviewFigmaRouteTarget
-) {
-  return `${REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_KEY_PREFIX}${createReviewFigmaImageTargetKey(target)}`;
-}
-
-function readStoredReviewFigmaImageOverlayState(storageKey: string) {
-  if (typeof window === 'undefined') {
-    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
-  }
-
-  try {
-    const value = window.localStorage.getItem(storageKey);
-    if (!value) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
-
-    return normalizeReviewFigmaImageOverlayState(JSON.parse(value));
-  } catch {
-    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
-  }
-}
-
-function writeStoredReviewFigmaImageOverlayState(
-  storageKey: string,
-  state: ReviewFigmaImageOverlayState
-) {
-  if (typeof window === 'undefined') return;
-  if (isDefaultReviewFigmaImageOverlayState(state)) {
-    try {
-      window.localStorage.removeItem(storageKey);
-    } catch {
-      return;
-    }
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        version: REVIEW_FIGMA_IMAGE_OVERLAY_STORAGE_VERSION,
-        ...state,
-      } satisfies StoredReviewFigmaImageOverlayState)
-    );
-  } catch {
-    return;
-  }
-}
-
-const DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE: ReviewFigmaImageOverlayState = {
-  selectedImageId: null,
-  imageStates: {},
-  lastVisibleImageIds: [],
-};
-
-const DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE: ReviewFigmaImageOverlayItemState = {
-  isVisible: false,
-  opacity: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
-  isLocked: false,
-  mode: DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE,
-  offsetY: 0,
-};
-
-function normalizeReviewFigmaImageOverlayState(
-  value: unknown
-): ReviewFigmaImageOverlayState {
-  if (!value || typeof value !== 'object') {
-    return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_STATE;
-  }
-
-  const state = value as StoredReviewFigmaImageOverlayState;
-  const selectedImageId =
-    typeof state.selectedImageId === 'string' ? state.selectedImageId : null;
-  const lastVisibleImageIds = Array.isArray(state.lastVisibleImageIds)
-    ? state.lastVisibleImageIds.filter(
-        (imageId): imageId is string => typeof imageId === 'string'
-      )
-    : [];
-  const imageStates = normalizeReviewFigmaImageOverlayItemStateRecord(
-    state.imageStates
-  );
-  if (Object.keys(imageStates).length === 0 && selectedImageId) {
-    imageStates[selectedImageId] = normalizeReviewFigmaImageOverlayItemState(
-      state
-    );
-  }
-
-  return {
-    selectedImageId,
-    imageStates,
-    lastVisibleImageIds,
-  };
-}
-
-function normalizeReviewFigmaImageOverlayItemStateRecord(value: unknown) {
-  if (!value || typeof value !== 'object') return {};
-
-  return Object.fromEntries(
-    Object.entries(value).flatMap(([imageId, itemState]) => {
-      if (!imageId || typeof itemState !== 'object') return [];
-      return [
-        [
-          imageId,
-          normalizeReviewFigmaImageOverlayItemState(
-            itemState as Partial<ReviewFigmaImageOverlayItemState>
-          ),
-        ],
-      ];
-    })
-  );
-}
-
-function normalizeReviewFigmaImageOverlayItemState(
-  value: Partial<ReviewFigmaImageOverlayItemState>
-): ReviewFigmaImageOverlayItemState {
-  return {
-    isVisible: value.isVisible === true,
-    opacity: clampReviewFigmaImageOverlayOpacity(
-      typeof value.opacity === 'number'
-        ? value.opacity
-        : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY
-    ),
-    isLocked: value.isLocked === true,
-    mode: normalizeReviewFigmaImageOverlayMode(value.mode),
-    offsetY: normalizeReviewFigmaImageOverlayOffsetY(value.offsetY),
-  };
-}
-
-function normalizeReviewFigmaImageOverlayMode(
-  value: unknown
-): ReviewFigmaImageOverlayMode {
-  return value === 'invert' ? 'invert' : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_MODE;
-}
-
-function normalizeReviewFigmaImageOverlayOffsetY(value: unknown) {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
-  return Math.round(value);
-}
-
-function clampReviewFigmaImageOverlayOpacity(value: number) {
-  if (!Number.isFinite(value)) return DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY;
-  return Math.min(1, Math.max(0, value));
-}
-
-function isDefaultReviewFigmaImageOverlayState(
-  state: ReviewFigmaImageOverlayState
-) {
-  return (
-    state.selectedImageId === null &&
-    Object.keys(state.imageStates).length === 0 &&
-    state.lastVisibleImageIds.length === 0
-  );
-}
-
-function getReviewFigmaImageOverlayItemState(
-  state: ReviewFigmaImageOverlayState,
-  imageId: string | null
-) {
-  return imageId
-    ? (state.imageStates[imageId] ??
-        DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE)
-    : DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE;
-}
-
-function updateSelectedReviewFigmaImageOverlayItemState(
-  state: ReviewFigmaImageOverlayState,
-  updater: (
-    itemState: ReviewFigmaImageOverlayItemState
-  ) => ReviewFigmaImageOverlayItemState
-) {
-  return state.selectedImageId
-    ? updateReviewFigmaImageOverlayItemState(
-        state.imageStates,
-        state.selectedImageId,
-        updater
-      )
-    : state.imageStates;
-}
-
-function updateReviewFigmaImageOverlayItemState(
-  imageStates: Record<string, ReviewFigmaImageOverlayItemState>,
-  imageId: string,
-  updater: (
-    itemState: ReviewFigmaImageOverlayItemState
-  ) => ReviewFigmaImageOverlayItemState
-) {
-  return {
-    ...imageStates,
-    [imageId]: updater(
-      imageStates[imageId] ?? DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_ITEM_STATE
-    ),
-  };
-}

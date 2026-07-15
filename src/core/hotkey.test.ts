@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getHotkeyActionKey, isHotkey, isHotkeyKey } from './hotkey';
+import {
+  getHotkeyActionKey,
+  isEditableEventTarget,
+  isHotkey,
+  isHotkeyKey,
+} from './hotkey';
 
 // KeyboardEvent 전체를 만들 필요 없이 판정에 쓰이는 필드만 채운다.
 function createKeyEvent(
@@ -71,5 +76,27 @@ describe('getHotkeyActionKey', () => {
   it('returns the first configured key matching the event', () => {
     expect(getHotkeyActionKey(createKeyEvent('ㄷ'), ['r', 'e'])).toBe('e');
     expect(getHotkeyActionKey(createKeyEvent('z'), ['r', 'e'])).toBeUndefined();
+  });
+});
+
+describe('isEditableEventTarget', () => {
+  it('treats select elements as editable hotkey targets', () => {
+    const select = document.createElement('select');
+    const event = {
+      target: select,
+      composedPath: () => [select],
+    } as unknown as KeyboardEvent;
+
+    expect(isEditableEventTarget(event)).toBe(true);
+  });
+
+  it('allows hotkeys from regular buttons', () => {
+    const button = document.createElement('button');
+    const event = {
+      target: button,
+      composedPath: () => [button],
+    } as unknown as KeyboardEvent;
+
+    expect(isEditableEventTarget(event)).toBe(false);
   });
 });

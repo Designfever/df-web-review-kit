@@ -14,9 +14,11 @@ Use the full package check before release or when touching public types:
 ```bash
 pnpm typecheck
 pnpm test
+pnpm lint:dead-code
 pnpm build
 pnpm typecheck:dev
 pnpm build:dev
+npm pack --dry-run --json
 ```
 
 ## Current Coverage
@@ -33,15 +35,19 @@ pnpm build:dev
 
 The Supabase coverage uses an in-memory PostgREST/RPC mock. It does not contact a real Supabase project.
 
-### Pure function unit suites
+### Regression and unit suites
 
-Colocated `*.test.ts` files cover the core pure-function modules that refactors depend on:
+Colocated `*.test.ts` and `*.test.tsx` files cover the runtime contracts that
+refactors depend on:
 
 - `src/core/geometry.test.ts`: coordinate conversion (host/target spaces), clamping, selection shapes, popover placement.
-- `src/core/hotkey.test.ts`: hotkey matching with modifiers, Korean IME key aliases, physical key-code fallback.
+- `src/core/hotkey.test.ts`: hotkey matching with modifiers, Korean IME key aliases, physical key-code fallback, and editable-target blocking including `<select>`.
 - `src/core/location.test.ts`: page URL building and review-internal query param stripping.
 - `src/core/review/scope.test.ts`: viewport preset matching, scope inference, and item numbering/draft labels.
-- `src/route.test.ts`: route path normalization (`index.html`, query/hash) and item route keys.
+- `src/react-shell/route.test.ts`: shell URL updates preserve the current hash while changing target or selected QA item.
+- `src/react-shell/figma/image.overlay.controller.test.tsx`: unchanged image-list refreshes do not rewrite overlay state in localStorage.
+- `src/react-shell/sitemap/tree.test.ts`: status filters use OR with each other, AND with search, and return flat full-path page rows.
+- `src/react-shell/sitemap/modal.test.tsx`: closing and reopening the sitemap preserves search and status-filter state.
 - `src/figma/parse.test.ts`: Figma URL/node-ref parsing, including non-figma host rejection.
 - `src/vite/figma-asset.test.ts`: asset storage key validation, including path traversal rejection, and mime/format helpers.
 - `src/vite/figma-image-store.server.test.ts`: dev middleware request guards — cross-origin (CSRF) rejection, JSON content-type enforcement, body size limit.
@@ -59,6 +65,8 @@ Add or extend Vitest coverage when changing:
 - Supabase row mapping, RPC payloads, or review URL generation
 - attachment upload contracts
 - status, assignee, or external link fields
+- route-keyed Figma image overlay storage or migration behavior
+- sitemap count aggregation, filtering, sorting, or close/reopen state
 - coordinate/scope/route/parsing helpers listed above (extend the colocated suite)
 
 ## Known Behavior Notes

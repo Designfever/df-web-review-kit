@@ -1,33 +1,17 @@
-import type {
-  ReviewItemScope,
-  ReviewWorkflowStatus,
-} from '../../types';
-import type {
-  ReviewPresenceUser,
-  ReviewShellPage,
-  ReviewShellViewportPreset,
-} from '../types';
+import type { ReviewPresenceUser, ReviewShellPage } from '../types';
+import {
+  addSitemapQaCounts,
+  createEmptySitemapQaCount,
+  type SitemapQaCount,
+} from './count';
 
-export type SitemapViewportCount = {
-  total: number;
-  remaining: number;
-};
-
-export type SitemapViewportColumn = {
-  key: string;
-  label: string;
-  title: string;
-};
-
-export type SitemapQaCount = {
-  total: number;
-  remaining: number;
-  local: number;
-  remote: number;
-  status: Record<ReviewWorkflowStatus, number>;
-  scope: Partial<Record<ReviewItemScope, number>>;
-  viewport: Record<string, SitemapViewportCount>;
-};
+// 기존 공개 import 경로를 유지하면서 집계 모델만 별도 파일에서 관리한다.
+export {
+  addSitemapQaCounts,
+  createEmptySitemapQaCount,
+  createSitemapViewportColumn,
+  type SitemapQaCount,
+} from './count';
 
 type SitemapTreeNode = {
   href: string;
@@ -61,39 +45,6 @@ export type SitemapSortKey =
   | 'hold'
   | 'online'
   | `viewport:${string}`;
-
-const WORKFLOW_STATUSES: ReviewWorkflowStatus[] = [
-  'todo',
-  'doing',
-  'review',
-  'hold',
-  'done',
-];
-
-export const createEmptySitemapQaCount = (): SitemapQaCount => ({
-  total: 0,
-  remaining: 0,
-  local: 0,
-  remote: 0,
-  status: {
-    todo: 0,
-    doing: 0,
-    review: 0,
-    hold: 0,
-    done: 0,
-  },
-  scope: {},
-  viewport: {},
-});
-
-export const createSitemapViewportColumn = (
-  preset: ReviewShellViewportPreset,
-  index: number
-): SitemapViewportColumn => ({
-  key: `${index}:${preset.width}x${preset.height}`,
-  label: preset.label,
-  title: `${preset.label} ${preset.width}x${preset.height}`,
-});
 
 const normalizeSitemapHref = (href: string) => {
   const [path = '/'] = href.split(/[?#]/);
@@ -137,51 +88,6 @@ const mergeSitemapUsers = (users: ReviewPresenceUser[]) => {
   return Array.from(userByKey.values());
 };
 
-export const addSitemapQaCounts = (
-  first: SitemapQaCount,
-  second: SitemapQaCount
-): SitemapQaCount => ({
-  total: first.total + second.total,
-  remaining: first.remaining + second.remaining,
-  local: first.local + second.local,
-  remote: first.remote + second.remote,
-  status: WORKFLOW_STATUSES.reduce(
-    (statusCounts, status) => ({
-      ...statusCounts,
-      [status]: first.status[status] + second.status[status],
-    }),
-    {} as Record<ReviewWorkflowStatus, number>
-  ),
-  scope: Array.from(
-    new Set([
-      ...Object.keys(first.scope),
-      ...Object.keys(second.scope),
-    ] as ReviewItemScope[])
-  ).reduce(
-    (scopeCounts, scope) => ({
-      ...scopeCounts,
-      [scope]: (first.scope[scope] ?? 0) + (second.scope[scope] ?? 0),
-    }),
-    {} as Partial<Record<ReviewItemScope, number>>
-  ),
-  viewport: Array.from(
-    new Set([...Object.keys(first.viewport), ...Object.keys(second.viewport)])
-  ).reduce(
-    (viewportCounts, viewportKey) => ({
-      ...viewportCounts,
-      [viewportKey]: {
-        total:
-          (first.viewport[viewportKey]?.total ?? 0) +
-          (second.viewport[viewportKey]?.total ?? 0),
-        remaining:
-          (first.viewport[viewportKey]?.remaining ?? 0) +
-          (second.viewport[viewportKey]?.remaining ?? 0),
-      },
-    }),
-    {} as Record<string, SitemapViewportCount>
-  ),
-});
-
 type SitemapTreeSummary = {
   node: SitemapTreeNode;
   directCount: SitemapQaCount;
@@ -205,6 +111,7 @@ export const createSitemapRows = (
     statusFilters?: ReadonlySet<SitemapStatusFilter>;
   } = {}
 ) => {
+  // 원본 pages는 건드리지 않고 매 render마다 표시용 tree와 합계를 만든다.
   const collapsedFolderHrefs =
     options.collapsedFolderHrefs ?? new Set<string>();
   const searchQuery = normalizeSitemapSearchQuery(options.searchQuery);
@@ -280,6 +187,7 @@ export const createSitemapRows = (
       node,
       directCount,
       directUsers,
+      // folder는 하위 page 합계, 실제 page는 자신의 수치를 별도로 보존한다.
       count: node.isPage
         ? addSitemapQaCounts(directCount, childAggregate.count)
         : childAggregate.count,
@@ -337,7 +245,7 @@ export const createSitemapRows = (
   const countMatchesStatusFilters = (count: SitemapQaCount) =>
     Array.from(statusFilters).some((status) => count.status[status] > 0);
 
-  // status filter 중에는 tree 대신 매칭 페이지만 전체 경로로 평평하게 보여준다.
+  // status filter 중에는 부모 집계가 아닌 실제 매칭 page만 전체 경로로 보여준다.
   if (isStatusFiltering) {
     const flatEntries: {
       node: SitemapTreeNode;

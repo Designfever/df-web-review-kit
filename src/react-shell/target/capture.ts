@@ -112,6 +112,7 @@ async function createHtml2CanvasCapture(
     onclone: (documentClone) => {
       normalizeUnsupportedCaptureStyles(documentClone);
       normalizeUnsupportedCaptureColors(documentClone);
+      normalizeZeroSizeCaptureGradients(documentClone);
     },
     removeContainer: true,
     scale,
@@ -374,6 +375,23 @@ function normalizeUnsupportedCaptureColors(documentClone: Document) {
       }
     }
   });
+}
+
+export function normalizeZeroSizeCaptureGradients(documentClone: Document) {
+  const view = documentClone.defaultView;
+  if (!view) return;
+
+  documentClone.documentElement.querySelectorAll<HTMLElement>('*').forEach(
+    (element) => {
+      const backgroundImage = view.getComputedStyle(element).backgroundImage;
+      if (!backgroundImage.includes('gradient(')) return;
+
+      const bounds = element.getBoundingClientRect();
+      if (bounds.width > 0 && bounds.height > 0) return;
+
+      element.style.setProperty('background-image', 'none', 'important');
+    }
+  );
 }
 
 function hasUnsupportedColorFunction(value: string) {

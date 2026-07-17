@@ -30,7 +30,7 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, sitemap, and feature ownership boundaries.
 - [Figma overlay](docs/figma-overlay.md): host helper behavior and package-managed image overlay state.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.8.5](docs/release-notes-0.8.5.md): reliable Source Tree focus for asynchronously rendered targets.
+- [Release notes 0.8.6](docs/release-notes-0.8.6.md): explicit source hint opt-in for review builds.
 
 ## Quick Start
 
@@ -129,7 +129,7 @@ import {
 
 - `@designfever/web-review-kit`: core API, adapters, shared types.
 - `@designfever/web-review-kit/react-shell`: review shell UI, presence adapters, page glob helper.
-- `@designfever/web-review-kit/vite`: dev-only source/data locators for review hints.
+- `@designfever/web-review-kit/vite`: dev source/data locators with explicit review-build opt-in.
 - `src/*` is not a public import path.
 
 ## Optional Source Locator
@@ -157,7 +157,7 @@ export default defineConfig({
 });
 ```
 
-The locator plugins run automatically on the Vite dev server and stay disabled in production builds. Source Tree and the `Option` shortcut stay available without `sourceRoot` or an `enabled` option; `sourceRoot` is only needed to open relative source paths. When source hints are available, hold `Option` over the review target to inspect its source outline, then click the target to open the closest component in Source Tree. The source locator also reads TSX/JSX with the TypeScript parser when available and writes `data-wrk-source-component` for intrinsic JSX nodes, which helps the inspector prefer real component candidates over repeated wrapper primitives. For function component render paths, it also records the parent JSX call site so Source Tree can show where a component was used. The side rail can open a Source Tree panel with section/source/data links, parent usage links, live box metrics, text/font/media metadata, and class tags. DOM QA cards show a source action when the saved item has source hints. Source Tree filter/options, QA panel mode, and QA status filter are stored in browser localStorage.
+The locator plugins run automatically on the Vite dev server. Production builds stay disabled unless the host explicitly passes `enabled: true`; use that only for review builds and prefer `filePath: 'relative'`. Source Tree and the `Option` shortcut stay available without `sourceRoot`; `sourceRoot` is only needed to open relative source paths. When source hints are available, hold `Option` over the review target to inspect its source outline, then click the target to open the closest component in Source Tree. The source locator also reads TSX/JSX with the TypeScript parser when available and writes `data-wrk-source-component` for intrinsic JSX nodes, which helps the inspector prefer real component candidates over repeated wrapper primitives. For function component render paths, it also records the parent JSX call site so Source Tree can show where a component was used. The side rail can open a Source Tree panel with section/source/data links, parent usage links, live box metrics, text/font/media metadata, and class tags. DOM QA cards show a source action when the saved item has source hints. Source Tree filter/options, QA panel mode, and QA status filter are stored in browser localStorage.
 
 In Vite/ESM hosts, source opening reads `VITE_REVIEW_SOURCE_ROOT`, `VITE_REVIEW_SOURCE_EDITOR`, and `VITE_REVIEW_SOURCE_URL_TEMPLATE` from the host env. Env values override matching `sourceRoot`, `sourceInspector.editor`, and `sourceInspector.urlTemplate` init values; init values still work as a fallback for existing projects and CommonJS consumers. Use `VITE_REVIEW_SOURCE_URL_TEMPLATE` only with `VITE_REVIEW_SOURCE_EDITOR=custom`; the template supports `{path}`, `{encodedPath}`, `{line}`, and `{column}`.
 

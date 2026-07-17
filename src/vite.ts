@@ -6,7 +6,7 @@ export * from './vite/figma-image-store';
 type SourceLocatorPattern = string | RegExp;
 
 export interface ReviewSourceLocatorOptions {
-  /** @deprecated Dev server에서 자동 활성화되고 production build에서는 비활성화된다. */
+  /** Dev server에서는 자동 활성화된다. Build에서는 true일 때만 활성화된다. */
   enabled?: boolean;
   root?: string;
   include?: readonly SourceLocatorPattern[];
@@ -132,7 +132,7 @@ export const reviewSourceLocator = (
 };
 
 export interface ReviewDataLocatorOptions {
-  /** @deprecated Dev server에서 자동 활성화되고 production build에서는 비활성화된다. */
+  /** Dev server에서는 자동 활성화된다. Build에서는 true일 때만 활성화된다. */
   enabled?: boolean;
   root?: string;
   include?: readonly SourceLocatorPattern[];
@@ -169,7 +169,7 @@ export const reviewDataLocator = (
     enforce: 'pre',
     configResolved(config) {
       root = normalizePath(options.root ?? config.root ?? '');
-      enabled = isReviewLocatorEnabled(config.command);
+      enabled = isReviewLocatorEnabled(config.command, options.enabled);
       sourceEnvReplacements = createReviewSourceEnvReplacements(config.env);
     },
     transform(code, id) {
@@ -426,7 +426,7 @@ function createRuntimeOptions(
   );
   const root = normalizePath(options.root ?? config?.root ?? '');
   const enabled = config
-    ? isReviewLocatorEnabled(config.command)
+    ? isReviewLocatorEnabled(config.command, options.enabled)
     : false;
 
   return {

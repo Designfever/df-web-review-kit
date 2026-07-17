@@ -1,6 +1,6 @@
 {
   "name": "@designfever/web-review-kit",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "type": "module",
   "description": "Designfever web page review overlay toolkit.",
   "license": "Apache-2.0",

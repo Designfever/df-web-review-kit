@@ -30,7 +30,7 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, sitemap, and feature ownership boundaries.
 - [Figma overlay](docs/figma-overlay.md): host helper behavior and package-managed image overlay state.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.8.4](docs/release-notes-0.8.4.md): reliable viewport capture for zero-size gradient elements.
+- [Release notes 0.8.5](docs/release-notes-0.8.5.md): reliable Source Tree focus for asynchronously rendered targets.
 
 ## Quick Start
 

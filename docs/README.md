@@ -28,6 +28,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
+- [0.8.5](release-notes-0.8.5.md): reliable Source Tree focus for asynchronously rendered targets.
 - [0.8.4](release-notes-0.8.4.md): reliable viewport capture for zero-size gradient elements.
 - [0.8.3](release-notes-0.8.3.md): code-review bug fixes (hidden draft composer, select hotkeys, overlay state writes, URL hash), sitemap state persistence/filtering, tests, and feature-module cleanup.
 - [0.8.2](release-notes-0.8.2.md): Figma image layer edit/delete tooltip removal.

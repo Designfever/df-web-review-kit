@@ -12,9 +12,6 @@
   가시 콘텐츠에는 영향을 주지 않는다.
 - `CanvasGradient.addColorStop()`에 non-finite 값이 전달되면서 발생하던
   `Selected region capture failed` 오류를 방지한다.
-- `VITE_REVIEW_SOURCE_ROOT`가 설정된 Vite production build에서도 source/data
-  locator를 활성화한다. Vercel 같은 build 기반 리뷰 배포에서 Component List의
-  `Used in`과 `Option` source 매칭용 metadata가 유지된다.
 
 ## 검증
 

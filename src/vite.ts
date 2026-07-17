@@ -169,7 +169,7 @@ export const reviewDataLocator = (
     enforce: 'pre',
     configResolved(config) {
       root = normalizePath(options.root ?? config.root ?? '');
-      enabled = isReviewLocatorEnabled(config.command, config.env);
+      enabled = isReviewLocatorEnabled(config.command);
       sourceEnvReplacements = createReviewSourceEnvReplacements(config.env);
     },
     transform(code, id) {
@@ -426,7 +426,7 @@ function createRuntimeOptions(
   );
   const root = normalizePath(options.root ?? config?.root ?? '');
   const enabled = config
-    ? isReviewLocatorEnabled(config.command, config.env)
+    ? isReviewLocatorEnabled(config.command)
     : false;
 
   return {

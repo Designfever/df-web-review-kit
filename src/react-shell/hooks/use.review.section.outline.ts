@@ -478,11 +478,13 @@ export function useReviewSectionOutline({
 
   // 패널을 연 직후에는 target 렌더 완료 시점을 알 수 없어
   // 몇 차례(프레임 + 120/500/1200ms) 재시도한다.
+  // 첫 유효 outline만 기본 접힘 상태로 만들고, 이후 재시도는
+  // Option 포커스로 열린 경로를 다시 접지 않도록 현재 상태를 유지한다.
   useEffect(() => {
     if (!isPanelVisible) return undefined;
 
     const refreshSectionOutline = () => {
-      refreshCurrentSectionOutline(true);
+      refreshCurrentSectionOutline(false);
     };
 
     const animationFrame = window.requestAnimationFrame(refreshSectionOutline);
@@ -603,15 +605,22 @@ export function useReviewSectionOutline({
       return;
     }
 
-    const entries = sectionOutline ?? getCurrentSectionOutline();
+    // 비동기 target은 패널이 열린 뒤 하위 컴포넌트를 렌더할 수 있다.
+    // Option 포커스 시점의 DOM을 우선 사용해 초기 root-only 캐시를 교체한다.
+    const currentEntries = getCurrentSectionOutline();
+    const entries = currentEntries ?? sectionOutline;
     if (!entries) return;
 
+    if (currentEntries) {
+      setSectionOutline(currentEntries);
+      sectionOutlineCountRef.current =
+        getSectionOutlineEntryCount(currentEntries);
+    }
+
     if (!sectionOutline) {
-      setSectionOutline(entries);
       setCollapsedSectionOutlineIds(
         getDefaultCollapsedSectionOutlineIds(entries)
       );
-      sectionOutlineCountRef.current = getSectionOutlineEntryCount(entries);
     }
 
     const path = findSectionOutlinePathForElement(entries, request.element);

@@ -89,7 +89,7 @@ export const SectionOutlinePanel = ({
 
   React.useEffect(() => {
     selectedEntryRef.current?.scrollIntoView({
-      block: 'nearest',
+      block: 'center',
       inline: 'nearest',
     });
   }, [selectedEntryId]);

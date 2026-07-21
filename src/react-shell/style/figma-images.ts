@@ -86,6 +86,17 @@ export const reviewShellFigmaImagesStyle = `
     align-items: center;
     gap: var(--df-review-space-1-5);
     min-width: 0;
+    border-radius: var(--df-review-radius-sm);
+  }
+
+  .df-review-figma-image-url-row.is-drag-active {
+    outline: 2px solid var(--df-review-accent);
+    outline-offset: 2px;
+  }
+
+  .df-review-figma-image-url-row.is-drag-active input {
+    border-color: var(--df-review-accent);
+    background: var(--df-review-control);
   }
 
   .df-review-figma-image-header-button {

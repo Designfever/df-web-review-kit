@@ -28,6 +28,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
+- [0.8.7](release-notes-0.8.7.md): direct Figma overlay image imports and build-safe Source Tree paths.
 - [0.8.6](release-notes-0.8.6.md): explicit source hint opt-in for review builds.
 - [0.8.5](release-notes-0.8.5.md): reliable Source Tree focus for asynchronously rendered targets.
 - [0.8.4](release-notes-0.8.4.md): reliable viewport capture for zero-size gradient elements.

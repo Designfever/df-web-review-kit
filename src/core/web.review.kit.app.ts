@@ -1,35 +1,19 @@
 import { localAdapter } from '../adapters/local';
 import type {
-  DomAnchor,
   ReviewAttachment,
   ReviewItem,
-  ReviewMarker,
   ReviewMode,
   ReviewPoint,
-  ReviewSelection,
-  RelativeSelection,
-  ReviewViewportCaptureInput,
-  ReviewViewportCaptureResult,
   WebReviewKitAdapter,
   WebReviewKitController,
   WebReviewKitOptions,
 } from '../types';
-import {
-  cssEscape,
-  getDomAnchorFromElement,
-  getDomAnchorFromPoint,
-  getElementViewportSelection,
-  getRelativePoint,
-  getRelativeSelection,
-} from './dom.anchor';
+import { cssEscape } from './dom.anchor';
 import { getErrorMessage } from './error';
 import {
   createId,
 } from './id';
 import {
-  clampPoint,
-  getPointSelection,
-  getSelectionCenter,
   getViewportSize,
   roundPoint,
   toPublicSelection,
@@ -43,12 +27,22 @@ import {
   getRouteKey,
 } from './location';
 import { getReviewViewportScope } from './review/scope';
-import { createSelectionStartMarker } from './review/item';
+import {
+  createCaptureDraftAttachment,
+  createViewportCaptureInput,
+  type CaptureDraftInput,
+} from './review/capture.input';
+import {
+  buildAreaDraft,
+  buildDomDraftFromElement,
+  buildDomDraftFromPoint,
+  type DraftItemFields,
+  type ElementDraftFields,
+} from './review/draft.builder';
 import type {
   AreaDraft,
   DomDraft,
   ReviewDraftAttachment,
-  ReviewDraftPreviewElement,
 } from './review/draft';
 import {
   runWithAutoScrollBehavior,
@@ -62,17 +56,6 @@ import {
 
 const ROOT_ID = 'df-web-review-kit-root';
 const VIEWPORT_SCROLL_OPTIONS = { capture: true, passive: true } as const;
-
-type DraftItemFields = Partial<
-  Pick<ReviewItem, 'title' | 'comment' | 'assigneeId' | 'assigneeName'>
->;
-type ElementDraftFields = DraftItemFields &
-  Partial<Pick<DomDraft, 'adjustment' | 'isSelectionOnly'>>;
-
-type CaptureDraftInput = Pick<
-  AreaDraft,
-  'marker' | 'selection' | 'viewport'
->;
 
 /** Creates the vanilla runtime controller that mounts review overlays on a target page. */
 export function createWebReviewKit(
@@ -599,70 +582,14 @@ class WebReviewKitApp {
     const environment = this.getEnvironment();
     if (!environment) return;
 
-    const viewport = getViewportSize(environment);
-    const nextPoint = clampPoint(point, environment);
-
-    const draft = await this.withOverlayHidden(() => {
-      const pointSelection = getPointSelection(nextPoint);
-      const targetElement = environment.document.elementFromPoint(
-        nextPoint.x,
-        nextPoint.y
-      );
-      const previewElement =
-        targetElement && 'style' in targetElement
-          ? (targetElement as ReviewDraftPreviewElement)
-          : undefined;
-      const targetRect = targetElement?.getBoundingClientRect();
-      const clickedSelection =
-        targetRect && targetRect.width > 0 && targetRect.height > 0
-          ? {
-              left: targetRect.left,
-              top: targetRect.top,
-              width: targetRect.width,
-              height: targetRect.height,
-            }
-          : undefined;
-      const anchor = getDomAnchorFromPoint(
-        nextPoint,
-        this.options.anchors?.attribute,
-        environment
-      );
-      const elementSelection = anchor
-        ? (clickedSelection ??
-          getElementViewportSelection(anchor, environment, pointSelection))
-        : undefined;
-      const selection = elementSelection ?? pointSelection;
-      const markerPoint = elementSelection
-        ? { x: selection.left, y: selection.top }
-        : getSelectionCenter(selection);
-      const reviewSelection = elementSelection
-        ? {
-            viewport: toPublicSelection(elementSelection),
-            relative: getRelativeSelection(
-              elementSelection,
-              anchor as DomAnchor,
-              environment
-            ),
-          }
-        : undefined;
-      const marker: ReviewMarker = {
-        viewport: roundPoint(markerPoint),
-        relative: anchor
-          ? getRelativePoint(markerPoint, anchor, environment)
-          : undefined,
-      };
-
-      return {
-        viewport,
-        anchor,
-        marker,
-        selection: reviewSelection,
-        ...fields,
-        previewElement,
-      };
-    });
-
-    this.domDraft = draft;
+    this.domDraft = await this.withOverlayHidden(() =>
+      buildDomDraftFromPoint({
+        point,
+        environment,
+        attribute: this.options.anchors?.attribute,
+        fields,
+      })
+    );
     this.render();
   }
 
@@ -673,48 +600,14 @@ class WebReviewKitApp {
     const environment = this.getEnvironment();
     if (!environment || element.ownerDocument !== environment.document) return;
 
-    const viewport = getViewportSize(environment);
-
-    const draft = await this.withOverlayHidden(() => {
-      const rect = element.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return undefined;
-
-      const selection: ViewportSelection = {
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
-      };
-      const anchor = getDomAnchorFromElement(
+    const draft = await this.withOverlayHidden(() =>
+      buildDomDraftFromElement({
         element,
-        this.options.anchors?.attribute,
-        environment
-      );
-      const markerPoint = { x: selection.left, y: selection.top };
-      const marker: ReviewMarker = {
-        viewport: roundPoint(markerPoint),
-        relative: anchor
-          ? getRelativePoint(markerPoint, anchor, environment)
-          : undefined,
-      };
-      const reviewSelection: ReviewSelection = {
-        viewport: toPublicSelection(selection),
-        relative: anchor
-          ? getRelativeSelection(selection, anchor, environment)
-          : undefined,
-      };
-      const previewElement =
-        'style' in element ? (element as ReviewDraftPreviewElement) : undefined;
-
-      return {
-        viewport,
-        anchor,
-        marker,
-        selection: reviewSelection,
-        ...fields,
-        previewElement,
-      };
-    });
+        environment,
+        attribute: this.options.anchors?.attribute,
+        fields,
+      })
+    );
 
     if (!draft) return;
 
@@ -731,37 +624,13 @@ class WebReviewKitApp {
     }
 
     try {
-      const viewport = getViewportSize(environment);
-
-      this.areaDraft = await this.withOverlayHidden(() => {
-        const anchorPoint = clampPoint(
-          getSelectionCenter(selection),
-          environment
-        );
-        const anchor = getDomAnchorFromPoint(
-          anchorPoint,
-          this.options.anchors?.attribute,
-          environment
-        );
-        const marker = createSelectionStartMarker(
+      this.areaDraft = await this.withOverlayHidden(() =>
+        buildAreaDraft({
           selection,
-          anchor,
-          environment
-        );
-        const reviewSelection: ReviewSelection = {
-          viewport: toPublicSelection(selection),
-          relative: anchor
-            ? getRelativeSelection(selection, anchor, environment)
-            : undefined,
-        };
-
-        return {
-          viewport,
-          anchor,
-          marker,
-          selection: reviewSelection,
-        };
-      });
+          environment,
+          attribute: this.options.anchors?.attribute,
+        })
+      );
       this.setModeState('area');
     } finally {
       this.isSelectingArea = false;
@@ -819,7 +688,7 @@ class WebReviewKitApp {
       return;
     }
 
-    const captureInput = this.createViewportCaptureInput(
+    const captureInput = createViewportCaptureInput(
       environment,
       input,
       input.selection?.viewport
@@ -830,7 +699,7 @@ class WebReviewKitApp {
 
     try {
       const result = await environment.captureViewport(captureInput);
-      const attachment = this.createCaptureDraftAttachment(result, captureInput);
+      const attachment = createCaptureDraftAttachment(result, captureInput);
       const currentDraft = getDraft() ?? draft;
       setDraft({
         ...currentDraft,
@@ -842,67 +711,6 @@ class WebReviewKitApp {
       this.isCapturingViewport = false;
       this.render();
     }
-  }
-
-  private createViewportCaptureInput(
-    environment: ReviewEnvironment,
-    draft: CaptureDraftInput,
-    captureRegion?: RelativeSelection
-  ): ReviewViewportCaptureInput {
-    const timestamp = new Date().toISOString();
-    const viewport = draft.viewport ?? getViewportSize(environment);
-    const routeKey = getRouteKey(environment);
-
-    return {
-      routeKey,
-      pageUrl: getPageUrl(environment),
-      originalUrl: getOriginalUrl(environment),
-      viewport,
-      captureRegion,
-      devicePixelRatio: environment.window.devicePixelRatio || 1,
-      scroll: {
-        x: environment.window.scrollX,
-        y: environment.window.scrollY,
-      },
-      marker: draft.marker,
-      selection: draft.selection,
-      timestamp,
-    };
-  }
-
-  private createCaptureDraftAttachment(
-    result: ReviewViewportCaptureResult,
-    input: ReviewViewportCaptureInput
-  ): ReviewDraftAttachment {
-    const mime = result.mime || result.file.type || 'image/png';
-    const name = result.name || `review-capture-${Date.now()}.png`;
-    return {
-      id: createId(),
-      file: result.file,
-      name,
-      mime,
-      size: result.file.size,
-      kind: 'capture',
-      previewUrl: mime.startsWith('image/')
-        ? URL.createObjectURL(result.file)
-        : undefined,
-      metadata: {
-        ...result.metadata,
-        source: 'viewport-capture',
-        target: 'iframe',
-        routeKey: input.routeKey,
-        pageUrl: input.pageUrl,
-        originalUrl: input.originalUrl,
-        viewport: input.viewport,
-        scroll: input.scroll,
-        marker: input.marker,
-        selection: input.selection,
-        timestamp: input.timestamp,
-        devicePixelRatio: input.devicePixelRatio,
-        width: result.width,
-        height: result.height,
-      },
-    };
   }
 
   private async createItem(input: CreateReviewItemInput) {

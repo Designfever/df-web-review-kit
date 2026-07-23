@@ -4,12 +4,25 @@
 // - Alt(Option) 단축키로 target iframe 안에서 소스 후보를 추적/클릭하는
 //   바인딩 (bindSourceOpenShortcut) — 폰트 힌트 오버레이 포함
 // - Source Tree 패널 hover 시 요소 아웃라인 표시
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
 import { createSourceShortcutStyle } from '../review/source.shortcut.style';
 import type {
+  SourceComponentPopup,
   SourceInspectorRect,
   SourceInspectorState,
 } from '../review/source.inspector.overlay';
+import {
+  getSectionOutlinePathForElement,
+  type GetSectionOutlineOptions,
+} from '../section.outline';
+import { getDisplaySourcePath } from '../source.hint';
 import {
   getSourceCandidates,
   type GetSourceCandidatesOptions,
@@ -21,6 +34,7 @@ export function useReviewSourceInspector({
   frameScrollRef,
   iframeRef,
   isSourceTreeHoverOutlineEnabled,
+  sectionOutlineOptions,
   sourceCandidateOptions,
   targetSrc,
   onCancelReviewMode,
@@ -29,6 +43,7 @@ export function useReviewSourceInspector({
   frameScrollRef: RefObject<HTMLDivElement | null>;
   iframeRef: RefObject<HTMLIFrameElement | null>;
   isSourceTreeHoverOutlineEnabled: boolean;
+  sectionOutlineOptions: GetSectionOutlineOptions;
   sourceCandidateOptions: GetSourceCandidatesOptions;
   /** target 주소가 바뀌면 새 문서에 단축키를 다시 바인딩한다. */
   targetSrc: string;
@@ -140,6 +155,45 @@ export function useReviewSourceInspector({
     sourceInspectorState?.targetElement ?? null;
   const componentSelectionTargetElement =
     componentSelectionState?.targetElement ?? null;
+
+  // 선택된 컴포넌트의 outline 조상 체인(선택→부모→…→루트)을 즉석 계산한다.
+  // 요소가 바뀔 때만 다시 만들고, rect 는 아래에서 매 렌더 최신값을 쓴다.
+  const sourceComponentChain = useMemo(() => {
+    const frameDocument = iframeRef.current?.contentDocument;
+    if (!componentSelectionTargetElement || !frameDocument) return null;
+
+    const path = getSectionOutlinePathForElement(
+      frameDocument,
+      componentSelectionTargetElement,
+      sectionOutlineOptions
+    );
+    if (!path || path.length === 0) return null;
+
+    return [...path].reverse();
+  }, [componentSelectionTargetElement, iframeRef, sectionOutlineOptions]);
+
+  const sourceComponentPopup: SourceComponentPopup | null =
+    componentSelectionState && sourceComponentChain
+      ? {
+          rect: componentSelectionState.rect,
+          dataFile:
+            getDisplaySourcePath(sourceComponentChain[0].data?.file) ??
+            sourceComponentChain[0].data?.file,
+          entries: sourceComponentChain.map((entry) => ({
+            id: entry.id,
+            label: entry.label,
+            filePath: entry.filePath,
+            element: entry.element,
+          })),
+        }
+      : null;
+
+  const selectSourceComponent = useCallback(
+    (element: Element) => {
+      onRequestSourceTreeFocus?.(element);
+    },
+    [onRequestSourceTreeFocus]
+  );
 
   useEffect(() => {
     const trackedElement =
@@ -515,8 +569,10 @@ export function useReviewSourceInspector({
     clearSourceOutlineHover,
     clearSourceOutlineSelection,
     componentSelectionState,
+    selectSourceComponent,
     selectSourceOutlineForElement,
     showSourceOutlineForElement,
+    sourceComponentPopup,
     sourceInspectorState,
   };
 }

@@ -81,6 +81,7 @@ export const useReviewShellRuntime = ({
   const selectedItemId = useReviewShellStore((state) => state.selectedItemId);
   const {
     isSourceTreeHoverOutlineEnabled,
+    sectionOutlineOptions,
     sourceCandidateOptions,
   } = useReviewShellConfig();
 
@@ -286,6 +287,7 @@ export const useReviewShellRuntime = ({
     frameScrollRef,
     iframeRef,
     isSourceTreeHoverOutlineEnabled,
+    sectionOutlineOptions,
     sourceCandidateOptions,
     targetSrc,
     onCancelReviewMode: cancelReviewMode,

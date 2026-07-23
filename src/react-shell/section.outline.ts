@@ -94,6 +94,38 @@ export const getSectionOutline = (
   });
 };
 
+/**
+ * entries 트리에서 element 를 포함하는 가장 깊은 경로(root→해당 entry)를 찾는다.
+ * entry.element 가 element 이거나 이를 포함하면 매칭으로 본다.
+ */
+export function findSectionOutlinePath(
+  entries: SectionOutlineEntry[],
+  element: Element
+): SectionOutlineEntry[] | null {
+  let bestPath: SectionOutlineEntry[] | null = null;
+
+  const visit = (entry: SectionOutlineEntry, path: SectionOutlineEntry[]) => {
+    const isMatch = entry.element === element || entry.element.contains(element);
+    if (!isMatch) return;
+
+    const nextPath = [...path, entry];
+    bestPath = nextPath;
+    entry.children.forEach((child) => visit(child, nextPath));
+  };
+
+  entries.forEach((entry) => visit(entry, []));
+  return bestPath;
+}
+
+/** target 문서에서 outline 을 즉석으로 만들어 element 의 경로를 반환한다. */
+export function getSectionOutlinePathForElement(
+  root: ParentNode,
+  element: Element,
+  options?: GetSectionOutlineOptions
+): SectionOutlineEntry[] | null {
+  return findSectionOutlinePath(getSectionOutline(root, options), element);
+}
+
 function getSectionOutlineRoots(
   root: ParentNode,
   options: GetSectionOutlineOptions | undefined

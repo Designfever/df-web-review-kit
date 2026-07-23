@@ -14,6 +14,7 @@ export const SectionOutlineContainer = () => {
   } = useReviewShellActions();
   const {
     activeDomAdjustmentEntryId,
+    canOpenSourceFiles,
     canWriteDom,
     collapsedSectionOutlineIds,
     domAdjustmentByEntryId,
@@ -57,6 +58,7 @@ export const SectionOutlineContainer = () => {
       selectedEntryId={selectedSectionOutlineId}
       activeDomAdjustmentEntryId={activeDomAdjustmentEntryId}
       domAdjustmentByEntryId={domAdjustmentByEntryId}
+      canOpenSourceFiles={canOpenSourceFiles}
       canWriteDom={canWriteDom}
       isFontMetaVisible={sectionOutlineMetaVisibility.font}
       isMediaMetaVisible={sectionOutlineMetaVisibility.media}

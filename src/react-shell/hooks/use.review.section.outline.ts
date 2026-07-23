@@ -119,8 +119,12 @@ export function useReviewSectionOutline({
   onInitReviewKit: () => void;
   onSelectSourceElement: (element: Element) => void;
 }) {
-  const { reviewViewportPresets, sectionOutlineOptions, sourceOpenOptions } =
-    useReviewShellConfig();
+  const {
+    canOpenSourceFiles,
+    reviewViewportPresets,
+    sectionOutlineOptions,
+    sourceOpenOptions,
+  } = useReviewShellConfig();
   const { controllerRef, frameScrollRef, iframeRef } = useReviewShellRefs();
   const { canWriteDom } = useReviewShellAdapterState();
   const storeApi = useReviewShellStoreApi();
@@ -646,32 +650,35 @@ export function useReviewSectionOutline({
 
   const openSectionSource = useCallback(
     (entry: SectionOutlineEntry) => {
+      if (!canOpenSourceFiles) return;
       const didOpen = openSourceInEditor(entry.source, {
         ...sourceOpenOptions,
         omitPosition: true,
       });
       showToast(didOpen ? 'Source opened' : 'Source root required');
     },
-    [showToast, sourceOpenOptions]
+    [canOpenSourceFiles, showToast, sourceOpenOptions]
   );
 
   const openSectionUsageSource = useCallback(
     (entry: SectionOutlineEntry) => {
+      if (!canOpenSourceFiles) return;
       const didOpen = openSourceInEditor(
         entry.metadata.usage?.source,
         sourceOpenOptions
       );
       showToast(didOpen ? 'Usage opened' : 'Usage source not found');
     },
-    [showToast, sourceOpenOptions]
+    [canOpenSourceFiles, showToast, sourceOpenOptions]
   );
 
   const openSectionData = useCallback(
     (entry: SectionOutlineEntry) => {
+      if (!canOpenSourceFiles) return;
       const didOpen = openSourceInEditor(entry.data, sourceOpenOptions);
       showToast(didOpen ? 'Data opened' : 'Data hint not found');
     },
-    [showToast, sourceOpenOptions]
+    [canOpenSourceFiles, showToast, sourceOpenOptions]
   );
 
   /**
@@ -847,6 +854,7 @@ export function useReviewSectionOutline({
   );
 
   return {
+    canOpenSourceFiles,
     canWriteDom,
     collapsedSectionOutlineIds,
     filteredSectionOutline,

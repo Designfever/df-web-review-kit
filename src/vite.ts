@@ -60,17 +60,24 @@ const REVIEW_SOURCE_ENV_DEFINE_KEYS = [
   ],
 ] as const;
 
+const REVIEW_SOURCE_OPEN_ENABLED_DEFINE_KEY =
+  '__DF_WRK_REVIEW_SOURCE_OPEN_ENABLED__';
+
 type ReviewSourceEnvReplacements = Record<string, string>;
 
 const createReviewSourceEnvReplacements = (
-  env: ResolvedConfig['env'] = {}
+  env: ResolvedConfig['env'] = {},
+  command: ResolvedConfig['command'] = 'serve'
 ): ReviewSourceEnvReplacements => {
-  return Object.fromEntries(
-    REVIEW_SOURCE_ENV_DEFINE_KEYS.map(([defineKey, envKey]) => [
-      defineKey,
-      JSON.stringify(env[envKey] ?? ''),
-    ])
-  );
+  return {
+    ...Object.fromEntries(
+      REVIEW_SOURCE_ENV_DEFINE_KEYS.map(([defineKey, envKey]) => [
+        defineKey,
+        JSON.stringify(env[envKey] ?? ''),
+      ])
+    ),
+    [REVIEW_SOURCE_OPEN_ENABLED_DEFINE_KEY]: JSON.stringify(command === 'serve'),
+  };
 };
 
 const injectReviewSourceEnv = (
@@ -100,7 +107,10 @@ export const reviewSourceLocator = (
     enforce: 'pre',
     configResolved(config) {
       runtimeOptions = createRuntimeOptions(options, config);
-      sourceEnvReplacements = createReviewSourceEnvReplacements(config.env);
+      sourceEnvReplacements = createReviewSourceEnvReplacements(
+        config.env,
+        config.command
+      );
     },
     resolveId(id, importer) {
       if (!runtimeOptions.enabled) return null;
@@ -170,7 +180,10 @@ export const reviewDataLocator = (
     configResolved(config) {
       root = normalizePath(options.root ?? config.root ?? '');
       enabled = isReviewLocatorEnabled(config.command, options.enabled);
-      sourceEnvReplacements = createReviewSourceEnvReplacements(config.env);
+      sourceEnvReplacements = createReviewSourceEnvReplacements(
+        config.env,
+        config.command
+      );
     },
     transform(code, id) {
       if (!enabled) return null;

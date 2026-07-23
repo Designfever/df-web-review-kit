@@ -27,6 +27,7 @@ import {
 } from '../viewport';
 
 export interface ReviewShellConfig {
+  canOpenSourceFiles: boolean;
   initialPrompt: string;
   qaPrompt: string;
   projectId: string;
@@ -67,6 +68,7 @@ export const createReviewShellConfig = ({
   const resolvedSourceRoot = resolvedReviewSourceOptions.sourceRoot;
 
   return {
+    canOpenSourceFiles: resolvedReviewSourceOptions.canOpenSourceFiles,
     initialPrompt,
     qaPrompt,
     projectId,

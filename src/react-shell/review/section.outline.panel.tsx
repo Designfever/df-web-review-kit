@@ -36,6 +36,7 @@ type SectionOutlinePanelProps = {
   selectedEntryId: string | null;
   activeDomAdjustmentEntryId: string | null;
   domAdjustmentByEntryId: Record<string, DomAdjustmentPosition>;
+  canOpenSourceFiles: boolean;
   canWriteDom: boolean;
   isFontMetaVisible: boolean;
   isMediaMetaVisible: boolean;
@@ -67,6 +68,7 @@ export const SectionOutlinePanel = ({
   selectedEntryId,
   activeDomAdjustmentEntryId,
   domAdjustmentByEntryId,
+  canOpenSourceFiles,
   canWriteDom,
   isFontMetaVisible,
   isMediaMetaVisible,
@@ -165,7 +167,7 @@ export const SectionOutlinePanel = ({
           key="source"
         >
           <b>src</b>
-          {entry.source?.file ? (
+          {canOpenSourceFiles && entry.source?.file ? (
             <button
               className="df-review-section-outline-source-link"
               type="button"
@@ -191,17 +193,24 @@ export const SectionOutlinePanel = ({
           key="usage"
         >
           <b>used in</b>
-          <button
-            className="df-review-section-outline-usage-link"
-            type="button"
-            title={`Open ${metadata.usage.filePath}${usagePosition}`}
-            onClick={() => onOpenUsageSource(entry)}
-          >
+          {canOpenSourceFiles ? (
+            <button
+              className="df-review-section-outline-usage-link"
+              type="button"
+              title={`Open ${metadata.usage.filePath}${usagePosition}`}
+              onClick={() => onOpenUsageSource(entry)}
+            >
+              <code>
+                {metadata.usage.filePath}
+                {usagePosition}
+              </code>
+            </button>
+          ) : (
             <code>
               {metadata.usage.filePath}
               {usagePosition}
             </code>
-          </button>
+          )}
         </span>
       );
     }
@@ -353,45 +362,49 @@ export const SectionOutlinePanel = ({
                   ) : null}
                 </span>
                 <span className="df-review-section-outline-action-group is-right">
-                  <button
-                    aria-label={`Open ${entry.label} data`}
-                    className="df-review-section-outline-link"
-                    data-review-tooltip="Open data"
-                    title="Open data"
-                    type="button"
-                    disabled={!entry.data?.file}
-                    onClick={() => onOpenData(entry)}
-                  >
-                    <DatabaseIcon aria-hidden="true" />
-                  </button>
-                  <button
-                    aria-label={`Open ${entry.label} source`}
-                    className="df-review-section-outline-link"
-                    data-review-tooltip="Open source"
-                    title="Open source"
-                    type="button"
-                    disabled={!entry.source?.file}
-                    onClick={() => onOpenSource(entry)}
-                  >
-                    <Code2Icon aria-hidden="true" />
-                  </button>
-                  <button
-                    aria-label={`Open ${entry.label} usage`}
-                    className="df-review-section-outline-link"
-                    data-review-tooltip="Open parent usage"
-                    title="Open parent usage"
-                    type="button"
-                    disabled={!entry.metadata.usage?.source.file}
-                    onClick={() => onOpenUsageSource(entry)}
-                  >
-                    <UsageIcon aria-hidden="true" />
-                  </button>
-                  <span
-                    aria-hidden="true"
-                    className="df-review-section-outline-divider"
-                  >
-                    |
-                  </span>
+                  {canOpenSourceFiles ? (
+                    <>
+                      <button
+                        aria-label={`Open ${entry.label} data`}
+                        className="df-review-section-outline-link"
+                        data-review-tooltip="Open data"
+                        title="Open data"
+                        type="button"
+                        disabled={!entry.data?.file}
+                        onClick={() => onOpenData(entry)}
+                      >
+                        <DatabaseIcon aria-hidden="true" />
+                      </button>
+                      <button
+                        aria-label={`Open ${entry.label} source`}
+                        className="df-review-section-outline-link"
+                        data-review-tooltip="Open source"
+                        title="Open source"
+                        type="button"
+                        disabled={!entry.source?.file}
+                        onClick={() => onOpenSource(entry)}
+                      >
+                        <Code2Icon aria-hidden="true" />
+                      </button>
+                      <button
+                        aria-label={`Open ${entry.label} usage`}
+                        className="df-review-section-outline-link"
+                        data-review-tooltip="Open parent usage"
+                        title="Open parent usage"
+                        type="button"
+                        disabled={!entry.metadata.usage?.source.file}
+                        onClick={() => onOpenUsageSource(entry)}
+                      >
+                        <UsageIcon aria-hidden="true" />
+                      </button>
+                      <span
+                        aria-hidden="true"
+                        className="df-review-section-outline-divider"
+                      >
+                        |
+                      </span>
+                    </>
+                  ) : null}
                   <button
                     aria-label={`Start DOM QA for ${entry.label}`}
                     className="df-review-section-outline-link is-dom-select"

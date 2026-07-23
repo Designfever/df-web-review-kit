@@ -77,10 +77,12 @@ describe('isReviewLocatorEnabled', () => {
     ).resolves.toBeNull();
   });
 
-  it('enables source locators with explicit build opt-in', async () => {
+  it('enables source locators but disables editor links in review builds', async () => {
     const plugin = createLocatorPlugin('build', true);
-    const code =
-      'const root = typeof __DF_WRK_REVIEW_SOURCE_ROOT__ === "undefined";';
+    const code = [
+      'const root = typeof __DF_WRK_REVIEW_SOURCE_ROOT__ === "undefined";',
+      'const canOpen = typeof __DF_WRK_REVIEW_SOURCE_OPEN_ENABLED__ === "undefined" ? true : __DF_WRK_REVIEW_SOURCE_OPEN_ENABLED__;',
+    ].join('\n');
 
     expect(isReviewLocatorEnabled('build', true)).toBe(true);
     expect(
@@ -89,7 +91,19 @@ describe('isReviewLocatorEnabled', () => {
     await expect(
       plugin.transform(code, '/private/project/src/app.tsx')
     ).resolves.toMatchObject({
-      code: expect.stringContaining('/private/project'),
+      code: expect.stringContaining('const canOpen = typeof false'),
+    });
+  });
+
+  it('keeps editor links enabled on the dev server', async () => {
+    const plugin = createLocatorPlugin('serve', false);
+    const code =
+      'const canOpen = typeof __DF_WRK_REVIEW_SOURCE_OPEN_ENABLED__ === "undefined" ? true : __DF_WRK_REVIEW_SOURCE_OPEN_ENABLED__;';
+
+    await expect(
+      plugin.transform(code, '/private/project/src/app.tsx')
+    ).resolves.toMatchObject({
+      code: expect.stringContaining('const canOpen = typeof true'),
     });
   });
 

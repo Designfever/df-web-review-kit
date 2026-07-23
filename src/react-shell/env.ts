@@ -9,6 +9,7 @@ type ReviewRuntimeEnv = Record<string, unknown>;
 declare const __DF_WRK_REVIEW_SOURCE_ROOT__: string | undefined;
 declare const __DF_WRK_REVIEW_SOURCE_EDITOR__: string | undefined;
 declare const __DF_WRK_REVIEW_SOURCE_URL_TEMPLATE__: string | undefined;
+declare const __DF_WRK_REVIEW_SOURCE_OPEN_ENABLED__: boolean | undefined;
 
 const REVIEW_SOURCE_EDITORS: readonly ReviewSourceEditor[] = [
   'vscode',
@@ -31,6 +32,11 @@ const getInjectedSourceUrlTemplate = () =>
   typeof __DF_WRK_REVIEW_SOURCE_URL_TEMPLATE__ === 'undefined'
     ? undefined
     : __DF_WRK_REVIEW_SOURCE_URL_TEMPLATE__;
+
+const getInjectedSourceOpenEnabled = () =>
+  typeof __DF_WRK_REVIEW_SOURCE_OPEN_ENABLED__ === 'undefined'
+    ? true
+    : __DF_WRK_REVIEW_SOURCE_OPEN_ENABLED__;
 
 const getRuntimeEnv = (): ReviewRuntimeEnv => ({
   VITE_REVIEW_SOURCE_EDITOR: getInjectedSourceEditor(),
@@ -71,6 +77,7 @@ export const resolveReviewSourceOptions = ({
       : sourceInspector;
 
   return {
+    canOpenSourceFiles: getInjectedSourceOpenEnabled(),
     sourceInspector: resolvedSourceInspector,
     sourceRoot: envSourceRoot ?? sourceRoot,
   };

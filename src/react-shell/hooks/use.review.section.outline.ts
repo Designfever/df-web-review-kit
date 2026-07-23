@@ -25,8 +25,6 @@ import {
   getSectionOutline,
   type SectionOutlineEntry,
 } from '../section.outline';
-import { getDraftViewportScale } from '../../core/draft.metrics';
-import { isEditableEventTarget } from '../../core/hotkey';
 import {
   getStoredSourceTreeFilter,
   getStoredSourceTreeMetaVisibility,
@@ -43,29 +41,13 @@ import {
 } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
 import { useReviewToast } from './use.review.toast';
-import {
-  DomAdjustmentLayerManager,
-  type DomAdjustmentPosition,
-} from '../target/dom-adjustment.layer';
+import { useSectionDomAdjustment } from './use.section.dom.adjustment';
+import { type DomAdjustmentPosition } from '../target/dom-adjustment.layer';
 
 type SourceTreeMetaVisibilityKey = keyof StoredSourceTreeMetaVisibility;
 
-const EMPTY_DOM_ADJUSTMENT_POSITION: DomAdjustmentPosition = {
-  x: 0,
-  y: 0,
-};
-
 /** 패널이 닫히는 애니메이션을 기다린 뒤 DOM QA 를 시작하기 위한 지연. */
 const SOURCE_TREE_PANEL_CLOSE_DELAY_MS = 180;
-
-const getSectionDomAdjustmentKeyDelta = (event: KeyboardEvent) => {
-  const step = event.shiftKey ? 10 : 1;
-  if (event.key === 'ArrowLeft') return { x: -step };
-  if (event.key === 'ArrowRight') return { x: step };
-  if (event.key === 'ArrowUp') return { y: -step };
-  if (event.key === 'ArrowDown') return { y: step };
-  return null;
-};
 
 const isDomAdjustmentEmpty = (position: DomAdjustmentPosition) =>
   position.x === 0 && position.y === 0;
@@ -119,19 +101,14 @@ export function useReviewSectionOutline({
   onInitReviewKit: () => void;
   onSelectSourceElement: (element: Element) => void;
 }) {
-  const {
-    canOpenSourceFiles,
-    reviewViewportPresets,
-    sectionOutlineOptions,
-    sourceOpenOptions,
-  } = useReviewShellConfig();
+  const { canOpenSourceFiles, sectionOutlineOptions, sourceOpenOptions } =
+    useReviewShellConfig();
   const { controllerRef, frameScrollRef, iframeRef } = useReviewShellRefs();
   const { canWriteDom } = useReviewShellAdapterState();
   const storeApi = useReviewShellStoreApi();
   const isListVisible = useReviewShellStore((state) => state.isListVisible);
   const sidePanel = useReviewShellStore((state) => state.sidePanel);
   const target = useReviewShellStore((state) => state.target);
-  const size = useReviewShellStore((state) => state.size);
   const targetFrameLoadVersion = useReviewShellStore(
     (state) => state.targetFrameLoadVersion
   );
@@ -158,15 +135,7 @@ export function useReviewSectionOutline({
   const [selectedSectionOutlineId, setSelectedSectionOutlineId] = useState<
     string | null
   >(null);
-  const [activeDomAdjustmentEntryId, setActiveDomAdjustmentEntryId] = useState<
-    string | null
-  >(null);
-  const [domAdjustmentByEntryId, setDomAdjustmentByEntryId] = useState<
-    Record<string, DomAdjustmentPosition>
-  >({});
   const handledSourceTreeFocusVersionRef = useRef(0);
-  const domAdjustmentManagerRef = useRef<DomAdjustmentLayerManager | null>(null);
-  const domAdjustmentRequestVersionRef = useRef(0);
 
   const clearSectionOutlineSelection = useCallback(() => {
     const activeElement = document.activeElement;
@@ -180,59 +149,38 @@ export function useReviewSectionOutline({
     onClearSourceSelection();
   }, [onClearSourceSelection]);
 
-  const handleDomAdjustmentCleared = useCallback((entryId: string) => {
-    setActiveDomAdjustmentEntryId((current) =>
-      current === entryId ? null : current
-    );
-    setDomAdjustmentByEntryId((current) => {
-      if (!current[entryId]) return current;
-      const next = { ...current };
-      delete next[entryId];
-      return next;
-    });
-  }, []);
-
-  const getDomAdjustmentManager = useCallback(() => {
-    const frameDocument = iframeRef.current?.contentDocument;
-    if (!frameDocument?.documentElement || !frameDocument.body) return null;
-
-    const current = domAdjustmentManagerRef.current;
-    if (current?.belongsTo(frameDocument)) return current;
-
-    current?.destroy();
-    const next = new DomAdjustmentLayerManager({
-      document: frameDocument,
-      onClear: handleDomAdjustmentCleared,
-    });
-    domAdjustmentManagerRef.current = next;
-    return next;
-  }, [handleDomAdjustmentCleared, iframeRef]);
-
-  const domAdjustmentViewportScale = useMemo(
-    () =>
-      getDraftViewportScale(
-        { width: size.width, height: size.height },
-        reviewViewportPresets
-      ).scale,
-    [reviewViewportPresets, size.height, size.width]
+  const scrollToSection = useCallback(
+    (entry: SectionOutlineEntry) => {
+      scrollElementInTarget(entry.element, 'center');
+      centerFrameScrollOnElement(
+        frameScrollRef.current,
+        iframeRef.current,
+        entry.element
+      );
+    },
+    [frameScrollRef, iframeRef]
   );
 
-  const clearActiveDomAdjustment = useCallback(() => {
-    setActiveDomAdjustmentEntryId(null);
-  }, []);
+  const selectSectionEntryElement = useCallback(
+    (entry: SectionOutlineEntry) => {
+      setSelectedSectionOutlineId(entry.id);
+      onSelectSourceElement(entry.element);
+    },
+    [onSelectSourceElement]
+  );
 
-  const clearDomAdjustments = useCallback(() => {
-    domAdjustmentRequestVersionRef.current += 1;
-    domAdjustmentManagerRef.current?.destroy();
-    domAdjustmentManagerRef.current = null;
-    setActiveDomAdjustmentEntryId(null);
-    setDomAdjustmentByEntryId({});
-  }, []);
-
-  const finishActiveDomAdjustment = useCallback(() => {
-    if (!activeDomAdjustmentEntryId) return;
-    clearActiveDomAdjustment();
-  }, [activeDomAdjustmentEntryId, clearActiveDomAdjustment]);
+  const {
+    activeDomAdjustmentEntryId,
+    domAdjustmentByEntryId,
+    clearActiveDomAdjustment,
+    clearDomAdjustments,
+    finishActiveDomAdjustment,
+    startSectionDomAdjustment,
+    clearSectionDomAdjustment,
+  } = useSectionDomAdjustment({
+    scrollToSection,
+    onSelectEntry: selectSectionEntryElement,
+  });
 
   const updateSectionOutlineFilter = useCallback((nextFilter: string) => {
     setSectionOutlineFilter(nextFilter);
@@ -290,85 +238,6 @@ export function useReviewSectionOutline({
     targetFrameLoadVersion,
     targetSrc,
   ]);
-
-  useEffect(() => {
-    if (!activeDomAdjustmentEntryId) return undefined;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (isEditableEventTarget(event)) return;
-
-      const delta = getSectionDomAdjustmentKeyDelta(event);
-      if (!delta) return;
-
-      const position = domAdjustmentManagerRef.current?.adjust(
-        activeDomAdjustmentEntryId,
-        delta,
-        domAdjustmentViewportScale
-      );
-      if (!position) {
-        clearActiveDomAdjustment();
-        return;
-      }
-
-      setDomAdjustmentByEntryId((current) => ({
-        ...current,
-        [activeDomAdjustmentEntryId]: position,
-      }));
-      event.preventDefault();
-      event.stopPropagation();
-    };
-
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [
-    activeDomAdjustmentEntryId,
-    clearActiveDomAdjustment,
-    domAdjustmentViewportScale,
-  ]);
-
-  useEffect(() => {
-    if (!activeDomAdjustmentEntryId) return undefined;
-
-    const finishOnPointerDown = (event: PointerEvent) => {
-      if (
-        event.target instanceof Element &&
-        event.target.closest('.df-review-section-outline-link.is-dom-adjust')
-      ) {
-        return;
-      }
-      finishActiveDomAdjustment();
-    };
-
-    let frameDocument: Document | null = null;
-    try {
-      frameDocument = iframeRef.current?.contentDocument ?? null;
-    } catch {
-      frameDocument = null;
-    }
-
-    window.addEventListener('pointerdown', finishOnPointerDown, true);
-    frameDocument?.addEventListener(
-      'pointerdown',
-      finishOnPointerDown,
-      true
-    );
-    return () => {
-      window.removeEventListener('pointerdown', finishOnPointerDown, true);
-      frameDocument?.removeEventListener(
-        'pointerdown',
-        finishOnPointerDown,
-        true
-      );
-    };
-  }, [
-    activeDomAdjustmentEntryId,
-    finishActiveDomAdjustment,
-    iframeRef,
-  ]);
-
-  useEffect(() => {
-    domAdjustmentManagerRef.current?.setActive(activeDomAdjustmentEntryId);
-  }, [activeDomAdjustmentEntryId]);
 
   useEffect(() => {
     if (
@@ -553,15 +422,6 @@ export function useReviewSectionOutline({
       return next;
     });
   }, []);
-
-  const scrollToSection = useCallback((entry: SectionOutlineEntry) => {
-    scrollElementInTarget(entry.element, 'center');
-    centerFrameScrollOnElement(
-      frameScrollRef.current,
-      iframeRef.current,
-      entry.element
-    );
-  }, [frameScrollRef, iframeRef]);
 
   const selectSectionOutlinePath = useCallback(
     (path: SectionOutlineEntry[]) => {
@@ -760,97 +620,6 @@ export function useReviewSectionOutline({
       showToast,
       storeApi,
     ]
-  );
-
-  const startSectionDomAdjustment = useCallback(
-    (entry: SectionOutlineEntry) => {
-      if (!canWriteDom) {
-        showToast('DOM select unavailable');
-        return;
-      }
-
-      const rect = entry.element.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) {
-        showToast('Component has no visible area here');
-        return;
-      }
-
-      finishActiveDomAdjustment();
-      scrollToSection(entry);
-      setSelectedSectionOutlineId(entry.id);
-      onSelectSourceElement(entry.element);
-      const requestVersion = domAdjustmentRequestVersionRef.current + 1;
-      domAdjustmentRequestVersionRef.current = requestVersion;
-
-      let targetWindow: Window | null = null;
-      try {
-        targetWindow =
-          entry.element.ownerDocument.defaultView ??
-          iframeRef.current?.contentWindow ??
-          null;
-      } catch {
-        targetWindow = null;
-      }
-
-      void waitForFrame(targetWindow)
-        .then(async () => {
-          const position =
-            domAdjustmentByEntryId[entry.id] ?? EMPTY_DOM_ADJUSTMENT_POSITION;
-          const manager = getDomAdjustmentManager();
-          if (!manager) {
-            showToast('DOM move unavailable');
-            return;
-          }
-
-          const didCreate = await manager.create(
-            entry.id,
-            entry.label,
-            entry.element,
-            position,
-            domAdjustmentViewportScale
-          );
-          if (!didCreate) {
-            showToast('DOM move unavailable');
-            return;
-          }
-
-          setDomAdjustmentByEntryId((current) => ({
-            ...current,
-            [entry.id]: position,
-          }));
-          if (domAdjustmentRequestVersionRef.current === requestVersion) {
-            setActiveDomAdjustmentEntryId(entry.id);
-          }
-        })
-        .catch(() => {
-          clearActiveDomAdjustment();
-          showToast('DOM move unavailable');
-        });
-    },
-    [
-      canWriteDom,
-      clearActiveDomAdjustment,
-      domAdjustmentByEntryId,
-      domAdjustmentViewportScale,
-      finishActiveDomAdjustment,
-      getDomAdjustmentManager,
-      iframeRef,
-      onSelectSourceElement,
-      scrollToSection,
-      showToast,
-    ]
-  );
-
-  const clearSectionDomAdjustment = useCallback(
-    (entry: SectionOutlineEntry) => {
-      const manager = domAdjustmentManagerRef.current;
-      if (manager) {
-        manager.clear(entry.id);
-        return;
-      }
-      handleDomAdjustmentCleared(entry.id);
-    },
-    [handleDomAdjustmentCleared]
   );
 
   return {

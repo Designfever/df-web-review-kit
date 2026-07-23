@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import type {
+  ReviewFigmaImageAssetInput,
   ReviewFigmaImageFormat,
   ReviewFigmaImageStore,
   ReviewFigmaRouteTarget,
@@ -95,8 +96,12 @@ export const useReviewFigmaImages = ({
   });
 
   const addImage = useCallback(
-    async (figmaUrl: string, label?: string) => {
-      const image = await addStoreImage(figmaUrl, label);
+    async (
+      figmaUrl: string,
+      label?: string,
+      asset?: ReviewFigmaImageAssetInput
+    ) => {
+      const image = await addStoreImage(figmaUrl, label, asset);
       if (image) showImage(image.id);
       return image;
     },

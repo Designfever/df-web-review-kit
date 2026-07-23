@@ -121,8 +121,8 @@ export function createRemoteReviewFigmaImageStore({
     listImages,
     async addImage(input) {
       const ref = parseReviewFigmaNodeRef(input.figmaUrl);
-      if (!ref) {
-        throw new Error('A Figma node link or fileKey->nodeId value is required.');
+      if (!ref && !input.asset) {
+        throw new Error('A Figma node link or image asset is required.');
       }
 
       const id = createFigmaImageId();
@@ -147,11 +147,11 @@ export function createRemoteReviewFigmaImageStore({
       const now = new Date().toISOString();
       const row = createImageRow({
         asset,
-        fileKey: ref.fileKey,
+        fileKey: ref?.fileKey ?? '',
         id,
         imageUrl: uploaded.imageUrl,
         input,
-        nodeId: ref.nodeId,
+        nodeId: ref?.nodeId ?? '',
         now,
         order,
         storageKey: uploaded.storageKey,

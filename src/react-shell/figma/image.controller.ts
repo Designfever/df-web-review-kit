@@ -6,6 +6,7 @@ import {
   useState,
 } from 'react';
 import type {
+  AddReviewFigmaImageInput,
   ReviewFigmaImage,
   ReviewFigmaImageFormat,
   ReviewFigmaImageStore,
@@ -104,7 +105,11 @@ export const useReviewFigmaImageStoreController = ({
   }, [refreshImages]);
 
   const addImage = useCallback(
-    async (figmaUrl: string, label?: string) => {
+    async (
+      figmaUrl: string,
+      label?: string,
+      asset?: AddReviewFigmaImageInput['asset']
+    ) => {
       const trimmedUrl = figmaUrl.trim();
       if (!store || !trimmedUrl) return null;
 
@@ -117,6 +122,7 @@ export const useReviewFigmaImageStoreController = ({
           imageFormat,
           label: label?.trim() || undefined,
           order: getNewReviewFigmaImageOrder(images),
+          asset,
         });
         const uniqueLabel = getUniqueReviewFigmaImageLabel(
           getReviewFigmaImageComparableLabel(image),

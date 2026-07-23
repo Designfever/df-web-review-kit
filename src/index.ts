@@ -6,6 +6,11 @@ export {
 } from './status';
 export { DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT } from './figma/image.types';
 export {
+  createReviewImageAssetFromFile,
+  createReviewImageAssetFromUrl,
+  isReviewImageUrl,
+} from './figma/image.import';
+export {
   DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
   createEndpointReviewFigmaImageStore,
   createReviewFigmaImageStoreClient,

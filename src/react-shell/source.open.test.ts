@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getSourceCandidates } from './source.open';
+import { getSourceCandidates, openSourceInEditor } from './source.open';
 
 // 같은 소스 라인에서 렌더된 반복 요소(#index/count) 판정과
 // per-call 문서 스캔 캐시가 유지되는지 검증한다.
@@ -22,6 +22,32 @@ function renderRepeatedCards() {
 
 afterEach(() => {
   document.body.innerHTML = '';
+  vi.restoreAllMocks();
+});
+
+describe('openSourceInEditor', () => {
+  it('does not open a Vite root-relative source without sourceRoot', () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    expect(openSourceInEditor({ file: '/src/App.tsx', line: '3' })).toBe(false);
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it('opens the same source after sourceRoot is configured', () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    expect(
+      openSourceInEditor(
+        { file: '/src/App.tsx', line: '3' },
+        { sourceRoot: '/Users/example/project' }
+      )
+    ).toBe(true);
+    expect(open).toHaveBeenCalledWith(
+      'vscode://file//Users/example/project/src/App.tsx:3',
+      '_blank',
+      'noreferrer'
+    );
+  });
 });
 
 describe('getSourceCandidates repeat info', () => {

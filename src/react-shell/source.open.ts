@@ -476,17 +476,21 @@ function getEventElement(target: EventTarget | null): Element | null {
 
 function getSourcePath(file: string, sourceRoot?: string) {
   const normalizedFile = file.replace(/\\/g, '/');
-  if (normalizedFile.startsWith('/') || /^[a-zA-Z]:\//.test(normalizedFile)) {
-    return normalizedFile;
-  }
-
   const normalizedRoot = sourceRoot
     ?.trim()
     .replace(/\\/g, '/')
     .replace(/\/+$/, '');
+  if (isAbsoluteFilesystemPath(normalizedFile)) return normalizedFile;
   if (!normalizedRoot) return null;
 
   return `${normalizedRoot}/${normalizedFile.replace(/^\/+/, '')}`;
+}
+
+function isAbsoluteFilesystemPath(file: string) {
+  return (
+    /^[a-zA-Z]:\//.test(file) ||
+    /^\/(?:Users|Volumes|home|opt|private|tmp|var)\//.test(file)
+  );
 }
 
 function getSourcePosition(value: string | undefined) {

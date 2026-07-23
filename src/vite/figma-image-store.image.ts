@@ -177,8 +177,8 @@ export async function createReviewFigmaImage({
   requestToken?: string | null;
 }): Promise<ReviewFigmaImage> {
   const ref = parseReviewFigmaNodeRef(input.figmaUrl);
-  if (!ref) {
-    throw new Error('A Figma node copy link or fileKey->nodeId value is required.');
+  if (!ref && !input.asset) {
+    throw new Error('A Figma node link or image asset is required.');
   }
 
   const id = createReviewFigmaImageId();
@@ -202,8 +202,8 @@ export async function createReviewFigmaImage({
       projectId: input.target.projectId,
       target: input.target,
       figmaUrl: input.figmaUrl,
-      fileKey: ref.fileKey,
-      nodeId: ref.nodeId,
+      fileKey: ref?.fileKey ?? '',
+      nodeId: ref?.nodeId ?? '',
       imageUrl: cachedAsset.imageUrl,
       imageFormat: cachedAsset.imageFormat,
       mimeType: cachedAsset.mimeType,
@@ -217,6 +217,8 @@ export async function createReviewFigmaImage({
       updatedAt: now,
     };
   }
+
+  if (!ref) throw new Error('A Figma node link is required.');
 
   const nodeLabelPromise = explicitLabel
     ? Promise.resolve(undefined)

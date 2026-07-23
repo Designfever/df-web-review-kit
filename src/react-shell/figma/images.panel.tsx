@@ -1,5 +1,6 @@
 import {
   type CSSProperties,
+  type DragEvent,
   type MouseEvent,
   type PointerEvent,
   useRef,
@@ -14,7 +15,15 @@ import {
   Trash2 as TrashIcon,
   X as XIcon,
 } from 'lucide-react';
-import type { ReviewFigmaImage } from '../../figma/image.types';
+import type {
+  ReviewFigmaImage,
+  ReviewFigmaImageAssetInput,
+} from '../../figma/image.types';
+import {
+  createReviewImageAssetFromFile,
+  createReviewImageAssetFromUrl,
+  isReviewImageUrl,
+} from '../../figma/image.import';
 import type {
   ReviewFigmaImageOverlayItemState,
 } from './image.overlay.controller';
@@ -43,7 +52,8 @@ interface FigmaImagesPanelProps {
   selectedImageId: string | null;
   onAddImage: (
     figmaUrl: string,
-    label?: string
+    label?: string,
+    asset?: ReviewFigmaImageAssetInput
   ) => Promise<ReviewFigmaImage | null>;
   onDeleteImage: (id: string) => Promise<void>;
   onRefreshImages: () => Promise<ReviewFigmaImage[]>;
@@ -81,6 +91,8 @@ export const FigmaImagesPanel = ({
   onUpdateImage,
 }: FigmaImagesPanelProps) => {
   const [figmaUrlDraft, setFigmaUrlDraft] = useState('');
+  const [importError, setImportError] = useState('');
+  const [isImportDragActive, setIsImportDragActive] = useState(false);
   const [editingImageId, setEditingImageId] = useState<string | null>(null);
   const [editingLabelDraft, setEditingLabelDraft] = useState('');
   const [draggingImageId, setDraggingImageId] = useState<string | null>(null);
@@ -121,13 +133,38 @@ export const FigmaImagesPanel = ({
     ? offsetYDraftByImageId[selectedImage.id] ??
       String(selectedOverlayState.offsetY)
     : '';
-  const statusText = error
-    ? error
-    : '';
+  const statusText = importError || error;
   const progressText = isMutating ? 'Saving...' : isLoading ? 'Loading...' : '';
   const draggingImageIndex = draggingImageId
     ? images.findIndex((image) => image.id === draggingImageId)
     : -1;
+  const addImageSource = async (source: string, file?: File) => {
+    setImportError('');
+    try {
+      const asset = file
+        ? await createReviewImageAssetFromFile(file)
+        : isReviewImageUrl(source)
+          ? await createReviewImageAssetFromUrl(source)
+          : undefined;
+      const image = await onAddImage(
+        source,
+        file?.name.replace(/\.[^.]+$/, ''),
+        asset
+      );
+      if (image) setFigmaUrlDraft('');
+    } catch (addError) {
+      setImportError(
+        addError instanceof Error ? addError.message : 'Image import failed.'
+      );
+    }
+  };
+  const handleImageFileDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsImportDragActive(false);
+    const file = event.dataTransfer.files[0];
+    if (!file) return;
+    void addImageSource(file.name, file);
+  };
   const finishEditingImageLabel = (
     imageId: string,
     currentLabel: string
@@ -215,10 +252,7 @@ export const FigmaImagesPanel = ({
         className="df-review-figma-image-form"
         onSubmit={(event) => {
           event.preventDefault();
-          void onAddImage(figmaUrlDraft).then((image) => {
-            if (!image) return;
-            setFigmaUrlDraft('');
-          });
+          void addImageSource(figmaUrlDraft);
         }}
       >
         <div className="df-review-figma-images-header">
@@ -237,15 +271,35 @@ export const FigmaImagesPanel = ({
             <RefreshCwIcon aria-hidden="true" />
           </button>
         </div>
-        <div className="df-review-figma-image-url-row">
+        <div
+          className={`df-review-figma-image-url-row${
+            isImportDragActive ? ' is-drag-active' : ''
+          }`}
+          onDragEnter={(event) => {
+            event.preventDefault();
+            setIsImportDragActive(true);
+          }}
+          onDragLeave={(event) => {
+            if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+            setIsImportDragActive(false);
+          }}
+          onDragOver={(event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+          }}
+          onDrop={handleImageFileDrop}
+        >
           <input
-            aria-label="Figma URL"
+            aria-label="Figma or image URL"
             autoComplete="off"
-            placeholder="Figma URL"
+            placeholder="Figma or image URL · drop image"
             required
             spellCheck={false}
             value={figmaUrlDraft}
-            onChange={(event) => setFigmaUrlDraft(event.currentTarget.value)}
+            onChange={(event) => {
+              setImportError('');
+              setFigmaUrlDraft(event.currentTarget.value);
+            }}
           />
           <button
             aria-label="Add Figma image"
@@ -634,6 +688,8 @@ const FigmaImagePreviewModal = ({
   label,
   onClose,
 }: FigmaImagePreviewModalProps) => {
+  const isExternalSource = /^https?:\/\//i.test(image.figmaUrl);
+  const isFigmaSource = Boolean(image.fileKey && image.nodeId);
   return (
     <div
       aria-label={`${label} Figma image preview`}
@@ -655,16 +711,18 @@ const FigmaImagePreviewModal = ({
             spellCheck={false}
             value={image.figmaUrl}
           />
-          <a
-            aria-label={`Open ${label} Figma node`}
-            className="df-review-figma-image-preview-link"
-            href={image.figmaUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            <span>Open Figma</span>
-            <ExternalLinkIcon aria-hidden="true" />
-          </a>
+          {isExternalSource && (
+            <a
+              aria-label={`Open ${label} source`}
+              className="df-review-figma-image-preview-link"
+              href={image.figmaUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              <span>{isFigmaSource ? 'Open Figma' : 'Open Image'}</span>
+              <ExternalLinkIcon aria-hidden="true" />
+            </a>
+          )}
           <button
             aria-label="Close Figma image preview"
             className="df-review-figma-image-preview-close"

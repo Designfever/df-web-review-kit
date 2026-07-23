@@ -10,6 +10,19 @@ export type SourceInspectorState = {
   targetElement: Element;
 };
 
+type SourceComponentPopupEntry = {
+  id: string;
+  label: string;
+  filePath: string;
+  element: Element;
+};
+
+export type SourceComponentPopup = {
+  rect: SourceInspectorRect;
+  dataFile: string | undefined;
+  entries: SourceComponentPopupEntry[];
+};
+
 type SourceInspectorOverlayProps = {
   componentSelectionState: SourceInspectorState | null;
   state: SourceInspectorState | null;

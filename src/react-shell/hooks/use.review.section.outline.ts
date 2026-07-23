@@ -22,6 +22,7 @@ import {
 } from '../review/shell.helpers';
 import { buildTargetSrc } from '../route';
 import {
+  findSectionOutlinePath,
   getSectionOutline,
   type SectionOutlineEntry,
 } from '../section.outline';
@@ -69,25 +70,6 @@ const getClosestElement = (target: EventTarget | null, selector: string) => {
   return typeof element?.closest === 'function'
     ? element.closest(selector)
     : null;
-};
-
-const findSectionOutlinePathForElement = (
-  entries: SectionOutlineEntry[],
-  element: Element
-): SectionOutlineEntry[] | null => {
-  let bestPath: SectionOutlineEntry[] | null = null;
-
-  const visit = (entry: SectionOutlineEntry, path: SectionOutlineEntry[]) => {
-    const isMatch = entry.element === element || entry.element.contains(element);
-    if (!isMatch) return;
-
-    const nextPath = [...path, entry];
-    bestPath = nextPath;
-    entry.children.forEach((child) => visit(child, nextPath));
-  };
-
-  entries.forEach((entry) => visit(entry, []));
-  return bestPath;
 };
 
 export function useReviewSectionOutline({
@@ -487,7 +469,7 @@ export function useReviewSectionOutline({
       );
     }
 
-    const path = findSectionOutlinePathForElement(entries, request.element);
+    const path = findSectionOutlinePath(entries, request.element);
     if (!path) {
       handledSourceTreeFocusVersionRef.current = request.version;
       showToast('Component not found');

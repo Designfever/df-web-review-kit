@@ -48,12 +48,27 @@ export const SourceInspectorPopup = ({
         top: `${position.top}px`,
       }}
     >
-      <div className="df-review-source-popup-data">
-        <span className="df-review-source-popup-data-label">data</span>
-        <code>{popup.dataFile ?? 'no data file'}</code>
-      </div>
-      <hr className="df-review-source-popup-divider" />
       <ul className="df-review-source-popup-list">
+        {popup.dataEntries.map((entry) => (
+          <li key={entry.id}>
+            <button
+              className="df-review-source-popup-entry is-data"
+              type="button"
+              title={entry.filePath}
+              onClick={() => onSelectEntry(entry.element)}
+            >
+              <span className="df-review-source-popup-entry-label">
+                {entry.label}
+              </span>
+              <span className="df-review-source-popup-entry-path">
+                {entry.filePath}
+              </span>
+            </button>
+          </li>
+        ))}
+        {popup.dataEntries.length > 0 ? (
+          <li aria-hidden="true" className="df-review-source-popup-divider" />
+        ) : null}
         {popup.entries.map((entry, index) => (
           <li key={entry.id}>
             <button

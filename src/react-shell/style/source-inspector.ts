@@ -33,31 +33,8 @@ export const reviewShellSourceInspectorStyle = `
     line-height: 1.35;
   }
 
-  .df-review-source-popup-data {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: baseline;
-    gap: 6px;
-  }
-
-  .df-review-source-popup-data-label {
-    color: var(--df-review-muted);
-    text-transform: uppercase;
-    font-size: 10px;
-    letter-spacing: 0.04em;
-  }
-
-  .df-review-source-popup-data code {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--df-review-accent);
-  }
-
   .df-review-source-popup-divider {
-    margin: 0;
-    border: 0;
+    margin: 4px 0;
     border-top: 1px solid var(--df-review-dom-soft);
   }
 
@@ -98,8 +75,12 @@ export const reviewShellSourceInspectorStyle = `
     border-color: var(--df-review-dom);
   }
 
+  .df-review-source-popup-entry.is-data {
+    color: var(--df-review-accent);
+  }
+
   .df-review-source-popup-entry-label {
-    color: var(--df-review-text);
+    color: inherit;
     font-weight: 500;
   }
 
@@ -109,6 +90,12 @@ export const reviewShellSourceInspectorStyle = `
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .df-review-source-popup-entry.is-data
+    .df-review-source-popup-entry-path {
+    color: inherit;
+    opacity: 0.72;
   }
 
 `;

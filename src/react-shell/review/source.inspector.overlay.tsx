@@ -19,7 +19,7 @@ type SourceComponentPopupEntry = {
 
 export type SourceComponentPopup = {
   rect: SourceInspectorRect;
-  dataFile: string | undefined;
+  dataEntries: SourceComponentPopupEntry[];
   entries: SourceComponentPopupEntry[];
 };
 

@@ -22,7 +22,6 @@ import {
   getSectionOutlinePathForElement,
   type GetSectionOutlineOptions,
 } from '../section.outline';
-import { getDisplaySourcePath } from '../source.hint';
 import {
   getSourceCandidates,
   type GetSourceCandidatesOptions,
@@ -156,9 +155,9 @@ export function useReviewSourceInspector({
   const componentSelectionTargetElement =
     componentSelectionState?.targetElement ?? null;
 
-  // 선택된 컴포넌트의 outline 조상 체인(선택→부모→…→루트)을 즉석 계산한다.
+  // 선택 지점의 data 후보와 outline 조상 체인(선택→부모→…→루트)을 계산한다.
   // 요소가 바뀔 때만 다시 만들고, rect 는 아래에서 매 렌더 최신값을 쓴다.
-  const sourceComponentChain = useMemo(() => {
+  const sourceComponentPopupContent = useMemo(() => {
     const frameDocument = iframeRef.current?.contentDocument;
     if (!componentSelectionTargetElement || !frameDocument) return null;
 
@@ -169,22 +168,37 @@ export function useReviewSourceInspector({
     );
     if (!path || path.length === 0) return null;
 
-    return [...path].reverse();
-  }, [componentSelectionTargetElement, iframeRef, sectionOutlineOptions]);
+    return {
+      dataEntries: getSourceCandidates(
+        componentSelectionTargetElement,
+        sourceCandidateOptions
+      )
+        .filter((candidate) => candidate.kind === 'data')
+        .map((candidate) => ({
+          id: candidate.id,
+          label: candidate.label,
+          filePath: candidate.filePath,
+          element: candidate.element,
+        })),
+      entries: [...path].reverse().map((entry) => ({
+        id: entry.id,
+        label: entry.label,
+        filePath: entry.filePath,
+        element: entry.element,
+      })),
+    };
+  }, [
+    componentSelectionTargetElement,
+    iframeRef,
+    sectionOutlineOptions,
+    sourceCandidateOptions,
+  ]);
 
   const sourceComponentPopup: SourceComponentPopup | null =
-    componentSelectionState && sourceComponentChain
+    componentSelectionState && sourceComponentPopupContent
       ? {
           rect: componentSelectionState.rect,
-          dataFile:
-            getDisplaySourcePath(sourceComponentChain[0].data?.file) ??
-            sourceComponentChain[0].data?.file,
-          entries: sourceComponentChain.map((entry) => ({
-            id: entry.id,
-            label: entry.label,
-            filePath: entry.filePath,
-            element: entry.element,
-          })),
+          ...sourceComponentPopupContent,
         }
       : null;
 

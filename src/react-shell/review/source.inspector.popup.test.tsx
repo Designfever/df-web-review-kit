@@ -1,14 +1,15 @@
+import { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { SourceComponentPopup } from './source.inspector.overlay';
 import { SourceInspectorPopup } from './source.inspector.popup';
 
-const element = document.createElement('section');
 const componentEntry = {
   id: 'component',
   label: 'HeroSection',
   filePath: 'src/hero.section.tsx',
-  element,
+  source: { file: 'src/hero.section.tsx', line: '12' },
 };
 
 const renderPopup = (dataEntries: SourceComponentPopup['dataEntries']) => {
@@ -19,7 +20,8 @@ const renderPopup = (dataEntries: SourceComponentPopup['dataEntries']) => {
         dataEntries,
         entries: [componentEntry],
       }}
-      onSelectEntry={vi.fn()}
+      onSelectData={vi.fn()}
+      onSelectSource={vi.fn()}
     />
   );
   const root = document.createElement('div');
@@ -34,13 +36,13 @@ describe('SourceInspectorPopup', () => {
         id: 'data-child',
         label: 'HeroData',
         filePath: 'src/hero.data.ts',
-        element,
+        source: { file: 'src/hero.data.ts', line: '4' },
       },
       {
         id: 'data-parent',
         label: 'PageData',
         filePath: 'src/page.data.ts',
-        element,
+        source: { file: 'src/page.data.ts', line: '8' },
       },
     ]);
     const items = root.querySelectorAll('.df-review-source-popup-list > li');
@@ -62,5 +64,52 @@ describe('SourceInspectorPopup', () => {
     expect(
       root.querySelector('.df-review-source-popup-list')?.textContent
     ).toContain('HeroSection');
+  });
+
+  it('routes data and component clicks to their source callbacks', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const onSelectData = vi.fn();
+    const onSelectSource = vi.fn();
+    const source = { file: 'src/hero.data.ts', line: '4' };
+
+    await act(async () => {
+      root.render(
+        <SourceInspectorPopup
+          popup={{
+            rect: { height: 100, left: 100, top: 100, width: 100 },
+            dataEntries: [
+              {
+                id: 'data',
+                label: 'HeroData',
+                filePath: 'src/hero.data.ts',
+                source,
+              },
+            ],
+            entries: [componentEntry],
+          }}
+          onSelectData={onSelectData}
+          onSelectSource={onSelectSource}
+        />
+      );
+    });
+
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>('.is-data')
+        ?.click();
+    });
+
+    expect(onSelectData).toHaveBeenCalledWith(source);
+    expect(onSelectSource).not.toHaveBeenCalled();
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>(
+          '.df-review-source-popup-entry:not(.is-data)'
+        )
+        ?.click();
+    });
+    expect(onSelectSource).toHaveBeenCalledWith(componentEntry.source);
+    await act(async () => root.unmount());
   });
 });

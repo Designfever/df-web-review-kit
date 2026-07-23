@@ -24,8 +24,10 @@ import {
 } from '../section.outline';
 import {
   getSourceCandidates,
+  openSourceInEditor,
   type GetSourceCandidatesOptions,
 } from '../source.open';
+import { useReviewShellConfig } from '../store/shell.config';
 import { setTargetFigmaSourceSelectLocked } from '../target/target';
 import { useReviewToast } from './use.review.toast';
 
@@ -50,6 +52,7 @@ export function useReviewSourceInspector({
   onRequestSourceTreeFocus?: (element: Element) => void;
 }) {
   const showToast = useReviewToast();
+  const { canOpenSourceFiles, sourceOpenOptions } = useReviewShellConfig();
   const sourceShortcutCleanupRef = useRef<(() => void) | null>(null);
   const [componentSelectionState, setComponentSelectionState] =
     useState<SourceInspectorState | null>(null);
@@ -178,13 +181,13 @@ export function useReviewSourceInspector({
           id: candidate.id,
           label: candidate.label,
           filePath: candidate.filePath,
-          element: candidate.element,
+          source: candidate.source,
         })),
       entries: [...path].reverse().map((entry) => ({
         id: entry.id,
         label: entry.label,
         filePath: entry.filePath,
-        element: entry.element,
+        source: entry.source,
       })),
     };
   }, [
@@ -202,11 +205,33 @@ export function useReviewSourceInspector({
         }
       : null;
 
-  const selectSourceComponent = useCallback(
-    (element: Element) => {
-      onRequestSourceTreeFocus?.(element);
+  const openSourceComponent = useCallback(
+    (source: SourceComponentPopup['entries'][number]['source']) => {
+      if (!canOpenSourceFiles) {
+        showToast('Source opening unavailable');
+        return;
+      }
+
+      const didOpen = openSourceInEditor(source, {
+        ...sourceOpenOptions,
+        omitPosition: true,
+      });
+      showToast(didOpen ? 'Source opened' : 'Source root required');
     },
-    [onRequestSourceTreeFocus]
+    [canOpenSourceFiles, showToast, sourceOpenOptions]
+  );
+
+  const selectSourceData = useCallback(
+    (source: SourceComponentPopup['dataEntries'][number]['source']) => {
+      if (!canOpenSourceFiles) {
+        showToast('Source opening unavailable');
+        return;
+      }
+
+      const didOpen = openSourceInEditor(source, sourceOpenOptions);
+      showToast(didOpen ? 'Data opened' : 'Source root required');
+    },
+    [canOpenSourceFiles, showToast, sourceOpenOptions]
   );
 
   useEffect(() => {
@@ -583,7 +608,8 @@ export function useReviewSourceInspector({
     clearSourceOutlineHover,
     clearSourceOutlineSelection,
     componentSelectionState,
-    selectSourceComponent,
+    openSourceComponent,
+    selectSourceData,
     selectSourceOutlineForElement,
     showSourceOutlineForElement,
     sourceComponentPopup,

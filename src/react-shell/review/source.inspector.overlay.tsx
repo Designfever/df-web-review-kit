@@ -1,3 +1,5 @@
+import type { DomSourceHint } from '../../types';
+
 export type SourceInspectorRect = {
   height: number;
   left: number;
@@ -14,12 +16,19 @@ type SourceComponentPopupEntry = {
   id: string;
   label: string;
   filePath: string;
-  element: Element;
+  source: DomSourceHint | undefined;
+};
+
+type SourceDataPopupEntry = {
+  id: string;
+  label: string;
+  filePath: string;
+  source: DomSourceHint;
 };
 
 export type SourceComponentPopup = {
   rect: SourceInspectorRect;
-  dataEntries: SourceComponentPopupEntry[];
+  dataEntries: SourceDataPopupEntry[];
   entries: SourceComponentPopupEntry[];
 };
 

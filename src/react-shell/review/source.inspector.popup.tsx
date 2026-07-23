@@ -5,7 +5,12 @@ import type {
 
 type SourceInspectorPopupProps = {
   popup: SourceComponentPopup | null;
-  onSelectEntry: (element: Element) => void;
+  onSelectData: (
+    source: SourceComponentPopup['dataEntries'][number]['source']
+  ) => void;
+  onSelectSource: (
+    source: SourceComponentPopup['entries'][number]['source']
+  ) => void;
 };
 
 const POPUP_GAP = 8;
@@ -34,7 +39,8 @@ const getPopupPosition = (rect: SourceInspectorRect) => {
 
 export const SourceInspectorPopup = ({
   popup,
-  onSelectEntry,
+  onSelectData,
+  onSelectSource,
 }: SourceInspectorPopupProps) => {
   if (!popup || popup.entries.length === 0) return null;
 
@@ -55,7 +61,7 @@ export const SourceInspectorPopup = ({
               className="df-review-source-popup-entry is-data"
               type="button"
               title={entry.filePath}
-              onClick={() => onSelectEntry(entry.element)}
+              onClick={() => onSelectData(entry.source)}
             >
               <span className="df-review-source-popup-entry-label">
                 {entry.label}
@@ -77,7 +83,7 @@ export const SourceInspectorPopup = ({
               }`}
               type="button"
               title={entry.filePath}
-              onClick={() => onSelectEntry(entry.element)}
+              onClick={() => onSelectSource(entry.source)}
             >
               <span className="df-review-source-popup-entry-label">
                 {entry.label}

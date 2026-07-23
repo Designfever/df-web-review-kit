@@ -5,7 +5,8 @@ import { SourceInspectorPopup } from './source.inspector.popup';
 export const SourceInspectorOverlayContainer = () => {
   const {
     componentSelectionState,
-    selectSourceComponent,
+    openSourceComponent,
+    selectSourceData,
     sourceComponentPopup,
     sourceInspectorState,
   } = useReviewSourceInspectorState();
@@ -18,7 +19,8 @@ export const SourceInspectorOverlayContainer = () => {
       />
       <SourceInspectorPopup
         popup={sourceComponentPopup}
-        onSelectEntry={selectSourceComponent}
+        onSelectData={selectSourceData}
+        onSelectSource={openSourceComponent}
       />
     </>
   );

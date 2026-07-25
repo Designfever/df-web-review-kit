@@ -452,8 +452,14 @@ export function useReviewSourceInspector({
       event.stopPropagation();
       event.stopImmediatePropagation();
 
+      // 첫 click의 event.target이 아직 Figma overlay여도 pointer lock을 적용한
+      // 뒤 같은 좌표를 다시 hit-test해 실제 DOM element를 선택한다.
+      setTargetFigmaSourceSelectLocked(frameDocument, true);
+      const sourceTarget =
+        frameDocument.elementFromPoint(event.clientX, event.clientY) ??
+        event.target;
       const candidates = getSourceCandidates(
-        event.target,
+        sourceTarget,
         sourceCandidateOptions
       );
       const candidate = candidates

@@ -1,10 +1,12 @@
+import packageJson from '../../../package.json';
+
 import { ReviewModal } from '../review/modal';
 
 interface PromptModalProps {
   onClose: () => void;
 }
 
-const REVIEW_KIT_VERSION = '0.7.3';
+const REVIEW_KIT_VERSION = packageJson.version;
 
 const SHORTCUT_SECTIONS = [
   {

@@ -465,6 +465,7 @@ export function useReviewSourceInspector({
         return;
       }
 
+      selectSourceOutlineForElement(candidate.element);
       onRequestSourceTreeFocus?.(candidate.element);
       setSourceSelecting(false);
     };
@@ -518,6 +519,14 @@ export function useReviewSourceInspector({
     };
 
     const handleWindowPointerDown = (event: PointerEvent) => {
+      const isTargetDocumentPointerDown = event.currentTarget === frameDocument;
+      if (
+        isTargetDocumentPointerDown &&
+        (isSourceSelecting || event.altKey)
+      ) {
+        return;
+      }
+
       setSourceSelecting(false);
 
       const activeElement = getActiveDomSelectButton();
@@ -586,6 +595,7 @@ export function useReviewSourceInspector({
     cleanupSourceOpenShortcut,
     iframeRef,
     onRequestSourceTreeFocus,
+    selectSourceOutlineForElement,
     showToast,
     sourceCandidateOptions,
     showSourceOutlineForTarget,

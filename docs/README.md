@@ -28,6 +28,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
+- [0.8.11](release-notes-0.8.11.md): package-synced version display and reliable Option DOM selection over the Figma overlay.
 - [0.8.10](release-notes-0.8.10.md): open data and component files directly from the Option DOM popup.
 - [0.8.9](release-notes-0.8.9.md): data candidates in the Option DOM component popup.
 - [0.8.8](release-notes-0.8.8.md): component ancestry popup for Option DOM selection and internal module cleanup.

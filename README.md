@@ -30,7 +30,7 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, sitemap, and feature ownership boundaries.
 - [Figma overlay](docs/figma-overlay.md): host helper behavior and package-managed image overlay state.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.8.10](docs/release-notes-0.8.10.md): open data and component files directly from the Option DOM popup.
+- [Release notes 0.8.11](docs/release-notes-0.8.11.md): package-synced version display and reliable Option DOM selection over the Figma overlay.
 
 ## Quick Start
 

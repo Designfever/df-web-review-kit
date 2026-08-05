@@ -182,6 +182,7 @@ const adapters = [
     defaultUserId: REVIEW_USER_ID,
     get: (id) => local.get(id),
     list: (query) => local.list(query),
+    listSummary: (query) => local.listSummary?.(query) ?? Promise.resolve([]),
     create: (item) => local.create(item),
     update: (id, patch) => local.update(id, patch),
     statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,
@@ -196,6 +197,8 @@ const adapters = [
           defaultUserId: REVIEW_USER_ID,
           get: (id) => remote.get(id),
           list: (query) => remote.list(query),
+          listSummary: (query) =>
+            remote.listSummary?.(query) ?? Promise.resolve([]),
           create: (item) => remote.create(item),
           update: (id, patch) => remote.update(id, patch),
           statusOptions: REVIEW_WORKFLOW_STATUS_OPTIONS,

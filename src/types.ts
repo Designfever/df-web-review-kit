@@ -192,6 +192,14 @@ export interface ReviewItem {
   updatedAt: string;
 }
 
+export interface ReviewItemSummary {
+  id: string;
+  routeKey: string;
+  scope?: ReviewItemScope;
+  status: ReviewItemStatus;
+  viewport: ViewportSize;
+}
+
 export interface ReviewItemQuery {
   projectId: string;
   pageId?: string;
@@ -204,6 +212,7 @@ export interface ReviewItemQuery {
 export interface WebReviewKitAdapter {
   get(id: string): Promise<ReviewItem | null>;
   list(query: ReviewItemQuery): Promise<ReviewItem[]>;
+  listSummary?(query: ReviewItemQuery): Promise<ReviewItemSummary[]>;
   create(item: ReviewItem): Promise<ReviewItem>;
   update(
     id: string,

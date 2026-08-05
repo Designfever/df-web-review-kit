@@ -29,7 +29,7 @@ export const useReviewQaPanelData = () => {
   const activeRoute = useReviewShellStore((state) => state.activeRoute);
   const size = useReviewShellStore((state) => state.size);
   const items = useReviewShellStore((state) => state.items);
-  const sitemapItems = useReviewShellStore((state) => state.sitemapItems);
+  const allQaItems = useReviewShellStore((state) => state.allQaItems);
   const qaFilter = useReviewShellStore((state) => state.qaFilter);
   const qaStatusFilters = useReviewShellStore((state) => state.qaStatusFilters);
   const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
@@ -38,9 +38,9 @@ export const useReviewQaPanelData = () => {
   );
   const { isRemoteSource } = useReviewShellAdapterState();
 
-  const sitemapSourceItems = useMemo(
-    () => (isRemoteSource ? sitemapItems.remote : sitemapItems.local),
-    [isRemoteSource, sitemapItems]
+  const allQaSourceItems = useMemo(
+    () => (isRemoteSource ? allQaItems.remote : allQaItems.local),
+    [allQaItems, isRemoteSource]
   );
 
   const activeItems = useMemo(
@@ -50,9 +50,9 @@ export const useReviewQaPanelData = () => {
         isAllQaVisible,
         items,
         reviewPathPrefix,
-        sitemapSourceItems,
+        allQaSourceItems,
       }),
-    [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
+    [activeRoute, allQaSourceItems, isAllQaVisible, items, reviewPathPrefix]
   );
   const numberedActiveItems = useMemo(
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),

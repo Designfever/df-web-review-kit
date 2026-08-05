@@ -3,6 +3,7 @@ import { matchesReviewItemStatus } from '../status';
 import type {
   LocalAdapterOptions,
   ReviewItem,
+  ReviewItemQuery,
   WebReviewKitAdapter,
 } from '../types';
 
@@ -41,26 +42,35 @@ export function localAdapter(
     }
   };
 
+  const list = async (query: ReviewItemQuery) =>
+    read().filter((item) => {
+      if (item.projectId !== query.projectId) return false;
+      const queryRouteKey = query.routeKey ?? query.normalizedPath;
+      if (queryRouteKey && getItemRouteKey(item) !== queryRouteKey) {
+        return false;
+      }
+      if (query.status && !matchesReviewItemStatus(item.status, query.status)) {
+        return false;
+      }
+      return true;
+    });
+
   return {
     async get(id) {
       return read().find((item) => item.id === id) ?? null;
     },
 
-    async list(query) {
-      return read().filter((item) => {
-        if (item.projectId !== query.projectId) return false;
-        const queryRouteKey = query.routeKey ?? query.normalizedPath;
-        if (
-          queryRouteKey &&
-          getItemRouteKey(item) !== queryRouteKey
-        ) {
-          return false;
-        }
-        if (query.status && !matchesReviewItemStatus(item.status, query.status)) {
-          return false;
-        }
-        return true;
-      });
+    list,
+
+    async listSummary(query) {
+      const items = await list(query);
+      return items.map(({ id, routeKey, scope, status, viewport }) => ({
+        id,
+        routeKey,
+        scope,
+        status,
+        viewport,
+      }));
     },
 
     async create(item) {

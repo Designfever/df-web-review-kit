@@ -41,6 +41,7 @@ export const useReviewShellData = () => {
   const activeRoute = useReviewShellStore((state) => state.activeRoute);
   const target = useReviewShellStore((state) => state.target);
   const items = useReviewShellStore((state) => state.items);
+  const allQaItems = useReviewShellStore((state) => state.allQaItems);
   const sitemapItems = useReviewShellStore((state) => state.sitemapItems);
   const hiddenOverlayItemIds = useReviewShellStore(
     (state) => state.hiddenOverlayItemIds
@@ -57,9 +58,9 @@ export const useReviewShellData = () => {
       ),
     [pages, reviewPathPrefix]
   );
-  const sitemapSourceItems = useMemo(
-    () => (isRemoteSource ? sitemapItems.remote : sitemapItems.local),
-    [isRemoteSource, sitemapItems]
+  const allQaSourceItems = useMemo(
+    () => (isRemoteSource ? allQaItems.remote : allQaItems.local),
+    [allQaItems, isRemoteSource]
   );
   const activeItems = useMemo(
     () =>
@@ -68,9 +69,9 @@ export const useReviewShellData = () => {
         isAllQaVisible,
         items,
         reviewPathPrefix,
-        sitemapSourceItems,
+        allQaSourceItems,
       }),
-    [activeRoute, isAllQaVisible, items, reviewPathPrefix, sitemapSourceItems]
+    [activeRoute, allQaSourceItems, isAllQaVisible, items, reviewPathPrefix]
   );
   const numberedActiveItems = useMemo(
     () => getNumberedReviewItems(activeItems, reviewViewportPresets),
@@ -91,7 +92,7 @@ export const useReviewShellData = () => {
     [activeItems, hiddenOverlayItemIds, qaStatusFilters]
   );
   const getItemPreset = useCallback(
-    (item: ReviewItem) =>
+    (item: Pick<ReviewItem, 'viewport'>) =>
       findViewportPreset(
         viewportPresets,
         item.viewport?.width ?? 0,
@@ -100,11 +101,12 @@ export const useReviewShellData = () => {
     [viewportPresets]
   );
   const getItemPresetScope = useCallback(
-    (item: ReviewItem) => getViewportPresetKind(getItemPreset(item)),
+    (item: Pick<ReviewItem, 'viewport'>) =>
+      getViewportPresetKind(getItemPreset(item)),
     [getItemPreset]
   );
   const getItemPresetColumn = useCallback(
-    (item: ReviewItem) => {
+    (item: Pick<ReviewItem, 'viewport'>) => {
       const preset = getItemPreset(item);
       const presetIndex = Math.max(0, viewportPresets.indexOf(preset));
 
@@ -113,7 +115,7 @@ export const useReviewShellData = () => {
     [getItemPreset, viewportPresets]
   );
   const getItemCountScope = useCallback(
-    (item: ReviewItem): ReviewItemScope =>
+    (item: Pick<ReviewItem, 'scope' | 'viewport'>): ReviewItemScope =>
       item.scope === 'dom' ? 'dom' : getItemPresetScope(item),
     [getItemPresetScope]
   );
@@ -131,13 +133,10 @@ export const useReviewShellData = () => {
     const counts = new Map<string, SitemapQaCount>();
     const addItems = (
       sourceKey: 'local' | 'remote',
-      sourceItems: ReviewItem[]
+      sourceItems: typeof sitemapItems.local
     ) => {
       sourceItems.forEach((item) => {
-        const pageTarget = normalizeTarget(
-          getItemTarget(item, reviewPathPrefix),
-          reviewPathPrefix
-        );
+        const pageTarget = normalizeTarget(item.routeKey, reviewPathPrefix);
         const currentCount =
           counts.get(pageTarget) ?? createEmptySitemapQaCount();
         const status = normalizeReviewItemStatus(item.status);

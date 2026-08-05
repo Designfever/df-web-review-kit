@@ -4,7 +4,6 @@ import {
   useCallback,
   useMemo,
 } from 'react';
-import { refreshReviewData as refreshReviewDataAction } from '../review/shell.actions';
 import type { ReviewShellProviderValues } from '../review/shell.providers';
 import { DEFAULT_REVIEW_PATH_PREFIX } from '../route';
 import type { ReviewShellProps } from '../types';
@@ -79,6 +78,7 @@ export const useReviewShellRuntime = ({
     Boolean(state.editingItem)
   );
   const selectedItemId = useReviewShellStore((state) => state.selectedItemId);
+  const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
   const {
     isSourceTreeHoverOutlineEnabled,
     sectionOutlineOptions,
@@ -203,12 +203,13 @@ export const useReviewShellRuntime = ({
   } = rulerState;
 
   const {
-    refreshItems,
+    invalidateAllItems,
+    invalidateSitemapItems,
+    refreshAllItems,
     refreshSitemapItems,
   } = useReviewShellRefresh({
     activeAdapterEntry,
-    activeRoute,
-    adapter,
+    isAllQaVisible,
     isRemoteSource,
     isSitemapOpen,
     localAdapterEntry,
@@ -216,6 +217,20 @@ export const useReviewShellRuntime = ({
     remoteAdapterEntry,
     storeApi,
   });
+
+  const handleItemCreated = useCallback(() => {
+    invalidateAllItems();
+    invalidateSitemapItems();
+    if (isAllQaVisible) void refreshAllItems(true);
+    if (isSitemapOpen) void refreshSitemapItems(true);
+  }, [
+    invalidateAllItems,
+    invalidateSitemapItems,
+    isAllQaVisible,
+    isSitemapOpen,
+    refreshAllItems,
+    refreshSitemapItems,
+  ]);
 
   const {
     clearSelectedItem,
@@ -233,16 +248,26 @@ export const useReviewShellRuntime = ({
     adjustmentLabel,
     onCancelReviewMode: cancelReviewMode,
     onCloseRuler: closeRuler,
-    onItemsRefresh: refreshItems,
+    onItemCreated: handleItemCreated,
   });
 
-  const refreshReviewData = useCallback(() => {
-    return refreshReviewDataAction({
-      onRefreshItems: refreshItems,
-      onRefreshSitemapItems: refreshSitemapItems,
-      onReloadReviewKit: reloadReviewKit,
-    });
-  }, [refreshItems, refreshSitemapItems, reloadReviewKit]);
+  const refreshReviewData = useCallback(async () => {
+    invalidateAllItems();
+    invalidateSitemapItems();
+    await reloadReviewKit();
+    await Promise.all([
+      isSitemapOpen ? refreshSitemapItems(true) : Promise.resolve(),
+      isAllQaVisible ? refreshAllItems(true) : Promise.resolve([]),
+    ]);
+  }, [
+    invalidateAllItems,
+    invalidateSitemapItems,
+    isAllQaVisible,
+    isSitemapOpen,
+    refreshAllItems,
+    refreshSitemapItems,
+    reloadReviewKit,
+  ]);
 
   const {
     applyTarget,
@@ -256,6 +281,7 @@ export const useReviewShellRuntime = ({
     onClearSelectedItem: clearSelectedItem,
     onReloadTargetFrame: reloadTargetFrame,
     onRestoreReviewItem: restoreReviewItem,
+    onSelectAllQa: refreshAllItems,
   });
 
   const setReviewMode = useReviewShellModeSetter({

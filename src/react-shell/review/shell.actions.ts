@@ -6,22 +6,14 @@ import type {
   NumberedReviewItem,
   ReviewFieldsConfig,
   ReviewItem,
+  ReviewItemSummary,
   ReviewItemStatus,
   ReviewSource,
-  WebReviewKitAdapter,
 } from '../../types';
 import type { NormalizedReviewShellAdapter } from '../adapters';
 import { updateShellUrl } from '../route';
 import type { ReviewShellViewportPreset } from '../types';
 import type { SitemapItemsBySource } from '../store/qa.slice';
-
-interface ListReviewItemsOptions {
-  activeRoute: string;
-  adapter: WebReviewKitAdapter;
-  isRemoteSource: boolean;
-  pageId?: string;
-  projectId: string;
-}
 
 interface ListSitemapReviewItemsOptions {
   localAdapterEntry: NormalizedReviewShellAdapter | null;
@@ -33,19 +25,9 @@ interface CopyCurrentReviewUrlOptions {
   onCopyLabelChange: Dispatch<SetStateAction<string>>;
 }
 
-interface RefreshReviewItemsOptions extends ListReviewItemsOptions {
-  onItemsChange: (items: ReviewItem[]) => void;
-}
-
 interface RefreshSitemapReviewItemsOptions
   extends ListSitemapReviewItemsOptions {
   onSitemapItemsChange: (items: SitemapItemsBySource) => void;
-}
-
-interface RefreshReviewDataOptions {
-  onRefreshItems: () => Promise<ReviewItem[]>;
-  onRefreshSitemapItems: () => Promise<void>;
-  onReloadReviewKit: () => Promise<void>;
 }
 
 interface UpdateReviewItemStatusOptions {
@@ -150,18 +132,32 @@ const writeClipboardText = async (value: string) => {
   }
 };
 
-const listReviewItems = async ({
-  activeRoute,
-  adapter,
-  isRemoteSource,
-  pageId,
-  projectId,
-}: ListReviewItemsOptions) =>
-  adapter.list({
+const toReviewItemSummary = ({
+  id,
+  routeKey,
+  scope,
+  status,
+  viewport,
+}: ReviewItem): ReviewItemSummary => ({
+  id,
+  routeKey,
+  scope,
+  status,
+  viewport,
+});
+
+const listReviewItemSummaries = async (
+  entry: NormalizedReviewShellAdapter,
+  projectId: string
+) => {
+  const query = {
     projectId,
-    pageId,
-    routeKey: isRemoteSource ? activeRoute : undefined,
-  });
+    pageId: entry.pageId,
+    source: entry.label,
+  };
+  if (entry.adapter.listSummary) return entry.adapter.listSummary(query);
+  return (await entry.adapter.list(query)).map(toReviewItemSummary);
+};
 
 const listSitemapReviewItems = async ({
   localAdapterEntry,
@@ -170,17 +166,10 @@ const listSitemapReviewItems = async ({
 }: ListSitemapReviewItemsOptions): Promise<SitemapItemsBySource> => {
   const [localResult, remoteResult] = await Promise.allSettled([
     localAdapterEntry
-      ? localAdapterEntry.adapter.list({
-          projectId,
-          pageId: localAdapterEntry.pageId,
-        })
+      ? listReviewItemSummaries(localAdapterEntry, projectId)
       : Promise.resolve([]),
     remoteAdapterEntry
-      ? remoteAdapterEntry.adapter.list({
-          projectId,
-          pageId: remoteAdapterEntry.pageId,
-          source: remoteAdapterEntry.label,
-        })
+      ? listReviewItemSummaries(remoteAdapterEntry, projectId)
       : Promise.resolve([]),
   ]);
 
@@ -188,15 +177,6 @@ const listSitemapReviewItems = async ({
     local: localResult.status === 'fulfilled' ? localResult.value : [],
     remote: remoteResult.status === 'fulfilled' ? remoteResult.value : [],
   };
-};
-
-export const refreshReviewItems = async ({
-  onItemsChange,
-  ...listOptions
-}: RefreshReviewItemsOptions) => {
-  const nextItems = await listReviewItems(listOptions);
-  onItemsChange(nextItems);
-  return nextItems;
 };
 
 export const refreshSitemapReviewItems = async ({
@@ -213,15 +193,6 @@ export const copyCurrentReviewUrl = async ({
   await writeClipboardText(window.location.href);
   onCopyLabelChange('Copied');
   window.setTimeout(() => onCopyLabelChange('Copy URL'), 1200);
-};
-
-export const refreshReviewData = async ({
-  onRefreshItems,
-  onRefreshSitemapItems,
-  onReloadReviewKit,
-}: RefreshReviewDataOptions) => {
-  await onReloadReviewKit();
-  await Promise.all([onRefreshItems(), onRefreshSitemapItems()]);
 };
 
 export const updateReviewItemStatus = async ({

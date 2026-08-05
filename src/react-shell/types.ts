@@ -110,6 +110,7 @@ export type ReviewShellAdapter = {
   defaultUserId?: string;
   get: WebReviewKitAdapter['get'];
   list: WebReviewKitAdapter['list'];
+  listSummary?: WebReviewKitAdapter['listSummary'];
   create?: WebReviewKitAdapter['create'];
   update?: WebReviewKitAdapter['update'];
   uploadAttachment?: WebReviewKitAdapter['uploadAttachment'];

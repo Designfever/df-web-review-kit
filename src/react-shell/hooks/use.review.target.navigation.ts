@@ -34,7 +34,7 @@ export const useReviewTargetNavigation = ({
     useReviewShellAdapterState();
   const storeApi = useReviewShellStoreApi();
   const getPageTarget = useCallback(
-    (href: string) => normalizeTarget(href, reviewPathPrefix),
+    (href: string) => getTargetRouteKey(href, reviewPathPrefix),
     [reviewPathPrefix]
   );
 
@@ -111,7 +111,7 @@ export const useReviewTargetNavigation = ({
 
   const selectPage = useCallback(
     (href: string) => {
-      const normalizedTarget = getPageTarget(href);
+      const normalizedTarget = normalizeTarget(href, reviewPathPrefix);
       const normalizedRoute = getTargetRouteKey(
         normalizedTarget,
         reviewPathPrefix
@@ -132,7 +132,6 @@ export const useReviewTargetNavigation = ({
       state.setIsSitemapOpen(false);
     },
     [
-      getPageTarget,
       onClearSelectedItem,
       reviewPathPrefix,
       source,

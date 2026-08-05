@@ -3,7 +3,7 @@ import type { ReviewItem } from './types';
 export function getItemRouteKey(
   item: Pick<ReviewItem, 'routeKey' | 'normalizedPath'>
 ) {
-  return item.routeKey || normalizeRoutePath(item.normalizedPath);
+  return normalizeRoutePath(item.routeKey || item.normalizedPath);
 }
 
 export function normalizeRoutePath(pathname: string) {

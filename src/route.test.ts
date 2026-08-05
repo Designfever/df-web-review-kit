@@ -4,6 +4,7 @@ import { getItemRouteKey, normalizeRoutePath } from './route';
 describe('normalizeRoutePath', () => {
   it('strips query strings and hashes', () => {
     expect(normalizeRoutePath('/about?tab=1')).toBe('/about');
+    expect(normalizeRoutePath('/en/?ttt-tttt')).toBe('/en/');
     expect(normalizeRoutePath('/about#section')).toBe('/about');
   });
 
@@ -20,10 +21,16 @@ describe('normalizeRoutePath', () => {
 });
 
 describe('getItemRouteKey', () => {
-  it('prefers the stored route key over the normalized path', () => {
+  it('prefers and normalizes the stored route key', () => {
     expect(
       getItemRouteKey({ routeKey: '/stored', normalizedPath: '/other' })
     ).toBe('/stored');
+    expect(
+      getItemRouteKey({
+        routeKey: '/en/?ttt-tttt',
+        normalizedPath: '/other',
+      })
+    ).toBe('/en/');
   });
 
   it('falls back to normalizing the persisted path', () => {

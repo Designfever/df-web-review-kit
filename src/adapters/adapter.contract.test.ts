@@ -424,3 +424,70 @@ describe('legacy note removal', () => {
     expect(await adapter.get('legacy-note')).toBeNull();
   });
 });
+
+describe('supabase egress query shape', () => {
+  it('keeps full item queries route-scoped and uses projected sitemap summaries', async () => {
+    const selects: string[] = [];
+    const filters: Array<[string, unknown]> = [];
+    const summaryItem = createReviewItem({
+      id: 'summary-1',
+      routeKey: '/about/',
+    });
+    const client: SupabaseReviewClient = {
+      from() {
+        const query = {
+          select(columns: string) {
+            selects.push(columns);
+            return query;
+          },
+          eq(column: string, value: unknown) {
+            filters.push([column, value]);
+            return query;
+          },
+          order() {
+            const isSummary = selects[selects.length - 1] !== '*';
+            return {
+              data: isSummary
+                ? [
+                    {
+                      id: summaryItem.id,
+                      route_key: summaryItem.routeKey,
+                      status: summaryItem.status,
+                      scope: summaryItem.scope,
+                      viewport: summaryItem.viewport,
+                    },
+                  ]
+                : [createSupabaseRow(summaryItem)],
+              error: null,
+            };
+          },
+        };
+        return query;
+      },
+    };
+    const adapter = supabaseAdapter({
+      client,
+      projectId: PROJECT_ID,
+      source: SOURCE,
+    });
+
+    await adapter.list({ projectId: PROJECT_ID, routeKey: '/about/' });
+    expect(selects[0]).toBe('*');
+    expect(filters).toContainEqual(['route_key', '/about/']);
+
+    const summaries = await adapter.listSummary?.({ projectId: PROJECT_ID });
+    expect(selects[1]).toBe(
+      'id,route_key,status,scope:item->>scope,viewport:item->viewport'
+    );
+    expect(selects[1]).not.toBe('*');
+    expect(summaries).toEqual([
+      {
+        id: summaryItem.id,
+        routeKey: '/about/',
+        scope: 'dom',
+        status: 'todo',
+        viewport: { width: 390, height: 844 },
+      },
+    ]);
+  });
+});

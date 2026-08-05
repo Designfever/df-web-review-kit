@@ -42,7 +42,6 @@ interface UseReviewKitLifecycleOptions {
   onApplyPendingRestore: () => void;
   onCancelReviewMode: () => boolean;
   onCloseRuler: () => boolean;
-  onItemsRefresh: () => Promise<ReviewItem[]>;
   onModeChange: (mode: ReviewMode) => void;
   onCreateItem: (item: ReviewItem) => void;
   onRefreshTargetOverlayState: () => void;
@@ -75,7 +74,6 @@ export const useReviewKitLifecycle = ({
   onApplyPendingRestore,
   onCancelReviewMode,
   onCloseRuler,
-  onItemsRefresh,
   onModeChange,
   onCreateItem,
   onRefreshTargetOverlayState,
@@ -136,8 +134,10 @@ export const useReviewKitLifecycle = ({
       adjustmentLabel,
       onCreateItem,
       onRestoreItem: onRestoreReviewItem,
-      onItemsChange: () => {
-        void onItemsRefresh();
+      onItemsChange: (items) => {
+        const state = storeApi.getState();
+        state.setItems(items);
+        state.setIsItemsLoading(false);
       },
       onModeChange,
       ui: {
@@ -150,10 +150,10 @@ export const useReviewKitLifecycle = ({
         figma: false,
       },
     });
+    storeApi.getState().setIsItemsLoading(true);
     controllerRef.current.open();
     controllerRef.current.setHiddenItemIds(hiddenOverlayItemIdListRef.current);
     onModeChange(controllerRef.current.getMode());
-    void onItemsRefresh();
     void onRestoreInitialItem().then(onApplyPendingRestore);
     onRefreshTargetOverlayState();
     setTargetScrollbarHidden(
@@ -175,7 +175,6 @@ export const useReviewKitLifecycle = ({
     onCancelReviewMode,
     onCloseRuler,
     onCreateItem,
-    onItemsRefresh,
     onModeChange,
     onRefreshTargetOverlayState,
     onRestoreInitialItem,
@@ -193,8 +192,13 @@ export const useReviewKitLifecycle = ({
   ]);
 
   const reloadReviewKit = useCallback(async () => {
-    await controllerRef.current?.reload();
-  }, [controllerRef]);
+    storeApi.getState().setIsItemsLoading(true);
+    try {
+      await controllerRef.current?.reload();
+    } finally {
+      storeApi.getState().setIsItemsLoading(false);
+    }
+  }, [controllerRef, storeApi]);
 
   const setControllerReviewMode = useCallback(
     (nextMode: ReviewMode) => {

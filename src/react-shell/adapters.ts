@@ -171,6 +171,7 @@ function normalizeShellAdapter(
     adapter: {
       get: adapterConfig.get,
       list: adapterConfig.list,
+      listSummary: adapterConfig.listSummary,
       create: async (item) => {
         if (!adapterConfig.create) {
           throw new Error(

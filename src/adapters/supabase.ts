@@ -2,6 +2,8 @@ import { normalizeReviewItemStatus } from '../status';
 import type {
   ReviewItem,
   ReviewItemKind,
+  ReviewItemScope,
+  ReviewItemSummary,
   ReviewItemStatus,
   ReviewSource,
   SupabaseReviewAdapterOptions,
@@ -22,6 +24,14 @@ type SupabaseReviewRow = {
   item: unknown;
   created_at: string;
   updated_at: string;
+};
+
+type SupabaseReviewSummaryRow = {
+  id: string;
+  route_key: string;
+  status: string;
+  scope?: string | null;
+  viewport?: unknown;
 };
 
 type SupabaseResponse<T> = {
@@ -73,6 +83,28 @@ export function supabaseAdapter(
         const item = rowToReviewItem(row, options);
         return item ? [item] : [];
       });
+    },
+
+    async listSummary(query) {
+      let request = fromTable()
+        .select(
+          'id,route_key,status,scope:item->>scope,viewport:item->viewport'
+        )
+        .eq('project_id', query.projectId)
+        .eq('source', query.source ?? source);
+      const routeKey = query.routeKey ?? query.normalizedPath;
+
+      if (routeKey) request = request.eq('route_key', routeKey);
+      if (query.status) {
+        request = request.eq('status', normalizeReviewItemStatus(query.status));
+      }
+
+      const rows = await unwrapResponse<SupabaseReviewSummaryRow[]>(
+        request.order('created_at', { ascending: false }),
+        'supabase list review item summaries'
+      );
+
+      return (rows ?? []).map(rowToReviewItemSummary);
     },
 
     async create(item) {
@@ -267,6 +299,42 @@ function rowToReviewItem(
     createdAt: item.createdAt ?? row.created_at ?? now,
     updatedAt: row.updated_at ?? item.updatedAt ?? now,
   };
+}
+
+function rowToReviewItemSummary(
+  row: SupabaseReviewSummaryRow
+): ReviewItemSummary {
+  const viewport = isViewportSize(row.viewport)
+    ? row.viewport
+    : { width: 390, height: 720 };
+  const scope = isReviewItemScope(row.scope) ? row.scope : undefined;
+
+  return {
+    id: row.id,
+    routeKey: row.route_key || '/',
+    scope,
+    status: normalizeReviewItemStatus(row.status as ReviewItemStatus),
+    viewport,
+  };
+}
+
+function isViewportSize(value: unknown): value is ReviewItem['viewport'] {
+  if (!value || typeof value !== 'object') return false;
+  const viewport = value as Partial<ReviewItem['viewport']>;
+  return (
+    typeof viewport.width === 'number' &&
+    typeof viewport.height === 'number'
+  );
+}
+
+function isReviewItemScope(value: unknown): value is ReviewItemScope {
+  return (
+    value === 'mobile' ||
+    value === 'tablet' ||
+    value === 'desktop' ||
+    value === 'wide' ||
+    value === 'dom'
+  );
 }
 
 function normalizeReviewItemKind(

@@ -19,6 +19,7 @@ interface UseReviewTargetNavigationOptions {
   onClearSelectedItem: () => void;
   onReloadTargetFrame: () => void;
   onRestoreReviewItem: (item: ReviewItem) => void;
+  onSelectAllQa: () => Promise<ReviewItem[]>;
 }
 
 export const useReviewTargetNavigation = ({
@@ -26,6 +27,7 @@ export const useReviewTargetNavigation = ({
   onClearSelectedItem,
   onReloadTargetFrame,
   onRestoreReviewItem,
+  onSelectAllQa,
 }: UseReviewTargetNavigationOptions) => {
   const { reviewPathPrefix, viewportPresets } = useReviewShellConfig();
   const { activeAdapterEntry, source, sourceEntries } =
@@ -142,7 +144,8 @@ export const useReviewTargetNavigation = ({
     const state = storeApi.getState();
     state.setIsAllQaVisible(true);
     state.setIsSitemapOpen(false);
-  }, [storeApi]);
+    void onSelectAllQa();
+  }, [onSelectAllQa, storeApi]);
 
   const clearSelectedReviewItem = useCallback(() => {
     onClearSelectedItem();

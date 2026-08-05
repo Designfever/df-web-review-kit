@@ -1,6 +1,6 @@
 import type { SetStateAction } from 'react';
 import type { StateCreator } from 'zustand';
-import type { ReviewItem } from '../../types';
+import type { ReviewItem, ReviewItemSummary } from '../../types';
 import { getInitialItemId } from '../route';
 import { getStoredReviewQaStatusFilters } from '../settings';
 import type {
@@ -9,12 +9,18 @@ import type {
 } from '../types';
 import type { ReviewShellState } from './create.review.shell.store';
 
-export type SitemapItemsBySource = {
+type ReviewItemsBySource = {
   local: ReviewItem[];
   remote: ReviewItem[];
 };
 
+export type SitemapItemsBySource = {
+  local: ReviewItemSummary[];
+  remote: ReviewItemSummary[];
+};
+
 export interface QaSlice {
+  allQaItems: ReviewItemsBySource;
   copiedPromptKey: string | null;
   editingItem: ReviewItem | null;
   hiddenOverlayItemIds: ReadonlySet<string>;
@@ -28,6 +34,7 @@ export interface QaSlice {
   sitemapItems: SitemapItemsBySource;
   addMutatingItemId: (itemId: string) => void;
   removeMutatingItemId: (itemId: string) => void;
+  setAllQaItems: (items: ReviewItemsBySource) => void;
   setCopiedPromptKey: (value: SetStateAction<string | null>) => void;
   setEditingItem: (item: ReviewItem | null) => void;
   setIsAllQaVisible: (isVisible: boolean) => void;
@@ -46,6 +53,10 @@ export const createQaSlice: StateCreator<
   [],
   QaSlice
 > = (set) => ({
+  allQaItems: {
+    local: [],
+    remote: [],
+  },
   copiedPromptKey: null,
   editingItem: null,
   hiddenOverlayItemIds: new Set<string>(),
@@ -72,6 +83,7 @@ export const createQaSlice: StateCreator<
       mutatingItemIds.delete(itemId);
       return { mutatingItemIds };
     }),
+  setAllQaItems: (allQaItems) => set({ allQaItems }),
   setCopiedPromptKey: (value) =>
     set((state) => ({
       copiedPromptKey:

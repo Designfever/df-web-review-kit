@@ -7,7 +7,7 @@ interface GetActiveReviewItemsOptions {
   isAllQaVisible: boolean;
   items: ReviewItem[];
   reviewPathPrefix: string;
-  sitemapSourceItems: ReviewItem[];
+  allQaSourceItems: ReviewItem[];
 }
 
 export const getActiveReviewItems = ({
@@ -15,10 +15,10 @@ export const getActiveReviewItems = ({
   isAllQaVisible,
   items,
   reviewPathPrefix,
-  sitemapSourceItems,
+  allQaSourceItems,
 }: GetActiveReviewItemsOptions) => {
   const sourceItems = isAllQaVisible
-    ? sitemapSourceItems
+    ? allQaSourceItems
     : items.filter(
         (item) => getItemTarget(item, reviewPathPrefix) === activeRoute
       );

@@ -23,8 +23,8 @@ interface UseReviewControllerOptions {
   ruler?: ReviewRulerConfig;
   adjustmentLabel?: string;
   onCancelReviewMode: () => boolean;
-  onItemsRefresh: () => Promise<ReviewItem[]>;
   onCloseRuler: () => boolean;
+  onItemCreated: () => void;
 }
 
 export const useReviewController = ({
@@ -34,8 +34,8 @@ export const useReviewController = ({
   ruler,
   adjustmentLabel,
   onCancelReviewMode,
-  onItemsRefresh,
   onCloseRuler,
+  onItemCreated,
 }: UseReviewControllerOptions) => {
   const {
     pages,
@@ -130,11 +130,13 @@ export const useReviewController = ({
   });
   const restoreCreatedReviewItem = useCallback(
     (item: ReviewItem) => {
+      onItemCreated();
       setSidePanel('qa');
       setIsListVisible(true);
       restoreReviewItem(item);
     },
     [
+      onItemCreated,
       restoreReviewItem,
       setIsListVisible,
       setSidePanel,
@@ -178,7 +180,6 @@ export const useReviewController = ({
     onCancelReviewMode,
     onCloseRuler,
     onCreateItem: restoreCreatedReviewItem,
-    onItemsRefresh,
     onModeChange: setMode,
     onRefreshTargetOverlayState: refreshTargetOverlayState,
     onRestoreInitialItem: restoreInitialItem,

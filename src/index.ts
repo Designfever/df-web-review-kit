@@ -67,6 +67,7 @@ export type {
   ReviewExternalLink,
   ReviewExternalLinkIcon,
   ReviewItem,
+  ReviewItemSummary,
   ReviewItemKind,
   ReviewItemQuery,
   ReviewItemScope,

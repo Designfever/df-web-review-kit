@@ -10,6 +10,11 @@ import {
   formatInstallPlan,
 } from './install-generator';
 import { createReadlineInitPrompt } from './init-prompt';
+import {
+  applyMigrationPlan,
+  createMigrationPlan,
+  formatMigrationPlan,
+} from './migration';
 import { scanProject } from './preflight';
 import {
   createProviderArtifacts,
@@ -116,11 +121,26 @@ const defaultHandlers: CliCommandHandlers = {
   },
   doctor: async ({ args, io }) => {
     const options = parseDoctorArgs(args);
-    const result = await runDoctor({
-      root: process.cwd(),
-      profileSpecifier: options.profileSpecifier,
-    });
-    io.stdout(options.json ? JSON.stringify(result, null, 2) : formatDoctorResult(result));
+    const root = process.cwd();
+    let result = await runDoctor({ root, profileSpecifier: options.profileSpecifier });
+    if (!options.fix) {
+      io.stdout(options.json ? JSON.stringify(result, null, 2) : formatDoctorResult(result));
+      return result.exitCode;
+    }
+
+    const migration = await createMigrationPlan(root);
+    if (options.json) {
+      io.stdout(JSON.stringify({ doctor: result, migration }, null, 2));
+    } else {
+      io.stdout(formatDoctorResult(result));
+      io.stdout(formatMigrationPlan(migration));
+    }
+    if (migration.blockers.length) return CLI_EXIT_CODE.failure;
+    if (!migration.changes.length || !options.yes) return result.exitCode;
+
+    const backupPath = await applyMigrationPlan(migration);
+    io.stdout(`Applied ${migration.changes.length} migration change(s). Backup: ${backupPath}`);
+    result = await runDoctor({ root, profileSpecifier: options.profileSpecifier });
     return result.exitCode;
   },
 };

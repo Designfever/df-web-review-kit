@@ -266,11 +266,21 @@ export function formatDoctorResult(result: DoctorResult) {
 
 export function parseDoctorArgs(args: string[]) {
   let json = false;
+  let fix = false;
+  let yes = false;
   let profileSpecifier: string | null = null;
   for (let index = 0; index < args.length; index += 1) {
     const flag = args[index];
     if (flag === '--json') {
       json = true;
+      continue;
+    }
+    if (flag === '--fix') {
+      fix = true;
+      continue;
+    }
+    if (flag === '--yes') {
+      yes = true;
       continue;
     }
     if (flag === '--profile') {
@@ -282,5 +292,6 @@ export function parseDoctorArgs(args: string[]) {
     }
     throw new Error(`Unknown doctor option: ${flag}`);
   }
-  return { json, profileSpecifier };
+  if (yes && !fix) throw new Error('--yes requires --fix.');
+  return { json, fix, yes, profileSpecifier };
 }

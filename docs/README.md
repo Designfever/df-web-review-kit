@@ -6,15 +6,16 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 1. [Installation](installation.md)
 2. [Easy Install v0.9 contract](easy-install-v0.9.md)
-3. [Custom provider profiles](provider-profiles.md)
-4. [Host env sample](../.env.sample)
-5. [Adapter boundaries](adapters.md)
-6. [Testing](testing.md)
-7. [Custom adapter sample](adaptor.sample.ts)
-8. [DB setup](db-setup.md)
-9. [Architecture and runtime logic](architecture.md)
-10. [Figma overlay](figma-overlay.md)
-11. [Grid overlay](grid-overlay.md)
+3. [Packed installation E2E matrix](pack-install-e2e.md)
+4. [Custom provider profiles](provider-profiles.md)
+5. [Host env sample](../.env.sample)
+6. [Adapter boundaries](adapters.md)
+7. [Testing](testing.md)
+8. [Custom adapter sample](adaptor.sample.ts)
+9. [DB setup](db-setup.md)
+10. [Architecture and runtime logic](architecture.md)
+11. [Figma overlay](figma-overlay.md)
+12. [Grid overlay](grid-overlay.md)
 
 ## Document Roles
 

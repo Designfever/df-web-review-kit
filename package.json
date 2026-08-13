@@ -67,6 +67,7 @@
     "lint:dead-code": "knip",
     "prepare": "pnpm build",
     "test": "vitest run",
+    "test:e2e:pack": "node scripts/e2e/pack-install.mjs",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "typecheck:dev": "tsc --noEmit -p tsconfig.dev.json"

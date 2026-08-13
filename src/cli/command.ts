@@ -1,3 +1,8 @@
+import {
+  formatDoctorResult,
+  parseDoctorArgs,
+  runDoctor,
+} from './doctor';
 import { InitCancelledError, resolveInitConfig } from './init-config';
 import {
   applyInstallPlan,
@@ -109,9 +114,14 @@ const defaultHandlers: CliCommandHandlers = {
       promptSession?.close();
     }
   },
-  doctor: ({ io }) => {
-    io.stdout('web-review-kit doctor');
-    io.stdout('Doctor setup is ready. Diagnostics arrive in the next v0.9 step.');
+  doctor: async ({ args, io }) => {
+    const options = parseDoctorArgs(args);
+    const result = await runDoctor({
+      root: process.cwd(),
+      profileSpecifier: options.profileSpecifier,
+    });
+    io.stdout(options.json ? JSON.stringify(result, null, 2) : formatDoctorResult(result));
+    return result.exitCode;
   },
 };
 

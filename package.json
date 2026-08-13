@@ -16,6 +16,9 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
+  "bin": {
+    "web-review-kit": "./dist/cli.js"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -45,7 +48,9 @@
     ".env.sample"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/react-shell.tsx src/vite.ts --format esm,cjs --dts --sourcemap --clean --external react --external react-dom --external react/jsx-runtime --external zustand",
+    "build": "pnpm build:lib && pnpm build:cli",
+    "build:lib": "tsup src/index.ts src/react-shell.tsx src/vite.ts --format esm,cjs --dts --sourcemap --clean --external react --external react-dom --external react/jsx-runtime --external zustand",
+    "build:cli": "tsup src/cli.ts --format esm --sourcemap --external react --external react-dom --external react/jsx-runtime --external zustand",
     "dev": "tsup src/index.ts src/react-shell.tsx src/vite.ts --format esm,cjs --dts --sourcemap --watch --external react --external react-dom --external react/jsx-runtime --external zustand",
     "dev:review": "vite --config dev/vite.config.ts",
     "build:dev": "vite build --config dev/vite.config.ts",

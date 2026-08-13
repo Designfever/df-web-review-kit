@@ -22,6 +22,7 @@ This package does not own internal operator tools, private admin keys, or produc
 
 - [Docs index](docs/README.md): reading order, document roles, and release history.
 - [Installation](docs/installation.md): install the package and mount `/review`.
+- [Easy Install v0.9 contract](docs/easy-install-v0.9.md): experimental `init`, `doctor`, provider profile, safety, scope, and v1.0 promotion contract.
 - [.env.sample](.env.sample): copyable host project env template for local, Supabase, and source opening.
 - [Adapter boundaries](docs/adapters.md): QA adapter vs Figma image store responsibilities.
 - [Testing](docs/testing.md): Vitest adapter contract tests and local verification commands.

@@ -1,4 +1,6 @@
-import { getProfileSpecifier, resolveProviderProfile } from './provider-install';
+import { InitCancelledError, resolveInitConfig } from './init-config';
+import { createReadlineInitPrompt } from './init-prompt';
+import { resolveProviderProfile } from './provider-install';
 
 export const CLI_EXIT_CODE = {
   success: 0,
@@ -45,13 +47,28 @@ Options:
 const defaultHandlers: CliCommandHandlers = {
   init: async ({ args, io }) => {
     io.stdout('web-review-kit init');
-    const profileSpecifier = getProfileSpecifier(args);
-    if (profileSpecifier) {
-      const profile = await resolveProviderProfile(profileSpecifier);
+    const interactive = !args.includes('--non-interactive');
+    const promptSession = interactive
+      ? createReadlineInitPrompt(process.stdin, process.stdout)
+      : null;
+    let config;
+    try {
+      config = await resolveInitConfig({ args, prompt: promptSession?.prompt });
+    } catch (error) {
+      if (error instanceof InitCancelledError) throw new CliCancelledError(error.message);
+      throw error;
+    } finally {
+      promptSession?.close();
+    }
+
+    if (config.profile) {
+      const profile = await resolveProviderProfile(config.profile);
       const capabilities = profile.capabilities.figma ? 'review, figma' : 'review';
       io.stdout(`Provider profile loaded (${capabilities}).`);
     }
-    io.stdout('Installer setup is ready. Project scanning arrives in the next v0.9 step.');
+    io.stdout(
+      `Configuration ready: ${config.projectId} (${config.reviewStorage} review, ${config.figmaImageStore} Figma).`
+    );
   },
   doctor: ({ io }) => {
     io.stdout('web-review-kit doctor');

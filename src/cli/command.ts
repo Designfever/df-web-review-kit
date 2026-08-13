@@ -1,3 +1,5 @@
+import { getProfileSpecifier, resolveProviderProfile } from './provider-install';
+
 export const CLI_EXIT_CODE = {
   success: 0,
   failure: 1,
@@ -41,8 +43,14 @@ Options:
   -v, --version  Show version`;
 
 const defaultHandlers: CliCommandHandlers = {
-  init: ({ io }) => {
+  init: async ({ args, io }) => {
     io.stdout('web-review-kit init');
+    const profileSpecifier = getProfileSpecifier(args);
+    if (profileSpecifier) {
+      const profile = await resolveProviderProfile(profileSpecifier);
+      const capabilities = profile.capabilities.figma ? 'review, figma' : 'review';
+      io.stdout(`Provider profile loaded (${capabilities}).`);
+    }
     io.stdout('Installer setup is ready. Project scanning arrives in the next v0.9 step.');
   },
   doctor: ({ io }) => {

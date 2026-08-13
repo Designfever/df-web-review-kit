@@ -39,6 +39,11 @@
       "import": "./dist/vite.js",
       "require": "./dist/vite.cjs"
     },
+    "./profile": {
+      "types": "./dist/profile.d.ts",
+      "import": "./dist/profile.js",
+      "require": "./dist/profile.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -49,7 +54,7 @@
   ],
   "scripts": {
     "build": "pnpm build:lib && pnpm build:cli",
-    "build:lib": "tsup src/index.ts src/react-shell.tsx src/vite.ts --format esm,cjs --dts --sourcemap --clean --external react --external react-dom --external react/jsx-runtime --external zustand",
+    "build:lib": "tsup src/index.ts src/react-shell.tsx src/vite.ts src/profile.ts --format esm,cjs --dts --sourcemap --clean --external react --external react-dom --external react/jsx-runtime --external zustand",
     "build:cli": "tsup src/cli.ts --format esm --sourcemap --external react --external react-dom --external react/jsx-runtime --external zustand",
     "dev": "tsup src/index.ts src/react-shell.tsx src/vite.ts --format esm,cjs --dts --sourcemap --watch --external react --external react-dom --external react/jsx-runtime --external zustand",
     "dev:review": "vite --config dev/vite.config.ts",

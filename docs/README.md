@@ -6,19 +6,21 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 1. [Installation](installation.md)
 2. [Easy Install v0.9 contract](easy-install-v0.9.md)
-3. [Host env sample](../.env.sample)
-4. [Adapter boundaries](adapters.md)
-5. [Testing](testing.md)
-6. [Custom adapter sample](adaptor.sample.ts)
-7. [DB setup](db-setup.md)
-8. [Architecture and runtime logic](architecture.md)
-9. [Figma overlay](figma-overlay.md)
-10. [Grid overlay](grid-overlay.md)
+3. [Custom provider profiles](provider-profiles.md)
+4. [Host env sample](../.env.sample)
+5. [Adapter boundaries](adapters.md)
+6. [Testing](testing.md)
+7. [Custom adapter sample](adaptor.sample.ts)
+8. [DB setup](db-setup.md)
+9. [Architecture and runtime logic](architecture.md)
+10. [Figma overlay](figma-overlay.md)
+11. [Grid overlay](grid-overlay.md)
 
 ## Document Roles
 
 - `installation.md`: install the npm package, create the `/review` route, wire adapters, and run checks.
 - `easy-install-v0.9.md`: experimental CLI flows, support scope, extension contract, safety rules, and v1.0 promotion criteria.
+- `provider-profiles.md`: generic private-provider schema, capability composition, environment safety, and authoring examples.
 - `../.env.sample`: copyable host project env template for local, Supabase, and source opening.
 - `adapters.md`: QA adapter and Figma image store responsibility boundary.
 - `testing.md`: Vitest adapter contract and core pure-function unit coverage, plus local verification commands.

@@ -4,23 +4,26 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Read This Order
 
-1. [Installation](installation.md)
-2. [Easy Install v0.9 contract](easy-install-v0.9.md)
-3. [Packed installation E2E matrix](pack-install-e2e.md)
+1. [Easy Install Preview](easy-install.md)
+2. [Installation](installation.md)
+3. [Easy Install v0.9 contract](easy-install-v0.9.md)
 4. [Custom provider profiles](provider-profiles.md)
-5. [Host env sample](../.env.sample)
-6. [Adapter boundaries](adapters.md)
-7. [Testing](testing.md)
-8. [Custom adapter sample](adaptor.sample.ts)
-9. [DB setup](db-setup.md)
-10. [Architecture and runtime logic](architecture.md)
-11. [Figma overlay](figma-overlay.md)
-12. [Grid overlay](grid-overlay.md)
+5. [Packed installation E2E matrix](pack-install-e2e.md)
+6. [v1.0 promotion checklist](v1.0-promotion-checklist.md)
+7. [Host env sample](../.env.sample)
+8. [Adapter boundaries](adapters.md)
+9. [Testing](testing.md)
+10. [Custom adapter sample](adaptor.sample.ts)
+11. [DB setup](db-setup.md)
+12. [Architecture and runtime logic](architecture.md)
+13. [Figma overlay](figma-overlay.md)
+14. [Grid overlay](grid-overlay.md)
 
 ## Document Roles
 
-- `installation.md`: install the npm package, create the `/review` route, wire adapters, and run checks.
-- `easy-install-v0.9.md`: experimental CLI flows, support scope, extension contract, safety rules, and v1.0 promotion criteria.
+- `easy-install.md`: runnable v0.9 Quick Start, doctor, migration, rollback, custom profile, and security instructions.
+- `installation.md`: manually install the npm package, create the `/review` route, wire adapters, and run checks.
+- `easy-install-v0.9.md`: experimental CLI contract, support scope, extension contract, safety rules, and v1.0 criteria.
 - `provider-profiles.md`: generic private-provider schema, capability composition, environment safety, and authoring examples.
 - `../.env.sample`: copyable host project env template for local, Supabase, and source opening.
 - `adapters.md`: QA adapter and Figma image store responsibility boundary.
@@ -33,6 +36,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
+- [0.9.0 preview](release-notes-0.9.0.md): experimental easy-install CLI, doctor, safe migration, provider profiles, and packed E2E matrix.
 - [0.8.12](release-notes-0.8.12.md): reliable first Figma overlay selection and lower Supabase review-item egress.
 - [0.8.11](release-notes-0.8.11.md): package-synced version display and reliable Option DOM selection over the Figma overlay.
 - [0.8.10](release-notes-0.8.10.md): open data and component files directly from the Option DOM popup.

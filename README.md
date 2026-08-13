@@ -21,8 +21,9 @@ This package does not own internal operator tools, private admin keys, or produc
 ## Docs
 
 - [Docs index](docs/README.md): reading order, document roles, and release history.
-- [Installation](docs/installation.md): install the package and mount `/review`.
-- [Easy Install v0.9 contract](docs/easy-install-v0.9.md): experimental `init`, `doctor`, provider profile, safety, scope, and v1.0 promotion contract.
+- [Easy Install Preview](docs/easy-install.md): 10-minute Quick Start, doctor, migration, rollback, custom profiles, and safety.
+- [Installation](docs/installation.md): manual package installation and `/review` mounting.
+- [Easy Install v0.9 contract](docs/easy-install-v0.9.md): experimental scope and v1.0 promotion contract.
 - [.env.sample](.env.sample): copyable host project env template for local, Supabase, and source opening.
 - [Adapter boundaries](docs/adapters.md): QA adapter vs Figma image store responsibilities.
 - [Testing](docs/testing.md): Vitest adapter contract tests and local verification commands.
@@ -34,6 +35,23 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Release notes 0.8.12](docs/release-notes-0.8.12.md): reliable first Figma overlay selection and lower Supabase review-item egress.
 
 ## Quick Start
+
+The v0.9 easy installer is experimental. Preview every change before applying it:
+
+```bash
+npx @designfever/web-review-kit@0.9 init \
+  --non-interactive \
+  --project-id my-project \
+  --project-name "My Project" \
+  --review-storage local \
+  --figma-image-store none \
+  --source-locator \
+  --dry-run
+```
+
+See [Easy Install Preview](docs/easy-install.md) for apply, doctor, migration, rollback, and custom profile instructions. The CLI/config contract may break before v1.0.
+
+For manual installation:
 
 ```bash
 pnpm add @designfever/web-review-kit react react-dom zustand

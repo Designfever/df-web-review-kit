@@ -1,0 +1,139 @@
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import { createInitConfig } from './init-config';
+import {
+  applyInstallPlan,
+  createInstallPlan,
+  formatInstallPlan,
+} from './install-generator';
+import { scanProject } from './preflight';
+
+const roots: string[] = [];
+
+async function createFixture(files: Record<string, string>) {
+  const root = await mkdtemp(join(tmpdir(), 'web-review-kit-generator-'));
+  roots.push(root);
+  for (const [path, content] of Object.entries(files)) {
+    const target = join(root, path);
+    await mkdir(join(target, '..'), { recursive: true });
+    await writeFile(target, content);
+  }
+  return root;
+}
+
+async function snapshot(root: string) {
+  const result: Record<string, string> = {};
+  async function visit(path: string): Promise<void> {
+    const entries = await readdir(path, { withFileTypes: true });
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const target = join(path, entry.name);
+      if (entry.isDirectory()) await visit(target);
+      else result[target.slice(root.length + 1)] = await readFile(target, 'utf8');
+    }
+  }
+  await visit(root);
+  return result;
+}
+
+const localConfig = createInitConfig({
+  projectId: 'fixture',
+  projectName: 'Fixture',
+  reviewStorage: 'local',
+  figmaImageStore: 'local',
+  sourceLocator: true,
+  profile: null,
+});
+
+const baseFiles = {
+  'package.json': JSON.stringify({
+    scripts: { build: 'vite build' },
+    dependencies: { react: '^19.0.0' },
+    devDependencies: { vite: '^8.0.0' },
+  }, null, 2),
+  'pnpm-lock.yaml': 'lockfileVersion: 9\n',
+  'vite.config.ts': "import { defineConfig } from 'vite';\nexport default defineConfig({ plugins: [] });\n",
+  'src/main.tsx': 'export const app = true;\n',
+};
+
+afterEach(async () => {
+  await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
+});
+
+describe('safe install generator', () => {
+  it('creates a minimal local integration and a dependency plan', async () => {
+    const root = await createFixture(baseFiles);
+    const plan = await createInstallPlan({
+      root,
+      config: localConfig,
+      preflight: await scanProject(root),
+      packageVersion: '^0.9.0',
+    });
+
+    expect(plan.dependencies).toEqual({ '@designfever/web-review-kit': '^0.9.0' });
+    expect(formatInstallPlan(plan)).toContain('+++ src/review/index.tsx');
+    expect(await snapshot(root)).toEqual(await snapshot(root));
+
+    await applyInstallPlan(plan);
+    const generated = await snapshot(root);
+    expect(generated['src/review/index.tsx']).toContain('mountReviewShell');
+    expect(generated['src/review/review.config.ts']).toContain('localAdapter');
+    expect(generated['src/review/review.config.ts']).toContain('createReviewFigmaImageStoreClient');
+    expect(generated['review/index.html']).toContain('/src/review/index.tsx');
+    expect(generated['vite.config.ts']).toContain('reviewSourceLocator()');
+    expect(generated['vite.config.ts']).toContain('reviewFigmaImageStore({ projectId: "fixture" })');
+    expect(generated['.env.example']).toBe('VITE_REVIEW_PROJECT_ID=fixture\n');
+  });
+
+  it('preserves existing Vite and env content while adding only requested entries', async () => {
+    const root = await createFixture({
+      ...baseFiles,
+      'vite.config.ts': "import { defineConfig } from 'vite';\nconst existing = true;\nexport default defineConfig({ plugins: [existing], server: { port: 4100 } });\n",
+      '.env.example': 'VITE_EXISTING=value\n',
+    });
+    const plan = await createInstallPlan({ root, config: localConfig, preflight: await scanProject(root) });
+    await applyInstallPlan(plan);
+
+    const vite = await readFile(join(root, 'vite.config.ts'), 'utf8');
+    const env = await readFile(join(root, '.env.example'), 'utf8');
+    expect(vite).toContain('const existing = true;');
+    expect(vite).toContain('server: { port: 4100 }');
+    expect(env).toBe('VITE_EXISTING=value\nVITE_REVIEW_PROJECT_ID=fixture\n');
+  });
+
+  it('is idempotent after applying the first plan', async () => {
+    const root = await createFixture(baseFiles);
+    const first = await createInstallPlan({ root, config: localConfig, preflight: await scanProject(root) });
+    await applyInstallPlan(first);
+    const before = await snapshot(root);
+    const second = await createInstallPlan({ root, config: localConfig, preflight: await scanProject(root) });
+
+    expect(second.changes).toEqual([]);
+    await applyInstallPlan(second);
+    expect(await snapshot(root)).toEqual(before);
+  });
+
+  it('leaves every file untouched when a generated path conflicts', async () => {
+    const root = await createFixture({
+      ...baseFiles,
+      'src/review/index.tsx': '// user-owned review entry\n',
+    });
+    const before = await snapshot(root);
+
+    await expect(
+      createInstallPlan({ root, config: localConfig, preflight: await scanProject(root) })
+    ).rejects.toThrow('INSTALL_FILE_CONFLICT: src/review/index.tsx');
+    expect(await snapshot(root)).toEqual(before);
+  });
+
+  it('checks the complete preview for stale files before writing anything', async () => {
+    const root = await createFixture(baseFiles);
+    const plan = await createInstallPlan({ root, config: localConfig, preflight: await scanProject(root) });
+    await writeFile(join(root, 'vite.config.ts'), '// changed after preview\n');
+    const before = await snapshot(root);
+
+    await expect(applyInstallPlan(plan)).rejects.toThrow('INSTALL_STALE_PLAN: vite.config.ts');
+    expect(await snapshot(root)).toEqual(before);
+  });
+});

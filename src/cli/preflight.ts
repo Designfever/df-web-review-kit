@@ -77,7 +77,8 @@ const VITE_CONFIG_NAMES = [
 const ENV_FILE_PATTERN = /^\.env(?:\.[A-Za-z0-9_-]+)?$/;
 const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts']);
 const IGNORED_DIRECTORIES = new Set(['.git', 'dist', 'build', 'coverage', 'node_modules']);
-const REVIEW_ROUTE_PATTERN = /(^|\/)(?:page|pages|src\/pages|src\/app|src)\/review(?:\/|\.(?:jsx?|tsx?))/;
+const REVIEW_ROUTE_PATTERN =
+  /(^|\/)(?:(?:page|pages|src\/pages|src\/app)\/review(?:\/(?:index|page))?|src\/review\/index)\.(?:jsx?|tsx?)$/;
 const MAX_SOURCE_FILES = 2_000;
 
 function toPosix(path: string) {

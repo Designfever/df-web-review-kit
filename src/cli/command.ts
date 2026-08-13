@@ -1,6 +1,15 @@
 import { InitCancelledError, resolveInitConfig } from './init-config';
+import {
+  applyInstallPlan,
+  createInstallPlan,
+  formatInstallPlan,
+} from './install-generator';
 import { createReadlineInitPrompt } from './init-prompt';
-import { resolveProviderProfile } from './provider-install';
+import { scanProject } from './preflight';
+import {
+  createProviderArtifacts,
+  resolveProviderProfile,
+} from './provider-install';
 
 export const CLI_EXIT_CODE = {
   success: 0,
@@ -48,27 +57,57 @@ const defaultHandlers: CliCommandHandlers = {
   init: async ({ args, io }) => {
     io.stdout('web-review-kit init');
     const interactive = !args.includes('--non-interactive');
+    const dryRun = args.includes('--dry-run');
     const promptSession = interactive
       ? createReadlineInitPrompt(process.stdin, process.stdout)
       : null;
-    let config;
     try {
-      config = await resolveInitConfig({ args, prompt: promptSession?.prompt });
+      const config = await resolveInitConfig({ args, prompt: promptSession?.prompt });
+      const profile = config.profile
+        ? await resolveProviderProfile(config.profile)
+        : undefined;
+      const provider = profile ? createProviderArtifacts(profile) : undefined;
+      if (profile) {
+        const capabilities = profile.capabilities.figma ? 'review, figma' : 'review';
+        io.stdout(`Provider profile loaded (${capabilities}).`);
+      }
+
+      const root = process.cwd();
+      const plan = await createInstallPlan({
+        root,
+        config,
+        preflight: await scanProject(root),
+        provider,
+      });
+      io.stdout(formatInstallPlan(plan));
+      io.stdout(`Install dependencies: ${Object.keys(plan.dependencies).sort().join(', ')}`);
+      if (dryRun || plan.changes.length === 0) return;
+
+      let approved = args.includes('--yes');
+      if (!approved && promptSession) {
+        const answer = await promptSession.prompt.confirm({
+          message: 'Apply this installation plan?',
+          defaultValue: false,
+        });
+        if (answer === null) throw new InitCancelledError();
+        approved = answer;
+      }
+      if (!approved) {
+        throw new InitCancelledError(
+          interactive
+            ? 'Initialization cancelled.'
+            : 'Use --dry-run to preview or --yes to apply non-interactively.'
+        );
+      }
+
+      await applyInstallPlan(plan);
+      io.stdout(`Applied ${plan.changes.length} file change(s).`);
     } catch (error) {
       if (error instanceof InitCancelledError) throw new CliCancelledError(error.message);
       throw error;
     } finally {
       promptSession?.close();
     }
-
-    if (config.profile) {
-      const profile = await resolveProviderProfile(config.profile);
-      const capabilities = profile.capabilities.figma ? 'review, figma' : 'review';
-      io.stdout(`Provider profile loaded (${capabilities}).`);
-    }
-    io.stdout(
-      `Configuration ready: ${config.projectId} (${config.reviewStorage} review, ${config.figmaImageStore} Figma).`
-    );
   },
   doctor: ({ io }) => {
     io.stdout('web-review-kit doctor');

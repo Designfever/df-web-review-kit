@@ -62,6 +62,7 @@ const BOOLEAN_FLAGS = new Set([
   '--no-source-locator',
   '--non-interactive',
   '--dry-run',
+  '--yes',
 ]);
 
 function requireValue(args: string[], index: number, flag: string) {

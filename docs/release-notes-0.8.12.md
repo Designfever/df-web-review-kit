@@ -10,6 +10,13 @@ Figma overlay의 첫 클릭 DOM target 해석을 수정하고, review item 조�
 - Figma overlay를 켠 직후 첫 클릭에서도 실제 DOM target을 올바르게 해석한다.
 - 첫 클릭에서 target을 놓쳐 다시 클릭해야 하던 문제를 수정했다.
 
+## URL parameter route matching
+
+- route identity는 query parameter와 hash를 제외한 pathname만 사용한다.
+- `/en/?ttt-tttt`, `/en/#section`, `/en/`을 모두 같은 `/en/` route로 묶는다.
+- query parameter가 있는 page도 sitemap, QA count, marker, adapter 조회에서 별도 path로 중복되지 않는다.
+- iframe navigation에는 원래 query parameter를 유지한다.
+
 ## Supabase egress 최적화
 
 - 일반 review 화면은 현재 route의 full review item만 조회한다.

@@ -5,6 +5,7 @@ import {
   it,
 } from 'vitest';
 import {
+  getTargetRouteKey,
   updateShellUrl,
   updateShellUrlForItem,
 } from './route';
@@ -17,6 +18,13 @@ const viewport = {
 
 afterEach(() => {
   window.history.replaceState(null, '', '/');
+});
+
+describe('route matching', () => {
+  it('uses only the pathname as the route key', () => {
+    expect(getTargetRouteKey('/en/?ttt-tttt')).toBe('/en/');
+    expect(getTargetRouteKey('/en/#section')).toBe('/en/');
+  });
 });
 
 describe('shell URL updates', () => {

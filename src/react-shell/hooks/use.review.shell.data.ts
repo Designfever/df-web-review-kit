@@ -13,7 +13,7 @@ import { normalizeReviewItemStatus } from '../../status';
 import {
   buildTargetSrc,
   getItemTarget,
-  normalizeTarget,
+  getTargetRouteKey,
 } from '../route';
 import { getActiveReviewItems } from '../qa/derive';
 import { matchesReviewQaStatusFilters } from '../qa/status.filter';
@@ -54,7 +54,7 @@ export const useReviewShellData = () => {
   const pageTargets = useMemo(
     () =>
       new Set(
-        pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
+        pages.map((page) => getTargetRouteKey(page.href, reviewPathPrefix))
       ),
     [pages, reviewPathPrefix]
   );
@@ -136,7 +136,10 @@ export const useReviewShellData = () => {
       sourceItems: typeof sitemapItems.local
     ) => {
       sourceItems.forEach((item) => {
-        const pageTarget = normalizeTarget(item.routeKey, reviewPathPrefix);
+        const pageTarget = getTargetRouteKey(
+          item.routeKey,
+          reviewPathPrefix
+        );
         const currentCount =
           counts.get(pageTarget) ?? createEmptySitemapQaCount();
         const status = normalizeReviewItemStatus(item.status);

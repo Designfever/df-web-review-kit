@@ -10,7 +10,7 @@ import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellRefs } from '../store/shell.refs';
 import { useReviewShellStore } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
-import { normalizeTarget } from '../route';
+import { getTargetRouteKey } from '../route';
 import { useReviewItemRestore } from './use.review.item.restore';
 import { useReviewKitLifecycle } from './use.review.kit.lifecycle';
 import { useReviewTargetOverlay } from './use.review.target.overlay';
@@ -93,7 +93,7 @@ export const useReviewController = ({
   const pageTargets = useMemo(
     () =>
       new Set(
-        pages.map((page) => normalizeTarget(page.href, reviewPathPrefix))
+        pages.map((page) => getTargetRouteKey(page.href, reviewPathPrefix))
       ),
     [pages, reviewPathPrefix]
   );

@@ -2,6 +2,10 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import {
+  renderCustomFigmaScaffold,
+  renderCustomReviewScaffold,
+} from './custom-scaffold';
 import { formatDoctorResult, runDoctor } from './doctor';
 
 const roots: string[] = [];
@@ -150,6 +154,51 @@ describe('doctor', () => {
     expect(codes(result)).toEqual(
       expect.arrayContaining(['REVIEW_ADAPTER_MISSING', 'FIGMA_CAPABILITY_PARTIAL'])
     );
+  });
+
+  it('accepts a custom runtime Figma store without a Vite plugin', async () => {
+    const files = healthyFiles();
+    files['src/review/index.tsx'] = `
+      import { mountReviewShell } from '@designfever/web-review-kit/react-shell';
+      import { createFigmaImageStore, createReviewBootstrap } from '@example/provider';
+      const reviewBootstrap = createReviewBootstrap();
+      const figmaImageStore = createFigmaImageStore();
+      reviewBootstrap.mount({
+        rootId: 'root',
+        projectId: 'fixture',
+        onReady: ({ adapters }) => mountReviewShell({
+          projectId: 'fixture',
+          pages: [],
+          adapters,
+          figmaImages: { store: figmaImageStore },
+        }),
+      });
+    `;
+    const root = await createFixture(files);
+
+    const result = await runDoctor({ root });
+
+    expect(codes(result)).not.toContain('FIGMA_CAPABILITY_PARTIAL');
+    expect(result.detected.capabilities.review).toBe(true);
+    expect(result.detected.capabilities.figma).toBe(true);
+  });
+
+  it('blocks unfinished host-owned custom scaffolds', async () => {
+    const root = await createFixture({
+      ...healthyFiles(),
+      'src/review/custom.review.tsx': renderCustomReviewScaffold(),
+      'src/review/custom.figma.store.ts': renderCustomFigmaScaffold(),
+    });
+
+    const result = await runDoctor({ root });
+
+    expect(result.status).toBe('failed');
+    expect(codes(result)).toEqual(
+      expect.arrayContaining(['CUSTOM_REVIEW_INCOMPLETE', 'CUSTOM_FIGMA_INCOMPLETE'])
+    );
+    expect(
+      result.diagnostics.find(({ code }) => code === 'CUSTOM_REVIEW_INCOMPLETE')?.paths
+    ).toEqual(['src/review/custom.review.tsx']);
   });
 
   it('keeps secret values out of human and JSON output', async () => {

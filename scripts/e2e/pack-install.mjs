@@ -13,13 +13,28 @@ function run(command, args, options = {}) {
   return execFileSync(command, args, {
     cwd: options.cwd ?? repo,
     encoding: 'utf8',
-    env: { ...process.env, CI: '1', ...options.env },
+    env: {
+      ...process.env,
+      CI: '1',
+      npm_config_cache: join(workspace, 'npm-cache'),
+      ...options.env,
+    },
     stdio: options.capture ? 'pipe' : 'inherit',
   });
 }
 
 function runResult(command, args, cwd) {
-  return spawnSync(command, args, { cwd, encoding: 'utf8', env: { ...process.env, CI: '1' } });
+  return spawnSync(command, args, {
+    cwd,
+    encoding: 'utf8',
+    env: { ...process.env, CI: '1', npm_config_cache: join(workspace, 'npm-cache') },
+  });
+}
+
+function parseNpmPackOutput(output) {
+  const trimmed = output.trim();
+  const jsonStart = trimmed.lastIndexOf('\n[');
+  return JSON.parse(jsonStart === -1 ? trimmed : trimmed.slice(jsonStart + 1));
 }
 
 function write(root, path, content) {
@@ -87,13 +102,23 @@ function verifyDoctor(root, profile) {
 
 try {
   run('pnpm', ['build']);
-  const packed = JSON.parse(run('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', packDir], { capture: true }));
+  const packed = parseNpmPackOutput(
+    run('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', packDir], { capture: true })
+  );
   const tarball = join(packDir, packed[0].filename);
   const matrix = [];
 
   for (const language of ['javascript', 'typescript']) {
     const root = fixture(`clean-${language}`, language);
     install(root, tarball);
+    if (language === 'javascript') {
+      const checkBefore = filesHash(root);
+      cli(root, ['check']);
+      if (filesHash(root) !== checkBefore) {
+        throw new Error('packed check command changed a non-interactive host.');
+      }
+      matrix.push('clean-javascript: packed check command read-only');
+    }
     const before = filesHash(root);
     cli(root, ['init', '--non-interactive', '--project-id', `clean-${language}`, '--project-name', `Clean ${language}`, '--review-storage', 'local', '--figma-image-store', 'none', '--no-source-locator', '--dry-run']);
     if (filesHash(root) !== before) throw new Error(`${language} dry-run changed fixture files.`);
@@ -148,13 +173,121 @@ try {
   env: [{ key: 'VITE_CUSTOM_PROJECT_ID', secret: false, required: true, example: 'custom-app' }],
   doctorChecks: [{ code: 'CUSTOM_WIRING_MISSING', message: 'Custom wiring missing.', sourceIncludes: 'providerCapabilities' }],
 };\n`);
-    cli(root, ['init', '--non-interactive', '--project-id', 'custom-app', '--project-name', 'Custom app', '--review-storage', 'custom', '--figma-image-store', 'none', '--no-source-locator', '--profile', './provider.mjs', '--yes']);
+    cli(root, ['init', '--non-interactive', '--project-id', 'custom-app', '--project-name', 'Custom app', '--review-storage', 'profile', '--figma-image-store', 'none', '--no-source-locator', '--profile', './provider.mjs', '--yes']);
     verifyDoctor(root, './provider.mjs');
     verifyBuild(root);
     const applied = filesHash(root);
-    cli(root, ['init', '--non-interactive', '--project-id', 'custom-app', '--project-name', 'Custom app', '--review-storage', 'custom', '--figma-image-store', 'none', '--no-source-locator', '--profile', './provider.mjs', '--yes']);
+    cli(root, ['init', '--non-interactive', '--project-id', 'custom-app', '--project-name', 'Custom app', '--review-storage', 'profile', '--figma-image-store', 'none', '--no-source-locator', '--profile', './provider.mjs', '--yes']);
     if (filesHash(root) !== applied) throw new Error('custom adapter init was not idempotent.');
     matrix.push('custom-adapter: profile init doctor typecheck build idempotent');
+  }
+
+  {
+    const root = fixture('custom-bootstrap-figma');
+    install(root, tarball);
+    write(root, 'node_modules/@example/test-provider/package.json', JSON.stringify({
+      name: '@example/test-provider', type: 'module', exports: './index.js',
+    }));
+    write(root, 'node_modules/@example/test-provider/index.js', `
+      import { localAdapter } from '@designfever/web-review-kit';
+      export function createReviewBootstrap() {
+        return {
+          mount({ onReady }) {
+            const adapter = localAdapter();
+            onReady({ adapters: [{ label: 'local', ...adapter }] });
+          },
+        };
+      }
+      export function createFigmaImageStore() {
+        return {};
+      }
+    `);
+    write(root, 'node_modules/@example/test-provider/index.d.ts', `
+      import type { ReviewFigmaImageStore } from '@designfever/web-review-kit';
+      import type { ReviewProviderBootstrap } from '@designfever/web-review-kit/react-shell';
+      export declare function createReviewBootstrap(options?: { endpoint?: string }): ReviewProviderBootstrap;
+      export declare function createFigmaImageStore(options?: { endpoint?: string }): ReviewFigmaImageStore;
+    `);
+    write(root, 'provider.mjs', `export default {
+  schemaVersion: 1,
+  capabilities: {
+    review: {
+      mode: 'bootstrap',
+      module: '@example/test-provider',
+      exportName: 'createReviewBootstrap',
+      options: { endpoint: { env: 'VITE_REVIEW_PROXY_URL' } },
+    },
+    figma: {
+      module: '@example/test-provider',
+      exportName: 'createFigmaImageStore',
+      options: { endpoint: { env: 'VITE_FIGMA_PROXY_URL' } },
+    },
+  },
+  env: [
+    { key: 'VITE_FIGMA_PROXY_URL', secret: false, required: true, example: '/api/figma' },
+    { key: 'VITE_REVIEW_PROXY_URL', secret: false, required: true, example: '/api/review' },
+  ],
+  doctorChecks: [{ code: 'BOOTSTRAP_WIRING_MISSING', capability: 'review', message: 'Review bootstrap wiring missing.', sourceIncludes: 'reviewBootstrap' }],
+};\n`);
+    cli(root, ['init', '--non-interactive', '--project-id', 'custom-bootstrap', '--project-name', 'Custom bootstrap', '--review-storage', 'profile', '--figma-image-store', 'profile', '--no-source-locator', '--profile', './provider.mjs', '--yes']);
+    const vite = readFileSync(join(root, 'vite.config.ts'), 'utf8');
+    if (vite.includes('reviewFigmaImageStore')) {
+      throw new Error('custom runtime Figma store unexpectedly added a Vite plugin.');
+    }
+    verifyDoctor(root, './provider.mjs');
+    verifyBuild(root);
+    const applied = filesHash(root);
+    cli(root, ['init', '--non-interactive', '--project-id', 'custom-bootstrap', '--project-name', 'Custom bootstrap', '--review-storage', 'profile', '--figma-image-store', 'profile', '--no-source-locator', '--profile', './provider.mjs', '--yes']);
+    if (filesHash(root) !== applied) throw new Error('custom bootstrap init was not idempotent.');
+    matrix.push('custom-bootstrap-figma: gate profile doctor typecheck build no-vite-plugin idempotent');
+  }
+
+  {
+    const root = fixture('host-custom');
+    install(root, tarball);
+    cli(root, ['init', '--non-interactive', '--project-id', 'host-custom', '--project-name', 'Host custom', '--review-storage', 'custom', '--figma-image-store', 'custom', '--no-source-locator', '--yes']);
+
+    const incomplete = runResult(
+      join(root, 'node_modules/.bin/web-review-kit'),
+      ['doctor', '--json'],
+      root
+    );
+    const incompleteResult = JSON.parse(incomplete.stdout);
+    const incompleteCodes = incompleteResult.diagnostics.map(({ code }) => code);
+    if (
+      incomplete.status !== 1 ||
+      !incompleteCodes.includes('CUSTOM_REVIEW_INCOMPLETE') ||
+      !incompleteCodes.includes('CUSTOM_FIGMA_INCOMPLETE')
+    ) {
+      throw new Error('host custom scaffolds were not reported as incomplete.');
+    }
+
+    write(root, 'src/review/custom.review.tsx', `
+      import { localAdapter } from '@designfever/web-review-kit';
+      import type { ReviewProviderBootstrap } from '@designfever/web-review-kit/react-shell';
+      const adapter = localAdapter({ storageKey: 'host-custom-review-items' });
+      export const customReviewBootstrap: ReviewProviderBootstrap = {
+        mount({ onReady }) {
+          onReady({ adapters: [{ label: 'custom', ...adapter }] });
+        },
+      };
+    `);
+    write(root, 'src/review/custom.figma.store.ts', `
+      import { createEndpointReviewFigmaImageStore } from '@designfever/web-review-kit';
+      export const customFigmaImageStore = createEndpointReviewFigmaImageStore({
+        endpoint: '/api/custom-figma',
+      });
+    `);
+    const vite = readFileSync(join(root, 'vite.config.ts'), 'utf8');
+    if (vite.includes('reviewFigmaImageStore')) {
+      throw new Error('host custom Figma store unexpectedly added a Vite plugin.');
+    }
+    verifyDoctor(root);
+    verifyBuild(root);
+    const applied = filesHash(root);
+    cli(root, ['init', '--non-interactive', '--project-id', 'host-custom', '--project-name', 'Host custom', '--review-storage', 'custom', '--figma-image-store', 'custom', '--no-source-locator', '--yes']);
+    if (filesHash(root) !== applied) throw new Error('host custom init overwrote edited scaffolds.');
+    matrix.push('host-custom: scaffold blockers edit doctor typecheck build preserved no-vite-plugin');
   }
 
   {

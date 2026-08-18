@@ -25,9 +25,10 @@ existing dev command:
 ```
 
 Interactive terminals show the installed and latest versions and ask before
-running `pnpm add --save-exact`. Answering `N`, a registry failure, and a
-non-interactive terminal do not block the dev server. Local `link:`, `file:`,
-and `workspace:` package references are never replaced.
+running the detected npm, pnpm, or Yarn exact-version add command. Answering
+`N`, a registry failure, and a non-interactive terminal do not block the dev
+server. Local `link:`, `file:`, and `workspace:` package references are never
+replaced.
 
 Supabase is optional. Install it only in host projects that use the Supabase adapter.
 
@@ -364,7 +365,7 @@ Rules:
 
 - Browser env uses a Supabase `anon` key only.
 - Never expose `service_role` in browser env.
-- OpenClaw/operator secrets stay outside the host browser and outside this package.
+- Operator secrets stay outside the host browser and outside this package.
 
 ## Viewport Presets
 

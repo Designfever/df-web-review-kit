@@ -3,7 +3,11 @@ import {
   parseDoctorArgs,
   runDoctor,
 } from './doctor';
-import { InitCancelledError, resolveInitConfig } from './init-config';
+import {
+  InitCancelledError,
+  resolveInitConfig,
+  usesProviderProfile,
+} from './init-config';
 import {
   applyInstallPlan,
   createInstallPlan,
@@ -33,16 +37,16 @@ export type CliIo = {
   stderr: (message: string) => void;
 };
 
-export type CliCommandContext = {
+type CliCommandContext = {
   args: string[];
   io: CliIo;
 };
 
-export type CliCommandHandler = (
+type CliCommandHandler = (
   context: CliCommandContext
 ) => number | void | Promise<number | void>;
 
-export type CliCommandHandlers = {
+type CliCommandHandlers = {
   init: CliCommandHandler;
   doctor: CliCommandHandler;
   check: CliCommandHandler;
@@ -76,13 +80,18 @@ const defaultHandlers: CliCommandHandlers = {
       : null;
     try {
       const config = await resolveInitConfig({ args, prompt: promptSession?.prompt });
-      const profile = config.profile
+      const profile = usesProviderProfile(config) && config.profile
         ? await resolveProviderProfile(config.profile)
         : undefined;
-      const provider = profile ? createProviderArtifacts(profile) : undefined;
+      const providerCapabilities = [
+        ...(config.reviewStorage === 'profile' ? ['review' as const] : []),
+        ...(config.figmaImageStore === 'profile' ? ['figma' as const] : []),
+      ];
+      const provider = profile
+        ? createProviderArtifacts(profile, {}, providerCapabilities)
+        : undefined;
       if (profile) {
-        const capabilities = profile.capabilities.figma ? 'review, figma' : 'review';
-        io.stdout(`Provider profile loaded (${capabilities}).`);
+        io.stdout(`Provider profile loaded (${provider?.capabilities.join(', ')}).`);
       }
 
       const root = process.cwd();

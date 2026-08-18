@@ -1,6 +1,12 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import type { InitConfig } from './init-config';
+import {
+  CUSTOM_FIGMA_PATH,
+  CUSTOM_REVIEW_PATH,
+  renderCustomFigmaScaffold,
+  renderCustomReviewScaffold,
+} from './custom-scaffold';
+import { usesProviderProfile, type InitConfig } from './init-config';
 import type { ProjectPreflightResult } from './preflight';
 import type { ProviderArtifacts } from './provider-install';
 
@@ -42,50 +48,111 @@ function addGeneratedFile(
   changes.push({ path, action: before === null ? 'create' : 'update', before, after });
 }
 
-function renderReviewConfig(config: InitConfig, provider?: ProviderArtifacts) {
-  if (config.reviewStorage === 'custom') {
-    if (!provider) {
-      throw new Error('INSTALL_PROFILE_REQUIRED: custom review storage needs provider artifacts.');
-    }
-    return `${GENERATED_HEADER}\n${provider.source}\nexport const reviewAdapters = [providerCapabilities.review];\n${
-      config.figmaImageStore === 'custom'
-        ? 'export const figmaImageStore = providerCapabilities.figma;\n'
-        : ''
-    }`;
+function addHostOwnedScaffold(
+  changes: InstallFileChange[],
+  path: string,
+  before: string | null,
+  after: string,
+  expectedExport: string
+) {
+  if (before === null) {
+    changes.push({ path, action: 'create', before, after });
+    return;
   }
-
-  const figmaImport =
-    config.figmaImageStore === 'local' ? ', createReviewFigmaImageStoreClient' : '';
-  return `${GENERATED_HEADER}
-import { localAdapter${figmaImport} } from '@designfever/web-review-kit';
-
-export const reviewAdapters = {
-  local: localAdapter({ storageKey: ${JSON.stringify(`${config.projectId}-review-items`)} }),
-};
-${
-  config.figmaImageStore === 'local'
-    ? '\nexport const figmaImageStore = createReviewFigmaImageStoreClient();\n'
-    : ''
-}`;
+  if (!before.includes(expectedExport)) {
+    throw new Error(
+      `INSTALL_CUSTOM_WIRING_CONFLICT: ${path} must export ${expectedExport}.`
+    );
+  }
 }
 
-function renderReviewEntry(config: InitConfig) {
+function renderReviewConfig(config: InitConfig, provider?: ProviderArtifacts) {
+  const imports: string[] = [];
+  if (config.reviewStorage === 'local') {
+    imports.push("import { localAdapter } from '@designfever/web-review-kit';");
+  }
+  if (config.reviewStorage === 'custom') {
+    imports.push("import { customReviewBootstrap } from './custom.review';");
+  }
+  if (config.figmaImageStore === 'local') {
+    imports.push(
+      "import { createReviewFigmaImageStoreClient } from '@designfever/web-review-kit';"
+    );
+  }
+  if (config.figmaImageStore === 'custom') {
+    imports.push("import { customFigmaImageStore } from './custom.figma.store';");
+  }
+
+  let reviewExport: string;
+  if (config.reviewStorage === 'local') {
+    reviewExport = `export const reviewAdapters = {
+  local: localAdapter({ storageKey: ${JSON.stringify(`${config.projectId}-review-items`)} }),
+};`;
+  } else if (config.reviewStorage === 'custom') {
+    reviewExport = 'export const reviewBootstrap = customReviewBootstrap;';
+  } else {
+    reviewExport =
+      provider?.reviewMode === 'bootstrap'
+        ? 'export const reviewBootstrap = providerCapabilities.review;'
+        : 'export const reviewAdapters = [providerCapabilities.review];';
+  }
+
+  let figmaExport = '';
+  if (config.figmaImageStore === 'local') {
+    figmaExport = 'export const figmaImageStore = createReviewFigmaImageStoreClient();';
+  } else if (config.figmaImageStore === 'custom') {
+    figmaExport = 'export const figmaImageStore = customFigmaImageStore;';
+  } else if (config.figmaImageStore === 'profile') {
+    figmaExport = 'export const figmaImageStore = providerCapabilities.figma;';
+  }
+
+  return [
+    GENERATED_HEADER,
+    imports.join('\n'),
+    usesProviderProfile(config) ? provider?.source.trim() ?? '' : '',
+    reviewExport,
+    figmaExport,
+  ]
+    .filter(Boolean)
+    .join('\n\n')
+    .concat('\n');
+}
+
+function renderReviewEntry(config: InitConfig, provider?: ProviderArtifacts) {
   const usesFigma = config.figmaImageStore !== 'none';
+  const usesBootstrap =
+    config.reviewStorage === 'custom' ||
+    (config.reviewStorage === 'profile' && provider?.reviewMode === 'bootstrap');
+  const reviewImport = usesBootstrap ? 'reviewBootstrap' : 'reviewAdapters';
+  const mount = `mountReviewShell({
+  projectId,
+  pages,
+  adapters${usesBootstrap ? '' : ': reviewAdapters'},
+  ${usesFigma ? 'figmaImages: { store: figmaImageStore },\n  ' : ''}reviewPathPrefix: '/review',
+});`;
   return `${GENERATED_HEADER}
-import { createReviewPagesFromGlob, mountReviewShell } from '@designfever/web-review-kit/react-shell';
-import { reviewAdapters${usesFigma ? ', figmaImageStore' : ''} } from './review.config';
+import { createReviewPagesFromGlob, mountReviewShell${usesBootstrap ? ', type ReviewProviderSession' : ''} } from '@designfever/web-review-kit/react-shell';
+import { ${reviewImport}${usesFigma ? ', figmaImageStore' : ''} } from './review.config';
 
 const projectId = import.meta.env.VITE_REVIEW_PROJECT_ID || ${JSON.stringify(config.projectId)};
-const pages = createReviewPagesFromGlob(import.meta.glob('/src/**/*.{jsx,tsx}'), {
+const pages = createReviewPagesFromGlob(import.meta.glob([
+  '/src/**/*.{jsx,tsx}',
+  '!/src/review/**/*',
+]), {
   exclude: (href) => href === '/review/',
 });
 
-mountReviewShell({
+${usesBootstrap
+    ? `const mountProviderSession = ({ adapters }: ReviewProviderSession) => {
+  ${mount.split('\n').join('\n  ')}
+};
+
+void reviewBootstrap.mount({
+  rootId: 'root',
   projectId,
-  pages,
-  adapters: reviewAdapters,
-  ${usesFigma ? 'figmaImages: { store: figmaImageStore },\n  ' : ''}reviewPathPrefix: '/review',
-});
+  onReady: mountProviderSession,
+});`
+    : mount}
 `;
 }
 
@@ -157,8 +224,14 @@ export async function createInstallPlan(input: {
   if (needsVitePatch && preflight.files.viteConfigs.length !== 1) {
     throw new Error('INSTALL_VITE_CONFLICT: exactly one Vite config is required for plugin patching.');
   }
-  if ((config.reviewStorage === 'custom' || config.figmaImageStore === 'custom') && !provider) {
-    throw new Error('INSTALL_PROFILE_REQUIRED: custom capabilities need provider artifacts.');
+  if (usesProviderProfile(config) && !provider) {
+    throw new Error('INSTALL_PROFILE_REQUIRED: profile capabilities need provider artifacts.');
+  }
+  if (
+    config.figmaImageStore === 'profile' &&
+    !provider?.capabilities.includes('figma')
+  ) {
+    throw new Error('INSTALL_PROFILE_CAPABILITY_MISSING: profile does not provide Figma.');
   }
 
   const dependencies = {
@@ -166,9 +239,27 @@ export async function createInstallPlan(input: {
     ...(provider?.dependencies ?? {}),
   };
   const changes: InstallFileChange[] = [];
+  if (config.reviewStorage === 'custom') {
+    addHostOwnedScaffold(
+      changes,
+      CUSTOM_REVIEW_PATH,
+      await readOptional(join(root, CUSTOM_REVIEW_PATH)),
+      renderCustomReviewScaffold(),
+      'customReviewBootstrap'
+    );
+  }
+  if (config.figmaImageStore === 'custom') {
+    addHostOwnedScaffold(
+      changes,
+      CUSTOM_FIGMA_PATH,
+      await readOptional(join(root, CUSTOM_FIGMA_PATH)),
+      renderCustomFigmaScaffold(),
+      'customFigmaImageStore'
+    );
+  }
   const generated = [
     ['src/review/review.config.ts', renderReviewConfig(config, provider)],
-    ['src/review/index.tsx', renderReviewEntry(config)],
+    ['src/review/index.tsx', renderReviewEntry(config, provider)],
     ['review/index.html', renderReviewHtml()],
   ] as const;
   for (const [path, content] of generated) {

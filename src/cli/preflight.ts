@@ -1,7 +1,8 @@
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
+import { detectPackageManager, type PackageManager } from './package-manager';
 
-export type PreflightSeverity = 'info' | 'warning' | 'blocker';
+type PreflightSeverity = 'info' | 'warning' | 'blocker';
 
 export type PreflightDiagnosticCode =
   | 'PROJECT_PACKAGE_JSON_MISSING'
@@ -17,20 +18,19 @@ export type PreflightDiagnosticCode =
   | 'REVIEW_ROUTE_CONFLICT'
   | 'REVIEW_KIT_PARTIAL';
 
-export type PreflightDiagnostic = {
+type PreflightDiagnostic = {
   code: PreflightDiagnosticCode;
   severity: PreflightSeverity;
   message: string;
   paths?: string[];
 };
 
-export type ProjectPackageManager = 'npm' | 'pnpm' | 'yarn';
-export type ProjectLanguage = 'javascript' | 'typescript';
+type ProjectLanguage = 'javascript' | 'typescript';
 
 export type ProjectPreflightResult = {
   root: string;
   support: 'supported' | 'warning' | 'blocked';
-  packageManager: ProjectPackageManager | null;
+  packageManager: PackageManager | null;
   language: ProjectLanguage;
   dependencies: {
     react: string | null;
@@ -57,12 +57,6 @@ export type ProjectPreflightResult = {
 type PackageJson = {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
-};
-
-const PACKAGE_MANAGER_LOCKS: Record<ProjectPackageManager, string[]> = {
-  npm: ['package-lock.json', 'npm-shrinkwrap.json'],
-  pnpm: ['pnpm-lock.yaml'],
-  yarn: ['yarn.lock'],
 };
 
 const VITE_CONFIG_NAMES = [
@@ -216,25 +210,14 @@ export async function scanProject(root: string): Promise<ProjectPreflightResult>
     );
   }
 
-  const lockfiles: string[] = [];
-  const packageManagers: ProjectPackageManager[] = [];
-  for (const manager of Object.keys(PACKAGE_MANAGER_LOCKS) as ProjectPackageManager[]) {
-    const matches = [];
-    for (const lockfile of PACKAGE_MANAGER_LOCKS[manager]) {
-      if (await isFile(join(root, lockfile))) matches.push(lockfile);
-    }
-    if (matches.length) {
-      packageManagers.push(manager);
-      lockfiles.push(...matches);
-    }
-  }
-  lockfiles.sort();
+  const { packageManager, managers: packageManagers, lockfiles } =
+    await detectPackageManager(root);
 
   if (packageManagers.length === 0) {
     diagnostics.push(
       diagnostic('PACKAGE_MANAGER_MISSING', 'warning', 'No supported package manager lockfile was found.')
     );
-  } else if (packageManagers.length > 1) {
+  } else if (packageManagers.length > 1 && !packageManager) {
     diagnostics.push(
       diagnostic(
         'PACKAGE_MANAGER_AMBIGUOUS',
@@ -293,7 +276,7 @@ export async function scanProject(root: string): Promise<ProjectPreflightResult>
   return {
     root,
     support: getSupport(diagnostics),
-    packageManager: packageManagers.length === 1 ? packageManagers[0] : null,
+    packageManager,
     language,
     dependencies: { react, vite, reviewKit },
     files: {

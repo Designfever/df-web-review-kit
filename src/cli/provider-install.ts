@@ -6,6 +6,7 @@ import {
   validateProviderProfile,
   type ProviderCapability,
   type ProviderProfile,
+  type ProviderReviewMode,
   type ProviderWiring,
 } from './provider-profile';
 
@@ -20,9 +21,10 @@ export type ProviderArtifacts = {
   envExample: string;
   dependencies: Record<string, string>;
   capabilities: ProviderCapability[];
+  reviewMode: ProviderReviewMode;
 };
 
-export type ProviderDoctorDiagnostic = {
+type ProviderDoctorDiagnostic = {
   code: string;
   severity: 'info' | 'warning' | 'blocker';
   message: string;
@@ -33,6 +35,24 @@ export type ProviderDoctorResult = {
   capabilities: ProviderCapability[];
   diagnostics: ProviderDoctorDiagnostic[];
 };
+
+function getDeclaredCapabilities(profile: ProviderProfile): ProviderCapability[] {
+  return profile.capabilities.figma ? ['review', 'figma'] : ['review'];
+}
+
+function getSelectedEnvKeys(
+  profile: ProviderProfile,
+  capabilities: ProviderCapability[]
+) {
+  const keys = new Set<string>();
+  for (const capability of capabilities) {
+    const wiring = profile.capabilities[capability];
+    for (const option of Object.values(wiring?.options ?? {})) {
+      if (typeof option === 'object') keys.add(option.env);
+    }
+  }
+  return keys;
+}
 
 function isLocalSpecifier(specifier: string) {
   return specifier.startsWith('.') || specifier.startsWith('/') || specifier.startsWith('file:');
@@ -92,37 +112,56 @@ function renderEnvValue(value: string) {
 
 export function createProviderArtifacts(
   profile: ProviderProfile,
-  envValues: Record<string, string> = {}
+  envValues: Record<string, string> = {},
+  selectedCapabilities: ProviderCapability[] = getDeclaredCapabilities(profile)
 ): ProviderArtifacts {
   validateProviderProfile(profile);
+  const capabilities = [...new Set(selectedCapabilities)];
+  if (!capabilities.length) throw new Error('Provider artifacts require a selected capability.');
+  for (const capability of capabilities) {
+    if (!profile.capabilities[capability]) {
+      throw new Error(`Provider profile does not declare ${capability} capability.`);
+    }
+  }
+  const reviewMode = profile.capabilities.review.mode ?? 'adapter';
+  const includesReview = capabilities.includes('review');
+  const includesFigma = capabilities.includes('figma');
   const imports = new Map<string, Set<string>>();
   const addImport = (wiring: ProviderWiring) => {
     const exports = imports.get(wiring.module) ?? new Set<string>();
     exports.add(wiring.exportName);
     imports.set(wiring.module, exports);
   };
-  addImport(profile.capabilities.review);
-  if (profile.capabilities.figma) addImport(profile.capabilities.figma);
+  if (includesReview) addImport(profile.capabilities.review);
+  if (includesFigma && profile.capabilities.figma) addImport(profile.capabilities.figma);
 
   const source = [
-    '// Generated provider wiring. Secret values stay in .env.local.',
+    '// Generated provider wiring. Browser code receives public configuration only.',
+    `// Provider capabilities selected: ${capabilities.join(', ')}`,
     ...[...imports.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([module, exports]) => `import { ${[...exports].sort().join(', ')} } from ${JSON.stringify(module)};`),
     '',
-    renderWiring('reviewAdapter', profile.capabilities.review),
-    ...(profile.capabilities.figma
-      ? ['', renderWiring('figmaImageStore', profile.capabilities.figma)]
+    ...(includesReview ? [renderWiring('providerReview', profile.capabilities.review)] : []),
+    ...(includesFigma && profile.capabilities.figma
+      ? ['', renderWiring('providerFigma', profile.capabilities.figma)]
       : []),
     '',
     'export const providerCapabilities = {',
-    '  review: reviewAdapter,',
-    ...(profile.capabilities.figma ? ['  figma: figmaImageStore,'] : []),
+    ...(includesReview ? ['  review: providerReview,'] : []),
+    ...(includesFigma ? ['  figma: providerFigma,'] : []),
     '};',
     '',
   ].join('\n');
 
-  const fields = [...(profile.env ?? [])].sort((a, b) => a.key.localeCompare(b.key));
+  const declaredCapabilities = getDeclaredCapabilities(profile);
+  const selectedEnvKeys = getSelectedEnvKeys(profile, capabilities);
+  const fields = [...(profile.env ?? [])]
+    .filter(
+      (field) =>
+        capabilities.length === declaredCapabilities.length || selectedEnvKeys.has(field.key)
+    )
+    .sort((a, b) => a.key.localeCompare(b.key));
   const envExample = fields
     .map((field) => `${field.key}=${field.secret ? '' : field.example ?? ''}`)
     .join('\n');
@@ -136,7 +175,8 @@ export function createProviderArtifacts(
     envLocal: envLocal ? `${envLocal}\n` : '',
     envExample: envExample ? `${envExample}\n` : '',
     dependencies: { ...(profile.dependencies ?? {}) },
-    capabilities: profile.capabilities.figma ? ['review', 'figma'] : ['review'],
+    capabilities,
+    reviewMode,
   };
 }
 
@@ -151,7 +191,25 @@ export function doctorProviderProfile(input: {
     { code: 'PROFILE_LOADED', severity: 'info', message: 'Provider profile loaded successfully.' },
   ];
 
-  for (const field of [...(profile.env ?? [])].sort((a, b) => a.key.localeCompare(b.key))) {
+  const marker = /Provider capabilities selected: ([^\n]+)/.exec(source);
+  const markedCapabilities = marker
+    ? marker[1]
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter((entry): entry is ProviderCapability => entry === 'review' || entry === 'figma')
+    : [];
+  const capabilities = markedCapabilities.length
+    ? markedCapabilities
+    : getDeclaredCapabilities(profile);
+  const declaredCapabilities = getDeclaredCapabilities(profile);
+  const selectedEnvKeys = getSelectedEnvKeys(profile, capabilities);
+
+  for (const field of [...(profile.env ?? [])]
+    .filter(
+      (entry) =>
+        capabilities.length === declaredCapabilities.length || selectedEnvKeys.has(entry.key)
+    )
+    .sort((a, b) => a.key.localeCompare(b.key))) {
     if (field.required && !env[field.key]) {
       diagnostics.push({
         code: 'PROFILE_ENV_MISSING',
@@ -161,15 +219,12 @@ export function doctorProviderProfile(input: {
     }
   }
 
-  const capabilities: ProviderCapability[] = ['review'];
-  const wiring = [
-    ['review', profile.capabilities.review] as const,
-    ...(profile.capabilities.figma ? [['figma', profile.capabilities.figma] as const] : []),
-  ];
-  if (profile.capabilities.figma) capabilities.push('figma');
+  const wiring = capabilities.map(
+    (capability) => [capability, profile.capabilities[capability]] as const
+  );
 
   for (const [capability, entry] of wiring) {
-    if (!source.includes(entry.exportName)) {
+    if (!entry || !source.includes(entry.exportName)) {
       diagnostics.push({
         code: `PROFILE_${capability.toUpperCase()}_WIRING_MISSING`,
         severity: 'blocker',
@@ -179,6 +234,7 @@ export function doctorProviderProfile(input: {
   }
 
   for (const check of profile.doctorChecks ?? []) {
+    if (check.capability && !capabilities.includes(check.capability)) continue;
     if (check.sourceIncludes && !source.includes(check.sourceIncludes)) {
       diagnostics.push({ code: check.code, severity: 'warning', message: check.message });
     }

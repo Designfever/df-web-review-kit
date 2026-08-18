@@ -23,15 +23,16 @@ export default defineProviderProfile({
       module: '@example/review-provider',
       exportName: 'createReviewAdapter',
       options: {
-        token: { env: 'VITE_EXAMPLE_REVIEW_TOKEN' },
+        endpoint: { env: 'VITE_EXAMPLE_REVIEW_URL' },
       },
     },
   },
   env: [
     {
-      key: 'VITE_EXAMPLE_REVIEW_TOKEN',
-      secret: true,
+      key: 'VITE_EXAMPLE_REVIEW_URL',
+      secret: false,
       required: true,
+      example: '/api/review',
     },
   ],
   dependencies: {
@@ -51,6 +52,33 @@ The module must default-export the profile, or export it as `providerProfile`.
 
 Every profile declares `capabilities.review`. `capabilities.figma` is optional and independent. Each wiring entry names a package module, factory export, and serializable options. An option shaped as `{ env: "ENV_KEY" }` generates an `import.meta.env.ENV_KEY` reference instead of a value.
 
+Review wiring has two modes:
+
+- `mode: "adapter"` is the default. The factory returns a ready `ReviewShellAdapter`.
+- `mode: "bootstrap"` is for providers that must show login or project/page selection before creating adapters. The factory returns a `ReviewProviderBootstrap`.
+
+```ts
+import type { ReviewProviderBootstrap } from '@designfever/web-review-kit/react-shell';
+
+export function createReviewBootstrap({ mountGate }): ReviewProviderBootstrap {
+  return {
+    mount({ rootId, projectId, onReady }) {
+      mountGate({
+        rootId,
+        projectId,
+        onStart(adapter) {
+          onReady({ adapters: [adapter] });
+        },
+      });
+    },
+  };
+}
+```
+
+The generated entry waits for `onReady` before calling `mountReviewShell`. The bootstrap owns its gate UI and must unmount that UI before invoking `onReady`.
+
+The optional Figma factory is still created independently. A custom runtime Figma store does not require `reviewFigmaImageStore()` in Vite; that plugin belongs only to the built-in local Figma store.
+
 `dependencies` lists host packages for the future installation plan. The public CLI does not download or execute provider code beyond loading the selected profile module.
 
 ## Questions and environment fields
@@ -61,13 +89,15 @@ Environment rules:
 
 - keys must use uppercase `A-Z`, numbers, and underscores;
 - secret fields cannot declare example values;
+- secret fields cannot use the `VITE_` prefix;
+- browser wiring cannot reference a field marked `secret`;
 - generated source contains environment references, never entered values;
 - `.env.example` contains all declared keys, but secret values are always empty;
 - entered values may be written only to `.env.local` after the installer preview and confirmation;
 - diagnostics report environment key names, never values;
 - secrets must not be supplied through CLI arguments.
 
-Profiles should avoid `VITE_` for server-only credentials. Values exposed through `import.meta.env` are client-visible by Vite design; the provider package owns that security decision.
+Values exposed through `import.meta.env` are client-visible by Vite design. A browser provider should receive only public proxy URLs and non-secret identifiers. Private review-storage or Figma credentials belong in a server environment behind a narrow proxy or secure session.
 
 ## Doctor checks
 

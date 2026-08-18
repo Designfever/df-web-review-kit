@@ -1,14 +1,20 @@
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
+import {
+  CUSTOM_FIGMA_PATH,
+  CUSTOM_FIGMA_TODO,
+  CUSTOM_REVIEW_PATH,
+  CUSTOM_REVIEW_TODO,
+} from './custom-scaffold';
 import { scanProject } from './preflight';
 import {
   doctorProviderProfile,
   resolveProviderProfile,
 } from './provider-install';
 
-export type DoctorSeverity = 'info' | 'warning' | 'blocker';
+type DoctorSeverity = 'info' | 'warning' | 'blocker';
 
-export type DoctorDiagnostic = {
+type DoctorDiagnostic = {
   code: string;
   severity: DoctorSeverity;
   message: string;
@@ -191,16 +197,51 @@ export async function runDoctor(input: {
     }
   }
 
-  const reviewCapability = /\badapters\s*:|\breviewAdapters\b|\blocalAdapter\s*\(/.test(combinedSource);
+  const reviewCapability = /\badapters\s*:|\breviewAdapters\b|\breviewBootstrap\b|\blocalAdapter\s*\(/.test(combinedSource);
   const figmaClient = /\bfigmaImages\s*:|\bfigmaImageStore\b/.test(combinedSource);
+  const localFigmaClient = /\bcreateReviewFigmaImageStoreClient\s*\(/.test(combinedSource);
+  const customReviewTodoPaths = sources
+    .filter(
+      ({ path, content }) =>
+        path === CUSTOM_REVIEW_PATH && content.includes(CUSTOM_REVIEW_TODO)
+    )
+    .map(({ path }) => path);
+  const customFigmaTodoPaths = sources
+    .filter(
+      ({ path, content }) =>
+        path === CUSTOM_FIGMA_PATH && content.includes(CUSTOM_FIGMA_TODO)
+    )
+    .map(({ path }) => path);
+  if (customReviewTodoPaths.length) {
+    diagnostics.push(
+      finding(
+        'CUSTOM_REVIEW_INCOMPLETE',
+        'blocker',
+        'The host-owned custom review adapter or gate is still a scaffold.',
+        'Implement customReviewBootstrap and remove the TODO marker.',
+        customReviewTodoPaths
+      )
+    );
+  }
+  if (customFigmaTodoPaths.length) {
+    diagnostics.push(
+      finding(
+        'CUSTOM_FIGMA_INCOMPLETE',
+        'blocker',
+        'The host-owned custom Figma image store is still a scaffold.',
+        'Implement customFigmaImageStore and remove the TODO marker.',
+        customFigmaTodoPaths
+      )
+    );
+  }
   if (preflight.features.reviewShellMounted && !reviewCapability) {
     diagnostics.push(
       finding('REVIEW_ADAPTER_MISSING', 'blocker', 'Review shell mount was found without adapter capability wiring.', 'Pass at least one ReviewShellAdapter to mountReviewShell().')
     );
   }
-  if (preflight.features.figmaImageStorePlugin !== figmaClient) {
+  if (preflight.features.figmaImageStorePlugin !== localFigmaClient) {
     diagnostics.push(
-      finding('FIGMA_CAPABILITY_PARTIAL', 'warning', 'Figma server plugin and client image-store wiring are incomplete.', 'Wire both reviewFigmaImageStore() and figmaImages.store, or remove both.')
+      finding('FIGMA_CAPABILITY_PARTIAL', 'warning', 'The local Figma client store and its Vite plugin wiring are incomplete.', 'Wire both createReviewFigmaImageStoreClient() and reviewFigmaImageStore(), or remove both.')
     );
   }
   if (!envKeys.includes('VITE_REVIEW_PROJECT_ID')) {
@@ -245,7 +286,9 @@ export async function runDoctor(input: {
       envKeys,
       capabilities: {
         review: reviewCapability,
-        figma: figmaClient && preflight.features.figmaImageStorePlugin,
+        figma:
+          figmaClient &&
+          (!localFigmaClient || preflight.features.figmaImageStorePlugin),
         sourceLocator: preflight.features.sourceLocator,
         dataLocator: preflight.features.dataLocator,
       },

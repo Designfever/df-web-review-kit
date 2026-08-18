@@ -11,21 +11,34 @@ The package exposes the `web-review-kit` executable:
 ```text
 web-review-kit init
 web-review-kit doctor
+web-review-kit check
 ```
 
 `init` supports interactive answers, non-interactive flags, and schema-versioned secret-free JSON config through one validation path. It scans the host, creates a previewable plan, and writes only after confirmation or `--yes`.
 
 `doctor` checks host/package versions, package exports, review route and React mount, selected Vite plugins, environment key presence, adapter capabilities, provider wiring, partial installs, and known legacy integrations. Human and `--json` output use the same diagnostics. Exit codes are 0 for healthy, 2 for warnings, and 1 for blockers or failures.
 
+`check` compares the installed package with the npm registry and asks before
+updating. It preserves the dependency field, uses the detected npm, pnpm, or
+Yarn lockfile, respects an explicit `packageManager` field when stale lockfiles
+coexist, skips local dependency specs, and remains non-blocking
+when declined, non-interactive, or offline.
+
 ## Safe Generation
 
-The installer can generate a minimal `/review/` HTML entry, React mount, and review configuration for local or profile-supplied capabilities. It plans dependencies and minimally patches recognized Vite and `.env.example` structures.
+The installer can generate a minimal `/review/` HTML entry, React mount, and review configuration for local, host-owned custom, or profile-supplied capabilities. Host-owned custom Review/Figma files are created once, remain editable, and are never overwritten by reruns. It plans dependencies and minimally patches recognized Vite and `.env.example` structures.
 
 Dry-run is read-only. Installer-owned files have an explicit header; existing user-owned files are conflicts. A stale plan blocks the complete write. Repeated installation produces no additional diff.
 
+`custom` means a host-owned adapter/gate or Figma store, while `profile` means a separately loaded package/module. Review and Figma selections compose independently. Custom scaffold TODO markers are `doctor` blockers until implemented.
+
 ## Provider Profiles
 
-The public `@designfever/web-review-kit/profile` export defines schema version 1. A generic profile can declare review storage, optional independent Figma image storage, dependencies, environment key metadata, generated wiring, and declarative doctor checks.
+The public `@designfever/web-review-kit/profile` export defines schema version 1. A generic profile can declare direct adapter mode or bootstrap mode, optional independent Figma image storage, dependencies, environment key metadata, generated wiring, and declarative doctor checks.
+
+Bootstrap mode lets a provider render login and project/page selection before resolving adapters and mounting Review Shell. Custom runtime Figma stores remain independent and do not require the built-in local Figma Vite plugin.
+
+Provider validation rejects secret `VITE_` fields and secret environment references in generated browser wiring. Private review-storage/Figma credentials must remain behind a server proxy or secure session.
 
 Profiles do not receive unrestricted filesystem access. Backend implementation, endpoints, and authentication remain in host-owned or separately published packages.
 
@@ -37,7 +50,7 @@ Customized adapter options, host callbacks, multiple legacy integrations, and am
 
 ## Verification
 
-`pnpm test:e2e:pack` builds and packs the package, installs the tarball into temporary clean JavaScript/TypeScript, existing 0.8, and generic custom-adapter fixtures, then verifies init/doctor/migration, typecheck, production build, idempotency, failure exit codes, and unchanged-file guarantees.
+`pnpm test:e2e:pack` builds and packs the package, installs the tarball into temporary clean JavaScript/TypeScript, existing 0.8, host-owned custom, generic provider-adapter, and bootstrap-plus-Figma fixtures, then verifies init/doctor/check/migration, typecheck, production build, idempotency, failure exit codes, and unchanged-file guarantees.
 
 See:
 

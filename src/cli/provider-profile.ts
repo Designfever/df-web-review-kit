@@ -1,4 +1,5 @@
 export type ProviderCapability = 'review' | 'figma';
+export type ProviderReviewMode = 'adapter' | 'bootstrap';
 
 export type ProviderQuestion = {
   key: string;
@@ -21,6 +22,10 @@ export type ProviderWiring = {
   options?: Record<string, { env: string } | string | boolean | number>;
 };
 
+export type ProviderReviewWiring = ProviderWiring & {
+  mode?: ProviderReviewMode;
+};
+
 export type ProviderDoctorCheck = {
   code: string;
   message: string;
@@ -31,7 +36,7 @@ export type ProviderDoctorCheck = {
 export type ProviderProfile = {
   schemaVersion: 1;
   capabilities: {
-    review: ProviderWiring;
+    review: ProviderReviewWiring;
     figma?: ProviderWiring;
   };
   questions?: ProviderQuestion[];
@@ -62,15 +67,27 @@ export function validateProviderProfile(value: unknown): asserts value is Provid
       throw new Error('Provider wiring requires a module and valid exportName.');
     }
   }
+  if (
+    profile.capabilities.review.mode !== undefined &&
+    profile.capabilities.review.mode !== 'adapter' &&
+    profile.capabilities.review.mode !== 'bootstrap'
+  ) {
+    throw new Error('Provider review mode must be adapter or bootstrap.');
+  }
 
   const envKeys = new Set<string>();
+  const secretEnvKeys = new Set<string>();
   for (const field of profile.env ?? []) {
     if (!ENV_KEY.test(field.key)) throw new Error(`Invalid provider env key: ${field.key}`);
     if (envKeys.has(field.key)) throw new Error(`Duplicate provider env key: ${field.key}`);
     if (field.secret && field.example) {
       throw new Error(`Secret env field ${field.key} cannot declare an example value.`);
     }
+    if (field.secret && field.key.startsWith('VITE_')) {
+      throw new Error(`Secret provider env field ${field.key} cannot use the VITE_ prefix.`);
+    }
     envKeys.add(field.key);
+    if (field.secret) secretEnvKeys.add(field.key);
   }
 
   const questionKeys = new Set<string>();
@@ -85,8 +102,13 @@ export function validateProviderProfile(value: unknown): asserts value is Provid
 
   for (const wiring of wirings) {
     for (const option of Object.values(wiring.options ?? {})) {
-      if (typeof option === 'object' && !envKeys.has(option.env)) {
-        throw new Error(`Provider wiring references undeclared env key ${option.env}.`);
+      if (typeof option === 'object') {
+        if (!envKeys.has(option.env)) {
+          throw new Error(`Provider wiring references undeclared env key ${option.env}.`);
+        }
+        if (secretEnvKeys.has(option.env)) {
+          throw new Error(`Provider browser wiring cannot reference secret env key ${option.env}.`);
+        }
       }
     }
   }

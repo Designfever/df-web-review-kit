@@ -21,7 +21,7 @@ const reviewOnlyProfile = defineProviderProfile({
       exportName: 'createReviewAdapter',
       options: {
         projectId: { env: 'VITE_EXAMPLE_PROJECT_ID' },
-        token: { env: 'VITE_EXAMPLE_REVIEW_TOKEN' },
+        endpoint: { env: 'VITE_EXAMPLE_REVIEW_URL' },
       },
     },
   },
@@ -29,13 +29,14 @@ const reviewOnlyProfile = defineProviderProfile({
     {
       key: 'reviewToken',
       message: 'Review access token',
-      envKey: 'VITE_EXAMPLE_REVIEW_TOKEN',
+      envKey: 'EXAMPLE_REVIEW_TOKEN',
       required: true,
     },
   ],
   env: [
     { key: 'VITE_EXAMPLE_PROJECT_ID', secret: false, required: true, example: 'my-project' },
-    { key: 'VITE_EXAMPLE_REVIEW_TOKEN', secret: true, required: true },
+    { key: 'VITE_EXAMPLE_REVIEW_URL', secret: false, required: true, example: '/api/review' },
+    { key: 'EXAMPLE_REVIEW_TOKEN', secret: true, required: true },
   ],
   dependencies: { '@example/review-provider': '^1.0.0' },
 });
@@ -46,7 +47,7 @@ const reviewAndFigmaProfile = defineProviderProfile({
     review: {
       module: '@example/full-provider',
       exportName: 'createReviewAdapter',
-      options: { token: { env: 'VITE_EXAMPLE_TOKEN' } },
+      options: { endpoint: { env: 'VITE_EXAMPLE_REVIEW_URL' } },
     },
     figma: {
       module: '@example/full-provider',
@@ -56,7 +57,7 @@ const reviewAndFigmaProfile = defineProviderProfile({
   },
   env: [
     { key: 'VITE_EXAMPLE_IMAGE_URL', secret: false, required: true, example: 'https://example.invalid' },
-    { key: 'VITE_EXAMPLE_TOKEN', secret: true, required: true },
+    { key: 'VITE_EXAMPLE_REVIEW_URL', secret: false, required: true, example: '/api/review' },
   ],
   dependencies: { '@example/full-provider': '^2.0.0' },
   doctorChecks: [
@@ -69,6 +70,27 @@ const reviewAndFigmaProfile = defineProviderProfile({
   ],
 });
 
+const bootstrapAndFigmaProfile = defineProviderProfile({
+  schemaVersion: 1,
+  capabilities: {
+    review: {
+      mode: 'bootstrap',
+      module: '@example/full-provider',
+      exportName: 'createReviewBootstrap',
+      options: { endpoint: { env: 'VITE_EXAMPLE_REVIEW_URL' } },
+    },
+    figma: {
+      module: '@example/full-provider',
+      exportName: 'createFigmaImageStore',
+      options: { endpoint: { env: 'VITE_EXAMPLE_IMAGE_URL' } },
+    },
+  },
+  env: [
+    { key: 'VITE_EXAMPLE_IMAGE_URL', secret: false, required: true, example: '/api/figma' },
+    { key: 'VITE_EXAMPLE_REVIEW_URL', secret: false, required: true, example: '/api/review' },
+  ],
+});
+
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
@@ -77,22 +99,22 @@ describe('provider profile installation contract', () => {
   it('creates review-only wiring while isolating secret values', () => {
     const artifacts = createProviderArtifacts(reviewOnlyProfile, {
       VITE_EXAMPLE_PROJECT_ID: 'fixture',
-      VITE_EXAMPLE_REVIEW_TOKEN: SECRET_VALUE,
+      EXAMPLE_REVIEW_TOKEN: SECRET_VALUE,
     });
 
     expect(artifacts.capabilities).toEqual(['review']);
+    expect(artifacts.reviewMode).toBe('adapter');
     expect(artifacts.source).toContain('createReviewAdapter');
     expect(artifacts.source).not.toContain(SECRET_VALUE);
     expect(artifacts.envExample).toContain('VITE_EXAMPLE_PROJECT_ID=my-project');
-    expect(artifacts.envExample).toContain('VITE_EXAMPLE_REVIEW_TOKEN=\n');
+    expect(artifacts.envExample).toContain('EXAMPLE_REVIEW_TOKEN=\n');
     expect(artifacts.envExample).not.toContain(SECRET_VALUE);
-    expect(artifacts.envLocal).toContain(`VITE_EXAMPLE_REVIEW_TOKEN=${SECRET_VALUE}`);
+    expect(artifacts.envLocal).toContain(`EXAMPLE_REVIEW_TOKEN=${SECRET_VALUE}`);
   });
 
   it('composes independent review and Figma capabilities', () => {
     const artifacts = createProviderArtifacts(reviewAndFigmaProfile, {
       VITE_EXAMPLE_IMAGE_URL: 'https://host.invalid',
-      VITE_EXAMPLE_TOKEN: SECRET_VALUE,
     });
 
     expect(artifacts.capabilities).toEqual(['review', 'figma']);
@@ -100,8 +122,60 @@ describe('provider profile installation contract', () => {
     expect(artifacts.source).toContain('createFigmaImageStore');
     expect(artifacts.source).not.toContain(SECRET_VALUE);
     expect(artifacts.envExample).toBe(
-      'VITE_EXAMPLE_IMAGE_URL=https://example.invalid\nVITE_EXAMPLE_TOKEN=\n'
+      'VITE_EXAMPLE_IMAGE_URL=https://example.invalid\nVITE_EXAMPLE_REVIEW_URL=/api/review\n'
     );
+  });
+
+  it('generates a review bootstrap independently from the Figma store', () => {
+    const artifacts = createProviderArtifacts(bootstrapAndFigmaProfile);
+
+    expect(artifacts.reviewMode).toBe('bootstrap');
+    expect(artifacts.source).toContain('const providerReview = createReviewBootstrap');
+    expect(artifacts.source).toContain('const providerFigma = createFigmaImageStore');
+    expect(artifacts.source).toContain('review: providerReview');
+    expect(artifacts.source).toContain('figma: providerFigma');
+  });
+
+  it('generates only the selected provider capability and its environment', () => {
+    const artifacts = createProviderArtifacts(bootstrapAndFigmaProfile, {}, ['figma']);
+    const doctor = doctorProviderProfile({
+      profile: bootstrapAndFigmaProfile,
+      source: artifacts.source,
+      env: { VITE_EXAMPLE_IMAGE_URL: '/api/figma' },
+    });
+
+    expect(artifacts.capabilities).toEqual(['figma']);
+    expect(artifacts.source).toContain('createFigmaImageStore');
+    expect(artifacts.source).not.toContain('createReviewBootstrap');
+    expect(artifacts.envExample).toBe('VITE_EXAMPLE_IMAGE_URL=/api/figma\n');
+    expect(doctor.healthy).toBe(true);
+    expect(doctor.capabilities).toEqual(['figma']);
+  });
+
+  it('rejects secrets exposed through Vite or browser wiring', () => {
+    expect(() =>
+      defineProviderProfile({
+        schemaVersion: 1,
+        capabilities: {
+          review: { module: '@example/provider', exportName: 'createReviewAdapter' },
+        },
+        env: [{ key: 'VITE_PRIVATE_TOKEN', secret: true }],
+      })
+    ).toThrow('cannot use the VITE_ prefix');
+
+    expect(() =>
+      defineProviderProfile({
+        schemaVersion: 1,
+        capabilities: {
+          review: {
+            module: '@example/provider',
+            exportName: 'createReviewAdapter',
+            options: { token: { env: 'PRIVATE_TOKEN' } },
+          },
+        },
+        env: [{ key: 'PRIVATE_TOKEN', secret: true }],
+      })
+    ).toThrow('browser wiring cannot reference secret env key');
   });
 
   it('loads a local profile module through the profile resolver', async () => {
@@ -133,7 +207,7 @@ describe('provider profile installation contract', () => {
       source: artifacts.source,
       env: {
         VITE_EXAMPLE_IMAGE_URL: 'https://host.invalid',
-        VITE_EXAMPLE_TOKEN: SECRET_VALUE,
+        VITE_EXAMPLE_REVIEW_URL: '/api/review',
       },
     });
     const unhealthy = doctorProviderProfile({

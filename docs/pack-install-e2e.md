@@ -11,9 +11,13 @@ The script builds an `npm pack` artifact, creates temporary hosts outside the so
 ## Matrix
 
 - Clean React + Vite JavaScript host: dry-run, init, doctor, typecheck, production build, idempotent rerun.
+- Packed `check` command in an npm host: version check remains read-only without
+  interactive confirmation.
 - Clean React + Vite TypeScript host: dry-run, init, doctor, typecheck, production build, idempotent rerun.
 - Existing 0.8-style local integration: read-only migration preview, backup creation, apply, doctor, typecheck, production build, idempotent rerun.
 - Generic custom adapter profile: local profile loading, generated wiring, doctor profile checks, typecheck, production build, idempotent rerun.
+- Generic bootstrap + Figma profile: gate-first shell mount, independent runtime Figma store, no custom Vite plugin, doctor profile checks, typecheck, production build, idempotent rerun.
+- Host-owned custom Review + Figma: scaffold creation, TODO blockers, host edits, doctor, typecheck, production build, no custom Vite plugin, and edit-preserving rerun.
 - User-owned generated-path conflict: exit code 1 and unchanged host files.
 - Unsupported customized legacy integration: migration blocker, exit code 1, and unchanged host files.
 
@@ -24,9 +28,12 @@ A successful run ends with `PACK_INSTALL_E2E_PASS` and one result line for every
 - the tarball was produced by `npm pack` in the same run;
 - every successful fixture completed dependency install, `tsc --noEmit`, and `vite build`;
 - clean init dry-runs and migration previews left host hashes unchanged;
+- the packed `check` command left the non-interactive npm host unchanged;
 - repeated init and migration produced no additional diff;
+- bootstrap mode waited for provider adapters and custom Figma wiring did not add the local-store Vite plugin;
+- host-owned custom files were never overwritten and their TODO markers blocked incomplete installation;
 - migration created a manifest-backed backup before changing host files;
 - conflict and unsupported-customization fixtures returned exit code 1 without changing host hashes;
-- custom profile source and generated host files contain no private integration names, endpoints, or credentials.
+- provider profile source and generated host files contain no private integration names, endpoints, or credentials.
 
 This matrix covers the representative synthetic hosts required for v0.9. It does not replace the two real-host migration checks required before v1.0 promotion.

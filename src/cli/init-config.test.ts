@@ -43,7 +43,7 @@ describe('init configuration', () => {
     });
   });
 
-  it('represents custom review and Figma capabilities with one profile', async () => {
+  it('represents review and Figma capabilities supplied by one profile', async () => {
     const config = await resolveInitConfig({
       args: [
         '--non-interactive',
@@ -52,19 +52,36 @@ describe('init configuration', () => {
         '--project-name',
         'Custom site',
         '--review-storage',
-        'custom',
+        'profile',
         '--figma-image-store',
-        'custom',
+        'profile',
         '--source-locator',
         '--profile',
         './provider-profile.mjs',
       ],
     });
 
-    expect(config.reviewStorage).toBe('custom');
-    expect(config.figmaImageStore).toBe('custom');
+    expect(config.reviewStorage).toBe('profile');
+    expect(config.figmaImageStore).toBe('profile');
     expect(config.profile).toBe('./provider-profile.mjs');
     expect(JSON.stringify(config)).not.toMatch(/token|secret/i);
+  });
+
+  it('keeps host-owned custom capabilities independent from provider profiles', async () => {
+    const prompt = promptWith(['custom-site', 'Custom site', 'custom', 'custom', false]);
+
+    const config = createInitConfig(await promptInitAnswers({}, prompt));
+
+    expect(config).toEqual({
+      schemaVersion: 1,
+      projectId: 'custom-site',
+      projectName: 'Custom site',
+      reviewStorage: 'custom',
+      figmaImageStore: 'custom',
+      sourceLocator: false,
+      profile: null,
+    });
+    expect(prompt.text).toHaveBeenCalledTimes(2);
   });
 
   it('loads a secret-free JSON config and lets explicit flags override it', async () => {
@@ -115,7 +132,7 @@ describe('init configuration', () => {
           '--project-name',
           'Custom',
           '--review-storage',
-          'custom',
+          'profile',
           '--figma-image-store',
           'none',
           '--source-locator',
@@ -129,7 +146,7 @@ describe('init configuration', () => {
       'Unknown init option: --token'
     );
     expect(() => parseInitArgs(['--review-storage', 'remote'])).toThrow(
-      'must be one of: local, custom'
+      'must be one of: local, custom, profile'
     );
   });
 
@@ -142,7 +159,7 @@ describe('init configuration', () => {
         schemaVersion: 1,
         projectId: 'fixture',
         projectName: 'Fixture',
-        reviewStorage: 'custom',
+        reviewStorage: 'profile',
         figmaImageStore: 'none',
         sourceLocator: true,
         profile: './profile.mjs',

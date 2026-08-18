@@ -221,6 +221,26 @@ export interface ReviewShellMountOptions extends ReviewShellProps {
   rootId?: string;
 }
 
+export type ReviewProviderSession = {
+  adapters: ReviewShellAdapters;
+};
+
+export type ReviewProviderBootstrapMountOptions = {
+  rootId: string;
+  projectId: string;
+  onReady: (session: ReviewProviderSession) => void;
+};
+
+/**
+ * A provider-owned login/selection gate that resolves runtime review adapters.
+ * The provider must remove its gate UI before calling onReady.
+ */
+export type ReviewProviderBootstrap = {
+  mount: (
+    options: ReviewProviderBootstrapMountOptions
+  ) => void | Promise<void>;
+};
+
 export type TargetOverlayKey = 'grid' | 'figma';
 
 export type TargetOverlayState = Record<TargetOverlayKey, boolean>;

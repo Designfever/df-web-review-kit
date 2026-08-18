@@ -6,5 +6,7 @@ export {
   type ProviderEnvField,
   type ProviderProfile,
   type ProviderQuestion,
+  type ProviderReviewMode,
+  type ProviderReviewWiring,
   type ProviderWiring,
 } from './cli/provider-profile';

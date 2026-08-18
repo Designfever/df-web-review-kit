@@ -16,12 +16,12 @@ This package owns:
 - optional Supabase adapter samples
 - grid/Figma overlay controls for host pages that already support them
 
-This package does not own internal operator tools, private admin keys, or production QA administration. OpenClaw tools such as `kuku` and future QA admin services stay outside the public npm package.
+This package does not own internal operator tools, private admin keys, or production QA administration. Those systems stay outside the public npm package.
 
 ## Docs
 
 - [Docs index](docs/README.md): reading order, document roles, and release history.
-- [Easy Install Preview](docs/easy-install.md): 10-minute Quick Start, doctor, migration, rollback, custom profiles, and safety.
+- [Easy Install Preview](docs/easy-install.md): 10-minute Quick Start, doctor, migration, rollback, host-owned custom code, provider profiles, and safety.
 - [Installation](docs/installation.md): manual package installation and `/review` mounting.
 - [Easy Install v0.9 contract](docs/easy-install-v0.9.md): experimental scope and v1.0 promotion contract.
 - [.env.sample](.env.sample): copyable host project env template for local, Supabase, and source opening.
@@ -32,7 +32,7 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, sitemap, and feature ownership boundaries.
 - [Figma overlay](docs/figma-overlay.md): host helper behavior and package-managed image overlay state.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.8.12](docs/release-notes-0.8.12.md): reliable first Figma overlay selection and lower Supabase review-item egress.
+- [Release notes 0.9.0](docs/release-notes-0.9.0.md): experimental easy-install CLI, doctor, safe migration, and host-owned custom integrations.
 
 ## Quick Start
 
@@ -49,7 +49,7 @@ npx @designfever/web-review-kit@0.9 init \
   --dry-run
 ```
 
-See [Easy Install Preview](docs/easy-install.md) for apply, doctor, migration, rollback, and custom profile instructions. The CLI/config contract may break before v1.0.
+See [Easy Install Preview](docs/easy-install.md) for apply, doctor, migration, rollback, host-owned custom code, and provider profile instructions. The CLI/config contract may break before v1.0.
 
 For manual installation:
 
@@ -69,8 +69,9 @@ existing dev command with the bundled CLI:
 ```
 
 The check continues without updating when the user answers `N`. It asks before
-changing `package.json` and `pnpm-lock.yaml`, preserves the current dependency
-field, and skips `link:`, `file:`, and `workspace:` dependencies.
+changing `package.json` and the detected npm, pnpm, or Yarn lockfile, preserves
+the current dependency field, and skips `link:`, `file:`, and `workspace:`
+dependencies.
 
 Minimal Vite route:
 
@@ -148,7 +149,7 @@ VITE_REVIEW_SOURCE_EDITOR=cursor
 VITE_REVIEW_SOURCE_URL_TEMPLATE=
 ```
 
-Browser env must use a Supabase `anon` key only. Do not put `service_role`, OpenClaw operator secrets, or private admin keys in a host browser env or in this package.
+Browser env must use a Supabase `anon` key only. Do not put `service_role`, operator secrets, or private admin keys in a host browser env or in this package.
 
 ## Public Imports
 

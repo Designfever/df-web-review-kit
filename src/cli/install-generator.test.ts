@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createInitConfig } from './init-config';
+import { createProviderArtifacts } from './provider-install';
+import { defineProviderProfile } from './provider-profile';
 import {
   applyInstallPlan,
   createInstallPlan,
@@ -45,6 +47,49 @@ const localConfig = createInitConfig({
   sourceLocator: true,
   profile: null,
 });
+
+const bootstrapConfig = createInitConfig({
+  projectId: 'fixture',
+  projectName: 'Fixture',
+  reviewStorage: 'profile',
+  figmaImageStore: 'profile',
+  sourceLocator: false,
+  profile: './provider-profile.mjs',
+});
+
+const hostCustomConfig = createInitConfig({
+  projectId: 'fixture',
+  projectName: 'Fixture',
+  reviewStorage: 'custom',
+  figmaImageStore: 'custom',
+  sourceLocator: false,
+  profile: null,
+});
+
+const bootstrapProfile = defineProviderProfile({
+  schemaVersion: 1,
+  capabilities: {
+    review: {
+      mode: 'bootstrap',
+      module: '@example/provider',
+      exportName: 'createReviewBootstrap',
+      options: { endpoint: { env: 'VITE_REVIEW_PROXY_URL' } },
+    },
+    figma: {
+      module: '@example/provider',
+      exportName: 'createFigmaImageStore',
+      options: { endpoint: { env: 'VITE_FIGMA_PROXY_URL' } },
+    },
+  },
+  env: [
+    { key: 'VITE_FIGMA_PROXY_URL', secret: false, example: '/api/figma' },
+    { key: 'VITE_REVIEW_PROXY_URL', secret: false, example: '/api/review' },
+  ],
+});
+
+const bootstrapProvider = createProviderArtifacts(bootstrapProfile);
+const reviewOnlyProvider = createProviderArtifacts(bootstrapProfile, {}, ['review']);
+const figmaOnlyProvider = createProviderArtifacts(bootstrapProfile, {}, ['figma']);
 
 const baseFiles = {
   'package.json': JSON.stringify({
@@ -100,6 +145,117 @@ describe('safe install generator', () => {
     expect(vite).toContain('const existing = true;');
     expect(vite).toContain('server: { port: 4100 }');
     expect(env).toBe('VITE_EXISTING=value\nVITE_REVIEW_PROJECT_ID=fixture\n');
+  });
+
+  it('generates a provider gate before mounting the shell without a Figma Vite plugin', async () => {
+    const root = await createFixture(baseFiles);
+    const plan = await createInstallPlan({
+      root,
+      config: bootstrapConfig,
+      preflight: await scanProject(root),
+      provider: bootstrapProvider,
+    });
+    await applyInstallPlan(plan);
+
+    const generated = await snapshot(root);
+    expect(generated['src/review/review.config.ts']).toContain(
+      'export const reviewBootstrap = providerCapabilities.review'
+    );
+    expect(generated['src/review/index.tsx']).toContain('reviewBootstrap.mount');
+    expect(generated['src/review/index.tsx']).toContain('onReady: mountProviderSession');
+    expect(generated['src/review/index.tsx']).toContain('figmaImages: { store: figmaImageStore }');
+    expect(generated['vite.config.ts']).not.toContain('reviewFigmaImageStore');
+    expect(generated['.env.example']).toContain('VITE_REVIEW_PROXY_URL=/api/review');
+    expect(generated['.env.example']).not.toMatch(/TOKEN|SECRET/);
+  });
+
+  it('creates host-owned custom scaffolds once and preserves later edits', async () => {
+    const root = await createFixture(baseFiles);
+    const first = await createInstallPlan({
+      root,
+      config: hostCustomConfig,
+      preflight: await scanProject(root),
+    });
+    await applyInstallPlan(first);
+
+    const generated = await snapshot(root);
+    expect(generated['src/review/custom.review.tsx']).toContain(
+      'WEB_REVIEW_KIT_CUSTOM_REVIEW_TODO'
+    );
+    expect(generated['src/review/custom.figma.store.ts']).toContain(
+      'WEB_REVIEW_KIT_CUSTOM_FIGMA_TODO'
+    );
+    expect(generated['src/review/review.config.ts']).toContain(
+      "from './custom.review'"
+    );
+    expect(generated['src/review/review.config.ts']).toContain(
+      "from './custom.figma.store'"
+    );
+    expect(generated['src/review/index.tsx']).toContain('reviewBootstrap.mount');
+    expect(generated['vite.config.ts']).not.toContain('reviewFigmaImageStore');
+
+    const customReviewPath = join(root, 'src/review/custom.review.tsx');
+    const edited = `${generated['src/review/custom.review.tsx']}\n// host edit\n`;
+    await writeFile(customReviewPath, edited);
+    const second = await createInstallPlan({
+      root,
+      config: hostCustomConfig,
+      preflight: await scanProject(root),
+    });
+
+    expect(second.changes.find(({ path }) => path === 'src/review/custom.review.tsx')).toBeUndefined();
+    expect(await readFile(customReviewPath, 'utf8')).toBe(edited);
+  });
+
+  it('composes local and profile capabilities independently', async () => {
+    const localReviewRoot = await createFixture(baseFiles);
+    const localReviewPlan = await createInstallPlan({
+      root: localReviewRoot,
+      config: createInitConfig({
+        projectId: 'fixture',
+        projectName: 'Fixture',
+        reviewStorage: 'local',
+        figmaImageStore: 'profile',
+        sourceLocator: false,
+        profile: './provider-profile.mjs',
+      }),
+      preflight: await scanProject(localReviewRoot),
+      provider: figmaOnlyProvider,
+    });
+    await applyInstallPlan(localReviewPlan);
+    const localReview = await snapshot(localReviewRoot);
+    expect(localReview['src/review/review.config.ts']).toContain('localAdapter');
+    expect(localReview['src/review/review.config.ts']).toContain(
+      'figmaImageStore = providerCapabilities.figma'
+    );
+    expect(localReview['src/review/review.config.ts']).not.toContain('createReviewBootstrap');
+    expect(localReview['.env.example']).not.toContain('VITE_REVIEW_PROXY_URL');
+    expect(localReview['src/review/index.tsx']).not.toContain('reviewBootstrap.mount');
+    expect(localReview['vite.config.ts']).not.toContain('reviewFigmaImageStore');
+
+    const localFigmaRoot = await createFixture(baseFiles);
+    const localFigmaPlan = await createInstallPlan({
+      root: localFigmaRoot,
+      config: createInitConfig({
+        projectId: 'fixture',
+        projectName: 'Fixture',
+        reviewStorage: 'profile',
+        figmaImageStore: 'local',
+        sourceLocator: false,
+        profile: './provider-profile.mjs',
+      }),
+      preflight: await scanProject(localFigmaRoot),
+      provider: reviewOnlyProvider,
+    });
+    await applyInstallPlan(localFigmaPlan);
+    const localFigma = await snapshot(localFigmaRoot);
+    expect(localFigma['src/review/review.config.ts']).toContain(
+      'createReviewFigmaImageStoreClient'
+    );
+    expect(localFigma['src/review/review.config.ts']).not.toContain('createFigmaImageStore');
+    expect(localFigma['.env.example']).not.toContain('VITE_FIGMA_PROXY_URL');
+    expect(localFigma['src/review/index.tsx']).toContain('reviewBootstrap.mount');
+    expect(localFigma['vite.config.ts']).toContain('reviewFigmaImageStore');
   });
 
   it('is idempotent after applying the first plan', async () => {

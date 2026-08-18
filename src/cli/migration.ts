@@ -10,7 +10,7 @@ import {
 } from './install-generator';
 import { scanProject } from './preflight';
 
-export type MigrationBlocker = {
+type MigrationBlocker = {
   code: string;
   message: string;
   fixHint: string;

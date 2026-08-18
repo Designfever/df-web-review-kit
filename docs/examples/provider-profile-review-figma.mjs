@@ -3,10 +3,11 @@ export default {
   schemaVersion: 1,
   capabilities: {
     review: {
+      mode: 'bootstrap',
       module: '@example/full-provider',
-      exportName: 'createReviewAdapter',
+      exportName: 'createReviewBootstrap',
       options: {
-        token: { env: 'VITE_EXAMPLE_REVIEW_TOKEN' },
+        endpoint: { env: 'VITE_EXAMPLE_REVIEW_URL' },
       },
     },
     figma: {
@@ -25,9 +26,10 @@ export default {
       example: 'https://example.invalid',
     },
     {
-      key: 'VITE_EXAMPLE_REVIEW_TOKEN',
-      secret: true,
+      key: 'VITE_EXAMPLE_REVIEW_URL',
+      secret: false,
       required: true,
+      example: '/api/review',
     },
   ],
   dependencies: {
@@ -38,7 +40,7 @@ export default {
       code: 'PROFILE_BOOTSTRAP_MISSING',
       capability: 'review',
       message: 'Provider bootstrap export is missing.',
-      sourceIncludes: 'providerCapabilities',
+      sourceIncludes: 'reviewBootstrap',
     },
   ],
 };

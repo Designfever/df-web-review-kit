@@ -1,5 +1,6 @@
 export {
   createInitConfig,
+  usesProviderProfile,
   validateInitAnswers,
   type InitAnswers,
   type InitConfig,

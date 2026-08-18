@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  createPnpmUpdateArgs,
+  createPackageUpdateCommand,
   findReviewKitDependency,
   isLocalDependencySpec,
   isNewerVersion,
@@ -15,18 +15,22 @@ describe('review-kit version check', () => {
     expect(isNewerVersion('0.8.13', '0.8.13')).toBe(false);
   });
 
-  it('preserves the dependency field in the pnpm update command', () => {
+  it.each([
+    ['npm', ['install', '--save-exact', '--save-dev']],
+    ['pnpm', ['add', '--exact', '--save-dev']],
+    ['yarn', ['add', '--exact', '--dev']],
+  ] as const)('creates an exact %s update command', (packageManager, args) => {
     const dependency = findReviewKitDependency({
       devDependencies: { '@designfever/web-review-kit': '0.8.12' },
     });
 
     expect(dependency).toEqual({ field: 'devDependencies', spec: '0.8.12' });
-    expect(createPnpmUpdateArgs(dependency!, '0.8.13')).toEqual([
-      'add',
-      '--save-exact',
-      '--save-dev',
-      '@designfever/web-review-kit@0.8.13',
-    ]);
+    expect(
+      createPackageUpdateCommand(packageManager, dependency!, '0.8.13')
+    ).toEqual({
+      command: packageManager,
+      args: [...args, '@designfever/web-review-kit@0.8.13'],
+    });
   });
 
   it('recognizes dependency specs that must not be replaced', () => {
@@ -42,6 +46,7 @@ describe('review-kit version check', () => {
       cwd: process.cwd(),
       currentVersion: '0.8.12',
       dependency: { field: 'dependencies', spec: '0.8.12' },
+      packageManager: 'npm',
       fetchLatestVersion: async () => '0.8.13',
       confirmUpdate: async () => true,
       installUpdate,
@@ -49,10 +54,14 @@ describe('review-kit version check', () => {
     });
 
     expect(exitCode).toBe(0);
-    expect(installUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ spec: '0.8.12' }),
-      '0.8.13'
-    );
+    expect(installUpdate).toHaveBeenCalledWith({
+      command: 'npm',
+      args: [
+        'install',
+        '--save-exact',
+        '@designfever/web-review-kit@0.8.13',
+      ],
+    });
     expect(log).toHaveBeenCalledWith('✓ Updated to 0.8.13. Starting dev...');
   });
 
@@ -62,6 +71,7 @@ describe('review-kit version check', () => {
     const exitCode = await runVersionCheck({
       currentVersion: '0.8.12',
       dependency: { field: 'dependencies', spec: '0.8.12' },
+      packageManager: 'yarn',
       fetchLatestVersion: async () => '0.8.13',
       confirmUpdate: async () => false,
       installUpdate,

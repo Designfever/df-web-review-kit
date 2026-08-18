@@ -7,18 +7,10 @@ export default {
       exportName: 'createReviewAdapter',
       options: {
         projectId: { env: 'VITE_EXAMPLE_PROJECT_ID' },
-        token: { env: 'VITE_EXAMPLE_REVIEW_TOKEN' },
+        endpoint: { env: 'VITE_EXAMPLE_REVIEW_URL' },
       },
     },
   },
-  questions: [
-    {
-      key: 'reviewToken',
-      message: 'Review access token',
-      envKey: 'VITE_EXAMPLE_REVIEW_TOKEN',
-      required: true,
-    },
-  ],
   env: [
     {
       key: 'VITE_EXAMPLE_PROJECT_ID',
@@ -27,9 +19,10 @@ export default {
       example: 'my-project',
     },
     {
-      key: 'VITE_EXAMPLE_REVIEW_TOKEN',
-      secret: true,
+      key: 'VITE_EXAMPLE_REVIEW_URL',
+      secret: false,
       required: true,
+      example: '/api/review',
     },
   ],
   dependencies: {

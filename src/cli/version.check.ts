@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
 import { createInterface } from 'node:readline/promises';
+import { detectPackageManager, type PackageManager } from './package-manager';
 
 const REVIEW_KIT_PACKAGE_NAME = '@designfever/web-review-kit';
 
@@ -26,15 +27,18 @@ type VersionCheckOptions = {
   cwd?: string;
   currentVersion?: string;
   dependency?: ReviewKitDependency | null;
+  packageManager?: PackageManager | null;
   fetchLatestVersion?: () => Promise<string>;
   confirmUpdate?: (latestVersion: string) => Promise<boolean>;
-  installUpdate?: (
-    dependency: ReviewKitDependency,
-    latestVersion: string
-  ) => Promise<number>;
+  installUpdate?: (update: PackageUpdateCommand) => Promise<number>;
   interactive?: boolean;
   log?: (message: string) => void;
   warn?: (message: string) => void;
+};
+
+type PackageUpdateCommand = {
+  command: PackageManager;
+  args: string[];
 };
 
 const DEPENDENCY_FIELDS: DependencyField[] = [
@@ -73,20 +77,37 @@ export function isLocalDependencySpec(spec: string): boolean {
   );
 }
 
-export function createPnpmUpdateArgs(
+export function createPackageUpdateCommand(
+  packageManager: PackageManager,
   dependency: ReviewKitDependency,
   latestVersion: string
-): string[] {
-  const fieldFlag: Partial<Record<DependencyField, string>> = {
-    devDependencies: '--save-dev',
-    optionalDependencies: '--save-optional',
-    peerDependencies: '--save-peer',
+): PackageUpdateCommand {
+  const fieldFlags: Record<
+    PackageManager,
+    Partial<Record<DependencyField, string>>
+  > = {
+    npm: {
+      devDependencies: '--save-dev',
+      optionalDependencies: '--save-optional',
+      peerDependencies: '--save-peer',
+    },
+    pnpm: {
+      devDependencies: '--save-dev',
+      optionalDependencies: '--save-optional',
+      peerDependencies: '--save-peer',
+    },
+    yarn: {
+      devDependencies: '--dev',
+      optionalDependencies: '--optional',
+      peerDependencies: '--peer',
+    },
   };
-  const args = ['add', '--save-exact'];
-  const flag = fieldFlag[dependency.field];
+  const args =
+    packageManager === 'npm' ? ['install', '--save-exact'] : ['add', '--exact'];
+  const flag = fieldFlags[packageManager][dependency.field];
   if (flag) args.push(flag);
   args.push(`${REVIEW_KIT_PACKAGE_NAME}@${latestVersion}`);
-  return args;
+  return { command: packageManager, args };
 }
 
 async function fetchLatestReviewKitVersion(): Promise<string> {
@@ -149,10 +170,26 @@ export async function runVersionCheck(
     return 0;
   }
 
+  let packageManager = options.packageManager;
+  if (packageManager === undefined) {
+    packageManager = (await detectPackageManager(cwd)).packageManager;
+  }
+  if (!packageManager) {
+    warn(
+      '! Update skipped: declare packageManager in package.json or keep one npm, pnpm, or Yarn lockfile.'
+    );
+    return 0;
+  }
+  const update = createPackageUpdateCommand(
+    packageManager,
+    dependency,
+    latestVersion
+  );
+
   const interactive =
     options.interactive ?? Boolean(process.stdin.isTTY && process.stdout.isTTY);
   if (!interactive && !options.confirmUpdate) {
-    log(`  Run: pnpm ${createPnpmUpdateArgs(dependency, latestVersion).join(' ')}`);
+    log(`  Run: ${update.command} ${update.args.join(' ')}`);
     return 0;
   }
 
@@ -165,9 +202,8 @@ export async function runVersionCheck(
   log(`→ Installing ${REVIEW_KIT_PACKAGE_NAME}@${latestVersion}...`);
   const exitCode = await (
     options.installUpdate ??
-    ((targetDependency, targetVersion) =>
-      installWithPnpm(cwd, targetDependency, targetVersion))
-  )(dependency, latestVersion);
+    ((targetUpdate) => installPackageUpdate(cwd, targetUpdate))
+  )(update);
   if (exitCode !== 0) {
     warn('! Package update failed.');
     return exitCode;
@@ -213,15 +249,14 @@ async function confirmInTerminal(latestVersion: string): Promise<boolean> {
   }
 }
 
-function installWithPnpm(
+function installPackageUpdate(
   cwd: string,
-  dependency: ReviewKitDependency,
-  latestVersion: string
+  update: PackageUpdateCommand
 ): Promise<number> {
-  const command = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-  const args = createPnpmUpdateArgs(dependency, latestVersion);
+  const command =
+    process.platform === 'win32' ? `${update.command}.cmd` : update.command;
   return new Promise((resolve) => {
-    const child = spawn(command, args, { cwd, stdio: 'inherit' });
+    const child = spawn(command, update.args, { cwd, stdio: 'inherit' });
     child.on('error', () => resolve(1));
     child.on('exit', (code) => resolve(code ?? 1));
   });

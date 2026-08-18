@@ -30,12 +30,14 @@ npx @designfever/web-review-kit@0.9 init
 
 The public choices are capability based:
 
-- QA storage: `local` or `custom`;
-- Figma image storage: `none`, `local`, or `custom`;
+- QA storage: `local`, host-owned `custom`, or `profile`;
+- Figma image storage: `none`, `local`, host-owned `custom`, or `profile`;
 - source locator: enabled or disabled;
 - provider profile: an optional package name or local module path.
 
 Backend product names, private endpoints, and organization-specific token rules are not built-in presets.
+
+`custom` and `profile` are intentionally different. `custom` creates a host-owned editable scaffold and never requires a provider package. `profile` loads declarative wiring from a package or local module.
 
 For automation, `init` must eventually accept the same answers through non-interactive flags or a checked-in, secret-free config. The interactive prompt and non-interactive input must produce the same normalized installation plan.
 
@@ -53,6 +55,7 @@ npx @designfever/web-review-kit@0.9 doctor
 - Vite source/data/Figma plugins when selected;
 - required environment variable names without printing their values;
 - QA adapter and Figma image store capabilities;
+- direct adapter or login/selection bootstrap review mode;
 - provider profile availability and compatibility;
 - known legacy or partially installed structures.
 
@@ -73,6 +76,7 @@ The package exposes one executable, `web-review-kit`, through its npm `bin` entr
 ```text
 web-review-kit init [--profile <package-or-path>] [--dry-run] [non-interactive options]
 web-review-kit doctor [--json] [--fix]
+web-review-kit check
 web-review-kit --help
 web-review-kit --version
 ```
@@ -83,6 +87,9 @@ Contract rules:
 - cancellation before confirmation leaves the host unchanged;
 - unknown commands, invalid input, and blockers return a non-zero exit code;
 - `--dry-run` never writes or installs dependencies;
+- `check` updates only after interactive confirmation and uses the detected
+  npm, pnpm, or Yarn lockfile; an explicit `packageManager` field resolves
+  stale lockfiles from another manager;
 - secrets are never accepted as command-line arguments;
 - secret values are never written to generated source, logs, diagnostics, or `.env.example`;
 - unsupported structures are reported instead of guessed.
@@ -109,6 +116,7 @@ The normalized installation plan may include:
 - package dependency changes;
 - a review route or entry module;
 - one host-owned review configuration module;
+- host-owned custom Review/Figma scaffolds when selected;
 - a small app bootstrap hook when the selected flow requires it;
 - Vite plugin additions for selected local/source capabilities;
 - `.env.example` entries containing names and empty/example values only;
@@ -133,11 +141,11 @@ Installation composes independent capabilities rather than one large backend pre
 
 ### QA adapter
 
-The host supplies a `ReviewShellAdapter` entry for review item persistence. The built-in public default is local storage. Remote systems remain host-owned or profile-owned implementations.
+The host supplies a `ReviewShellAdapter` entry for review item persistence. The built-in public default is local storage. A host-owned custom selection creates an editable bootstrap scaffold that can resolve an adapter immediately or mount a login/project/page gate first. Profile-owned implementations remain separately packaged.
 
 ### Figma image store
 
-The host independently supplies a `ReviewFigmaImageStore`, selects the public local Vite store, or disables Figma images. QA storage and Figma image storage must not be coupled.
+The host independently supplies a `ReviewFigmaImageStore`, selects the public local Vite store, loads a profile capability, or disables Figma images. QA storage and Figma image storage must not be coupled. A custom runtime store does not require the local-store Vite plugin.
 
 ### Provider profile
 
@@ -152,7 +160,7 @@ An optional provider profile package or local module can declare:
 
 The public package defines and validates the profile contract. A profile owns backend-specific code. Loading a profile must not grant unrestricted file writes: it contributes to the same previewable installation plan and the core writer enforces the same safety rules.
 
-The exact typed profile interface is a follow-up implementation task. It must support review-only and review-plus-Figma profiles without naming or embedding private services in this repository.
+The typed profile interface supports review-only and review-plus-Figma profiles without naming or embedding private services in this repository. Bootstrap mode lets a provider complete login and project/page selection before Review Shell mounts.
 
 ## Explicit Non-Goals for v0.9
 
@@ -172,13 +180,13 @@ Easy install can become v1.0 when all of the following are true:
 
 1. `init` installs from the packed npm artifact into clean React + Vite JavaScript and TypeScript fixtures.
 2. Local QA works end to end after generation.
-3. At least one generic custom QA profile and one generic custom QA + Figma profile install without private code in this repository.
+3. Host-owned custom Review/Figma scaffolds and generic provider profiles install without private code in this repository.
 4. `doctor` correctly diagnoses healthy, partial, legacy, and unsupported fixtures without exposing secret values.
 5. Safe fixes are previewable, reversible, idempotent, and leave ambiguous customizations untouched.
 6. Generated projects pass dependency install, typecheck where applicable, and production build.
 7. The CLI behaves consistently with npm, pnpm, and Yarn fixtures.
 8. Two existing real host projects complete migration and remain buildable.
-9. Quick Start, custom profile, migration, rollback, and security documentation match the packed artifact.
+9. Quick Start, host-owned custom code, provider profile, migration, rollback, and security documentation match the packed artifact.
 10. The CLI options, profile schema, generated-config schema, diagnostic codes, and support matrix are reviewed and declared stable.
 
 Until these checks pass, v0.9 CLI behavior may change between preview releases and must say so in its output and release notes.

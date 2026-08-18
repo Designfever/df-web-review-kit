@@ -21,7 +21,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Document Roles
 
-- `easy-install.md`: runnable v0.9 Quick Start, doctor, migration, rollback, custom profile, and security instructions.
+- `easy-install.md`: runnable v0.9 Quick Start, doctor, migration, rollback, host-owned custom code, provider profiles, and security instructions.
 - `installation.md`: manually install the npm package, create the `/review` route, wire adapters, and run checks.
 - `easy-install-v0.9.md`: experimental CLI contract, support scope, extension contract, safety rules, and v1.0 criteria.
 - `provider-profiles.md`: generic private-provider schema, capability composition, environment safety, and authoring examples.

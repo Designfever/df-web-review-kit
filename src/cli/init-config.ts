@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
 
-export type InitReviewStorage = 'local' | 'custom';
-export type InitFigmaImageStore = 'none' | 'local' | 'custom';
+export type InitReviewStorage = 'local' | 'custom' | 'profile';
+export type InitFigmaImageStore = 'none' | 'local' | 'custom' | 'profile';
 
 export type InitAnswers = {
   projectId: string;
@@ -64,6 +64,14 @@ const BOOLEAN_FLAGS = new Set([
   '--dry-run',
   '--yes',
 ]);
+const REVIEW_STORAGE_CHOICES = ['local', 'custom', 'profile'] as const;
+const FIGMA_IMAGE_STORE_CHOICES = ['none', 'local', 'custom', 'profile'] as const;
+
+export function usesProviderProfile(
+  answers: Partial<Pick<InitAnswers, 'reviewStorage' | 'figmaImageStore'>>
+) {
+  return answers.reviewStorage === 'profile' || answers.figmaImageStore === 'profile';
+}
 
 function requireValue(args: string[], index: number, flag: string) {
   const value = args[index + 1];
@@ -101,18 +109,10 @@ export function parseInitArgs(args: string[]): ParsedInitInput {
     if (flag === '--project-id') values.projectId = value;
     if (flag === '--project-name') values.projectName = value;
     if (flag === '--review-storage') {
-      values.reviewStorage = parseChoice(
-        value,
-        ['local', 'custom'] as const,
-        flag
-      );
+      values.reviewStorage = parseChoice(value, REVIEW_STORAGE_CHOICES, flag);
     }
     if (flag === '--figma-image-store') {
-      values.figmaImageStore = parseChoice(
-        value,
-        ['none', 'local', 'custom'] as const,
-        flag
-      );
+      values.figmaImageStore = parseChoice(value, FIGMA_IMAGE_STORE_CHOICES, flag);
     }
     if (flag === '--profile') values.profile = value;
     if (flag === '--config') configPath = value;
@@ -128,21 +128,21 @@ export function validateInitAnswers(value: unknown): asserts value is InitAnswer
     throw new Error('projectId must use lowercase letters, numbers, dots, underscores, or hyphens.');
   }
   if (!answers.projectName?.trim()) throw new Error('projectName is required.');
-  if (answers.reviewStorage !== 'local' && answers.reviewStorage !== 'custom') {
-    throw new Error('reviewStorage must be local or custom.');
+  if (!REVIEW_STORAGE_CHOICES.includes(answers.reviewStorage as InitReviewStorage)) {
+    throw new Error('reviewStorage must be local, custom, or profile.');
   }
-  if (!['none', 'local', 'custom'].includes(answers.figmaImageStore ?? '')) {
-    throw new Error('figmaImageStore must be none, local, or custom.');
+  if (!FIGMA_IMAGE_STORE_CHOICES.includes(answers.figmaImageStore as InitFigmaImageStore)) {
+    throw new Error('figmaImageStore must be none, local, custom, or profile.');
   }
   if (typeof answers.sourceLocator !== 'boolean') throw new Error('sourceLocator must be boolean.');
   if (answers.profile !== null && typeof answers.profile !== 'string') {
     throw new Error('profile must be a package/module specifier or null.');
   }
   if (
-    (answers.reviewStorage === 'custom' || answers.figmaImageStore === 'custom') &&
+    usesProviderProfile(answers) &&
     !answers.profile
   ) {
-    throw new Error('A provider profile is required for custom capabilities.');
+    throw new Error('A provider profile is required for profile capabilities.');
   }
 }
 
@@ -151,7 +151,7 @@ export function createInitConfig(answers: InitAnswers): InitConfig {
   return { schemaVersion: 1, ...answers };
 }
 
-export async function loadInitConfig(path: string, cwd = process.cwd()): Promise<InitConfig> {
+async function loadInitConfig(path: string, cwd = process.cwd()): Promise<InitConfig> {
   const absolutePath = isAbsolute(path) ? path : resolve(cwd, path);
   const parsed = JSON.parse(await readFile(absolutePath, 'utf8')) as Partial<InitConfig>;
   if (parsed.schemaVersion !== 1) throw new Error('Unsupported init config schemaVersion.');
@@ -178,28 +178,28 @@ export async function promptInitAnswers(
   const projectName =
     initial.projectName ??
     cancelled(await prompt.text({ message: 'Project name', defaultValue: projectId }));
-  const reviewStorage =
+  const reviewStorage: InitReviewStorage =
     initial.reviewStorage ??
     cancelled(
-      await prompt.select({
-        message: 'Review storage',
-        choices: ['local', 'custom'] as const,
+      await prompt.select<InitReviewStorage>({
+        message: 'Review storage (custom creates a host-owned adapter)',
+        choices: REVIEW_STORAGE_CHOICES,
         defaultValue: 'local',
       })
     );
-  const figmaImageStore =
+  const figmaImageStore: InitFigmaImageStore =
     initial.figmaImageStore ??
     cancelled(
-      await prompt.select({
-        message: 'Figma image store',
-        choices: ['none', 'local', 'custom'] as const,
+      await prompt.select<InitFigmaImageStore>({
+        message: 'Figma image store (custom creates a host-owned store)',
+        choices: FIGMA_IMAGE_STORE_CHOICES,
         defaultValue: 'none',
       })
     );
   const sourceLocator =
     initial.sourceLocator ??
     cancelled(await prompt.confirm({ message: 'Enable source locator?', defaultValue: true }));
-  const needsProfile = reviewStorage === 'custom' || figmaImageStore === 'custom';
+  const needsProfile = usesProviderProfile({ reviewStorage, figmaImageStore });
   const profile = needsProfile
     ? initial.profile ?? cancelled(await prompt.text({ message: 'Provider profile package or path' }))
     : initial.profile ?? null;

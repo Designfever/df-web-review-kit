@@ -170,6 +170,25 @@ describe('scanProject', () => {
     ]);
   });
 
+  it('uses the declared package manager when stale lockfiles coexist', async () => {
+    const root = await createFixture({
+      'package.json': JSON.stringify({
+        packageManager: 'pnpm@9.0.0',
+        dependencies: { react: '^19.0.0', vite: '^8.0.0' },
+      }),
+      'package-lock.json': '{}\n',
+      'pnpm-lock.yaml': 'lockfileVersion: 9\n',
+      'vite.config.ts': 'export default {};\n',
+      'src/main.tsx': 'console.log("fixture");\n',
+    });
+
+    const result = await scanProject(root);
+
+    expect(result.packageManager).toBe('pnpm');
+    expect(result.files.lockfiles).toEqual(['package-lock.json', 'pnpm-lock.yaml']);
+    expect(codes(result)).not.toContain('PACKAGE_MANAGER_AMBIGUOUS');
+  });
+
   it('returns the same normalized result for repeated scans', async () => {
     const root = await createFixture({
       'package.json': JSON.stringify({

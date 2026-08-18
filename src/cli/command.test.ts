@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   CLI_EXIT_CODE,
   CliCancelledError,
+  getReviewPageGuide,
   runCli,
   type CliIo,
 } from './command';
@@ -50,7 +51,11 @@ describe('runCli', () => {
           handlers: { [command]: handler },
         })
       ).resolves.toBe(CLI_EXIT_CODE.success);
-      expect(handler).toHaveBeenCalledWith({ args: ['--dry-run'], io });
+      expect(handler).toHaveBeenCalledWith({
+        args: ['--dry-run'],
+        io,
+        version: '0.9.0',
+      });
     }
   );
 
@@ -95,5 +100,12 @@ describe('runCli', () => {
       })
     ).resolves.toBe(CLI_EXIT_CODE.failure);
     expect(stderr).toHaveBeenCalledWith('Project scan failed.');
+  });
+
+  it('uses a version-pinned framework guide for stable releases', () => {
+    expect(getReviewPageGuide('nextjs-app-router', '0.10.0')).toEqual({
+      framework: 'Next.js App Router',
+      url: 'https://github.com/Designfever/df-web-review-kit/blob/v0.10.0/docs/review-page/nextjs-app-router.md',
+    });
   });
 });

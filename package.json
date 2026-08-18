@@ -1,6 +1,6 @@
 {
   "name": "@designfever/web-review-kit",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "type": "module",
   "description": "Designfever web page review overlay toolkit.",
   "license": "Apache-2.0",
@@ -34,6 +34,11 @@
       "import": "./dist/react-shell.js",
       "require": "./dist/react-shell.cjs"
     },
+    "./df-sheet": {
+      "types": "./dist/df-sheet.d.ts",
+      "import": "./dist/df-sheet.js",
+      "require": "./dist/df-sheet.cjs"
+    },
     "./vite": {
       "types": "./dist/vite.d.ts",
       "import": "./dist/vite.js",
@@ -59,7 +64,7 @@
   ],
   "scripts": {
     "build": "pnpm build:lib && pnpm build:cli",
-    "build:lib": "tsup src/index.ts src/react-shell.tsx src/vite.ts src/profile.ts src/init.ts --format esm,cjs --dts --sourcemap --clean --external react --external react-dom --external react/jsx-runtime --external zustand",
+    "build:lib": "tsup src/index.ts src/react-shell.tsx src/df-sheet.ts src/vite.ts src/profile.ts src/init.ts --format esm,cjs --dts --sourcemap --clean --external react --external react-dom --external react/jsx-runtime --external zustand",
     "build:cli": "tsup src/cli.ts --format esm --platform node --target node18 --sourcemap --external react --external react-dom --external react/jsx-runtime --external zustand",
     "dev": "tsup src/index.ts src/react-shell.tsx src/vite.ts --format esm,cjs --dts --sourcemap --watch --external react --external react-dom --external react/jsx-runtime --external zustand",
     "dev:review": "vite --config dev/vite.config.ts",

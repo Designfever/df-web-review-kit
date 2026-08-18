@@ -3,6 +3,7 @@
   "entry": [
     "src/index.ts",
     "src/react-shell.tsx",
+    "src/df-sheet.ts",
     "src/vite.ts",
     "src/profile.ts",
     "src/init.ts",

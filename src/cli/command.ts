@@ -6,7 +6,6 @@ import {
 import {
   InitCancelledError,
   resolveInitConfig,
-  usesProviderProfile,
 } from './init-config';
 import {
   applyInstallPlan,
@@ -19,11 +18,12 @@ import {
   createMigrationPlan,
   formatMigrationPlan,
 } from './migration';
-import { scanProject } from './preflight';
 import {
-  createProviderArtifacts,
-  resolveProviderProfile,
-} from './provider-install';
+  createPackageInstallCommand,
+  installPackage,
+} from './package-manager';
+import { scanProject, type ReviewHostFramework } from './preflight';
+import { isLocalDependencySpec } from './version.check';
 import { runVersionCheck } from './version.check';
 
 export const CLI_EXIT_CODE = {
@@ -40,6 +40,7 @@ export type CliIo = {
 type CliCommandContext = {
   args: string[];
   io: CliIo;
+  version: string;
 };
 
 type CliCommandHandler = (
@@ -70,8 +71,44 @@ Options:
   -h, --help     Show help
   -v, --version  Show version`;
 
+const REVIEW_PAGE_GUIDES: Record<
+  ReviewHostFramework,
+  { label: string; file: string }
+> = {
+  'nextjs-app-router': {
+    label: 'Next.js App Router',
+    file: 'nextjs-app-router.md',
+  },
+  'vite-react': { label: 'Vite + React', file: 'vite-react.md' },
+  'vue-router': { label: 'Vue Router', file: 'vue-router.md' },
+  custom: { label: 'Custom', file: 'custom.md' },
+};
+
+export function getReviewPageGuide(
+  framework: ReviewHostFramework,
+  version: string
+) {
+  const guide = REVIEW_PAGE_GUIDES[framework];
+  const ref = version.includes('-') ? 'main' : `v${version}`;
+  return {
+    framework: guide.label,
+    url: `https://github.com/Designfever/df-web-review-kit/blob/${ref}/docs/review-page/${guide.file}`,
+  };
+}
+
+function printReviewPageGuide(
+  io: CliIo,
+  framework: ReviewHostFramework,
+  version: string
+) {
+  const guide = getReviewPageGuide(framework, version);
+  io.stdout('Create /review manually. The CLI does not modify host routes.');
+  io.stdout(`Detected framework: ${guide.framework}`);
+  io.stdout(`Guide: ${guide.url}`);
+}
+
 const defaultHandlers: CliCommandHandlers = {
-  init: async ({ args, io }) => {
+  init: async ({ args, io, version }) => {
     io.stdout('web-review-kit init');
     const interactive = !args.includes('--non-interactive');
     const dryRun = args.includes('--dry-run');
@@ -80,30 +117,33 @@ const defaultHandlers: CliCommandHandlers = {
       : null;
     try {
       const config = await resolveInitConfig({ args, prompt: promptSession?.prompt });
-      const profile = usesProviderProfile(config) && config.profile
-        ? await resolveProviderProfile(config.profile)
-        : undefined;
-      const providerCapabilities = [
-        ...(config.reviewStorage === 'profile' ? ['review' as const] : []),
-        ...(config.figmaImageStore === 'profile' ? ['figma' as const] : []),
-      ];
-      const provider = profile
-        ? createProviderArtifacts(profile, {}, providerCapabilities)
-        : undefined;
-      if (profile) {
-        io.stdout(`Provider profile loaded (${provider?.capabilities.join(', ')}).`);
-      }
-
       const root = process.cwd();
+      const preflight = await scanProject(root);
       const plan = await createInstallPlan({
         root,
         config,
-        preflight: await scanProject(root),
-        provider,
+        preflight,
+        packageVersion: `^${version}`,
       });
+      const currentSpec = preflight.dependencies.reviewKit;
+      const shouldInstallPackage = !currentSpec || !isLocalDependencySpec(currentSpec);
+      const packageInstall = shouldInstallPackage && preflight.packageManager
+        ? createPackageInstallCommand(
+            preflight.packageManager,
+            '@designfever/web-review-kit',
+            version
+          )
+        : null;
       io.stdout(formatInstallPlan(plan));
-      io.stdout(`Install dependencies: ${Object.keys(plan.dependencies).sort().join(', ')}`);
-      if (dryRun || plan.changes.length === 0) return;
+      if (packageInstall) {
+        io.stdout(`Install package: ${packageInstall.command} ${packageInstall.args.join(' ')}`);
+      } else if (!currentSpec) {
+        io.stdout('Install package manually: @designfever/web-review-kit');
+      }
+      if (dryRun || (plan.changes.length === 0 && !packageInstall)) {
+        printReviewPageGuide(io, preflight.framework, version);
+        return;
+      }
 
       let approved = args.includes('--yes');
       if (!approved && promptSession) {
@@ -122,8 +162,18 @@ const defaultHandlers: CliCommandHandlers = {
         );
       }
 
+      if (!currentSpec && !packageInstall) {
+        throw new Error(
+          'INSTALL_PACKAGE_MANAGER_REQUIRED: declare packageManager or keep one npm, pnpm, or Yarn lockfile.'
+        );
+      }
+      if (packageInstall) {
+        io.stdout(`Installing @designfever/web-review-kit@${version}...`);
+        await installPackage(root, packageInstall);
+      }
       await applyInstallPlan(plan);
       io.stdout(`Applied ${plan.changes.length} file change(s).`);
+      printReviewPageGuide(io, preflight.framework, version);
     } catch (error) {
       if (error instanceof InitCancelledError) throw new CliCancelledError(error.message);
       throw error;
@@ -192,7 +242,7 @@ export async function runCli(
   const handler = options.handlers?.[command] ?? defaultHandlers[command];
 
   try {
-    const result = await handler({ args: args.slice(1), io });
+    const result = await handler({ args: args.slice(1), io, version });
     return result ?? CLI_EXIT_CODE.success;
   } catch (error) {
     if (error instanceof CliCancelledError) {

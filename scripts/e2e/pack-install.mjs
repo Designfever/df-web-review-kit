@@ -1,6 +1,14 @@
 import { createHash } from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 
@@ -17,7 +25,6 @@ function run(command, args, options = {}) {
       ...process.env,
       CI: '1',
       npm_config_cache: join(workspace, 'npm-cache'),
-      ...options.env,
     },
     stdio: options.capture ? 'pipe' : 'inherit',
   });
@@ -27,7 +34,11 @@ function runResult(command, args, cwd) {
   return spawnSync(command, args, {
     cwd,
     encoding: 'utf8',
-    env: { ...process.env, CI: '1', npm_config_cache: join(workspace, 'npm-cache') },
+    env: {
+      ...process.env,
+      CI: '1',
+      npm_config_cache: join(workspace, 'npm-cache'),
+    },
   });
 }
 
@@ -43,24 +54,60 @@ function write(root, path, content) {
   writeFileSync(target, content);
 }
 
-function fixture(name, language = 'typescript') {
+function viteFixture(name) {
   const root = join(workspace, name);
   mkdirSync(root);
-  const typescript = language === 'typescript';
-  write(root, 'package.json', `${JSON.stringify({
-    name: `web-review-kit-e2e-${name}`,
-    private: true,
-    type: 'module',
-    scripts: { build: 'vite build', typecheck: 'tsc --noEmit' },
-    dependencies: { react: '^19.2.0', 'react-dom': '^19.2.0', vite: '^8.0.0' },
-    devDependencies: { typescript: '^6.0.0', '@types/react': '^19.0.0', '@types/react-dom': '^19.0.0' },
-  }, null, 2)}\n`);
-  write(root, 'vite.config.ts', "import { defineConfig } from 'vite';\nexport default defineConfig({ plugins: [], build: { rollupOptions: { input: 'review/index.html' } } });\n");
-  write(root, 'tsconfig.json', `${JSON.stringify({ compilerOptions: {
-    target: 'ES2020', lib: ['DOM', 'ES2020'], module: 'ESNext', moduleResolution: 'Bundler',
-    jsx: 'react-jsx', types: ['vite/client'], strict: true, allowJs: !typescript, checkJs: false, skipLibCheck: true,
-  }, include: ['src/review/**/*'] }, null, 2)}\n`);
-  write(root, typescript ? 'src/main.tsx' : 'src/main.jsx', 'export const host = true;\n');
+  write(
+    root,
+    'package.json',
+    `${JSON.stringify(
+      {
+        name: `web-review-kit-e2e-${name}`,
+        private: true,
+        type: 'module',
+        scripts: { build: 'vite build', typecheck: 'tsc --noEmit' },
+        dependencies: {
+          react: '^19.2.0',
+          'react-dom': '^19.2.0',
+          vite: '^8.0.0',
+        },
+        devDependencies: {
+          '@types/react': '^19.0.0',
+          '@types/react-dom': '^19.0.0',
+          typescript: '^6.0.0',
+        },
+      },
+      null,
+      2
+    )}\n`
+  );
+  write(
+    root,
+    'vite.config.ts',
+    "import { defineConfig } from 'vite';\nexport default defineConfig({ build: { rollupOptions: { input: 'review/index.html' } } });\n"
+  );
+  write(
+    root,
+    'tsconfig.json',
+    `${JSON.stringify(
+      {
+        compilerOptions: {
+          target: 'ES2020',
+          lib: ['DOM', 'ES2020'],
+          module: 'ESNext',
+          moduleResolution: 'Bundler',
+          jsx: 'react-jsx',
+          types: ['vite/client'],
+          strict: true,
+          skipLibCheck: true,
+        },
+        include: ['df.ts', 'src/review/**/*'],
+      },
+      null,
+      2
+    )}\n`
+  );
+  write(root, 'src/main.tsx', 'export const host = true;\n');
   return root;
 }
 
@@ -68,11 +115,17 @@ function filesHash(root) {
   const hash = createHash('sha256');
   function visit(directory) {
     for (const name of readdirSync(directory).sort()) {
-      if (['node_modules', 'dist', '.web-review-kit'].includes(name) || name.startsWith('.e2e-')) continue;
-      const path = join(directory, name);
-      const info = statSync(path);
-      if (info.isDirectory()) visit(path);
-      else hash.update(relative(root, path)).update('\0').update(readFileSync(path)).update('\0');
+      if (['node_modules', 'dist', '.web-review-kit'].includes(name)) continue;
+      const filePath = join(directory, name);
+      const info = statSync(filePath);
+      if (info.isDirectory()) visit(filePath);
+      else {
+        hash
+          .update(relative(root, filePath))
+          .update('\0')
+          .update(readFileSync(filePath))
+          .update('\0');
+      }
     }
   }
   visit(root);
@@ -80,233 +133,168 @@ function filesHash(root) {
 }
 
 function install(root, tarball) {
-  run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', tarball], { cwd: root });
+  run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', tarball], {
+    cwd: root,
+  });
 }
 
 function cli(root, args, capture = false) {
-  return run(join(root, 'node_modules/.bin/web-review-kit'), args, { cwd: root, capture });
+  return run(join(root, 'node_modules/.bin/web-review-kit'), args, {
+    cwd: root,
+    capture,
+  });
 }
 
-function verifyBuild(root) {
-  run('npm', ['run', 'typecheck'], { cwd: root });
-  run('npm', ['run', 'build'], { cwd: root });
-}
+function addHostReviewRoute(root) {
+  write(
+    root,
+    'review/index.html',
+    '<div id="root"></div><script type="module" src="/src/review/index.tsx"></script>\n'
+  );
+  write(
+    root,
+    'src/review/index.tsx',
+    `import { localAdapter } from '@designfever/web-review-kit';
+import { mountReviewShell } from '@designfever/web-review-kit/react-shell';
+import { REVIEW_PROJECT_ID } from '../../df';
 
-function verifyDoctor(root, profile) {
-  const args = ['doctor', '--json', ...(profile ? ['--profile', profile] : [])];
-  const result = JSON.parse(cli(root, args, true));
-  if (result.status !== 'healthy' || result.exitCode !== 0) {
-    throw new Error(`doctor failed in ${root}: ${JSON.stringify(result.diagnostics)}`);
-  }
+mountReviewShell({
+  projectId: REVIEW_PROJECT_ID,
+  pages: [{ href: '/' }],
+  adapters: [{ label: 'local', ...localAdapter() }],
+});
+`
+  );
 }
 
 try {
   run('pnpm', ['build']);
   const packed = parseNpmPackOutput(
-    run('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', packDir], { capture: true })
+    run(
+      'npm',
+      ['pack', '--ignore-scripts', '--json', '--pack-destination', packDir],
+      { capture: true }
+    )
   );
   const tarball = join(packDir, packed[0].filename);
   const matrix = [];
 
-  for (const language of ['javascript', 'typescript']) {
-    const root = fixture(`clean-${language}`, language);
+  {
+    const root = viteFixture('vite-react');
     install(root, tarball);
-    if (language === 'javascript') {
-      const checkBefore = filesHash(root);
-      cli(root, ['check']);
-      if (filesHash(root) !== checkBefore) {
-        throw new Error('packed check command changed a non-interactive host.');
-      }
-      matrix.push('clean-javascript: packed check command read-only');
-    }
+    const args = [
+      'init',
+      '--non-interactive',
+      '--project-id',
+      'f82b8ad5-7289-43d4-b175-bd5ecf1d4dba',
+      '--project-name',
+      'Fixture',
+    ];
     const before = filesHash(root);
-    cli(root, ['init', '--non-interactive', '--project-id', `clean-${language}`, '--project-name', `Clean ${language}`, '--review-storage', 'local', '--figma-image-store', 'none', '--no-source-locator', '--dry-run']);
-    if (filesHash(root) !== before) throw new Error(`${language} dry-run changed fixture files.`);
-    cli(root, ['init', '--non-interactive', '--project-id', `clean-${language}`, '--project-name', `Clean ${language}`, '--review-storage', 'local', '--figma-image-store', 'none', '--no-source-locator', '--yes']);
-    verifyDoctor(root);
-    verifyBuild(root);
+    const preview = cli(root, [...args, '--dry-run'], true);
+    if (filesHash(root) !== before) throw new Error('dry-run changed host files.');
+    if (!preview.includes('docs/review-page/vite-react.md')) {
+      throw new Error('Vite guide URL was not printed.');
+    }
+
+    cli(root, [...args, '--yes']);
+    if (!readFileSync(join(root, 'df.ts'), 'utf8').includes('REVIEW_PROJECT_ID')) {
+      throw new Error('df.ts was not created.');
+    }
+    if (statSync(join(root, 'vite.config.ts')).size === 0) {
+      throw new Error('host Vite config was damaged.');
+    }
     const applied = filesHash(root);
-    cli(root, ['init', '--non-interactive', '--project-id', `clean-${language}`, '--project-name', `Clean ${language}`, '--review-storage', 'local', '--figma-image-store', 'none', '--no-source-locator', '--yes']);
-    if (filesHash(root) !== applied) throw new Error(`${language} init was not idempotent.`);
-    matrix.push(`clean-${language}: init doctor typecheck build idempotent`);
+    cli(root, [...args, '--yes']);
+    if (filesHash(root) !== applied) throw new Error('init was not idempotent.');
+
+    addHostReviewRoute(root);
+    const doctor = JSON.parse(cli(root, ['doctor', '--json'], true));
+    if (doctor.status !== 'healthy') {
+      throw new Error(`doctor failed: ${JSON.stringify(doctor.diagnostics)}`);
+    }
+    run('npm', ['run', 'typecheck'], { cwd: root });
+    run('npm', ['run', 'build'], { cwd: root });
+    matrix.push('vite-react: dry-run df.ts guide host-route doctor build idempotent');
   }
 
   {
-    const root = fixture('existing-0.8');
-    write(root, 'src/legacy-review.ts', "import { createWebReviewKit, localAdapter } from '@designfever/web-review-kit';\ncreateWebReviewKit({ projectId: 'legacy-08', adapter: localAdapter() });\n");
+    const root = viteFixture('next-detection');
+    const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+    manifest.dependencies.next = '^16.0.0';
+    delete manifest.dependencies.vite;
+    write(root, 'package.json', `${JSON.stringify(manifest, null, 2)}\n`);
+    install(root, tarball);
+    const output = cli(
+      root,
+      [
+        'init',
+        '--non-interactive',
+        '--project-id',
+        'next-project',
+        '--project-name',
+        'Next project',
+        '--dry-run',
+      ],
+      true
+    );
+    if (!output.includes('docs/review-page/nextjs-app-router.md')) {
+      throw new Error('Next.js guide URL was not printed.');
+    }
+    matrix.push('next: detected guide without route generation');
+  }
+
+  {
+    const root = viteFixture('legacy');
+    write(
+      root,
+      'src/legacy-review.ts',
+      "import { createWebReviewKit, localAdapter } from '@designfever/web-review-kit';\ncreateWebReviewKit({ projectId: 'legacy', adapter: localAdapter() });\n"
+    );
     install(root, tarball);
     const before = filesHash(root);
-    const preview = runResult(join(root, 'node_modules/.bin/web-review-kit'), ['doctor', '--fix'], root);
-    if (preview.status !== 1 || preview.signal) {
-      throw new Error(`legacy preview exit changed: ${preview.status}`);
-    }
-    if (!preview.stdout.includes('Backup before apply:') || filesHash(root) !== before) {
-      throw new Error('legacy preview did not remain read-only.');
-    }
-    cli(root, ['doctor', '--fix', '--yes']);
-    verifyDoctor(root);
-    verifyBuild(root);
-    const second = cli(root, ['doctor', '--fix'], true);
-    if (!second.includes('No safe migration changes required.')) throw new Error('migration rerun produced a diff.');
-    matrix.push('existing-0.8: preview backup migrate doctor typecheck build idempotent');
-  }
-
-  {
-    const root = fixture('custom-adapter');
-    install(root, tarball);
-    write(root, 'node_modules/@example/test-provider/package.json', JSON.stringify({
-      name: '@example/test-provider', type: 'module', exports: './index.js',
-    }));
-    write(root, 'node_modules/@example/test-provider/index.js', `
-      import { localAdapter } from '@designfever/web-review-kit';
-      export function createReviewAdapter() {
-        return { label: 'local', adapter: localAdapter() };
-      }
-    `);
-    write(root, 'node_modules/@example/test-provider/index.d.ts', `
-      import type { ReviewShellAdapter } from '@designfever/web-review-kit/react-shell';
-      export declare function createReviewAdapter(): ReviewShellAdapter;
-    `);
-    write(root, 'provider.mjs', `export default {
-  schemaVersion: 1,
-  capabilities: { review: { module: '@example/test-provider', exportName: 'createReviewAdapter' } },
-  env: [{ key: 'VITE_CUSTOM_PROJECT_ID', secret: false, required: true, example: 'custom-app' }],
-  doctorChecks: [{ code: 'CUSTOM_WIRING_MISSING', message: 'Custom wiring missing.', sourceIncludes: 'providerCapabilities' }],
-};\n`);
-    cli(root, ['init', '--non-interactive', '--project-id', 'custom-app', '--project-name', 'Custom app', '--review-storage', 'profile', '--figma-image-store', 'none', '--no-source-locator', '--profile', './provider.mjs', '--yes']);
-    verifyDoctor(root, './provider.mjs');
-    verifyBuild(root);
-    const applied = filesHash(root);
-    cli(root, ['init', '--non-interactive', '--project-id', 'custom-app', '--project-name', 'Custom app', '--review-storage', 'profile', '--figma-image-store', 'none', '--no-source-locator', '--profile', './provider.mjs', '--yes']);
-    if (filesHash(root) !== applied) throw new Error('custom adapter init was not idempotent.');
-    matrix.push('custom-adapter: profile init doctor typecheck build idempotent');
-  }
-
-  {
-    const root = fixture('custom-bootstrap-figma');
-    install(root, tarball);
-    write(root, 'node_modules/@example/test-provider/package.json', JSON.stringify({
-      name: '@example/test-provider', type: 'module', exports: './index.js',
-    }));
-    write(root, 'node_modules/@example/test-provider/index.js', `
-      import { localAdapter } from '@designfever/web-review-kit';
-      export function createReviewBootstrap() {
-        return {
-          mount({ onReady }) {
-            const adapter = localAdapter();
-            onReady({ adapters: [{ label: 'local', ...adapter }] });
-          },
-        };
-      }
-      export function createFigmaImageStore() {
-        return {};
-      }
-    `);
-    write(root, 'node_modules/@example/test-provider/index.d.ts', `
-      import type { ReviewFigmaImageStore } from '@designfever/web-review-kit';
-      import type { ReviewProviderBootstrap } from '@designfever/web-review-kit/react-shell';
-      export declare function createReviewBootstrap(options?: { endpoint?: string }): ReviewProviderBootstrap;
-      export declare function createFigmaImageStore(options?: { endpoint?: string }): ReviewFigmaImageStore;
-    `);
-    write(root, 'provider.mjs', `export default {
-  schemaVersion: 1,
-  capabilities: {
-    review: {
-      mode: 'bootstrap',
-      module: '@example/test-provider',
-      exportName: 'createReviewBootstrap',
-      options: { endpoint: { env: 'VITE_REVIEW_PROXY_URL' } },
-    },
-    figma: {
-      module: '@example/test-provider',
-      exportName: 'createFigmaImageStore',
-      options: { endpoint: { env: 'VITE_FIGMA_PROXY_URL' } },
-    },
-  },
-  env: [
-    { key: 'VITE_FIGMA_PROXY_URL', secret: false, required: true, example: '/api/figma' },
-    { key: 'VITE_REVIEW_PROXY_URL', secret: false, required: true, example: '/api/review' },
-  ],
-  doctorChecks: [{ code: 'BOOTSTRAP_WIRING_MISSING', capability: 'review', message: 'Review bootstrap wiring missing.', sourceIncludes: 'reviewBootstrap' }],
-};\n`);
-    cli(root, ['init', '--non-interactive', '--project-id', 'custom-bootstrap', '--project-name', 'Custom bootstrap', '--review-storage', 'profile', '--figma-image-store', 'profile', '--no-source-locator', '--profile', './provider.mjs', '--yes']);
-    const vite = readFileSync(join(root, 'vite.config.ts'), 'utf8');
-    if (vite.includes('reviewFigmaImageStore')) {
-      throw new Error('custom runtime Figma store unexpectedly added a Vite plugin.');
-    }
-    verifyDoctor(root, './provider.mjs');
-    verifyBuild(root);
-    const applied = filesHash(root);
-    cli(root, ['init', '--non-interactive', '--project-id', 'custom-bootstrap', '--project-name', 'Custom bootstrap', '--review-storage', 'profile', '--figma-image-store', 'profile', '--no-source-locator', '--profile', './provider.mjs', '--yes']);
-    if (filesHash(root) !== applied) throw new Error('custom bootstrap init was not idempotent.');
-    matrix.push('custom-bootstrap-figma: gate profile doctor typecheck build no-vite-plugin idempotent');
-  }
-
-  {
-    const root = fixture('host-custom');
-    install(root, tarball);
-    cli(root, ['init', '--non-interactive', '--project-id', 'host-custom', '--project-name', 'Host custom', '--review-storage', 'custom', '--figma-image-store', 'custom', '--no-source-locator', '--yes']);
-
-    const incomplete = runResult(
+    const result = runResult(
       join(root, 'node_modules/.bin/web-review-kit'),
-      ['doctor', '--json'],
+      ['doctor', '--fix', '--yes'],
       root
     );
-    const incompleteResult = JSON.parse(incomplete.stdout);
-    const incompleteCodes = incompleteResult.diagnostics.map(({ code }) => code);
     if (
-      incomplete.status !== 1 ||
-      !incompleteCodes.includes('CUSTOM_REVIEW_INCOMPLETE') ||
-      !incompleteCodes.includes('CUSTOM_FIGMA_INCOMPLETE')
+      result.status !== 1 ||
+      !result.stdout.includes('MIGRATION_MANUAL_REVIEW_ROUTE_REQUIRED') ||
+      filesHash(root) !== before
     ) {
-      throw new Error('host custom scaffolds were not reported as incomplete.');
+      throw new Error('legacy route migration was not blocked read-only.');
     }
-
-    write(root, 'src/review/custom.review.tsx', `
-      import { localAdapter } from '@designfever/web-review-kit';
-      import type { ReviewProviderBootstrap } from '@designfever/web-review-kit/react-shell';
-      const adapter = localAdapter({ storageKey: 'host-custom-review-items' });
-      export const customReviewBootstrap: ReviewProviderBootstrap = {
-        mount({ onReady }) {
-          onReady({ adapters: [{ label: 'custom', ...adapter }] });
-        },
-      };
-    `);
-    write(root, 'src/review/custom.figma.store.ts', `
-      import { createEndpointReviewFigmaImageStore } from '@designfever/web-review-kit';
-      export const customFigmaImageStore = createEndpointReviewFigmaImageStore({
-        endpoint: '/api/custom-figma',
-      });
-    `);
-    const vite = readFileSync(join(root, 'vite.config.ts'), 'utf8');
-    if (vite.includes('reviewFigmaImageStore')) {
-      throw new Error('host custom Figma store unexpectedly added a Vite plugin.');
-    }
-    verifyDoctor(root);
-    verifyBuild(root);
-    const applied = filesHash(root);
-    cli(root, ['init', '--non-interactive', '--project-id', 'host-custom', '--project-name', 'Host custom', '--review-storage', 'custom', '--figma-image-store', 'custom', '--no-source-locator', '--yes']);
-    if (filesHash(root) !== applied) throw new Error('host custom init overwrote edited scaffolds.');
-    matrix.push('host-custom: scaffold blockers edit doctor typecheck build preserved no-vite-plugin');
+    matrix.push('legacy: manual route migration blocker unchanged');
   }
 
   {
-    const root = fixture('failure-conflict');
+    const root = viteFixture('removed-custom-option');
     install(root, tarball);
-    write(root, 'src/review/index.tsx', '// host-owned conflict\n');
     const before = filesHash(root);
-    const failed = runResult(join(root, 'node_modules/.bin/web-review-kit'), ['init', '--non-interactive', '--project-id', 'failure', '--project-name', 'Failure', '--review-storage', 'local', '--figma-image-store', 'none', '--no-source-locator', '--yes'], root);
-    if (failed.status !== 1 || filesHash(root) !== before) throw new Error('conflict failure changed fixture files or exit code.');
-
-    const custom = fixture('failure-custom-migration');
-    write(custom, 'src/legacy.ts', "import { createWebReviewKit, localAdapter } from '@designfever/web-review-kit';\ncreateWebReviewKit({ projectId: 'custom', adapter: localAdapter({ storageKey: 'owned' }), onSubmit: send });\n");
-    install(custom, tarball);
-    const customBefore = filesHash(custom);
-    const blocked = runResult(join(custom, 'node_modules/.bin/web-review-kit'), ['doctor', '--fix', '--yes'], custom);
-    if (blocked.status !== 1 || !blocked.stdout.includes('MIGRATION_CUSTOMIZATION_UNSUPPORTED') || filesHash(custom) !== customBefore) {
-      throw new Error('custom migration blocker did not preserve fixture files.');
+    const result = runResult(
+      join(root, 'node_modules/.bin/web-review-kit'),
+      [
+        'init',
+        '--non-interactive',
+        '--project-id',
+        'custom',
+        '--project-name',
+        'Custom',
+        '--review-storage',
+        'custom',
+        '--yes',
+      ],
+      root
+    );
+    if (
+      result.status !== 1 ||
+      !result.stderr.includes('Unknown init option: --review-storage') ||
+      filesHash(root) !== before
+    ) {
+      throw new Error('removed custom option changed host files or exit code.');
     }
-    matrix.push('failures: conflict/customization exit=1 unchanged');
+    matrix.push('custom: removed installer option fails unchanged');
   }
 
   console.log('PACK_INSTALL_E2E_PASS');

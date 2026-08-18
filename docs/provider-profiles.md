@@ -1,13 +1,8 @@
 # Custom Provider Profiles
 
-Provider profiles let `web-review-kit init` compose host-owned review storage and optional Figma image storage without embedding a backend implementation in the public package.
+Provider profiles are a v0.9 extension contract. In v0.10, `web-review-kit init` no longer accepts `--profile` and never generates provider or `/review` code.
 
-```bash
-npx @designfever/web-review-kit init --profile ./review-profile.mjs
-npx @designfever/web-review-kit init --profile @example/review-profile
-```
-
-A profile is declarative. It contributes questions, environment variable names, dependencies, capability wiring, and doctor checks. It cannot write host files directly; the core installer turns it into the same previewable installation plan used by built-in local setup.
+A project that needs Jira, Mantis, Trac, FTP, a custom database, or a custom Figma bridge must keep that adapter and its setup guide in the host repository. The types below remain available for existing integrations and read-only `doctor --profile` checks, but they are not an installer path.
 
 ## Authoring
 
@@ -75,7 +70,7 @@ export function createReviewBootstrap({ mountGate }): ReviewProviderBootstrap {
 }
 ```
 
-The generated entry waits for `onReady` before calling `mountReviewShell`. The bootstrap owns its gate UI and must unmount that UI before invoking `onReady`.
+The host-owned entry waits for `onReady` before calling `mountReviewShell`. The bootstrap owns its gate UI and must unmount that UI before invoking `onReady`.
 
 The optional Figma factory is still created independently. A custom runtime Figma store does not require `reviewFigmaImageStore()` in Vite; that plugin belongs only to the built-in local Figma store.
 

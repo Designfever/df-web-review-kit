@@ -26,143 +26,83 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
-describe('init configuration', () => {
-  it('normalizes a local-only interactive setup', async () => {
-    const prompt = promptWith(['demo', 'Demo site', 'local', 'none', true]);
-
+describe('framework-neutral init configuration', () => {
+  it('asks only for project id and project name', async () => {
+    const prompt = promptWith(['f82b8ad5-7289-43d4-b175-bd5ecf1d4dba', 'iKAOS']);
     const config = createInitConfig(await promptInitAnswers({}, prompt));
 
     expect(config).toEqual({
-      schemaVersion: 1,
-      projectId: 'demo',
-      projectName: 'Demo site',
-      reviewStorage: 'local',
-      figmaImageStore: 'none',
-      sourceLocator: true,
-      profile: null,
-    });
-  });
-
-  it('represents review and Figma capabilities supplied by one profile', async () => {
-    const config = await resolveInitConfig({
-      args: [
-        '--non-interactive',
-        '--project-id',
-        'custom-site',
-        '--project-name',
-        'Custom site',
-        '--review-storage',
-        'profile',
-        '--figma-image-store',
-        'profile',
-        '--source-locator',
-        '--profile',
-        './provider-profile.mjs',
-      ],
-    });
-
-    expect(config.reviewStorage).toBe('profile');
-    expect(config.figmaImageStore).toBe('profile');
-    expect(config.profile).toBe('./provider-profile.mjs');
-    expect(JSON.stringify(config)).not.toMatch(/token|secret/i);
-  });
-
-  it('keeps host-owned custom capabilities independent from provider profiles', async () => {
-    const prompt = promptWith(['custom-site', 'Custom site', 'custom', 'custom', false]);
-
-    const config = createInitConfig(await promptInitAnswers({}, prompt));
-
-    expect(config).toEqual({
-      schemaVersion: 1,
-      projectId: 'custom-site',
-      projectName: 'Custom site',
-      reviewStorage: 'custom',
-      figmaImageStore: 'custom',
-      sourceLocator: false,
-      profile: null,
+      schemaVersion: 2,
+      projectId: 'f82b8ad5-7289-43d4-b175-bd5ecf1d4dba',
+      projectName: 'iKAOS',
     });
     expect(prompt.text).toHaveBeenCalledTimes(2);
+    expect(prompt.select).not.toHaveBeenCalled();
+    expect(prompt.confirm).not.toHaveBeenCalled();
   });
 
-  it('loads a secret-free JSON config and lets explicit flags override it', async () => {
+  it('loads schema v2 config and lets explicit flags override it', async () => {
     const root = await mkdtemp(join(tmpdir(), 'web-review-kit-init-'));
     roots.push(root);
     await writeFile(
       join(root, 'review-kit.json'),
       JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: 2,
         projectId: 'fixture',
         projectName: 'Fixture',
-        reviewStorage: 'local',
-        figmaImageStore: 'none',
-        sourceLocator: false,
-        profile: null,
       })
     );
 
     const config = await resolveInitConfig({
       cwd: root,
-      args: ['--non-interactive', '--config', 'review-kit.json', '--source-locator'],
+      args: [
+        '--non-interactive',
+        '--config',
+        'review-kit.json',
+        '--project-name',
+        'Changed',
+      ],
     });
 
-    expect(config.sourceLocator).toBe(true);
-    expect(config.projectId).toBe('fixture');
+    expect(config).toEqual({
+      schemaVersion: 2,
+      projectId: 'fixture',
+      projectName: 'Changed',
+    });
   });
 
-  it('rejects missing and invalid input before any writer boundary exists', async () => {
-    await expect(
-      resolveInitConfig({ args: ['--non-interactive', '--project-id', 'missing-fields'] })
-    ).rejects.toThrow('projectName is required');
-    expect(() =>
-      createInitConfig({
-        projectId: 'Invalid ID',
-        projectName: 'Invalid',
-        reviewStorage: 'local',
-        figmaImageStore: 'none',
-        sourceLocator: true,
-        profile: null,
-      })
-    ).toThrow('projectId');
-    await expect(
-      resolveInitConfig({
-        args: [
-          '--non-interactive',
-          '--project-id',
-          'custom',
-          '--project-name',
-          'Custom',
-          '--review-storage',
-          'profile',
-          '--figma-image-store',
-          'none',
-          '--source-locator',
-        ],
-      })
-    ).rejects.toThrow('provider profile is required');
-  });
-
-  it('rejects secret-like and unknown CLI arguments', () => {
+  it('rejects removed provider and secret options', () => {
+    expect(() => parseInitArgs(['--review-storage', 'custom'])).toThrow(
+      'Unknown init option: --review-storage'
+    );
+    expect(() => parseInitArgs(['--profile', './provider.mjs'])).toThrow(
+      'Unknown init option: --profile'
+    );
     expect(() => parseInitArgs(['--token', 'do-not-accept'])).toThrow(
       'Unknown init option: --token'
     );
-    expect(() => parseInitArgs(['--review-storage', 'remote'])).toThrow(
-      'must be one of: local, custom, profile'
-    );
   });
 
-  it('rejects secret-like fields in checked-in config input', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'web-review-kit-init-secret-'));
+  it('rejects missing, invalid, old, and unknown config input', async () => {
+    await expect(
+      resolveInitConfig({ args: ['--non-interactive', '--project-id', 'missing-name'] })
+    ).rejects.toThrow('projectName is required');
+    expect(() =>
+      createInitConfig({ projectId: 'Invalid ID', projectName: 'Invalid' })
+    ).toThrow('projectId');
+
+    const root = await mkdtemp(join(tmpdir(), 'web-review-kit-init-invalid-'));
     roots.push(root);
     await writeFile(
-      join(root, 'review-kit.json'),
+      join(root, 'old.json'),
+      JSON.stringify({ schemaVersion: 1, projectId: 'fixture', projectName: 'Fixture' })
+    );
+    await writeFile(
+      join(root, 'secret.json'),
       JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: 2,
         projectId: 'fixture',
         projectName: 'Fixture',
-        reviewStorage: 'profile',
-        figmaImageStore: 'none',
-        sourceLocator: true,
-        profile: './profile.mjs',
         token: 'do-not-accept',
       })
     );
@@ -170,16 +110,20 @@ describe('init configuration', () => {
     await expect(
       resolveInitConfig({
         cwd: root,
-        args: ['--non-interactive', '--config', 'review-kit.json'],
+        args: ['--non-interactive', '--config', 'old.json'],
+      })
+    ).rejects.toThrow('Unsupported init config schemaVersion');
+    await expect(
+      resolveInitConfig({
+        cwd: root,
+        args: ['--non-interactive', '--config', 'secret.json'],
       })
     ).rejects.toThrow('Unknown init config field: token');
   });
 
   it('stops immediately when an interactive prompt is cancelled', async () => {
     const prompt = promptWith([null]);
-
     await expect(promptInitAnswers({}, prompt)).rejects.toBeInstanceOf(InitCancelledError);
     expect(prompt.text).toHaveBeenCalledTimes(1);
-    expect(prompt.select).not.toHaveBeenCalled();
   });
 });

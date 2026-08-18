@@ -4,24 +4,28 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Read This Order
 
-1. [Easy Install Preview](easy-install.md)
-2. [Installation](installation.md)
-3. [Easy Install v0.9 contract](easy-install-v0.9.md)
-4. [Custom provider profiles](provider-profiles.md)
-5. [Packed installation E2E matrix](pack-install-e2e.md)
-6. [v1.0 promotion checklist](v1.0-promotion-checklist.md)
-7. [Host env sample](../.env.sample)
-8. [Adapter boundaries](adapters.md)
-9. [Testing](testing.md)
-10. [Custom adapter sample](adaptor.sample.ts)
-11. [DB setup](db-setup.md)
-12. [Architecture and runtime logic](architecture.md)
-13. [Figma overlay](figma-overlay.md)
-14. [Grid overlay](grid-overlay.md)
+1. [Easy Install](easy-install.md)
+2. [Host-owned review page](review-page/README.md)
+3. [df-sheet connection](df-sheet.md)
+4. [Installation](installation.md)
+5. [Easy Install v0.9 contract](easy-install-v0.9.md)
+6. [Custom provider profiles](provider-profiles.md)
+7. [Packed installation E2E matrix](pack-install-e2e.md)
+8. [v1.0 promotion checklist](v1.0-promotion-checklist.md)
+9. [Host env sample](../.env.sample)
+10. [Adapter boundaries](adapters.md)
+11. [Testing](testing.md)
+12. [Custom adapter sample](adaptor.sample.ts)
+13. [DB setup](db-setup.md)
+14. [Architecture and runtime logic](architecture.md)
+15. [Figma overlay](figma-overlay.md)
+16. [Grid overlay](grid-overlay.md)
 
 ## Document Roles
 
-- `easy-install.md`: runnable v0.9 Quick Start, doctor, migration, rollback, host-owned custom code, provider profiles, and security instructions.
+- `easy-install.md`: framework-neutral installer boundary, `df.ts`, doctor, and guide routing.
+- `review-page/`: host-owned `/review` recipes for Next.js, Vite + React, Vue Router, and custom hosts.
+- `df-sheet.md`: standard df-login, short-session QA adapter, and authenticated Figma image flow.
 - `installation.md`: manually install the npm package, create the `/review` route, wire adapters, and run checks.
 - `easy-install-v0.9.md`: experimental CLI contract, support scope, extension contract, safety rules, and v1.0 criteria.
 - `provider-profiles.md`: generic private-provider schema, capability composition, environment safety, and authoring examples.
@@ -36,6 +40,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
+- [0.10.0](release-notes-0.10.0.md): framework-neutral easy install, df-login session, df-sheet QA, and authenticated Figma images.
 - [0.9.0 preview](release-notes-0.9.0.md): experimental easy-install CLI, doctor, safe migration, provider profiles, and packed E2E matrix.
 - [0.8.12](release-notes-0.8.12.md): reliable first Figma overlay selection and lower Supabase review-item egress.
 - [0.8.11](release-notes-0.8.11.md): package-synced version display and reliable Option DOM selection over the Figma overlay.

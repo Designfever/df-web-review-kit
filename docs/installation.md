@@ -36,6 +36,17 @@ Supabase is optional. Install it only in host projects that use the Supabase ada
 pnpm add @supabase/supabase-js
 ```
 
+## Project Configuration
+
+Keep the public project identifier in a checked-in root `df.ts`:
+
+```ts
+export const REVIEW_PROJECT_ID = 'my-project';
+```
+
+The project ID identifies the review project. It is not a credential and must
+not be used as authorization.
+
 ## Environment Reference
 
 Copy the repository [.env.sample](../.env.sample) into the host project as `.env.local`.
@@ -44,15 +55,11 @@ Copy the repository [.env.sample](../.env.sample) into the host project as `.env
 cp node_modules/@designfever/web-review-kit/.env.sample .env.local
 ```
 
-For a local-only setup, set only the project id:
-
-```env
-VITE_REVIEW_PROJECT_ID=my-project
-```
-
 Supabase and source-opening values are optional. Leave Supabase URL/key empty when the review shell should use local browser storage only.
 
 ## Vite Route
+
+This is a manual host recipe. The CLI does not create these files or patch Vite. See [Host-owned `/review` page](review-page/README.md) for other frameworks.
 
 Create a review entry such as:
 
@@ -79,8 +86,8 @@ import {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   localAdapter,
 } from '@designfever/web-review-kit';
+import { REVIEW_PROJECT_ID } from '../../df';
 
-const REVIEW_PROJECT_ID = import.meta.env.VITE_REVIEW_PROJECT_ID || 'my-project';
 const REVIEW_PATH_PREFIX = '/review';
 const REVIEW_USER_ID = import.meta.env.VITE_REVIEW_USER_ID || '';
 
@@ -169,9 +176,9 @@ import {
   supabaseAdapter,
   type SupabaseReviewClient,
 } from '@designfever/web-review-kit';
+import { REVIEW_PROJECT_ID } from '../../df';
 import { createClient } from '@supabase/supabase-js';
 
-const REVIEW_PROJECT_ID = import.meta.env.VITE_REVIEW_PROJECT_ID || 'my-project';
 const REVIEW_PATH_PREFIX = '/review';
 
 const local = localAdapter({
@@ -351,7 +358,6 @@ Private keys, admin credentials, canonical numbering, and permission checks shou
 The full copyable template is [.env.sample](../.env.sample).
 
 ```env
-VITE_REVIEW_PROJECT_ID=my-project
 VITE_REVIEW_SUPABASE_URL=
 VITE_REVIEW_SUPABASE_ANON_KEY=
 VITE_REVIEW_SUPABASE_TABLE=review_items

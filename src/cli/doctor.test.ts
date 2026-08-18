@@ -63,7 +63,8 @@ function healthyFiles() {
       const adapters = { local: localAdapter() };
       mountReviewShell({ projectId: 'fixture', pages: [], adapters });
     `,
-    '.env.local': `VITE_REVIEW_PROJECT_ID=fixture\nVITE_PRIVATE_TOKEN=${SECRET}\n`,
+    'df.ts': "export const REVIEW_PROJECT_ID = 'fixture';\n",
+    '.env.local': `VITE_PRIVATE_TOKEN=${SECRET}\n`,
   };
 }
 
@@ -89,7 +90,7 @@ describe('doctor', () => {
     expect(await snapshot(root)).toEqual(before);
   });
 
-  it('reports missing package, route, mount, and env as blockers or warnings', async () => {
+  it('reports missing package, route, mount, and project config as blockers or warnings', async () => {
     const root = await createFixture({
       'package.json': JSON.stringify({
         dependencies: {
@@ -112,7 +113,7 @@ describe('doctor', () => {
         'PACKAGE_NOT_INSTALLED',
         'REVIEW_ROUTE_MISSING',
         'REVIEW_KIT_PARTIAL',
-        'ENV_PROJECT_ID_MISSING',
+        'PROJECT_CONFIG_MISSING',
       ])
     );
   });

@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createReviewFigmaClientRenderedAsset } from './image.store';
+import {
+  createEndpointReviewFigmaImageStore,
+  createReviewFigmaClientRenderedAsset,
+} from './image.store';
 
 const FIGMA_URL =
   'https://www.figma.com/design/FILE/Example?node-id=1-2';
@@ -136,6 +139,31 @@ describe('createReviewFigmaClientRenderedAsset', () => {
       width: 1920,
     });
     expect(imageCount).toBe(1);
+  });
+});
+
+describe('createEndpointReviewFigmaImageStore', () => {
+  it('unwraps a df-sheet success envelope', async () => {
+    const request = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ success: true, data: [] }),
+    } as Response));
+    const store = createEndpointReviewFigmaImageStore({
+      endpoint: 'https://df-sheet.example/api/review/figma-images',
+      fetch: request as typeof fetch,
+      headers: { Authorization: 'Bearer session' },
+    });
+
+    await expect(
+      store.listImages({ type: 'route', projectId: 'project', pageUrl: '/' })
+    ).resolves.toEqual([]);
+    expect(request).toHaveBeenCalledWith(
+      expect.stringContaining('?target='),
+      expect.objectContaining({
+        headers: expect.any(Headers),
+      })
+    );
   });
 });
 

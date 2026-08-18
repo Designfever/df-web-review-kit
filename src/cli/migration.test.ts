@@ -6,7 +6,6 @@ import {
   applyMigrationPlan,
   createMigrationPlan,
   formatMigrationPlan,
-  rollbackMigration,
 } from './migration';
 
 const roots: string[] = [];
@@ -22,12 +21,11 @@ async function createFixture(files: Record<string, string>) {
   return root;
 }
 
-async function snapshot(root: string, ignoreBackup = false) {
+async function snapshot(root: string) {
   const result: Record<string, string> = {};
   async function visit(directory: string): Promise<void> {
     const entries = await readdir(directory, { withFileTypes: true });
     for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-      if (ignoreBackup && entry.name === '.web-review-kit') continue;
       const path = join(directory, entry.name);
       if (entry.isDirectory()) await visit(path);
       else result[path.slice(root.length + 1)] = await readFile(path, 'utf8');
@@ -52,7 +50,6 @@ function legacyFiles(source = `
     'pnpm-lock.yaml': 'lockfileVersion: 9\n',
     'vite.config.ts': "import { defineConfig } from 'vite';\nexport default defineConfig({ plugins: [] });\n",
     'src/legacy-review.ts': source,
-    '.env.example': 'VITE_EXISTING=value\n',
   };
 }
 
@@ -60,44 +57,22 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
-describe('safe migration', () => {
-  it('previews deterministic changes and leaves files unchanged until apply', async () => {
-    const root = await createFixture(legacyFiles());
-    const before = await snapshot(root);
-    const first = await createMigrationPlan(root);
-    const second = await createMigrationPlan(root);
-
-    expect(first).toEqual(second);
-    expect(first.blockers).toEqual([]);
-    expect(first.changes.map(({ path }) => path)).toEqual([
-      '.env.example',
-      'review/index.html',
-      'src/review/index.tsx',
-      'src/review/review.config.ts',
-    ]);
-    expect(formatMigrationPlan(first)).toContain(`Backup before apply: ${first.backupPath}`);
-    expect(await snapshot(root)).toEqual(before);
-  });
-
-  it('creates a complete backup, supports rollback, and is idempotent', async () => {
+describe('host-owned review route migration', () => {
+  it('reports a manual guide blocker without changing the host', async () => {
     const root = await createFixture(legacyFiles());
     const before = await snapshot(root);
     const plan = await createMigrationPlan(root);
 
-    const backupPath = await applyMigrationPlan(plan);
-    expect(backupPath).toBe(plan.backupPath);
-    expect(JSON.parse(await readFile(join(root, plan.backupPath, 'manifest.json'), 'utf8')))
-      .toMatchObject({ schemaVersion: 1, migrationId: plan.id });
-    expect(await readFile(join(root, plan.backupPath, 'before/.env.example'), 'utf8'))
-      .toBe('VITE_EXISTING=value\n');
-
-    const rerun = await createMigrationPlan(root);
-    expect(rerun.changes).toEqual([]);
-    await rollbackMigration(root, plan.backupPath);
-    expect(await snapshot(root, true)).toEqual(before);
+    expect(plan.changes).toEqual([]);
+    expect(plan.blockers.map(({ code }) => code)).toContain(
+      'MIGRATION_MANUAL_REVIEW_ROUTE_REQUIRED'
+    );
+    expect(formatMigrationPlan(plan)).toContain('migrate the /review page manually');
+    await expect(applyMigrationPlan(plan)).rejects.toThrow('MIGRATION_BLOCKED');
+    expect(await snapshot(root)).toEqual(before);
   });
 
-  it('reports customized legacy wiring as a blocker without modifying files', async () => {
+  it('keeps customized legacy wiring as an explicit blocker', async () => {
     const root = await createFixture(legacyFiles(`
       import { createWebReviewKit, localAdapter } from '@designfever/web-review-kit';
       createWebReviewKit({
@@ -106,23 +81,11 @@ describe('safe migration', () => {
         onSubmit: sendToHost,
       });
     `));
-    const before = await snapshot(root);
     const plan = await createMigrationPlan(root);
 
     expect(plan.changes).toEqual([]);
-    expect(plan.blockers.map(({ code }) => code)).toContain('MIGRATION_CUSTOMIZATION_UNSUPPORTED');
-    expect(formatMigrationPlan(plan)).toContain('migrate this host-specific integration manually');
-    await expect(applyMigrationPlan(plan)).rejects.toThrow('MIGRATION_BLOCKED');
-    expect(await snapshot(root)).toEqual(before);
-  });
-
-  it('rejects a stale preview before creating backups or writing files', async () => {
-    const root = await createFixture(legacyFiles());
-    const plan = await createMigrationPlan(root);
-    await writeFile(join(root, '.env.example'), 'changed after preview\n');
-    const before = await snapshot(root);
-
-    await expect(applyMigrationPlan(plan)).rejects.toThrow('MIGRATION_STALE_PLAN');
-    expect(await snapshot(root)).toEqual(before);
+    expect(plan.blockers.map(({ code }) => code)).toContain(
+      'MIGRATION_CUSTOMIZATION_UNSUPPORTED'
+    );
   });
 });

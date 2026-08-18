@@ -75,6 +75,7 @@ describe('scanProject', () => {
     expect(result.support).toBe('warning');
     expect(result.packageManager).toBe('pnpm');
     expect(result.language).toBe('typescript');
+    expect(result.framework).toBe('vite-react');
     expect(result.files.envFiles).toEqual(['.env.example']);
     expectCode(result, 'REVIEW_ROUTE_MISSING');
     expect(result.features.reviewKitInstalled).toBe(false);
@@ -123,7 +124,7 @@ describe('scanProject', () => {
     expect(result.diagnostics).toEqual([]);
   });
 
-  it('blocks unsupported framework hosts instead of guessing a patch', async () => {
+  it('detects Next.js and leaves its review route host-owned', async () => {
     const root = await createFixture({
       'package.json': JSON.stringify({
         dependencies: { next: '^16.0.0', react: '^19.0.0' },
@@ -134,9 +135,10 @@ describe('scanProject', () => {
 
     const result = await scanProject(root);
 
-    expect(result.support).toBe('blocked');
-    expectCode(result, 'HOST_FRAMEWORK_UNSUPPORTED');
-    expectCode(result, 'HOST_VITE_MISSING');
+    expect(result.support).toBe('supported');
+    expect(result.framework).toBe('nextjs-app-router');
+    expect(codes(result)).not.toContain('HOST_FRAMEWORK_UNSUPPORTED');
+    expect(codes(result)).not.toContain('HOST_VITE_MISSING');
   });
 
   it('blocks ambiguous lockfiles, Vite configs, and review routes', async () => {
@@ -212,6 +214,5 @@ describe('scanProject', () => {
     expect(result.support).toBe('blocked');
     expectCode(result, 'PROJECT_PACKAGE_JSON_INVALID');
     expectCode(result, 'HOST_REACT_MISSING');
-    expectCode(result, 'HOST_VITE_MISSING');
   });
 });

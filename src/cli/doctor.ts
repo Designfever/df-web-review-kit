@@ -244,9 +244,16 @@ export async function runDoctor(input: {
       finding('FIGMA_CAPABILITY_PARTIAL', 'warning', 'The local Figma client store and its Vite plugin wiring are incomplete.', 'Wire both createReviewFigmaImageStoreClient() and reviewFigmaImageStore(), or remove both.')
     );
   }
-  if (!envKeys.includes('VITE_REVIEW_PROJECT_ID')) {
+  const dfConfig = sources.find(({ path }) => path === 'df.ts');
+  if (!dfConfig || !/\bexport\s+const\s+REVIEW_PROJECT_ID\s*=/.test(dfConfig.content)) {
     diagnostics.push(
-      finding('ENV_PROJECT_ID_MISSING', 'warning', 'Environment key VITE_REVIEW_PROJECT_ID was not found.', 'Add the key to .env.example and set it in the local environment.')
+      finding(
+        'PROJECT_CONFIG_MISSING',
+        'warning',
+        'Checked-in df.ts with REVIEW_PROJECT_ID was not found.',
+        'Create root df.ts and export REVIEW_PROJECT_ID.',
+        ['df.ts']
+      )
     );
   }
   if (combinedSource.includes('createWebReviewKit') && !preflight.features.reviewShellMounted) {

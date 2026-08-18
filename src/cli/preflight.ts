@@ -26,12 +26,18 @@ type PreflightDiagnostic = {
 };
 
 type ProjectLanguage = 'javascript' | 'typescript';
+export type ReviewHostFramework =
+  | 'nextjs-app-router'
+  | 'vite-react'
+  | 'vue-router'
+  | 'custom';
 
 export type ProjectPreflightResult = {
   root: string;
   support: 'supported' | 'warning' | 'blocked';
   packageManager: PackageManager | null;
   language: ProjectLanguage;
+  framework: ReviewHostFramework;
   dependencies: {
     react: string | null;
     vite: string | null;
@@ -69,10 +75,10 @@ const VITE_CONFIG_NAMES = [
 ];
 
 const ENV_FILE_PATTERN = /^\.env(?:\.[A-Za-z0-9_-]+)?$/;
-const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts']);
+const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts', '.vue']);
 const IGNORED_DIRECTORIES = new Set(['.git', 'dist', 'build', 'coverage', 'node_modules']);
 const REVIEW_ROUTE_PATTERN =
-  /(^|\/)(?:(?:page|pages|src\/pages|src\/app)\/review(?:\/(?:index|page))?|src\/review\/index)\.(?:jsx?|tsx?)$/;
+  /(^|\/)(?:(?:app|page|pages|src\/pages|src\/app|src\/views)\/review(?:\/(?:index|page))?|src\/review\/index)\.(?:jsx?|tsx?|vue)$/;
 const MAX_SOURCE_FILES = 2_000;
 
 function toPosix(path: string) {
@@ -81,6 +87,17 @@ function toPosix(path: string) {
 
 function getDependency(packageJson: PackageJson, name: string) {
   return packageJson.dependencies?.[name] ?? packageJson.devDependencies?.[name] ?? null;
+}
+
+function detectFramework(packageJson: PackageJson): ReviewHostFramework {
+  if (getDependency(packageJson, 'next')) return 'nextjs-app-router';
+  if (getDependency(packageJson, 'vue') || getDependency(packageJson, 'nuxt')) {
+    return 'vue-router';
+  }
+  if (getDependency(packageJson, 'vite') && getDependency(packageJson, 'react')) {
+    return 'vite-react';
+  }
+  return 'custom';
 }
 
 function diagnostic(
@@ -192,20 +209,14 @@ export async function scanProject(root: string): Promise<ProjectPreflightResult>
   const react = getDependency(packageJson, 'react');
   const vite = getDependency(packageJson, 'vite');
   const reviewKit = getDependency(packageJson, '@designfever/web-review-kit');
-  const unsupportedFrameworks = ['next', 'vue', 'nuxt'].filter((name) => getDependency(packageJson, name));
+  const framework = detectFramework(packageJson);
 
-  if (!react) {
-    diagnostics.push(diagnostic('HOST_REACT_MISSING', 'blocker', 'React is not declared as a dependency.'));
-  }
-  if (!vite) {
-    diagnostics.push(diagnostic('HOST_VITE_MISSING', 'blocker', 'Vite is not declared as a dependency.'));
-  }
-  if (unsupportedFrameworks.length) {
+  if (framework === 'custom' && !react) {
     diagnostics.push(
       diagnostic(
-        'HOST_FRAMEWORK_UNSUPPORTED',
-        'blocker',
-        `Automatic installation does not support: ${unsupportedFrameworks.join(', ')}.`
+        'HOST_REACT_MISSING',
+        'warning',
+        'React is not declared. The custom guide must provide the React runtime used by Review Shell.'
       )
     );
   }
@@ -233,12 +244,14 @@ export async function scanProject(root: string): Promise<ProjectPreflightResult>
     if (await isFile(join(root, name))) viteConfigs.push(name);
   }
   viteConfigs.sort();
-  if (viteConfigs.length === 0) {
-    diagnostics.push(diagnostic('VITE_CONFIG_MISSING', 'warning', 'No root Vite config was found.'));
-  } else if (viteConfigs.length > 1) {
-    diagnostics.push(
-      diagnostic('VITE_CONFIG_CONFLICT', 'blocker', 'Multiple root Vite configs were found.', viteConfigs)
-    );
+  if (framework === 'vite-react') {
+    if (viteConfigs.length === 0) {
+      diagnostics.push(diagnostic('VITE_CONFIG_MISSING', 'warning', 'No root Vite config was found.'));
+    } else if (viteConfigs.length > 1) {
+      diagnostics.push(
+        diagnostic('VITE_CONFIG_CONFLICT', 'blocker', 'Multiple root Vite configs were found.', viteConfigs)
+      );
+    }
   }
 
   const rootEntries = await readdir(root).catch(() => [] as string[]);
@@ -278,6 +291,7 @@ export async function scanProject(root: string): Promise<ProjectPreflightResult>
     support: getSupport(diagnostics),
     packageManager,
     language,
+    framework,
     dependencies: { react, vite, reviewKit },
     files: {
       packageJson: packageJsonFile,

@@ -64,9 +64,12 @@ export const mountReviewShell = (options: ReviewShellMountOptions) => {
   root.style.height = '100%';
   root.style.margin = '0';
 
-  createRoot(root).render(
+  const reactRoot = createRoot(root);
+  reactRoot.render(
     <React.StrictMode>
       <ReviewShell {...shellProps} />
     </React.StrictMode>
   );
+
+  return () => reactRoot.unmount();
 };

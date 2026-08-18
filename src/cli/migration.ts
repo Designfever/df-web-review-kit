@@ -1,10 +1,7 @@
-import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, extname, join, relative } from 'node:path';
-import { createInitConfig } from './init-config';
 import {
   applyInstallPlan,
-  createInstallPlan,
   type InstallFileChange,
   type InstallPlan,
 } from './install-generator';
@@ -72,11 +69,6 @@ async function collectLegacySources(root: string) {
   return sources.sort((a, b) => a.path.localeCompare(b.path));
 }
 
-function migrationId(changes: InstallFileChange[]) {
-  const fingerprint = changes.map(({ path, before, after }) => ({ path, before, after }));
-  return createHash('sha256').update(JSON.stringify(fingerprint)).digest('hex').slice(0, 12);
-}
-
 export async function createMigrationPlan(root: string): Promise<MigrationPlan> {
   const preflight = await scanProject(root);
   const legacySources = await collectLegacySources(root);
@@ -109,25 +101,17 @@ export async function createMigrationPlan(root: string): Promise<MigrationPlan> 
     return { root, id: 'blocked', backupPath: '', changes: [], blockers, sourcePath: source.path };
   }
 
-  const projectId = matches[0][2];
-  const install = await createInstallPlan({
-    root,
-    preflight,
-    config: createInitConfig({
-      projectId,
-      projectName: projectId,
-      reviewStorage: 'local',
-      figmaImageStore: 'none',
-      sourceLocator: false,
-      profile: null,
-    }),
+  blockers.push({
+    code: 'MIGRATION_MANUAL_REVIEW_ROUTE_REQUIRED',
+    message: 'The CLI cannot safely replace a host-owned review route.',
+    fixHint: 'Follow the detected framework guide and migrate the /review page manually.',
+    paths: [source.path],
   });
-  const id = migrationId(install.changes);
   return {
     root,
-    id,
-    backupPath: `.web-review-kit/backups/${id}`,
-    changes: install.changes,
+    id: 'blocked',
+    backupPath: '',
+    changes: [],
     blockers,
     sourcePath: source.path,
   };
@@ -175,7 +159,7 @@ export async function applyMigrationPlan(plan: MigrationPlan) {
   return plan.backupPath;
 }
 
-export async function rollbackMigration(root: string, backupPath: string) {
+async function rollbackMigration(root: string, backupPath: string) {
   const backupRoot = join(root, backupPath);
   const raw = await readOptional(join(backupRoot, 'manifest.json'));
   if (raw === null) throw new Error(`MIGRATION_BACKUP_MISSING: ${backupPath}`);

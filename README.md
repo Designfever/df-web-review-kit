@@ -21,8 +21,10 @@ This package does not own internal operator tools, private admin keys, or produc
 ## Docs
 
 - [Docs index](docs/README.md): reading order, document roles, and release history.
-- [Easy Install Preview](docs/easy-install.md): 10-minute Quick Start, doctor, migration, rollback, host-owned custom code, provider profiles, and safety.
-- [Installation](docs/installation.md): manual package installation and `/review` mounting.
+- [Easy Install](docs/easy-install.md): framework detection, `df.ts`, doctor, and the host-owned route boundary.
+- [df-sheet connection](docs/df-sheet.md): df-login, short review sessions, QA adapter, and authenticated Figma image proxy.
+- [Review page guides](docs/review-page/README.md): Next.js, Vite + React, Vue Router, and custom route recipes.
+- [Installation](docs/installation.md): package APIs and detailed manual wiring.
 - [Easy Install v0.9 contract](docs/easy-install-v0.9.md): experimental scope and v1.0 promotion contract.
 - [.env.sample](.env.sample): copyable host project env template for local, Supabase, and source opening.
 - [Adapter boundaries](docs/adapters.md): QA adapter vs Figma image store responsibilities.
@@ -32,24 +34,31 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, sitemap, and feature ownership boundaries.
 - [Figma overlay](docs/figma-overlay.md): host helper behavior and package-managed image overlay state.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
-- [Release notes 0.9.0](docs/release-notes-0.9.0.md): experimental easy-install CLI, doctor, safe migration, and host-owned custom integrations.
+- [Release notes 0.10.0](docs/release-notes-0.10.0.md): framework-neutral install, df-login session, df-sheet QA, and authenticated Figma images.
 
 ## Quick Start
 
-The v0.9 easy installer is experimental. Preview every change before applying it:
+The v0.10 installer asks only for the df-sheet project ID and project name. Preview every change before applying it:
 
 ```bash
-npx @designfever/web-review-kit@0.9 init \
-  --non-interactive \
-  --project-id my-project \
-  --project-name "My Project" \
-  --review-storage local \
-  --figma-image-store none \
-  --source-locator \
-  --dry-run
+npx @designfever/web-review-kit@0.10 init --dry-run
 ```
 
-See [Easy Install Preview](docs/easy-install.md) for apply, doctor, migration, rollback, host-owned custom code, and provider profile instructions. The CLI/config contract may break before v1.0.
+See [Easy Install](docs/easy-install.md) for setup and the detected framework guide. The CLI does not create or patch `/review`.
+
+The standard Designfever route connects with df-login. It needs no permanent token or Figma token in the host:
+
+```ts
+import { connectDfSheetReview } from '@designfever/web-review-kit/df-sheet';
+
+const session = await connectDfSheetReview({ projectId: REVIEW_PROJECT_ID });
+if (!session) return;
+
+const reviewPages = await session.listPages();
+const adapter = session.createAdapter({ pageId: reviewPages[0].id });
+```
+
+Pass `adapter` to Review Shell and `session.figmaImageStore` to `figmaImages.store`. See [df-sheet connection](docs/df-sheet.md) for the complete boundary and multi-page handling.
 
 For manual installation:
 
@@ -84,14 +93,14 @@ import {
   REVIEW_WORKFLOW_STATUS_OPTIONS,
   localAdapter,
 } from '@designfever/web-review-kit';
+import { REVIEW_PROJECT_ID } from '../../df';
 
-const projectId = import.meta.env.VITE_REVIEW_PROJECT_ID || 'my-project';
 const local = localAdapter({
-  storageKey: `${projectId}-review-items`,
+  storageKey: `${REVIEW_PROJECT_ID}-review-items`,
 });
 
 mountReviewShell({
-  projectId,
+  projectId: REVIEW_PROJECT_ID,
   pages: createReviewPagesFromGlob(import.meta.glob('/**/index.tsx'), {
     exclude: (href) => href === '/review/',
   }),
@@ -126,10 +135,10 @@ See [Installation](docs/installation.md) for route files, `.env.sample`, Supabas
 
 Copy [.env.sample](.env.sample) into the host project as `.env.local`, then fill only the values that project needs.
 
-Local-only review needs only `VITE_REVIEW_PROJECT_ID`.
+Keep the public project identifier in a checked-in root `df.ts`:
 
-```env
-VITE_REVIEW_PROJECT_ID=my-project
+```ts
+export const REVIEW_PROJECT_ID = 'my-project';
 ```
 
 Only host projects that choose the Supabase adapter need Supabase values.
@@ -156,6 +165,7 @@ Browser env must use a Supabase `anon` key only. Do not put `service_role`, oper
 ```ts
 import { createWebReviewKit, localAdapter } from '@designfever/web-review-kit';
 import { mountReviewShell } from '@designfever/web-review-kit/react-shell';
+import { connectDfSheetReview } from '@designfever/web-review-kit/df-sheet';
 import {
   reviewDataLocator,
   reviewSourceLocator,
@@ -164,6 +174,7 @@ import {
 
 - `@designfever/web-review-kit`: core API, adapters, shared types.
 - `@designfever/web-review-kit/react-shell`: review shell UI, presence adapters, page glob helper.
+- `@designfever/web-review-kit/df-sheet`: df-login PKCE session, df-sheet QA adapter, page list, and authenticated Figma image store.
 - `@designfever/web-review-kit/vite`: dev source/data locators with explicit review-build opt-in.
 - `src/*` is not a public import path.
 

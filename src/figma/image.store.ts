@@ -438,13 +438,19 @@ function createReviewFigmaImageStoreRequest(
 
     if (!response.ok) {
       const message =
-        typeof body?.error === 'string'
-          ? body.error
+        typeof body?.message === 'string'
+          ? body.message
+          : typeof body?.error === 'string'
+            ? body.error
           : `Figma image store request failed: ${response.status}`;
       throw new Error(message);
     }
 
-    return body as T;
+    return (
+      body?.success === true && Object.prototype.hasOwnProperty.call(body, 'data')
+        ? body.data
+        : body
+    ) as T;
   };
 }
 

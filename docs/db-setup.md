@@ -7,7 +7,6 @@ Supabase is an optional backend adapter. A host project may use it for canonical
 Start from [.env.sample](../.env.sample), then fill Supabase values only in the host project that uses the Supabase adapter.
 
 ```env
-VITE_REVIEW_PROJECT_ID=my-project
 VITE_REVIEW_SUPABASE_URL=
 VITE_REVIEW_SUPABASE_ANON_KEY=
 VITE_REVIEW_SUPABASE_TABLE=review_items
@@ -148,7 +147,8 @@ grant select, insert, update on public.review_project_counters to anon;
 
 ## RLS Policies
 
-Run this after the schema SQL. Replace `df-web-review-kit` if `VITE_REVIEW_PROJECT_ID` uses a different value.
+Run this after the schema SQL. Replace `df-web-review-kit` if `REVIEW_PROJECT_ID`
+in the checked-in root `df.ts` uses a different value.
 
 ```sql
 alter table public.review_items enable row level security;

@@ -11,6 +11,24 @@ For the QA adapter and Figma image store split, see [Adapter boundaries](adapter
 pnpm add @designfever/web-review-kit react react-dom zustand
 ```
 
+## Dev Version Check
+
+The package includes a `web-review-kit` CLI. Put its check before the host's
+existing dev command:
+
+```json
+{
+  "scripts": {
+    "dev": "web-review-kit check && vite"
+  }
+}
+```
+
+Interactive terminals show the installed and latest versions and ask before
+running `pnpm add --save-exact`. Answering `N`, a registry failure, and a
+non-interactive terminal do not block the dev server. Local `link:`, `file:`,
+and `workspace:` package references are never replaced.
+
 Supabase is optional. Install it only in host projects that use the Supabase adapter.
 
 ```bash

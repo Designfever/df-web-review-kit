@@ -37,7 +37,7 @@ describe('runCli', () => {
     expect(stdout).toHaveBeenCalledWith('0.9.0');
   });
 
-  it.each(['init', 'doctor'] as const)(
+  it.each(['init', 'doctor', 'check'] as const)(
     'routes %s arguments through the injected command boundary',
     async (command) => {
       const { io } = createIo();

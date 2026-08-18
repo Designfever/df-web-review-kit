@@ -57,6 +57,21 @@ For manual installation:
 pnpm add @designfever/web-review-kit react react-dom zustand
 ```
 
+To check for review-kit updates before the host dev server starts, prefix its
+existing dev command with the bundled CLI:
+
+```json
+{
+  "scripts": {
+    "dev": "web-review-kit check && vite"
+  }
+}
+```
+
+The check continues without updating when the user answers `N`. It asks before
+changing `package.json` and `pnpm-lock.yaml`, preserves the current dependency
+field, and skips `link:`, `file:`, and `workspace:` dependencies.
+
 Minimal Vite route:
 
 ```tsx

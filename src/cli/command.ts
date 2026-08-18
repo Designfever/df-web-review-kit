@@ -20,6 +20,7 @@ import {
   createProviderArtifacts,
   resolveProviderProfile,
 } from './provider-install';
+import { runVersionCheck } from './version.check';
 
 export const CLI_EXIT_CODE = {
   success: 0,
@@ -44,6 +45,7 @@ export type CliCommandHandler = (
 export type CliCommandHandlers = {
   init: CliCommandHandler;
   doctor: CliCommandHandler;
+  check: CliCommandHandler;
 };
 
 export class CliCancelledError extends Error {
@@ -58,6 +60,7 @@ const HELP = `Usage: web-review-kit <command> [options]
 Commands:
   init      Prepare a review-kit installation
   doctor    Diagnose an existing installation
+  check     Check for a newer package version
 
 Options:
   -h, --help     Show help
@@ -143,6 +146,11 @@ const defaultHandlers: CliCommandHandlers = {
     result = await runDoctor({ root, profileSpecifier: options.profileSpecifier });
     return result.exitCode;
   },
+  check: ({ io }) =>
+    runVersionCheck({
+      log: io.stdout,
+      warn: io.stderr,
+    }),
 };
 
 export async function runCli(
@@ -166,7 +174,7 @@ export async function runCli(
     return CLI_EXIT_CODE.success;
   }
 
-  if (command !== 'init' && command !== 'doctor') {
+  if (command !== 'init' && command !== 'doctor' && command !== 'check') {
     io.stderr(`Unknown command: ${command}`);
     io.stderr('Run web-review-kit --help to see available commands.');
     return CLI_EXIT_CODE.failure;

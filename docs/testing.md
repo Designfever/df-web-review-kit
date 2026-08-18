@@ -40,6 +40,7 @@ The Supabase coverage uses an in-memory PostgREST/RPC mock. It does not contact 
 Colocated `*.test.ts` and `*.test.tsx` files cover the runtime contracts that
 refactors depend on:
 
+- `src/core/web.review.kit.app.test.ts`: the interaction-layer host stays fixed to the viewport without blocking pointer events globally.
 - `src/core/geometry.test.ts`: coordinate conversion (host/target spaces), clamping, selection shapes, popover placement.
 - `src/core/hotkey.test.ts`: hotkey matching with modifiers, Korean IME key aliases, physical key-code fallback, and editable-target blocking including `<select>`.
 - `src/core/location.test.ts`: page URL building and review-internal query param stripping.

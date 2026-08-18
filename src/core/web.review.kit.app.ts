@@ -162,7 +162,12 @@ class WebReviewKitApp {
 
     this.root = document.createElement('div');
     this.root.id = ROOT_ID;
-    this.root.style.display = 'contents';
+    Object.assign(this.root.style, {
+      position: 'fixed',
+      inset: '0',
+      zIndex: '2147483647',
+      pointerEvents: 'none',
+    });
 
     this.shadow = this.root.attachShadow({ mode: 'open' });
     document.body.appendChild(this.root);

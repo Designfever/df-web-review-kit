@@ -40,6 +40,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
+- [0.10.1](release-notes-0.10.1.md): reliable pointer interaction for review-shell controls.
 - [0.10.0](release-notes-0.10.0.md): framework-neutral easy install, df-login session, df-sheet QA, and authenticated Figma images.
 - [0.9.0 preview](release-notes-0.9.0.md): experimental easy-install CLI, doctor, safe migration, provider profiles, and packed E2E matrix.
 - [0.8.12](release-notes-0.8.12.md): reliable first Figma overlay selection and lower Supabase review-item egress.

@@ -26,6 +26,8 @@ export type {
   ReviewShellGlobEntries,
   ReviewShellMountOptions,
   ReviewShellPage,
+  ReviewShellQaPageOption,
+  ReviewShellQaPageSelector,
   ReviewShellProps,
   ReviewShellStatusOption,
   ReviewShellUpdateAssigneeInput,

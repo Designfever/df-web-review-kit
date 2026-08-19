@@ -81,7 +81,10 @@ export type ReviewShellUpdateAssigneeInput = {
   item: ReviewItem;
   assigneeId: string | null;
   assigneeName?: string;
+  assigneeIds: string[];
+  assigneeNames: string[];
   assigneeOption?: ReviewShellAssigneeOption;
+  assigneeOptions: ReviewShellAssigneeOption[];
   assigneeIndex: number;
 };
 
@@ -196,6 +199,17 @@ export type ReviewShellFigmaImagesOptions = {
   imageFormat?: ReviewFigmaImageFormat;
 };
 
+export type ReviewShellQaPageOption = {
+  label: string;
+  value: string;
+};
+
+export type ReviewShellQaPageSelector = {
+  options: readonly ReviewShellQaPageOption[];
+  value: string;
+  onChange: (value: string) => void;
+};
+
 export interface CreateReviewPagesOptions {
   root?: string;
   exclude?: (href: string) => boolean;
@@ -215,6 +229,8 @@ export interface ReviewShellProps {
   sourceInspector?: ReviewSourceInspectorOptions;
   presence?: ReviewPresenceAdapter;
   figmaImages?: ReviewShellFigmaImagesOptions;
+  qaPageSelector?: ReviewShellQaPageSelector;
+  onLogout?: () => void | Promise<void>;
 }
 
 export interface ReviewShellMountOptions extends ReviewShellProps {

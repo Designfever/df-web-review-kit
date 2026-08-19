@@ -1,10 +1,12 @@
 import { useReviewFigmaImagesState } from '../figma/images.context';
 import { useReviewPresenceState } from '../presence/presence.context';
 import { useReviewShellActions } from '../store/shell.actions.context';
+import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellStore } from '../store/store.context';
 import { ReviewSideRail } from './side.rail';
 
 export const ReviewSideRailContainer = () => {
+  const { onLogout } = useReviewShellConfig();
   const {
     openAbout,
     openInitialPrompt,
@@ -36,6 +38,7 @@ export const ReviewSideRailContainer = () => {
       presenceSessionId={presenceSessionId}
       onOpenAbout={openAbout}
       onOpenInitialPrompt={openInitialPrompt}
+      onLogout={onLogout}
       onOpenSettings={openSettings}
       onToggleFigmaImagesPanel={toggleFigmaImagesPanel}
       onToggleQaPanel={toggleQaPanel}

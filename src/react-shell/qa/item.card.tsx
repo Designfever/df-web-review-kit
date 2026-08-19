@@ -55,7 +55,7 @@ interface QaItemCardProps {
   ) => Promise<void>;
   onChangeItemAssignee: (
     item: ReviewItem,
-    assigneeId: string | null
+    assigneeIds: string[]
   ) => Promise<void>;
   onClearSelectedItem: () => void;
   onRemoveItem: (item: ReviewItem) => Promise<void>;

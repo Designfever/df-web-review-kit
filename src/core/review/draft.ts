@@ -1,6 +1,7 @@
 import type {
   DomAnchor,
   ReviewAttachmentKind,
+  ReviewItemStatus,
   ReviewMarker,
   ReviewPoint,
   ReviewSelection,
@@ -39,8 +40,11 @@ export interface AreaDraft extends ReviewDraftComposer {
   selection?: ReviewSelection;
   title?: string;
   comment?: string;
+  status?: ReviewItemStatus;
   assigneeId?: string | null;
   assigneeName?: string;
+  assigneeIds?: string[];
+  assigneeNames?: string[];
   attachments?: ReviewDraftAttachment[];
 }
 
@@ -54,8 +58,11 @@ export interface DomDraft extends ReviewDraftComposer {
   selection?: ReviewSelection;
   title?: string;
   comment?: string;
+  status?: ReviewItemStatus;
   assigneeId?: string | null;
   assigneeName?: string;
+  assigneeIds?: string[];
+  assigneeNames?: string[];
   adjustment?: ReviewAdjustmentDraft;
   previewElement?: ReviewDraftPreviewElement;
   attachments?: ReviewDraftAttachment[];

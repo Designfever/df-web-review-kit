@@ -19,6 +19,7 @@ import type {
 import type {
   ReviewShellPage,
   ReviewShellProps,
+  ReviewShellQaPageSelector,
   ReviewShellViewportPreset,
 } from '../types';
 import {
@@ -32,10 +33,12 @@ export interface ReviewShellConfig {
   qaPrompt: string;
   projectId: string;
   pages: ReviewShellPage[];
+  qaPageSelector?: ReviewShellQaPageSelector;
   reviewPathPrefix: string;
   viewportPresets: ReviewShellViewportPreset[];
   reviewViewportPresets: ReviewViewportPreset[];
   localAdapterEntry: NormalizedReviewShellAdapter | null;
+  onLogout?: () => void | Promise<void>;
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
   sectionOutlineOptions: GetSectionOutlineOptions;
   sourceEntries: NormalizedReviewShellAdapter[];
@@ -50,7 +53,9 @@ export const createReviewShellConfig = ({
   pages,
   adapters,
   initialPrompt = DEFAULT_INITIAL_REVIEW_PROMPT,
+  onLogout,
   qaPrompt = '',
+  qaPageSelector,
   presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
   reviewPathPrefix = DEFAULT_REVIEW_PATH_PREFIX,
   sourceInspector,
@@ -73,10 +78,12 @@ export const createReviewShellConfig = ({
     qaPrompt,
     projectId,
     pages,
+    qaPageSelector,
     reviewPathPrefix,
     viewportPresets,
     reviewViewportPresets: toReviewViewportPresets(viewportPresets),
     localAdapterEntry: normalizedAdapters.local,
+    onLogout,
     remoteAdapterEntry: normalizedAdapters.remote,
     sectionOutlineOptions: {
       includePlacer: resolvedSourceInspector?.includePlacer,

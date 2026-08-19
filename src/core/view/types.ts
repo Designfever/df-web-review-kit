@@ -16,7 +16,16 @@ import type {
 
 /** Draft form fields carried over when a draft is re-bound to another point. */
 type DraftItemFields = Partial<
-  Pick<ReviewItem, 'title' | 'comment' | 'assigneeId' | 'assigneeName'>
+  Pick<
+    ReviewItem,
+    | 'title'
+    | 'comment'
+    | 'status'
+    | 'assigneeId'
+    | 'assigneeName'
+    | 'assigneeIds'
+    | 'assigneeNames'
+  >
 >;
 
 /** Minimal item payload collected by the view before the app fills persistence metadata. */
@@ -25,8 +34,11 @@ export type CreateReviewItemInput = Pick<ReviewItem, 'kind' | 'comment'> &
     Pick<
       ReviewItem,
       | 'title'
+      | 'status'
       | 'assigneeId'
       | 'assigneeName'
+      | 'assigneeIds'
+      | 'assigneeNames'
       | 'scope'
       | 'viewport'
       | 'anchor'

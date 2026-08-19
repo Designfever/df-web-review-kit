@@ -60,4 +60,37 @@ describe('createReviewShellConfig', () => {
     expect(config).not.toHaveProperty('isSourceTreeEnabled');
     expect(config.isSourceTreeHoverOutlineEnabled).toBe(true);
   });
+
+  it('keeps the host-owned QA page selector', () => {
+    const qaPageSelector = {
+      options: [
+        { label: 'Home', value: 'home' },
+        { label: 'Story', value: 'story' },
+      ],
+      value: 'home',
+      onChange: () => undefined,
+    };
+
+    const config = createReviewShellConfig({
+      projectId: 'test',
+      pages: [{ href: '/' }],
+      adapters: { local: adapter },
+      qaPageSelector,
+    });
+
+    expect(config.qaPageSelector).toBe(qaPageSelector);
+  });
+
+  it('keeps the host-owned logout action', () => {
+    const onLogout = () => undefined;
+
+    const config = createReviewShellConfig({
+      projectId: 'test',
+      pages: [{ href: '/' }],
+      adapters: { local: adapter },
+      onLogout,
+    });
+
+    expect(config.onLogout).toBe(onLogout);
+  });
 });

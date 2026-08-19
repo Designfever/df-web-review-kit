@@ -143,7 +143,8 @@ export const reviewShellQaPanelStyle = `
     min-width: 0;
   }
 
-  .df-review-source-select {
+  .df-review-source-select,
+  .df-review-page-select {
     height: var(--df-review-control-height-md);
     min-height: var(--df-review-control-height-md);
     border: 1px solid var(--df-review-line-soft);
@@ -158,6 +159,12 @@ export const reviewShellQaPanelStyle = `
 
   .df-review-source-select {
     width: 104px;
+  }
+
+  .df-review-page-select {
+    flex: 0 1 128px;
+    width: 128px;
+    min-width: 72px;
   }
 
   .df-review-source-refresh {
@@ -773,6 +780,74 @@ export const reviewShellQaPanelStyle = `
   .df-review-item-assignee-select {
     cursor: pointer;
     outline: 0;
+    overflow: hidden;
+    list-style: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .df-review-item-assignee-select::-webkit-details-marker {
+    display: none;
+  }
+
+  .df-review-item-assignee-picker {
+    position: relative;
+  }
+
+  .df-review-item-assignee-menu {
+    position: absolute;
+    z-index: 20;
+    bottom: calc(100% + 6px);
+    left: 0;
+    display: grid;
+    gap: 3px;
+    width: 200px;
+    max-height: 260px;
+    overflow: auto;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-md);
+    padding: 7px;
+    background: var(--df-review-panel);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.36);
+  }
+
+  .df-review-item-assignee-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 30px;
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 7px;
+    color: var(--df-review-text);
+    font-size: var(--df-review-font-size-xs);
+    cursor: pointer;
+  }
+
+  .df-review-item-assignee-option:hover {
+    background: var(--df-review-line-soft);
+  }
+
+  .df-review-item-assignee-option input {
+    accent-color: var(--df-review-accent);
+  }
+
+  .df-review-item-assignee-menu-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    border-top: 1px solid var(--df-review-line-soft);
+    margin-top: 4px;
+    padding-top: 7px;
+  }
+
+  .df-review-item-assignee-menu-actions button {
+    min-height: 28px;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    padding: 0 9px;
+    color: var(--df-review-text);
+    background: var(--df-review-control);
+    cursor: pointer;
   }
 
 	  .df-review-item-assignee-select:focus-visible {
@@ -844,6 +919,7 @@ export const reviewShellQaPanelStyle = `
   }
 
   .df-review-source-select,
+  .df-review-page-select,
   .df-review-status-filter-select,
   .df-review-item-assignee-select,
   .df-review-item-status-select,

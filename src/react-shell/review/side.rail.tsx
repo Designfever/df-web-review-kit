@@ -2,6 +2,7 @@
 import {
   Bot as BotIcon,
   ListChecks as QaListIcon,
+  LogOut as LogOutIcon,
   Network as ComponentTreeIcon,
   Settings as SettingsIcon,
 } from 'lucide-react';
@@ -19,6 +20,7 @@ export const ReviewSideRail = ({
   presenceSessionId,
   onOpenAbout,
   onOpenInitialPrompt,
+  onLogout,
   onOpenSettings,
   onToggleFigmaImagesPanel,
   onToggleQaPanel,
@@ -32,6 +34,7 @@ export const ReviewSideRail = ({
   presenceSessionId: string;
   onOpenAbout: () => void;
   onOpenInitialPrompt: () => void;
+  onLogout?: () => void | Promise<void>;
   onOpenSettings: () => void;
   onToggleFigmaImagesPanel: () => void;
   onToggleQaPanel: () => void;
@@ -99,6 +102,21 @@ export const ReviewSideRail = ({
         </span>
       </button>
       <div className="df-review-side-actions">
+        {onLogout && (
+          <button
+            aria-label="Log out"
+            className="df-review-side-toggle"
+            data-review-tooltip="Log out"
+            data-review-tooltip-placement="left"
+            type="button"
+            onClick={() => void onLogout()}
+            title="Log out"
+          >
+            <span aria-hidden="true">
+              <LogOutIcon />
+            </span>
+          </button>
+        )}
         <button
           aria-label="Open initial prompt"
           className="df-review-side-toggle"

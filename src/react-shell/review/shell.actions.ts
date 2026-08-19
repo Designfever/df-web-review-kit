@@ -41,7 +41,7 @@ interface UpdateReviewItemStatusOptions {
 interface UpdateReviewItemAssigneeOptions {
   activeAdapterEntry: NormalizedReviewShellAdapter;
   item: ReviewItem;
-  assigneeId: string | null;
+  assigneeIds: string[];
   onRefreshReviewData: () => Promise<void>;
   onToast?: (message: string) => void;
 }
@@ -224,35 +224,39 @@ export const updateReviewItemStatus = async ({
 export const updateReviewItemAssignee = async ({
   activeAdapterEntry,
   item,
-  assigneeId,
+  assigneeIds,
   onRefreshReviewData,
   onToast,
 }: UpdateReviewItemAssigneeOptions) => {
   if (!activeAdapterEntry.updateAssignee) return;
 
-  const assigneeIndex = activeAdapterEntry.assigneeOptions.findIndex(
-    (assigneeOption) => assigneeOption.value === assigneeId
+  const nextAssigneeOptions = activeAdapterEntry.assigneeOptions.filter(
+    (option) => assigneeIds.includes(option.value)
   );
-  const assigneeOption = activeAdapterEntry.assigneeOptions[assigneeIndex];
-  const nextAssigneeId =
-    assigneeOption?.value ??
-    (assigneeId && item.assigneeId === assigneeId ? assigneeId : null);
-  const nextAssigneeName =
-    assigneeOption?.label ??
-    (nextAssigneeId ? item.assigneeName : undefined);
+  const nextAssigneeIds = nextAssigneeOptions.map((option) => option.value);
+  const nextAssigneeNames = nextAssigneeOptions.map((option) => option.label);
+  const currentAssigneeIds =
+    item.assigneeIds ?? (item.assigneeId ? [item.assigneeId] : []);
 
-  if ((item.assigneeId ?? null) === nextAssigneeId) {
+  if (currentAssigneeIds.join('\0') === nextAssigneeIds.join('\0')) {
     onToast?.('No QA assignee changes');
     return item;
   }
 
+  const assigneeOption = nextAssigneeOptions[0];
+
   const updated = await activeAdapterEntry.updateAssignee({
     id: item.id,
     item,
-    assigneeId: nextAssigneeId,
-    assigneeName: nextAssigneeName,
+    assigneeId: assigneeOption?.value ?? null,
+    assigneeName: assigneeOption?.label,
+    assigneeIds: nextAssigneeIds,
+    assigneeNames: nextAssigneeNames,
     assigneeOption,
-    assigneeIndex,
+    assigneeOptions: nextAssigneeOptions,
+    assigneeIndex: assigneeOption
+      ? activeAdapterEntry.assigneeOptions.indexOf(assigneeOption)
+      : -1,
   });
   await onRefreshReviewData();
   onToast?.('QA assignee updated');

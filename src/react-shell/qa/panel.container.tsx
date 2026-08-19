@@ -3,6 +3,7 @@
 // 컨트롤러/셸 결합 액션(restore/refresh/toast 등)만 셸에서 props 로 받는다.
 import { useReviewItemActions } from '../hooks/use.review.item.actions';
 import { useReviewShellActions } from '../store/shell.actions.context';
+import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellStore } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
 import { QaItemEditModal } from './item.edit.modal';
@@ -10,6 +11,7 @@ import { ReviewQaPanel } from './panel';
 import { useReviewQaPanelData } from './use.review.qa.panel.data';
 
 export const QaPanelContainer = () => {
+  const { qaPageSelector } = useReviewShellConfig();
   const {
     changeReviewSource,
     clearSelectedReviewItem,
@@ -98,6 +100,7 @@ export const QaPanelContainer = () => {
         copiedPromptKey={copiedPromptKey}
         qaStatusFilters={qaStatusFilters}
         qaStatusFilterCounts={qaStatusFilterCounts}
+        qaPageSelector={qaPageSelector}
         remoteAdapterEntry={remoteAdapterEntry}
         selectedItemId={selectedItemId}
         showSourceSelect={showSourceSelect}

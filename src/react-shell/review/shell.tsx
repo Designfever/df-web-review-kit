@@ -44,10 +44,12 @@ export const ReviewShell = (props: ReviewShellProps) => {
     [
       props.adapters,
       props.initialPrompt,
+      props.onLogout,
       props.qaPrompt,
       props.pages,
       props.presets,
       props.projectId,
+      props.qaPageSelector,
       props.reviewPathPrefix,
       props.sourceInspector,
       props.sourceRoot,

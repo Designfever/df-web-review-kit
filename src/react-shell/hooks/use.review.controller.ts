@@ -172,6 +172,7 @@ export const useReviewController = ({
     reviewUserId,
     reviewViewportPresets,
     fields: activeAdapterEntry.fields,
+    statusOptions: activeAdapterEntry.statusOptions,
     assigneeTitle: activeAdapterEntry.assigneeTitle,
     assigneeOptions: activeAdapterEntry.assigneeOptions,
     ruler,

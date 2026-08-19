@@ -170,6 +170,8 @@ export interface ReviewItem {
   comment: string;
   assigneeId?: string | null;
   assigneeName?: string;
+  assigneeIds?: string[];
+  assigneeNames?: string[];
   createdBy?: string;
   status: ReviewItemStatus;
   viewport: ViewportSize;
@@ -271,6 +273,10 @@ export interface WebReviewKitOptions {
   target?: WebReviewKitTarget | (() => WebReviewKitTarget | undefined);
   adjustmentLabel?: string;
   fields?: ReviewFieldsConfig;
+  statusOptions?: readonly {
+    value: ReviewItemStatus;
+    label: string;
+  }[];
   assigneeTitle?: string;
   assigneeOptions?: readonly ReviewAssigneeOption[];
   viewports?: {

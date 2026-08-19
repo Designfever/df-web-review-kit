@@ -727,10 +727,30 @@ class WebReviewKitApp {
     const viewport = input.viewport ?? getViewportSize(environment);
     const createdBy = this.options.userId?.trim();
     const title = input.title?.trim();
-    const assigneeId = input.assigneeId?.trim() || undefined;
-    const assigneeOption = this.options.assigneeOptions?.find(
-      (option) => option.value === assigneeId
+    const fallbackAssigneeId = input.assigneeId?.trim();
+    const assigneeIds = Array.from(
+      new Set(
+        (input.assigneeIds?.length
+          ? input.assigneeIds
+          : fallbackAssigneeId
+            ? [fallbackAssigneeId]
+            : []
+        )
+          .map((assigneeId) => assigneeId.trim())
+          .filter(Boolean)
+      )
     );
+    const assigneeNames = assigneeIds.map(
+      (assigneeId, index) =>
+        input.assigneeNames?.[index]?.trim() ||
+        (index === 0 ? input.assigneeName?.trim() : '') ||
+        this.options.assigneeOptions?.find(
+          (option) => option.value === assigneeId
+        )?.label ||
+        assigneeId
+    );
+    const assigneeId = assigneeIds[0];
+    const assigneeName = assigneeNames[0];
     const item: ReviewItem = {
       id: createId(),
       projectId: this.options.projectId,
@@ -745,9 +765,11 @@ class WebReviewKitApp {
       title: title || undefined,
       comment: input.comment,
       assigneeId,
-      assigneeName: input.assigneeName ?? assigneeOption?.label,
+      assigneeName,
+      assigneeIds: assigneeIds.length > 0 ? assigneeIds : undefined,
+      assigneeNames: assigneeNames.length > 0 ? assigneeNames : undefined,
       createdBy: createdBy || undefined,
-      status: 'todo',
+      status: input.status ?? 'todo',
       viewport,
       devicePixelRatio: environment.window.devicePixelRatio || 1,
       scroll: {

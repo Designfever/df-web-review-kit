@@ -36,6 +36,8 @@ export type DfSheetReviewUser = {
   name: string | null;
 };
 
+export type DfSheetReviewAssignee = ReviewShellAssigneeOption;
+
 export type ConnectDfSheetReviewOptions = {
   projectId: string;
   baseUrl?: string;
@@ -57,9 +59,11 @@ export type DfSheetReviewSession = {
   user: DfSheetReviewUser;
   expiresAt: number;
   listPages: () => Promise<DfSheetReviewPage[]>;
+  listAssignees: () => Promise<DfSheetReviewAssignee[]>;
   createAdapter: (options: DfSheetReviewAdapterOptions) => ReviewShellAdapter;
   figmaImageStore: ReviewFigmaImageStore;
   disconnect: () => void;
+  createLogoutUrl: () => Promise<string>;
 };
 
 type StoredSession = {
@@ -126,7 +130,14 @@ export async function connectDfSheetReview(
   const pendingKey = `${PENDING_KEY_PREFIX}${projectId}`;
   const cached = readStoredValue<StoredSession>(sessionKey);
   if (isStoredSession(cached, projectId) && cached.expiresAt > Date.now() + SESSION_CLOCK_SKEW_MS) {
-    return createSession({ baseUrl, requestFetch, sessionKey, stored: cached });
+    return createSession({
+      baseUrl,
+      pendingKey,
+      projectId,
+      requestFetch,
+      sessionKey,
+      stored: cached,
+    });
   }
   window.sessionStorage.removeItem(sessionKey);
 
@@ -171,9 +182,31 @@ export async function connectDfSheetReview(
       '',
       `${currentUrl.pathname}${pending.returnSearch}${currentUrl.hash}`
     );
-    return createSession({ baseUrl, requestFetch, sessionKey, stored });
+    return createSession({
+      baseUrl,
+      pendingKey,
+      projectId,
+      requestFetch,
+      sessionKey,
+      stored,
+    });
   }
 
+  const authorizeUrl = await createReviewAuthorizeUrl({
+    baseUrl,
+    pendingKey,
+    projectId,
+  });
+  window.location.assign(authorizeUrl.toString());
+  return null;
+}
+
+async function createReviewAuthorizeUrl(input: {
+  baseUrl: string;
+  pendingKey: string;
+  projectId: string;
+}) {
+  const currentUrl = new URL(window.location.href);
   const redirectUri = `${currentUrl.origin}${currentUrl.pathname}`;
   const verifier = randomBase64Url(32);
   const nextPending: PendingLogin = {
@@ -182,19 +215,20 @@ export async function connectDfSheetReview(
     redirectUri,
     returnSearch: currentUrl.search,
   };
-  window.sessionStorage.setItem(pendingKey, JSON.stringify(nextPending));
+  window.sessionStorage.setItem(input.pendingKey, JSON.stringify(nextPending));
 
-  const authorizeUrl = new URL('/api/review/sso/authorize', baseUrl);
-  authorizeUrl.searchParams.set('project_id', projectId);
+  const authorizeUrl = new URL('/api/review/sso/authorize', input.baseUrl);
+  authorizeUrl.searchParams.set('project_id', input.projectId);
   authorizeUrl.searchParams.set('redirect_uri', redirectUri);
   authorizeUrl.searchParams.set('state', nextPending.state);
   authorizeUrl.searchParams.set('code_challenge', await createPkceChallenge(verifier));
-  window.location.assign(authorizeUrl.toString());
-  return null;
+  return authorizeUrl;
 }
 
 function createSession(input: {
   baseUrl: string;
+  pendingKey: string;
+  projectId: string;
   requestFetch: typeof fetch;
   sessionKey: string;
   stored: StoredSession;
@@ -214,6 +248,8 @@ function createSession(input: {
     user: input.stored.user,
     expiresAt: input.stored.expiresAt,
     listPages: () => request<DfSheetReviewPage[]>('/api/review/pages'),
+    listAssignees: () =>
+      request<DfSheetReviewAssignee[]>('/api/review/assignees'),
     createAdapter: (options) =>
       createDfSheetSessionAdapter({
         ...options,
@@ -226,8 +262,18 @@ function createSession(input: {
       endpoint: `${input.baseUrl}/api/review/figma-images`,
       fetch: input.requestFetch,
       headers: { Authorization: `Bearer ${input.stored.accessToken}` },
+      token: () => null,
     }),
     disconnect,
+    createLogoutUrl: async () => {
+      const authorizeUrl = await createReviewAuthorizeUrl(input);
+      const logoutUrl = new URL('/api/auth/logout', input.baseUrl);
+      logoutUrl.searchParams.set(
+        'from',
+        `${authorizeUrl.pathname}${authorizeUrl.search}`
+      );
+      return logoutUrl.toString();
+    },
   };
 }
 
@@ -337,8 +383,19 @@ function createDfSheetSessionAdapter(
     updateStatus: ({ id, status }) => core.update(id, { status }),
     assigneeTitle: options.assigneeTitle,
     assigneeOptions: options.assigneeOptions ?? [],
-    updateAssignee: ({ id, assigneeId, assigneeName }) =>
-      core.update(id, { assigneeId, assigneeName }),
+    updateAssignee: ({
+      id,
+      assigneeId,
+      assigneeName,
+      assigneeIds,
+      assigneeNames,
+    }) =>
+      core.update(id, {
+        assigneeId,
+        assigneeName,
+        assigneeIds,
+        assigneeNames,
+      }),
   };
 }
 

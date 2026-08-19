@@ -79,8 +79,19 @@ function normalizeLegacyAdapterMap(
     assigneeOptions: [],
     defaultUserId: adapters.defaultUserId?.trim() ?? '',
     updateStatus: ({ id, status }) => adapters.local.update(id, { status }),
-    updateAssignee: ({ id, assigneeId, assigneeName }) =>
-      adapters.local.update(id, { assigneeId, assigneeName }),
+    updateAssignee: ({
+      id,
+      assigneeId,
+      assigneeName,
+      assigneeIds,
+      assigneeNames,
+    }) =>
+      adapters.local.update(id, {
+        assigneeId,
+        assigneeName,
+        assigneeIds,
+        assigneeNames,
+      }),
     syncSubmission: ({ id, patch }) => adapters.local.update(id, patch),
     uploadAttachment: adapters.local.uploadAttachment,
     writeModes: [...ALL_REVIEW_WRITE_MODES],
@@ -99,8 +110,19 @@ function normalizeLegacyAdapterMap(
         updateStatus: ({ id, status }) =>
           adapters.remote?.update(id, { status }) ??
           Promise.reject(new Error('Remote adapter is not available.')),
-        updateAssignee: ({ id, assigneeId, assigneeName }) =>
-          adapters.remote?.update(id, { assigneeId, assigneeName }) ??
+        updateAssignee: ({
+          id,
+          assigneeId,
+          assigneeName,
+          assigneeIds,
+          assigneeNames,
+        }) =>
+          adapters.remote?.update(id, {
+            assigneeId,
+            assigneeName,
+            assigneeIds,
+            assigneeNames,
+          }) ??
           Promise.reject(new Error('Remote adapter is not available.')),
         uploadAttachment: adapters.remote.uploadAttachment,
         writeModes: [],
@@ -141,10 +163,19 @@ function normalizeShellAdapter(
     adapterConfig.updateAssignee
       ? adapterConfig.updateAssignee
       : updateAdapter
-        ? ({ id, assigneeId, assigneeName, assigneeOption }) =>
+        ? ({
+            id,
+            assigneeId,
+            assigneeName,
+            assigneeIds,
+            assigneeNames,
+            assigneeOption,
+          }) =>
             updateAdapter(id, {
               assigneeId,
               assigneeName: assigneeName ?? assigneeOption?.label,
+              assigneeIds,
+              assigneeNames,
             })
         : undefined;
   const writeModes = normalizeWriteModes(

@@ -34,6 +34,7 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Architecture and runtime logic](docs/architecture.md): core runtime, React shell, coordinate, anchor, sitemap, and feature ownership boundaries.
 - [Figma overlay](docs/figma-overlay.md): host helper behavior and package-managed image overlay state.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
+- [Release notes 0.10.2](docs/release-notes-0.10.2.md): df-sheet page/logout controls and status-aware multi-owner QA workflows.
 - [Release notes 0.10.1](docs/release-notes-0.10.1.md): reliable pointer interaction for review-shell controls.
 - [Release notes 0.10.0](docs/release-notes-0.10.0.md): framework-neutral install, df-login session, df-sheet QA, and authenticated Figma images.
 

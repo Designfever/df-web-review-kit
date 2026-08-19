@@ -11,6 +11,7 @@ import type { NormalizedReviewShellAdapter } from '../adapters';
 import { REVIEW_QA_STATUS_FILTERS } from '../constants';
 import type {
   ReviewQaStatusFilter,
+  ReviewShellQaPageSelector,
   ReviewShellStatusOption,
 } from '../types';
 import { isDefaultReviewQaStatusFilters } from './status.filter';
@@ -24,6 +25,7 @@ interface QaPanelHeaderProps {
   label: ReviewSource;
   qaStatusFilters: readonly ReviewQaStatusFilter[];
   qaStatusFilterCounts: ReadonlyMap<ReviewQaStatusFilter, number>;
+  qaPageSelector?: ReviewShellQaPageSelector;
   showSourceSelect: boolean;
   source: ReviewSource;
   sourceEntries: NormalizedReviewShellAdapter[];
@@ -43,6 +45,7 @@ export const QaPanelHeader = ({
   label,
   qaStatusFilters,
   qaStatusFilterCounts,
+  qaPageSelector,
   showSourceSelect,
   source,
   sourceEntries,
@@ -60,11 +63,29 @@ export const QaPanelHeader = ({
     <div className="df-review-list-header">
       <div className="df-review-list-title">
         <span className="df-review-list-meta">
-          <span>
-            {isAllQaVisible
-              ? `${displayLabel} QA · All pages`
-              : `${displayLabel} QA`}
-          </span>
+          {!qaPageSelector && (
+            <span>
+              {isAllQaVisible
+                ? `${displayLabel} QA · All pages`
+                : `${displayLabel} QA`}
+            </span>
+          )}
+          {qaPageSelector && qaPageSelector.options.length > 1 && (
+            <select
+              aria-label="df-sheet page"
+              className="df-review-page-select"
+              value={qaPageSelector.value}
+              onChange={(event) =>
+                qaPageSelector.onChange(event.currentTarget.value)
+              }
+            >
+              {qaPageSelector.options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          )}
           <strong
             title={`${activeRemainingItemCount} remaining of ${activeItemCount}`}
           >

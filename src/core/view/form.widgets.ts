@@ -1,26 +1,19 @@
 // DOM/Area draft 폼이 공유하는 입력 위젯 빌더 모음.
 // 모든 함수는 상태를 직접 읽지 않고 값/콜백을 인자로 받는다.
-import type { WebReviewKitOptions } from '../../types';
+import {
+  REVIEW_WORKFLOW_STATUS_OPTIONS,
+  normalizeReviewItemStatus,
+} from '../../status';
+import type { ReviewItemStatus, WebReviewKitOptions } from '../../types';
 import { createSpinner } from './icons';
 
-/** Finds the configured assignee option for a stored assignee id. */
-function getAssigneeOption(
-  options: WebReviewKitOptions,
-  assigneeId: string | null | undefined
-) {
-  if (!assigneeId) return undefined;
-  return options.assigneeOptions?.find(
-    (option) => option.value === assigneeId
-  );
-}
+const getStatusOptions = (options: WebReviewKitOptions) =>
+  options.statusOptions?.length
+    ? options.statusOptions
+    : REVIEW_WORKFLOW_STATUS_OPTIONS;
 
-/** Resolves the display name for an assignee id, if it is still configured. */
-function getAssigneeName(
-  options: WebReviewKitOptions,
-  assigneeId: string | null | undefined
-) {
-  return getAssigneeOption(options, assigneeId)?.label;
-}
+const getAssigneeName = (options: WebReviewKitOptions, assigneeId: string) =>
+  options.assigneeOptions?.find((option) => option.value === assigneeId)?.label;
 
 /** Title input is opt-in per host project. */
 export function isTitleFieldEnabled(options: WebReviewKitOptions) {
@@ -40,51 +33,128 @@ export function createDraftTitleInput(
   return input;
 }
 
-/**
- * Assignee dropdown. Returns undefined when the host has no assignee options,
- * so callers can skip appending it entirely.
- */
-export function createDraftAssigneeSelect(
+export function createDraftStatusSelect(
   options: WebReviewKitOptions,
-  value: string | null | undefined,
-  fallbackLabel: string | undefined,
-  onChange: (assigneeId: string | null, assigneeName?: string) => void
+  value: ReviewItemStatus | undefined,
+  onChange: (status: ReviewItemStatus) => void
+) {
+  const statusOptions = getStatusOptions(options);
+  const selectedStatus =
+    statusOptions.find((option) => option.value === value)?.value ??
+    statusOptions[0]?.value ??
+    'todo';
+
+  const select = document.createElement('select');
+  select.setAttribute('aria-label', 'QA status');
+
+  const syncStatusClass = () => {
+    select.className = `dfwr-select dfwr-status-select is-status-${normalizeReviewItemStatus(
+      select.value as ReviewItemStatus
+    )}`;
+  };
+
+  statusOptions.forEach((statusOption) => {
+    const option = document.createElement('option');
+    option.value = statusOption.value;
+    option.textContent = statusOption.label;
+    select.append(option);
+  });
+
+  select.value = selectedStatus;
+  syncStatusClass();
+  select.addEventListener('change', () => {
+    syncStatusClass();
+    onChange(select.value as ReviewItemStatus);
+  });
+  return select;
+}
+
+/** Multi-owner picker shared by DOM and Area draft forms. */
+export function createDraftAssigneePicker(
+  options: WebReviewKitOptions,
+  valueIds: readonly string[],
+  onChange: (assigneeIds: string[], assigneeNames: string[]) => void
 ) {
   const assigneeOptions = options.assigneeOptions ?? [];
   if (assigneeOptions.length === 0) return undefined;
   const assigneeTitle = options.assigneeTitle?.trim() || 'Assignee';
+  const selectedIds = new Set(valueIds);
 
-  const select = document.createElement('select');
-  select.className = 'dfwr-select';
+  const details = document.createElement('details');
+  details.className = 'dfwr-assignee-picker';
 
-  const emptyOption = document.createElement('option');
-  emptyOption.value = '';
-  emptyOption.textContent = assigneeTitle;
-  select.append(emptyOption);
+  const summary = document.createElement('summary');
+  summary.className = 'dfwr-select dfwr-assignee-summary';
+  summary.setAttribute('aria-label', assigneeTitle);
 
-  // 저장된 담당자가 옵션 목록에서 빠졌어도 선택 값이 유실되지 않게 유지한다.
-  const hasUnknownAssignee =
-    Boolean(value) && !assigneeOptions.some((option) => option.value === value);
-  if (hasUnknownAssignee && value) {
-    const option = document.createElement('option');
-    option.value = value;
-    option.textContent = fallbackLabel ?? value;
-    select.append(option);
-  }
+  const menu = document.createElement('div');
+  menu.className = 'dfwr-assignee-menu';
+
+  const getSelectedOptions = () =>
+    Array.from(
+      menu.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked')
+    ).map((input) => ({
+      value: input.value,
+      label: input.dataset.label ?? input.value,
+    }));
+
+  const updateSummary = () => {
+    const selected = getSelectedOptions();
+    const labels = selected.map((option) => option.label);
+    summary.textContent = labels.join(', ') || assigneeTitle;
+    summary.title = labels.join(', ');
+  };
 
   assigneeOptions.forEach((assigneeOption) => {
-    const option = document.createElement('option');
-    option.value = assigneeOption.value;
-    option.textContent = assigneeOption.label;
-    select.append(option);
+    const label = document.createElement('label');
+    label.className = 'dfwr-assignee-option';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.value = assigneeOption.value;
+    input.checked = selectedIds.has(assigneeOption.value);
+    input.dataset.label = assigneeOption.label;
+    const text = document.createElement('span');
+    text.textContent = assigneeOption.label;
+    input.addEventListener('change', () => {
+      const selected = getSelectedOptions();
+      updateSummary();
+      onChange(
+        selected.map((option) => option.value),
+        selected.map((option) => option.label)
+      );
+    });
+    label.append(input, text);
+    menu.append(label);
   });
 
-  select.value = value ?? '';
-  select.addEventListener('change', () => {
-    onChange(select.value || null, getAssigneeName(options, select.value));
+  const menuActions = document.createElement('div');
+  menuActions.className = 'dfwr-assignee-menu-actions';
+  const clearButton = document.createElement('button');
+  clearButton.type = 'button';
+  clearButton.textContent = 'Clear';
+  clearButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    menu.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach(
+      (input) => {
+        input.checked = false;
+      }
+    );
+    updateSummary();
+    onChange([], []);
   });
+  const applyButton = document.createElement('button');
+  applyButton.type = 'button';
+  applyButton.textContent = 'Apply';
+  applyButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    details.open = false;
+  });
+  menuActions.append(clearButton, applyButton);
+  menu.append(menuActions);
+  details.append(summary, menu);
+  updateSummary();
 
-  return select;
+  return details;
 }
 
 /** Collects trimmed form values in the shape createItem expects. */
@@ -92,16 +162,28 @@ export function getDraftFields(
   options: WebReviewKitOptions,
   titleInput: HTMLInputElement | undefined,
   textarea: HTMLTextAreaElement,
-  assigneeSelect: HTMLSelectElement | undefined
+  statusSelect: HTMLSelectElement,
+  assigneePicker: HTMLDetailsElement | undefined
 ) {
   const title = titleInput?.value.trim();
   const comment = textarea.value.trim();
-  const assigneeId = assigneeSelect?.value.trim() || undefined;
+  const selectedAssignees = Array.from(
+    assigneePicker?.querySelectorAll<HTMLInputElement>(
+      'input[type="checkbox"]:checked'
+    ) ?? []
+  );
+  const assigneeIds = selectedAssignees.map((input) => input.value);
+  const assigneeNames = assigneeIds.map(
+    (assigneeId) => getAssigneeName(options, assigneeId) || assigneeId
+  );
   return {
     title: title || undefined,
     comment,
-    assigneeId,
-    assigneeName: getAssigneeName(options, assigneeId),
+    status: statusSelect.value as ReviewItemStatus,
+    assigneeId: assigneeIds[0],
+    assigneeName: assigneeNames[0],
+    assigneeIds,
+    assigneeNames,
   };
 }
 

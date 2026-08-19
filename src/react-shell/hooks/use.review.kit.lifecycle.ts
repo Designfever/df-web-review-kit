@@ -21,10 +21,12 @@ import { setTargetScrollbarHidden } from '../target/target';
 import { getViewportPresetKind } from '../viewport';
 import { bindReviewFrameNavigation } from './review.frame.navigation';
 import { getReviewKitTarget } from './review.kit.target';
+import type { ReviewShellStatusOption } from '../types';
 
 interface UseReviewKitLifecycleOptions {
   adapter: WebReviewKitAdapter;
   fields: Required<Pick<ReviewFieldsConfig, 'title'>>;
+  statusOptions: readonly ReviewShellStatusOption[];
   assigneeTitle: string;
   assigneeOptions: readonly ReviewAssigneeOption[];
   cleanupTargetRef: MutableRefObject<(() => void) | null>;
@@ -57,6 +59,7 @@ interface UseReviewKitLifecycleOptions {
 export const useReviewKitLifecycle = ({
   adapter,
   fields,
+  statusOptions,
   assigneeTitle,
   assigneeOptions,
   cleanupTargetRef,
@@ -118,6 +121,7 @@ export const useReviewKitLifecycle = ({
       userId: reviewUserId.trim() || undefined,
       adapter,
       fields,
+      statusOptions,
       assigneeTitle,
       assigneeOptions,
       target: () => getReviewKitTarget({ frameScrollRef, iframeRef }),
@@ -163,6 +167,7 @@ export const useReviewKitLifecycle = ({
   }, [
     adapter,
     fields,
+    statusOptions,
     assigneeTitle,
     assigneeOptions,
     cleanupTargetRef,

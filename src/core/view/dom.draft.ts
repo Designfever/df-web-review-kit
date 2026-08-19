@@ -35,9 +35,10 @@ import {
   withDraftAdjustmentComment,
 } from './draft.text';
 import {
-  createDraftAssigneeSelect,
+  createDraftAssigneePicker,
   createDraftDragHandle,
   createDraftError,
+  createDraftStatusSelect,
   createDraftTitleInput,
   createFormActions,
   getDraftFields,
@@ -193,19 +194,37 @@ export function createDomDraftLayer(
     onPasteComplete: () => config.actions.render(),
   });
 
-  const assigneeSelect = createDraftAssigneeSelect(
+  const statusSelect = createDraftStatusSelect(
     config.options,
-    draft.assigneeId,
-    draft.assigneeName,
-    (assigneeId, assigneeName) => {
+    draft.status,
+    (status) => {
+      const domDraft = config.getState().domDraft;
+      if (!domDraft) return;
+      config.actions.setDomDraft({ ...domDraft, status });
+    }
+  );
+  const draftAssigneeIds =
+    draft.assigneeIds ?? (draft.assigneeId ? [draft.assigneeId] : []);
+  const assigneePicker = createDraftAssigneePicker(
+    config.options,
+    draftAssigneeIds,
+    (assigneeIds, assigneeNames) => {
       const domDraft = config.getState().domDraft;
       if (!domDraft) return;
       config.actions.setDomDraft({
         ...domDraft,
-        assigneeId,
-        assigneeName,
+        assigneeId: assigneeIds[0],
+        assigneeName: assigneeNames[0],
+        assigneeIds,
+        assigneeNames,
       });
     }
+  );
+  const workflowFields = document.createElement('div');
+  workflowFields.className = 'dfwr-workflow-fields';
+  workflowFields.append(
+    statusSelect,
+    ...(assigneePicker ? [assigneePicker] : [])
   );
 
   const saveDraft = () => {
@@ -214,7 +233,8 @@ export function createDomDraftLayer(
       config.options,
       titleInput,
       textarea,
-      assigneeSelect
+      statusSelect,
+      assigneePicker
     );
     const comment = fields.comment;
     const hasAttachments = Boolean(currentDraft.attachments?.length);
@@ -234,8 +254,11 @@ export function createDomDraftLayer(
         currentDraft,
         config.options
       ),
+      status: fields.status,
       assigneeId: fields.assigneeId,
       assigneeName: fields.assigneeName,
+      assigneeIds: fields.assigneeIds,
+      assigneeNames: fields.assigneeNames,
       viewport: currentDraft.viewport,
       anchor: currentDraft.anchor,
       marker: currentDraft.marker,
@@ -295,7 +318,7 @@ export function createDomDraftLayer(
     ...(titleInput ? [titleInput] : []),
     textarea,
     ...(attachmentQueue ? [attachmentQueue] : []),
-    ...(assigneeSelect ? [assigneeSelect] : []),
+    workflowFields,
     ...(error ? [error] : []),
     actions
   );
@@ -632,8 +655,11 @@ function attachDraftPinDrag(
     const fields = {
       title: currentDraft?.title,
       comment: textarea.value,
+      status: currentDraft?.status,
       assigneeId: currentDraft?.assigneeId,
       assigneeName: currentDraft?.assigneeName,
+      assigneeIds: currentDraft?.assigneeIds,
+      assigneeNames: currentDraft?.assigneeNames,
     };
     void config.actions.bindElementDraftToPoint(nextPoint, fields);
   });

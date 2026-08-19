@@ -14,6 +14,7 @@ import { QaItemCard } from './item.card';
 import { QaPanelHeader } from './panel.header';
 import type {
   ReviewQaStatusFilter,
+  ReviewShellQaPageSelector,
   ReviewShellViewportKind,
 } from '../types';
 
@@ -35,6 +36,7 @@ interface ReviewQaPanelProps {
   copiedPromptKey: string | null;
   qaStatusFilters: readonly ReviewQaStatusFilter[];
   qaStatusFilterCounts: ReadonlyMap<ReviewQaStatusFilter, number>;
+  qaPageSelector?: ReviewShellQaPageSelector;
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
   selectedItemId: string | null;
   showSourceSelect: boolean;
@@ -46,7 +48,7 @@ interface ReviewQaPanelProps {
   ) => Promise<void>;
   onChangeItemAssignee: (
     item: ReviewItem,
-    assigneeId: string | null
+    assigneeIds: string[]
   ) => Promise<void>;
   onClearSelectedItem: () => void;
   onChangeReviewSource: (nextSource: ReviewSource) => void;
@@ -82,6 +84,7 @@ export const ReviewQaPanel = ({
   copiedPromptKey,
   qaStatusFilters,
   qaStatusFilterCounts,
+  qaPageSelector,
   remoteAdapterEntry,
   selectedItemId,
   showSourceSelect,
@@ -145,6 +148,7 @@ export const ReviewQaPanel = ({
             label={activeAdapterEntry.label}
             qaStatusFilters={qaStatusFilters}
             qaStatusFilterCounts={qaStatusFilterCounts}
+            qaPageSelector={qaPageSelector}
             showSourceSelect={showSourceSelect}
             source={source}
             sourceEntries={sourceEntries}

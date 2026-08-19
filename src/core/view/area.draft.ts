@@ -22,9 +22,10 @@ import {
   getSelectionMetricLines,
 } from './draft.text';
 import {
-  createDraftAssigneeSelect,
+  createDraftAssigneePicker,
   createDraftDragHandle,
   createDraftError,
+  createDraftStatusSelect,
   createDraftTitleInput,
   createFormActions,
   getDraftFields,
@@ -96,19 +97,38 @@ export function createAreaForm(context: DraftLayerContext) {
     onPasteComplete: () => config.actions.render(),
   });
 
-  const assigneeSelect = createDraftAssigneeSelect(
+  const statusSelect = createDraftStatusSelect(
     config.options,
-    areaDraft.assigneeId,
-    areaDraft.assigneeName,
-    (assigneeId, assigneeName) => {
+    areaDraft.status,
+    (status) => {
+      const draft = config.getState().areaDraft;
+      if (!draft) return;
+      config.actions.setAreaDraft({ ...draft, status });
+    }
+  );
+  const draftAssigneeIds =
+    areaDraft.assigneeIds ??
+    (areaDraft.assigneeId ? [areaDraft.assigneeId] : []);
+  const assigneePicker = createDraftAssigneePicker(
+    config.options,
+    draftAssigneeIds,
+    (assigneeIds, assigneeNames) => {
       const draft = config.getState().areaDraft;
       if (!draft) return;
       config.actions.setAreaDraft({
         ...draft,
-        assigneeId,
-        assigneeName,
+        assigneeId: assigneeIds[0],
+        assigneeName: assigneeNames[0],
+        assigneeIds,
+        assigneeNames,
       });
     }
+  );
+  const workflowFields = document.createElement('div');
+  workflowFields.className = 'dfwr-workflow-fields';
+  workflowFields.append(
+    statusSelect,
+    ...(assigneePicker ? [assigneePicker] : [])
   );
 
   const actions = createFormActions({
@@ -121,7 +141,8 @@ export function createAreaForm(context: DraftLayerContext) {
         config.options,
         titleInput,
         textarea,
-        assigneeSelect
+        statusSelect,
+        assigneePicker
       );
       const comment = fields.comment;
       // 코멘트도 첨부도 없는 빈 draft 는 저장하지 않는다.
@@ -130,8 +151,11 @@ export function createAreaForm(context: DraftLayerContext) {
         kind: 'area',
         title: fields.title,
         comment,
+        status: fields.status,
         assigneeId: fields.assigneeId,
         assigneeName: fields.assigneeName,
+        assigneeIds: fields.assigneeIds,
+        assigneeNames: fields.assigneeNames,
         viewport: draft.viewport,
         anchor: draft.anchor,
         marker: draft.marker,
@@ -169,7 +193,7 @@ export function createAreaForm(context: DraftLayerContext) {
     ...(titleInput ? [titleInput] : []),
     textarea,
     ...(attachmentQueue ? [attachmentQueue] : []),
-    ...(assigneeSelect ? [assigneeSelect] : []),
+    workflowFields,
     ...(error ? [error] : []),
     actions
   );

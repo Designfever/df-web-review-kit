@@ -33,7 +33,16 @@ import type {
 } from './draft';
 
 export type DraftItemFields = Partial<
-  Pick<ReviewItem, 'title' | 'comment' | 'assigneeId' | 'assigneeName'>
+  Pick<
+    ReviewItem,
+    | 'title'
+    | 'comment'
+    | 'status'
+    | 'assigneeId'
+    | 'assigneeName'
+    | 'assigneeIds'
+    | 'assigneeNames'
+  >
 >;
 export type ElementDraftFields = DraftItemFields &
   Partial<Pick<DomDraft, 'adjustment' | 'isSelectionOnly'>>;

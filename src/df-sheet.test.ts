@@ -18,6 +18,7 @@ const jsonResponse = (data: unknown, status = 200) =>
 
 describe('connectDfSheetReview', () => {
   beforeEach(() => {
+    window.localStorage.clear();
     window.sessionStorage.clear();
     window.history.replaceState(null, '', '/review');
   });
@@ -40,6 +41,12 @@ describe('connectDfSheetReview', () => {
       if (url.endsWith('/api/review/pages')) {
         return jsonResponse({ success: true, data: [{ id: 'page-1', name: 'QA' }] });
       }
+      if (url.endsWith('/api/review/assignees')) {
+        return jsonResponse({
+          success: true,
+          data: [{ value: 'hyeji', label: '안혜지' }],
+        });
+      }
       if (url.includes('/api/review/items?')) {
         return jsonResponse({ success: true, data: [] });
       }
@@ -56,8 +63,25 @@ describe('connectDfSheetReview', () => {
     });
 
     expect(session?.user.user_id).toBe('hyungjoo');
+    const logoutUrl = new URL(await session!.createLogoutUrl());
+    expect(logoutUrl.origin).toBe('https://sheet.example');
+    expect(logoutUrl.pathname).toBe('/api/auth/logout');
+
+    const authorizePath = logoutUrl.searchParams.get('from');
+    expect(authorizePath).toMatch(/^\/api\/review\/sso\/authorize\?/);
+    const authorizeUrl = new URL(authorizePath!, logoutUrl.origin);
+    expect(authorizeUrl.searchParams.get('project_id')).toBe(projectId);
+    expect(authorizeUrl.searchParams.get('redirect_uri')).toBe(
+      'http://localhost/review'
+    );
+    expect(authorizeUrl.searchParams.get('state')).toHaveLength(43);
+    expect(authorizeUrl.searchParams.get('code_challenge')).toHaveLength(43);
+    expect(window.sessionStorage.getItem(pendingKey)).not.toBeNull();
     await expect(session?.listPages()).resolves.toEqual([
       { id: 'page-1', name: 'QA' },
+    ]);
+    await expect(session?.listAssignees()).resolves.toEqual([
+      { value: 'hyeji', label: '안혜지' },
     ]);
     await expect(
       session?.createAdapter({ pageId: 'page-1' }).list({
@@ -72,6 +96,9 @@ describe('connectDfSheetReview', () => {
         pageUrl: '/story',
       })
     ).resolves.toEqual([]);
+
+    session?.disconnect();
+    expect(window.sessionStorage.getItem(sessionKey)).toBeNull();
   });
 
   it('exchanges a matching PKCE callback and removes the code from the URL', async () => {
@@ -139,5 +166,44 @@ describe('connectDfSheetReview', () => {
     await expect(session?.listPages()).rejects.toBeInstanceOf(
       DfSheetReviewSessionExpiredError
     );
+  });
+
+  it('does not send a legacy browser Figma token for links or files', async () => {
+    window.localStorage.setItem('figma-token', 'legacy-token');
+    window.sessionStorage.setItem(
+      sessionKey,
+      JSON.stringify({
+        accessToken: 'short-token',
+        expiresAt: Date.now() + 300_000,
+        project: { id: projectId, key: 'IKAOS' },
+        user: { user_id: 'hyungjoo', name: 'Hyung-Joo' },
+      })
+    );
+    const request = vi.fn<typeof fetch>(async (_input, init) => {
+      const headers = new Headers(init?.headers);
+      expect(headers.get('Authorization')).toBe('Bearer short-token');
+      expect(headers.has('X-Figma-Token')).toBe(false);
+      return jsonResponse({ success: true, data: { id: 'figma-1' } });
+    });
+    const session = await connectDfSheetReview({
+      projectId,
+      baseUrl: 'https://sheet.example',
+      fetch: request,
+    });
+
+    await session?.figmaImageStore.addImage({
+      target: { type: 'route', projectId, pageUrl: '/story' },
+      figmaUrl: 'https://www.figma.com/design/FILE/Example?node-id=1-2',
+    });
+    await session?.figmaImageStore.addImage({
+      target: { type: 'route', projectId, pageUrl: '/story' },
+      figmaUrl: 'dropped-image.png',
+      asset: {
+        dataUrl: 'data:image/png;base64,aW1hZ2U=',
+        imageFormat: 'png',
+        mimeType: 'image/png',
+      },
+    });
+    expect(request).toHaveBeenCalledTimes(2);
   });
 });

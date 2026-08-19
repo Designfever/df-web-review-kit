@@ -94,14 +94,14 @@ export function useReviewItemActions({
 
   const changeItemAssignee = async (
     item: ReviewItem,
-    assigneeId: string | null
+    assigneeIds: string[]
   ) => {
     try {
       await withItemMutation(item.id, () =>
         updateReviewItemAssignee({
           activeAdapterEntry,
           item,
-          assigneeId,
+          assigneeIds,
           onRefreshReviewData,
           onToast: showToast,
         })

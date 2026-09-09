@@ -182,6 +182,9 @@ const getOutsideMarkerTop = (
 };
 
 export const ReviewOutsideMarkers = () => {
+  const isDesignInspecting = useReviewShellStore(
+    (state) => state.isListVisible && state.sidePanel === 'design-inspector' && state.designInspectorMode === 'pick'
+  );
   const { reviewViewportPresets } = useReviewShellConfig();
   const { frameScrollRef, iframeRef } = useReviewShellRefs();
   const { restoreReviewItem } = useReviewShellActions();
@@ -272,7 +275,7 @@ export const ReviewOutsideMarkers = () => {
     size,
   ]);
 
-  if (markers.length === 0) return null;
+  if (isDesignInspecting || markers.length === 0) return null;
 
   return (
     <div className="df-review-outside-marker-layer" aria-label="QA markers">

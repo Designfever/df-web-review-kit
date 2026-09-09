@@ -97,12 +97,16 @@ export const useReviewShellEffects = ({
     };
   }, [
     frameScrollRef,
-    isListVisible,
     size.height,
     size.width,
     syncTargetViewport,
     targetSrc,
   ]);
+
+  // Opening a tool panel must not reset the page position being inspected.
+  useEffect(() => {
+    syncTargetViewport();
+  }, [isListVisible, syncTargetViewport]);
 
   useEffect(() => {
     const targetDocument = iframeRef.current?.contentDocument;

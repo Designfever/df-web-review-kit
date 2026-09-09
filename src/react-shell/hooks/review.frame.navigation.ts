@@ -46,6 +46,7 @@ export const bindReviewFrameNavigation = ({
   };
 
   const handleClick = (event: MouseEvent) => {
+    if (targetDocument.documentElement.hasAttribute('data-df-review-design-inspecting')) return;
     if (event.defaultPrevented || event.button !== 0) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return;

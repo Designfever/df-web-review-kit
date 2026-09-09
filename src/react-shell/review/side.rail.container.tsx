@@ -12,6 +12,7 @@ export const ReviewSideRailContainer = () => {
     openInitialPrompt,
     openSettings,
     toggleFigmaImagesPanel,
+    toggleDesignInspectorPanel,
     toggleQaPanel,
     toggleSourceTreePanel,
   } = useReviewShellActions();
@@ -34,6 +35,7 @@ export const ReviewSideRailContainer = () => {
         sidePanel === 'figma-images'
       }
       isQaPanelVisible={isListVisible && sidePanel === 'qa'}
+      isDesignInspectorVisible={isListVisible && sidePanel === 'design-inspector'}
       isSourceTreePanelVisible={isListVisible && sidePanel === 'source'}
       presenceSessionId={presenceSessionId}
       onOpenAbout={openAbout}
@@ -41,6 +43,7 @@ export const ReviewSideRailContainer = () => {
       onLogout={onLogout}
       onOpenSettings={openSettings}
       onToggleFigmaImagesPanel={toggleFigmaImagesPanel}
+      onToggleDesignInspector={toggleDesignInspectorPanel}
       onToggleQaPanel={toggleQaPanel}
       onToggleSourceTreePanel={toggleSourceTreePanel}
     />

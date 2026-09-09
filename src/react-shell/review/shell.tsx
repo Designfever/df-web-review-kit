@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import type { ReviewShellProps } from '../types';
+import { DesignInspectorPanelContainer } from '../design-inspector/panel.container';
 import { FigmaImagesPanelContainer } from '../figma/images.panel.container';
 import { QaPanelContainer } from '../qa/panel.container';
 import { SectionOutlineContainer } from './section.outline.container';
@@ -85,6 +86,7 @@ const ReviewShellContent = (props: ReviewShellProps) => {
           qaPanel: <QaPanelContainer />,
           figmaImagesPanel: <FigmaImagesPanelContainer />,
           sourceTreePanel: <SectionOutlineContainer />,
+          designInspectorPanel: <DesignInspectorPanelContainer />,
           targetFrame: <ReviewTargetFrame />,
           sourceInspector: <SourceInspectorOverlayContainer />,
         }}

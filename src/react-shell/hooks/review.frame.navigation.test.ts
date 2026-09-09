@@ -29,11 +29,26 @@ const bindNavigation = (
   });
 
 afterEach(() => {
+  document.documentElement.removeAttribute('data-df-review-design-inspecting');
   document.body.replaceChildren();
   window.history.replaceState(null, '', '/');
 });
 
 describe('bindReviewFrameNavigation', () => {
+  it('does not route a link selected by the design inspector', () => {
+    const onSyncShellTarget = vi.fn();
+    const link = document.createElement('a');
+    link.href = '/components/';
+    document.body.append(link);
+    const cleanup = bindNavigation(() => '/', onSyncShellTarget);
+    document.documentElement.setAttribute('data-df-review-design-inspecting', '');
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
+    // The inspector owns cancellation; navigation must not consume the event first.
+    document.addEventListener('click', (click) => click.preventDefault(), { once: true });
+    link.dispatchEvent(event);
+    expect(onSyncShellTarget).not.toHaveBeenCalled();
+    cleanup();
+  });
   it('reports pushState navigation as soft', () => {
     const onSyncShellTarget = vi.fn();
     const cleanup = bindNavigation(() => '/', onSyncShellTarget);

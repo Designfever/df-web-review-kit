@@ -21,7 +21,7 @@ import {
   normalizeReviewQaStatusFilters,
 } from './qa/status.filter';
 
-export type StoredReviewSidePanel = 'qa' | 'source' | 'figma-images';
+export type StoredReviewSidePanel = 'qa' | 'source' | 'figma-images' | 'design-inspector';
 export interface StoredSourceTreeMetaVisibility {
   font: boolean;
   media: boolean;
@@ -77,7 +77,7 @@ export const normalizeReviewTheme = (value: string | null): ReviewShellTheme =>
 const normalizeReviewSidePanel = (
   value: string | null
 ): StoredReviewSidePanel | null => {
-  if (value === 'qa' || value === 'source' || value === 'figma-images') {
+  if (value === 'qa' || value === 'source' || value === 'figma-images' || value === 'design-inspector') {
     return value;
   }
   return null;

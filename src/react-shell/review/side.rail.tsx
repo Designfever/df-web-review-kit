@@ -4,6 +4,7 @@ import {
   ListChecks as QaListIcon,
   LogOut as LogOutIcon,
   Network as ComponentTreeIcon,
+  Ruler as RulerIcon,
   Settings as SettingsIcon,
 } from 'lucide-react';
 import type { ReviewPresenceUser } from '../types';
@@ -16,6 +17,7 @@ export const ReviewSideRail = ({
   isFigmaImageManagementEnabled,
   isFigmaImagesPanelVisible,
   isQaPanelVisible,
+  isDesignInspectorVisible,
   isSourceTreePanelVisible,
   presenceSessionId,
   onOpenAbout,
@@ -24,12 +26,14 @@ export const ReviewSideRail = ({
   onOpenSettings,
   onToggleFigmaImagesPanel,
   onToggleQaPanel,
+  onToggleDesignInspector,
   onToggleSourceTreePanel,
 }: {
   currentPagePresenceUsers: ReviewPresenceUser[];
   isFigmaImageManagementEnabled: boolean;
   isFigmaImagesPanelVisible: boolean;
   isQaPanelVisible: boolean;
+  isDesignInspectorVisible: boolean;
   isSourceTreePanelVisible: boolean;
   presenceSessionId: string;
   onOpenAbout: () => void;
@@ -38,10 +42,24 @@ export const ReviewSideRail = ({
   onOpenSettings: () => void;
   onToggleFigmaImagesPanel: () => void;
   onToggleQaPanel: () => void;
+  onToggleDesignInspector: () => void;
   onToggleSourceTreePanel: () => void;
 }) => {
   return (
     <div className="df-review-side-rail">
+      <button
+        aria-controls="df-review-design-inspector"
+        aria-label={isDesignInspectorVisible ? 'Hide design inspector' : 'Show design inspector'}
+        aria-pressed={isDesignInspectorVisible}
+        className={`df-review-side-toggle${isDesignInspectorVisible ? ' is-active' : ''}`}
+        data-review-tooltip="Design inspector (Shift+D)"
+        data-review-tooltip-placement="left"
+        title="Design inspector (Shift+D)"
+        type="button"
+        onClick={onToggleDesignInspector}
+      >
+        <RulerIcon aria-hidden="true" />
+      </button>
       {isFigmaImageManagementEnabled && (
         <button
           aria-label={

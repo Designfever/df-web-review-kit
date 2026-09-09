@@ -6,6 +6,7 @@ import {
 } from 'react';
 
 export interface ReviewShellFrameSlots {
+  designInspectorPanel?: ReactNode;
   figmaImagesPanel?: ReactNode;
   modals?: ReactNode;
   qaPanel: ReactNode;
@@ -102,6 +103,7 @@ export const ReviewShellFrame = ({
       {slots.qaPanel}
       {slots.figmaImagesPanel}
       {slots.sourceTreePanel}
+      {slots.designInspectorPanel}
       <div className="df-review-qa-draft-host" />
       {slots.targetFrame}
       {slots.sourceInspector}

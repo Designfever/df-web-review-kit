@@ -32,6 +32,7 @@ import { setTargetFigmaSourceSelectLocked } from '../target/target';
 import { useReviewToast } from './use.review.toast';
 
 export function useReviewSourceInspector({
+  isBlocked = false,
   frameScrollRef,
   iframeRef,
   isSourceTreeHoverOutlineEnabled,
@@ -41,6 +42,7 @@ export function useReviewSourceInspector({
   onCancelReviewMode,
   onRequestSourceTreeFocus,
 }: {
+  isBlocked?: boolean;
   frameScrollRef: RefObject<HTMLDivElement | null>;
   iframeRef: RefObject<HTMLIFrameElement | null>;
   isSourceTreeHoverOutlineEnabled: boolean;
@@ -309,6 +311,10 @@ export function useReviewSourceInspector({
   const bindSourceOpenShortcut = useCallback(() => {
     cleanupSourceOpenShortcut();
     setComponentSelectionState(null);
+    if (isBlocked) {
+      clearSourceInspector();
+      return;
+    }
 
     let frameDocument: Document | null = null;
     try {
@@ -427,6 +433,7 @@ export function useReviewSourceInspector({
     };
 
     const handleTargetPointerMove = (event: MouseEvent | PointerEvent) => {
+      if (frameDocument.documentElement.hasAttribute('data-df-review-design-inspecting')) return;
       lastSourceTarget = event.target;
       const candidates = getSourceCandidates(
         event.target,
@@ -446,6 +453,7 @@ export function useReviewSourceInspector({
     };
 
     const selectSourceTreeEntry = (event: MouseEvent) => {
+      if (frameDocument.documentElement.hasAttribute('data-df-review-design-inspecting')) return;
       if (!isSourceSelecting && !event.altKey) return;
 
       event.preventDefault();
@@ -503,6 +511,7 @@ export function useReviewSourceInspector({
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (frameDocument.documentElement.hasAttribute('data-df-review-design-inspecting')) return;
       if (event.key === 'Escape') {
         onCancelReviewMode();
         setSourceSelecting(false);
@@ -599,6 +608,7 @@ export function useReviewSourceInspector({
     onCancelReviewMode,
     clearSourceInspector,
     cleanupSourceOpenShortcut,
+    isBlocked,
     iframeRef,
     onRequestSourceTreeFocus,
     selectSourceOutlineForElement,

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useReviewShellData } from './hooks/use.review.shell.data';
 import { copyCurrentReviewUrl } from './review/shell.actions';
 import { useReviewFigmaOverlayState } from './store/figma.overlay.context';
-import { useReviewRulerState } from './store/ruler.context';
 import { useReviewShellActions } from './store/shell.actions.context';
 import { useReviewShellConfig } from './store/shell.config';
 import { useReviewShellStore } from './store/store.context';
@@ -14,11 +13,6 @@ export const TopbarContainer = () => {
     applyTarget,
     toggleTargetOverlay,
   } = useReviewShellActions();
-  const {
-    isRulerAvailable,
-    isRulerVisible,
-    toggleRuler,
-  } = useReviewRulerState();
   const {
     figmaOverlayUnavailableMessage,
     isFigmaOverlayActive,
@@ -51,8 +45,6 @@ export const TopbarContainer = () => {
       viewportPresets={viewportPresets}
       size={size}
       presetScopeCounts={presetScopeCounts}
-      isRulerAvailable={isRulerAvailable}
-      isRulerVisible={isRulerVisible}
       targetOverlayState={targetOverlayState}
       figmaOverlayUnavailableMessage={figmaOverlayUnavailableMessage}
       isFigmaOverlayActive={isFigmaOverlayActive}
@@ -63,7 +55,6 @@ export const TopbarContainer = () => {
       onCopyCurrentUrl={() => void copyCurrentUrl()}
       onSizeChange={setSize}
       onToggleFigmaOverlay={toggleFigmaOverlay}
-      onToggleRuler={toggleRuler}
       onToggleTargetOverlay={toggleTargetOverlay}
     />
   );

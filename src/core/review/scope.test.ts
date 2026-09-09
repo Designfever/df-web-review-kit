@@ -28,6 +28,18 @@ function createItem(overrides: Partial<ReviewItem> = {}): ReviewItem {
 }
 
 describe('findReviewViewportPreset', () => {
+  it('uses 1920 by 1280 for the default Desktop viewport', () => {
+    expect(findReviewViewportPreset({ width: 1920, height: 1280 })).toEqual({
+      label: 'Desktop', width: 1920, height: 1280, scope: 'desktop',
+    });
+    expect(getReviewViewportScope({ width: 1920, height: 1280 })).toBe('desktop');
+  });
+
+  it('keeps an explicitly configured previous PC preset unchanged', () => {
+    const custom = { label: 'PC', width: 1440, height: 900, scope: 'desktop' as const };
+    expect(findReviewViewportPreset({ width: 1440, height: 900 }, [custom])).toBe(custom);
+  });
+
   it('returns the exact preset match first', () => {
     const preset = findReviewViewportPreset({ width: 768, height: 1024 });
     expect(preset.label).toBe('Tablet');

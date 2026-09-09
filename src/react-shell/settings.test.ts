@@ -8,6 +8,8 @@ import { REVIEW_TOOLTIP_STORAGE_KEY } from './constants';
 import {
   getStoredReviewTooltipsEnabled,
   writeStoredReviewTooltipsEnabled,
+  getStoredReviewSidePanel,
+  writeStoredReviewSidePanel,
 } from './settings';
 
 function createMemoryStorage(): Storage {
@@ -45,6 +47,11 @@ describe('review settings storage', () => {
 
   it('keeps tooltips enabled by default', () => {
     expect(getStoredReviewTooltipsEnabled()).toBe(true);
+  });
+
+  it('persists the design inspector independently of QA write permissions', () => {
+    writeStoredReviewSidePanel('design-inspector');
+    expect(getStoredReviewSidePanel()).toBe('design-inspector');
   });
 
   it('persists disabled tooltips', () => {

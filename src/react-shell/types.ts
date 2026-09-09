@@ -220,6 +220,7 @@ export interface ReviewShellProps {
   pages: ReviewShellPage[];
   adapters: ReviewShellAdapters;
   presets?: ReviewShellViewportPreset[];
+  /** Legacy QA measurement configuration. The shell ruler UI is replaced by Design Inspector. */
   ruler?: ReviewRulerConfig;
   initialPrompt?: string;
   qaPrompt?: string;

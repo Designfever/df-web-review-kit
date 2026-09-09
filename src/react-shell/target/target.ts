@@ -4,6 +4,8 @@ const HIDE_SCROLLBAR_STYLE_ID = 'df-review-hide-scrollbar';
 const FIGMA_POINTER_LOCK_STYLE_ID = 'df-review-figma-pointer-lock';
 const FIGMA_SOURCE_SELECT_POINTER_LOCK_STYLE_ID =
   'df-review-source-select-figma-pointer-lock';
+const FIGMA_DESIGN_INSPECTOR_POINTER_LOCK_STYLE_ID =
+  'df-review-design-inspector-figma-pointer-lock';
 const TARGET_OVERLAY_STACKING_STYLE_ID = 'df-review-target-overlay-stacking';
 export const TARGET_FIGMA_IMAGE_LAYER_Z_INDEX = 2147483000;
 const TARGET_GRID_LAYER_Z_INDEX = 2147483100;
@@ -124,6 +126,14 @@ export const setTargetFigmaSourceSelectLocked = (
     FIGMA_SOURCE_SELECT_POINTER_LOCK_STYLE_ID,
     locked
   );
+};
+
+export const setTargetDesignInspectorLocked = (
+  targetDocument: Document | null | undefined,
+  locked: boolean
+) => {
+  targetDocument?.documentElement.toggleAttribute('data-df-review-design-inspecting', locked);
+  setTargetFigmaPointerLockStyle(targetDocument, FIGMA_DESIGN_INSPECTOR_POINTER_LOCK_STYLE_ID, locked);
 };
 
 const TRUE_STORAGE_VALUES = new Set([

@@ -1,6 +1,5 @@
 import {
   createContext,
-  useContext,
   type RefObject,
 } from 'react';
 import type {
@@ -26,13 +25,3 @@ export interface ReviewRulerState {
 const ReviewRulerContext = createContext<ReviewRulerState | null>(null);
 
 export const ReviewRulerProvider = ReviewRulerContext.Provider;
-
-export const useReviewRulerState = (): ReviewRulerState => {
-  const state = useContext(ReviewRulerContext);
-  if (!state) {
-    throw new Error(
-      'useReviewRulerState must be used within a ReviewRuler provider'
-    );
-  }
-  return state;
-};

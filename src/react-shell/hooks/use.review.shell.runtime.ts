@@ -79,6 +79,12 @@ export const useReviewShellRuntime = ({
   );
   const selectedItemId = useReviewShellStore((state) => state.selectedItemId);
   const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
+  const isDesignInspectorVisible = useReviewShellStore(
+    (state) => state.isListVisible && state.sidePanel === 'design-inspector'
+  );
+  const isDesignInspecting = useReviewShellStore(
+    (state) => state.isListVisible && state.sidePanel === 'design-inspector' && state.designInspectorMode === 'pick'
+  );
   const {
     isSourceTreeHoverOutlineEnabled,
     sectionOutlineOptions,
@@ -117,12 +123,12 @@ export const useReviewShellRuntime = ({
     targetSrc,
   });
   const effectiveHiddenOverlayItemIdList = useMemo(() => {
-    if (!isCommandKeyPressed) return hiddenOverlayItemIdList;
+    if (!isCommandKeyPressed && !isDesignInspecting) return hiddenOverlayItemIdList;
 
     const itemIds = new Set(hiddenOverlayItemIdList);
     activeItems.forEach((item) => itemIds.add(item.id));
     return Array.from(itemIds);
-  }, [activeItems, hiddenOverlayItemIdList, isCommandKeyPressed]);
+  }, [activeItems, hiddenOverlayItemIdList, isCommandKeyPressed, isDesignInspecting]);
   const {
     isFigmaOverlayAvailable,
     refreshTargetFigmaConfig,
@@ -189,7 +195,7 @@ export const useReviewShellRuntime = ({
 
   const rulerState = useReviewRuler({
     iframeRef,
-    ruler,
+    ruler: { ...ruler, enabled: false },
     size,
     targetSrc,
     onCancelReviewMode: cancelReviewMode,
@@ -197,9 +203,6 @@ export const useReviewShellRuntime = ({
   });
   const {
     closeRuler,
-    isRulerAvailable,
-    isRulerVisible,
-    toggleRuler,
   } = rulerState;
 
   const {
@@ -286,8 +289,6 @@ export const useReviewShellRuntime = ({
 
   const setReviewMode = useReviewShellModeSetter({
     closeRuler,
-    isListVisible,
-    mode,
     openSidePanel,
     setControllerReviewMode,
     writeModes: activeAdapterEntry.writeModes,
@@ -310,6 +311,7 @@ export const useReviewShellRuntime = ({
   });
 
   const sourceInspector = useReviewSourceInspector({
+    isBlocked: isDesignInspecting,
     frameScrollRef,
     iframeRef,
     isSourceTreeHoverOutlineEnabled,
@@ -327,6 +329,21 @@ export const useReviewShellRuntime = ({
     selectSourceOutlineForElement,
     showSourceOutlineForElement,
   } = sourceInspector;
+
+  const closeDesignInspector = useCallback(() => {
+    const state = storeApi.getState();
+    if (!state.isListVisible || state.sidePanel !== 'design-inspector') return false;
+    state.setIsListVisible(false);
+    return true;
+  }, [storeApi]);
+  const toggleDesignInspectorPanel = useCallback(() => {
+    cancelReviewMode();
+    closeRuler();
+    closeRulerPanels();
+    clearSourceInspector();
+    clearSourceOutlineSelection();
+    toggleSidePanel('design-inspector');
+  }, [cancelReviewMode, closeRuler, closeRulerPanels, clearSourceInspector, clearSourceOutlineSelection, toggleSidePanel]);
 
   const {
     toggleFigmaImagesPanel,
@@ -354,17 +371,16 @@ export const useReviewShellRuntime = ({
       isItemEditing,
     isFigmaSettingsOpen,
     isFigmaOverlayAvailable: figmaOverlayState.isFigmaOverlayAvailable,
-    isRulerAvailable,
-    isRulerVisible,
+    isDesignInspectorVisible,
     onCancelReviewMode: cancelReviewMode,
     onCloseFigmaSettings: closeFigmaSettings,
-    onCloseRuler: closeRuler,
+    onCloseDesignInspector: closeDesignInspector,
     onSetReviewMode: setReviewMode,
     onToggleComponentListPanel: toggleSourceTreePanel,
     onToggleFigmaOverlay: figmaOverlayState.toggleFigmaOverlay,
     onToggleFigmaImagesPanel: toggleFigmaImagesPanel,
     onToggleQaPanel: toggleQaPanel,
-    onToggleRuler: toggleRuler,
+    onToggleDesignInspector: toggleDesignInspectorPanel,
     onToggleTargetOverlay: toggleTargetOverlay,
   });
 
@@ -398,6 +414,7 @@ export const useReviewShellRuntime = ({
     setReviewMode,
     showSourceOutlineForElement,
     toggleFigmaImagesPanel,
+    toggleDesignInspectorPanel,
     toggleQaPanel,
     toggleSourceTreePanel,
     toggleTargetOverlay,

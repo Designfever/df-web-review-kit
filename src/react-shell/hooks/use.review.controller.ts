@@ -75,6 +75,13 @@ export const useReviewController = ({
     (state) => state.setSelectedItemId
   );
   const setSidePanel = useReviewShellStore((state) => state.setSidePanel);
+  const onControllerModeChange = useCallback((nextMode: Parameters<typeof setMode>[0]) => {
+    if (nextMode !== 'idle') {
+      setSidePanel('qa');
+      setIsListVisible(true);
+    }
+    setMode(nextMode);
+  }, [setMode, setSidePanel, setIsListVisible]);
   const setSize = useReviewShellStore((state) => state.setSize);
   const setTarget = useReviewShellStore((state) => state.setTarget);
   const setTargetOverlayState = useReviewShellStore(
@@ -181,7 +188,7 @@ export const useReviewController = ({
     onCancelReviewMode,
     onCloseRuler,
     onCreateItem: restoreCreatedReviewItem,
-    onModeChange: setMode,
+    onModeChange: onControllerModeChange,
     onRefreshTargetOverlayState: refreshTargetOverlayState,
     onRestoreInitialItem: restoreInitialItem,
     onRestoreReviewItem: restoreReviewItem,

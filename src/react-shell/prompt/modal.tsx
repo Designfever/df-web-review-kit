@@ -30,7 +30,7 @@ const SHORTCUT_SECTIONS = [
     items: [
       { keys: ['G / ㅎ'], label: 'Grid overlay' },
       { keys: ['F / ㄹ'], label: 'Figma overlay' },
-      { keys: ['R / ㄱ'], label: 'Ruler' },
+      { keys: ['Shift+D', 'R / ㄱ'], label: 'Design inspector' },
     ],
   },
   {

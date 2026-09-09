@@ -4,9 +4,6 @@ import {
 import { useReviewFigmaImagesState } from '../figma/images.context';
 import { buildTargetSrc } from '../route';
 import { ReviewModeToolbar } from '../review/mode.toolbar';
-import { RulerGutters } from '../ruler/gutters';
-import { RulerOverlay } from '../ruler/overlay';
-import { useReviewRulerState } from '../store/ruler.context';
 import { useReviewShellActions } from '../store/shell.actions.context';
 import { useReviewShellRefs } from '../store/shell.refs';
 import { useReviewShellStore } from '../store/store.context';
@@ -23,7 +20,6 @@ export const ReviewTargetFrame = () => {
   } = useReviewFigmaImagesState();
   const { loadTargetFrame, setReviewMode } = useReviewShellActions();
   const { frameScrollRef, iframeRef } = useReviewShellRefs();
-  const { isRulerAvailable, isRulerVisible } = useReviewRulerState();
   const { canWriteArea, canWriteDom } = useReviewShellAdapterState();
   const mode = useReviewShellStore((state) => state.mode);
   const frameNavigationVersion = useReviewShellStore(
@@ -37,7 +33,6 @@ export const ReviewTargetFrame = () => {
     () => buildTargetSrc(frameTarget),
     [frameTarget]
   );
-  const showRuler = isRulerVisible && isRulerAvailable;
   const syncTargetFigmaImageOverlays = useTargetFigmaImageOverlays({
     figmaImageOverlays,
     iframeRef,
@@ -57,12 +52,7 @@ export const ReviewTargetFrame = () => {
         <div className="df-review-frame-scroll" ref={frameScrollRef}>
           <div className="df-review-frame-canvas">
             <div className="df-review-target-stack">
-              <div
-                className={`df-review-device-frame${
-                  showRuler ? ' is-ruler' : ''
-                }`}
-              >
-                {showRuler && <RulerGutters />}
+              <div className="df-review-device-frame">
                 <ReviewOutsideMarkers />
                 <div
                   className="df-review-device"
@@ -74,6 +64,7 @@ export const ReviewTargetFrame = () => {
                   }}
                 >
                   <iframe
+                    data-design-inspector-preview=""
                     key={`${frameTargetSrc}:${frameNavigationVersion}`}
                     ref={iframeRef}
                     width={size.width}
@@ -82,7 +73,6 @@ export const ReviewTargetFrame = () => {
                     title="Review target"
                     onLoad={handleLoadTarget}
                   />
-                  {showRuler && <RulerOverlay />}
                 </div>
               </div>
             </div>

@@ -7,7 +7,6 @@ import {
   Monitor as MonitorIcon,
   RectangleHorizontal as TabletIcon,
   RefreshCw as RefreshCwIcon,
-  Ruler as RulerIcon,
   Smartphone as SmartphoneIcon,
   SquareMousePointer as SquareMousePointerIcon,
 } from 'lucide-react';
@@ -28,8 +27,6 @@ interface ReviewTopbarProps {
   viewportPresets: ReviewShellViewportPreset[];
   size: ReviewShellViewportPreset;
   presetScopeCounts: ReadonlyMap<ReviewItemScope, number>;
-  isRulerAvailable: boolean;
-  isRulerVisible: boolean;
   targetOverlayState: TargetOverlayState;
   figmaOverlayUnavailableMessage?: string;
   isFigmaOverlayActive: boolean;
@@ -39,7 +36,6 @@ interface ReviewTopbarProps {
   onOpenSitemap: () => void;
   onCopyCurrentUrl: () => void;
   onSizeChange: (preset: ReviewShellViewportPreset) => void;
-  onToggleRuler: () => void;
   onToggleFigmaOverlay: () => void;
   onToggleTargetOverlay: (key: TargetOverlayKey) => void;
 }
@@ -75,8 +71,6 @@ export const ReviewTopbar = ({
   viewportPresets,
   size,
   presetScopeCounts,
-  isRulerAvailable,
-  isRulerVisible,
   targetOverlayState,
   figmaOverlayUnavailableMessage = FIGMA_OVERLAY_UNAVAILABLE_MESSAGE,
   isFigmaOverlayActive,
@@ -86,7 +80,6 @@ export const ReviewTopbar = ({
   onOpenSitemap,
   onCopyCurrentUrl,
   onSizeChange,
-  onToggleRuler,
   onToggleFigmaOverlay,
   onToggleTargetOverlay,
 }: ReviewTopbarProps) => {
@@ -211,20 +204,6 @@ export const ReviewTopbar = ({
         </div>
 
         <div className="df-review-overlays" aria-label="Target overlays">
-          {isRulerAvailable && (
-            <button
-              aria-label="Toggle ruler"
-              className={`df-review-overlay-button is-ruler${
-                isRulerVisible ? ' is-active' : ''
-              }`}
-              data-review-tooltip="Toggle ruler"
-              data-review-tooltip-placement="bottom"
-              type="button"
-              onClick={onToggleRuler}
-            >
-              <RulerIcon aria-hidden="true" />
-            </button>
-          )}
           <button
             aria-label="Toggle grid overlay"
             className={`df-review-overlay-button is-grid${

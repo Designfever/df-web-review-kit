@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useReviewShellRefs } from '../store/shell.refs';
 import { getHotkeyActionKey, isHotkey } from '../../core/hotkey';
 import type { ReviewMode } from '../../types';
 import { useReviewShellStore } from '../store/store.context';
@@ -9,17 +10,16 @@ interface UseReviewShellHotkeysOptions {
   isRailHotkeyBlocked: boolean;
   isFigmaSettingsOpen: boolean;
   isFigmaOverlayAvailable: boolean;
-  isRulerAvailable: boolean;
-  isRulerVisible: boolean;
+  isDesignInspectorVisible: boolean;
   onCancelReviewMode: () => boolean;
   onCloseFigmaSettings: () => void;
-  onCloseRuler: () => boolean;
+  onCloseDesignInspector: () => boolean;
   onSetReviewMode: (mode: ReviewMode) => void;
   onToggleComponentListPanel: () => void;
   onToggleFigmaOverlay: () => void;
   onToggleFigmaImagesPanel: () => void;
   onToggleQaPanel: () => void;
-  onToggleRuler: () => void;
+  onToggleDesignInspector: () => void;
   onToggleTargetOverlay: (overlay: TargetOverlayKey) => void;
 }
 
@@ -27,19 +27,20 @@ export const useReviewShellHotkeys = ({
   isRailHotkeyBlocked,
   isFigmaSettingsOpen,
   isFigmaOverlayAvailable,
-  isRulerAvailable,
-  isRulerVisible,
+  isDesignInspectorVisible,
   onCancelReviewMode,
   onCloseFigmaSettings,
-  onCloseRuler,
+  onCloseDesignInspector,
   onSetReviewMode,
   onToggleComponentListPanel,
   onToggleFigmaOverlay,
   onToggleFigmaImagesPanel,
   onToggleQaPanel,
-  onToggleRuler,
+  onToggleDesignInspector,
   onToggleTargetOverlay,
 }: UseReviewShellHotkeysOptions) => {
+  const { iframeRef } = useReviewShellRefs();
+  const targetFrameLoadVersion = useReviewShellStore((state) => state.targetFrameLoadVersion);
   const isInitialPromptOpen = useReviewShellStore(
     (state) => state.isInitialPromptOpen
   );
@@ -55,7 +56,7 @@ export const useReviewShellHotkeys = ({
   useEffect(() => {
     if (
       mode === 'idle' &&
-      !isRulerVisible &&
+      !isDesignInspectorVisible &&
       !isInitialPromptOpen &&
       !isSitemapOpen &&
       !isFigmaSettingsOpen
@@ -72,7 +73,7 @@ export const useReviewShellHotkeys = ({
         return;
       }
 
-      if (onCloseRuler()) {
+      if (onCloseDesignInspector()) {
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -95,32 +96,32 @@ export const useReviewShellHotkeys = ({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return bindShellAndFrameKeydown(iframeRef.current, handleKeyDown);
   }, [
     isFigmaSettingsOpen,
     isInitialPromptOpen,
-    isRulerVisible,
+    isDesignInspectorVisible,
     isSitemapOpen,
     mode,
     onCancelReviewMode,
     onCloseFigmaSettings,
-    onCloseRuler,
+    onCloseDesignInspector,
+    iframeRef,
+    targetFrameLoadVersion,
     setIsInitialPromptOpen,
     setIsSitemapOpen,
   ]);
 
   useEffect(() => {
     const handleHotkey = (event: KeyboardEvent) => {
+      if (isRailHotkeyBlocked || event.repeat) return;
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
         return;
       }
       if (isEditableEventTarget(event)) return;
 
       const actions: Record<string, () => void> = {
-        r: () => {
-          if (isRulerAvailable) onToggleRuler();
-        },
+        r: onToggleDesignInspector,
         g: () => onToggleTargetOverlay('grid'),
         f: () => {
           if (isFigmaOverlayAvailable) onToggleFigmaOverlay();
@@ -136,25 +137,27 @@ export const useReviewShellHotkeys = ({
       action();
     };
 
-    window.addEventListener('keydown', handleHotkey);
-    return () => window.removeEventListener('keydown', handleHotkey);
+    return bindShellAndFrameKeydown(iframeRef.current, handleHotkey);
   }, [
-    isRulerAvailable,
+    isRailHotkeyBlocked,
     isFigmaOverlayAvailable,
     onSetReviewMode,
     onToggleFigmaOverlay,
-    onToggleRuler,
+    onToggleDesignInspector,
+    iframeRef,
+    targetFrameLoadVersion,
     onToggleTargetOverlay,
   ]);
 
   useEffect(() => {
     const handleRailHotkey = (event: KeyboardEvent) => {
-      if (isRailHotkeyBlocked || isEditableEventTarget(event)) return;
+      if (isRailHotkeyBlocked || event.repeat || isEditableEventTarget(event)) return;
 
       const actions = [
         { hotkey: 'Shift+1', run: onToggleFigmaImagesPanel },
         { hotkey: 'Shift+2', run: onToggleQaPanel },
         { hotkey: 'Shift+3', run: onToggleComponentListPanel },
+        { hotkey: 'Shift+D', run: onToggleDesignInspector },
       ];
       const action = actions.find(({ hotkey }) => isHotkey(event, hotkey));
       if (!action) return;
@@ -164,12 +167,25 @@ export const useReviewShellHotkeys = ({
       action.run();
     };
 
-    window.addEventListener('keydown', handleRailHotkey);
-    return () => window.removeEventListener('keydown', handleRailHotkey);
+    return bindShellAndFrameKeydown(iframeRef.current, handleRailHotkey);
   }, [
     isRailHotkeyBlocked,
     onToggleComponentListPanel,
     onToggleFigmaImagesPanel,
     onToggleQaPanel,
+    onToggleDesignInspector,
+    iframeRef,
+    targetFrameLoadVersion,
   ]);
 };
+
+function bindShellAndFrameKeydown(frame: HTMLIFrameElement | null, handler: (event: KeyboardEvent) => void) {
+  const targets = new Set<Window>([window]);
+  try {
+    if (frame?.contentDocument && frame.contentWindow) targets.add(frame.contentWindow);
+  } catch {
+    // Shell hotkeys remain available when the target is cross-origin.
+  }
+  targets.forEach((target) => target.addEventListener('keydown', handler, true));
+  return () => targets.forEach((target) => target.removeEventListener('keydown', handler, true));
+}

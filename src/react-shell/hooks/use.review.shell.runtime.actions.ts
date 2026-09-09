@@ -94,8 +94,6 @@ export const useReviewShellPanelActions = ({
 
 interface UseReviewShellModeSetterOptions {
   closeRuler: () => void;
-  isListVisible: boolean;
-  mode: ReviewMode;
   openSidePanel: (sidePanel: StoredReviewSidePanel) => void;
   setControllerReviewMode: (mode: ReviewMode) => void;
   writeModes: ReviewShellWriteMode[];
@@ -103,8 +101,6 @@ interface UseReviewShellModeSetterOptions {
 
 export const useReviewShellModeSetter = ({
   closeRuler,
-  isListVisible,
-  mode,
   openSidePanel,
   setControllerReviewMode,
   writeModes,
@@ -114,15 +110,12 @@ export const useReviewShellModeSetter = ({
       const writeMode = getReviewModeWriteMode(nextMode);
       if (writeMode && !writeModes.includes(writeMode)) return;
       closeRuler();
-      if (writeMode && mode !== nextMode && !isListVisible) {
-        openSidePanel('qa');
-      }
+      // QA selection owns target gestures, even when another side panel was open.
+      if (writeMode) openSidePanel('qa');
       setControllerReviewMode(nextMode);
     },
     [
       closeRuler,
-      isListVisible,
-      mode,
       openSidePanel,
       setControllerReviewMode,
       writeModes,

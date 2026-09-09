@@ -8,6 +8,7 @@ import { reviewShellStageStyle } from './style/stage';
 import { reviewShellSourceInspectorStyle } from './style/source-inspector';
 import { reviewShellSectionOutlineStyle } from './style/section-outline';
 import { reviewShellRulerStyle } from './style/ruler';
+import { reviewShellDesignInspectorStyle } from './style/design-inspector';
 
 const REVIEW_SHELL_STYLE_ID = 'df-review-shell-style';
 
@@ -25,7 +26,8 @@ export function ensureReviewShellStyle() {
       reviewShellStageStyle,
       reviewShellSourceInspectorStyle,
       reviewShellSectionOutlineStyle,
-      reviewShellRulerStyle
+      reviewShellRulerStyle,
+      reviewShellDesignInspectorStyle
     ].join('\n\n');
     document.head.append(style);
   }

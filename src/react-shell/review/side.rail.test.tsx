@@ -10,6 +10,7 @@ describe('ReviewSideRail', () => {
         isFigmaImageManagementEnabled={false}
         isFigmaImagesPanelVisible={false}
         isQaPanelVisible={true}
+        isDesignInspectorVisible={false}
         isSourceTreePanelVisible={false}
         presenceSessionId="session"
         onLogout={() => undefined}
@@ -18,6 +19,7 @@ describe('ReviewSideRail', () => {
         onOpenSettings={() => undefined}
         onToggleFigmaImagesPanel={() => undefined}
         onToggleQaPanel={() => undefined}
+        onToggleDesignInspector={() => undefined}
         onToggleSourceTreePanel={() => undefined}
       />
     );
@@ -27,5 +29,7 @@ describe('ReviewSideRail', () => {
 
     expect(logoutIndex).toBeGreaterThan(-1);
     expect(logoutIndex).toBeLessThan(promptIndex);
+    expect(html).toContain('aria-label="Show design inspector"');
+    expect(html).toContain('aria-controls="df-review-design-inspector"');
   });
 });

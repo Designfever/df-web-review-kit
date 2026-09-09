@@ -10,7 +10,7 @@ import type {
 export const DEFAULT_REVIEW_VIEWPORTS: ReviewViewportPreset[] = [
   { label: 'Mobile', width: 390, height: 720, scope: 'mobile' },
   { label: 'Tablet', width: 768, height: 1024, scope: 'tablet' },
-  { label: 'Desktop', width: 1440, height: 900, scope: 'desktop' },
+  { label: 'Desktop', width: 1920, height: 1280, scope: 'desktop' },
   { label: 'Wide', width: 1980, height: 1080, scope: 'wide' },
 ];
 
@@ -39,9 +39,15 @@ const normalizeReviewItemScope = (value: unknown): ReviewItemScope | undefined =
 const getViewportPresetDistance = (
   preset: ReviewViewportPreset,
   viewport: ViewportSize
-) =>
-  Math.abs(preset.width - viewport.width) +
-  Math.abs(preset.height - viewport.height);
+) => {
+  const distance = Math.abs(preset.width - viewport.width) +
+    Math.abs(preset.height - viewport.height);
+  // 이전 PC 크기로 저장된 QA도 새 Desktop 프리셋에 유지합니다.
+  if (preset.scope === 'desktop' && preset.width === 1920 && preset.height === 1280) {
+    return Math.min(distance, Math.abs(1440 - viewport.width) + Math.abs(900 - viewport.height));
+  }
+  return distance;
+};
 
 const inferViewportScope = (
   preset: ReviewViewportPreset

@@ -376,6 +376,7 @@ Rules:
 ## Viewport Presets
 
 Pass `presets` when a project has custom design widths.
+The default Desktop viewport is 1920 × 1280 CSS pixels.
 
 ```tsx
 mountReviewShell({
@@ -385,7 +386,7 @@ mountReviewShell({
   presets: [
     { label: 'Mobile', kind: 'mobile', width: 540, height: 1080, designWidth: 540 },
     { label: 'Tablet', kind: 'tablet', width: 768, height: 1024, designWidth: 768 },
-    { label: 'Desktop', kind: 'desktop', width: 1440, height: 900, designWidth: 1440 },
+    { label: 'Desktop', kind: 'desktop', width: 1920, height: 1280, designWidth: 1920 },
     { label: 'Wide', kind: 'wide', width: 1980, height: 1080, designWidth: 1980 },
   ],
 });

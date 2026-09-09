@@ -4,7 +4,7 @@ import type { ReviewShellViewportKind, ReviewShellViewportPreset } from './types
 export const DEFAULT_REVIEW_VIEWPORT_PRESETS: ReviewShellViewportPreset[] = [
   { label: 'Mobile', width: 390, height: 720, kind: 'mobile' },
   { label: 'Tablet', width: 768, height: 1024, kind: 'tablet' },
-  { label: 'Desktop', width: 1440, height: 900, kind: 'desktop' },
+  { label: 'Desktop', width: 1920, height: 1280, kind: 'desktop' },
   { label: 'Wide', width: 1980, height: 1080, kind: 'wide' }
 ];
 
@@ -15,7 +15,14 @@ const getViewportPresetDistance = (
   preset: ReviewShellViewportPreset,
   width: number,
   height: number
-) => Math.abs(preset.width - width) + Math.abs(preset.height - height);
+) => {
+  const distance = Math.abs(preset.width - width) + Math.abs(preset.height - height);
+  // 이전 PC 주소와 QA 캡처 크기도 새 Desktop 프리셋으로 복원합니다.
+  if (preset.kind === 'desktop' && preset.width === 1920 && preset.height === 1280) {
+    return Math.min(distance, Math.abs(1440 - width) + Math.abs(900 - height));
+  }
+  return distance;
+};
 
 export const findViewportPreset = (
   presets: ReviewShellViewportPreset[],

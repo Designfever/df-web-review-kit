@@ -1,5 +1,6 @@
 import {
   useMemo,
+  useCallback,
 } from 'react';
 import { useReviewFigmaImagesState } from '../figma/images.context';
 import { buildTargetSrc } from '../route';
@@ -12,6 +13,7 @@ import {
   useTargetFigmaImageOverlays,
 } from './figma.image.overlay';
 import { ReviewOutsideMarkers } from './outside.markers';
+import { useCustomPanelRegistry } from '../custom-panels/context';
 
 export const ReviewTargetFrame = () => {
   const {
@@ -20,6 +22,11 @@ export const ReviewTargetFrame = () => {
   } = useReviewFigmaImagesState();
   const { loadTargetFrame, setReviewMode } = useReviewShellActions();
   const { frameScrollRef, iframeRef } = useReviewShellRefs();
+  const customPanels = useCustomPanelRegistry();
+  const setFrame = useCallback((frame: HTMLIFrameElement | null) => {
+    customPanels.setFrame(frame);
+    iframeRef.current = frame;
+  }, [customPanels, iframeRef]);
   const { canWriteArea, canWriteDom } = useReviewShellAdapterState();
   const mode = useReviewShellStore((state) => state.mode);
   const frameNavigationVersion = useReviewShellStore(
@@ -66,7 +73,7 @@ export const ReviewTargetFrame = () => {
                   <iframe
                     data-design-inspector-preview=""
                     key={`${frameTargetSrc}:${frameNavigationVersion}`}
-                    ref={iframeRef}
+                    ref={setFrame}
                     width={size.width}
                     height={size.height}
                     src={frameTargetSrc}

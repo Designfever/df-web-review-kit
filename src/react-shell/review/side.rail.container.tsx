@@ -4,6 +4,7 @@ import { useReviewShellActions } from '../store/shell.actions.context';
 import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellStore } from '../store/store.context';
 import { ReviewSideRail } from './side.rail';
+import { CustomPanelRailButtons } from '../custom-panels/rail';
 
 export const ReviewSideRailContainer = () => {
   const { onLogout } = useReviewShellConfig();
@@ -27,6 +28,7 @@ export const ReviewSideRailContainer = () => {
 
   return (
     <ReviewSideRail
+      customButtons={<CustomPanelRailButtons />}
       currentPagePresenceUsers={currentPagePresenceUsers}
       isFigmaImageManagementEnabled={isFigmaImageManagementEnabled}
       isFigmaImagesPanelVisible={

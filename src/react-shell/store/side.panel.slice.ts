@@ -8,12 +8,17 @@ import {
 } from '../settings';
 import type { ReviewShellState } from './create.review.shell.store';
 
+export type ReviewSidePanel = StoredReviewSidePanel | `custom:${string}`;
+
+export const isBuiltInSidePanel = (panel: ReviewSidePanel): panel is StoredReviewSidePanel =>
+  !panel.startsWith('custom:');
+
 export interface SidePanelSlice {
-  sidePanel: StoredReviewSidePanel;
+  sidePanel: ReviewSidePanel;
   isListVisible: boolean;
   designInspectorMode: 'pick' | 'browse';
   setDesignInspectorMode: (mode: 'pick' | 'browse') => void;
-  setSidePanel: (sidePanel: StoredReviewSidePanel) => void;
+  setSidePanel: (sidePanel: ReviewSidePanel) => void;
   setIsListVisible: (isListVisible: boolean) => void;
 }
 

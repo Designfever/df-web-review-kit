@@ -12,16 +12,18 @@ import {
   useReviewShellStoreApi,
 } from '../store/store.context';
 
+import { isBuiltInSidePanel, type ReviewSidePanel } from '../store/side.panel.slice';
+
 interface UseReviewSidePanelOptions {
   isFigmaImageManagementEnabled: boolean;
 }
 
 const getAvailableSidePanel = (
-  sidePanel: StoredReviewSidePanel,
+  sidePanel: ReviewSidePanel,
   {
     isFigmaImageManagementEnabled,
   }: UseReviewSidePanelOptions
-): StoredReviewSidePanel => {
+): ReviewSidePanel => {
   if (sidePanel === 'figma-images' && !isFigmaImageManagementEnabled) {
     return 'qa';
   }
@@ -56,12 +58,10 @@ export const useReviewSidePanel = ({
   }, [isFigmaImageManagementEnabled, storeApi]);
 
   useEffect(() => {
+    if (!isBuiltInSidePanel(sidePanel)) return;
     writeStoredReviewSidePanel(sidePanel);
-  }, [sidePanel]);
-
-  useEffect(() => {
     writeStoredReviewSidePanelVisible(isListVisible);
-  }, [isListVisible]);
+  }, [sidePanel, isListVisible]);
 
   const openSidePanel = useCallback(
     (nextSidePanel: StoredReviewSidePanel) => {

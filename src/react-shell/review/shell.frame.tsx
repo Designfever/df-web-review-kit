@@ -6,6 +6,7 @@ import {
 } from 'react';
 
 export interface ReviewShellFrameSlots {
+  customPanels?: ReactNode;
   designInspectorPanel?: ReactNode;
   figmaImagesPanel?: ReactNode;
   modals?: ReactNode;
@@ -100,6 +101,7 @@ export const ReviewShellFrame = ({
       {slots.modals}
       {slots.toast}
       {slots.sideRail}
+      {slots.customPanels}
       {slots.qaPanel}
       {slots.figmaImagesPanel}
       {slots.sourceTreePanel}

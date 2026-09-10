@@ -8,6 +8,7 @@ import type {
 } from '../../types';
 import type { ReviewShellWriteMode } from '../types';
 import type { StoredReviewSidePanel } from '../settings';
+import { useReviewShellRefs } from '../store/shell.refs';
 import { getReviewModeWriteMode } from '../review/shell.helpers';
 import { setTargetFigmaOverlayLocked } from '../target/target';
 
@@ -26,6 +27,7 @@ export const useReviewShellTransientActions = ({
   setIsSitemapOpen,
   setMode,
 }: UseReviewShellTransientActionsOptions) => {
+  const { invalidateCustomPanelsRef } = useReviewShellRefs();
   const cancelReviewMode = useCallback(() => {
     const controller = controllerRef.current;
     if (!controller || controller.getMode() === 'idle') return false;
@@ -45,11 +47,12 @@ export const useReviewShellTransientActions = ({
 
   const reloadTargetFrame = useCallback(() => {
     try {
+      invalidateCustomPanelsRef.current?.();
       iframeRef.current?.contentWindow?.location.reload();
     } catch {
       return;
     }
-  }, [iframeRef]);
+  }, [iframeRef, invalidateCustomPanelsRef]);
 
   return {
     cancelReviewMode,

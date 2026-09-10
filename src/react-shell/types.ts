@@ -216,6 +216,8 @@ export interface CreateReviewPagesOptions {
 }
 
 export interface ReviewShellProps {
+  /** Enable same-origin target-owned custom right-rail panels. Defaults to false. */
+  customPanels?: boolean;
   projectId: string;
   pages: ReviewShellPage[];
   adapters: ReviewShellAdapters;

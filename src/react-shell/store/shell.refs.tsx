@@ -12,6 +12,7 @@ import type {
 import { getInitialItemId } from '../route';
 
 export interface ReviewShellRefs {
+  invalidateCustomPanelsRef: MutableRefObject<(() => void) | null>;
   cleanupTargetRef: MutableRefObject<(() => void) | null>;
   controllerRef: MutableRefObject<WebReviewKitController | null>;
   frameScrollRef: MutableRefObject<HTMLDivElement | null>;
@@ -21,6 +22,7 @@ export interface ReviewShellRefs {
 }
 
 export const createReviewShellRefs = (): ReviewShellRefs => ({
+  invalidateCustomPanelsRef: { current: null },
   cleanupTargetRef: { current: null },
   controllerRef: { current: null },
   frameScrollRef: { current: null },

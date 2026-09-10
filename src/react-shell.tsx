@@ -1,4 +1,10 @@
 import React from 'react';
+export { connectReviewCustomPanel } from './react-shell/custom-panels/connection';
+export type {
+  ReviewCustomPanelDefinition,
+  ReviewCustomPanelSnapshot,
+  ReviewCustomPanelConnection,
+} from './react-shell/custom-panels/types';
 import { createRoot } from 'react-dom/client';
 import { ensureReviewShellStyle } from './react-shell/style';
 import type { ReviewShellMountOptions } from './react-shell/types';

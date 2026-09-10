@@ -1,4 +1,5 @@
 // 우측 사이드 레일의 presentational UI.
+import type { ReactNode } from 'react';
 import {
   Bot as BotIcon,
   ListChecks as QaListIcon,
@@ -13,6 +14,7 @@ import { PresenceOverlay } from '../presence/overlay';
 import { DfLogoIcon } from './df.logo';
 
 export const ReviewSideRail = ({
+  customButtons,
   currentPagePresenceUsers,
   isFigmaImageManagementEnabled,
   isFigmaImagesPanelVisible,
@@ -29,6 +31,7 @@ export const ReviewSideRail = ({
   onToggleDesignInspector,
   onToggleSourceTreePanel,
 }: {
+  customButtons?: ReactNode;
   currentPagePresenceUsers: ReviewPresenceUser[];
   isFigmaImageManagementEnabled: boolean;
   isFigmaImagesPanelVisible: boolean;
@@ -119,6 +122,7 @@ export const ReviewSideRail = ({
           <ComponentTreeIcon />
         </span>
       </button>
+      {customButtons}
       <div className="df-review-side-actions">
         {onLogout && (
           <button

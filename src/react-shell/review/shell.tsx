@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import type { ReviewShellProps } from '../types';
+import { CustomPanelProvider, CustomPanelHost } from '../custom-panels/context';
 import { DesignInspectorPanelContainer } from '../design-inspector/panel.container';
 import { FigmaImagesPanelContainer } from '../figma/images.panel.container';
 import { QaPanelContainer } from '../qa/panel.container';
@@ -65,7 +66,9 @@ export const ReviewShell = (props: ReviewShellProps) => {
     <ReviewShellConfigProvider value={config}>
       <ReviewShellStoreProvider value={store}>
         <ReviewShellRefsProvider value={refs}>
-          <ReviewShellContent {...props} />
+          <CustomPanelProvider enabled={props.customPanels === true}>
+            <ReviewShellContent {...props} />
+          </CustomPanelProvider>
         </ReviewShellRefsProvider>
       </ReviewShellStoreProvider>
     </ReviewShellConfigProvider>
@@ -79,6 +82,7 @@ const ReviewShellContent = (props: ReviewShellProps) => {
     <ReviewShellProviders {...runtime}>
       <ReviewShellFrameContainer
         slots={{
+          customPanels: <CustomPanelHost />,
           topbar: <TopbarContainer />,
           modals: <ReviewShellModalsContainer />,
           toast: <ReviewToastContainer />,

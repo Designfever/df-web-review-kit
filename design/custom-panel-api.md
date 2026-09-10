@@ -1,6 +1,7 @@
 # Custom right-rail panel API contract
 
-Status: proposed, ready for review; **not implemented or available in v0.11.1**.
+Status: implemented locally in step 2; **unreleased and not available in published v0.11.1**.
+See [implementation evidence](custom-panel-implementation.md). Browser/demo acceptance remains pending.
 Scope: reusable Review Kit extension, with a same-origin target-owned portal demo.
 This design lives outside published `docs/` until implementation is verified.
 

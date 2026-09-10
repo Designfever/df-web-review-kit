@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { DesignInspectorMode } from '../../design-inspector';
 import { getSourceCandidates, openSourceInEditor } from '../source.open';
 import { useReviewShellActions } from '../store/shell.actions.context';
 import { useReviewShellConfig } from '../store/shell.config';
@@ -9,6 +10,7 @@ import { setTargetDesignInspectorLocked } from '../target/target';
 /** The shell owns navigation and viewport; the engine only inspects its iframe. */
 export const DesignInspectorPanelContainer = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const modeRef = useRef<DesignInspectorMode>('pick');
   const { iframeRef, controllerRef } = useReviewShellRefs();
   const storeApi = useReviewShellStoreApi();
   const { clearSourceInspector, clearSourceOutlineSelection } = useReviewShellActions();
@@ -21,6 +23,7 @@ export const DesignInspectorPanelContainer = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!isVisible) modeRef.current = 'pick';
     const container = containerRef.current;
     const frame = iframeRef.current;
     if (!isVisible || !container || !frame) return;
@@ -28,9 +31,6 @@ export const DesignInspectorPanelContainer = () => {
     let cancelled = false;
     let destroy: (() => void) | undefined;
     let lockedDocument: Document | null = null;
-    const close = () => {
-      storeApi.getState().setIsListVisible(false);
-    };
     setError('');
 
     void import('../../design-inspector').then(({ createDesignInspector }) => {
@@ -38,9 +38,10 @@ export const DesignInspectorPanelContainer = () => {
       const inspector = createDesignInspector({
         container,
         frame,
+        initialMode: modeRef.current,
         overlayContainer: container.closest<HTMLElement>('.df-review-shell') ?? undefined,
-        onClose: close,
         onModeChange: (mode) => {
+          modeRef.current = mode;
           storeApi.getState().setDesignInspectorMode(mode);
           if (mode === 'pick') {
             controllerRef.current?.setMode('idle');

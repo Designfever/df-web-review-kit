@@ -12,15 +12,16 @@ const SHORTCUT_SECTIONS = [
   {
     title: 'Panels',
     items: [
-      { keys: ['Shift', '1'], label: 'Figma images' },
-      { keys: ['Shift', '2'], label: 'QA list' },
-      { keys: ['Shift', '3'], label: 'Component list' },
+      { keys: ['Shift', '1'], label: 'Design inspector' },
+      { keys: ['Shift', '2'], label: 'Figma images' },
+      { keys: ['Shift', '3'], label: 'QA list' },
+      { keys: ['Shift', '4'], label: 'Component list' },
     ],
   },
   {
     title: 'Review modes',
     items: [
-      { keys: ['Shift', 'Q / ㅂ'], label: 'Toggle QA runtime' },
+      { keys: ['Shift', 'Q / ㅂ'], label: 'Review page / normal page' },
       { keys: ['E / ㄷ'], label: 'Element QA' },
       { keys: ['A / ㅁ'], label: 'Area QA' },
     ],
@@ -30,7 +31,6 @@ const SHORTCUT_SECTIONS = [
     items: [
       { keys: ['G / ㅎ'], label: 'Grid overlay' },
       { keys: ['F / ㄹ'], label: 'Figma overlay' },
-      { keys: ['Shift+D', 'R / ㄱ'], label: 'Design inspector' },
     ],
   },
   {

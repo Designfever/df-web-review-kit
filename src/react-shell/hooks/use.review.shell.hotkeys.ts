@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { bindReviewPageShortcut } from '../review.page.shortcut';
+import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellRefs } from '../store/shell.refs';
 import { getHotkeyActionKey, isHotkey } from '../../core/hotkey';
 import type { ReviewMode } from '../../types';
@@ -10,10 +12,8 @@ interface UseReviewShellHotkeysOptions {
   isRailHotkeyBlocked: boolean;
   isFigmaSettingsOpen: boolean;
   isFigmaOverlayAvailable: boolean;
-  isDesignInspectorVisible: boolean;
   onCancelReviewMode: () => boolean;
   onCloseFigmaSettings: () => void;
-  onCloseDesignInspector: () => boolean;
   onSetReviewMode: (mode: ReviewMode) => void;
   onToggleComponentListPanel: () => void;
   onToggleFigmaOverlay: () => void;
@@ -27,10 +27,8 @@ export const useReviewShellHotkeys = ({
   isRailHotkeyBlocked,
   isFigmaSettingsOpen,
   isFigmaOverlayAvailable,
-  isDesignInspectorVisible,
   onCancelReviewMode,
   onCloseFigmaSettings,
-  onCloseDesignInspector,
   onSetReviewMode,
   onToggleComponentListPanel,
   onToggleFigmaOverlay,
@@ -40,7 +38,12 @@ export const useReviewShellHotkeys = ({
   onToggleTargetOverlay,
 }: UseReviewShellHotkeysOptions) => {
   const { iframeRef } = useReviewShellRefs();
+  const { reviewPathPrefix } = useReviewShellConfig();
   const targetFrameLoadVersion = useReviewShellStore((state) => state.targetFrameLoadVersion);
+  useEffect(() => {
+    if (isRailHotkeyBlocked) return;
+    return bindReviewPageShortcut(reviewPathPrefix, iframeRef.current);
+  }, [isRailHotkeyBlocked, reviewPathPrefix, iframeRef, targetFrameLoadVersion]);
   const isInitialPromptOpen = useReviewShellStore(
     (state) => state.isInitialPromptOpen
   );
@@ -56,7 +59,6 @@ export const useReviewShellHotkeys = ({
   useEffect(() => {
     if (
       mode === 'idle' &&
-      !isDesignInspectorVisible &&
       !isInitialPromptOpen &&
       !isSitemapOpen &&
       !isFigmaSettingsOpen
@@ -68,12 +70,6 @@ export const useReviewShellHotkeys = ({
       if (event.key !== 'Escape') return;
 
       if (mode !== 'idle' && onCancelReviewMode()) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-
-      if (onCloseDesignInspector()) {
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -100,12 +96,10 @@ export const useReviewShellHotkeys = ({
   }, [
     isFigmaSettingsOpen,
     isInitialPromptOpen,
-    isDesignInspectorVisible,
     isSitemapOpen,
     mode,
     onCancelReviewMode,
     onCloseFigmaSettings,
-    onCloseDesignInspector,
     iframeRef,
     targetFrameLoadVersion,
     setIsInitialPromptOpen,
@@ -121,7 +115,6 @@ export const useReviewShellHotkeys = ({
       if (isEditableEventTarget(event)) return;
 
       const actions: Record<string, () => void> = {
-        r: onToggleDesignInspector,
         g: () => onToggleTargetOverlay('grid'),
         f: () => {
           if (isFigmaOverlayAvailable) onToggleFigmaOverlay();
@@ -143,7 +136,6 @@ export const useReviewShellHotkeys = ({
     isFigmaOverlayAvailable,
     onSetReviewMode,
     onToggleFigmaOverlay,
-    onToggleDesignInspector,
     iframeRef,
     targetFrameLoadVersion,
     onToggleTargetOverlay,
@@ -154,10 +146,10 @@ export const useReviewShellHotkeys = ({
       if (isRailHotkeyBlocked || event.repeat || isEditableEventTarget(event)) return;
 
       const actions = [
-        { hotkey: 'Shift+1', run: onToggleFigmaImagesPanel },
-        { hotkey: 'Shift+2', run: onToggleQaPanel },
-        { hotkey: 'Shift+3', run: onToggleComponentListPanel },
-        { hotkey: 'Shift+D', run: onToggleDesignInspector },
+        { hotkey: 'Shift+1', run: onToggleDesignInspector },
+        { hotkey: 'Shift+2', run: onToggleFigmaImagesPanel },
+        { hotkey: 'Shift+3', run: onToggleQaPanel },
+        { hotkey: 'Shift+4', run: onToggleComponentListPanel },
       ];
       const action = actions.find(({ hotkey }) => isHotkey(event, hotkey));
       if (!action) return;

@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   state: { mode: 'idle', isInitialPromptOpen: false, isSitemapOpen: false, targetFrameLoadVersion: 0,
     setIsInitialPromptOpen: vi.fn(), setIsSitemapOpen: vi.fn() },
 }));
+vi.mock('../store/shell.config', () => ({ useReviewShellConfig: () => ({ reviewPathPrefix: '/review' }) }));
 vi.mock('../store/shell.refs', () => ({ useReviewShellRefs: () => mocks.refs }));
 vi.mock('../store/store.context', () => ({
   useReviewShellStore: (selector: (state: typeof mocks.state) => unknown) => selector(mocks.state),
@@ -28,8 +29,7 @@ describe('design inspector shell hotkeys', () => {
     root = createRoot(host);
     options = {
       isRailHotkeyBlocked: false, isFigmaSettingsOpen: false, isFigmaOverlayAvailable: false,
-      isDesignInspectorVisible: true,
-      onCancelReviewMode: vi.fn(() => false), onCloseDesignInspector: vi.fn(() => true),
+      onCancelReviewMode: vi.fn(() => false),
       onCloseFigmaSettings: vi.fn(), onSetReviewMode: vi.fn(), onToggleComponentListPanel: vi.fn(),
       onToggleFigmaOverlay: vi.fn(), onToggleFigmaImagesPanel: vi.fn(), onToggleQaPanel: vi.fn(),
       onToggleDesignInspector: vi.fn(), onToggleTargetOverlay: vi.fn(),
@@ -42,26 +42,47 @@ describe('design inspector shell hotkeys', () => {
     mocks.refs.iframeRef.current = null;
   });
 
-  it('toggles from both the shell and focused target iframe, preserving the R alias', () => {
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', code: 'KeyD', shiftKey: true }));
-    frame.contentDocument!.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ㅇ', code: 'KeyD', shiftKey: true, bubbles: true }));
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'r', code: 'KeyR' }));
-    expect(options.onToggleDesignInspector).toHaveBeenCalledTimes(3);
+  it('toggles with Shift+1 from both the shell and focused target iframe', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '!', code: 'Digit1', shiftKey: true }));
+    frame.contentDocument!.body.dispatchEvent(new KeyboardEvent('keydown', { key: '!', code: 'Digit1', shiftKey: true, bubbles: true }));
+    expect(options.onToggleDesignInspector).toHaveBeenCalledTimes(2);
   });
 
-  it('closes from Escape inside the iframe', () => {
-    frame.contentDocument!.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    expect(options.onCloseDesignInspector).toHaveBeenCalledOnce();
+  it.each([
+    ['@', 'Digit2', 'onToggleFigmaImagesPanel'],
+    ['#', 'Digit3', 'onToggleQaPanel'],
+    ['$', 'Digit4', 'onToggleComponentListPanel'],
+  ] as const)('maps Shift+%s in rail order from shell and iframe', (key, code, action) => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key, code, shiftKey: true }));
+    frame.contentDocument!.body.dispatchEvent(new KeyboardEvent('keydown', { key, code, shiftKey: true, bubbles: true }));
+    expect(options[action]).toHaveBeenCalledTimes(2);
+    expect(options.onToggleDesignInspector).not.toHaveBeenCalled();
+  });
+
+  it('does not toggle the inspector with retired shortcuts', () => {
+    for (const key of ['r', 'ㄱ']) {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key, code: 'KeyR' }));
+      frame.contentDocument!.body.dispatchEvent(new KeyboardEvent('keydown', { key, code: 'KeyR', bubbles: true }));
+    }
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', code: 'KeyD', shiftKey: true }));
+    expect(options.onToggleDesignInspector).not.toHaveBeenCalled();
+  });
+
+  it('does not consume Escape for an idle rail panel', () => {
+    const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    frame.contentDocument!.body.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(options.onToggleDesignInspector).not.toHaveBeenCalled();
   });
 
   it('does not steal typing or repeat keyboard toggles while blocked', () => {
     const input = frame.contentDocument!.createElement('input');
     frame.contentDocument!.body.append(input);
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', shiftKey: true, bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: '!', code: 'Digit1', shiftKey: true, bubbles: true }));
     expect(options.onToggleDesignInspector).not.toHaveBeenCalled();
     options = { ...options, isRailHotkeyBlocked: true };
     act(() => root.render(<Harness />));
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', shiftKey: true }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '!', code: 'Digit1', shiftKey: true }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'r' }));
     expect(options.onToggleDesignInspector).not.toHaveBeenCalled();
   });

@@ -126,7 +126,7 @@ export const useReviewKitLifecycle = ({
       assigneeOptions,
       target: () => getReviewKitTarget({ frameScrollRef, iframeRef }),
       hotkeys: {
-        qa: 'Shift+Q',
+        qa: '', // Shift+Q switches between the review route and the normal page.
       },
       anchors: {
         attribute: 'data-qa-id',

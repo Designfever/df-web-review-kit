@@ -13,7 +13,6 @@ let container: HTMLElement;
 let first: HTMLButtonElement;
 let second: HTMLButtonElement;
 let onModeChange: Mock<(mode: DesignInspectorMode) => void>;
-let onClose: Mock<() => void>;
 
 const panel = () => container.querySelector('[data-df-review-design-inspector]')!.shadowRoot!;
 const geometry = () => document.querySelector('[data-df-review-design-geometry]')!.shadowRoot!;
@@ -31,7 +30,7 @@ async function render() {
   }
 }
 function start(options: Partial<Parameters<typeof createDesignInspector>[0]> = {}) {
-  session = createDesignInspector({ container, frame, onClose, onModeChange, ...options });
+  session = createDesignInspector({ container, frame, onModeChange, ...options });
   return session;
 }
 
@@ -43,7 +42,6 @@ beforeEach(() => {
     return id;
   });
   vi.stubGlobal('cancelAnimationFrame', (id: number) => queued.delete(id));
-  onClose = vi.fn();
   onModeChange = vi.fn();
   container = document.createElement('aside');
   frame = document.createElement('iframe');
@@ -76,8 +74,22 @@ describe('embedded design inspector', () => {
     expect(panel().querySelector('iframe')).toBeNull();
     expect(panel().querySelector('.viewport-controls, .figma-controls, .move')).toBeNull();
     expect(geometry().querySelector('.canvas')).not.toBeNull();
-    press('.close');
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(panel().querySelector('.close')).toBeNull();
+    expect(node('.identity').textContent).toBe('body');
+    expect(node('.empty').hidden).toBe(true);
+    expect(node('.selection').hidden).toBe(false);
+  });
+
+  it('starts in restored browse mode without intercepting the next site click', async () => {
+    start({ initialMode: 'browse' });
+    await render();
+    expect(onModeChange).toHaveBeenLastCalledWith('browse');
+    expect(node('.browse').getAttribute('aria-pressed')).toBe('true');
+    expect(node('.identity').textContent).toBe('body');
+    expect(select(first)).toBe(true);
+    frame.dispatchEvent(new Event('load'));
+    expect(select(second)).toBe(true);
+    expect(onModeChange).toHaveBeenLastCalledWith('browse');
   });
 
   it('inspects cross-window elements, projects outlines and preserves original CSS pixel dimensions', async () => {
@@ -195,7 +207,8 @@ describe('embedded design inspector', () => {
     expect(onModeChange).toHaveBeenLastCalledWith('pick');
     expect(onModeChange).toHaveBeenCalledTimes(2);
     await render();
-    expect(node('.selection').hidden).toBe(true);
+    expect(node('.selection').hidden).toBe(false);
+    expect(node('.identity').textContent).toBe('body');
     select(second);
     await render();
     expect(node('.identity').textContent).toBe('button.second');
@@ -262,15 +275,17 @@ describe('embedded design inspector', () => {
     expect(node('.width').textContent).toBe('200 px');
   });
 
-  it('only uses the optional source adapter after selection and explicit open', async () => {
+  it('resolves default and clicked selections but only opens source explicitly', async () => {
     const location = { file: '/src/button.tsx', displayPath: 'button.tsx', line: 12, column: 3 };
     const resolve = vi.fn(() => location);
     const open = vi.fn();
     start({ source: { resolve, open } });
-    expect(resolve).not.toHaveBeenCalled();
+    await render();
+    expect(resolve).toHaveBeenCalledExactlyOnceWith(frame.contentDocument!.body);
     select(first);
     await render();
-    expect(resolve).toHaveBeenCalledExactlyOnceWith(first);
+    expect(resolve).toHaveBeenLastCalledWith(first);
+    expect(resolve).toHaveBeenCalledTimes(2);
     expect(open).not.toHaveBeenCalled();
     press('.open-source');
     await render();

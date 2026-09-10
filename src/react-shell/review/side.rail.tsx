@@ -4,7 +4,7 @@ import {
   ListChecks as QaListIcon,
   LogOut as LogOutIcon,
   Network as ComponentTreeIcon,
-  Ruler as RulerIcon,
+  SquareMousePointer as InspectorIcon,
   Settings as SettingsIcon,
 } from 'lucide-react';
 import type { ReviewPresenceUser } from '../types';
@@ -52,13 +52,13 @@ export const ReviewSideRail = ({
         aria-label={isDesignInspectorVisible ? 'Hide design inspector' : 'Show design inspector'}
         aria-pressed={isDesignInspectorVisible}
         className={`df-review-side-toggle${isDesignInspectorVisible ? ' is-active' : ''}`}
-        data-review-tooltip="Design inspector (Shift+D)"
+        data-review-tooltip="Design inspector (Shift+1)"
         data-review-tooltip-placement="left"
-        title="Design inspector (Shift+D)"
+        title="Design inspector (Shift+1)"
         type="button"
         onClick={onToggleDesignInspector}
       >
-        <RulerIcon aria-hidden="true" />
+        <InspectorIcon aria-hidden="true" />
       </button>
       {isFigmaImageManagementEnabled && (
         <button
@@ -71,11 +71,11 @@ export const ReviewSideRail = ({
           className={`df-review-side-toggle${
             isFigmaImagesPanelVisible ? ' is-active' : ''
           }`}
-          data-review-tooltip="Figma Images"
+          data-review-tooltip="Figma Images (Shift+2)"
           data-review-tooltip-placement="left"
           type="button"
           onClick={onToggleFigmaImagesPanel}
-          title="Figma Images"
+          title="Figma Images (Shift+2)"
         >
           <span aria-hidden="true">
             <FigmaRailIcon />
@@ -88,11 +88,11 @@ export const ReviewSideRail = ({
         className={`df-review-side-toggle${
           isQaPanelVisible ? ' is-active' : ''
         }`}
-        data-review-tooltip="QA"
+        data-review-tooltip="QA (Shift+3)"
         data-review-tooltip-placement="left"
         type="button"
         onClick={onToggleQaPanel}
-        title="QA"
+        title="QA (Shift+3)"
       >
         <span aria-hidden="true">
           <QaListIcon />
@@ -109,11 +109,11 @@ export const ReviewSideRail = ({
         className={`df-review-side-toggle${
           isSourceTreePanelVisible ? ' is-active' : ''
         }`}
-        data-review-tooltip="Component List"
+        data-review-tooltip="Component List (Shift+4)"
         data-review-tooltip-placement="left"
         type="button"
         onClick={onToggleSourceTreePanel}
-        title="Component List"
+        title="Component List (Shift+4)"
       >
         <span aria-hidden="true">
           <ComponentTreeIcon />

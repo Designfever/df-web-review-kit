@@ -12,6 +12,7 @@ import {
 } from '../../figma/image.types';
 import { isEditableEventTarget, isHotkey } from '../../core/hotkey';
 import { normalizeTarget } from '../route';
+import { bindReviewPageShortcut } from '../review.page.shortcut';
 import type {
   ReviewShellFigmaImagesOptions,
   ReviewShellViewportPreset,
@@ -109,6 +110,10 @@ const FigmaDevOverlayWidget = ({
   projectId,
   reviewPathPrefix,
 }: FigmaDevOverlayMountOptions) => {
+  useEffect(() => {
+    if (window.self !== window.top) return;
+    return bindReviewPageShortcut(reviewPathPrefix);
+  }, [reviewPathPrefix]);
   const figmaImageStore = getReviewFigmaImageStore(figmaImages);
   const viewport = useCurrentViewport();
   const currentPageUrl = useCurrentPageUrl(pageUrl, reviewPathPrefix);

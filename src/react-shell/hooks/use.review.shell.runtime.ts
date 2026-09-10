@@ -79,9 +79,6 @@ export const useReviewShellRuntime = ({
   );
   const selectedItemId = useReviewShellStore((state) => state.selectedItemId);
   const isAllQaVisible = useReviewShellStore((state) => state.isAllQaVisible);
-  const isDesignInspectorVisible = useReviewShellStore(
-    (state) => state.isListVisible && state.sidePanel === 'design-inspector'
-  );
   const isDesignInspecting = useReviewShellStore(
     (state) => state.isListVisible && state.sidePanel === 'design-inspector' && state.designInspectorMode === 'pick'
   );
@@ -330,12 +327,6 @@ export const useReviewShellRuntime = ({
     showSourceOutlineForElement,
   } = sourceInspector;
 
-  const closeDesignInspector = useCallback(() => {
-    const state = storeApi.getState();
-    if (!state.isListVisible || state.sidePanel !== 'design-inspector') return false;
-    state.setIsListVisible(false);
-    return true;
-  }, [storeApi]);
   const toggleDesignInspectorPanel = useCallback(() => {
     cancelReviewMode();
     closeRuler();
@@ -371,10 +362,8 @@ export const useReviewShellRuntime = ({
       isItemEditing,
     isFigmaSettingsOpen,
     isFigmaOverlayAvailable: figmaOverlayState.isFigmaOverlayAvailable,
-    isDesignInspectorVisible,
     onCancelReviewMode: cancelReviewMode,
     onCloseFigmaSettings: closeFigmaSettings,
-    onCloseDesignInspector: closeDesignInspector,
     onSetReviewMode: setReviewMode,
     onToggleComponentListPanel: toggleSourceTreePanel,
     onToggleFigmaOverlay: figmaOverlayState.toggleFigmaOverlay,

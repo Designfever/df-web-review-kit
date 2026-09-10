@@ -42,7 +42,7 @@ describe('embedded design inspector panel lifecycle', () => {
     mocks.state.sidePanel = 'design-inspector';
     mocks.create.mockImplementation((options: DesignInspectorOptions) => {
       engineOptions = options;
-      options.onModeChange?.('pick');
+      options.onModeChange?.(options.initialMode ?? 'pick');
       return { destroy: mocks.destroy };
     });
     root = createRoot(host);
@@ -77,13 +77,26 @@ describe('embedded design inspector panel lifecycle', () => {
     expect(frame.contentDocument!.documentElement.hasAttribute('data-df-review-design-inspecting')).toBe(false);
   });
 
-  it('destroys the old engine on hard iframe navigation', async () => {
+  it('preserves browsing when recreating the engine for a replacement iframe', async () => {
     mocks.state.isListVisible = true;
     await render();
+    engineOptions.onModeChange?.('browse');
+    const replacement = document.createElement('iframe');
+    host.append(replacement);
+    mocks.refs.iframeRef.current = replacement;
     mocks.state.frameNavigationVersion += 1;
     await render();
     expect(mocks.destroy).toHaveBeenCalledOnce();
     expect(mocks.create).toHaveBeenCalledTimes(2);
+    expect(engineOptions.frame).toBe(replacement);
+    expect(engineOptions.initialMode).toBe('browse');
+    expect(mocks.state.setDesignInspectorMode).toHaveBeenLastCalledWith('browse');
+    expect(replacement.contentDocument!.documentElement.hasAttribute('data-df-review-design-inspecting')).toBe(false);
+    mocks.state.isListVisible = false;
+    await render();
+    mocks.state.isListVisible = true;
+    await render();
+    expect(engineOptions.initialMode).toBe('pick');
   });
 
   it('routes source opening through the configured review-kit editor adapter', async () => {
@@ -91,7 +104,5 @@ describe('embedded design inspector panel lifecycle', () => {
     await render();
     await engineOptions.source!.open({ file: 'src/page.tsx', displayPath: 'page.tsx', line: 10, column: 2 });
     expect(mocks.openSource).toHaveBeenCalledWith({ file: 'src/page.tsx', line: '10', column: '2' }, mocks.config.sourceOpenOptions);
-    engineOptions.onClose();
-    expect(mocks.state.setIsListVisible).toHaveBeenCalledWith(false);
   });
 });

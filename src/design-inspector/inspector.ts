@@ -32,7 +32,7 @@ export type DesignInspectorOptions = {
   /** Existing same-origin target iframe, including its CSS scale. */
   frame: HTMLIFrameElement;
   source?: DesignInspectorSourceOptions;
-  onClose(): void;
+  initialMode?: DesignInspectorMode;
   /** Called synchronously on initial bind, mode changes and iframe document rebind. */
   onModeChange?(mode: DesignInspectorMode): void;
 };
@@ -43,7 +43,7 @@ export function createDesignInspector({
   overlayContainer,
   frame: targetFrame,
   source,
-  onClose,
+  initialMode = 'pick',
   onModeChange,
 }: DesignInspectorOptions): DesignInspectorSession {
   const doc = container.ownerDocument;
@@ -70,16 +70,15 @@ export function createDesignInspector({
     <section class="panel" aria-label="디자인 인스펙터">
       <div class="header">
         <div class="brand">Design Inspector<small>DESIGNFEVER · LOCAL QA</small></div>
-        <button class="close" aria-label="인스펙터 닫기" title="Esc">×</button>
-      </div>
-      <div class="toolbar">
-        <button class="pick" aria-pressed="true">요소 선택</button>
-        <button class="browse" aria-pressed="false">사이트 조작</button>
-        <button class="compare" aria-pressed="false" disabled>거리 측정</button>
+        <div class="toolbar">
+          <button class="pick" aria-pressed="true">요소 선택</button>
+          <button class="browse" aria-pressed="false">사이트 조작</button>
+          <button class="compare" aria-pressed="false" disabled>거리 측정</button>
+        </div>
       </div>
       <div class="status" role="status" aria-live="polite">호버로 크기 확인 · 클릭/탭으로 선택</div>
       <div class="body">
-        <div class="empty"><strong>화면 위의 요소를 선택하세요</strong>폰트, 색상, 크기와 간격을 확인합니다.<br>버튼을 실제로 누르려면 ‘사이트 조작’으로 전환하세요.<p>Shift+D 켜기/끄기 · Esc 닫기<br>요소 선택 후 Alt/Option+호버로 거리 측정</p></div>
+        <div class="empty"><strong>화면 위의 요소를 선택하세요</strong>폰트, 색상, 크기와 간격을 확인합니다.<br>버튼을 실제로 누르려면 ‘사이트 조작’으로 전환하세요.<p>Shift+1 켜기/끄기<br>요소 선택 후 Alt/Option+호버로 거리 측정</p></div>
         <div class="selection" hidden>
           <div class="identity"></div>
           <div class="source-location" hidden><code class="source-path"></code><button class="open-source" type="button" disabled>소스 열기</button></div>
@@ -118,7 +117,7 @@ export function createDesignInspector({
   let selected: Element | null = null;
   let hovered: Element | null = null;
   let compared: Element | null = null;
-  let mode: DesignInspectorMode = 'pick';
+  let mode: DesignInspectorMode = initialMode;
   let notifiedMode: DesignInspectorMode | null = null;
   let measuring = false;
   let alt = false;
@@ -284,7 +283,7 @@ export function createDesignInspector({
         : measuring
           ? '비교할 두 번째 요소를 클릭/탭하세요.'
           : selected
-            ? `선택 고정${source ? ' · 더블클릭으로 소스 열기' : ''} · Alt/Option+호버 또는 ‘거리 측정’`
+            ? `클릭/탭으로 요소 선택${source ? ' · 더블클릭으로 소스 열기' : ''} · Alt/Option+호버 또는 ‘거리 측정’`
             : '호버로 크기 확인 · 클릭/탭으로 선택';
     if (status.textContent !== message) status.textContent = message;
   }
@@ -534,11 +533,13 @@ export function createDesignInspector({
     alt = measuring = hitTest = false;
     observeSelection();
     get<HTMLTextAreaElement>('.report').hidden = true;
-    if (next && !destroyed) bindTargetEvents(next);
+    if (next && !destroyed) {
+      bindTargetEvents(next);
+      select(next.body);
+    }
     updateMode();
     invalidate();
   }
-  click('.close', onClose);
   click('.pick', () => {
     mode = 'pick';
     measuring = false;
@@ -753,7 +754,7 @@ export function createDesignInspector({
   }
   rebind();
   updateMode();
-  get('.close').focus({ preventScroll: true });
+  get('.pick').focus({ preventScroll: true });
   return {
     destroy() {
       if (destroyed) return;

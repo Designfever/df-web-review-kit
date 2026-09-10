@@ -1,0 +1,63 @@
+/* Loaded by dev/main in BOTH documents; iframe CSS does not follow a portal. */
+.dev-portal-demo {
+  display: grid;
+  min-width: 0;
+  margin: 24px 0;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+.dev-portal-demo.is-standalone {
+  grid-template-columns: minmax(0, 1fr) clamp(160px, 32vw, 280px);
+}
+.dev-portal-preview { min-width: 0; padding: clamp(16px, 3vw, 32px); }
+.dev-portal-preview h2 {
+  margin: 20px 0;
+  font-size: clamp(24px, 4vw, 40px);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.dev-portal-preview p { line-height: 1.5; }
+.dev-portal-local-panel { min-width: 0; border-left: 1px solid #334155; }
+.dev-portal-editor {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px;
+  background: #111827;
+  color: #e2e8f0;
+  font: 14px/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+.dev-portal-editor h2 { margin: 0; font-size: 20px; line-height: 1.3; }
+.dev-portal-kicker {
+  margin: 0 0 8px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.dev-portal-editor input,
+.dev-portal-editor button {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #0f172a;
+  color: #f8fafc;
+  font: inherit;
+}
+.dev-portal-editor button { cursor: pointer; background: #1e293b; }
+.dev-portal-editor :is(input, button):focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+.dev-portal-color-control { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dev-portal-color-control input { width: 56px; padding: 4px; cursor: pointer; }
+.dev-portal-help { margin: 0; color: #94a3b8; font-size: 12px; line-height: 1.5; }
+.dev-portal-review-link { display: inline-block; margin-top: 16px; color: #93c5fd; text-decoration: underline; }

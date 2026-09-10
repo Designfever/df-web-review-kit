@@ -25,6 +25,8 @@ import {
 } from './fixtures/config';
 import { TargetApp } from './fixtures/target-app';
 import './style.css';
+// Portal controls render in the review document; load their scoped CSS in both branches.
+import './fixtures/components/portal-editor.css';
 
 declare global {
   interface Window {
@@ -144,6 +146,7 @@ function mountDevReviewShell() {
   seedDevExternalLinksFixtureItem();
 
   mountReviewShell({
+    customPanels: true,
     projectId: REVIEW_PROJECT_ID,
     pages,
     adapters,

@@ -1,3 +1,4 @@
+import { PortalEditorDemo } from './portal-editor-demo';
 import { ControlRow } from './control-row';
 import { MetricsPanel } from './metrics-panel';
 import { StatePreviewGrid } from './state-preview-grid';
@@ -13,6 +14,7 @@ export function ComponentsFixture() {
         <p className="dev-eyebrow">Components</p>
         <h1>Controls and layout states</h1>
       </div>
+      <PortalEditorDemo />
       <ControlRow />
       <div className="dev-component-stack" data-qa-id="component-stack">
         <MetricsPanel />

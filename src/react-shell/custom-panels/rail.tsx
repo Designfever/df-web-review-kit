@@ -8,7 +8,9 @@ export function CustomPanelRailButtons() {
   const entries = useSyncExternalStore(registry.subscribe, registry.getSnapshot, registry.getSnapshot);
   const selected = useReviewShellStore(state => state.sidePanel);
   const visible = useReviewShellStore(state => state.isListVisible);
-  return <>{entries.map(({ definition, container }) => {
+  return <>
+    {entries.length > 0 && <span className="df-review-side-divider" aria-hidden="true" />}
+    {entries.map(({ definition, container }) => {
     const active = visible && selected === `custom:${definition.id}`;
     return <button
       key={container.id}

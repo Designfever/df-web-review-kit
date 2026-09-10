@@ -5,7 +5,7 @@ import {
 } from './protocol';
 import type { ReviewCustomPanelDefinition, ReviewCustomPanelSnapshot } from './types';
 
-export interface CustomPanelEntry {
+interface CustomPanelEntry {
   definition: ReviewCustomPanelDefinition;
   container: HTMLElement;
 }

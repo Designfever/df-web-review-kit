@@ -20,6 +20,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 14. [Architecture and runtime logic](architecture.md)
 15. [Figma overlay](figma-overlay.md)
 16. [Grid overlay](grid-overlay.md)
+17. [Custom right-rail panels (unreleased)](custom-panels.md)
 
 ## Document Roles
 
@@ -37,6 +38,10 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 - `architecture.md`: core/runtime, React shell, coordinate, anchor, sitemap, and feature ownership boundaries.
 - `figma-overlay.md`: host helper requirements plus package image overlay state and interaction rules.
 - `grid-overlay.md`: host requirements for the grid/helper overlay toggle.
+
+## Release Drafts
+
+- [Custom right-rail panels](release-notes-custom-panels-draft.md) — unreleased, version unassigned.
 
 ## Release History
 

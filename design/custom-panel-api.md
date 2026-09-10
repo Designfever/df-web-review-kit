@@ -1,7 +1,7 @@
 # Custom right-rail panel API contract
 
 Status: implemented locally in step 2; **unreleased and not available in published v0.11.1**.
-See [implementation evidence](custom-panel-implementation.md). Browser/demo acceptance remains pending.
+See [implementation evidence](custom-panel-implementation.md) and [browser regression results](custom-panel-regression.md). User sign-off and memory collection verification remain open.
 Scope: reusable Review Kit extension, with a same-origin target-owned portal demo.
 This design lives outside published `docs/` until implementation is verified.
 
@@ -240,7 +240,9 @@ registry, target connection, and panel container. Registry must not own editor d
 
 ## 8. Acceptance checklist for implementation/demo steps
 
-All items below are **pending**; source inspection is not browser validation.
+This is the original acceptance checklist, not user sign-off. See the linked
+regression results for completed automated/browser checks and remaining limits;
+full memory collection and cross-browser validation are not signed off.
 
 - [ ] Public exports/types build; existing mount cleanup and disabled default work.
 - [ ] Both target-first and shell-first mount produce one ready connected container;

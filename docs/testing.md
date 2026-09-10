@@ -75,3 +75,38 @@ Add or extend Vitest coverage when changing:
 - `getReviewItemScope` (`src/core/review/scope.ts`) intentionally never returns `dom`: a legacy `dom`/`element` scope falls back to viewport-based grouping so those items keep showing markers (marker visibility requires `scope === currentScope`, and the current scope is always a viewport scope). Current code never persists a `dom` scope, so this path only applies to legacy data. `scope.test.ts` pins this behavior.
 
 Use Playwright only for browser-visible shell flows, screenshots, or iframe interaction. Adapter regressions should stay in Vitest because they are faster and easier to run in package CI.
+
+
+## Custom-panel browser regression
+
+Use a local-only dev server (empty Supabase URL prevents remote adapters/presence):
+
+```sh
+VITE_REVIEW_SUPABASE_URL= pnpm dev:review
+```
+
+In a second terminal, with Puppeteer installed in the test environment:
+
+```sh
+node scripts/e2e/custom-panel.mjs
+```
+
+Optional environment variables: `PUPPETEER_MODULE` (module name or absolute module
+path), `CHROME_BIN` (installed Chrome executable), `REVIEW_BASE_URL` (localhost /
+127.0.0.1 only, defaults to port 5177), and `REVIEW_EVIDENCE_DIR` (screenshots and
+JSON results). Puppeteer is optional tooling, not a runtime package dependency.
+The script blocks external HTTP requests and fails if any were attempted. Do not
+point it at a remotely configured fixture. It edits only the local demo, never
+creates/updates QA records, and uses a fresh browser profile.
+
+Coverage: ordinary URL controls, portal text/color, keyboard focus/Tab, all rail
+panels/shortcuts, duplicate IDs, 390/620/768/1920px target widths, responsive styles,
+reload resets, document and SPA navigation, and stale-container detachment.
+Garbage collection is recorded separately as an observation, not a deterministic
+pass/fail gate or an exhaustive heap leak proof. Retained detached containers must
+not be reported as collected; an inconclusive result remains visible in the JSON. This script targets the source-served dev fixture, not a production
+site. See [Custom panels](custom-panels.md) for the integration contract.
+
+On Node 26, if experimental native web storage shadows jsdom and existing tests
+fail on `localStorage`, run `NODE_OPTIONS=--no-experimental-webstorage pnpm test`.
+This is a test-process workaround, not an application setting.

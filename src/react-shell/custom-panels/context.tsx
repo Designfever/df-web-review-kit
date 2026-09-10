@@ -21,7 +21,7 @@ export function CustomPanelProvider({ enabled, children }: { enabled: boolean; c
   return <Context.Provider value={registry}>{children}</Context.Provider>;
 }
 
-export function useCustomPanelRegistry() {
+export function useCustomPanelRegistry(): CustomPanelRegistry {
   const registry = useContext(Context);
   if (!registry) throw new Error('Custom panels require a ReviewShell provider');
   return registry;

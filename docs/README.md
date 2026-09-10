@@ -40,6 +40,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
+- [0.11.1](release-notes-0.11.1.md): grid toolbar state follows the visible host helper.
 - [0.11.0](release-notes-0.11.0.md): integrated design inspector, ordered rail shortcuts, and persistent Browse mode.
 - [0.10.2](release-notes-0.10.2.md): df-sheet page/logout controls and status-aware multi-owner QA workflows.
 - [0.10.1](release-notes-0.10.1.md): reliable pointer interaction for review-shell controls.

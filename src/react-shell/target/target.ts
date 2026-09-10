@@ -197,14 +197,21 @@ const getStoredOverlayState = (
   });
 };
 
+const getGridOverlayState = (targetDocument: Document | undefined) => {
+  const isVisible = Boolean(
+    targetDocument?.documentElement.classList.contains('is-help') ||
+      targetDocument?.body?.classList.contains('is-help') ||
+      targetDocument?.querySelector('.helper.onShow')
+  );
+  // A mounted helper owns its current state; stored flags may belong to an older host.
+  if (isVisible || targetDocument?.querySelector('.helper')) return isVisible;
+  return getStoredOverlayState(targetDocument, 'grid');
+};
+
 export const getTargetOverlayState = (
   targetDocument: Document | undefined
 ): TargetOverlayState => ({
-  grid: Boolean(
-    targetDocument?.body?.classList.contains('is-help') ||
-      targetDocument?.querySelector('.helper.onShow') ||
-      getStoredOverlayState(targetDocument, 'grid')
-  ),
+  grid: getGridOverlayState(targetDocument),
   figma: Boolean(
     targetDocument?.querySelector(
       '.helper-figma-root, .helper-figma-loading-backdrop'

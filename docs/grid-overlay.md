@@ -18,9 +18,13 @@ Expected behavior:
 - The target page toggles a visible grid/helper layer.
 - The active state is reflected by one of these:
   - `document.body.classList.contains('is-help')`
+  - `document.documentElement.classList.contains('is-help')`
   - `.helper.onShow`
 
 The review shell uses those signals to keep the toolbar button state in sync.
+When `.helper` is mounted, its current DOM state takes precedence over saved
+cookie/storage flags. Saved flags are only a fallback for hosts without a
+recognized helper.
 It also injects a small stacking-order safeguard so recognized grid/helper
 layers render above host Figma helpers and package-managed Figma image overlays.
 

@@ -73,6 +73,59 @@ export const reviewShellStageStyle = `
     pointer-events: none;
   }
 
+  .df-review-marker-capture {
+    --df-review-outside-marker-color: #7cc7ff;
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .df-review-marker-title {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    padding: 0 4px 0 7px;
+    border: 1px solid var(--df-review-outside-marker-color);
+    border-radius: 999px;
+    background: var(--df-review-color-panel);
+    color: var(--df-review-outside-marker-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--df-review-outside-marker-color) 20%, transparent);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .df-review-capture-icon {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .df-review-capture-icon svg { width: 13px; height: 13px; }
+  .df-review-capture-icon:hover { background: var(--df-review-control); }
+  .df-review-capture-icon:focus-visible,
+  .df-review-outside-marker-focus:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  .df-review-outside-marker-focus {
+    height: 100%;
+    padding: 0 5px;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
   .df-review-outside-marker {
     --df-review-outside-marker-color: #7cc7ff;
     --df-review-outside-marker-connector-top: 10px;
@@ -88,7 +141,7 @@ export const reviewShellStageStyle = `
     width: max-content;
     min-width: 28px;
     height: 22px;
-    padding: 0 6px;
+    padding: 0 2px;
     border: 1px solid var(--df-review-outside-marker-color);
     border-radius: var(--df-review-radius-pill);
     background: var(--df-review-color-panel);
@@ -124,19 +177,23 @@ export const reviewShellStageStyle = `
     height: 1px;
   }
 
-  .df-review-outside-marker.is-scope-tablet {
+  .df-review-outside-marker.is-scope-tablet,
+  .df-review-marker-capture.is-scope-tablet {
     --df-review-outside-marker-color: #63d7c7;
   }
 
-  .df-review-outside-marker.is-scope-desktop {
+  .df-review-outside-marker.is-scope-desktop,
+  .df-review-marker-capture.is-scope-desktop {
     --df-review-outside-marker-color: #f3b75f;
   }
 
-  .df-review-outside-marker.is-scope-wide {
+  .df-review-outside-marker.is-scope-wide,
+  .df-review-marker-capture.is-scope-wide {
     --df-review-outside-marker-color: #c99cff;
   }
 
-  .df-review-outside-marker.is-scope-dom {
+  .df-review-outside-marker.is-scope-dom,
+  .df-review-marker-capture.is-scope-dom {
     --df-review-outside-marker-color: #ff8f61;
   }
 

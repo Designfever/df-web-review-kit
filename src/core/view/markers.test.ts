@@ -39,6 +39,19 @@ function createAreaItem(overrides: Partial<ReviewItem> = {}): ReviewItem {
 }
 
 describe('createMarkerLayer', () => {
+  it('keeps the highlight when the shell renders its title', () => {
+    const layer = createMarkerLayer({
+      items: [createAreaItem()],
+      highlightedItemId: 'item-111',
+      environment: createEnvironment(),
+      showCompactMarkers: false,
+      showHighlightLabels: false,
+    });
+
+    expect(layer.querySelector('.dfwr-item-target-highlight')).not.toBeNull();
+    expect(layer.querySelector('.dfwr-item-target-label')).toBeNull();
+  });
+
   it('renders stored area items as compact markers until selected', () => {
     const layer = createMarkerLayer({
       items: [createAreaItem()],

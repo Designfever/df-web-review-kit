@@ -558,6 +558,11 @@ export function createStyleElement() {
       min-height: 184px;
     }
 
+    .dfwr-shell.is-docked-composer .dfwr-dom-popover.is-composer .dfwr-textarea {
+      /* Area metrics: three text lines, padding, borders and grid gaps. */
+      min-height: calc(184px + var(--df-review-font-size-xs) * 1.35 * 3 + 36px);
+    }
+
     .dfwr-dom-popover.is-dragging,
     .dfwr-area-draft.is-dragging {
       user-select: none;
@@ -626,6 +631,7 @@ export function createStyleElement() {
 
     .dfwr-shell.is-docked-composer .dfwr-actions.has-leading {
       align-items: stretch;
+      flex-wrap: wrap;
     }
 
     .dfwr-shell.is-docked-composer .dfwr-actions.has-leading .dfwr-button,
@@ -656,6 +662,8 @@ export function createStyleElement() {
 
     .dfwr-form {
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      min-width: 0;
       gap: 10px;
     }
 
@@ -779,6 +787,13 @@ export function createStyleElement() {
       grid-column: 1 / -1;
     }
 
+    .dfwr-workflow-fields .dfwr-select {
+      min-height: 30px;
+      padding: 0 10px;
+      font-size: var(--df-review-font-size-xs);
+      line-height: 28px;
+    }
+
     .dfwr-status-select {
       appearance: auto;
     }
@@ -818,9 +833,12 @@ export function createStyleElement() {
     }
 
     .dfwr-assignee-summary {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      display: block;
+      background-color: var(--df-review-color-control);
+      background-image: var(--df-review-select-chevron, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d7e0ec' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"));
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 14px 14px;
       overflow: hidden;
       list-style: none;
       text-overflow: ellipsis;
@@ -831,29 +849,26 @@ export function createStyleElement() {
       display: none;
     }
 
-    .dfwr-assignee-summary::after {
-      content: '⌄';
-      flex: 0 0 auto;
-      margin-left: auto;
-      color: var(--df-review-color-text-muted);
+    .dfwr-workflow-fields .dfwr-assignee-summary {
+      padding-right: 32px;
     }
 
     .dfwr-assignee-menu {
       position: absolute;
-      left: 0;
+      right: 0;
       bottom: calc(100% + 6px);
       z-index: 20;
       display: grid;
       gap: 3px;
-      width: max(100%, 210px);
+      width: max(100%, min(200px, calc(100vw - 50px)));
       max-height: 260px;
       overflow: auto;
       padding: 7px;
-      border: 1px solid var(--df-review-color-border-strong);
+      border: 1px solid var(--df-review-color-border);
       border-radius: var(--df-review-radius-md);
       color: var(--df-review-color-text);
-      background: var(--df-review-color-panel-strong);
-      box-shadow: var(--df-review-shadow-popover);
+      background: var(--df-review-color-panel);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.36);
     }
 
     .dfwr-assignee-option {
@@ -864,15 +879,21 @@ export function createStyleElement() {
       padding: 0 7px;
       border-radius: var(--df-review-radius-sm);
       cursor: pointer;
-      font-size: var(--df-review-font-size-sm);
+      font-size: var(--df-review-font-size-xs);
     }
 
     .dfwr-assignee-option:hover {
-      background: var(--df-review-color-control);
+      background: var(--df-review-color-border-soft, rgba(255, 255, 255, 0.08));
     }
 
     .dfwr-assignee-option input {
+      flex: 0 0 auto;
       accent-color: var(--df-review-color-accent);
+    }
+
+    .dfwr-assignee-option span {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .dfwr-assignee-menu-actions {
@@ -881,13 +902,13 @@ export function createStyleElement() {
       gap: 6px;
       margin-top: 4px;
       padding-top: 7px;
-      border-top: 1px solid var(--df-review-color-border);
+      border-top: 1px solid var(--df-review-color-border-soft, rgba(255, 255, 255, 0.08));
     }
 
     .dfwr-assignee-menu-actions button {
       min-height: 28px;
       padding: 0 9px;
-      border: 1px solid var(--df-review-color-border-strong);
+      border: 1px solid var(--df-review-color-border);
       border-radius: var(--df-review-radius-sm);
       color: var(--df-review-color-text);
       background: var(--df-review-color-control);

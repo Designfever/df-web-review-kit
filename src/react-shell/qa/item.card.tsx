@@ -23,6 +23,7 @@ import type {
 } from '../../types';
 import type { NormalizedReviewShellAdapter } from '../adapters';
 import { getItemTitle } from '../prompt/prompt';
+import { ImagePreviewModal } from '../image.preview.modal';
 import { QaItemAssigneeActions } from './item.assignee.actions';
 import { QaItemExternalLinks } from './item.external.links';
 import { QaItemRemoteActions } from './item.remote.actions';
@@ -93,28 +94,32 @@ const QaItemAttachments = ({
   attachments: ReviewAttachment[];
 }) => {
   const imageAttachments = attachments.filter(isImageAttachment);
+  const [preview, setPreview] = useState<ReviewAttachment | null>(null);
 
   if (imageAttachments.length === 0) return null;
 
   return (
     <div className="df-review-item-attachments">
       {imageAttachments.map((attachment, index) => (
-        <a
+        <button
           key={attachment.id ?? `${attachment.url}-${index}`}
           className="df-review-item-attachment"
-          href={attachment.url}
-          rel="noreferrer"
-          target="_blank"
+          type="button"
+          aria-label={`Preview ${attachment.name}`}
           title={attachment.name}
-          onClick={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            setPreview(attachment);
+          }}
         >
           <img
             alt={attachment.name}
             loading="lazy"
             src={attachment.url}
           />
-        </a>
+        </button>
       ))}
+      {preview && <ImagePreviewModal attachment={preview} onClose={() => setPreview(null)} />}
     </div>
   );
 };

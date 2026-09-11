@@ -1,6 +1,6 @@
 # Custom right-rail panels
 
-**Unreleased:** this API is present in repository source, not in published v0.11.1.
+Available starting in v0.12.0.
 
 Custom panels let a host project place its own editor inside Review Kit. The
 package owns the rail button and container; the target application owns the

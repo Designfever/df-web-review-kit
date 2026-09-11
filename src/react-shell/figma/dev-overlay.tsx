@@ -60,6 +60,8 @@ export interface FigmaDevOverlayMountOptions {
   reviewPathPrefix?: string;
   figmaImages?: ReviewShellFigmaImagesOptions;
   pageUrl?: string | (() => string);
+  /** Show the widget immediately when mounting after an explicit login action. */
+  initiallyVisible?: boolean;
 }
 
 export interface FigmaDevOverlayController {
@@ -109,6 +111,7 @@ const FigmaDevOverlayWidget = ({
   presets = DEFAULT_REVIEW_VIEWPORT_PRESETS,
   projectId,
   reviewPathPrefix,
+  initiallyVisible = false,
 }: FigmaDevOverlayMountOptions) => {
   useEffect(() => {
     if (window.self !== window.top) return;
@@ -152,7 +155,7 @@ const FigmaDevOverlayWidget = ({
     viewport: activeViewport,
   });
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [isWidgetVisible, setIsWidgetVisible] = useState(false);
+  const [isWidgetVisible, setIsWidgetVisible] = useState(initiallyVisible);
   const [offsetYDraftByImageId, setOffsetYDraftByImageId] = useState<
     Record<string, string>
   >({});

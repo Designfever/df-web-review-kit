@@ -172,6 +172,8 @@ class WebReviewKitApp {
     this.shadow = this.root.attachShadow({ mode: 'open' });
     document.body.appendChild(this.root);
     document.addEventListener('keydown', this.handleKeyDown, true);
+    document.addEventListener('pointerdown', this.closeOutsideAssigneePickers, true);
+    window.addEventListener('blur', this.closeOutsideAssigneePickers);
     window.addEventListener(
       'scroll',
       this.handleViewportChange,
@@ -198,6 +200,8 @@ class WebReviewKitApp {
     this.view.clearDraftPreview();
     this.clearDrafts();
     document.removeEventListener('keydown', this.handleKeyDown, true);
+    document.removeEventListener('pointerdown', this.closeOutsideAssigneePickers, true);
+    window.removeEventListener('blur', this.closeOutsideAssigneePickers);
     window.removeEventListener(
       'scroll',
       this.handleViewportChange,
@@ -410,6 +414,17 @@ class WebReviewKitApp {
     this.render();
     return true;
   }
+
+  private readonly closeOutsideAssigneePickers = (event: Event) => {
+    const path = event.composedPath();
+    // Docked forms live outside the overlay shadow root. Blur covers iframe clicks.
+    for (const root of [this.shadow, this.getEnvironment()?.composerHost]) {
+      root?.querySelectorAll<HTMLDetailsElement>('.dfwr-assignee-picker[open]')
+        .forEach((picker) => {
+          if (!path.includes(picker)) picker.open = false;
+        });
+    }
+  };
 
   private readonly handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && this.cancelMode()) {
@@ -792,6 +807,23 @@ class WebReviewKitApp {
         input.attachments,
         item
       );
+      if (!attachments.some((attachment) => attachment.kind === 'capture') &&
+          !input.attachments?.some((attachment) => attachment.kind === 'capture') &&
+          environment.captureViewport && this.adapter.uploadAttachment) {
+        let previewUrl: string | undefined;
+        try {
+          const captureInput = createViewportCaptureInput(environment, { ...input, viewport }, input.selection?.viewport);
+          const result = await environment.captureViewport(captureInput);
+          const capture = createCaptureDraftAttachment(result, captureInput);
+          previewUrl = capture.previewUrl;
+          attachments.push(...await this.uploadDraftAttachments([capture], item));
+        } catch (error) {
+          // A missing screenshot must not prevent the reviewer from saving the issue.
+          console.warn('[web-review-kit] Automatic capture failed', error);
+        } finally {
+          if (previewUrl) URL.revokeObjectURL(previewUrl);
+        }
+      }
       const itemWithAttachments =
         attachments.length > 0 ? { ...item, attachments } : item;
       const createdItem = await this.adapter.create(itemWithAttachments);

@@ -389,10 +389,13 @@ export const reviewShellQaPanelStyle = `
 
   .df-review-list-scroll {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     align-content: start;
     gap: var(--df-review-space-2);
+    min-width: 0;
     min-height: 0;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     padding: var(--df-review-space-2);
   }
 
@@ -970,23 +973,79 @@ export const reviewShellQaPanelStyle = `
 
   .df-review-item-attachments {
     display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 88px));
     gap: 8px;
     margin-top: 10px;
   }
 
   .df-review-item-attachment {
     display: block;
+    aspect-ratio: 1;
+    min-width: 0;
     overflow: hidden;
     border: 1px solid var(--df-review-line);
     border-radius: var(--df-review-radius-sm);
     background: var(--df-review-control);
+    padding: 0;
+    cursor: zoom-in;
   }
 
   .df-review-item-attachment img {
     display: block;
     width: 100%;
-    max-height: 140px;
-    object-fit: cover;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .df-review-attachment-preview {
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 40px);
+    padding: 0;
+    border: 1px solid var(--df-review-line);
+    border-radius: var(--df-review-radius-sm);
+    background: var(--df-review-panel);
+    color: var(--df-review-text);
+  }
+  .df-review-attachment-preview::backdrop { background: #0009; }
+  .df-review-attachment-preview-content { padding: 16px; }
+  .df-review-attachment-preview header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    overflow-wrap: anywhere;
+  }
+  .df-review-attachment-preview header button {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--df-review-control);
+    color: inherit;
+    cursor: pointer;
+  }
+  .df-review-attachment-preview header svg { width: 16px; height: 16px; }
+  .df-review-attachment-preview-original {
+    display: block;
+    max-width: 100%;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: zoom-in;
+  }
+  .df-review-attachment-preview img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: calc(100vh - 140px);
+    object-fit: contain;
+    margin: auto;
   }
 
   .df-review-item-header-actions {

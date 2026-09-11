@@ -1,7 +1,7 @@
 # Custom right-rail panels — release notes draft
 
-**Unreleased; version not assigned.** No package version bump or publication is
-included. This feature is not available in published v0.11.1.
+**Included in v0.12.0.** See [Release notes 0.12.0](release-notes-0.12.0.md)
+for the complete release. This feature is not available in v0.11.1.
 
 ## Added
 
@@ -20,5 +20,4 @@ Only the active direct same-origin iframe is supported. Host editor styles must
 be loaded into both documents. Reconnection does not persist unsaved target data.
 
 See [Custom panels](custom-panels.md) for integration and lifecycle details.
-Release remains subject to user review; cross-origin messaging and automatic
-state persistence are not part of this feature.
+Cross-origin messaging and automatic state persistence are not part of this feature.

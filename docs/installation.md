@@ -351,6 +351,10 @@ The upload method receives a browser `File | Blob` plus optional `kind`, `name`,
 
 Iframe captures are emitted as WebP when the DOM renderer succeeds and fall back to SVG only when raster capture is unavailable. Capture is based on same-origin iframe DOM access; it works on `localhost` and same-origin review hosts and is not HTTPS-only.
 
+Captures use 1× CSS-pixel resolution, including on Retina displays. When capture and attachment upload are available, saving a new QA automatically captures its selected region (or viewport) unless the draft already has a capture. Automatic capture is best-effort: capture/upload failure is logged and the issue is still saved. The existing Capture button remains available for manual capture.
+
+The QA list shows attachments as square thumbnails using contain sizing. Thumbnails and the matching camera icons inside the outside issue pill and selected region's title open the same image preview modal. Saved captures are shown in the modal, with no hover preview over the live page. Click the image in the modal to open an image-only tab at its original pixel dimensions; data URLs are rendered as images rather than navigated to directly. Existing issues without captures do not show camera controls. The local dev uploader stores data URLs so screenshots survive reloads; production adapters should return durable image URLs.
+
 Private keys, admin credentials, canonical numbering, and permission checks should stay in your backend, not in browser code.
 
 ## Environment

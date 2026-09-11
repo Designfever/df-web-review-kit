@@ -20,7 +20,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 14. [Architecture and runtime logic](architecture.md)
 15. [Figma overlay](figma-overlay.md)
 16. [Grid overlay](grid-overlay.md)
-17. [Custom right-rail panels (unreleased)](custom-panels.md)
+17. [Custom right-rail panels](custom-panels.md)
 
 ## Document Roles
 
@@ -39,12 +39,9 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 - `figma-overlay.md`: host helper requirements plus package image overlay state and interaction rules.
 - `grid-overlay.md`: host requirements for the grid/helper overlay toggle.
 
-## Release Drafts
-
-- [Custom right-rail panels](release-notes-custom-panels-draft.md) — unreleased, version unassigned.
-
 ## Release History
 
+- [0.12.0](release-notes-0.12.0.md): custom panels, automatic captures, shared image previews, and assignee picker fixes.
 - [0.11.1](release-notes-0.11.1.md): grid toolbar state follows the visible host helper.
 - [0.11.0](release-notes-0.11.0.md): integrated design inspector, ordered rail shortcuts, and persistent Browse mode.
 - [0.10.2](release-notes-0.10.2.md): df-sheet page/logout controls and status-aware multi-owner QA workflows.

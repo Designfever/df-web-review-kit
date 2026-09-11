@@ -20,6 +20,45 @@ describe('createWebReviewKit', () => {
     controller.destroy();
   });
 
+  it.each([false, true])('closes draft owners outside without losing selections (docked: %s)', async (docked) => {
+    const target = document.createElement('div');
+    const composerHost = document.createElement('div');
+    document.body.append(target, composerHost);
+    vi.spyOn(target, 'getBoundingClientRect').mockReturnValue({
+      x: 20, y: 20, left: 20, top: 20, right: 140, bottom: 60,
+      width: 120, height: 40, toJSON: () => ({}),
+    });
+    const controller = createWebReviewKit({
+      projectId: 'outside-owner-test',
+      ui: { panel: !docked },
+      target: { window, document, getComposerHost: () => composerHost },
+      assigneeOptions: [{ value: 'one', label: 'One' }],
+    });
+    await controller.startElementReview(target, 'Keep this comment');
+    const root = docked ? composerHost : document.getElementById('df-web-review-kit-root')!.shadowRoot!;
+    const picker = root.querySelector<HTMLDetailsElement>('.dfwr-assignee-picker')!;
+    const owner = picker.querySelector<HTMLInputElement>('input')!;
+    picker.open = true;
+    owner.dispatchEvent(new Event('pointerdown', { bubbles: true, composed: true }));
+    owner.click();
+    expect(picker.open).toBe(true);
+    expect(owner.checked).toBe(true);
+
+    const comment = root.querySelector<HTMLTextAreaElement>('textarea')!;
+    comment.dispatchEvent(new Event('pointerdown', { bubbles: true, composed: true }));
+    expect(picker.open).toBe(false);
+    expect(owner.checked).toBe(true);
+    expect(comment.value).toBe('Keep this comment');
+
+    picker.open = true;
+    window.dispatchEvent(new Event('blur'));
+    expect(picker.open).toBe(false);
+    controller.destroy();
+    picker.open = true;
+    window.dispatchEvent(new Event('blur'));
+    expect(picker.open).toBe(true);
+  });
+
   it('creates DOM QA with the selected status and multiple owners', async () => {
     const create = vi.fn(async (item: ReviewItem) => item);
     const adapter: WebReviewKitAdapter = {
@@ -90,4 +129,62 @@ describe('createWebReviewKit', () => {
 
     controller.destroy();
   });
+});
+
+describe('automatic issue capture', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.body.replaceChildren();
+  });
+
+  it.each(['automatic', 'manual', 'failed'] as const)(
+    'saves a capture once, or keeps the issue when capture fails: %s', async (mode) => {
+      vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:capture-test');
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const captureViewport = vi.fn(async () => {
+        if (mode === 'failed') throw new Error('Capture unavailable');
+        return { file: new Blob(['capture'], { type: 'image/webp' }), width: 120, height: 40 };
+      });
+      const uploadAttachment = vi.fn(async () => ({
+        url: 'https://example.com/capture.webp', name: 'capture.webp',
+        mime: 'image/webp', size: 7, kind: 'capture',
+      }));
+      const create = vi.fn(async (item: ReviewItem) => item);
+      const element = document.createElement('button');
+      element.textContent = 'Capture target';
+      document.body.append(element);
+      vi.spyOn(element, 'getBoundingClientRect').mockReturnValue({
+        x: 20, y: 20, left: 20, top: 20, right: 140, bottom: 60,
+        width: 120, height: 40, toJSON: () => ({}),
+      });
+      const controller = createWebReviewKit({
+        projectId: 'capture-test', target: { window, document, captureViewport },
+        adapter: {
+          get: async () => null, list: async () => [], create,
+          update: async (_id, patch) => patch as ReviewItem,
+          remove: async () => undefined, uploadAttachment,
+        },
+      });
+      try {
+        await controller.startElementReview(element, 'Capture this issue');
+        const shadow = document.getElementById('df-web-review-kit-root')!.shadowRoot!;
+        if (mode === 'manual') {
+          shadow.querySelector<HTMLButtonElement>('[title="Capture current viewport"]')!.click();
+          await vi.waitFor(() => expect(shadow.querySelector('[aria-busy="true"]')).toBeNull());
+        }
+        shadow.querySelector<HTMLButtonElement>('.dfwr-button.is-primary')!.click();
+        await vi.waitFor(() => expect(create).toHaveBeenCalledOnce());
+        expect(captureViewport).toHaveBeenCalledOnce();
+        if (mode === 'failed') {
+          expect(create.mock.calls[0][0].attachments).toBeUndefined();
+          expect(uploadAttachment).not.toHaveBeenCalled();
+        } else {
+          expect(create.mock.calls[0][0].attachments).toHaveLength(1);
+          expect(uploadAttachment).toHaveBeenCalledOnce();
+          expect(captureViewport.mock.calls[0]).toBeDefined();
+        }
+      } finally { controller.destroy(); }
+    }
+  );
 });

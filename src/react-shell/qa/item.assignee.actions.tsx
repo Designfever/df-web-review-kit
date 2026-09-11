@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReviewItem } from '../../types';
 import type { ReviewShellAssigneeOption } from '../types';
 
@@ -44,6 +44,23 @@ export const QaItemAssigneeActions = ({
   const itemAssigneeIds = getItemAssigneeIds(item);
   const [selectedIds, setSelectedIds] = useState(itemAssigneeIds);
   const currentLabel = getAssigneeLabels(item, assigneeOptions).join(', ');
+
+  useEffect(() => {
+    const details = detailsRef.current;
+    if (!details) return;
+    const ownerDocument = details.ownerDocument;
+    const close = () => { details.open = false; };
+    const closeOutside = (event: PointerEvent) => {
+      if (!event.composedPath().includes(details)) close();
+    };
+    ownerDocument.addEventListener('pointerdown', closeOutside, true);
+    // Pointer events inside the target iframe do not reach the shell document.
+    ownerDocument.defaultView?.addEventListener('blur', close);
+    return () => {
+      ownerDocument.removeEventListener('pointerdown', closeOutside, true);
+      ownerDocument.defaultView?.removeEventListener('blur', close);
+    };
+  }, [canUpdateAssignee]);
 
   if (!canUpdateAssignee && !currentLabel) return null;
 

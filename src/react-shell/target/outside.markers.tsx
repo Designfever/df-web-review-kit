@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { Camera as CameraIcon } from 'lucide-react';
 import {
   getBoundMarkerPoint,
   getItemHighlightSelection,
@@ -21,9 +22,11 @@ import {
 } from '../../core/geometry';
 import type {
   NumberedReviewItem,
+  ReviewAttachment,
   ReviewItem,
 } from '../../types';
 import { useReviewShellData } from '../hooks/use.review.shell.data';
+import { ImagePreviewModal } from '../image.preview.modal';
 import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellRefs } from '../store/shell.refs';
 import { useReviewShellActions } from '../store/shell.actions.context';
@@ -38,6 +41,9 @@ interface OutsideMarker {
   connectorTop: number;
   connectorStemTop: number;
   connectorStemHeight: number;
+  capture?: ReviewAttachment;
+  captureStyle: CSSProperties;
+  titleStyle: CSSProperties;
 }
 
 const OUTSIDE_MARKER_HEIGHT = 22;
@@ -202,7 +208,10 @@ export const ReviewOutsideMarkers = () => {
   );
   const setSidePanel = useReviewShellStore((state) => state.setSidePanel);
   const [layoutVersion, setLayoutVersion] = useState(0);
+  const [preview, setPreview] = useState<ReviewAttachment | null>(null);
   const frameUpdateRef = useRef<number | null>(null);
+
+  useEffect(() => { setPreview(null); }, [targetFrameLoadVersion]);
 
   useEffect(() => {
     const targetWindow = iframeRef.current?.contentWindow;
@@ -253,12 +262,31 @@ export const ReviewOutsideMarkers = () => {
       const top = getOutsideMarkerTop(item, environment);
       if (typeof top !== 'number') return [];
       const hostTop = toHostPoint({ x: 0, y: top }, environment).y;
+      const selection = getItemHighlightSelection(item, environment)?.viewport;
+      const capture = [...(item.attachments ?? [])].reverse().find(
+        (attachment) => attachment.kind === 'capture' && attachment.url && attachment.mime.startsWith('image/')
+      );
+      const isViewportCapture = capture?.metadata?.captureTarget === 'viewport';
+      const width = isViewportCapture ? Math.min(320, size.width) : selection?.width ?? 320;
+      const height = isViewportCapture ? width * size.height / size.width : selection?.height ?? 240;
+      const point = toHostPoint({ x: selection?.left ?? 0, y: top }, environment);
 
       return {
         item,
         label: displayLabel,
         scope,
         anchorTop: hostTop,
+        capture,
+        titleStyle: {
+          left: Math.max(4, point.x) - Math.max(0, point.x),
+          top: Math.max(4, point.y - 24) - Math.max(0, point.y),
+        },
+        captureStyle: {
+          left: 44 + Math.max(0, point.x),
+          top: Math.max(0, point.y),
+          width: Math.min(width * (environment.scaleX ?? 1), environment.viewportRect.width - Math.max(0, point.x)),
+          height: Math.min(height * (environment.scaleY ?? 1), environment.viewportRect.height - Math.max(0, point.y)),
+        },
       };
     });
 
@@ -278,38 +306,78 @@ export const ReviewOutsideMarkers = () => {
   if (isDesignInspecting || markers.length === 0) return null;
 
   return (
-    <div className="df-review-outside-marker-layer" aria-label="QA markers">
-      {markers.map((marker) => {
-        const isActive = marker.item.id === selectedItemId;
-        const style = {
-          top: `${marker.top}px`,
-          '--df-review-outside-marker-connector-top': `${marker.connectorTop}px`,
-          '--df-review-outside-marker-connector-stem-top': `${marker.connectorStemTop}px`,
-          '--df-review-outside-marker-connector-stem-height': `${marker.connectorStemHeight}px`,
-          '--df-review-outside-marker-z-index': isActive ? 2 : 1,
-        } as CSSProperties & Record<string, string | number>;
+    <>
+      <div className="df-review-outside-marker-layer" aria-label="QA markers">
+        {markers.map((marker) => {
+          const isActive = marker.item.id === selectedItemId;
+          const style = {
+            top: `${marker.top}px`,
+            '--df-review-outside-marker-connector-top': `${marker.connectorTop}px`,
+            '--df-review-outside-marker-connector-stem-top': `${marker.connectorStemTop}px`,
+            '--df-review-outside-marker-connector-stem-height': `${marker.connectorStemHeight}px`,
+            '--df-review-outside-marker-z-index': isActive ? 2 : 1,
+          } as CSSProperties & Record<string, string | number>;
 
-        return (
-          <button
-            key={marker.item.id}
-            aria-label={`Focus ${marker.label}`}
-            className={`df-review-outside-marker is-scope-${marker.scope}${
-              isActive ? ' is-active' : ''
-            }`}
-            style={style}
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setSidePanel('qa');
-              setIsListVisible(true);
-              restoreReviewItem(marker.item);
-            }}
-          >
-            {marker.label}
-          </button>
-        );
-      })}
-    </div>
+          const openCapture = () => {
+            setPreview(marker.capture ?? null);
+          };
+          return (
+            <div key={marker.item.id}>
+              <div
+                className={`df-review-outside-marker is-scope-${marker.scope}${
+                  isActive ? ' is-active' : ''
+                }`}
+                style={style}
+              >
+                <button
+                  type="button"
+                  className="df-review-outside-marker-focus"
+                  aria-label={`Focus ${marker.label}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setSidePanel('qa');
+                    setIsListVisible(true);
+                    restoreReviewItem(marker.item);
+                  }}
+                >
+                  {marker.label}
+                </button>
+                {marker.capture && <button
+                  type="button"
+                  className="df-review-capture-icon"
+                  aria-label={`View capture for ${marker.label}`}
+                  aria-haspopup="dialog"
+                  title="View capture"
+                  onClick={(event) => { event.stopPropagation(); openCapture(); }}
+                ><CameraIcon aria-hidden="true" /></button>}
+              </div>
+              {isActive && (
+                <div
+                  className={`df-review-marker-capture is-scope-${marker.scope}`}
+                  style={marker.captureStyle}
+                >
+                  <div className="df-review-marker-title" style={marker.titleStyle}>
+                    <span>{marker.label}</span>
+                    {marker.capture && <button
+                      type="button"
+                      className="df-review-capture-icon"
+                      aria-label={`View capture ${marker.label}`}
+                      aria-haspopup="dialog"
+                      title="View capture"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openCapture();
+                      }}
+                    ><CameraIcon aria-hidden="true" /></button>}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {preview && <ImagePreviewModal attachment={preview} onClose={() => setPreview(null)} />}
+    </>
   );
 };

@@ -28,7 +28,7 @@ export async function captureIframeViewport(
 
   const viewport = getCaptureViewport(input.viewport, targetWindow);
   const region = getCaptureRegion(input.captureRegion, viewport);
-  const scale = getCaptureScale(targetWindow);
+  const scale = 1;
   const errors: string[] = [];
 
   if (region) {
@@ -236,12 +236,6 @@ function getCaptureRegion(
   );
 
   return { x, y, width, height };
-}
-
-function getCaptureScale(targetWindow: Window) {
-  const devicePixelRatio =
-    targetWindow.devicePixelRatio || window.devicePixelRatio || 1;
-  return Math.max(1, Math.min(2, devicePixelRatio));
 }
 
 async function loadViewportImage(file: Blob) {

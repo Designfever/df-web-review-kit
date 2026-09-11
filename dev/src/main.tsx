@@ -44,6 +44,7 @@ const REVIEW_USER_ID = import.meta.env.VITE_REVIEW_USER_ID || '';
 const REVIEW_SUPABASE_TABLE =
   import.meta.env.VITE_REVIEW_SUPABASE_TABLE || 'review_items';
 const DEV_EXTERNAL_LINKS_ITEM_ID = 'dev-review-external-links-fixture';
+const DEV_MULTIPLE_OWNERS_ITEM_ID = 'dev-review-multiple-owners-fixture';
 const figmaImageStore = createReviewFigmaImageStoreClient();
 
 window.__figma = {
@@ -87,8 +88,8 @@ const adapters: ReviewShellAdapter[] = [
     updateStatus: ({ id, status }) => local.update(id, { status }),
     assigneeTitle: 'Part',
     assigneeOptions,
-    updateAssignee: ({ id, assigneeId, assigneeName }) =>
-      local.update(id, { assigneeId, assigneeName }),
+    updateAssignee: ({ id, assigneeId, assigneeName, assigneeIds, assigneeNames }) =>
+      local.update(id, { assigneeId, assigneeName, assigneeIds, assigneeNames }),
     syncSubmission: ({ id, patch }) => local.update(id, patch),
     uploadAttachment: createDevAttachmentUploader(),
     remove: (id) => local.remove(id),
@@ -144,6 +145,7 @@ const qaPrompt = [
 
 function mountDevReviewShell() {
   seedDevExternalLinksFixtureItem();
+  seedDevMultipleOwnersFixtureItem();
 
   mountReviewShell({
     customPanels: true,
@@ -183,6 +185,33 @@ function readStoredReviewItems(): ReviewItem[] {
   } catch {
     return [];
   }
+}
+
+function seedDevMultipleOwnersFixtureItem() {
+  const stored = readStoredReviewItems();
+  if (stored.some((item) => item.id === DEV_MULTIPLE_OWNERS_ITEM_ID)) return;
+  const now = new Date().toISOString();
+  const item: ReviewItem = {
+    id: DEV_MULTIPLE_OWNERS_ITEM_ID,
+    projectId: REVIEW_PROJECT_ID,
+    routeKey: '/',
+    pageUrl: `${window.location.origin}/`,
+    normalizedPath: '/',
+    scope: 'mobile',
+    kind: 'dom',
+    title: 'Multiple-owner dropdown example',
+    comment: '담당자 메뉴에서 여러 Part를 선택해 봐. 메뉴 바깥이나 iframe을 누르면 닫히고, Apply를 눌러야 저장돼.',
+    createdBy: 'dev:review',
+    status: 'todo',
+    viewport: { width: 390, height: 844 },
+    assigneeId: 'frontend',
+    assigneeName: 'Frontend',
+    assigneeIds: ['frontend', 'design'],
+    assigneeNames: ['Frontend', 'Design'],
+    createdAt: now,
+    updatedAt: now,
+  };
+  window.localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify([item, ...stored]));
 }
 
 function isStoredReviewItem(value: unknown): value is ReviewItem {
@@ -244,7 +273,12 @@ function createDevAttachmentUploader(): NonNullable<
   ReviewShellAdapter['uploadAttachment']
 > {
   return async ({ file, name, mime, kind, metadata }) => {
-    const url = URL.createObjectURL(file);
+    const url = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
     const resolvedMime = mime || file.type || 'application/octet-stream';
 
     return {
@@ -256,7 +290,7 @@ function createDevAttachmentUploader(): NonNullable<
       kind: kind || (resolvedMime.startsWith('image/') ? 'image' : 'file'),
       metadata: {
         ...metadata,
-        storage: 'dev-object-url',
+        storage: 'dev-data-url',
       },
       createdAt: new Date().toISOString(),
     };

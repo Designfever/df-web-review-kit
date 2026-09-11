@@ -88,7 +88,8 @@ function createItemHighlightElements(
   label: string,
   scope: ReviewItemScope,
   isBound: boolean,
-  isHighlighted: boolean
+  isHighlighted: boolean,
+  showLabel: boolean
 ) {
   const rect = toHostSelection(selection, environment);
   const mode = getReviewItemHighlightMode(item);
@@ -107,6 +108,8 @@ function createItemHighlightElements(
   highlight.style.width = `${rect.width}px`;
   highlight.style.height = `${rect.height}px`;
   highlight.dataset.reviewItemId = item.id;
+
+  if (!showLabel) return [highlight];
 
   const labelElement = document.createElement('div');
   labelElement.className = [
@@ -136,12 +139,14 @@ export function createMarkerLayer({
   environment,
   presets,
   showCompactMarkers = true,
+  showHighlightLabels = true,
 }: {
   items: ReviewItem[];
   highlightedItemId?: string;
   environment: ReviewEnvironment | undefined;
   presets?: ReviewViewportPreset[];
   showCompactMarkers?: boolean;
+  showHighlightLabels?: boolean;
 }) {
   const layer = document.createElement('div');
   layer.className = 'dfwr-marker-layer';
@@ -171,7 +176,8 @@ export function createMarkerLayer({
             displayLabel,
             scope,
             selection.isBound,
-            isHighlighted
+            isHighlighted,
+            showHighlightLabels
           )
         );
         return;

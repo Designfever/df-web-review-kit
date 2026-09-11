@@ -40,6 +40,8 @@ export type DfSheetReviewAssignee = ReviewShellAssigneeOption;
 
 export type ConnectDfSheetReviewOptions = {
   projectId: string;
+  /** Select the QA page in df-sheet before returning to the host. */
+  selectPage?: boolean;
   baseUrl?: string;
   fetch?: typeof fetch;
 };
@@ -56,6 +58,7 @@ export type DfSheetReviewAdapterOptions = {
 
 export type DfSheetReviewSession = {
   project: DfSheetReviewProject;
+  selectedPageId?: string;
   user: DfSheetReviewUser;
   expiresAt: number;
   listPages: () => Promise<DfSheetReviewPage[]>;
@@ -68,6 +71,7 @@ export type DfSheetReviewSession = {
 
 type StoredSession = {
   accessToken: string;
+  selectedPageId?: string;
   expiresAt: number;
   project: DfSheetReviewProject;
   user: DfSheetReviewUser;
@@ -78,6 +82,7 @@ type PendingLogin = {
   verifier: string;
   redirectUri: string;
   returnSearch: string;
+  selectPage?: boolean;
 };
 
 type DfSheetEnvelope<T> = {
@@ -129,7 +134,8 @@ export async function connectDfSheetReview(
   const sessionKey = `${SESSION_KEY_PREFIX}${projectId}`;
   const pendingKey = `${PENDING_KEY_PREFIX}${projectId}`;
   const cached = readStoredValue<StoredSession>(sessionKey);
-  if (isStoredSession(cached, projectId) && cached.expiresAt > Date.now() + SESSION_CLOCK_SKEW_MS) {
+  if (isStoredSession(cached, projectId) && cached.expiresAt > Date.now() + SESSION_CLOCK_SKEW_MS &&
+      (!options.selectPage || cached.selectedPageId)) {
     return createSession({
       baseUrl,
       pendingKey,
@@ -137,6 +143,7 @@ export async function connectDfSheetReview(
       requestFetch,
       sessionKey,
       stored: cached,
+      selectPage: options.selectPage,
     });
   }
   window.sessionStorage.removeItem(sessionKey);
@@ -169,19 +176,35 @@ export async function connectDfSheetReview(
       throw new Error('df-sheet returned a different review project.');
     }
 
-    const stored: StoredSession = {
-      accessToken: token.access_token,
-      expiresAt: Date.now() + token.expires_in * 1000,
-      project: token.project,
-      user: token.user,
-    };
-    window.sessionStorage.setItem(sessionKey, JSON.stringify(stored));
     window.sessionStorage.removeItem(pendingKey);
     window.history.replaceState(
       null,
       '',
       `${currentUrl.pathname}${pending.returnSearch}${currentUrl.hash}`
     );
+
+    // The callback page is a UI preference, not an authorization scope.
+    // Resolve it against the authenticated project's pages before using it.
+    let selectedPageId: string | undefined;
+    if (pending.selectPage || options.selectPage) {
+      const pageId = currentUrl.searchParams.get('review_page_id');
+      const pages = await requestDfSheet<DfSheetReviewPage[]>(
+        requestFetch, baseUrl, '/api/review/pages', token.access_token
+      );
+      selectedPageId = pages.find((page) => page.id === pageId)?.id;
+      if (!selectedPageId) {
+        throw new Error('df-sheet did not return a valid review page. Reload to select a page again.');
+      }
+    }
+
+    const stored: StoredSession = {
+      accessToken: token.access_token,
+      ...(selectedPageId ? { selectedPageId } : {}),
+      expiresAt: Date.now() + token.expires_in * 1000,
+      project: token.project,
+      user: token.user,
+    };
+    window.sessionStorage.setItem(sessionKey, JSON.stringify(stored));
     return createSession({
       baseUrl,
       pendingKey,
@@ -189,6 +212,7 @@ export async function connectDfSheetReview(
       requestFetch,
       sessionKey,
       stored,
+      selectPage: options.selectPage,
     });
   }
 
@@ -196,6 +220,7 @@ export async function connectDfSheetReview(
     baseUrl,
     pendingKey,
     projectId,
+    selectPage: options.selectPage,
   });
   window.location.assign(authorizeUrl.toString());
   return null;
@@ -205,6 +230,7 @@ async function createReviewAuthorizeUrl(input: {
   baseUrl: string;
   pendingKey: string;
   projectId: string;
+  selectPage?: boolean;
 }) {
   const currentUrl = new URL(window.location.href);
   const redirectUri = `${currentUrl.origin}${currentUrl.pathname}`;
@@ -214,11 +240,13 @@ async function createReviewAuthorizeUrl(input: {
     verifier,
     redirectUri,
     returnSearch: currentUrl.search,
+    ...(input.selectPage ? { selectPage: true } : {}),
   };
   window.sessionStorage.setItem(input.pendingKey, JSON.stringify(nextPending));
 
   const authorizeUrl = new URL('/api/review/sso/authorize', input.baseUrl);
   authorizeUrl.searchParams.set('project_id', input.projectId);
+  if (input.selectPage) authorizeUrl.searchParams.set('select_page', '1');
   authorizeUrl.searchParams.set('redirect_uri', redirectUri);
   authorizeUrl.searchParams.set('state', nextPending.state);
   authorizeUrl.searchParams.set('code_challenge', await createPkceChallenge(verifier));
@@ -232,6 +260,7 @@ function createSession(input: {
   requestFetch: typeof fetch;
   sessionKey: string;
   stored: StoredSession;
+  selectPage?: boolean;
 }): DfSheetReviewSession {
   const request = <T>(path: string, init?: RequestInit) =>
     requestDfSheet<T>(
@@ -245,6 +274,7 @@ function createSession(input: {
 
   return {
     project: input.stored.project,
+    selectedPageId: input.stored.selectedPageId,
     user: input.stored.user,
     expiresAt: input.stored.expiresAt,
     listPages: () => request<DfSheetReviewPage[]>('/api/review/pages'),

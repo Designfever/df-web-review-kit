@@ -46,3 +46,19 @@ No review secret is required in the host or Vercel:
 - host value: `REVIEW_PROJECT_ID` in checked-in `df.ts`
 
 The session is stored only in browser `sessionStorage` and expires quickly. Reload the review page to sign in again after expiration. `baseUrl` exists only for local df-sheet development.
+
+## Shared page selection (0.12.0)
+
+Use `connectDfSheetReview({ projectId, selectPage: true })` to select a QA page
+in df-sheet after login. The returned session exposes `selectedPageId`, which
+can be passed to `session.createAdapter({ pageId: session.selectedPageId! })`.
+Projects with one page continue automatically. The host URL's original query
+parameters are restored when login finishes.
+
+Page selection is opt-in; omit it for Figma-only helpers or hosts that provide
+their own selector. The selection is a UI preference within the authenticated
+project, not a new authorization scope. The kit verifies the callback page
+against the project's authenticated page list and caches it with the session.
+
+Deploy df-sheet's `/review/select-page` and updated SSO authorize route before
+enabling this option in hosts. Existing login-only callers remain supported.

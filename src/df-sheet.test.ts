@@ -168,6 +168,53 @@ describe('connectDfSheetReview', () => {
     );
   });
 
+  it.each(['page-1', 'other-project-page', null])('validates the selected callback page: %s', async (pageId) => {
+    window.sessionStorage.setItem(pendingKey, JSON.stringify({
+      state: 'a'.repeat(43), verifier: 'b'.repeat(43),
+      redirectUri: 'http://localhost/review',
+      returnSearch: '?target=%2Fsample%2F&w=390&h=844', selectPage: true,
+    }));
+    const query = new URLSearchParams({ code: 'c'.repeat(43), state: 'a'.repeat(43) });
+    if (pageId) query.set('review_page_id', pageId);
+    window.history.replaceState(null, '', `/review?${query}`);
+    const request = vi.fn<typeof fetch>(async (input, init) => {
+      if (String(input).endsWith('/api/review/pages')) {
+        expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer new-token');
+        return jsonResponse({ success: true, data: [{ id: 'page-1', name: 'QA' }] });
+      }
+      return jsonResponse({ success: true, data: {
+        access_token: 'new-token', expires_in: 600,
+        project: { id: projectId, key: 'LEXUS' }, user: { user_id: 'reviewer', name: null },
+      } });
+    });
+    const connecting = connectDfSheetReview({ projectId, selectPage: true, fetch: request });
+    if (pageId !== 'page-1') {
+      await expect(connecting).rejects.toThrow('valid review page');
+      expect(window.sessionStorage.getItem(sessionKey)).toBeNull();
+      expect(window.sessionStorage.getItem(pendingKey)).toBeNull();
+      expect(window.location.search).toBe('?target=%2Fsample%2F&w=390&h=844');
+      return;
+    }
+    const session = await connecting;
+    expect(session?.selectedPageId).toBe('page-1');
+    expect(window.location.search).toBe('?target=%2Fsample%2F&w=390&h=844');
+    const cached = await connectDfSheetReview({ projectId, selectPage: true, fetch: request });
+    expect(cached?.selectedPageId).toBe('page-1');
+    expect(request).toHaveBeenCalledTimes(2);
+    const logout = new URL(await cached!.createLogoutUrl());
+    const authorize = new URL(logout.searchParams.get('from')!, logout.origin);
+    expect(authorize.searchParams.get('select_page')).toBe('1');
+  });
+
+  it('starts page selection when a cached Figma-only session has no page', async () => {
+    window.sessionStorage.setItem(sessionKey, JSON.stringify({
+      accessToken: 'figma-token', expiresAt: Date.now() + 300_000,
+      project: { id: projectId, key: 'LEXUS' }, user: { user_id: 'reviewer', name: null },
+    }));
+    await expect(connectDfSheetReview({ projectId, selectPage: true })).resolves.toBeNull();
+    expect(JSON.parse(window.sessionStorage.getItem(pendingKey)!)).toMatchObject({ selectPage: true });
+  });
+
   it('does not send a legacy browser Figma token for links or files', async () => {
     window.localStorage.setItem('figma-token', 'legacy-token');
     window.sessionStorage.setItem(

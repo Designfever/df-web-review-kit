@@ -130,3 +130,10 @@ Source Tree observation and action coverage:
   late focus path surviving retries, frame reset and DOM adjustment → QA handoff.
   Both hooks are real; shell contexts/controller and canvas rasterization boundary
   are test doubles. Apply the documented Node 26 workaround if webstorage fails.
+
+Figma import UI coverage:
+
+- `src/react-shell/figma/images.import.test.tsx`: Figma vs image URL routing,
+  successful/null mutation draft handling, file label/drop state, error precedence
+  and status placement, and loading/mutation guards. Asset decoding is mocked
+  at the existing helper boundary; real decoding is a local browser fixture check.

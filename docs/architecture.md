@@ -316,3 +316,11 @@ Avoid turning `core` into a feature bucket. Core should stay focused on target r
 - Put feature-specific integration logic, such as Figma matching, in its own module.
 - Keep adapter contracts storage-agnostic.
 - Prefer anchor-relative data for anything that must survive layout changes.
+
+### Figma import and preview ownership
+
+`react-shell/figma/images.import.tsx` owns URL/file import interaction state;
+`image.preview.tsx` owns the existing image preview modal. `images.panel.tsx`
+keeps list/layer controls and preview selection. The import component's children
+slot preserves form → selected controls → error status DOM order without adding
+a wrapper. Store mutation contracts and controller/container ownership stay intact.

@@ -1,6 +1,5 @@
 import {
   type CSSProperties,
-  type DragEvent,
   type MouseEvent,
   type PointerEvent,
   useRef,
@@ -10,20 +9,12 @@ import {
   ExternalLink as ExternalLinkIcon,
   MoveVertical as OffsetYIcon,
   Pencil as PencilIcon,
-  Plus as PlusIcon,
-  RefreshCw as RefreshCwIcon,
   Trash2 as TrashIcon,
-  X as XIcon,
 } from 'lucide-react';
 import type {
   ReviewFigmaImage,
   ReviewFigmaImageAssetInput,
 } from '../../figma/image.types';
-import {
-  createReviewImageAssetFromFile,
-  createReviewImageAssetFromUrl,
-  isReviewImageUrl,
-} from '../../figma/image.import';
 import type {
   ReviewFigmaImageOverlayItemState,
 } from './image.overlay.controller';
@@ -39,6 +30,9 @@ import {
 } from './image-panel.utils';
 import { FigmaImageLayerStateButtons } from './layer-state-buttons';
 import { ReviewSpinner } from '../review/spinner';
+
+import { FigmaImagesImport } from './images.import';
+import { FigmaImagePreviewModal } from './image.preview';
 
 const FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS = 6;
 
@@ -90,9 +84,6 @@ export const FigmaImagesPanel = ({
   onToggleImageOverlayVisible,
   onUpdateImage,
 }: FigmaImagesPanelProps) => {
-  const [figmaUrlDraft, setFigmaUrlDraft] = useState('');
-  const [importError, setImportError] = useState('');
-  const [isImportDragActive, setIsImportDragActive] = useState(false);
   const [editingImageId, setEditingImageId] = useState<string | null>(null);
   const [editingLabelDraft, setEditingLabelDraft] = useState('');
   const [draggingImageId, setDraggingImageId] = useState<string | null>(null);
@@ -133,38 +124,10 @@ export const FigmaImagesPanel = ({
     ? offsetYDraftByImageId[selectedImage.id] ??
       String(selectedOverlayState.offsetY)
     : '';
-  const statusText = importError || error;
   const progressText = isMutating ? 'Saving...' : isLoading ? 'Loading...' : '';
   const draggingImageIndex = draggingImageId
     ? images.findIndex((image) => image.id === draggingImageId)
     : -1;
-  const addImageSource = async (source: string, file?: File) => {
-    setImportError('');
-    try {
-      const asset = file
-        ? await createReviewImageAssetFromFile(file)
-        : isReviewImageUrl(source)
-          ? await createReviewImageAssetFromUrl(source)
-          : undefined;
-      const image = await onAddImage(
-        source,
-        file?.name.replace(/\.[^.]+$/, ''),
-        asset
-      );
-      if (image) setFigmaUrlDraft('');
-    } catch (addError) {
-      setImportError(
-        addError instanceof Error ? addError.message : 'Image import failed.'
-      );
-    }
-  };
-  const handleImageFileDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsImportDragActive(false);
-    const file = event.dataTransfer.files[0];
-    if (!file) return;
-    void addImageSource(file.name, file);
-  };
   const finishEditingImageLabel = (
     imageId: string,
     currentLabel: string
@@ -248,70 +211,13 @@ export const FigmaImagesPanel = ({
         finishEditingImageLabel(editingImage.id, editingImage.label ?? '');
       }}
     >
-      <form
-        className="df-review-figma-image-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void addImageSource(figmaUrlDraft);
-        }}
+      <FigmaImagesImport
+        error={error}
+        isLoading={isLoading}
+        isMutating={isMutating}
+        onAddImage={onAddImage}
+        onRefreshImages={onRefreshImages}
       >
-        <div className="df-review-figma-images-header">
-          <div className="df-review-figma-images-title">
-            <strong>Figma</strong>
-          </div>
-          <button
-            aria-label="Refresh Figma images"
-            className="df-review-figma-image-header-button"
-            data-review-tooltip="Refresh Figma images"
-            disabled={isLoading || isMutating}
-            title="Refresh"
-            type="button"
-            onClick={() => void onRefreshImages()}
-          >
-            <RefreshCwIcon aria-hidden="true" />
-          </button>
-        </div>
-        <div
-          className={`df-review-figma-image-url-row${
-            isImportDragActive ? ' is-drag-active' : ''
-          }`}
-          onDragEnter={(event) => {
-            event.preventDefault();
-            setIsImportDragActive(true);
-          }}
-          onDragLeave={(event) => {
-            if (event.currentTarget.contains(event.relatedTarget as Node)) return;
-            setIsImportDragActive(false);
-          }}
-          onDragOver={(event) => {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = 'copy';
-          }}
-          onDrop={handleImageFileDrop}
-        >
-          <input
-            aria-label="Figma or image URL"
-            autoComplete="off"
-            placeholder="Figma or image URL · drop image"
-            required
-            spellCheck={false}
-            value={figmaUrlDraft}
-            onChange={(event) => {
-              setImportError('');
-              setFigmaUrlDraft(event.currentTarget.value);
-            }}
-          />
-          <button
-            aria-label="Add Figma image"
-            data-review-tooltip="Add Figma image"
-            disabled={isMutating || figmaUrlDraft.trim().length === 0}
-            type="submit"
-          >
-            <PlusIcon aria-hidden="true" />
-          </button>
-        </div>
-      </form>
-
       <div
         aria-label="Selected Figma image layer controls"
         className="df-review-figma-image-selected-controls"
@@ -436,16 +342,7 @@ export const FigmaImagesPanel = ({
           )}
         </div>
       </div>
-
-      {statusText && (
-        <p
-          className={`df-review-figma-image-status${
-            error ? ' is-error' : ''
-          }`}
-        >
-          {statusText}
-        </p>
-      )}
+      </FigmaImagesImport>
 
       <div className="df-review-figma-image-list">
         {progressText && (
@@ -674,68 +571,5 @@ export const FigmaImagesPanel = ({
         />
       )}
     </aside>
-  );
-};
-
-interface FigmaImagePreviewModalProps {
-  image: ReviewFigmaImage;
-  label: string;
-  onClose: () => void;
-}
-
-const FigmaImagePreviewModal = ({
-  image,
-  label,
-  onClose,
-}: FigmaImagePreviewModalProps) => {
-  const isExternalSource = /^https?:\/\//i.test(image.figmaUrl);
-  const isFigmaSource = Boolean(image.fileKey && image.nodeId);
-  return (
-    <div
-      aria-label={`${label} Figma image preview`}
-      aria-modal="true"
-      className="df-review-prompt-modal"
-      role="dialog"
-    >
-      <button
-        aria-label="Close Figma image preview"
-        className="df-review-prompt-backdrop"
-        type="button"
-        onClick={onClose}
-      />
-      <div className="df-review-prompt-dialog df-review-figma-image-preview-dialog">
-        <div className="df-review-figma-image-preview-header">
-          <input
-            aria-label="Figma URL"
-            readOnly
-            spellCheck={false}
-            value={image.figmaUrl}
-          />
-          {isExternalSource && (
-            <a
-              aria-label={`Open ${label} source`}
-              className="df-review-figma-image-preview-link"
-              href={image.figmaUrl}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <span>{isFigmaSource ? 'Open Figma' : 'Open Image'}</span>
-              <ExternalLinkIcon aria-hidden="true" />
-            </a>
-          )}
-          <button
-            aria-label="Close Figma image preview"
-            className="df-review-figma-image-preview-close"
-            type="button"
-            onClick={onClose}
-          >
-            <XIcon aria-hidden="true" />
-          </button>
-        </div>
-        <div className="df-review-figma-image-preview-scroll">
-          <img alt={label} src={image.imageUrl} />
-        </div>
-      </div>
-    </div>
   );
 };

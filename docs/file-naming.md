@@ -99,6 +99,20 @@ later implementation status is recorded below without rewriting the historical m
 - Locate the implementation commit with
   `git log --oneline --grep='refactor: isolate Source Tree observation lifecycle'`.
 
+## Implemented: step 09
+
+- `src/react-shell/figma/images.import.tsx` owns URL draft, import error,
+  file drag-over state, URL/file asset routing and the existing import form.
+  Selected controls are passed as children so form → controls → status retains
+  the exact DOM order without a new wrapper or duplicated error state.
+- `src/react-shell/figma/image.preview.tsx` owns the unchanged
+  `FigmaImagePreviewModal`. It is not merged with attachment preview and does not
+  add Escape handling or other new modal behavior.
+- `images.panel.tsx` retains preview selection, layer/rename/reorder state and
+  list assembly. Controllers, container and import helpers are unchanged.
+- Locate the implementation commit with
+  `git log --oneline --grep='refactor: separate Figma import and preview UI'`.
+
 ## Rules and ownership
 
 - Keep the [core / React shell boundary](architecture.md): vanilla target review
@@ -176,7 +190,7 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-Except for steps 03–05 and 07–08 marked implemented above, these are **new planned files**,
+Except for steps 03–05 and 07–09 marked implemented above, these are **new planned files**,
 not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one

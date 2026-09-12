@@ -8,7 +8,7 @@ import {
 } from './snapshot';
 import { createDesignInspectorPanel } from './panel.view';
 import { createDesignInspectorGeometry } from './geometry.view';
-import { isElement } from './dom';
+import { bindDesignInspectorTargetEvents } from './target.events';
 import type {
   DesignInspectorSourceLocation,
   DesignInspectorSourceOptions
@@ -75,7 +75,7 @@ export function createDesignInspector({
   let animationFrame = 0;
   let destroyed = false;
   const cleanups: (() => void)[] = [];
-  const targetCleanups: (() => void)[] = [];
+  let targetCleanup: (() => void) | null = null;
   const resize = typeof win.ResizeObserver === 'function'
     ? new win.ResizeObserver(() => invalidate()) : null;
   const mutation = new win.MutationObserver(() => invalidate());
@@ -88,21 +88,16 @@ export function createDesignInspector({
     target: EventTarget,
     name: string,
     callback: EventListener,
-    options?: AddEventListenerOptions,
-    bucket = cleanups
+    options?: AddEventListenerOptions
   ) {
     target.addEventListener(name, callback, options);
-    bucket.push(() => target.removeEventListener(name, callback, options));
+    cleanups.push(() => target.removeEventListener(name, callback, options));
   }
   function click(selector: string, callback: () => void) {
     listen(get(selector), 'click', callback);
   }
   function inside(event: Event) {
     return event.composedPath().includes(host);
-  }
-  function targetOf(event: Event) {
-    if (inside(event)) return null;
-    return event.composedPath().find(isElement) ?? null;
   }
   function observeSelection() {
     resize?.disconnect();
@@ -327,7 +322,8 @@ export function createDesignInspector({
   }
 
   function changeDocument(next: Document | null) {
-    targetCleanups.splice(0).forEach((cleanup) => cleanup());
+    targetCleanup?.();
+    targetCleanup = null;
     targetDoc = next;
     notifiedMode = null;
     clearSource();
@@ -338,7 +334,45 @@ export function createDesignInspector({
     observeSelection();
     get<HTMLTextAreaElement>('.report').hidden = true;
     if (next && !destroyed) {
-      bindTargetEvents(next);
+      targetCleanup = bindDesignInspectorTargetEvents(next, {
+        isPicking: () => mode === 'pick',
+        isInside: inside,
+        getSelected: () => selected,
+        sourceEnabled: !!source,
+        onHover: (element, nextPoint, nextAlt) => {
+          point = nextPoint;
+          alt = nextAlt;
+          hovered = element;
+          schedule();
+        },
+        onSelect: (element, withAlt) => {
+          if (selected && (measuring || withAlt)) {
+            if (element !== selected) {
+              compared = element;
+              measuring = false;
+              observeSelection();
+              updateMode();
+              schedule();
+            }
+          } else if (element !== selected) select(element);
+        },
+        onOpenSource: () => { void openSelectedSource(); },
+        onAltChange: (nextAlt) => { alt = nextAlt; schedule(); },
+        onLeave: (clearPoint) => {
+          hovered = null;
+          if (clearPoint) point = null;
+          alt = false;
+          schedule();
+        },
+        onPageHide: () => changeDocument(null),
+        onViewportChange: (readStyles) => {
+          hitTest = true;
+          if (readStyles) invalidate();
+          else schedule();
+        },
+        schedule,
+        invalidate,
+      });
       select(next.body);
     }
     updateMode();
@@ -411,135 +445,6 @@ export function createDesignInspector({
       }, fallback);
     } else fallback();
   });
-  function bindTargetEvents(eventDoc: Document) {
-    const eventWin = eventDoc.defaultView!;
-    const listenTarget = (
-      target: EventTarget,
-      name: string,
-      callback: EventListener,
-      options?: AddEventListenerOptions
-    ) => listen(target, name, callback, options, targetCleanups);
-    listenTarget(
-      eventDoc,
-      'pointermove',
-      (event) => {
-        const pointer = event as PointerEvent;
-        if (mode !== 'pick' || pointer.pointerType === 'touch' || inside(event)) return;
-        point = { x: pointer.clientX, y: pointer.clientY };
-        alt = pointer.altKey;
-        hovered = targetOf(event);
-        schedule();
-      },
-      { capture: true, passive: true }
-    );
-    listenTarget(
-      eventDoc,
-      'pointerdown',
-      (event) => {
-        if (mode !== 'pick' || inside(event)) return;
-        // Keep touch scrolling native. Selection is completed on click, not touchstart.
-        if ((event as PointerEvent).pointerType !== 'touch') event.preventDefault();
-        event.stopImmediatePropagation();
-      },
-      { capture: true }
-    );
-    listenTarget(
-      eventDoc,
-      'click',
-      (event) => {
-        if (mode !== 'pick' || inside(event)) return;
-        const element = targetOf(event);
-        if (!element) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        if (selected && (measuring || (event as MouseEvent).altKey)) {
-          if (element !== selected) {
-            compared = element;
-            measuring = false;
-            observeSelection();
-            updateMode();
-            schedule();
-          }
-        } else if (element !== selected) select(element);
-      },
-      { capture: true }
-    );
-    listenTarget(
-      eventDoc,
-      'dblclick',
-      (event) => {
-        if (mode !== 'pick' || inside(event)) return;
-        const element = targetOf(event);
-        if (!element || element !== selected || !source) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        void openSelectedSource();
-      },
-      { capture: true }
-    );
-    listenTarget(eventDoc, 'keydown', (event) => {
-      alt = (event as KeyboardEvent).altKey;
-      schedule();
-    });
-    listenTarget(eventDoc, 'keyup', (event) => {
-      alt = (event as KeyboardEvent).altKey;
-      schedule();
-    });
-    listenTarget(eventWin, 'blur', () => {
-      alt = false;
-      hovered = null;
-      schedule();
-    });
-    listenTarget(eventDoc, 'pointerout', (event) => {
-      if ((event as MouseEvent).relatedTarget) return;
-      hovered = null;
-      point = null;
-      alt = false;
-      schedule();
-    }, { capture: true });
-    listenTarget(eventWin, 'pagehide', () => changeDocument(null));
-    listenTarget(
-      eventDoc,
-      'scroll',
-      (event) => {
-        if (inside(event)) return;
-        hitTest = true;
-        schedule();
-      },
-      { capture: true, passive: true }
-    );
-    listenTarget(
-      eventWin,
-      'resize',
-      () => {
-        hitTest = true;
-        invalidate();
-      },
-      { passive: true }
-    );
-    if (eventWin.visualViewport) {
-      listenTarget(eventWin.visualViewport, 'resize', invalidate, { passive: true });
-      listenTarget(eventWin.visualViewport, 'scroll', () => schedule(), { passive: true });
-    }
-    for (const name of [
-      'transitionend',
-      'animationend',
-      'input',
-      'change',
-      'focusin',
-      'focusout'
-    ]) {
-      listenTarget(
-        eventDoc,
-        name,
-        (event) => {
-          if (!inside(event)) invalidate();
-        },
-        { capture: true, passive: true }
-      );
-    }
-    if (eventDoc.fonts) listenTarget(eventDoc.fonts, 'loadingdone', invalidate);
-  }
   const rebind = () => changeDocument(getFrameDocument(targetFrame));
   listen(targetFrame, 'load', rebind);
   listen(targetFrame, 'error', () => changeDocument(null));
@@ -569,7 +474,8 @@ export function createDesignInspector({
       resize?.disconnect();
       mutation.disconnect();
       cleanups.forEach((cleanup) => cleanup());
-      targetCleanups.splice(0).forEach((cleanup) => cleanup());
+      targetCleanup?.();
+      targetCleanup = null;
       host.remove();
       overlayHost.remove();
       clearSource();

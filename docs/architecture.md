@@ -75,7 +75,10 @@ The overlay renderer is split by role. Modules never reach into the app directly
 The CSS Design Inspector remains separate from Source Tree selection:
 
 - `src/design-inspector/inspector.ts`: selection, mode, snapshot reads, source
-  request lifecycle, frame scheduling, event binding and cleanup.
+  request lifecycle, frame scheduling, document rebinding and session cleanup.
+- `src/design-inspector/target.events.ts`: one target document's event binding
+  and listener cleanup. Reads current pick mode/selection through callbacks and
+  delegates state changes to explicit controller commands; it owns no selection.
 - `src/design-inspector/panel.view.ts`: static panel DOM, summary/CSS detail rows,
   measurement rows, and detail-scroll preservation. Receives the current snapshot,
   tab and search text; it does not own selection or source requests.
@@ -88,6 +91,13 @@ The controller still batches target DOM reads before overlay writes, and label
 fitting still batches its own label reads before position writes. Both views use
 the existing stylesheet; selectors, markup, model/snapshot helpers and projection
 math remain unchanged. The controller mounts and removes both hosts.
+
+On document changes, the controller calls the previous target cleanup before
+resetting selection, disconnecting selection observers and invalidating pending
+source results. It then binds the new document. Destroy also releases target,
+host, viewport and font listeners and disconnects observers. Source promises are
+not forcibly aborted: existing request IDs reject stale results/open requests.
+No event bus or second state owner is introduced.
 
 ## Coordinate Spaces
 

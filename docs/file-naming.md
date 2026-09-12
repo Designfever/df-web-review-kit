@@ -35,9 +35,23 @@ later implementation status is recorded below without rewriting the historical m
   projected boxes/lines and label fitting. Frame geometry is an explicit input.
 - Shared `appendText` moved into existing `src/design-inspector/dom.ts` rather
   than duplicating it across views. Target selection, source requests, events and
-  scheduling remain in `inspector.ts`; step 05 event extraction is still pending.
+  scheduling remain in `inspector.ts`; target event registration is handled in step 05.
 - Locate the implementation commit with
   `git log --oneline --grep='refactor: separate Design Inspector rendering'`.
+
+## Implemented: step 05
+
+- `src/design-inspector/target.events.ts` binds one target Document/Window,
+  visual viewport and FontFaceSet, returning one idempotent cleanup function.
+- Controller read/command callbacks preserve single ownership of selection,
+  mode, hover/compare state and scheduling. Rebinding cleans the previous document
+  before installing the new binder; source request guards and observer cleanup
+  remain in `inspector.ts`.
+- `target.events.test.ts` covers live mode policy, native touch pointerdown and
+  listener disposal. Inspector integration tests also cover rebind while a source
+  open waits for resolution and observer teardown.
+- Locate the implementation commit with
+  `git log --oneline --grep='refactor: isolate Design Inspector target events'`.
 
 ## Rules and ownership
 
@@ -115,7 +129,7 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-Except for steps 03–04 marked implemented above, these are **new planned files**,
+Except for steps 03–05 marked implemented above, these are **new planned files**,
 not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one

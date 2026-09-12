@@ -341,3 +341,16 @@ Style ownership: custom-panel container rules live in
 `react-shell/style.ts`. The standalone Figma widget imports its shadow-root CSS
 from `react-shell/figma/dev.overlay.style.ts`. These are ownership-only changes;
 selectors, tokens, z-index values and emitted style order remain unchanged.
+
+## Vite Locator Modules
+
+`src/vite.ts` remains the package entry, re-exporting the source/data locator
+plugins, their option types and the existing Figma store API. Internal ownership:
+
+- `vite/source.locator.ts` / `data.locator.ts`: plugin hooks and orchestration.
+- `vite/locator.options.ts`: shared options, path matching and source environment replacement.
+- `vite/locator.transform.ts`: optional TypeScript loader and line-preserving JSX AST insertion.
+- `vite/jsx.runtime.ts`: generated JSX development runtime; its serialized helpers remain self-contained.
+
+Serve/build activation and editor-link gates remain in the existing
+`vite/review-locator.mode.ts`. Figma storage/server modules are unchanged.

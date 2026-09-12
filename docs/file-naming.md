@@ -163,6 +163,20 @@ later implementation status is recorded below without rewriting the historical m
 - Locate the commit with
   `git log --oneline --grep='refactor: organize styles by UI ownership'`.
 
+## Implemented: step 13
+
+- `src/vite.ts` is the public re-export entry. Source/data plugin factories live in
+  `vite/source.locator.ts` and `vite/data.locator.ts`; public names/signatures stay.
+- `vite/locator.options.ts` owns option types, normalization/matching and shared
+  environment replacements. `vite/locator.transform.ts` owns optional TypeScript
+  loading and AST insertion; `vite/jsx.runtime.ts` owns the generated runtime.
+- Generated runtime string and 32 moved declaration bodies/types are unchanged.
+  The runtime's serialized matcher remains self-contained: its existing matching
+  semantics differ from the build-time matcher and are not unified here.
+- Image storage/server restructuring remains on the watchlist, not implemented.
+- Locate the commit with
+  `git log --oneline --grep='refactor: extract Vite locator internals'`.
+
 ## Rules and ownership
 
 - Keep the [core / React shell boundary](architecture.md): vanilla target review
@@ -240,7 +254,7 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-Except for steps 03–05 and 07–12 marked implemented above, these are **new planned files**,
+Except for steps 03–05 and 07–13 marked implemented above, these are **new planned files**,
 not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one

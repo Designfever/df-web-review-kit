@@ -149,3 +149,13 @@ Core item/attachment orchestration coverage:
   manual capture retry/current-draft merge, capture/submit guards through async
   completion, owner metadata and preview disposal. Adapters/capture are mocks;
   this does not cover real storage uploads or browser image capture.
+
+Vite locator coverage:
+
+- `src/vite/review-locator.mode.test.ts`: serve/build opt-in and editor-link gates.
+- `src/vite/locator.transform.test.ts`: public-plugin AST/data annotations,
+  explicit hints, line preservation, matching, and generated JSX runtime source
+  propagation/wrapper cleanup. Vitest's VM cannot dynamically import via
+  `new Function`; this file substitutes only that loader with the real TypeScript
+  module. Validate the unmodified dynamic loader separately against built
+  ESM/CJS when changing plugin module boundaries.

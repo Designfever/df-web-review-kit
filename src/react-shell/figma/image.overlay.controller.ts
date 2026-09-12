@@ -26,7 +26,6 @@ import {
 } from './image.overlay.state';
 
 export {
-  DEFAULT_REVIEW_FIGMA_IMAGE_OVERLAY_OPACITY,
   type ReviewFigmaImageOverlayItemState,
   type ReviewFigmaImageOverlayMode,
   type ReviewFigmaImageOverlayState,

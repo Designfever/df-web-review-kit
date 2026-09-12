@@ -1,3 +1,6 @@
+export const DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT =
+  '/__dfwr/figma-images';
+
 export type ReviewFigmaImageFormat = 'webp' | 'png' | 'jpg';
 
 export const DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT =

@@ -50,12 +50,14 @@ refactors depend on:
 - `src/react-shell/sitemap/tree.test.ts`: status filters use OR with each other, AND with search, and return flat full-path page rows.
 - `src/react-shell/sitemap/modal.test.tsx`: closing and reopening the sitemap preserves search and status-filter state.
 - `src/figma/parse.test.ts`: Figma URL/node-ref parsing, including non-figma host rejection.
-- `src/vite/figma-asset.test.ts`: asset storage key validation, including path traversal rejection, and mime/format helpers.
+- `src/figma/image.asset.test.ts`: shared storage-key validation and MIME/format helpers.
+- `src/figma/image.target.test.ts`: persisted store/overlay key formats and existing client-store re-exports.
+- `src/vite/figma-asset.test.ts`: server asset pathname decoding, including encoded traversal rejection.
 - `src/vite/figma-image-store.server.test.ts`: dev middleware request guards — cross-origin (CSRF) rejection, JSON content-type enforcement, body size limit.
 - `src/vite/figma-image-store.image.test.ts`: image store mutation lock ordering, lost-update prevention, and atomic data-file writes.
 - `src/react-shell/source.open.test.ts`: repeated same-source element indexing (`#i/n`) and the per-call document scan cache.
 
-Security-relevant behavior (figma.com host allowlist, asset path traversal guard) is pinned by these tests; keep them green when touching `src/figma/parse.ts` or `src/vite/figma-asset.ts`.
+Security-relevant behavior (figma.com host allowlist, asset path traversal guard) is pinned by these tests; keep them green when touching `src/figma/parse.ts`, `src/figma/image.asset.ts`, or `src/vite/figma-asset.ts`.
 
 ## When to Add Tests
 

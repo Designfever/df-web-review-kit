@@ -15,6 +15,7 @@ import type {
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_FORMAT,
 } from '../../figma/image.types';
+import { createReviewFigmaImageTargetKey } from '../../figma/image.target';
 import type { ReviewShellViewportPreset } from '../types';
 import { getViewportPresetKind } from '../viewport';
 
@@ -288,18 +289,6 @@ function getNewReviewFigmaImageOrder(images: ReviewFigmaImage[]) {
   return images.length
     ? Math.min(...images.map((image) => image.order)) - 1
     : 0;
-}
-
-export function createReviewFigmaImageTargetKey(target: ReviewFigmaRouteTarget) {
-  return [
-    target.projectId,
-    target.pageUrl,
-    target.viewport?.scope ?? '',
-    target.viewport?.label ?? '',
-    target.viewport?.width ?? '',
-    target.viewport?.height ?? '',
-    target.slot ?? '',
-  ].join('|');
 }
 
 function getReviewFigmaImageComparableLabel(image: ReviewFigmaImage) {

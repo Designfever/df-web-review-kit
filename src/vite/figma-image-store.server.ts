@@ -4,18 +4,16 @@ import path from 'node:path';
 import type {
   ReviewFigmaImageTarget,
   AddReviewFigmaImageInput,
+  ReorderReviewFigmaImagesInput,
 } from '../figma/image.types';
-import {
-  getReviewFigmaImageTargetKey,
-  type ReorderReviewFigmaImagesInput,
-} from '../figma/image.store';
+import { getReviewFigmaImageTargetKey } from '../figma/image.target';
 import type { ReviewFigmaTokenEnv } from '../figma/token';
 import { createReviewFigmaReleaseSnapshot } from '../figma/image.snapshot';
 import {
   getReviewFigmaAssetMimeType,
-  getReviewFigmaAssetStorageKeyFromPathname,
   parseReviewFigmaImageFormat,
-} from './figma-asset';
+} from '../figma/image.asset';
+import { getReviewFigmaAssetStorageKeyFromPathname } from './figma-asset';
 import type { ReviewFigmaImageStorePluginOptions } from './figma-image-store';
 import {
   createReviewFigmaImage,

@@ -4,7 +4,28 @@ This is the path contract for the v0.12 cleanup sequence, not a description of
 completed moves. Checked on 2026-09-12 against
 `36024c984b4365045080276bb3b7ead836771941` (step 01), following the structural
 review at `dab969be2bfd135d86791dd1e87a976b811f49f1`.
-Step numbers below refer to sequence 8. Step 02 changes documentation only.
+Step numbers below refer to sequence 8. Step 02 changed documentation only;
+later implementation status is recorded below without rewriting the historical map.
+
+## Implemented: step 03
+
+- `src/figma/image.asset.ts` now owns shared MIME/format/storage-key helpers,
+  including `getReviewFigmaImageMimeType`. Server pathname decoding remains in
+  `src/vite/figma-asset.ts`; its tests stay there, while pure helper tests moved to
+  `src/figma/image.asset.test.ts`.
+- `src/figma/image.target.ts` now owns the normalized store target key and its
+  existing normalization. It also owns the unchanged legacy overlay key helper
+  previously in `src/react-shell/figma/image.controller.ts`: moving only the
+  panel helper import would otherwise leave a transitive React dependency through
+  overlay state. The JSON store key and pipe-separated overlay key are not merged.
+- The default store endpoint moved from `src/figma/image.store.ts` to existing
+  `src/figma/image.types.ts`, alongside the existing image-format default. This
+  avoids a new constants-only module and removes Vite's remaining client-store
+  import. Existing client-store public re-exports remain intact.
+- `src/figma/image.target.test.ts` pins key formats and compatibility re-exports.
+  Other whole-file moves/extractions below remain pending.
+- Locate the implementation commit with
+  `git log --oneline --grep='refactor: decouple shared Figma helpers'`.
 
 ## Rules and ownership
 
@@ -82,7 +103,8 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-These are **new planned files**, not whole-file renames. Every donor path exists
+Except for step 03 marked implemented above, these are **new planned files**,
+not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one
 implementation and preserve public re-exports where already exposed.

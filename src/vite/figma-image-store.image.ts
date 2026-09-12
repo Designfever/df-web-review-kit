@@ -6,13 +6,10 @@ import type {
   ReviewFigmaImageFormat,
   ReviewFigmaImageTarget,
   AddReviewFigmaImageInput,
+  ReorderReviewFigmaImagesInput,
   UpdateReviewFigmaImageInput,
 } from '../figma/image.types';
-import {
-  getReviewFigmaImageMimeType,
-  getReviewFigmaImageTargetKey,
-  type ReorderReviewFigmaImagesInput,
-} from '../figma/image.store';
+import { getReviewFigmaImageTargetKey } from '../figma/image.target';
 import { parseReviewFigmaNodeRef } from '../figma/parse';
 import {
   DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
@@ -28,10 +25,11 @@ import {
   createReviewFigmaAssetStorageKey,
   createReviewFigmaAssetUrl,
   getReviewFigmaImageFormatFromMimeType,
+  getReviewFigmaImageMimeType,
   getStoreRenderFormat,
   isSafeReviewFigmaAssetStorageKey,
   normalizeImageMimeType,
-} from './figma-asset';
+} from '../figma/image.asset';
 import type { ReviewFigmaImageStorePluginOptions, ReviewFigmaImageAssetTransformer } from './figma-image-store';
 
 export type ReviewFigmaImageStoreFile = {

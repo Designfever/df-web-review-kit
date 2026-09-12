@@ -92,7 +92,6 @@ export type {
 } from './types';
 export type {
   AddReviewFigmaImageInput,
-  ReorderReviewFigmaImagesInput,
   ReviewFigmaImage,
   ReviewFigmaImageAssetInput,
   ReviewFigmaImageFormat,
@@ -115,6 +114,7 @@ export type {
   ReviewFigmaRemoteImageRow,
 } from './figma/remote.image.store';
 export type {
+  ReorderReviewFigmaImagesInput,
   EndpointReviewFigmaImageStoreOptions,
   ReviewFigmaImageClientRenderOptions,
   ReviewFigmaImageStoreHeadersProvider,

@@ -3,7 +3,7 @@ import { loadEnv, type Plugin } from 'vite';
 import type { ReviewFigmaImageFormat } from '../figma/image.types';
 import {
   DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT,
-} from '../figma/image.store';
+} from '../figma/image.types';
 import {
   DEFAULT_REVIEW_FIGMA_TOKEN_ENV_KEY,
   readReviewFigmaToken,

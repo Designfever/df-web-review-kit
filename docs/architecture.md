@@ -9,8 +9,8 @@ This split keeps the target-page overlay independent from React while allowing t
 
 For file conventions, feature ownership, and the current-to-planned path map,
 see [File Naming and Feature Ownership](file-naming.md). The runtime paths below
-describe the current implementation; planned cleanup destinations are not yet
-implemented and must not be read as completed moves.
+describe the current implementation; only destinations marked implemented in
+the naming map are completed moves.
 
 ## High-Level Flow
 
@@ -266,6 +266,16 @@ shell modules, but persistence and normalization live in
 of the React controller.
 
 Shared coordinate math can reuse `core/geometry.ts` or move to a future shared module if both core and Figma need it heavily.
+
+Shared Figma helpers now live in `src/figma/image.asset.ts` (MIME, formats and
+storage keys) and `src/figma/image.target.ts` (normalized store keys and legacy
+overlay keys). The two key formats remain distinct for persisted-data compatibility.
+The default store endpoint lives with existing defaults/contracts in
+`src/figma/image.types.ts`. The client store preserves its existing public
+re-exports; Vite imports shared helpers directly, not through the client store.
+Server-only asset pathname decoding and request routing stay under `src/vite/`.
+Panel helpers import overlay defaults/types from `image.overlay.state.ts`, which
+no longer imports a React controller for key construction.
 
 Avoid turning `core` into a feature bucket. Core should stay focused on target review runtime behavior.
 

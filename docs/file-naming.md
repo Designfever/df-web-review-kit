@@ -23,9 +23,21 @@ later implementation status is recorded below without rewriting the historical m
   avoids a new constants-only module and removes Vite's remaining client-store
   import. Existing client-store public re-exports remain intact.
 - `src/figma/image.target.test.ts` pins key formats and compatibility re-exports.
-  Other whole-file moves/extractions below remain pending.
+  See later implementation sections for subsequent progress.
 - Locate the implementation commit with
   `git log --oneline --grep='refactor: decouple shared Figma helpers'`.
+
+## Implemented: step 04
+
+- `src/design-inspector/panel.view.ts` now owns static panel creation, detail rows,
+  measurement rows and detail-scroll preservation.
+- `src/design-inspector/geometry.view.ts` now owns overlay creation, clipping,
+  projected boxes/lines and label fitting. Frame geometry is an explicit input.
+- Shared `appendText` moved into existing `src/design-inspector/dom.ts` rather
+  than duplicating it across views. Target selection, source requests, events and
+  scheduling remain in `inspector.ts`; step 05 event extraction is still pending.
+- Locate the implementation commit with
+  `git log --oneline --grep='refactor: separate Design Inspector rendering'`.
 
 ## Rules and ownership
 
@@ -103,7 +115,7 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-Except for step 03 marked implemented above, these are **new planned files**,
+Except for steps 03–04 marked implemented above, these are **new planned files**,
 not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one

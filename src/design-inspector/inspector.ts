@@ -1,24 +1,21 @@
-import { filterStyles, measureRects, plainRect, px, type Measure, type Rect } from './model';
+import { measureRects, plainRect, px } from './model';
 import {
   createReport,
   elementLabel,
   parentElement,
   readSnapshot,
-  styleGroups,
   type StyleSnapshot
 } from './snapshot';
-import { inspectorStyles } from './styles';
+import { createDesignInspectorPanel } from './panel.view';
+import { createDesignInspectorGeometry } from './geometry.view';
 import { isElement } from './dom';
 import type {
   DesignInspectorSourceLocation,
   DesignInspectorSourceOptions
 } from './source';
 import {
-  fitLabelInViewport,
   getFrameDocument,
   getFrameGeometry,
-  projectRect,
-  projectMeasure,
   type FrameGeometry,
 } from './frame.geometry';
 
@@ -48,69 +45,13 @@ export function createDesignInspector({
 }: DesignInspectorOptions): DesignInspectorSession {
   const doc = container.ownerDocument;
   const win = doc.defaultView!;
-  const host = doc.createElement('div');
-  host.dataset.dfReviewDesignInspector = '';
-  const shadow = host.attachShadow({ mode: 'open' });
-  const overlayHost = doc.createElement('div');
-  overlayHost.dataset.dfReviewDesignGeometry = '';
-  Object.assign(overlayHost.style, {
-    position: 'fixed', inset: '0', zIndex: '870', pointerEvents: 'none',
-  });
-  const overlayShadow = overlayHost.attachShadow({ mode: 'open' });
-  const canvas = doc.createElement('div');
-  canvas.className = 'canvas';
-  canvas.setAttribute('aria-hidden', 'true');
-  canvas.innerHTML = '<div class="geometry"></div><div class="labels"></div>';
-  const root = doc.createElement('div');
-  root.className = 'inspector';
-  const style = doc.createElement('style');
-  style.textContent = inspectorStyles;
-  // Static, package-owned markup only. Inspected content is always assigned with textContent.
-  root.innerHTML = `
-    <section class="panel" aria-label="디자인 인스펙터">
-      <div class="header">
-        <div class="brand">Design Inspector<small>DESIGNFEVER · LOCAL QA</small></div>
-        <div class="toolbar">
-          <button class="pick" aria-pressed="true">요소 선택</button>
-          <button class="browse" aria-pressed="false">사이트 조작</button>
-          <button class="compare" aria-pressed="false" disabled>거리 측정</button>
-        </div>
-      </div>
-      <div class="status" role="status" aria-live="polite">호버로 크기 확인 · 클릭/탭으로 선택</div>
-      <div class="body">
-        <div class="empty"><strong>화면 위의 요소를 선택하세요</strong>폰트, 색상, 크기와 간격을 확인합니다.<br>버튼을 실제로 누르려면 ‘사이트 조작’으로 전환하세요.<p>Shift+1 켜기/끄기<br>요소 선택 후 Alt/Option+호버로 거리 측정</p></div>
-        <div class="selection" hidden>
-          <div class="identity"></div>
-          <div class="source-location" hidden><code class="source-path"></code><button class="open-source" type="button" disabled>소스 열기</button></div>
-          <div class="navigation">
-            <button class="parent">부모 ↑</button><button class="child">자식 ↓</button>
-            <button class="previous">이전 형제</button><button class="next">다음 형제</button>
-          </div>
-          <div class="metrics"><div class="metric"><span>화면 너비 · border box</span><strong class="width"></strong></div><div class="metric"><span>화면 높이 · border box</span><strong class="height"></strong></div></div>
-          <div class="measure-info"></div>
-          <div class="tabs"><button class="summary-tab" aria-pressed="true">디자인 요약</button><button class="css-tab" aria-pressed="false">전체 CSS</button></div>
-          <div class="css-controls" hidden>
-            <select class="pseudo" aria-label="가상 요소 선택"><option value="">요소 자체</option><option value="::before">::before</option><option value="::after">::after</option><option value="::placeholder">::placeholder</option><option value="::marker">::marker</option></select>
-            <input class="search" aria-label="CSS 속성 검색" placeholder="속성 또는 값 검색 · font, 16px…" type="search" autocomplete="off">
-          </div>
-          <div class="details"></div>
-          <div class="actions"><button class="refresh">값 새로고침</button><button class="copy">CSS 리포트 복사</button></div>
-          <textarea class="report" aria-label="복사할 CSS 리포트" readonly hidden></textarea>
-          <p class="hint">현재 브라우저의 계산값 · CSS px 기준. 색상은 합성 전 CSS 값, 폰트는 선언 목록입니다. 원본 CSS 규칙·우선순위와 강제 hover는 아직 지원하지 않습니다.</p>
-        </div>
-      </div>
-    </section>`;
-  shadow.append(style, root);
-  overlayShadow.append(style.cloneNode(true), canvas);
+  const panel = createDesignInspectorPanel(doc);
+  const geometryView = createDesignInspectorGeometry(doc);
+  const { host, get } = panel;
+  const overlayHost = geometryView.host;
   container.append(host);
   (overlayContainer ?? doc.body).append(overlayHost);
-  const get = <T extends HTMLElement = HTMLElement>(selector: string) =>
-    root.querySelector<T>(selector)!;
-  const geometry = canvas.querySelector<HTMLElement>('.geometry')!;
-  const labels = canvas.querySelector<HTMLElement>('.labels')!;
-  const body = get('.body');
   const status = get('.status');
-  const details = get('.details');
   const search = get<HTMLInputElement>('.search');
   const pseudoSelect = get<HTMLSelectElement>('.pseudo');
   let targetDoc: Document | null = null;
@@ -295,139 +236,6 @@ export function createDesignInspector({
     dirtyDetails = true;
     schedule();
   }
-  function appendText(parent: Element, tag: string, text: string, className = '') {
-    const node = doc.createElement(tag);
-    node.textContent = text;
-    node.className = className;
-    parent.append(node);
-    return node;
-  }
-  function row(parent: Element, name: string, value: string) {
-    const line = appendText(parent, 'div', '', 'row');
-    appendText(line, 'span', name, 'key');
-    const output = appendText(line, 'span', value || '—', 'value');
-    if (name.endsWith('color') && win.CSS?.supports?.('color', value)) {
-      const swatch = doc.createElement('span');
-      swatch.className = 'swatch';
-      swatch.style.backgroundColor = value;
-      output.prepend(swatch);
-    }
-  }
-  function renderDetails(data: StyleSnapshot) {
-    const previousScroll = body.scrollTop;
-    details.replaceChildren();
-    for (const warning of data.warnings) appendText(details, 'div', warning, 'notice');
-    if (tab === 'css') {
-      const entries = filterStyles(data.styles, search.value);
-      appendText(
-        details,
-        'p',
-        `${entries.length}개 속성 · 현재 브라우저가 제공하는 계산값`,
-        'hint'
-      );
-      for (const [name, value] of entries) row(details, name, value);
-    } else {
-      appendText(details, 'h3', '박스 모델 · 위 / 오른쪽 / 아래 / 왼쪽');
-      const sides = (kind: string) =>
-        ['top', 'right', 'bottom', 'left']
-          .map(
-            (side) => data.styles[`${kind}-${side}${kind === 'border' ? '-width' : ''}`] || '0px'
-          )
-          .join(' / ');
-      const box = appendText(details, 'div', `margin  ${sides('margin')}`, 'box-model');
-      const border = appendText(box, 'div', `border  ${sides('border')}`, 'border');
-      const padding = appendText(border, 'div', `padding  ${sides('padding')}`, 'padding');
-      appendText(
-        padding,
-        'div',
-        `CSS width ${data.styles.width} · height ${data.styles.height}`,
-        'content'
-      );
-      appendText(
-        details,
-        'p',
-        'margin/padding 값과 요소 간 실측 거리는 다를 수 있습니다. 부모 정렬, gap, margin 상쇄 등이 함께 영향을 줍니다.',
-        'hint'
-      );
-      for (const [title, properties] of styleGroups) {
-        appendText(details, 'h3', title);
-        for (const name of properties) row(details, name, data.styles[name]);
-      }
-    }
-    body.scrollTop = previousScroll;
-  }
-  function box(rect: Rect, label: string, hover = false, below = false) {
-    const actual = rect;
-    rect = projectRect(rect, origin);
-    const outline = doc.createElement('div');
-    outline.className = `outline${hover ? ' hover' : ''}`;
-    Object.assign(outline.style, {
-      left: `${rect.left}px`,
-      top: `${rect.top}px`,
-      width: `${rect.width}px`,
-      height: `${rect.height}px`
-    });
-    geometry.append(outline);
-    const badge = appendText(
-      labels,
-      'div',
-      `${label}  ${px(actual.width)} × ${px(actual.height)}`,
-      `badge${hover ? ' hover' : ''}`
-    );
-    badge.dataset.above = String(!below);
-    Object.assign(badge.style, {
-      left: `${rect.left}px`,
-      top: `${below ? rect.bottom + 3 : rect.top}px`
-    });
-  }
-  function drawMeasure(guide: Measure) {
-    const distance = guide.end - guide.start;
-    guide = projectMeasure(guide, origin);
-    const line = doc.createElement('div');
-    line.className = `line ${guide.axis} ${guide.kind}`;
-    const x = guide.axis === 'x' ? guide.start : guide.lane;
-    const y = guide.axis === 'y' ? guide.start : guide.lane;
-    Object.assign(line.style, {
-      left: `${x}px`,
-      top: `${y}px`,
-      [guide.axis === 'x' ? 'width' : 'height']: `${guide.end - guide.start}px`
-    });
-    geometry.append(line);
-    const label = appendText(
-      labels,
-      'div',
-      `${guide.kind === 'overlap' ? '겹침 ' : ''}${px(distance)}`,
-      `distance ${guide.kind}`
-    );
-    Object.assign(label.style, {
-      left: `${Math.max(0, Math.min(guide.axis === 'x' ? (guide.start + guide.end) / 2 - 24 : guide.kind === 'gap' ? guide.lane - 64 : guide.lane + 6, win.innerWidth - 100))}px`,
-      top: `${Math.max(0, Math.min(guide.axis === 'y' ? (guide.start + guide.end) / 2 - 11 : guide.lane + 6, win.innerHeight - 26))}px`
-    });
-  }
-  function fitLabels() {
-    // 표시 라벨만 한 번에 읽은 뒤 위치를 보정합니다. 페이지 전체는 측정하지 않습니다.
-    const positions = Array.from(labels.children, (node) => {
-      const label = node as HTMLElement;
-      const rect = label.getBoundingClientRect();
-      return {
-        label,
-        position: fitLabelInViewport(
-          {
-            left: rect.left,
-            top: rect.top - (label.dataset.above === 'true' ? rect.height + 4 : 0),
-            width: rect.width,
-            height: rect.height
-          },
-          win.innerWidth,
-          win.innerHeight
-        )
-      };
-    });
-    for (const { label, position } of positions) {
-      label.style.left = `${position.left}px`;
-      label.style.top = `${position.top}px`;
-    }
-  }
   function atPoint() {
     if (!point || !targetDoc) return null;
     let element = targetDoc.elementFromPoint?.(point.x, point.y) ?? null;
@@ -479,23 +287,21 @@ export function createDesignInspector({
         : [];
     const hoverLabel = hovered ? elementLabel(hovered) : '';
     origin = getFrameGeometry(targetFrame);
-    const bounds = origin.bounds;
-    geometry.style.clipPath = `inset(${bounds.top}px ${Math.max(0, win.innerWidth - bounds.right)}px ${Math.max(0, win.innerHeight - bounds.bottom)}px ${bounds.left}px)`;
-    geometry.replaceChildren();
-    labels.replaceChildren();
-    if (selectedRect && selected) box(selectedRect, `A · ${elementLabel(selected)}`);
+    geometryView.clear(origin);
+    if (selectedRect && selected) geometryView.box(selectedRect, `A · ${elementLabel(selected)}`, origin);
     if (targetRect && target)
-      box(
+      geometryView.box(
         targetRect,
         `B · ${elementLabel(target)}`,
+        origin,
         true,
         !!selectedRect &&
           targetRect.top >= selectedRect.top &&
           targetRect.top - 23 < selectedRect.bottom
       );
-    else if (hoverRect) box(hoverRect, hoverLabel, true);
-    guides.forEach(drawMeasure);
-    fitLabels();
+    else if (hoverRect) geometryView.box(hoverRect, hoverLabel, origin, true);
+    guides.forEach((guide) => geometryView.drawMeasure(guide, origin));
+    geometryView.fitLabels();
     get('.empty').hidden = !!selected;
     get('.selection').hidden = !selected;
     updateMode();
@@ -513,10 +319,8 @@ export function createDesignInspector({
       get<HTMLButtonElement>('.previous').disabled = !selected.previousElementSibling;
       get<HTMLButtonElement>('.next').disabled =
         !selected.nextElementSibling || selected.nextElementSibling === host;
-      const info = get('.measure-info');
-      info.replaceChildren();
-      for (const guide of guides) row(info, guide.label, px(guide.end - guide.start));
-      if (dirtyDetails) renderDetails(snapshot);
+      panel.renderMeasurements(guides);
+      if (dirtyDetails) panel.renderDetails(snapshot, tab, search.value);
     }
     dirtyStyle = false;
     dirtyDetails = false;

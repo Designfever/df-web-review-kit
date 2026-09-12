@@ -70,6 +70,25 @@ The overlay renderer is split by role. Modules never reach into the app directly
 - `draft.text.ts`: metric/adjustment display formatting and the saved-comment adjustment suffix.
 - `icons.ts`: stateless SVG icon and spinner builders.
 
+## Design Inspector Rendering Boundary
+
+The CSS Design Inspector remains separate from Source Tree selection:
+
+- `src/design-inspector/inspector.ts`: selection, mode, snapshot reads, source
+  request lifecycle, frame scheduling, event binding and cleanup.
+- `src/design-inspector/panel.view.ts`: static panel DOM, summary/CSS detail rows,
+  measurement rows, and detail-scroll preservation. Receives the current snapshot,
+  tab and search text; it does not own selection or source requests.
+- `src/design-inspector/geometry.view.ts`: overlay host, clipping, projected boxes,
+  measurement lines and viewport-fitted labels. Receives rectangles, guides and
+  current frame geometry; it does not read target elements or own target state.
+- `src/design-inspector/dom.ts`: shared text-node creation using `textContent`.
+
+The controller still batches target DOM reads before overlay writes, and label
+fitting still batches its own label reads before position writes. Both views use
+the existing stylesheet; selectors, markup, model/snapshot helpers and projection
+math remain unchanged. The controller mounts and removes both hosts.
+
 ## Coordinate Spaces
 
 Core uses two coordinate spaces:

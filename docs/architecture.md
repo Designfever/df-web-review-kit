@@ -49,6 +49,9 @@ When the React shell provides a composer host, core docks DOM/area draft compose
 - `draft.metrics.ts`: pure geometry for draft adjustment (nudge/scale) previews, kept out of the renderer.
 - `dom.anchor.ts`: selector candidate generation, anchor rebinding, text fingerprint matching.
 - `geometry.ts`: target-space and host-space coordinate conversion.
+- `overlay.style.ts`: ordered stylesheet assembly from `style/overlay.base.ts`,
+  `style/overlay.markers.ts` and `style/overlay.draft.ts`; interleaved fragments
+  preserve the original cascade and responsive override positions.
 - `review/item.ts`: marker, selection, highlight, and fallback resolution.
 - `review/item.payload.ts`: pure item field normalization from form data and explicit persistence/environment snapshots.
 - `review/draft.attachments.ts`: manual capture conversion and required-upload / best-effort-auto-capture operations. Uses `review/capture.input.ts`; no app state ownership.
@@ -332,3 +335,9 @@ a wrapper. Store mutation contracts and controller/container ownership stay inta
 `figma/use.image.reorder.ts` owns drag state and pointer handlers. Both hooks are
 mounted once by the panel so only one rename/drag session exists across rows.
 Opacity/offset/preview selection and mutation callback contracts stay at panel scope.
+
+Style ownership: custom-panel container rules live in
+`react-shell/custom-panels/style.ts`, composed immediately before QA styles in
+`react-shell/style.ts`. The standalone Figma widget imports its shadow-root CSS
+from `react-shell/figma/dev.overlay.style.ts`. These are ownership-only changes;
+selectors, tokens, z-index values and emitted style order remain unchanged.

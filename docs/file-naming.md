@@ -146,6 +146,23 @@ later implementation status is recorded below without rewriting the historical m
 - Locate the commit with
   `git log --oneline --grep='refactor: separate core item payload and attachments'`.
 
+## Implemented: step 12
+
+- `core/style/overlay.base.ts` owns tokens/common controls, list UI and responsive
+  panel rules; `overlay.markers.ts` owns marker/highlight styles and animations;
+  `overlay.draft.ts` owns draft/composer and selection-layer rules.
+- Some rules were interleaved originally. These modules export ordered fragments;
+  `core/overlay.style.ts` assembles base → markers → draft → list → selection →
+  marker animations → responsive with no inserted separators, preserving the
+  complete emitted CSS string and cascade.
+- `react-shell/custom-panels/style.ts` owns the custom-panel host/container rules.
+  Shell composition keeps them immediately before QA rules in their original
+  joined slot, without inserting a new separator.
+- `react-shell/figma/dev.overlay.style.ts` contains the existing widget stylesheet;
+  widget logic is unchanged. No broader style feature migration performed.
+- Locate the commit with
+  `git log --oneline --grep='refactor: organize styles by UI ownership'`.
+
 ## Rules and ownership
 
 - Keep the [core / React shell boundary](architecture.md): vanilla target review
@@ -223,7 +240,7 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-Except for steps 03–05 and 07–11 marked implemented above, these are **new planned files**,
+Except for steps 03–05 and 07–12 marked implemented above, these are **new planned files**,
 not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one

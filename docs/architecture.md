@@ -242,7 +242,7 @@ hooks and returns provider values; it should not become a render component.
 - `hooks/use.review.side.panel.ts`: side panel selection, availability fallback, and browser-local persistence.
 - `hooks/use.review.target.navigation.ts`: address parsing, page/source switching, selected-item clearing, and shell URL sync.
 - `source-tree/`: Source Tree model, source selection, panels, overlays and dedicated tests. Shared shell orchestration stays in `hooks/` and layout assembly in `review/`; CSS Design Inspector remains separate.
-- `source-tree/use.source.inspector.ts`: source inspector state and target-iframe shortcut binding.
+- `source-tree/use.source.inspector.ts`: source inspector React state and target-iframe shortcut lifecycle; `source-tree/source.selection.events.ts` owns listener binding and `source-tree/source.font.overlay.ts` owns font-hint DOM/styles.
 - `source-tree/use.section.outline.ts`: Source Tree outline extraction, filter/collapse state, refresh scheduling, and entry actions.
 - `hooks/use.review.command.key.ts`: hide-all-overlays-while-command-held tracking across host and iframe.
 

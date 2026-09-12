@@ -63,10 +63,24 @@ later implementation status is recorded below without rewriting the historical m
   unchanged. Importers point directly to the feature folder.
 - Only module paths changed in source/test bodies. Shared shell hooks, central
   styles and CSS Design Inspector implementations stay in their existing folders.
-- Steps 07–08 still describe future extractions: resolve their historical donor
+- Step 08 still describes future extractions: resolve its historical donor
   paths through the step-06 map. Step-10 whole-file moves are also still pending.
 - Locate the implementation commit with
   `git log --oneline --grep='refactor: group Source Tree files by feature'`.
+
+## Implemented: step 07
+
+- `src/react-shell/source-tree/source.selection.events.ts` binds one target
+  document and its host window through explicit outline/selection/focus/cancel
+  commands. It returns cleanup for the same listener targets and capture options.
+- `src/react-shell/source-tree/source.font.overlay.ts` owns shortcut style and
+  font-hint DOM creation, positioning, deduplication and removal, using the existing
+  stylesheet. Selection mode and Figma locking remain in the event binder.
+- `use.source.inspector.ts` retains React hover/selection/popup state, rectangle
+  tracking, blocked-mode policy and iframe rebind/unmount orchestration. Figma
+  first-click hit-testing and Design Inspector exclusion keep their old order.
+- Locate the implementation commit with
+  `git log --oneline --grep='refactor: isolate Source selection events and font hints'`.
 
 ## Rules and ownership
 
@@ -145,7 +159,7 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-Except for steps 03–05 marked implemented above, these are **new planned files**,
+Except for steps 03–05 and 07 marked implemented above, these are **new planned files**,
 not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one

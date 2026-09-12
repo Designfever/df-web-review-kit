@@ -114,3 +114,9 @@ site. See [Custom panels](custom-panels.md) for the integration contract.
 On Node 26, if experimental native web storage shadows jsdom and existing tests
 fail on `localStorage`, run `NODE_OPTIONS=--no-experimental-webstorage pnpm test`.
 This is a test-process workaround, not an application setting.
+
+Source selection cleanup coverage:
+
+- `src/react-shell/source-tree/source.selection.events.test.ts`: Alt/Option,
+  Escape/blur, font deduplication, first Figma click hit-testing, Design Inspector
+  exclusion, composer/outside focus policy, and old document/host listener disposal.

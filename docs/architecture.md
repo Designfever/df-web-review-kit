@@ -354,3 +354,19 @@ plugins, their option types and the existing Figma store API. Internal ownership
 
 Serve/build activation and editor-link gates remain in the existing
 `vite/review-locator.mode.ts`. Figma storage/server modules are unchanged.
+
+## df-sheet Integration Modules
+
+The public `src/df-sheet.ts` entry re-exports its existing API from:
+
+- `df-sheet/session.ts`: PKCE authorization/callback, cached browser session,
+  selected-page validation, authenticated client assembly, disconnect and logout.
+- `df-sheet/http.ts`: JSON envelopes, bearer headers, multipart handling and
+  the exported `DfSheetReviewSessionExpiredError` class.
+- `df-sheet/adapter.ts`: QA list/get/create/update/remove and attachment upload;
+  each adapter still owns its own in-flight list map and last-item cache.
+- `df-sheet/types.ts`: the existing public contracts shared by those modules.
+
+Session owns authentication and calls HTTP and adapter modules; the adapter
+receives an authenticated request callback. No internal module imports the
+public entry, and there is no new session manager or duplicate state owner.

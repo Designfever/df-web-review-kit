@@ -177,6 +177,20 @@ later implementation status is recorded below without rewriting the historical m
 - Locate the commit with
   `git log --oneline --grep='refactor: extract Vite locator internals'`.
 
+## Implemented: step 14
+
+- `src/df-sheet.ts` keeps its public runtime and type exports; implementation
+  lives in `df-sheet/session.ts` (PKCE, cached session and logout), `http.ts`
+  (transport and the same exported expiry error), and `adapter.ts` (QA and uploads).
+- `df-sheet/types.ts` holds only the seven existing public type declarations
+  shared by session and adapter; no replacement contracts or runtime dependency
+  on the public entry were introduced.
+- Session keys, 30-second expiry skew, selected-page validation, request headers,
+  upload fields and in-flight list handling retain their original implementations.
+- Verification uses mocked fetch/storage only; real login and external writes
+  are not part of this step. Find the implementation with
+  `git log --oneline --grep='refactor: extract df-sheet session and adapter'`.
+
 ## Rules and ownership
 
 - Keep the [core / React shell boundary](architecture.md): vanilla target review
@@ -254,7 +268,7 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-Except for steps 03–05 and 07–13 marked implemented above, these are **new planned files**,
+Except for steps 03–05 and 07–14 marked implemented above, these are **new planned files**,
 not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one

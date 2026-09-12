@@ -159,3 +159,76 @@ Vite locator coverage:
   `new Function`; this file substitutes only that loader with the real TypeScript
   module. Validate the unmodified dynamic loader separately against built
   ESM/CJS when changing plugin module boundaries.
+
+
+Df-sheet session and adapter coverage:
+
+- `src/df-sheet.test.ts`: cached-session expiry skew, selected-page validation,
+  callback/state/project checks, SHA-256 PKCE challenge, logout/disconnect,
+  request errors/401 identity, multipart fields and in-flight list/retry behavior.
+  Fetch and storage are mocks; no real login or remote writes.
+
+## Sequence 8 final regression — 2026-09-12
+
+Validated `70bd8ab` after steps 01–14; step 15 changes documentation only.
+Original baseline is `dab969b`. Reproduction scripts, raw logs, JSON inventories
+and screenshots are under the local artifact directory
+`~/Shared/AgentFiles/df-web-review-kit/`, prefixed `step-52-`.
+
+| Check | Result |
+|---|---|
+| `pnpm typecheck`, `pnpm typecheck:dev` | Pass |
+| `pnpm lint:dead-code` | Pass |
+| `pnpm test` with default Node 26 | 4 files failed; 15 failed / 345 passed tests |
+| `NODE_OPTIONS=--no-experimental-webstorage pnpm test` | 70 files / 360 tests passed |
+| `pnpm build` (library + CLI) | Pass |
+| `VITE_REVIEW_SUPABASE_URL= VITE_REVIEW_SUPABASE_ANON_KEY= pnpm build:dev` | Pass; >500 kB main-chunk warning remains |
+| `npm pack --dry-run --json` | Pass; all 20 exports/bin target paths included |
+
+Default-test failures arise from native Node web storage shadowing jsdom;
+cleanup failures follow that missing storage setup. Preserve the original failure
+log; the successful workaround run is not a default-environment pass.
+Jsdom also logs its unsupported full-document navigation in redirect tests.
+Pack dry-run invokes prepare/build and prints lifecycle logs before JSON;
+`step-52-pack-manifest.json` is the parsed manifest, the raw output is retained.
+No tarball install test or publish was performed.
+
+### Local browser evidence
+
+Fresh Chrome profiles, local-only dev/isolated fixtures:
+
+- Design Inspector: pick/browse, Alt comparison, native touch scroll, stale-source
+  cancellation, iframe reload and listener cleanup at 0.5/1 scale.
+- Source selection: font hints, Alt/Option, Escape/blur, exclusion, reload,
+  blocked/unmount cleanup. Isolated fixture uses host-context doubles.
+- Figma: row rename/cancel/blur, pointer reorder/click suppression, mock-store
+  refresh and opacity/offset/lock/visible/invert. Earlier step-46 artifacts retain
+  URL/file import and preview checks; these were not rerun as browser import E2E
+  in step 15 (their unit tests ran in the full suite).
+- Core composer, QA, custom panel and populated Figma widget screenshots at
+  390/1440px. Sixteen repeated fixture PNGs match the previous step results.
+  That is comparison against the previous verified fixtures, not a claim that
+  every app screen was compared directly against the original baseline.
+- Custom-panel regression: all eight check groups/four viewport presets passed
+  on retry, including reload/navigation/old-container detachment. First attempt
+  timed out loading the standalone editor; cause is unconfirmed and its log is
+  retained. No product fix or claim of reliable first-run loading.
+- Real local adapter: Source Tree filter/collapse/select → DOM QA → save →
+  full-page reload retains the comment; localStorage only, zero page errors or
+  attempted external requests. Screenshots visually inspected.
+
+### Open observations and limits
+
+- Step-49 iframe reload once encountered null `documentElement` in
+  `target/target.ts`. It was not changed or fixed; later successful runs do not
+  resolve this observation. Step-52 standalone-editor timeout is separate.
+- GC remains **inconclusive**: three old panel containers detached, zero observed
+  collected. This is not proof of absence of leaks.
+- Step-49 QA 390px before/after difference of one pixel and step-46 error-screen
+  difference of seven pixels remain in original artifacts. Current repeated
+  screenshots do not erase those observations.
+- Local fixture favicon 404 messages remain; no product page exceptions in the
+  successful asserted flows. Dev main-chunk size warning remains.
+- Real df-sheet login, Supabase writes, Figma remote imports, deployed browsers,
+  cross-browser coverage and packed-package installation were not tested.
+  No dependency addition, push, release, deployment or Todo approval occurred.

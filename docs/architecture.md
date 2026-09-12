@@ -370,3 +370,59 @@ The public `src/df-sheet.ts` entry re-exports its existing API from:
 Session owns authentication and calls HTTP and adapter modules; the adapter
 receives an authenticated request callback. No internal module imports the
 public entry, and there is no new session manager or duplicate state owner.
+
+## Structural review handoff — 2026-09-12
+
+Sequence 8 compares `dab969b` (v0.12.0 review baseline) with `70bd8ab`
+(steps 01–14 implemented). Step 15 adds verification/documentation only.
+Counts exclude tests, dev fixtures, dependencies and generated output; physical
+lines include comments, blank lines and embedded CSS/runtime templates.
+
+| Inventory | Before | After |
+|---|---:|---:|
+| Production TS/TSX files | 222 | 250 |
+| Physical source lines | 44,229 | 44,601 |
+| Files ≥500 lines | 23 | 16 |
+| Files ≥800 lines | 6 | 4 |
+| Files >1,000 lines | 2 | 1 |
+
+This is responsibility separation, not net code deletion: imports and explicit
+module boundaries add 372 lines. No line budget is enforced.
+
+| Responsibility / current path | Before | After |
+|---|---:|---:|
+| `design-inspector/inspector.ts` | 779 | 489 |
+| `react-shell/source-tree/use.source.inspector.ts` | 648 | 379 |
+| `react-shell/source-tree/use.section.outline.ts` | 635 | 560 |
+| `react-shell/figma/images.panel.tsx` | 741 | 343 |
+| `react-shell/figma/dev-overlay.tsx` | 819 | 495 |
+| `core/web.review.kit.app.ts` | 934 | 847 |
+| `core/overlay.style.ts` | 1,244 | 19 |
+| `vite.ts` | 679 | 4 |
+| `df-sheet.ts` | 539 | 11 |
+
+The old Source Tree hook paths are mapped in [File naming](file-naming.md).
+All 20 whole-file destinations exist and old paths are absent. Of 28 planned
+extraction destinations, 27 exist. The optional recursive entry component was
+intentionally not extracted: it would increase prop forwarding without reducing
+ownership complexity. Additional shared `df-sheet/types.ts` contains only the
+existing public types.
+
+### Compatibility and remaining work
+
+- Six public library entries retain all 196 exported declaration records and
+  63 runtime export names across baseline ESM and current ESM/CJS builds.
+  Generated chunk filenames/declaration ordering may differ. `package.json`
+  exports/bin/dependency configuration is unchanged; this is not a new release.
+- Core, shell and Figma widget stylesheet output is byte-identical to baseline.
+- State owners remain in app/controller/hooks. DOM rendering, document event
+  binding, observation scheduling, import/row/reorder UI, payload/attachments,
+  transport and locator internals have focused homes.
+- `dom.anchor.ts` (826), target capture fallbacks (591), and Vite image storage
+  (image 598) remain watchlist candidates. Core app orchestration (847) and
+  large cohesive styles such as QA panel (1,226) are not automatic split tasks.
+- `target/target.ts` naming and source-candidate/editor splitting remain deferred.
+  Todo 766 (package split) and release todos were not changed or marked done.
+- See [Testing](testing.md#sequence-8-final-regression--2026-09-12) for test
+  environment failures, browser observations and verification limits. Agent
+  completion is a review handoff, not human approval or a release gate waiver.

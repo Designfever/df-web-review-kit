@@ -278,8 +278,8 @@ Current ownership:
 
 ```txt
 src/react-shell/figma/
-  image.controller.ts          # image store list and mutations
-  image.overlay.controller.ts  # React effects and overlay commands
+  use.image.store.ts          # image store list and mutations
+  use.image.overlay.ts  # React effects and overlay commands
   image.overlay.state.ts       # route-keyed localStorage and migration
   images.panel*.tsx            # shell panel UI
 
@@ -290,7 +290,7 @@ src/figma/
   image.types.ts               # public image/store contracts
 ```
 
-`image.overlay.controller.ts` re-exports the overlay types used by existing
+`use.image.overlay.ts` re-exports the overlay types used by existing
 shell modules, but persistence and normalization live in
 `image.overlay.state.ts`. Keep storage migrations and default-value cleanup out
 of the React controller.
@@ -324,3 +324,8 @@ Avoid turning `core` into a feature bucket. Core should stay focused on target r
 keeps list/layer controls and preview selection. The import component's children
 slot preserves form → selected controls → error status DOM order without adding
 a wrapper. Store mutation contracts and controller/container ownership stay intact.
+
+`figma/image.row.tsx` owns the row view and shared row-editing hook;
+`figma/use.image.reorder.ts` owns drag state and pointer handlers. Both hooks are
+mounted once by the panel so only one rename/drag session exists across rows.
+Opacity/offset/preview selection and mutation callback contracts stay at panel scope.

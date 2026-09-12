@@ -48,7 +48,7 @@ refactors depend on:
 - `src/core/location.test.ts`: page URL building and review-internal query param stripping.
 - `src/core/review/scope.test.ts`: viewport preset matching, scope inference, and item numbering/draft labels.
 - `src/react-shell/route.test.ts`: shell URL updates preserve the current hash while changing target or selected QA item.
-- `src/react-shell/figma/image.overlay.controller.test.tsx`: unchanged image-list refreshes do not rewrite overlay state in localStorage.
+- `src/react-shell/figma/use.image.overlay.test.tsx`: unchanged image-list refreshes do not rewrite overlay state in localStorage.
 - `src/react-shell/sitemap/tree.test.ts`: status filters use OR with each other, AND with search, and return flat full-path page rows.
 - `src/react-shell/sitemap/modal.test.tsx`: closing and reopening the sitemap preserves search and status-filter state.
 - `src/figma/parse.test.ts`: Figma URL/node-ref parsing, including non-figma host rejection.
@@ -137,3 +137,7 @@ Figma import UI coverage:
   successful/null mutation draft handling, file label/drop state, error precedence
   and status placement, and loading/mutation guards. Asset decoding is mocked
   at the existing helper boundary; real decoding is a local browser fixture check.
+
+- `src/react-shell/figma/images.panel.test.tsx`: row Enter/blur/Escape and
+  duplicate-save guards, single active editor, pointer threshold/order changes,
+  post-drag click suppression, mutation/edit/interactive-target guards.

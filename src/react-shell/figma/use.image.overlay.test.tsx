@@ -12,7 +12,7 @@ import type {
   ReviewFigmaImage,
   ReviewFigmaRouteTarget,
 } from '../../figma/image.types';
-import { useReviewFigmaImageOverlayController } from './image.overlay.controller';
+import { useReviewFigmaImageOverlayController } from './use.image.overlay';
 
 const target: ReviewFigmaRouteTarget = {
   type: 'route',

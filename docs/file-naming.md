@@ -64,7 +64,7 @@ later implementation status is recorded below without rewriting the historical m
 - Only module paths changed in source/test bodies. Shared shell hooks, central
   styles and CSS Design Inspector implementations stay in their existing folders.
 - Later extraction donor paths resolve through the step-06 map.
-  Step-10 whole-file moves remain pending.
+  Step-10 whole-file moves are also implemented below.
 - Locate the implementation commit with
   `git log --oneline --grep='refactor: group Source Tree files by feature'`.
 
@@ -113,6 +113,24 @@ later implementation status is recorded below without rewriting the historical m
 - Locate the implementation commit with
   `git log --oneline --grep='refactor: separate Figma import and preview UI'`.
 
+## Implemented: step 10
+
+- `src/react-shell/figma/image.row.tsx` owns row markup and a shared
+  `useFigmaImageRowEditing` hook. One editing session stays mounted at panel scope,
+  preserving single-row editing and capture-before-blur duplicate-save guards.
+  The row receives a narrow editing contract, not the panel's full state.
+- `src/react-shell/figma/use.image.reorder.ts` owns shared pointer refs, drag
+  highlighting, the existing >6px threshold and post-drag click suppression.
+  Existing hit-test/order helpers and callback persistence contract remain.
+- Whole-file moves now implemented: `image.controller.ts` → `use.image.store.ts`,
+  `image.overlay.controller.ts` → `use.image.overlay.ts`, and its test →
+  `use.image.overlay.test.tsx`. Exported hook/function/type names are unchanged;
+  importers and current docs use the new paths. Historical release notes remain
+  historical, not current path guidance.
+- Panel retains opacity, offset, preview selection and layer-control ownership.
+- Locate the implementation commit with
+  `git log --oneline --grep='refactor: isolate Figma row editing and reorder'`.
+
 ## Rules and ownership
 
 - Keep the [core / React shell boundary](architecture.md): vanilla target review
@@ -158,7 +176,7 @@ All paths are repository-relative. Every **Current** path exists at the baseline
 every **Target** below is **planned / absent** at step 02. Move the full file,
 update importers and documentation, and preserve exported names. Step 06 does not
 split `source.open.ts` into candidate/editor modules. Step-06 targets are now
-implemented; only step-10 targets in this table remain planned.
+implemented; step-10 targets are also implemented. No moves in this table remain pending.
 
 | Step | Current | Target |
 |---|---|---|
@@ -190,7 +208,7 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-Except for steps 03–05 and 07–09 marked implemented above, these are **new planned files**,
+Except for steps 03–05 and 07–10 marked implemented above, these are **new planned files**,
 not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one

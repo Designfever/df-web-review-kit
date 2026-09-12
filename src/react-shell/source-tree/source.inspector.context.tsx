@@ -2,7 +2,7 @@ import {
   createContext,
   useContext,
 } from 'react';
-import type { ReviewSourceInspectorController } from '../hooks/use.review.source.inspector';
+import type { ReviewSourceInspectorController } from './use.source.inspector';
 
 const ReviewSourceInspectorContext =
   createContext<ReviewSourceInspectorController | null>(null);

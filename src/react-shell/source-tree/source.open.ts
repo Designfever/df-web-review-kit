@@ -1,5 +1,5 @@
-import type { DomSourceHint } from '../types';
-import type { ReviewSourceInspectorOptions } from './types';
+import type { DomSourceHint } from '../../types';
+import type { ReviewSourceInspectorOptions } from '../types';
 import {
   addSourceFileCompareKey,
   getComponentNameFromSourceFile,

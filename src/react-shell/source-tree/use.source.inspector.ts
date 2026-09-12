@@ -12,24 +12,24 @@ import {
   useState,
   type RefObject,
 } from 'react';
-import { createSourceShortcutStyle } from '../review/source.shortcut.style';
+import { createSourceShortcutStyle } from './source.shortcut.style';
 import type {
   SourceComponentPopup,
   SourceInspectorRect,
   SourceInspectorState,
-} from '../review/source.inspector.overlay';
+} from './source.inspector.overlay';
 import {
   getSectionOutlinePathForElement,
   type GetSectionOutlineOptions,
-} from '../section.outline';
+} from './section.outline';
 import {
   getSourceCandidates,
   openSourceInEditor,
   type GetSourceCandidatesOptions,
-} from '../source.open';
+} from './source.open';
 import { useReviewShellConfig } from '../store/shell.config';
 import { setTargetFigmaSourceSelectLocked } from '../target/target';
-import { useReviewToast } from './use.review.toast';
+import { useReviewToast } from '../hooks/use.review.toast';
 
 export function useReviewSourceInspector({
   isBlocked = false,

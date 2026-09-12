@@ -53,6 +53,21 @@ later implementation status is recorded below without rewriting the historical m
 - Locate the implementation commit with
   `git log --oneline --grep='refactor: isolate Design Inspector target events'`.
 
+## Implemented: step 06
+
+- All 17 step-06 targets in the historical whole-file map now exist under
+  `src/react-shell/source-tree/`; their former paths are removed, not compatibility
+  shims. Four dedicated test files moved with their subjects.
+- Hook filenames are now `use.section.outline.ts`, `use.source.inspector.ts` and
+  `use.section.dom.adjustment.ts`; exported hook names and state ownership remain
+  unchanged. Importers point directly to the feature folder.
+- Only module paths changed in source/test bodies. Shared shell hooks, central
+  styles and CSS Design Inspector implementations stay in their existing folders.
+- Steps 07–08 still describe future extractions: resolve their historical donor
+  paths through the step-06 map. Step-10 whole-file moves are also still pending.
+- Locate the implementation commit with
+  `git log --oneline --grep='refactor: group Source Tree files by feature'`.
+
 ## Rules and ownership
 
 - Keep the [core / React shell boundary](architecture.md): vanilla target review
@@ -61,7 +76,7 @@ later implementation status is recorded below without rewriting the historical m
 - Directories use lowercase kebab-case; internal files use lowercase dot-separated
   names. React hook files start with `use.`; tests stay beside their subjects as
   `.test.ts` or `.test.tsx`. Keep existing public entry filenames unchanged.
-- Group Source Tree and source selection in planned `src/react-shell/source-tree/`.
+- Group Source Tree and source selection in `src/react-shell/source-tree/`.
   Keep shell-wide orchestration in `hooks/`, layout assembly in `review/`,
   and shared config/refs/state in `store/`.
 - CSS Design Inspector stays in `src/design-inspector/`; its shell container stays
@@ -97,7 +112,8 @@ later implementation status is recorded below without rewriting the historical m
 All paths are repository-relative. Every **Current** path exists at the baseline;
 every **Target** below is **planned / absent** at step 02. Move the full file,
 update importers and documentation, and preserve exported names. Step 06 does not
-split `source.open.ts` into candidate/editor modules.
+split `source.open.ts` into candidate/editor modules. Step-06 targets are now
+implemented; only step-10 targets in this table remain planned.
 
 | Step | Current | Target |
 |---|---|---|

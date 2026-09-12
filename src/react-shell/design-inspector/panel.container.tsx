@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { DesignInspectorMode } from '../../design-inspector';
-import { getSourceCandidates, openSourceInEditor } from '../source.open';
+import { getSourceCandidates, openSourceInEditor } from '../source-tree/source.open';
 import { useReviewShellActions } from '../store/shell.actions.context';
 import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellRefs } from '../store/shell.refs';

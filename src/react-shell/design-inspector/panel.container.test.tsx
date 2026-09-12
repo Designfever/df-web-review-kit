@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
     setIsListVisible: vi.fn(), setDesignInspectorMode: vi.fn(), setMode: vi.fn() },
 }));
 vi.mock('../../design-inspector', () => ({ createDesignInspector: mocks.create }));
-vi.mock('../source.open', () => ({ getSourceCandidates: mocks.candidates, openSourceInEditor: mocks.openSource }));
+vi.mock('../source-tree/source.open', () => ({ getSourceCandidates: mocks.candidates, openSourceInEditor: mocks.openSource }));
 vi.mock('../store/shell.refs', () => ({ useReviewShellRefs: () => mocks.refs }));
 vi.mock('../store/shell.config', () => ({ useReviewShellConfig: () => mocks.config }));
 vi.mock('../store/shell.actions.context', () => ({

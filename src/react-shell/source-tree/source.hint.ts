@@ -1,4 +1,4 @@
-import type { DomSourceHint } from '../types';
+import type { DomSourceHint } from '../../types';
 
 export type SourceIgnorePattern = string | RegExp;
 

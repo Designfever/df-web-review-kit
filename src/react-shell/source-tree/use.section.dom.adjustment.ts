@@ -7,12 +7,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getDraftViewportScale } from '../../core/draft.metrics';
 import { isEditableEventTarget } from '../../core/hotkey';
 import { waitForFrame } from '../review/shell.helpers';
-import { type SectionOutlineEntry } from '../section.outline';
+import { type SectionOutlineEntry } from './section.outline';
 import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellRefs } from '../store/shell.refs';
 import { useReviewShellStore } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
-import { useReviewToast } from './use.review.toast';
+import { useReviewToast } from '../hooks/use.review.toast';
 import {
   DomAdjustmentLayerManager,
   type DomAdjustmentPosition,

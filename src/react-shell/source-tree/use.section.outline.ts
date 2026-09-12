@@ -25,7 +25,7 @@ import {
   findSectionOutlinePath,
   getSectionOutline,
   type SectionOutlineEntry,
-} from '../section.outline';
+} from './section.outline';
 import {
   getStoredSourceTreeFilter,
   getStoredSourceTreeMetaVisibility,
@@ -33,7 +33,7 @@ import {
   writeStoredSourceTreeMetaVisibility,
   type StoredSourceTreeMetaVisibility,
 } from '../settings';
-import { openSourceInEditor } from '../source.open';
+import { openSourceInEditor } from './source.open';
 import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellRefs } from '../store/shell.refs';
 import {
@@ -41,7 +41,7 @@ import {
   useReviewShellStoreApi,
 } from '../store/store.context';
 import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
-import { useReviewToast } from './use.review.toast';
+import { useReviewToast } from '../hooks/use.review.toast';
 import { useSectionDomAdjustment } from './use.section.dom.adjustment';
 import { type DomAdjustmentPosition } from '../target/dom-adjustment.layer';
 

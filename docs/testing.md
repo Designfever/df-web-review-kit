@@ -57,7 +57,7 @@ refactors depend on:
 - `src/vite/figma-asset.test.ts`: server asset pathname decoding, including encoded traversal rejection.
 - `src/vite/figma-image-store.server.test.ts`: dev middleware request guards — cross-origin (CSRF) rejection, JSON content-type enforcement, body size limit.
 - `src/vite/figma-image-store.image.test.ts`: image store mutation lock ordering, lost-update prevention, and atomic data-file writes.
-- `src/react-shell/source.open.test.ts`: repeated same-source element indexing (`#i/n`) and the per-call document scan cache.
+- `src/react-shell/source-tree/source.open.test.ts`: repeated same-source element indexing (`#i/n`) and the per-call document scan cache.
 
 Security-relevant behavior (figma.com host allowlist, asset path traversal guard) is pinned by these tests; keep them green when touching `src/figma/parse.ts`, `src/figma/image.asset.ts`, or `src/vite/figma-asset.ts`.
 

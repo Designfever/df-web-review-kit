@@ -1,5 +1,5 @@
 // Source Tree feature container. 아웃라인 훅과 패널 JSX 를 소유한다.
-import { useReviewSectionOutline } from '../hooks/use.review.section.outline';
+import { useReviewSectionOutline } from './use.section.outline';
 import { useReviewShellActions } from '../store/shell.actions.context';
 import { SectionOutlinePanel } from './section.outline.panel';
 

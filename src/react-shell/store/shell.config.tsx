@@ -11,11 +11,11 @@ import {
 import { DEFAULT_INITIAL_REVIEW_PROMPT } from '../constants';
 import { resolveReviewSourceOptions } from '../env';
 import { DEFAULT_REVIEW_PATH_PREFIX } from '../route';
-import type { GetSectionOutlineOptions } from '../section.outline';
+import type { GetSectionOutlineOptions } from '../source-tree/section.outline';
 import type {
   GetSourceCandidatesOptions,
   SourceOpenOptions,
-} from '../source.open';
+} from '../source-tree/source.open';
 import type {
   ReviewShellPage,
   ReviewShellProps,

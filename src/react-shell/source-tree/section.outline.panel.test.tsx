@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import type { SectionOutlineEntry } from '../section.outline';
+import type { SectionOutlineEntry } from './section.outline';
 import { SectionOutlinePanel } from './section.outline.panel';
 
 const entry: SectionOutlineEntry = {

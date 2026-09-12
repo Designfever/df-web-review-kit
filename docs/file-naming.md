@@ -63,8 +63,8 @@ later implementation status is recorded below without rewriting the historical m
   unchanged. Importers point directly to the feature folder.
 - Only module paths changed in source/test bodies. Shared shell hooks, central
   styles and CSS Design Inspector implementations stay in their existing folders.
-- Step 08 still describes future extractions: resolve its historical donor
-  paths through the step-06 map. Step-10 whole-file moves are also still pending.
+- Later extraction donor paths resolve through the step-06 map.
+  Step-10 whole-file moves remain pending.
 - Locate the implementation commit with
   `git log --oneline --grep='refactor: group Source Tree files by feature'`.
 
@@ -81,6 +81,23 @@ later implementation status is recorded below without rewriting the historical m
   first-click hit-testing and Design Inspector exclusion keep their old order.
 - Locate the implementation commit with
   `git log --oneline --grep='refactor: isolate Source selection events and font hints'`.
+
+## Implemented: step 08
+
+- `src/react-shell/source-tree/use.outline.observation.ts` owns ready-document
+  scanning, frame reset notification, initial rAF + 120/500/1200ms retries and
+  the existing 80ms child-list mutation debounce. Cleanup cancels pending work
+  and disconnects the observer on close, frame changes and unmount.
+- `use.section.outline.ts` owns applying snapshots, default-collapse policy,
+  filter/collapse/selection state, focus-path expansion and QA handoff. Explicit
+  reset/refresh callbacks keep UI state out of the observation hook.
+- `use.section.dom.adjustment.ts` is reused unchanged. The optional
+  `section.outline.entry.tsx` was **not created**: the current recursive renderer
+  shares selection refs, metadata flags and numerous entry commands. Moving it
+  would add prop forwarding or context solely for extraction; the focused entry
+  renderer stays in `section.outline.panel.tsx`, unchanged.
+- Locate the implementation commit with
+  `git log --oneline --grep='refactor: isolate Source Tree observation lifecycle'`.
 
 ## Rules and ownership
 
@@ -159,7 +176,7 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-Except for steps 03–05 and 07 marked implemented above, these are **new planned files**,
+Except for steps 03–05 and 07–08 marked implemented above, these are **new planned files**,
 not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one
@@ -207,7 +224,8 @@ helper-only tests to `src/figma/image.asset.test.ts`, but retain tests beside an
 Vite-only behavior that remains. Other extraction tests are colocated with their
 new subject only when the later step requires a meaningful regression check.
 
-Destinations fix naming and ownership, not a quota of new modules. If a listed
+The step-08 entry destination remains an unimplemented optional proposal, as
+recorded above. Destinations fix naming and ownership, not a quota of new modules. If a listed
 extraction would duplicate an existing helper or increase state coupling, reuse
 the existing module and record the actual path and reason here in that step.
 Mark completed moves with their commit and update architecture/test references;

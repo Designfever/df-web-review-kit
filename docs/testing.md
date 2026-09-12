@@ -120,3 +120,13 @@ Source selection cleanup coverage:
 - `src/react-shell/source-tree/source.selection.events.test.ts`: Alt/Option,
   Escape/blur, font deduplication, first Figma click hit-testing, Design Inspector
   exclusion, composer/outside focus policy, and old document/host listener disposal.
+
+Source Tree observation and action coverage:
+
+- `src/react-shell/source-tree/use.outline.observation.test.tsx`: initial rAF and
+  120/500/1200ms retries, late DOM, 80ms mutation debounce, close/reload/unmount
+  cancellation and observer disposal.
+- `src/react-shell/source-tree/use.section.outline.test.tsx`: filter/collapse,
+  late focus path surviving retries, frame reset and DOM adjustment → QA handoff.
+  Both hooks are real; shell contexts/controller and canvas rasterization boundary
+  are test doubles. Apply the documented Node 26 workaround if webstorage fails.

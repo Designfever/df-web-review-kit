@@ -1,6 +1,5 @@
 import { localAdapter } from '../adapters/local';
 import type {
-  ReviewAttachment,
   ReviewItem,
   ReviewMode,
   ReviewPoint,
@@ -26,9 +25,9 @@ import {
   getPageUrl,
   getRouteKey,
 } from './location';
-import { getReviewViewportScope } from './review/scope';
+import { buildReviewItemPayload } from './review/item.payload';
+import { captureDraftAttachment, prepareItemAttachments } from './review/draft.attachments';
 import {
-  createCaptureDraftAttachment,
   createViewportCaptureInput,
   type CaptureDraftInput,
 } from './review/capture.input';
@@ -42,7 +41,6 @@ import {
 import type {
   AreaDraft,
   DomDraft,
-  ReviewDraftAttachment,
 } from './review/draft';
 import {
   runWithAutoScrollBehavior,
@@ -718,8 +716,10 @@ class WebReviewKitApp {
     this.render();
 
     try {
-      const result = await environment.captureViewport(captureInput);
-      const attachment = createCaptureDraftAttachment(result, captureInput);
+      const attachment = await captureDraftAttachment(
+        environment as ReviewEnvironment & Required<Pick<ReviewEnvironment, 'captureViewport'>>,
+        captureInput
+      );
       const currentDraft = getDraft() ?? draft;
       setDraft({
         ...currentDraft,
@@ -740,90 +740,27 @@ class WebReviewKitApp {
     const now = new Date().toISOString();
     const routeKey = getRouteKey(environment);
     const viewport = input.viewport ?? getViewportSize(environment);
-    const createdBy = this.options.userId?.trim();
-    const title = input.title?.trim();
-    const fallbackAssigneeId = input.assigneeId?.trim();
-    const assigneeIds = Array.from(
-      new Set(
-        (input.assigneeIds?.length
-          ? input.assigneeIds
-          : fallbackAssigneeId
-            ? [fallbackAssigneeId]
-            : []
-        )
-          .map((assigneeId) => assigneeId.trim())
-          .filter(Boolean)
-      )
-    );
-    const assigneeNames = assigneeIds.map(
-      (assigneeId, index) =>
-        input.assigneeNames?.[index]?.trim() ||
-        (index === 0 ? input.assigneeName?.trim() : '') ||
-        this.options.assigneeOptions?.find(
-          (option) => option.value === assigneeId
-        )?.label ||
-        assigneeId
-    );
-    const assigneeId = assigneeIds[0];
-    const assigneeName = assigneeNames[0];
-    const item: ReviewItem = {
+    const item = buildReviewItemPayload({
+      input,
+      options: this.options,
       id: createId(),
-      projectId: this.options.projectId,
+      now,
       routeKey,
       pageUrl: getPageUrl(environment),
       originalUrl: getOriginalUrl(environment),
-      normalizedPath: routeKey,
-      scope:
-        input.scope ??
-        getReviewViewportScope(viewport, this.options.viewports?.presets),
-      kind: input.kind,
-      title: title || undefined,
-      comment: input.comment,
-      assigneeId,
-      assigneeName,
-      assigneeIds: assigneeIds.length > 0 ? assigneeIds : undefined,
-      assigneeNames: assigneeNames.length > 0 ? assigneeNames : undefined,
-      createdBy: createdBy || undefined,
-      status: input.status ?? 'todo',
       viewport,
       devicePixelRatio: environment.window.devicePixelRatio || 1,
-      scroll: {
-        x: environment.window.scrollX,
-        y: environment.window.scrollY,
-      },
-      anchor: input.anchor,
-      marker: input.marker,
-      selection: input.selection,
-      createdAt: now,
-      updatedAt: now,
-    };
+      scroll: { x: environment.window.scrollX, y: environment.window.scrollY },
+    });
 
     this.draftError = '';
     this.isCreatingItem = true;
     this.render();
 
     try {
-      const attachments = await this.uploadDraftAttachments(
-        input.attachments,
-        item
-      );
-      if (!attachments.some((attachment) => attachment.kind === 'capture') &&
-          !input.attachments?.some((attachment) => attachment.kind === 'capture') &&
-          environment.captureViewport && this.adapter.uploadAttachment) {
-        let previewUrl: string | undefined;
-        try {
-          const captureInput = createViewportCaptureInput(environment, { ...input, viewport }, input.selection?.viewport);
-          const result = await environment.captureViewport(captureInput);
-          const capture = createCaptureDraftAttachment(result, captureInput);
-          previewUrl = capture.previewUrl;
-          attachments.push(...await this.uploadDraftAttachments([capture], item));
-        } catch (error) {
-          // A missing screenshot must not prevent the reviewer from saving the issue.
-          console.warn('[web-review-kit] Automatic capture failed', error);
-        } finally {
-          if (previewUrl) URL.revokeObjectURL(previewUrl);
-        }
-      }
+      const attachments = await prepareItemAttachments({
+        input, item, environment, adapter: this.adapter,
+      });
       const itemWithAttachments =
         attachments.length > 0 ? { ...item, attachments } : item;
       const createdItem = await this.adapter.create(itemWithAttachments);
@@ -841,30 +778,6 @@ class WebReviewKitApp {
       this.isCreatingItem = false;
       this.render();
     }
-  }
-
-  private async uploadDraftAttachments(
-    attachments: ReviewDraftAttachment[] | undefined,
-    item: ReviewItem
-  ): Promise<ReviewAttachment[]> {
-    if (!attachments?.length) return [];
-    const uploadAttachment = this.adapter.uploadAttachment;
-    if (!uploadAttachment) {
-      throw new Error('Attachment upload adapter is not configured.');
-    }
-
-    return Promise.all(
-      attachments.map((attachment) =>
-        uploadAttachment({
-          file: attachment.file,
-          name: attachment.name,
-          mime: attachment.mime,
-          kind: attachment.kind,
-          item,
-          metadata: attachment.metadata,
-        })
-      )
-    );
   }
 
   private getCreateItemErrorMessage(

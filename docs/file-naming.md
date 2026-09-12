@@ -131,6 +131,21 @@ later implementation status is recorded below without rewriting the historical m
 - Locate the implementation commit with
   `git log --oneline --grep='refactor: isolate Figma row editing and reorder'`.
 
+## Implemented: step 11
+
+- `src/core/review/item.payload.ts` normalizes item fields using explicit ID,
+  timestamp, location and viewport snapshots. It reuses `DraftItemFields` from
+  `draft.builder.ts` and viewport scope logic; it does not read app state or
+  generate IDs/timestamps itself.
+- `src/core/review/draft.attachments.ts` owns capture conversion and attachment
+  upload operations, reusing `capture.input.ts`. Explicit attachments must upload
+  successfully; automatic capture/upload remains best effort with temporary
+  preview cleanup in `finally`.
+- The app retains mode/draft/loading, capture/submit guards, current-draft merge,
+  error presentation, draft preview disposal and create → reload → notification.
+- Locate the commit with
+  `git log --oneline --grep='refactor: separate core item payload and attachments'`.
+
 ## Rules and ownership
 
 - Keep the [core / React shell boundary](architecture.md): vanilla target review
@@ -208,7 +223,7 @@ stay put. Tests not listed here are not invented or renamed speculatively.
 
 ## Current → target: extraction destinations
 
-Except for steps 03–05 and 07–10 marked implemented above, these are **new planned files**,
+Except for steps 03–05 and 07–11 marked implemented above, these are **new planned files**,
 not whole-file renames. Every donor path exists
 at the step-02 baseline and remains unless its whole-file move is listed above.
 Use the step-06 target path when later extracting Source Tree code. Keep one

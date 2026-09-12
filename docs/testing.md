@@ -141,3 +141,11 @@ Figma import UI coverage:
 - `src/react-shell/figma/images.panel.test.tsx`: row Enter/blur/Escape and
   duplicate-save guards, single active editor, pointer threshold/order changes,
   post-drag click suppression, mutation/edit/interactive-target guards.
+
+Core item/attachment orchestration coverage:
+
+- `src/core/web.review.kit.app.operations.test.ts`: real app actions through a
+  stubbed view boundary; required upload errors, best-effort automatic upload,
+  manual capture retry/current-draft merge, capture/submit guards through async
+  completion, owner metadata and preview disposal. Adapters/capture are mocks;
+  this does not cover real storage uploads or browser image capture.

@@ -50,6 +50,9 @@ When the React shell provides a composer host, core docks DOM/area draft compose
 - `dom.anchor.ts`: selector candidate generation, anchor rebinding, text fingerprint matching.
 - `geometry.ts`: target-space and host-space coordinate conversion.
 - `review/item.ts`: marker, selection, highlight, and fallback resolution.
+- `review/item.payload.ts`: pure item field normalization from form data and explicit persistence/environment snapshots.
+- `review/draft.attachments.ts`: manual capture conversion and required-upload / best-effort-auto-capture operations. Uses `review/capture.input.ts`; no app state ownership.
+- `review/draft.builder.ts`: existing DOM/area draft geometry builders. App retains draft state, loading guards, preview disposal and save lifecycle.
 - `review/scope.ts`: viewport scope grouping and numbering.
 - `review/format.ts`: compact item/draft metadata labels.
 - `scroll.ts`: scroll restore helpers.

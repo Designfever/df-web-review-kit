@@ -179,7 +179,6 @@ function createSourceCandidate(
   const tag = element.tagName.toLowerCase();
   const line = getSourcePosition(source.line);
   const column = getSourcePosition(source.column);
-  const position = line ? `:${line}${column ? `:${column}` : ''}` : '';
 
   return {
     id: `${kind}:${getSourceCandidateDedupeKey(source)}:${repeatInfo?.index ?? 0}:${depth}`,

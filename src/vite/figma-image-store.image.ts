@@ -189,7 +189,6 @@ export async function createReviewFigmaImage({
       assetEndpoint,
       id,
       asset: input.asset,
-      options,
     });
     const now = new Date().toISOString();
     const order =
@@ -301,13 +300,11 @@ async function cacheReviewFigmaProvidedImageAsset({
   assetEndpoint,
   id,
   asset,
-  options,
 }: {
   assetDir: string;
   assetEndpoint: string;
   id: string;
   asset: ReviewFigmaImageAssetInput;
-  options: ReviewFigmaImageStorePluginOptions;
 }): Promise<CachedReviewFigmaImageAsset> {
   const decodedAsset = decodeReviewFigmaImageAsset(asset);
   const storageKey = createReviewFigmaAssetStorageKey(

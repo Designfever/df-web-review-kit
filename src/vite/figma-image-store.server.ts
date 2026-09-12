@@ -2,7 +2,6 @@ import { readFile } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import type {
-  ReviewFigmaImage,
   ReviewFigmaImageTarget,
   AddReviewFigmaImageInput,
 } from '../figma/image.types';

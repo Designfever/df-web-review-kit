@@ -49,7 +49,6 @@ export const useReviewShellRuntime = ({
   const {
     activeAdapterEntry,
     activeRoute,
-    adapter,
     bumpTargetFrameLoadVersion,
     controllerRef,
     frameScrollRef,

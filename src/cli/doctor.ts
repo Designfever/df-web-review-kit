@@ -1,4 +1,4 @@
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
 import {
   CUSTOM_FIGMA_PATH,
@@ -59,14 +59,6 @@ async function readOptional(path: string) {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
     throw error;
-  }
-}
-
-async function isFile(path: string) {
-  try {
-    return (await stat(path)).isFile();
-  } catch {
-    return false;
   }
 }
 

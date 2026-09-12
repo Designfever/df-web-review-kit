@@ -7,6 +7,11 @@
 
 This split keeps the target-page overlay independent from React while allowing the review shell to provide richer workflow UI.
 
+For file conventions, feature ownership, and the current-to-planned path map,
+see [File Naming and Feature Ownership](file-naming.md). The runtime paths below
+describe the current implementation; planned cleanup destinations are not yet
+implemented and must not be read as completed moves.
+
 ## High-Level Flow
 
 ```txt

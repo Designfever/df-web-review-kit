@@ -10,6 +10,7 @@ import type {
   ReviewItemStatus,
   ReviewSource,
 } from '../../types';
+import { normalizeReviewItemStatus } from '../../status';
 import type { NormalizedReviewShellAdapter } from '../adapters';
 import { updateShellUrl } from '../route';
 import type { ReviewShellViewportPreset } from '../types';
@@ -32,6 +33,7 @@ interface RefreshSitemapReviewItemsOptions
 
 interface UpdateReviewItemStatusOptions {
   activeAdapterEntry: NormalizedReviewShellAdapter;
+  completionSyncAdapterEntry?: NormalizedReviewShellAdapter | null;
   item: ReviewItem;
   nextStatus: ReviewItemStatus;
   onRefreshReviewData: () => Promise<void>;
@@ -197,6 +199,7 @@ export const copyCurrentReviewUrl = async ({
 
 export const updateReviewItemStatus = async ({
   activeAdapterEntry,
+  completionSyncAdapterEntry,
   item,
   nextStatus,
   onRefreshReviewData,
@@ -210,6 +213,40 @@ export const updateReviewItemStatus = async ({
   const statusOption = activeAdapterEntry.statusOptions[statusIndex];
   if (!statusOption) return;
 
+  const externalIssueId = item.externalIssueId?.trim();
+  const shouldSyncCompletion =
+    completionSyncAdapterEntry !== undefined &&
+    normalizeReviewItemStatus(statusOption.value) === 'done' &&
+    Boolean(externalIssueId) &&
+    completionSyncAdapterEntry !== activeAdapterEntry;
+
+  if (shouldSyncCompletion && externalIssueId) {
+    if (!completionSyncAdapterEntry?.updateStatus) {
+      throw new Error('DF Sheet completion sync is unavailable.');
+    }
+    const syncStatusIndex = completionSyncAdapterEntry.statusOptions.findIndex(
+      (candidate) => normalizeReviewItemStatus(candidate.value) === 'done'
+    );
+    const syncStatusOption =
+      completionSyncAdapterEntry.statusOptions[syncStatusIndex];
+    if (!syncStatusOption) {
+      throw new Error('DF Sheet adapter does not support a completed status.');
+    }
+
+    const remoteItem =
+      (await completionSyncAdapterEntry.adapter.get(externalIssueId)) ?? {
+        ...item,
+        id: externalIssueId,
+      };
+    await completionSyncAdapterEntry.updateStatus({
+      id: externalIssueId,
+      item: remoteItem,
+      status: syncStatusOption.value,
+      statusOption: syncStatusOption,
+      statusIndex: syncStatusIndex,
+    });
+  }
+
   await activeAdapterEntry.updateStatus({
     id: item.id,
     item,
@@ -218,7 +255,11 @@ export const updateReviewItemStatus = async ({
     statusIndex,
   });
   await onRefreshReviewData();
-  onToast?.('QA status updated');
+  onToast?.(
+    shouldSyncCompletion
+      ? 'QA completed and synced to DF Sheet'
+      : 'QA status updated'
+  );
 };
 
 export const updateReviewItemAssignee = async ({

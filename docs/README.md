@@ -41,6 +41,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
+- [0.13.1](release-notes-0.13.1.md): 완료된 Review Kit QA를 DF Sheet 상태와 동기화.
 - [0.13.0](release-notes-0.13.0.md): Review Kit에서 DF Sheet 개선사항을 바로 등록하는 패널.
 - [0.12.0](release-notes-0.12.0.md): custom panels, automatic captures, shared image previews, and assignee picker fixes.
 - [0.11.1](release-notes-0.11.1.md): grid toolbar state follows the visible host helper.

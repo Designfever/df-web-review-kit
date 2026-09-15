@@ -35,6 +35,7 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Figma overlay](docs/figma-overlay.md): host helper behavior and package-managed image overlay state.
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
 - [Design inspector](docs/design-inspector.md): 기존 리뷰 iframe의 CSS·글꼴·치수·요소 간격 검사와 수동 QA.
+- [Release notes 0.13.1](docs/release-notes-0.13.1.md): 완료된 Review Kit QA를 DF Sheet 상태와 동기화.
 - [Release notes 0.13.0](docs/release-notes-0.13.0.md): Review Kit에서 DF Sheet 개선사항을 바로 등록하는 패널.
 - [Release notes 0.12.0](docs/release-notes-0.12.0.md): custom rail panels, automatic issue captures, shared image previews, and assignee picker fixes.
 - [Release notes 0.11.1](docs/release-notes-0.11.1.md): grid toolbar state follows the visible host helper.

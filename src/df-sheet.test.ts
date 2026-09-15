@@ -5,6 +5,7 @@ import {
   DfSheetReviewSessionExpiredError,
   connectDfSheetReview,
 } from './df-sheet';
+import type { ReviewItem } from './types';
 
 const projectId = 'f82b8ad5-7289-43d4-b175-bd5ecf1d4dba';
 const sessionKey = `df-web-review-kit:df-sheet:session:${projectId}`;
@@ -33,6 +34,19 @@ describe('connectDfSheetReview', () => {
         user: { user_id: 'hyungjoo', name: 'Hyung-Joo' },
       })
     );
+    const remoteItem: ReviewItem = {
+      id: 'df-sheet-issue-1',
+      projectId,
+      routeKey: '/story',
+      pageUrl: '/story',
+      normalizedPath: '/story',
+      kind: 'dom',
+      comment: '완료 상태 동기화',
+      status: 'doing',
+      viewport: { width: 390, height: 844 },
+      createdAt: '2026-09-15T00:00:00.000Z',
+      updatedAt: '2026-09-15T00:00:00.000Z',
+    };
     const request = vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
       expect(new Headers(init?.headers).get('Authorization')).toBe(
@@ -49,6 +63,16 @@ describe('connectDfSheetReview', () => {
       }
       if (url.includes('/api/review/items?')) {
         return jsonResponse({ success: true, data: [] });
+      }
+      if (url.endsWith('/api/review/issues/df-sheet-issue-1')) {
+        expect(init?.method).toBe('PATCH');
+        expect(JSON.parse(String(init?.body))).toEqual({
+          patch: { status: 'done' },
+        });
+        return jsonResponse({
+          success: true,
+          data: { ...remoteItem, status: 'done' },
+        });
       }
       if (url.includes('/api/review/figma-images?')) {
         return jsonResponse({ success: true, data: [] });
@@ -81,6 +105,7 @@ describe('connectDfSheetReview', () => {
     });
 
     expect(session?.user.user_id).toBe('hyungjoo');
+    const adapter = session!.createAdapter({ pageId: 'page-1' });
     const logoutUrl = new URL(await session!.createLogoutUrl());
     expect(logoutUrl.origin).toBe('https://sheet.example');
     expect(logoutUrl.pathname).toBe('/api/auth/logout');
@@ -102,13 +127,22 @@ describe('connectDfSheetReview', () => {
       { value: 'hyeji', label: '안혜지' },
     ]);
     await expect(
-      session?.createAdapter({ pageId: 'page-1' }).list({
+      adapter.list({
         projectId,
         routeKey: '/story',
       })
     ).resolves.toEqual([]);
     await expect(
-      session?.createAdapter({ pageId: 'page-1' }).createImprovement?.({
+      adapter.updateStatus?.({
+        id: remoteItem.id,
+        item: remoteItem,
+        status: 'done',
+        statusOption: { value: 'done', label: 'Done' },
+        statusIndex: 4,
+      })
+    ).resolves.toEqual({ ...remoteItem, status: 'done' });
+    await expect(
+      adapter.createImprovement?.({
         title: '검색 개선',
         content: '검색 결과를 더 빠르게 보고 싶습니다.',
         category: 'feature',

@@ -81,6 +81,9 @@ export function useReviewItemActions({
       await withItemMutation(item.id, () =>
         updateReviewItemStatus({
           activeAdapterEntry,
+          completionSyncAdapterEntry: isRemoteSource
+            ? undefined
+            : remoteAdapterEntry,
           item,
           nextStatus,
           onRefreshReviewData,

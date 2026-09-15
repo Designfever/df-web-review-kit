@@ -36,7 +36,10 @@ function Target({ targetWindow }: { targetWindow: Window }) {
 }
 function ShellParts() {
   const registry = useCustomPanelRegistry();
-  const panels = useReviewSidePanel({ isFigmaImageManagementEnabled: true });
+  const panels = useReviewSidePanel({
+    isFigmaImageManagementEnabled: true,
+    isImprovementEnabled: true,
+  });
   return <div className="df-review-shell">
     <div className="df-review-side-rail">
       <button aria-controls="df-review-design-inspector" onClick={() => panels.toggleSidePanel('design-inspector')}>Design</button>

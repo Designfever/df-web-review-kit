@@ -64,11 +64,13 @@ export const useReviewShellTransientActions = ({
 
 interface UseReviewShellPanelActionsOptions {
   isFigmaImageManagementEnabled: boolean;
+  isImprovementEnabled: boolean;
   toggleSidePanel: (sidePanel: StoredReviewSidePanel) => void;
 }
 
 export const useReviewShellPanelActions = ({
   isFigmaImageManagementEnabled,
+  isImprovementEnabled,
   toggleSidePanel,
 }: UseReviewShellPanelActionsOptions) => {
   const toggleQaPanel = useCallback(() => {
@@ -88,8 +90,14 @@ export const useReviewShellPanelActions = ({
     toggleSidePanel,
   ]);
 
+  const toggleImprovementsPanel = useCallback(() => {
+    if (!isImprovementEnabled) return;
+    toggleSidePanel('improvements');
+  }, [isImprovementEnabled, toggleSidePanel]);
+
   return {
     toggleFigmaImagesPanel,
+    toggleImprovementsPanel,
     toggleQaPanel,
     toggleSourceTreePanel,
   };

@@ -32,6 +32,7 @@ export type NormalizedReviewShellAdapter = {
   updateAssignee?: (input: ReviewShellUpdateAssigneeInput) => Promise<unknown>;
   syncSubmission?: (input: ReviewShellSyncSubmissionInput) => Promise<unknown>;
   uploadAttachment?: WebReviewKitAdapter['uploadAttachment'];
+  createImprovement?: ReviewShellAdapter['createImprovement'];
   writeModes: ReviewShellWriteMode[];
   canUpdate: boolean;
   canRemove: boolean;
@@ -196,6 +197,7 @@ function normalizeShellAdapter(
     updateAssignee,
     syncSubmission: adapterConfig.syncSubmission,
     uploadAttachment: adapterConfig.uploadAttachment,
+    createImprovement: adapterConfig.createImprovement,
     writeModes,
     canUpdate: Boolean(updateAdapter),
     canRemove: Boolean(adapterConfig.remove),

@@ -7,12 +7,13 @@ import { ReviewSideRail } from './side.rail';
 import { CustomPanelRailButtons } from '../custom-panels/rail';
 
 export const ReviewSideRailContainer = () => {
-  const { onLogout } = useReviewShellConfig();
+  const { improvementAdapterEntry, onLogout } = useReviewShellConfig();
   const {
     openAbout,
     openInitialPrompt,
     openSettings,
     toggleFigmaImagesPanel,
+    toggleImprovementsPanel,
     toggleDesignInspectorPanel,
     toggleQaPanel,
     toggleSourceTreePanel,
@@ -37,6 +38,12 @@ export const ReviewSideRailContainer = () => {
         sidePanel === 'figma-images'
       }
       isQaPanelVisible={isListVisible && sidePanel === 'qa'}
+      isImprovementEnabled={Boolean(improvementAdapterEntry?.createImprovement)}
+      isImprovementsPanelVisible={
+        Boolean(improvementAdapterEntry?.createImprovement) &&
+        isListVisible &&
+        sidePanel === 'improvements'
+      }
       isDesignInspectorVisible={isListVisible && sidePanel === 'design-inspector'}
       isSourceTreePanelVisible={isListVisible && sidePanel === 'source'}
       presenceSessionId={presenceSessionId}
@@ -45,6 +52,7 @@ export const ReviewSideRailContainer = () => {
       onLogout={onLogout}
       onOpenSettings={openSettings}
       onToggleFigmaImagesPanel={toggleFigmaImagesPanel}
+      onToggleImprovementsPanel={toggleImprovementsPanel}
       onToggleDesignInspector={toggleDesignInspectorPanel}
       onToggleQaPanel={toggleQaPanel}
       onToggleSourceTreePanel={toggleSourceTreePanel}

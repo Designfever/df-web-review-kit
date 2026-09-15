@@ -38,6 +38,7 @@ export interface ReviewShellConfig {
   viewportPresets: ReviewShellViewportPreset[];
   reviewViewportPresets: ReviewViewportPreset[];
   localAdapterEntry: NormalizedReviewShellAdapter | null;
+  improvementAdapterEntry: NormalizedReviewShellAdapter | null;
   onLogout?: () => void | Promise<void>;
   remoteAdapterEntry: NormalizedReviewShellAdapter | null;
   sectionOutlineOptions: GetSectionOutlineOptions;
@@ -83,6 +84,8 @@ export const createReviewShellConfig = ({
     viewportPresets,
     reviewViewportPresets: toReviewViewportPresets(viewportPresets),
     localAdapterEntry: normalizedAdapters.local,
+    improvementAdapterEntry:
+      normalizedAdapters.sources.find((entry) => entry.createImprovement) ?? null,
     onLogout,
     remoteAdapterEntry: normalizedAdapters.remote,
     sectionOutlineOptions: {

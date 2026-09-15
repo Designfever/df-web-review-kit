@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import {
   Bot as BotIcon,
   ListChecks as QaListIcon,
+  Lightbulb as ImprovementIcon,
   LogOut as LogOutIcon,
   Network as ComponentTreeIcon,
   SquareMousePointer as InspectorIcon,
@@ -19,6 +20,8 @@ export const ReviewSideRail = ({
   isFigmaImageManagementEnabled,
   isFigmaImagesPanelVisible,
   isQaPanelVisible,
+  isImprovementEnabled,
+  isImprovementsPanelVisible,
   isDesignInspectorVisible,
   isSourceTreePanelVisible,
   presenceSessionId,
@@ -28,6 +31,7 @@ export const ReviewSideRail = ({
   onOpenSettings,
   onToggleFigmaImagesPanel,
   onToggleQaPanel,
+  onToggleImprovementsPanel,
   onToggleDesignInspector,
   onToggleSourceTreePanel,
 }: {
@@ -36,6 +40,8 @@ export const ReviewSideRail = ({
   isFigmaImageManagementEnabled: boolean;
   isFigmaImagesPanelVisible: boolean;
   isQaPanelVisible: boolean;
+  isImprovementEnabled: boolean;
+  isImprovementsPanelVisible: boolean;
   isDesignInspectorVisible: boolean;
   isSourceTreePanelVisible: boolean;
   presenceSessionId: string;
@@ -45,6 +51,7 @@ export const ReviewSideRail = ({
   onOpenSettings: () => void;
   onToggleFigmaImagesPanel: () => void;
   onToggleQaPanel: () => void;
+  onToggleImprovementsPanel: () => void;
   onToggleDesignInspector: () => void;
   onToggleSourceTreePanel: () => void;
 }) => {
@@ -101,6 +108,29 @@ export const ReviewSideRail = ({
           <QaListIcon />
         </span>
       </button>
+      {isImprovementEnabled && (
+        <button
+          aria-controls="df-review-improvements-panel"
+          aria-label={
+            isImprovementsPanelVisible
+              ? '개선사항 등록 닫기'
+              : '개선사항 등록 열기'
+          }
+          aria-pressed={isImprovementsPanelVisible}
+          className={`df-review-side-toggle${
+            isImprovementsPanelVisible ? ' is-active' : ''
+          }`}
+          data-review-tooltip="개선사항"
+          data-review-tooltip-placement="left"
+          type="button"
+          onClick={onToggleImprovementsPanel}
+          title="개선사항"
+        >
+          <span aria-hidden="true">
+            <ImprovementIcon />
+          </span>
+        </button>
+      )}
       <button
         aria-controls="df-review-section-outline"
         aria-label={

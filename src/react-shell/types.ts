@@ -68,6 +68,34 @@ export type ReviewShellAssigneeOption = ReviewAssigneeOption;
 
 export type ReviewShellWriteMode = 'dom' | 'area';
 
+export type ReviewImprovementCategory =
+  | 'feature'
+  | 'bug'
+  | 'ui_ux'
+  | 'other';
+
+export type ReviewImprovementArea =
+  | 'meetings'
+  | 'issues'
+  | 'projects'
+  | 'improvements'
+  | 'all';
+
+export type ReviewImprovementInput = {
+  title: string;
+  content?: string | null;
+  category?: ReviewImprovementCategory;
+  area?: ReviewImprovementArea;
+  attachmentUrls?: string[];
+};
+
+export type ReviewImprovementResult = {
+  id: string;
+  title: string;
+  status?: string;
+  url?: string;
+};
+
 export type ReviewShellUpdateStatusInput = {
   id: string;
   item: ReviewItem;
@@ -117,6 +145,9 @@ export type ReviewShellAdapter = {
   create?: WebReviewKitAdapter['create'];
   update?: WebReviewKitAdapter['update'];
   uploadAttachment?: WebReviewKitAdapter['uploadAttachment'];
+  createImprovement?: (
+    input: ReviewImprovementInput
+  ) => Promise<ReviewImprovementResult>;
   fields?: ReviewFieldsConfig;
   statusOptions?: readonly ReviewShellStatusOption[];
   assigneeTitle?: string;

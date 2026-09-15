@@ -53,6 +53,24 @@ describe('connectDfSheetReview', () => {
       if (url.includes('/api/review/figma-images?')) {
         return jsonResponse({ success: true, data: [] });
       }
+      if (url.endsWith('/api/review/improvements')) {
+        expect(init?.method).toBe('POST');
+        expect(JSON.parse(String(init?.body))).toEqual({
+          title: '검색 개선',
+          content: '검색 결과를 더 빠르게 보고 싶습니다.',
+          category: 'feature',
+          area: 'projects',
+          attachment_urls: ['https://asset.example/improvement.png'],
+        });
+        return jsonResponse({
+          success: true,
+          data: {
+            id: 'improvement-1',
+            title: '검색 개선',
+            status: 'pending',
+          },
+        });
+      }
       throw new Error(`Unexpected request: ${url}`);
     });
 
@@ -89,6 +107,20 @@ describe('connectDfSheetReview', () => {
         routeKey: '/story',
       })
     ).resolves.toEqual([]);
+    await expect(
+      session?.createAdapter({ pageId: 'page-1' }).createImprovement?.({
+        title: '검색 개선',
+        content: '검색 결과를 더 빠르게 보고 싶습니다.',
+        category: 'feature',
+        area: 'projects',
+        attachmentUrls: ['https://asset.example/improvement.png'],
+      })
+    ).resolves.toEqual({
+      id: 'improvement-1',
+      title: '검색 개선',
+      status: 'pending',
+      url: 'https://sheet.example/improvements',
+    });
     await expect(
       session?.figmaImageStore.listImages({
         type: 'route',

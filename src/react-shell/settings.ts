@@ -21,7 +21,12 @@ import {
   normalizeReviewQaStatusFilters,
 } from './qa/status.filter';
 
-export type StoredReviewSidePanel = 'qa' | 'source' | 'figma-images' | 'design-inspector';
+export type StoredReviewSidePanel =
+  | 'qa'
+  | 'source'
+  | 'figma-images'
+  | 'design-inspector'
+  | 'improvements';
 export interface StoredSourceTreeMetaVisibility {
   font: boolean;
   media: boolean;
@@ -77,7 +82,13 @@ export const normalizeReviewTheme = (value: string | null): ReviewShellTheme =>
 const normalizeReviewSidePanel = (
   value: string | null
 ): StoredReviewSidePanel | null => {
-  if (value === 'qa' || value === 'source' || value === 'figma-images' || value === 'design-inspector') {
+  if (
+    value === 'qa' ||
+    value === 'source' ||
+    value === 'figma-images' ||
+    value === 'design-inspector' ||
+    value === 'improvements'
+  ) {
     return value;
   }
   return null;

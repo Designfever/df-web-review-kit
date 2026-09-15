@@ -16,29 +16,34 @@ import { isBuiltInSidePanel, type ReviewSidePanel } from '../store/side.panel.sl
 
 interface UseReviewSidePanelOptions {
   isFigmaImageManagementEnabled: boolean;
+  isImprovementEnabled: boolean;
 }
 
 const getAvailableSidePanel = (
   sidePanel: ReviewSidePanel,
   {
     isFigmaImageManagementEnabled,
+    isImprovementEnabled,
   }: UseReviewSidePanelOptions
 ): ReviewSidePanel => {
   if (sidePanel === 'figma-images' && !isFigmaImageManagementEnabled) {
     return 'qa';
   }
+  if (sidePanel === 'improvements' && !isImprovementEnabled) return 'qa';
   return sidePanel;
 };
 
 // slice 는 raw 상태만 갖는다. prop 의존 클램프/localStorage 저장은 이 훅이 담당.
 export const useReviewSidePanel = ({
   isFigmaImageManagementEnabled,
+  isImprovementEnabled,
 }: UseReviewSidePanelOptions) => {
   const storeApi = useReviewShellStoreApi();
   const rawSidePanel = useReviewShellStore((state) => state.sidePanel);
   const isListVisible = useReviewShellStore((state) => state.isListVisible);
   const sidePanel = getAvailableSidePanel(rawSidePanel, {
     isFigmaImageManagementEnabled,
+    isImprovementEnabled,
   });
   const isQaPanelVisible = isListVisible && sidePanel === 'qa';
   const isSourceTreePanelVisible = isListVisible && sidePanel === 'source';
@@ -51,11 +56,12 @@ export const useReviewSidePanel = ({
     const state = storeApi.getState();
     const availableSidePanel = getAvailableSidePanel(state.sidePanel, {
       isFigmaImageManagementEnabled,
+      isImprovementEnabled,
     });
     if (availableSidePanel !== state.sidePanel) {
       state.setSidePanel(availableSidePanel);
     }
-  }, [isFigmaImageManagementEnabled, storeApi]);
+  }, [isFigmaImageManagementEnabled, isImprovementEnabled, storeApi]);
 
   useEffect(() => {
     if (!isBuiltInSidePanel(sidePanel)) return;
@@ -69,11 +75,12 @@ export const useReviewSidePanel = ({
       state.setSidePanel(
         getAvailableSidePanel(nextSidePanel, {
           isFigmaImageManagementEnabled,
+          isImprovementEnabled,
         })
       );
       state.setIsListVisible(true);
     },
-    [isFigmaImageManagementEnabled, storeApi]
+    [isFigmaImageManagementEnabled, isImprovementEnabled, storeApi]
   );
 
   const toggleSidePanel = useCallback(
@@ -81,16 +88,18 @@ export const useReviewSidePanel = ({
       const state = storeApi.getState();
       const currentSidePanel = getAvailableSidePanel(state.sidePanel, {
         isFigmaImageManagementEnabled,
+        isImprovementEnabled,
       });
       const availableSidePanel = getAvailableSidePanel(nextSidePanel, {
         isFigmaImageManagementEnabled,
+        isImprovementEnabled,
       });
       state.setSidePanel(availableSidePanel);
       state.setIsListVisible(
         currentSidePanel === availableSidePanel ? !state.isListVisible : true
       );
     },
-    [isFigmaImageManagementEnabled, storeApi]
+    [isFigmaImageManagementEnabled, isImprovementEnabled, storeApi]
   );
 
   return {

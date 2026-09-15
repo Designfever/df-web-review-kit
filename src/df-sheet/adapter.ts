@@ -108,6 +108,26 @@ export function createDfSheetSessionAdapter(
     create: core.create,
     update: core.update,
     uploadAttachment: core.uploadAttachment,
+    createImprovement: async (input) => {
+      const data = await options.request<{
+        id: string;
+        title: string;
+        status?: string;
+      }>('/api/review/improvements', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: input.title,
+          content: input.content,
+          category: input.category,
+          area: input.area,
+          attachment_urls: input.attachmentUrls,
+        }),
+      });
+      return {
+        ...data,
+        url: `${options.baseUrl}/improvements`,
+      };
+    },
     remove: core.remove,
     canWrite: ['dom', 'area'],
     fields: options.fields,

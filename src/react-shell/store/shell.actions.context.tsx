@@ -30,6 +30,7 @@ export interface ReviewShellActions {
   setReviewMode: (mode: ReviewMode) => void;
   showSourceOutlineForElement: (element: Element) => void;
   toggleFigmaImagesPanel: () => void;
+  toggleImprovementsPanel: () => void;
   toggleDesignInspectorPanel: () => void;
   toggleQaPanel: () => void;
   toggleSourceTreePanel: () => void;

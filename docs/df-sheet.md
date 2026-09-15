@@ -33,6 +33,12 @@ const unmount = mountReviewShell({
 });
 ```
 
+The df-sheet adapter also enables the `개선사항` rail button automatically.
+It opens an in-context form for title, category, related area, description, and
+image attachments. A submission is stored in the same df-sheet improvements
+list, includes the current Review Kit URL in its description, and uses the
+existing df-sheet administrator notification flow.
+
 If the df-sheet project has more than one page, the host must choose one safely. A small page selector is usually enough. Do not silently send QA to an arbitrary page when page meaning matters.
 
 ## Deployment values

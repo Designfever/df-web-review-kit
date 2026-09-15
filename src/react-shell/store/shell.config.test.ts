@@ -93,4 +93,27 @@ describe('createReviewShellConfig', () => {
 
     expect(config.onLogout).toBe(onLogout);
   });
+
+  it('finds an adapter that can create DF Sheet improvements', () => {
+    const createImprovement = async (input: { title: string }) => ({
+      id: 'improvement-1',
+      title: input.title,
+    });
+    const config = createReviewShellConfig({
+      projectId: 'test',
+      pages: [{ href: '/' }],
+      adapters: [
+        {
+          label: 'df-sheet',
+          get: adapter.get,
+          list: adapter.list,
+          createImprovement,
+        },
+      ],
+    });
+
+    expect(config.improvementAdapterEntry?.createImprovement).toBe(
+      createImprovement
+    );
+  });
 });

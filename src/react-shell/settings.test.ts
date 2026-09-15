@@ -55,6 +55,11 @@ describe('review settings storage', () => {
     expect(getStoredReviewSidePanel()).toBe('design-inspector');
   });
 
+  it('persists the improvements panel', () => {
+    writeStoredReviewSidePanel('improvements');
+    expect(getStoredReviewSidePanel()).toBe('improvements');
+  });
+
   it('persists disabled tooltips', () => {
     writeStoredReviewTooltipsEnabled(false);
 

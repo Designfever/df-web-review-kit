@@ -92,6 +92,12 @@ const adapters: ReviewShellAdapter[] = [
       local.update(id, { assigneeId, assigneeName, assigneeIds, assigneeNames }),
     syncSubmission: ({ id, patch }) => local.update(id, patch),
     uploadAttachment: createDevAttachmentUploader(),
+    createImprovement: async (input) => ({
+      id: `dev-improvement-${Date.now()}`,
+      title: input.title,
+      status: 'pending',
+      url: 'https://df-sheet.vercel.app/improvements',
+    }),
     remove: (id) => local.remove(id),
   },
   ...(remote

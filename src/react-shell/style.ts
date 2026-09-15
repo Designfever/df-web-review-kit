@@ -10,6 +10,7 @@ import { reviewShellSourceInspectorStyle } from './style/source-inspector';
 import { reviewShellSectionOutlineStyle } from './style/section-outline';
 import { reviewShellRulerStyle } from './style/ruler';
 import { reviewShellDesignInspectorStyle } from './style/design-inspector';
+import { reviewShellImprovementsStyle } from './style/improvements';
 
 const REVIEW_SHELL_STYLE_ID = 'df-review-shell-style';
 
@@ -29,7 +30,8 @@ export function ensureReviewShellStyle() {
       reviewShellSourceInspectorStyle,
       reviewShellSectionOutlineStyle,
       reviewShellRulerStyle,
-      reviewShellDesignInspectorStyle
+      reviewShellDesignInspectorStyle,
+      reviewShellImprovementsStyle,
     ].join('\n\n');
     document.head.append(style);
   }

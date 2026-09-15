@@ -10,6 +10,8 @@ describe('ReviewSideRail', () => {
         isFigmaImageManagementEnabled={false}
         isFigmaImagesPanelVisible={false}
         isQaPanelVisible={true}
+        isImprovementEnabled={false}
+        isImprovementsPanelVisible={false}
         isDesignInspectorVisible={false}
         isSourceTreePanelVisible={false}
         presenceSessionId="session"
@@ -19,6 +21,7 @@ describe('ReviewSideRail', () => {
         onOpenSettings={() => undefined}
         onToggleFigmaImagesPanel={() => undefined}
         onToggleQaPanel={() => undefined}
+        onToggleImprovementsPanel={() => undefined}
         onToggleDesignInspector={() => undefined}
         onToggleSourceTreePanel={() => undefined}
       />

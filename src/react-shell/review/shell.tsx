@@ -14,6 +14,7 @@ import type { ReviewShellProps } from '../types';
 import { CustomPanelProvider, CustomPanelHost } from '../custom-panels/context';
 import { DesignInspectorPanelContainer } from '../design-inspector/panel.container';
 import { FigmaImagesPanelContainer } from '../figma/images.panel.container';
+import { ImprovementsPanelContainer } from '../improvements/panel.container';
 import { QaPanelContainer } from '../qa/panel.container';
 import { SectionOutlineContainer } from '../source-tree/section.outline.container';
 import { ReviewSideRailContainer } from './side.rail.container';
@@ -89,6 +90,7 @@ const ReviewShellContent = (props: ReviewShellProps) => {
           sideRail: <ReviewSideRailContainer />,
           qaPanel: <QaPanelContainer />,
           figmaImagesPanel: <FigmaImagesPanelContainer />,
+          improvementsPanel: <ImprovementsPanelContainer />,
           sourceTreePanel: <SectionOutlineContainer />,
           designInspectorPanel: <DesignInspectorPanelContainer />,
           targetFrame: <ReviewTargetFrame />,

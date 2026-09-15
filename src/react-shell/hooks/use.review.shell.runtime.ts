@@ -83,9 +83,11 @@ export const useReviewShellRuntime = ({
   );
   const {
     isSourceTreeHoverOutlineEnabled,
+    improvementAdapterEntry,
     sectionOutlineOptions,
     sourceCandidateOptions,
   } = useReviewShellConfig();
+  const isImprovementEnabled = Boolean(improvementAdapterEntry?.createImprovement);
 
   const {
     figmaImagesController,
@@ -103,6 +105,7 @@ export const useReviewShellRuntime = ({
     toggleSidePanel,
   } = useReviewSidePanel({
     isFigmaImageManagementEnabled,
+    isImprovementEnabled,
   });
 
   const {
@@ -337,10 +340,12 @@ export const useReviewShellRuntime = ({
 
   const {
     toggleFigmaImagesPanel,
+    toggleImprovementsPanel,
     toggleQaPanel,
     toggleSourceTreePanel,
   } = useReviewShellPanelActions({
     isFigmaImageManagementEnabled,
+    isImprovementEnabled,
     toggleSidePanel,
   });
 
@@ -402,6 +407,7 @@ export const useReviewShellRuntime = ({
     setReviewMode,
     showSourceOutlineForElement,
     toggleFigmaImagesPanel,
+    toggleImprovementsPanel,
     toggleDesignInspectorPanel,
     toggleQaPanel,
     toggleSourceTreePanel,

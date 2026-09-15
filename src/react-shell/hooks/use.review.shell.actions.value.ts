@@ -30,6 +30,7 @@ interface UseReviewShellActionsValueOptions {
   setReviewMode: (mode: ReviewMode) => void;
   showSourceOutlineForElement: (element: Element) => void;
   toggleFigmaImagesPanel: () => void;
+  toggleImprovementsPanel: () => void;
   toggleDesignInspectorPanel: () => void;
   toggleQaPanel: () => void;
   toggleSourceTreePanel: () => void;
@@ -57,6 +58,7 @@ export const useReviewShellActionsValue = ({
   setReviewMode,
   showSourceOutlineForElement,
   toggleFigmaImagesPanel,
+  toggleImprovementsPanel,
   toggleDesignInspectorPanel,
   toggleQaPanel,
   toggleSourceTreePanel,
@@ -86,6 +88,7 @@ export const useReviewShellActionsValue = ({
       setReviewMode,
       showSourceOutlineForElement,
       toggleFigmaImagesPanel,
+      toggleImprovementsPanel,
       toggleDesignInspectorPanel,
       toggleQaPanel,
       toggleSourceTreePanel,
@@ -112,6 +115,7 @@ export const useReviewShellActionsValue = ({
       setReviewMode,
       showSourceOutlineForElement,
       toggleFigmaImagesPanel,
+      toggleImprovementsPanel,
       toggleDesignInspectorPanel,
       toggleQaPanel,
       toggleSourceTreePanel,

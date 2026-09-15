@@ -9,6 +9,7 @@ export interface ReviewShellFrameSlots {
   customPanels?: ReactNode;
   designInspectorPanel?: ReactNode;
   figmaImagesPanel?: ReactNode;
+  improvementsPanel?: ReactNode;
   modals?: ReactNode;
   qaPanel: ReactNode;
   sideRail: ReactNode;
@@ -104,6 +105,7 @@ export const ReviewShellFrame = ({
       {slots.customPanels}
       {slots.qaPanel}
       {slots.figmaImagesPanel}
+      {slots.improvementsPanel}
       {slots.sourceTreePanel}
       {slots.designInspectorPanel}
       <div className="df-review-qa-draft-host" />

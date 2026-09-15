@@ -1,3 +1,4 @@
+import { getStoredCaptureMethod, writeStoredCaptureMethod } from './settings';
 import {
   beforeEach,
   describe,
@@ -70,4 +71,14 @@ describe('review settings storage', () => {
     expect(window.localStorage.getItem(REVIEW_TOOLTIP_STORAGE_KEY)).toBeNull();
     expect(getStoredReviewTooltipsEnabled()).toBe(true);
   });
+});
+
+
+it('defaults to browser capture and persists the html2canvas choice', () => {
+  writeStoredCaptureMethod('browser');
+  expect(getStoredCaptureMethod()).toBe('browser');
+  writeStoredCaptureMethod('html2canvas');
+  expect(getStoredCaptureMethod()).toBe('html2canvas');
+  writeStoredCaptureMethod('browser');
+  expect(getStoredCaptureMethod()).toBe('browser');
 });

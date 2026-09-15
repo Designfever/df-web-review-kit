@@ -232,3 +232,60 @@ Fresh Chrome profiles, local-only dev/isolated fixtures:
 - Real df-sheet login, Supabase writes, Figma remote imports, deployed browsers,
   cross-browser coverage and packed-package installation were not tested.
   No dependency addition, push, release, deployment or Todo approval occurred.
+
+## Screen-sharing capture pilot
+
+Settings stores the capture method per origin: Browser (default) or html2canvas.
+There is no entry popup. With Browser selected, Element/Area first request
+sharing before changing selection mode; failure leaves the existing mode/draft
+unchanged. An active session is reused. The bottom monitor can also start sharing. Without active sharing, captures fall back to html2canvas.
+Selecting html2canvas stops sharing and hides the monitor control. Capturing or
+saving an issue never opens a sharing picker.
+Choose the current Review tab. The pilot uses Capture Handle verification and
+requires a browser that supports it (Chrome). Other tabs/windows are rejected.
+The active stream is reused by both manual and automatic captures across target
+iframe navigation/reloads. **Stop sharing**, browser stop, shell unmount, or a
+full Review-page reload ends it. Sharing failure opens an error dialog with retry and close actions. Stop
+sharing switches later captures to html2canvas until sharing is started again.
+Starting sharing from the bottom toolbar alone does not take a screenshot.
+
+While sharing is active, captures use a PNG frame from `getDisplayMedia`, cropped
+using the iframe's current position/scale and resized to the target CSS pixel
+dimensions (1×), including on Retina displays. Only visible pixels can be captured;
+keep the target unobscured and fit it inside the shell viewport. Inactive sharing,
+clipped areas, or capture failures use the existing html2canvas path. Failure
+fallbacks include `captureFallbackReason`; `captureRenderer` identifies the result.
+Screen sharing remains active between screenshots, but frames are only encoded
+when a capture is requested. This does not record a continuous video.
+
+Focused tests: `screen.capture.test.ts` covers stream reuse/stop, wrong-tab
+rejection, late permission results after disposal, crop geometry after movement,
+and clipped target rejection. A live Lexus test must additionally verify the
+browser picker, actual fonts, and target navigation; mocked tests do not prove
+screen-capture fidelity.
+
+Pilot status (2026-09-14): package suite passed 365 tests before the additional
+iframe-replacement regression; the focused set now passes 8 tests. Package and
+Lexus type checks passed. Real Chrome startup remains unverified: both the pilot
+and a minimal local `getDisplayMedia({video:true,audio:false})` diagnostic return
+`InvalidStateError: Invalid state` before the picker. The pilot reported focus,
+transient user activation, and top-level context as true. Removing the optional
+current-tab picker preference did not resolve it. Do not treat these mocked tests
+as proof of a working screen-sharing session or typography fidelity.
+
+Follow-up (2026-09-15): manual sharing succeeded in the Lexus pilot; a PNG
+attachment was generated and sharing survived Refresh target. Local Lexus upload
+was unavailable, so saved-image text fidelity remains unverified. Default
+first-capture sharing and 1× Retina output pass the focused 9-test suite; the
+new automatic picker flow still needs a live user sharing check.
+
+Capture setup follow-up: permission is requested before writing rather than during
+capture/save. Escape in an open native dialog preserves the QA draft. Session,
+setup, and draft orchestration regressions pass (17 tests).
+
+Settings follow-up: entry setup was replaced by a persisted capture preference.
+Permission remains explicit through the monitor button. Settings/session/draft
+regressions pass (22 tests).
+
+Element/Area sharing activation is covered for successful, pending, canceled,
+and html2canvas selections; focused toolbar/session/draft tests pass (19 tests).

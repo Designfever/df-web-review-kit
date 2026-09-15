@@ -425,6 +425,8 @@ class WebReviewKitApp {
   };
 
   private readonly handleKeyDown = (event: KeyboardEvent) => {
+    // Closing a native dialog must not also discard the underlying QA draft.
+    if (event.key === 'Escape' && document.querySelector('dialog[open]')) return;
     if (event.key === 'Escape' && this.cancelMode()) {
       const activeElement = document.activeElement;
       if (

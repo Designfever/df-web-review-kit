@@ -983,22 +983,67 @@ export const reviewShellQaPanelStyle = `	  .df-review-qa-panel {
   }
 
   .df-review-attachment-preview {
-    max-width: calc(100vw - 40px);
-    max-height: calc(100vh - 40px);
+    box-sizing: border-box;
+    min-width: min(320px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
     padding: 0;
     border: 1px solid var(--df-review-line);
     border-radius: var(--df-review-radius-sm);
     background: var(--df-review-panel);
     color: var(--df-review-text);
   }
+  .df-review-capture-error {
+    padding: 0;
+    max-height: calc(100dvh - 48px);
+    overflow: auto;
+    color: var(--df-review-text);
+    font: inherit;
+  }
+  .df-review-capture-error:not([open]) { display: none; }
+  .df-review-capture-error::backdrop { background: var(--df-review-color-backdrop); }
+  .df-review-capture-error .df-review-settings-header svg { width: 16px; height: 16px; }
+  .df-review-capture-setup-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .df-review-capture-help,
+  .df-review-capture-error p {
+    margin: 0;
+    font-size: var(--df-review-font-size-sm);
+    white-space: pre-line;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
   .df-review-attachment-preview::backdrop { background: #0009; }
-  .df-review-attachment-preview-content { padding: 16px; }
+  .df-review-attachment-preview-content { padding: 12px; }
   .df-review-attachment-preview header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 12px;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .df-review-attachment-preview-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+  .df-review-attachment-preview-heading strong { color: var(--df-review-muted); }
+  .df-review-attachment-preview footer {
+    margin: 12px -12px -12px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--df-review-line);
+    background: var(--df-review-control);
+    color: var(--df-review-muted);
+    font-size: 12px;
     overflow-wrap: anywhere;
   }
   .df-review-attachment-preview header button {
@@ -1028,7 +1073,7 @@ export const reviewShellQaPanelStyle = `	  .df-review-qa-panel {
     width: auto;
     height: auto;
     max-width: 100%;
-    max-height: calc(100vh - 140px);
+    max-height: calc(100dvh - 160px);
     object-fit: contain;
     margin: auto;
   }

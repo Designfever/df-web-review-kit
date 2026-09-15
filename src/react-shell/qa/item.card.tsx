@@ -90,8 +90,10 @@ const isImageAttachment = (attachment: ReviewAttachment) =>
 
 const QaItemAttachments = ({
   attachments,
+  numberedItem,
 }: {
   attachments: ReviewAttachment[];
+  numberedItem: NumberedReviewItem;
 }) => {
   const imageAttachments = attachments.filter(isImageAttachment);
   const [preview, setPreview] = useState<ReviewAttachment | null>(null);
@@ -119,7 +121,7 @@ const QaItemAttachments = ({
           />
         </button>
       ))}
-      {preview && <ImagePreviewModal attachment={preview} onClose={() => setPreview(null)} />}
+      {preview && <ImagePreviewModal attachment={preview} issueLabel={numberedItem.displayLabel} issueTitle={getItemTitle(numberedItem.item)} onClose={() => setPreview(null)} />}
     </div>
   );
 };
@@ -371,7 +373,7 @@ export const QaItemCard = ({
           )}
         </div>
         {item.attachments && (
-          <QaItemAttachments attachments={item.attachments} />
+          <QaItemAttachments attachments={item.attachments} numberedItem={numberedItem} />
         )}
         {!isRemoteSource && <QaItemExternalLinks item={item} />}
         <small className="df-review-item-meta">{itemMeta}</small>

@@ -1,3 +1,7 @@
+import { useState } from 'react';
+import { useReviewSettingsState } from './settings.context';
+import { useReviewShellRefs } from '../store/shell.refs';
+import { screenCaptureSessions } from '../target/screen.capture';
 import {
   Scan as ScanIcon,
   SquareMousePointer as SquareMousePointerIcon,
@@ -17,6 +21,23 @@ export const ReviewModeToolbar = ({
   mode,
   onSetReviewMode,
 }: ReviewModeToolbarProps) => {
+  const { captureMethod } = useReviewSettingsState();
+  const { iframeRef } = useReviewShellRefs();
+  const [pending, setPending] = useState(false);
+  const selectMode = async (nextMode: ReviewMode) => {
+    if (captureMethod === 'browser') {
+      const frame = iframeRef.current;
+      const session = frame && screenCaptureSessions.get(frame);
+      if (!session) return;
+      setPending(true);
+      try {
+        if (!await session.ensureStarted()) return;
+      } finally {
+        setPending(false);
+      }
+    }
+    onSetReviewMode(nextMode);
+  };
   if (!canWriteDom && !canWriteArea) return null;
 
   return (
@@ -29,7 +50,8 @@ export const ReviewModeToolbar = ({
           }`}
           data-review-tooltip="Element QA"
           type="button"
-          onClick={() => onSetReviewMode('element')}
+          disabled={pending}
+          onClick={() => void selectMode('element')}
         >
           <SquareMousePointerIcon aria-hidden="true" />
         </button>
@@ -47,7 +69,8 @@ export const ReviewModeToolbar = ({
           }`}
           data-review-tooltip="Area QA"
           type="button"
-          onClick={() => onSetReviewMode('area')}
+          disabled={pending}
+          onClick={() => void selectMode('area')}
         >
           <ScanIcon aria-hidden="true" />
         </button>

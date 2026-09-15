@@ -16,6 +16,7 @@ export const reviewShellStageStyle = `
   }
 
   .df-review-frame-actions {
+    gap: 12px;
     position: relative;
     z-index: 600;
     display: flex;

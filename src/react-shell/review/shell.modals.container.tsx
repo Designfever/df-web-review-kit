@@ -23,6 +23,8 @@ export const ReviewShellModalsContainer = () => {
   } = useReviewShellActions();
   const { pagePresenceUsers } = useReviewPresenceState();
   const {
+    captureMethodDraft,
+    setCaptureMethodDraft,
     areTooltipsEnabledDraft,
     closeFigmaSettings,
     figmaSettingsStatus,
@@ -107,6 +109,8 @@ export const ReviewShellModalsContainer = () => {
 
       {isFigmaSettingsOpen && (
         <ReviewSettingsModal
+          captureMethodDraft={captureMethodDraft}
+          onCaptureMethodDraftChange={setCaptureMethodDraft}
           areTooltipsEnabledDraft={areTooltipsEnabledDraft}
           figmaSettingsStatus={figmaSettingsStatus}
           figmaTokenDraft={figmaTokenDraft}

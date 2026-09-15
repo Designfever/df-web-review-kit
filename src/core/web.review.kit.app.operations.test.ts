@@ -49,6 +49,19 @@ const draftAttachment = (): ReviewDraftAttachment => ({
 const uploaded = { url: '/file.png', name: 'file.png', mime: 'image/png', size: 4, kind: 'image' as const };
 
 describe('core item and attachment orchestration', () => {
+  it('preserves the draft when Escape dismisses a modal', () => {
+    const { config } = captureSetup();
+    config.actions.setDomDraft({ ...config.getState().domDraft!, comment: 'Keep my writing' });
+    const dialog = document.createElement('dialog');
+    dialog.open = true;
+    document.body.append(dialog);
+    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(config.getState().domDraft?.comment).toBe('Keep my writing');
+    dialog.remove();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(config.getState().domDraft).toBeUndefined();
+  });
+
   it('keeps one submit in flight through upload, create, reload and notification', async () => {
     const { config, create, list } = setup();
     let finishUpload!: (value: typeof uploaded) => void;

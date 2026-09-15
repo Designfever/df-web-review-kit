@@ -264,3 +264,11 @@ export const getSystemReviewTheme = (): Exclude<ReviewShellTheme, 'system'> => {
     ? 'light'
     : 'dark';
 };
+
+
+export type ReviewCaptureMethod = 'browser' | 'html2canvas';
+const CAPTURE_METHOD_STORAGE_KEY = 'df-review-capture-method';
+export const getStoredCaptureMethod = (): ReviewCaptureMethod =>
+  readStorage(CAPTURE_METHOD_STORAGE_KEY) === 'html2canvas' ? 'html2canvas' : 'browser';
+export const writeStoredCaptureMethod = (method: ReviewCaptureMethod) =>
+  writeStorage(CAPTURE_METHOD_STORAGE_KEY, method === 'browser' ? null : method);

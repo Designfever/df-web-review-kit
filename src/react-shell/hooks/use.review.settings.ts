@@ -4,6 +4,9 @@ import {
   DEFAULT_REVIEW_TOOLTIPS_ENABLED,
 } from '../constants';
 import {
+  getStoredCaptureMethod,
+  writeStoredCaptureMethod,
+  type ReviewCaptureMethod,
   getStoredFigmaToken,
   getStoredReviewTooltipsEnabled,
   getStoredReviewTheme,
@@ -32,6 +35,8 @@ export const useReviewSettings = ({
   onCloseSitemap,
   onReloadTargetFrame,
 }: UseReviewSettingsOptions) => {
+  const [captureMethod, setCaptureMethod] = useState(getStoredCaptureMethod);
+  const [captureMethodDraft, setCaptureMethodDraft] = useState(getStoredCaptureMethod);
   const [figmaTokenDraft, setFigmaTokenDraft] = useState(getStoredFigmaToken);
   const [reviewUserId, setReviewUserId] = useState(() =>
     getStoredReviewUserId(defaultReviewUserId)
@@ -71,6 +76,7 @@ export const useReviewSettings = ({
     setFigmaTokenDraft(getStoredFigmaToken());
     setReviewUserIdDraft(getStoredReviewUserId(defaultReviewUserId));
     setReviewThemeDraft(reviewTheme);
+    setCaptureMethodDraft(captureMethod);
     setAreTooltipsEnabledDraft(areTooltipsEnabled);
     setFigmaSettingsStatus('');
     setIsFigmaTokenVisible(false);
@@ -83,6 +89,7 @@ export const useReviewSettings = ({
     defaultReviewUserId,
     areTooltipsEnabled,
     reviewTheme,
+    captureMethod,
   ]);
 
   const saveReviewSettings = useCallback(
@@ -90,13 +97,17 @@ export const useReviewSettings = ({
       token: string,
       userId: string,
       theme: ReviewShellTheme,
-      tooltipsEnabled: boolean
+      tooltipsEnabled: boolean,
+      method: ReviewCaptureMethod = 'browser'
     ) => {
       const nextToken = token.trim();
       const nextUserId = userId.trim();
       const nextTheme = normalizeReviewTheme(theme);
       const shouldReload = nextToken !== getStoredFigmaToken();
 
+      writeStoredCaptureMethod(method);
+      setCaptureMethod(method);
+      setCaptureMethodDraft(method);
       writeStoredFigmaToken(nextToken);
       writeStoredReviewUserId(nextUserId);
       writeStoredReviewTheme(nextTheme);
@@ -171,6 +182,9 @@ export const useReviewSettings = ({
   }, [effectiveReviewTheme]);
 
   return {
+    captureMethod,
+    captureMethodDraft,
+    setCaptureMethodDraft,
     areTooltipsEnabled,
     areTooltipsEnabledDraft,
     closeFigmaSettings,

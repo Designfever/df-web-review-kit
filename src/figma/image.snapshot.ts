@@ -3,7 +3,7 @@ import type {
   ReviewFigmaImageStore,
   ReviewFigmaImageTarget,
 } from './image.types';
-import { getReviewFigmaImageTargetKey } from './image.store';
+import { getReviewFigmaImageTargetKey } from './image.target';
 
 export type ReviewFigmaImagesSnapshot = ReviewFigmaImage[];
 

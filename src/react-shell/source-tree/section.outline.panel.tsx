@@ -12,7 +12,7 @@ import {
   Type as TypeIcon,
   X as XIcon,
 } from 'lucide-react';
-import type { SectionOutlineEntry } from '../section.outline';
+import type { SectionOutlineEntry } from './section.outline';
 import type { StoredSourceTreeMetaVisibility } from '../settings';
 
 type SourceTreeMetaVisibilityKey = keyof StoredSourceTreeMetaVisibility;

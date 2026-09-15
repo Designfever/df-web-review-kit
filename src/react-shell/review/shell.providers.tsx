@@ -22,9 +22,9 @@ import {
   type ReviewShellActions,
 } from '../store/shell.actions.context';
 import type { ReviewSettingsController } from '../hooks/use.review.settings';
-import type { ReviewSourceInspectorController } from '../hooks/use.review.source.inspector';
+import type { ReviewSourceInspectorController } from '../source-tree/use.source.inspector';
 import { ReviewSettingsProvider } from './settings.context';
-import { ReviewSourceInspectorProvider } from './source.inspector.context';
+import { ReviewSourceInspectorProvider } from '../source-tree/source.inspector.context';
 
 export interface ReviewShellProviderValues {
   actions: ReviewShellActions;

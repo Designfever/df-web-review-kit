@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { ReviewAttachment } from '../types';
 
-export function ImagePreviewModal({ attachment, onClose }: {
+export function ImagePreviewModal({ attachment, issueLabel, issueTitle, onClose }: {
   attachment: ReviewAttachment;
+  issueLabel: string;
+  issueTitle: string;
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -32,7 +34,7 @@ export function ImagePreviewModal({ attachment, onClose }: {
   return <dialog
     ref={dialogRef}
     className="df-review-attachment-preview"
-    aria-label={`Preview ${attachment.name}`}
+    aria-label={`Preview ${issueLabel}: ${issueTitle}`}
     onClose={onClose}
     onClick={(event) => {
       event.stopPropagation();
@@ -41,7 +43,10 @@ export function ImagePreviewModal({ attachment, onClose }: {
   >
     <div className="df-review-attachment-preview-content">
       <header>
-        <span>{attachment.name}</span>
+        <div className="df-review-attachment-preview-heading">
+          <strong>{issueLabel}</strong>
+          <span>{issueTitle}</span>
+        </div>
         <button type="button" aria-label="Close image preview"
           onClick={() => dialogRef.current?.close()}><X aria-hidden="true" /></button>
       </header>
@@ -50,6 +55,7 @@ export function ImagePreviewModal({ attachment, onClose }: {
         title="Open original image in a new window" onClick={openOriginal}>
         <img src={attachment.url} alt={attachment.name} />
       </button>
+      <footer>{attachment.name}</footer>
       {popupBlocked && <p role="status">Allow pop-ups to open the original image.</p>}
     </div>
   </dialog>;

@@ -12,24 +12,23 @@ import {
   useState,
   type RefObject,
 } from 'react';
-import { createSourceShortcutStyle } from '../review/source.shortcut.style';
+import { bindSourceSelectionEvents } from './source.selection.events';
 import type {
   SourceComponentPopup,
   SourceInspectorRect,
   SourceInspectorState,
-} from '../review/source.inspector.overlay';
+} from './source.inspector.overlay';
 import {
   getSectionOutlinePathForElement,
   type GetSectionOutlineOptions,
-} from '../section.outline';
+} from './section.outline';
 import {
   getSourceCandidates,
   openSourceInEditor,
   type GetSourceCandidatesOptions,
-} from '../source.open';
+} from './source.open';
 import { useReviewShellConfig } from '../store/shell.config';
-import { setTargetFigmaSourceSelectLocked } from '../target/target';
-import { useReviewToast } from './use.review.toast';
+import { useReviewToast } from '../hooks/use.review.toast';
 
 export function useReviewSourceInspector({
   isBlocked = false,
@@ -325,285 +324,17 @@ export function useReviewSourceInspector({
 
     if (!frameDocument) return;
 
-    const frameRoot = frameDocument.head ?? frameDocument.documentElement;
-    const frameBody = frameDocument.body ?? frameDocument.documentElement;
-    if (!frameRoot || !frameBody) return;
-
-    const optionAttribute = 'data-dfwr-source-option';
-    const fontOverlayAttribute = 'data-dfwr-source-fonts';
-    const style = frameDocument.createElement('style');
-    style.dataset.dfwrSourceOpenShortcut = 'true';
-    style.textContent = createSourceShortcutStyle(
-      optionAttribute,
-      fontOverlayAttribute,
-    );
-
-    frameRoot.append(style);
-
-    const fontOverlay = frameDocument.createElement('div');
-    fontOverlay.setAttribute(fontOverlayAttribute, 'true');
-    fontOverlay.hidden = true;
-    frameBody.append(fontOverlay);
-
-    let hoveredElement: Element | null = null;
-    let lastSourceTarget: EventTarget | null = null;
-    let isSourceSelecting = false;
-
-    // 요소와 하위의 data-font 값을 수집해 폰트 힌트로 보여준다.
-    const getFontHints = (element: Element | null) => {
-      if (!element) return [];
-
-      const values: Array<{ tag: string; value: string }> = [];
-      const addValue = (target: Element) => {
-        const value = target.getAttribute('data-font')?.trim();
-        const tag = target.tagName.toLowerCase();
-        if (
-          value &&
-          !values.some((item) => item.tag === tag && item.value === value)
-        ) {
-          values.push({ tag, value });
-        }
-      };
-
-      addValue(element);
-      element.querySelectorAll('[data-font]').forEach(addValue);
-      return values;
-    };
-
-    const updateFontOverlay = (element: Element | null) => {
-      const values = isSourceSelecting ? getFontHints(element) : [];
-      if (!values.length || !element) {
-        fontOverlay.hidden = true;
-        return;
-      }
-
-      const rect = element.getBoundingClientRect();
-      const frameWidth = frameDocument.documentElement.clientWidth;
-      const showAbove = rect.top > 48;
-      const top = Math.max(4, showAbove ? rect.top : rect.bottom);
-
-      fontOverlay.replaceChildren();
-      fontOverlay.style.minWidth = '72px';
-      fontOverlay.style.left = '4px';
-      fontOverlay.style.top = `${top}px`;
-      fontOverlay.style.transform = showAbove
-        ? 'translateY(calc(-100% - 6px))'
-        : 'translateY(6px)';
-      // 너비 측정 전까지 숨겨서 좌표 보정 중 깜빡임을 막는다.
-      fontOverlay.style.visibility = 'hidden';
-      const rows = values.map(({ tag, value }) => {
-        const row = frameDocument.createElement('span');
-        const tagText = frameDocument.createElement('span');
-        const valueText = frameDocument.createElement('span');
-        tagText.textContent = tag;
-        valueText.textContent = value;
-        row.append(tagText, valueText);
-        return row;
-      });
-      fontOverlay.append(...rows);
-      fontOverlay.hidden = false;
-      const overlayWidth = fontOverlay.getBoundingClientRect().width;
-      const left = Math.max(
-        4,
-        Math.min(rect.left, frameWidth - overlayWidth - 4)
-      );
-      fontOverlay.style.left = `${left}px`;
-      fontOverlay.style.visibility = '';
-    };
-
-    const setHoveredElement = (element: Element | null) => {
-      hoveredElement = element;
-      updateFontOverlay(element);
-    };
-
-    const setSourceSelecting = (isSelecting: boolean) => {
-      isSourceSelecting = isSelecting;
-      setTargetFigmaSourceSelectLocked(frameDocument, isSelecting);
-      if (isSelecting) {
-        frameDocument.documentElement.setAttribute(optionAttribute, 'true');
-        const candidate = showSourceOutlineForTarget(lastSourceTarget);
-        setHoveredElement(candidate?.element ?? hoveredElement);
-        return;
-      }
-
-      setHoveredElement(null);
-      fontOverlay.hidden = true;
-      frameDocument.documentElement.removeAttribute(optionAttribute);
-      clearSourceInspector();
-    };
-
-    const handleTargetPointerMove = (event: MouseEvent | PointerEvent) => {
-      if (frameDocument.documentElement.hasAttribute('data-df-review-design-inspecting')) return;
-      lastSourceTarget = event.target;
-      const candidates = getSourceCandidates(
-        event.target,
-        sourceCandidateOptions
-      );
-      const sourceElement = candidates[0]?.element ?? null;
-
-      if (event.altKey && !isSourceSelecting) {
-        setSourceSelecting(true);
-      }
-
-      if (isSourceSelecting) {
-        showSourceOutlineForTarget(event.target);
-      }
-
-      setHoveredElement(isSourceSelecting ? sourceElement : null);
-    };
-
-    const selectSourceTreeEntry = (event: MouseEvent) => {
-      if (frameDocument.documentElement.hasAttribute('data-df-review-design-inspecting')) return;
-      if (!isSourceSelecting && !event.altKey) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-
-      // 첫 click의 event.target이 아직 Figma overlay여도 pointer lock을 적용한
-      // 뒤 같은 좌표를 다시 hit-test해 실제 DOM element를 선택한다.
-      setTargetFigmaSourceSelectLocked(frameDocument, true);
-      const sourceTarget =
-        frameDocument.elementFromPoint(event.clientX, event.clientY) ??
-        event.target;
-      const candidates = getSourceCandidates(
-        sourceTarget,
-        sourceCandidateOptions
-      );
-      const candidate = candidates
-        .filter((item) => item.kind !== 'data')
-        .sort((a, b) => a.depth - b.depth)[0] ?? candidates[0];
-      if (!candidate) {
-        showToast('Source hint not found');
-        setSourceSelecting(false);
-        return;
-      }
-
-      selectSourceOutlineForElement(candidate.element);
-      onRequestSourceTreeFocus?.(candidate.element);
-      setSourceSelecting(false);
-    };
-
-    const handleClick = (event: MouseEvent) => {
-      selectSourceTreeEntry(event);
-    };
-
-    const isOptionKeyEvent = (event: KeyboardEvent) =>
-      event.key === 'Alt' ||
-      event.code === 'AltLeft' ||
-      event.code === 'AltRight' ||
-      event.altKey;
-
-    const getActiveDomSelectButton = () => {
-      const activeElement = document.activeElement;
-      return (
-        activeElement instanceof HTMLButtonElement &&
-        activeElement.matches(
-          '.df-review-section-outline-link.is-dom-select'
-        )
-          ? activeElement
-          : null
-      );
-    };
-
-    const blurDomSelectButton = () => {
-      getActiveDomSelectButton()?.blur();
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (frameDocument.documentElement.hasAttribute('data-df-review-design-inspecting')) return;
-      if (event.key === 'Escape') {
-        onCancelReviewMode();
-        setSourceSelecting(false);
-        clearSourceInspector();
-        blurDomSelectButton();
-        return;
-      }
-      if (!isOptionKeyEvent(event)) return;
-
-      onCancelReviewMode();
-      setSourceSelecting(true);
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (isOptionKeyEvent(event) || !event.altKey) setSourceSelecting(false);
-    };
-
-    const handleBlur = () => {
-      setSourceSelecting(false);
-    };
-
-    const handleWindowPointerDown = (event: PointerEvent) => {
-      const isTargetDocumentPointerDown = event.currentTarget === frameDocument;
-      if (
-        isTargetDocumentPointerDown &&
-        (isSourceSelecting || event.altKey)
-      ) {
-        return;
-      }
-
-      setSourceSelecting(false);
-
-      const activeElement = getActiveDomSelectButton();
-      if (!activeElement || event.composedPath().includes(activeElement)) {
-        return;
-      }
-
-      const isComposerClick = event.composedPath().some((target) => {
-        if (!(target instanceof Element)) return false;
-        return Boolean(
-          target.closest('.df-review-qa-draft-host, .dfwr-dom-popover')
-        );
-      });
-      if (isComposerClick) return;
-
-      onCancelReviewMode();
-      activeElement.blur();
-    };
-
-    frameDocument.addEventListener('mousemove', handleTargetPointerMove, true);
-    frameDocument.addEventListener('pointermove', handleTargetPointerMove, true);
-    frameDocument.addEventListener('click', handleClick, true);
-    frameDocument.addEventListener('keydown', handleKeyDown, true);
-    frameDocument.addEventListener('keyup', handleKeyUp, true);
-    frameDocument.addEventListener(
-      'pointerdown',
-      handleWindowPointerDown,
-      true
-    );
-    window.addEventListener('keydown', handleKeyDown, true);
-    window.addEventListener('keyup', handleKeyUp, true);
-    window.addEventListener('blur', handleBlur);
-    window.addEventListener('pointerdown', handleWindowPointerDown, true);
-
-    sourceShortcutCleanupRef.current = () => {
-      frameDocument.removeEventListener(
-        'mousemove',
-        handleTargetPointerMove,
-        true
-      );
-      frameDocument.removeEventListener(
-        'pointermove',
-        handleTargetPointerMove,
-        true
-      );
-      frameDocument.removeEventListener('click', handleClick, true);
-      frameDocument.removeEventListener('keydown', handleKeyDown, true);
-      frameDocument.removeEventListener('keyup', handleKeyUp, true);
-      frameDocument.removeEventListener(
-        'pointerdown',
-        handleWindowPointerDown,
-        true
-      );
-      window.removeEventListener('keydown', handleKeyDown, true);
-      window.removeEventListener('keyup', handleKeyUp, true);
-      window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('pointerdown', handleWindowPointerDown, true);
-      setSourceSelecting(false);
-      blurDomSelectButton();
-      style.remove();
-      fontOverlay.remove();
-    };
+    sourceShortcutCleanupRef.current = bindSourceSelectionEvents({
+      frameDocument,
+      hostWindow: window,
+      sourceCandidateOptions,
+      showSourceOutlineForTarget,
+      selectSourceOutlineForElement,
+      clearSourceInspector,
+      onCancelReviewMode,
+      onRequestSourceTreeFocus,
+      showToast,
+    }) ?? null;
   }, [
     onCancelReviewMode,
     clearSourceInspector,

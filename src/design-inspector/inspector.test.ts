@@ -316,6 +316,39 @@ describe('embedded design inspector', () => {
     expect(queued.size).toBe(0);
   });
 
+  it('ignores a pending source-open request after iframe rebind', async () => {
+    const location = { file: '/src/late.tsx', displayPath: 'late.tsx', line: 1, column: 1 };
+    let resolve!: (value: typeof location) => void;
+    const pending = new Promise<typeof location>(done => { resolve = done; });
+    const open = vi.fn();
+    start({ source: { resolve: element => element === first ? pending : null, open } });
+    select(first);
+    await render();
+    first.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+    frame.dispatchEvent(new Event('load'));
+    resolve(location);
+    await render();
+    expect(open).not.toHaveBeenCalled();
+    expect(node('.identity').textContent).toBe('body');
+    expect(node('.source-path').textContent).not.toContain('late.tsx');
+  });
+
+  it('destroy disconnects observers and ignores late input from the old target', async () => {
+    const disconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
+    const inspector = start();
+    select(first);
+    await render();
+    disconnect.mockClear();
+    inspector.destroy();
+    expect(disconnect).toHaveBeenCalledTimes(2);
+    first.setAttribute('data-after-destroy', 'true');
+    first.dispatchEvent(new Event('input', { bubbles: true }));
+    frame.contentDocument!.dispatchEvent(new Event('scroll'));
+    await render();
+    expect(queued.size).toBe(0);
+    expect(container.children).toHaveLength(0);
+  });
+
   it('destroy removes all owned DOM, cancels redraws and releases site events and frame-load handlers', async () => {
     const inspector = start();
     select(first);

@@ -105,7 +105,7 @@ sync.
 
 `src/react-shell/figma/image.overlay.state.ts` owns the storage shape,
 normalization, and the legacy flat-state migration. The React effects and user
-commands stay in `image.overlay.controller.ts`; iframe DOM creation and drag
+commands stay in `use.image.overlay.ts`; iframe DOM creation and drag
 behavior stay in `src/react-shell/target/figma.image.overlay.ts`.
 
 When the store refreshes its image list, removed image IDs are pruned. If the

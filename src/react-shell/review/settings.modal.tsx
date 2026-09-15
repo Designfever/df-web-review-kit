@@ -16,7 +16,7 @@ import {
   REVIEW_THEME_STORAGE_KEY,
   REVIEW_USER_ID_STORAGE_KEY,
 } from '../constants';
-import { normalizeReviewTheme } from '../settings';
+import { type ReviewCaptureMethod, normalizeReviewTheme } from '../settings';
 import type { ReviewShellTheme } from '../types';
 
 const getReviewThemeIcon = (theme: ReviewShellTheme) => {
@@ -26,6 +26,8 @@ const getReviewThemeIcon = (theme: ReviewShellTheme) => {
 };
 
 interface ReviewSettingsModalProps {
+  captureMethodDraft: ReviewCaptureMethod;
+  onCaptureMethodDraftChange: (method: ReviewCaptureMethod) => void;
   figmaTokenDraft: string;
   reviewUserIdDraft: string;
   reviewThemeDraft: ReviewShellTheme;
@@ -45,11 +47,14 @@ interface ReviewSettingsModalProps {
     figmaToken: string,
     reviewUserId: string,
     reviewTheme: ReviewShellTheme,
-    tooltipsEnabled: boolean
+    tooltipsEnabled: boolean,
+    captureMethod?: ReviewCaptureMethod
   ) => void;
 }
 
 export const ReviewSettingsModal = ({
+  captureMethodDraft,
+  onCaptureMethodDraftChange,
   figmaTokenDraft,
   reviewUserIdDraft,
   reviewThemeDraft,
@@ -88,7 +93,8 @@ export const ReviewSettingsModal = ({
             figmaTokenDraft,
             reviewUserIdDraft,
             reviewThemeDraft,
-            areTooltipsEnabledDraft
+            areTooltipsEnabledDraft,
+            captureMethodDraft
           );
         }}
       >
@@ -107,6 +113,20 @@ export const ReviewSettingsModal = ({
           </div>
         </div>
         <div className="df-review-settings-body">
+          <div className="df-review-settings-row">
+            <span>Capture</span>
+            <div className="df-review-settings-theme-options">
+              {(['browser', 'html2canvas'] as const).map((method) => (
+                <button key={method} type="button"
+                  aria-pressed={captureMethodDraft === method}
+                  className={`df-review-settings-theme-option${captureMethodDraft === method ? ' is-active' : ''}`}
+                  onClick={() => { onCaptureMethodDraftChange(method); onClearStatus(); }}>
+                  {method === 'browser' ? 'Browser (기본)' : 'html2canvas'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="df-review-capture-help">브라우저 캡처는 Element 또는 Area 버튼을 누르면 공유를 요청합니다. 공유 중에는 다시 요청하지 않습니다.</p>
           <div className="df-review-settings-row">
             <span>Theme</span>
             <div className="df-review-settings-theme-options">

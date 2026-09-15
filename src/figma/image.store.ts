@@ -3,19 +3,22 @@ import type {
   ReorderReviewFigmaImagesInput,
   ReviewFigmaImage,
   ReviewFigmaImageAssetInput,
-  ReviewFigmaImageFormat,
   ReviewFigmaImageStore,
-  ReviewFigmaImageTarget,
 } from './image.types';
-import { getReviewFigmaImageFormatFromMimeType } from '../vite/figma-asset';
+import {
+  getReviewFigmaImageFormatFromMimeType,
+  getReviewFigmaImageMimeType,
+} from './image.asset';
+import { DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT } from './image.types';
 import { parseReviewFigmaNodeRef } from './parse';
 import {
   createReviewFigmaImageApiUrl,
   type ReviewFigmaRenderFormat,
 } from './render';
 
-export const DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT =
-  '/__dfwr/figma-images';
+export { getReviewFigmaImageMimeType } from './image.asset';
+export { getReviewFigmaImageTargetKey } from './image.target';
+export { DEFAULT_REVIEW_FIGMA_IMAGE_STORE_ENDPOINT } from './image.types';
 
 type ReviewFigmaImageTokenProvider =
   | string
@@ -388,18 +391,6 @@ async function withStageTimeout<T>(
   }
 }
 
-export function getReviewFigmaImageTargetKey(target: ReviewFigmaImageTarget) {
-  return JSON.stringify(normalizeReviewFigmaImageTarget(target));
-}
-
-export function getReviewFigmaImageMimeType(
-  format: ReviewFigmaImageFormat
-) {
-  if (format === 'jpg') return 'image/jpeg';
-  if (format === 'png') return 'image/png';
-  return 'image/webp';
-}
-
 type ReviewFigmaImageStoreRequestInit = RequestInit & {
   figmaToken?: string;
 };
@@ -483,32 +474,6 @@ function getStoredReviewFigmaImageToken() {
   } catch {
     return '';
   }
-}
-
-function normalizeReviewFigmaImageTarget(target: ReviewFigmaImageTarget) {
-  if (target.type === 'figma-node') {
-    return {
-      type: target.type,
-      projectId: target.projectId,
-      fileKey: target.fileKey,
-      nodeId: target.nodeId,
-    };
-  }
-
-  return {
-    type: target.type,
-    projectId: target.projectId,
-    pageUrl: target.pageUrl,
-    slot: target.slot ?? '',
-    viewport: target.viewport
-      ? {
-          label: target.viewport.label ?? '',
-          width: target.viewport.width ?? null,
-          height: target.viewport.height ?? null,
-          scope: target.viewport.scope ?? '',
-        }
-      : null,
-  };
 }
 
 export type { ReorderReviewFigmaImagesInput };

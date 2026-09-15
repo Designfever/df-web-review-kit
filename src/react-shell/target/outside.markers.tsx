@@ -26,6 +26,7 @@ import type {
   ReviewItem,
 } from '../../types';
 import { useReviewShellData } from '../hooks/use.review.shell.data';
+import { getItemTitle } from '../prompt/prompt';
 import { ImagePreviewModal } from '../image.preview.modal';
 import { useReviewShellConfig } from '../store/shell.config';
 import { useReviewShellRefs } from '../store/shell.refs';
@@ -208,7 +209,7 @@ export const ReviewOutsideMarkers = () => {
   );
   const setSidePanel = useReviewShellStore((state) => state.setSidePanel);
   const [layoutVersion, setLayoutVersion] = useState(0);
-  const [preview, setPreview] = useState<ReviewAttachment | null>(null);
+  const [preview, setPreview] = useState<{ attachment: ReviewAttachment; issueLabel: string; issueTitle: string } | null>(null);
   const frameUpdateRef = useRef<number | null>(null);
 
   useEffect(() => { setPreview(null); }, [targetFrameLoadVersion]);
@@ -319,7 +320,7 @@ export const ReviewOutsideMarkers = () => {
           } as CSSProperties & Record<string, string | number>;
 
           const openCapture = () => {
-            setPreview(marker.capture ?? null);
+            setPreview(marker.capture ? { attachment: marker.capture, issueLabel: marker.label, issueTitle: getItemTitle(marker.item) } : null);
           };
           return (
             <div key={marker.item.id}>
@@ -377,7 +378,7 @@ export const ReviewOutsideMarkers = () => {
           );
         })}
       </div>
-      {preview && <ImagePreviewModal attachment={preview} onClose={() => setPreview(null)} />}
+      {preview && <ImagePreviewModal {...preview} onClose={() => setPreview(null)} />}
     </>
   );
 };

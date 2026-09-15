@@ -9,9 +9,9 @@ import type {
 } from './image.types';
 import {
   createReviewFigmaClientRenderedAsset,
-  getReviewFigmaImageTargetKey,
   type ReviewFigmaImageClientRenderOptions,
 } from './image.store';
+import { getReviewFigmaImageTargetKey } from './image.target';
 import { parseReviewFigmaNodeRef } from './parse';
 
 export const DEFAULT_REVIEW_FIGMA_REMOTE_IMAGES_TABLE = 'review_figma_images';

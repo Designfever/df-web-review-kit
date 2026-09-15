@@ -254,3 +254,137 @@ describe('connectDfSheetReview', () => {
     expect(request).toHaveBeenCalledTimes(2);
   });
 });
+
+// Public-entry regressions: no real authentication or network writes.
+describe('df-sheet session and adapter boundaries', () => {
+  const stored = (expiresAt = Date.now() + 300_000) => ({
+    accessToken: 'mock-token', expiresAt,
+    project: { id: projectId, key: 'IKAOS' },
+    user: { user_id: 'reviewer', name: null },
+  });
+  beforeEach(() => {
+    window.sessionStorage.clear();
+    window.history.replaceState(null, '', '/review');
+  });
+  const callback = () => {
+    window.sessionStorage.setItem(pendingKey, JSON.stringify({
+      state: 'valid-state', verifier: 'mock-verifier',
+      redirectUri: 'http://localhost/review', returnSearch: '?target=%2Fstory',
+    }));
+    window.history.replaceState(null, '', '/review?code=mock-code&state=valid-state#details');
+  };
+
+  it.each([30_000, 30_001])('preserves the cached-session skew boundary at %i ms', async (remaining) => {
+    const now = Date.now();
+    vi.spyOn(Date, 'now').mockReturnValue(now);
+    callback();
+    window.sessionStorage.setItem(sessionKey, JSON.stringify(stored(now + remaining)));
+    const request = vi.fn<typeof fetch>(async () => jsonResponse({ success: true, data: {
+      access_token: 'exchanged-token', expires_in: 600,
+      project: stored().project, user: stored().user,
+    } }));
+    const session = await connectDfSheetReview({ projectId, fetch: request });
+    if (remaining === 30_000) {
+      expect(request).toHaveBeenCalledTimes(1);
+      expect(session?.expiresAt).toBe(now + 600_000);
+      expect(window.location.search + window.location.hash).toBe('?target=%2Fstory#details');
+    } else {
+      expect(request).not.toHaveBeenCalled();
+      expect(session?.expiresAt).toBe(now + remaining);
+    }
+  });
+
+  it('rejects mismatched state before fetching and a different token project before storing', async () => {
+    callback();
+    window.history.replaceState(null, '', '/review?code=mock-code&state=wrong');
+    const request = vi.fn<typeof fetch>(async () => jsonResponse({ success: true, data: {
+      access_token: 'wrong-project-token', expires_in: 600,
+      project: { id: 'other', key: 'OTHER' }, user: stored().user,
+    } }));
+    await expect(connectDfSheetReview({ projectId, fetch: request })).rejects.toThrow('state is invalid');
+    expect(request).not.toHaveBeenCalled();
+    callback();
+    await expect(connectDfSheetReview({ projectId, fetch: request })).rejects.toThrow('different review project');
+    expect(window.sessionStorage.getItem(sessionKey)).toBeNull();
+    expect(window.sessionStorage.getItem(pendingKey)).not.toBeNull();
+    expect(window.location.search).toContain('code=');
+  });
+
+  it('derives the logout PKCE challenge from the stored verifier without disconnecting', async () => {
+    window.sessionStorage.setItem(sessionKey, JSON.stringify(stored()));
+    const request = vi.fn<typeof fetch>();
+    const session = await connectDfSheetReview({ projectId, fetch: request });
+    const logout = new URL(await session!.createLogoutUrl());
+    const authorize = new URL(logout.searchParams.get('from')!, logout.origin);
+    const pending = JSON.parse(window.sessionStorage.getItem(pendingKey)!);
+    const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(pending.verifier));
+    const challenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    expect(authorize.searchParams.get('code_challenge')).toBe(challenge);
+    expect(authorize.searchParams.get('state')).toBe(pending.state);
+    expect(window.sessionStorage.getItem(sessionKey)).not.toBeNull();
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it('keeps HTTP error precedence and the exported authenticated-401 error identity', async () => {
+    window.sessionStorage.setItem(sessionKey, JSON.stringify(stored()));
+    const request = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ success: false, message: 'message-first', error: 'secondary' }, 400))
+      .mockResolvedValueOnce(jsonResponse({ success: false, error: 'error-only' }, 403))
+      .mockResolvedValueOnce(new Response('not-json', { status: 502 }))
+      .mockResolvedValueOnce(jsonResponse({ success: false }, 401));
+    const session = await connectDfSheetReview({ projectId, fetch: request });
+    await expect(session!.listPages()).rejects.toThrow('message-first');
+    await expect(session!.listPages()).rejects.toThrow('error-only');
+    await expect(session!.listPages()).rejects.toThrow('df-sheet request failed (502 /api/review/pages).');
+    await expect(session!.listPages()).rejects.toBeInstanceOf(DfSheetReviewSessionExpiredError);
+  });
+
+  it('preserves multipart fields without a JSON content type', async () => {
+    window.sessionStorage.setItem(sessionKey, JSON.stringify(stored()));
+    const request = vi.fn<typeof fetch>(async (url, init) => {
+      expect(String(url)).toBe('https://sheet.example/api/review/attachments');
+      const headers = new Headers(init?.headers);
+      expect(headers.get('Authorization')).toBe('Bearer mock-token');
+      expect(headers.get('Accept')).toBe('application/json');
+      expect(headers.has('Content-Type')).toBe(false);
+      const form = init!.body as FormData;
+      expect(form.get('name')).toBe('capture.png');
+      expect(form.get('mime')).toBe('image/png');
+      expect(form.get('kind')).toBe('capture');
+      expect(form.get('item_id')).toBe('item-1');
+      expect(form.get('metadata')).toBe('{"origin":"mock"}');
+      expect((form.get('file') as File).size).toBe(3);
+      return jsonResponse({ success: true, data: { id: 'asset-1', url: '/asset.png' } });
+    });
+    const session = await connectDfSheetReview({ projectId, baseUrl: 'https://sheet.example///', fetch: request });
+    const adapter = session!.createAdapter({ pageId: 'page-1' });
+    await expect(adapter.uploadAttachment!({
+      file: new File(['png'], 'capture.png', { type: 'image/png' }), kind: 'capture',
+      item: { id: 'item-1' } as import('./types').ReviewItem, metadata: { origin: 'mock' },
+    })).resolves.toEqual({ id: 'asset-1', url: '/asset.png' });
+  });
+
+  it('shares in-flight lists, resolves external IDs, and retries after a rejected list', async () => {
+    window.sessionStorage.setItem(sessionKey, JSON.stringify(stored()));
+    let resolve!: (response: Response) => void;
+    const request = vi.fn<typeof fetch>()
+      .mockImplementationOnce(() => new Promise<Response>((done) => { resolve = done; }))
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce(jsonResponse({ success: true, data: [] }));
+    const session = await connectDfSheetReview({ projectId, fetch: request });
+    const adapter = session!.createAdapter({ pageId: 'page-1' });
+    const first = adapter.list({ projectId, routeKey: '/story', normalizedPath: '/ignored' });
+    const second = adapter.list({ projectId, normalizedPath: '/story' });
+    expect(first).toBe(second);
+    const found = adapter.get!('external-1');
+    resolve(jsonResponse({ success: true, data: [{ id: 'item-1', externalIssueId: 'external-1' }] }));
+    await first;
+    await expect(found).resolves.toMatchObject({ id: 'item-1' });
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(String(request.mock.calls[0][0])).toContain('page_id=page-1&route_key=%2Fstory');
+    await expect(adapter.list({ projectId })).rejects.toThrow('offline');
+    await expect(adapter.list({ projectId })).resolves.toEqual([]);
+    expect(request).toHaveBeenCalledTimes(3);
+  });
+});

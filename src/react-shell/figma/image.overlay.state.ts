@@ -1,5 +1,5 @@
 import type { ReviewFigmaRouteTarget } from '../../figma/image.types';
-import { createReviewFigmaImageTargetKey } from './image.controller';
+import { createReviewFigmaImageTargetKey } from '../../figma/image.target';
 
 // Route별 overlay 선택과 편집값을 브라우저 세션 사이에도 복원한다.
 const STORAGE_KEY_PREFIX = 'df-review-figma-image-overlay-state:';

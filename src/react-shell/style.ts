@@ -2,6 +2,7 @@ import { reviewShellBaseStyle } from './style/base';
 import { reviewShellSitemapStyle } from './style/sitemap';
 import { reviewShellModalStyle } from './style/modals';
 import { reviewShellToolbarStyle } from './style/toolbar';
+import { reviewShellCustomPanelStyle } from './custom-panels/style';
 import { reviewShellQaPanelStyle } from './style/qa-panel';
 import { reviewShellFigmaImagesStyle } from './style/figma-images';
 import { reviewShellStageStyle } from './style/stage';
@@ -21,7 +22,8 @@ export function ensureReviewShellStyle() {
       reviewShellSitemapStyle,
       reviewShellModalStyle,
       reviewShellToolbarStyle,
-      reviewShellQaPanelStyle,
+      // These adjacent fragments shared one stylesheet; keep their exact boundary.
+      reviewShellCustomPanelStyle + reviewShellQaPanelStyle,
       reviewShellFigmaImagesStyle,
       reviewShellStageStyle,
       reviewShellSourceInspectorStyle,

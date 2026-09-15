@@ -40,22 +40,26 @@ The Supabase coverage uses an in-memory PostgREST/RPC mock. It does not contact 
 Colocated `*.test.ts` and `*.test.tsx` files cover the runtime contracts that
 refactors depend on:
 
+- `src/design-inspector/target.events.test.ts`: current-mode event policy, native touch pointerdown, and document/window/viewport/font listener cleanup.
+- `src/design-inspector/inspector.test.ts`: rendering, selection, source resolution, iframe rebind, pending source-open invalidation and observer/session teardown.
 - `src/core/web.review.kit.app.test.ts`: the interaction-layer host stays fixed to the viewport without blocking pointer events globally.
 - `src/core/geometry.test.ts`: coordinate conversion (host/target spaces), clamping, selection shapes, popover placement.
 - `src/core/hotkey.test.ts`: hotkey matching with modifiers, Korean IME key aliases, physical key-code fallback, and editable-target blocking including `<select>`.
 - `src/core/location.test.ts`: page URL building and review-internal query param stripping.
 - `src/core/review/scope.test.ts`: viewport preset matching, scope inference, and item numbering/draft labels.
 - `src/react-shell/route.test.ts`: shell URL updates preserve the current hash while changing target or selected QA item.
-- `src/react-shell/figma/image.overlay.controller.test.tsx`: unchanged image-list refreshes do not rewrite overlay state in localStorage.
+- `src/react-shell/figma/use.image.overlay.test.tsx`: unchanged image-list refreshes do not rewrite overlay state in localStorage.
 - `src/react-shell/sitemap/tree.test.ts`: status filters use OR with each other, AND with search, and return flat full-path page rows.
 - `src/react-shell/sitemap/modal.test.tsx`: closing and reopening the sitemap preserves search and status-filter state.
 - `src/figma/parse.test.ts`: Figma URL/node-ref parsing, including non-figma host rejection.
-- `src/vite/figma-asset.test.ts`: asset storage key validation, including path traversal rejection, and mime/format helpers.
+- `src/figma/image.asset.test.ts`: shared storage-key validation and MIME/format helpers.
+- `src/figma/image.target.test.ts`: persisted store/overlay key formats and existing client-store re-exports.
+- `src/vite/figma-asset.test.ts`: server asset pathname decoding, including encoded traversal rejection.
 - `src/vite/figma-image-store.server.test.ts`: dev middleware request guards — cross-origin (CSRF) rejection, JSON content-type enforcement, body size limit.
 - `src/vite/figma-image-store.image.test.ts`: image store mutation lock ordering, lost-update prevention, and atomic data-file writes.
-- `src/react-shell/source.open.test.ts`: repeated same-source element indexing (`#i/n`) and the per-call document scan cache.
+- `src/react-shell/source-tree/source.open.test.ts`: repeated same-source element indexing (`#i/n`) and the per-call document scan cache.
 
-Security-relevant behavior (figma.com host allowlist, asset path traversal guard) is pinned by these tests; keep them green when touching `src/figma/parse.ts` or `src/vite/figma-asset.ts`.
+Security-relevant behavior (figma.com host allowlist, asset path traversal guard) is pinned by these tests; keep them green when touching `src/figma/parse.ts`, `src/figma/image.asset.ts`, or `src/vite/figma-asset.ts`.
 
 ## When to Add Tests
 
@@ -110,3 +114,178 @@ site. See [Custom panels](custom-panels.md) for the integration contract.
 On Node 26, if experimental native web storage shadows jsdom and existing tests
 fail on `localStorage`, run `NODE_OPTIONS=--no-experimental-webstorage pnpm test`.
 This is a test-process workaround, not an application setting.
+
+Source selection cleanup coverage:
+
+- `src/react-shell/source-tree/source.selection.events.test.ts`: Alt/Option,
+  Escape/blur, font deduplication, first Figma click hit-testing, Design Inspector
+  exclusion, composer/outside focus policy, and old document/host listener disposal.
+
+Source Tree observation and action coverage:
+
+- `src/react-shell/source-tree/use.outline.observation.test.tsx`: initial rAF and
+  120/500/1200ms retries, late DOM, 80ms mutation debounce, close/reload/unmount
+  cancellation and observer disposal.
+- `src/react-shell/source-tree/use.section.outline.test.tsx`: filter/collapse,
+  late focus path surviving retries, frame reset and DOM adjustment → QA handoff.
+  Both hooks are real; shell contexts/controller and canvas rasterization boundary
+  are test doubles. Apply the documented Node 26 workaround if webstorage fails.
+
+Figma import UI coverage:
+
+- `src/react-shell/figma/images.import.test.tsx`: Figma vs image URL routing,
+  successful/null mutation draft handling, file label/drop state, error precedence
+  and status placement, and loading/mutation guards. Asset decoding is mocked
+  at the existing helper boundary; real decoding is a local browser fixture check.
+
+- `src/react-shell/figma/images.panel.test.tsx`: row Enter/blur/Escape and
+  duplicate-save guards, single active editor, pointer threshold/order changes,
+  post-drag click suppression, mutation/edit/interactive-target guards.
+
+Core item/attachment orchestration coverage:
+
+- `src/core/web.review.kit.app.operations.test.ts`: real app actions through a
+  stubbed view boundary; required upload errors, best-effort automatic upload,
+  manual capture retry/current-draft merge, capture/submit guards through async
+  completion, owner metadata and preview disposal. Adapters/capture are mocks;
+  this does not cover real storage uploads or browser image capture.
+
+Vite locator coverage:
+
+- `src/vite/review-locator.mode.test.ts`: serve/build opt-in and editor-link gates.
+- `src/vite/locator.transform.test.ts`: public-plugin AST/data annotations,
+  explicit hints, line preservation, matching, and generated JSX runtime source
+  propagation/wrapper cleanup. Vitest's VM cannot dynamically import via
+  `new Function`; this file substitutes only that loader with the real TypeScript
+  module. Validate the unmodified dynamic loader separately against built
+  ESM/CJS when changing plugin module boundaries.
+
+
+Df-sheet session and adapter coverage:
+
+- `src/df-sheet.test.ts`: cached-session expiry skew, selected-page validation,
+  callback/state/project checks, SHA-256 PKCE challenge, logout/disconnect,
+  request errors/401 identity, multipart fields and in-flight list/retry behavior.
+  Fetch and storage are mocks; no real login or remote writes.
+
+## Sequence 8 final regression — 2026-09-12
+
+Validated `70bd8ab` after steps 01–14; step 15 changes documentation only.
+Original baseline is `dab969b`. Reproduction scripts, raw logs, JSON inventories
+and screenshots are under the local artifact directory
+`~/Shared/AgentFiles/df-web-review-kit/`, prefixed `step-52-`.
+
+| Check | Result |
+|---|---|
+| `pnpm typecheck`, `pnpm typecheck:dev` | Pass |
+| `pnpm lint:dead-code` | Pass |
+| `pnpm test` with default Node 26 | 4 files failed; 15 failed / 345 passed tests |
+| `NODE_OPTIONS=--no-experimental-webstorage pnpm test` | 70 files / 360 tests passed |
+| `pnpm build` (library + CLI) | Pass |
+| `VITE_REVIEW_SUPABASE_URL= VITE_REVIEW_SUPABASE_ANON_KEY= pnpm build:dev` | Pass; >500 kB main-chunk warning remains |
+| `npm pack --dry-run --json` | Pass; all 20 exports/bin target paths included |
+
+Default-test failures arise from native Node web storage shadowing jsdom;
+cleanup failures follow that missing storage setup. Preserve the original failure
+log; the successful workaround run is not a default-environment pass.
+Jsdom also logs its unsupported full-document navigation in redirect tests.
+Pack dry-run invokes prepare/build and prints lifecycle logs before JSON;
+`step-52-pack-manifest.json` is the parsed manifest, the raw output is retained.
+No tarball install test or publish was performed.
+
+### Local browser evidence
+
+Fresh Chrome profiles, local-only dev/isolated fixtures:
+
+- Design Inspector: pick/browse, Alt comparison, native touch scroll, stale-source
+  cancellation, iframe reload and listener cleanup at 0.5/1 scale.
+- Source selection: font hints, Alt/Option, Escape/blur, exclusion, reload,
+  blocked/unmount cleanup. Isolated fixture uses host-context doubles.
+- Figma: row rename/cancel/blur, pointer reorder/click suppression, mock-store
+  refresh and opacity/offset/lock/visible/invert. Earlier step-46 artifacts retain
+  URL/file import and preview checks; these were not rerun as browser import E2E
+  in step 15 (their unit tests ran in the full suite).
+- Core composer, QA, custom panel and populated Figma widget screenshots at
+  390/1440px. Sixteen repeated fixture PNGs match the previous step results.
+  That is comparison against the previous verified fixtures, not a claim that
+  every app screen was compared directly against the original baseline.
+- Custom-panel regression: all eight check groups/four viewport presets passed
+  on retry, including reload/navigation/old-container detachment. First attempt
+  timed out loading the standalone editor; cause is unconfirmed and its log is
+  retained. No product fix or claim of reliable first-run loading.
+- Real local adapter: Source Tree filter/collapse/select → DOM QA → save →
+  full-page reload retains the comment; localStorage only, zero page errors or
+  attempted external requests. Screenshots visually inspected.
+
+### Open observations and limits
+
+- Step-49 iframe reload once encountered null `documentElement` in
+  `target/target.ts`. It was not changed or fixed; later successful runs do not
+  resolve this observation. Step-52 standalone-editor timeout is separate.
+- GC remains **inconclusive**: three old panel containers detached, zero observed
+  collected. This is not proof of absence of leaks.
+- Step-49 QA 390px before/after difference of one pixel and step-46 error-screen
+  difference of seven pixels remain in original artifacts. Current repeated
+  screenshots do not erase those observations.
+- Local fixture favicon 404 messages remain; no product page exceptions in the
+  successful asserted flows. Dev main-chunk size warning remains.
+- Real df-sheet login, Supabase writes, Figma remote imports, deployed browsers,
+  cross-browser coverage and packed-package installation were not tested.
+  No dependency addition, push, release, deployment or Todo approval occurred.
+
+## Screen-sharing capture pilot
+
+Settings stores the capture method per origin: Browser (default) or html2canvas.
+There is no entry popup. With Browser selected, Element/Area first request
+sharing before changing selection mode; failure leaves the existing mode/draft
+unchanged. An active session is reused. The bottom monitor can also start sharing. Without active sharing, captures fall back to html2canvas.
+Selecting html2canvas stops sharing and hides the monitor control. Capturing or
+saving an issue never opens a sharing picker.
+Choose the current Review tab. The pilot uses Capture Handle verification and
+requires a browser that supports it (Chrome). Other tabs/windows are rejected.
+The active stream is reused by both manual and automatic captures across target
+iframe navigation/reloads. **Stop sharing**, browser stop, shell unmount, or a
+full Review-page reload ends it. Sharing failure opens an error dialog with retry and close actions. Stop
+sharing switches later captures to html2canvas until sharing is started again.
+Starting sharing from the bottom toolbar alone does not take a screenshot.
+
+While sharing is active, captures use a PNG frame from `getDisplayMedia`, cropped
+using the iframe's current position/scale and resized to the target CSS pixel
+dimensions (1×), including on Retina displays. Only visible pixels can be captured;
+keep the target unobscured and fit it inside the shell viewport. Inactive sharing,
+clipped areas, or capture failures use the existing html2canvas path. Failure
+fallbacks include `captureFallbackReason`; `captureRenderer` identifies the result.
+Screen sharing remains active between screenshots, but frames are only encoded
+when a capture is requested. This does not record a continuous video.
+
+Focused tests: `screen.capture.test.ts` covers stream reuse/stop, wrong-tab
+rejection, late permission results after disposal, crop geometry after movement,
+and clipped target rejection. A live Lexus test must additionally verify the
+browser picker, actual fonts, and target navigation; mocked tests do not prove
+screen-capture fidelity.
+
+Pilot status (2026-09-14): package suite passed 365 tests before the additional
+iframe-replacement regression; the focused set now passes 8 tests. Package and
+Lexus type checks passed. Real Chrome startup remains unverified: both the pilot
+and a minimal local `getDisplayMedia({video:true,audio:false})` diagnostic return
+`InvalidStateError: Invalid state` before the picker. The pilot reported focus,
+transient user activation, and top-level context as true. Removing the optional
+current-tab picker preference did not resolve it. Do not treat these mocked tests
+as proof of a working screen-sharing session or typography fidelity.
+
+Follow-up (2026-09-15): manual sharing succeeded in the Lexus pilot; a PNG
+attachment was generated and sharing survived Refresh target. Local Lexus upload
+was unavailable, so saved-image text fidelity remains unverified. Default
+first-capture sharing and 1× Retina output pass the focused 9-test suite; the
+new automatic picker flow still needs a live user sharing check.
+
+Capture setup follow-up: permission is requested before writing rather than during
+capture/save. Escape in an open native dialog preserves the QA draft. Session,
+setup, and draft orchestration regressions pass (17 tests).
+
+Settings follow-up: entry setup was replaced by a persisted capture preference.
+Permission remains explicit through the monitor button. Settings/session/draft
+regressions pass (22 tests).
+
+Element/Area sharing activation is covered for successful, pending, canceled,
+and html2canvas selections; focused toolbar/session/draft tests pass (19 tests).

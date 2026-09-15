@@ -1,6 +1,5 @@
 import {
   type CSSProperties,
-  type DragEvent,
   type MouseEvent,
   type PointerEvent,
   useRef,
@@ -9,36 +8,25 @@ import {
 import {
   ExternalLink as ExternalLinkIcon,
   MoveVertical as OffsetYIcon,
-  Pencil as PencilIcon,
-  Plus as PlusIcon,
-  RefreshCw as RefreshCwIcon,
-  Trash2 as TrashIcon,
-  X as XIcon,
 } from 'lucide-react';
 import type {
   ReviewFigmaImage,
   ReviewFigmaImageAssetInput,
 } from '../../figma/image.types';
-import {
-  createReviewImageAssetFromFile,
-  createReviewImageAssetFromUrl,
-  isReviewImageUrl,
-} from '../../figma/image.import';
 import type {
   ReviewFigmaImageOverlayItemState,
-} from './image.overlay.controller';
+} from './use.image.overlay';
 import {
   DEFAULT_FIGMA_IMAGE_LAYER_STATE,
-  formatFigmaImageDate,
   getFigmaImageLabel,
-  getFigmaImageLayerStatusLabel,
-  getPointerFigmaImageTargetId,
-  getReorderedFigmaImageIds,
   getSnappedOpacityPercent,
-  isInteractiveFigmaImageTarget,
 } from './image-panel.utils';
-import { FigmaImageLayerStateButtons } from './layer-state-buttons';
+import { FigmaImageRow, useFigmaImageRowEditing } from './image.row';
+import { useFigmaImageReorder } from './use.image.reorder';
 import { ReviewSpinner } from '../review/spinner';
+
+import { FigmaImagesImport } from './images.import';
+import { FigmaImagePreviewModal } from './image.preview';
 
 const FIGMA_IMAGE_OPACITY_SLIDER_THUMB_RADIUS = 6;
 
@@ -90,22 +78,10 @@ export const FigmaImagesPanel = ({
   onToggleImageOverlayVisible,
   onUpdateImage,
 }: FigmaImagesPanelProps) => {
-  const [figmaUrlDraft, setFigmaUrlDraft] = useState('');
-  const [importError, setImportError] = useState('');
-  const [isImportDragActive, setIsImportDragActive] = useState(false);
-  const [editingImageId, setEditingImageId] = useState<string | null>(null);
-  const [editingLabelDraft, setEditingLabelDraft] = useState('');
-  const [draggingImageId, setDraggingImageId] = useState<string | null>(null);
-  const [dragOverImageId, setDragOverImageId] = useState<string | null>(null);
+  const editing = useFigmaImageRowEditing(images, onUpdateImage, onSelectImage);
+  const reorder = useFigmaImageReorder(images, isMutating, onReorderImages, onSelectImage);
   const [previewImageId, setPreviewImageId] = useState<string | null>(null);
-  const pointerDragImageIdRef = useRef<string | null>(null);
-  const pointerDragTargetIdRef = useRef<string | null>(null);
-  const pointerDragStartRef = useRef<{ x: number; y: number } | null>(null);
-  const pointerDragDidMoveRef = useRef(false);
   const opacityDragPointerIdRef = useRef<number | null>(null);
-  const labelEditCancelRef = useRef(false);
-  const labelInputFocusedImageIdRef = useRef<string | null>(null);
-  const labelEditFinishedImageIdRef = useRef<string | null>(null);
   const [offsetYDraftByImageId, setOffsetYDraftByImageId] = useState<
     Record<string, string>
   >({});
@@ -133,55 +109,7 @@ export const FigmaImagesPanel = ({
     ? offsetYDraftByImageId[selectedImage.id] ??
       String(selectedOverlayState.offsetY)
     : '';
-  const statusText = importError || error;
   const progressText = isMutating ? 'Saving...' : isLoading ? 'Loading...' : '';
-  const draggingImageIndex = draggingImageId
-    ? images.findIndex((image) => image.id === draggingImageId)
-    : -1;
-  const addImageSource = async (source: string, file?: File) => {
-    setImportError('');
-    try {
-      const asset = file
-        ? await createReviewImageAssetFromFile(file)
-        : isReviewImageUrl(source)
-          ? await createReviewImageAssetFromUrl(source)
-          : undefined;
-      const image = await onAddImage(
-        source,
-        file?.name.replace(/\.[^.]+$/, ''),
-        asset
-      );
-      if (image) setFigmaUrlDraft('');
-    } catch (addError) {
-      setImportError(
-        addError instanceof Error ? addError.message : 'Image import failed.'
-      );
-    }
-  };
-  const handleImageFileDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsImportDragActive(false);
-    const file = event.dataTransfer.files[0];
-    if (!file) return;
-    void addImageSource(file.name, file);
-  };
-  const finishEditingImageLabel = (
-    imageId: string,
-    currentLabel: string
-  ) => {
-    if (labelEditFinishedImageIdRef.current === imageId) return;
-
-    labelEditFinishedImageIdRef.current = imageId;
-    labelInputFocusedImageIdRef.current = null;
-    const nextLabel = editingLabelDraft;
-    setEditingImageId(null);
-    setEditingLabelDraft('');
-    if (nextLabel === currentLabel) return;
-
-    void onUpdateImage(imageId, {
-      label: nextLabel,
-    });
-  };
   const updateSelectedImageOpacity = (value: string) => {
     if (!selectedImage) return;
     const opacityPercent = Math.max(
@@ -234,84 +162,15 @@ export const FigmaImagesPanel = ({
     <aside
       className="df-review-figma-images-panel"
       aria-hidden={!isListVisible}
-      onPointerDownCapture={(event) => {
-        if (
-          !editingImageId ||
-          (event.target instanceof Element &&
-            event.target.closest('.df-review-figma-image-label-input'))
-        ) {
-          return;
-        }
-
-        const editingImage = images.find((image) => image.id === editingImageId);
-        if (!editingImage) return;
-        finishEditingImageLabel(editingImage.id, editingImage.label ?? '');
-      }}
+      onPointerDownCapture={editing.onPanelPointerDownCapture}
     >
-      <form
-        className="df-review-figma-image-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void addImageSource(figmaUrlDraft);
-        }}
+      <FigmaImagesImport
+        error={error}
+        isLoading={isLoading}
+        isMutating={isMutating}
+        onAddImage={onAddImage}
+        onRefreshImages={onRefreshImages}
       >
-        <div className="df-review-figma-images-header">
-          <div className="df-review-figma-images-title">
-            <strong>Figma</strong>
-          </div>
-          <button
-            aria-label="Refresh Figma images"
-            className="df-review-figma-image-header-button"
-            data-review-tooltip="Refresh Figma images"
-            disabled={isLoading || isMutating}
-            title="Refresh"
-            type="button"
-            onClick={() => void onRefreshImages()}
-          >
-            <RefreshCwIcon aria-hidden="true" />
-          </button>
-        </div>
-        <div
-          className={`df-review-figma-image-url-row${
-            isImportDragActive ? ' is-drag-active' : ''
-          }`}
-          onDragEnter={(event) => {
-            event.preventDefault();
-            setIsImportDragActive(true);
-          }}
-          onDragLeave={(event) => {
-            if (event.currentTarget.contains(event.relatedTarget as Node)) return;
-            setIsImportDragActive(false);
-          }}
-          onDragOver={(event) => {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = 'copy';
-          }}
-          onDrop={handleImageFileDrop}
-        >
-          <input
-            aria-label="Figma or image URL"
-            autoComplete="off"
-            placeholder="Figma or image URL · drop image"
-            required
-            spellCheck={false}
-            value={figmaUrlDraft}
-            onChange={(event) => {
-              setImportError('');
-              setFigmaUrlDraft(event.currentTarget.value);
-            }}
-          />
-          <button
-            aria-label="Add Figma image"
-            data-review-tooltip="Add Figma image"
-            disabled={isMutating || figmaUrlDraft.trim().length === 0}
-            type="submit"
-          >
-            <PlusIcon aria-hidden="true" />
-          </button>
-        </div>
-      </form>
-
       <div
         aria-label="Selected Figma image layer controls"
         className="df-review-figma-image-selected-controls"
@@ -436,16 +295,7 @@ export const FigmaImagesPanel = ({
           )}
         </div>
       </div>
-
-      {statusText && (
-        <p
-          className={`df-review-figma-image-status${
-            error ? ' is-error' : ''
-          }`}
-        >
-          {statusText}
-        </p>
-      )}
+      </FigmaImagesImport>
 
       <div className="df-review-figma-image-list">
         {progressText && (
@@ -463,208 +313,23 @@ export const FigmaImagesPanel = ({
         {images.length === 0 && !isLoading && !isMutating && (
           <p className="df-review-empty">No Figma images on this viewport.</p>
         )}
-        {images.map((image, index) => {
-          const imageLabel = getFigmaImageLabel(image, index);
-          const overlayState =
-            imageOverlayStates[image.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE;
-          const isDragging = draggingImageId === image.id;
-          const isDropTarget =
-            dragOverImageId === image.id && draggingImageId !== image.id;
-          const isDropBefore = isDropTarget && draggingImageIndex > index;
-          const isDropAfter =
-            isDropTarget && draggingImageIndex >= 0 && draggingImageIndex < index;
-
-          return (
-            <article
-              data-figma-image-id={image.id}
-              className={`df-review-figma-image-card${
-                image.id === selectedImageId ? ' is-active' : ''
-              }${editingImageId === image.id ? ' is-editing' : ''}${
-                isDragging ? ' is-dragging' : ''
-              }${isDropTarget ? ' is-drop-target' : ''}${
-                isDropBefore ? ' is-drop-before' : ''
-              }${isDropAfter ? ' is-drop-after' : ''}`}
-              key={image.id}
-              onClick={() => {
-                if (pointerDragDidMoveRef.current) {
-                  pointerDragDidMoveRef.current = false;
-                  return;
-                }
-                onSelectImage(image.id);
-              }}
-              onPointerCancel={() => {
-                pointerDragImageIdRef.current = null;
-                pointerDragTargetIdRef.current = null;
-                pointerDragStartRef.current = null;
-                setDraggingImageId(null);
-                setDragOverImageId(null);
-              }}
-              onPointerDown={(event: PointerEvent<HTMLElement>) => {
-                if (
-                  event.button !== 0 ||
-                  isMutating ||
-                  editingImageId === image.id ||
-                  isInteractiveFigmaImageTarget(event.target)
-                ) {
-                  return;
-                }
-
-                pointerDragImageIdRef.current = image.id;
-                pointerDragTargetIdRef.current = null;
-                pointerDragStartRef.current = {
-                  x: event.clientX,
-                  y: event.clientY,
-                };
-                pointerDragDidMoveRef.current = false;
-                event.currentTarget.setPointerCapture(event.pointerId);
-              }}
-              onPointerMove={(event) => {
-                const sourceImageId = pointerDragImageIdRef.current;
-                const dragStart = pointerDragStartRef.current;
-                if (!sourceImageId || !dragStart) return;
-
-                const hasMoved =
-                  Math.abs(event.clientX - dragStart.x) +
-                    Math.abs(event.clientY - dragStart.y) >
-                  6;
-                if (!hasMoved) return;
-
-                pointerDragDidMoveRef.current = true;
-                setDraggingImageId(sourceImageId);
-                const targetImageId = getPointerFigmaImageTargetId(event);
-                pointerDragTargetIdRef.current =
-                  targetImageId && targetImageId !== sourceImageId
-                    ? targetImageId
-                    : null;
-                setDragOverImageId(pointerDragTargetIdRef.current);
-              }}
-              onPointerUp={(event) => {
-                const sourceImageId = pointerDragImageIdRef.current;
-                const targetImageId = pointerDragTargetIdRef.current;
-                pointerDragImageIdRef.current = null;
-                pointerDragTargetIdRef.current = null;
-                pointerDragStartRef.current = null;
-                setDraggingImageId(null);
-                setDragOverImageId(null);
-                if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-                  event.currentTarget.releasePointerCapture(event.pointerId);
-                }
-                if (
-                  !sourceImageId ||
-                  !targetImageId ||
-                  sourceImageId === targetImageId
-                ) {
-                  return;
-                }
-
-                const nextImageIds = getReorderedFigmaImageIds(
-                  images,
-                  sourceImageId,
-                  targetImageId
-                );
-                void onReorderImages(nextImageIds);
-              }}
-            >
-              <FigmaImageLayerStateButtons
-                imageLabel={imageLabel}
-                overlayState={overlayState}
-                title={getFigmaImageLayerStatusLabel(overlayState)}
-                onSelect={() => onSelectImage(image.id)}
-                onToggleLocked={() => onToggleImageOverlayLocked(image.id)}
-                onToggleMode={() => onToggleImageOverlayMode(image.id)}
-                onToggleVisible={() => onToggleImageOverlayVisible(image.id)}
-              />
-              <div className="df-review-figma-image-card-main">
-                {editingImageId === image.id ? (
-                  <input
-                    aria-label="Selected Figma image label"
-                    autoComplete="off"
-                    autoFocus
-                    className="df-review-figma-image-label-input"
-                    disabled={isMutating}
-                    placeholder="Label"
-                    ref={(element) => {
-                      if (
-                        !element ||
-                        labelInputFocusedImageIdRef.current === image.id
-                      ) {
-                        return;
-                      }
-
-                      labelInputFocusedImageIdRef.current = image.id;
-                      element.focus();
-                      element.select();
-                    }}
-                    spellCheck={false}
-                    value={editingLabelDraft}
-                    onBlur={() => {
-                      if (labelEditCancelRef.current) {
-                        labelEditCancelRef.current = false;
-                        labelInputFocusedImageIdRef.current = null;
-                        labelEditFinishedImageIdRef.current = image.id;
-                        setEditingImageId(null);
-                        setEditingLabelDraft('');
-                        return;
-                      }
-
-                      finishEditingImageLabel(image.id, image.label ?? '');
-                    }}
-                    onChange={(event) =>
-                      setEditingLabelDraft(event.currentTarget.value)
-                    }
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault();
-                        event.currentTarget.blur();
-                        return;
-                      }
-
-                      if (event.key === 'Escape') {
-                        labelEditCancelRef.current = true;
-                        event.currentTarget.blur();
-                      }
-                    }}
-                  />
-                ) : (
-                  <strong>{imageLabel}</strong>
-                )}
-                <small>{formatFigmaImageDate(image.updatedAt)}</small>
-              </div>
-              <div className="df-review-figma-image-card-actions">
-                <button
-                  aria-label={`Edit ${imageLabel} label`}
-                  className="df-review-figma-image-icon-button"
-                  disabled={isMutating}
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onSelectImage(image.id);
-                    labelEditCancelRef.current = false;
-                    labelInputFocusedImageIdRef.current = null;
-                    labelEditFinishedImageIdRef.current = null;
-                    setEditingImageId(image.id);
-                    setEditingLabelDraft(image.label ?? '');
-                  }}
-                >
-                  <PencilIcon aria-hidden="true" />
-                </button>
-                <button
-                  aria-label="Delete Figma image"
-                  className="df-review-figma-image-icon-button is-danger"
-                  disabled={isMutating}
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    void onDeleteImage(image.id);
-                  }}
-                >
-                  <TrashIcon aria-hidden="true" />
-                </button>
-              </div>
-            </article>
-          );
-        })}
+        {images.map((image, index) => (
+          <FigmaImageRow
+            key={image.id}
+            image={image}
+            index={index}
+            overlayState={imageOverlayStates[image.id] ?? DEFAULT_FIGMA_IMAGE_LAYER_STATE}
+            selectedImageId={selectedImageId}
+            isMutating={isMutating}
+            editing={editing}
+            reorder={reorder}
+            onSelectImage={onSelectImage}
+            onDeleteImage={onDeleteImage}
+            onToggleImageOverlayLocked={onToggleImageOverlayLocked}
+            onToggleImageOverlayMode={onToggleImageOverlayMode}
+            onToggleImageOverlayVisible={onToggleImageOverlayVisible}
+          />
+        ))}
       </div>
       {previewImage && (
         <FigmaImagePreviewModal
@@ -674,68 +339,5 @@ export const FigmaImagesPanel = ({
         />
       )}
     </aside>
-  );
-};
-
-interface FigmaImagePreviewModalProps {
-  image: ReviewFigmaImage;
-  label: string;
-  onClose: () => void;
-}
-
-const FigmaImagePreviewModal = ({
-  image,
-  label,
-  onClose,
-}: FigmaImagePreviewModalProps) => {
-  const isExternalSource = /^https?:\/\//i.test(image.figmaUrl);
-  const isFigmaSource = Boolean(image.fileKey && image.nodeId);
-  return (
-    <div
-      aria-label={`${label} Figma image preview`}
-      aria-modal="true"
-      className="df-review-prompt-modal"
-      role="dialog"
-    >
-      <button
-        aria-label="Close Figma image preview"
-        className="df-review-prompt-backdrop"
-        type="button"
-        onClick={onClose}
-      />
-      <div className="df-review-prompt-dialog df-review-figma-image-preview-dialog">
-        <div className="df-review-figma-image-preview-header">
-          <input
-            aria-label="Figma URL"
-            readOnly
-            spellCheck={false}
-            value={image.figmaUrl}
-          />
-          {isExternalSource && (
-            <a
-              aria-label={`Open ${label} source`}
-              className="df-review-figma-image-preview-link"
-              href={image.figmaUrl}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <span>{isFigmaSource ? 'Open Figma' : 'Open Image'}</span>
-              <ExternalLinkIcon aria-hidden="true" />
-            </a>
-          )}
-          <button
-            aria-label="Close Figma image preview"
-            className="df-review-figma-image-preview-close"
-            type="button"
-            onClick={onClose}
-          >
-            <XIcon aria-hidden="true" />
-          </button>
-        </div>
-        <div className="df-review-figma-image-preview-scroll">
-          <img alt={label} src={image.imageUrl} />
-        </div>
-      </div>
-    </div>
   );
 };

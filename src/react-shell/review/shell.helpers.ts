@@ -2,7 +2,7 @@ import { clamp } from '../../core/geometry';
 import { runWithAutoScrollBehavior } from '../../core/scroll';
 import type { ReviewMode } from '../../types';
 import type { ReviewShellWriteMode } from '../types';
-import type { SectionOutlineEntry } from '../section.outline';
+import type { SectionOutlineEntry } from '../source-tree/section.outline';
 
 export const getReviewModeWriteMode = (
   mode: ReviewMode

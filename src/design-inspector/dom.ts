@@ -6,3 +6,11 @@ export function isElement(target: EventTarget | null | undefined): target is Ele
 export function isShadowRoot(node: Node): node is ShadowRoot {
   return node.nodeType === 11 && 'host' in node;
 }
+
+export function appendText(parent: Element, tag: string, text: string, className = '') {
+  const node = parent.ownerDocument.createElement(tag);
+  node.textContent = text;
+  node.className = className;
+  parent.append(node);
+  return node;
+}

@@ -4,6 +4,7 @@ import {
 } from 'react';
 import { useReviewFigmaImagesState } from '../figma/images.context';
 import { buildTargetSrc } from '../route';
+import { ScreenCaptureControl } from './screen.capture.control';
 import { ReviewModeToolbar } from '../review/mode.toolbar';
 import { useReviewShellActions } from '../store/shell.actions.context';
 import { useReviewShellRefs } from '../store/shell.refs';
@@ -92,6 +93,7 @@ export const ReviewTargetFrame = () => {
             mode={mode}
             onSetReviewMode={setReviewMode}
           />
+          <ScreenCaptureControl />
         </div>
       </div>
     </main>

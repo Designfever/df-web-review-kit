@@ -8,6 +8,8 @@ import type { Options as Html2CanvasOptions } from 'html2canvas';
 import { getErrorMessage } from '../../core/error';
 import { normalizeUnsupportedColorFunctions } from './capture.color';
 
+import { screenCaptureSessions } from './screen.capture';
+
 const CAPTURE_MIME = 'image/webp';
 const CAPTURE_QUALITY = 0.86;
 const CAPTURE_ACCENT = '#d7ff5f';
@@ -31,6 +33,20 @@ export async function captureIframeViewport(
   const scale = 1;
   const errors: string[] = [];
 
+  try {
+    const screen = await screenCaptureSessions.get(frame)?.capture(frame, viewport, region);
+    if (screen) {
+      return {
+        file: await canvasToBlob(screen, 'image/png'),
+        name: `b-${formatCaptureTimestamp(input.timestamp)}.png`,
+        mime: 'image/png', width: screen.width, height: screen.height,
+        metadata: { captureRenderer: 'getDisplayMedia', captureScale: 1, captureTarget: region ? 'selection' : 'viewport' },
+      };
+    }
+  } catch (error) {
+    errors.push(`screen capture: ${getCaptureErrorMessage(error)}`);
+  }
+
   if (region) {
     try {
       return await createHtml2CanvasCapture(
@@ -39,7 +55,8 @@ export async function captureIframeViewport(
         viewport,
         scale,
         input,
-        region
+        region,
+        errors.join(' | ')
       );
     } catch (error) {
       throw new Error(
@@ -54,7 +71,9 @@ export async function captureIframeViewport(
       targetWindow,
       viewport,
       scale,
-      input
+      input,
+      undefined,
+      errors.join(' | ')
     );
   } catch (error) {
     errors.push(`html2canvas: ${getCaptureErrorMessage(error)}`);
@@ -78,7 +97,7 @@ export async function captureIframeViewport(
 
   return {
     file: svgFile,
-    name: `review-capture-${formatCaptureTimestamp(input.timestamp)}.svg`,
+    name: `s-${formatCaptureTimestamp(input.timestamp)}.svg`,
     mime: 'image/svg+xml',
     width: viewport.width,
     height: viewport.height,
@@ -95,7 +114,8 @@ async function createHtml2CanvasCapture(
   viewport: ViewportSize,
   scale: number,
   input: ReviewViewportCaptureInput,
-  region?: RelativeSelection
+  region?: RelativeSelection,
+  fallbackReason?: string
 ) {
   const html2canvas = (await import('html2canvas')).default;
   const scrollX = Math.round(targetWindow.scrollX || 0);
@@ -138,12 +158,13 @@ async function createHtml2CanvasCapture(
 
   return {
     file,
-    name: `review-capture-${formatCaptureTimestamp(input.timestamp)}.webp`,
+    name: `h-${formatCaptureTimestamp(input.timestamp)}.webp`,
     mime: CAPTURE_MIME,
     width: canvas.width,
     height: canvas.height,
     metadata: {
       captureRenderer: 'html2canvas',
+      ...(fallbackReason ? { captureFallbackReason: fallbackReason } : {}),
       captureTarget: region ? 'selection' : 'viewport',
       ...(region ? { captureRegion: region } : {}),
       captureScale: scale,
@@ -200,7 +221,7 @@ async function createSvgCanvasCapture(
   const file = await canvasToBlob(canvas, CAPTURE_MIME, CAPTURE_QUALITY);
   return {
     file,
-    name: `review-capture-${formatCaptureTimestamp(input.timestamp)}.webp`,
+    name: `s-${formatCaptureTimestamp(input.timestamp)}.webp`,
     mime: CAPTURE_MIME,
     width: canvas.width,
     height: canvas.height,
@@ -583,7 +604,12 @@ function createMarkerSvg(x: number, y: number) {
 }
 
 function formatCaptureTimestamp(timestamp: string) {
-  return timestamp.replace(/[^0-9A-Za-z]+/g, '-').replace(/^-|-$/g, '');
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return timestamp.replace(/[^0-9A-Za-z]+/g, '-').replace(/^-|-$/g, '');
+  }
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
 }
 
 function getCaptureErrorMessage(error: unknown) {

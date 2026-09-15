@@ -12,8 +12,8 @@ import type { ReviewShellViewportPreset } from '../types';
 import {
   createReviewFigmaRouteTarget,
   useReviewFigmaImageStoreController,
-} from '../figma/image.controller';
-import { useReviewFigmaImageOverlayController } from '../figma/image.overlay.controller';
+} from '../figma/use.image.store';
+import { useReviewFigmaImageOverlayController } from '../figma/use.image.overlay';
 
 interface UseReviewFigmaImagesOptions {
   imageFormat?: ReviewFigmaImageFormat;

@@ -4,7 +4,6 @@ import { supabaseAdapter } from './supabase';
 import type {
   ReviewItem,
   ReviewItemKind,
-  ReviewItemStatus,
   SupabaseReviewClient,
   WebReviewKitAdapter,
 } from '../types';

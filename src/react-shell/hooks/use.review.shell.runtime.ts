@@ -28,7 +28,7 @@ import { useReviewShellRefresh } from './use.review.shell.refresh';
 import { useReviewShellState } from './use.review.shell.state';
 import { useReviewShellTargetFigma } from './use.review.shell.target.figma';
 import { useReviewSidePanel } from './use.review.side.panel';
-import { useReviewSourceInspector } from './use.review.source.inspector';
+import { useReviewSourceInspector } from '../source-tree/use.source.inspector';
 import { useReviewTargetNavigation } from './use.review.target.navigation';
 import {
   useReviewShellConfig,
@@ -49,7 +49,6 @@ export const useReviewShellRuntime = ({
   const {
     activeAdapterEntry,
     activeRoute,
-    adapter,
     bumpTargetFrameLoadVersion,
     controllerRef,
     frameScrollRef,

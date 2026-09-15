@@ -12,7 +12,6 @@ import type {
 import { normalizeReviewItemStatus } from '../../status';
 import {
   buildTargetSrc,
-  getItemTarget,
   getTargetRouteKey,
 } from '../route';
 import { getActiveReviewItems } from '../qa/derive';

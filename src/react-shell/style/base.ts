@@ -273,6 +273,11 @@ export const reviewShellBaseStyle = `
     grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 420px) 48px;
   }
 
+  /* Keep QA highlights below shell controls (600+), popups, and modals (1000+). */
+  body:has(.df-review-shell) > #df-web-review-kit-root {
+    z-index: 500 !important;
+  }
+
 	  .df-review-topbar {
 	    grid-column: 1;
 	    grid-row: 1;

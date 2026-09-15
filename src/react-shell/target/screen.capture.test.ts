@@ -119,6 +119,17 @@ describe('screen capture session', () => {
       1536
     );
     const drawImage = vi.fn();
+    const overlay = document.createElement('div');
+    overlay.className = 'df-review-outside-marker-layer';
+    overlay.style.opacity = '0.7';
+    document.body.append(overlay);
+    const targetOverlay = frame.contentDocument!.createElement('div');
+    targetOverlay.id = 'df-web-review-kit-root';
+    frame.contentDocument!.body.append(targetOverlay);
+    drawImage.mockImplementation(() => {
+      expect(getComputedStyle(overlay).opacity).toBe('0');
+      expect(frame.contentWindow!.getComputedStyle(targetOverlay).opacity).toBe('0');
+    });
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
       drawImage,
     } as unknown as CanvasRenderingContext2D);
@@ -127,6 +138,8 @@ describe('screen capture session', () => {
       const viewport = { width: 800, height: 600 };
       const region = { x: 20, y: 40, width: 100, height: 80 };
       const first = await session.capture(frame, viewport, region);
+      expect(getComputedStyle(overlay).opacity).toBe('0.7');
+      expect(frame.contentDocument!.querySelector('style')).toBeNull();
       expect(first?.width).toBe(100);
       expect(drawImage.mock.calls[0].slice(1)).toEqual([
         220, 240, 100, 80, 0, 0, 100, 80,
@@ -146,8 +159,11 @@ describe('screen capture session', () => {
       expect(getDisplayMedia).toHaveBeenCalledOnce();
       left = -100;
       await expect(session.capture(frame, viewport)).rejects.toThrow('clipped');
+      expect(getComputedStyle(overlay).opacity).toBe('0.7');
+      expect(frame.contentDocument!.querySelector('style')).toBeNull();
     } finally {
       session.stop();
+      overlay.remove();
       frame.remove();
       Reflect.deleteProperty(
         HTMLVideoElement.prototype,

@@ -121,6 +121,26 @@ export class ScreenCaptureSession {
     viewport: ViewportSize,
     region?: RelativeSelection
   ) {
+    if (!this.video) return null;
+    const styles = [this.document, frame.contentDocument].flatMap((document) => {
+      if (!document?.documentElement) return [];
+      const style = document.createElement('style');
+      style.textContent = '#df-web-review-kit-root, .df-review-outside-marker-layer { opacity: 0 !important; }';
+      document.documentElement.appendChild(style);
+      return [style];
+    });
+    try {
+      return await this.captureFrame(frame, viewport, region);
+    } finally {
+      styles.forEach((style) => style.remove());
+    }
+  }
+
+  private async captureFrame(
+    frame: HTMLIFrameElement,
+    viewport: ViewportSize,
+    region?: RelativeSelection
+  ) {
     const video = this.video;
     if (!video) return null;
     this.assertCurrentTab();
@@ -129,9 +149,12 @@ export class ScreenCaptureSession {
         video.cancelVideoFrameCallback(id);
         reject(new Error('Screen capture frame timed out.'));
       }, 3000);
-      const id = video.requestVideoFrameCallback(() => {
-        clearTimeout(timeout);
-        resolve();
+      // Discard the in-flight frame so the screenshot reflects hidden overlays.
+      let id = video.requestVideoFrameCallback(() => {
+        id = video.requestVideoFrameCallback(() => {
+          clearTimeout(timeout);
+          resolve();
+        });
       });
     });
     this.assertCurrentTab();

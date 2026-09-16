@@ -17,7 +17,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "bin": {
-    "web-review-kit": "./dist/cli.js"
+    "web-review-kit": "dist/cli.js"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

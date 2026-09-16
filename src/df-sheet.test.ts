@@ -10,6 +10,8 @@ import type { ReviewItem } from './types';
 const projectId = 'f82b8ad5-7289-43d4-b175-bd5ecf1d4dba';
 const sessionKey = `df-web-review-kit:df-sheet:session:${projectId}`;
 const pendingKey = `df-web-review-kit:df-sheet:pending:${projectId}`;
+const selectedPageKey =
+  `df-web-review-kit:df-sheet:selected-page:${projectId}:hyungjoo`;
 
 const jsonResponse = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
@@ -279,6 +281,64 @@ describe('connectDfSheetReview', () => {
     }));
     await expect(connectDfSheetReview({ projectId, selectPage: true })).resolves.toBeNull();
     expect(JSON.parse(window.sessionStorage.getItem(pendingKey)!)).toMatchObject({ selectPage: true });
+  });
+
+  it('remembers a validated page by project and user across reloads', async () => {
+    const pages = [
+      { id: 'page-1', name: 'QA' },
+      { id: 'page-2', name: '운영 검수' },
+    ];
+    window.sessionStorage.setItem(
+      sessionKey,
+      JSON.stringify({
+        accessToken: 'short-token',
+        expiresAt: Date.now() + 300_000,
+        project: { id: projectId, key: 'LEXUS' },
+        user: { user_id: 'hyungjoo', name: 'Hyung-Joo' },
+      })
+    );
+
+    const session = await connectDfSheetReview({ projectId });
+    expect(session?.resolveSelectedPageId(pages)).toBeUndefined();
+
+    session?.rememberSelectedPageId('page-2', pages);
+    expect(session?.selectedPageId).toBe('page-2');
+    expect(window.localStorage.getItem(selectedPageKey)).toBe('page-2');
+    expect(JSON.parse(window.sessionStorage.getItem(sessionKey)!).selectedPageId)
+      .toBe('page-2');
+
+    const reloaded = await connectDfSheetReview({ projectId });
+    expect(reloaded?.resolveSelectedPageId(pages)).toBe('page-2');
+    expect(reloaded?.selectedPageId).toBe('page-2');
+
+    reloaded?.disconnect();
+    expect(window.localStorage.getItem(selectedPageKey)).toBe('page-2');
+  });
+
+  it('removes a remembered page that is no longer accessible', async () => {
+    window.localStorage.setItem(selectedPageKey, 'deleted-page');
+    window.sessionStorage.setItem(
+      sessionKey,
+      JSON.stringify({
+        accessToken: 'short-token',
+        expiresAt: Date.now() + 300_000,
+        project: { id: projectId, key: 'LEXUS' },
+        user: { user_id: 'hyungjoo', name: 'Hyung-Joo' },
+      })
+    );
+
+    const session = await connectDfSheetReview({ projectId });
+    expect(
+      session?.resolveSelectedPageId([{ id: 'page-1', name: 'QA' }])
+    ).toBeUndefined();
+    expect(window.localStorage.getItem(selectedPageKey)).toBeNull();
+    expect(JSON.parse(window.sessionStorage.getItem(sessionKey)!).selectedPageId)
+      .toBeUndefined();
+    expect(() =>
+      session?.rememberSelectedPageId('other-project-page', [
+        { id: 'page-1', name: 'QA' },
+      ])
+    ).toThrow('outside the authenticated project');
   });
 
   it('does not send a legacy browser Figma token for links or files', async () => {

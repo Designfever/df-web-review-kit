@@ -51,7 +51,10 @@ No review secret is required in the host or Vercel:
 - Figma image endpoint and asset storage: owned by df-sheet and df-asset-hub
 - host value: `REVIEW_PROJECT_ID` in checked-in `df.ts`
 
-The session is stored only in browser `sessionStorage` and expires quickly. Reload the review page to sign in again after expiration. `baseUrl` exists only for local df-sheet development.
+The authenticated session is stored only in browser `sessionStorage` and expires
+quickly. The optional remembered page preference is non-sensitive and uses
+`localStorage`. Reload the review page to sign in again after expiration.
+`baseUrl` exists only for local df-sheet development.
 
 ## Shared page selection (0.12.0)
 
@@ -68,3 +71,26 @@ against the project's authenticated page list and caches it with the session.
 
 Deploy df-sheet's `/review/select-page` and updated SSO authorize route before
 enabling this option in hosts. Existing login-only callers remain supported.
+
+## Remembering a host page selection (0.13.2)
+
+Hosts that render their own page selector can remember the last validated page
+with the session helpers. The preference is scoped to the authenticated project
+and user, while the access token remains in `sessionStorage`.
+
+```ts
+const reviewPages = await session.listPages();
+const rememberedPageId = session.resolveSelectedPageId(reviewPages);
+
+if (rememberedPageId) openReview(rememberedPageId);
+
+function selectReviewPage(pageId: string) {
+  session.rememberSelectedPageId(pageId, reviewPages);
+  openReview(pageId);
+}
+```
+
+Always pass the authenticated `listPages()` result to both helpers. A stored
+page that was deleted or is no longer accessible is removed automatically, so
+the host can show its selector again. Logging out clears the short review
+session but keeps this non-sensitive preference for the next login.

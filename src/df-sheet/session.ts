@@ -11,6 +11,9 @@ const SESSION_KEY_PREFIX = 'df-web-review-kit:df-sheet:session:';
 
 const PENDING_KEY_PREFIX = 'df-web-review-kit:df-sheet:pending:';
 
+const SELECTED_PAGE_KEY_PREFIX =
+  'df-web-review-kit:df-sheet:selected-page:';
+
 type StoredSession = {
   accessToken: string;
   selectedPageId?: string;
@@ -193,15 +196,68 @@ function createSession(input: {
       init
     );
   const disconnect = () => window.sessionStorage.removeItem(input.sessionKey);
+  const selectedPageKey = createSelectedPageKey(
+    input.stored.project.id,
+    input.stored.user.user_id
+  );
+  let selectedPageId = input.stored.selectedPageId;
+
+  const updateSelectedPageId = (pageId?: string) => {
+    selectedPageId = pageId;
+    if (pageId) {
+      input.stored.selectedPageId = pageId;
+      writeSelectedPageId(selectedPageKey, pageId);
+    } else {
+      delete input.stored.selectedPageId;
+      removeSelectedPageId(selectedPageKey);
+    }
+    window.sessionStorage.setItem(
+      input.sessionKey,
+      JSON.stringify(input.stored)
+    );
+  };
+
+  if (selectedPageId) {
+    updateSelectedPageId(selectedPageId);
+  }
+
+  const resolveSelectedPageId = (pages: readonly DfSheetReviewPage[]) => {
+    const rememberedPageId = readSelectedPageId(selectedPageKey);
+    const candidate = selectedPageId ?? rememberedPageId;
+    const resolved = pages.find((page) => page.id === candidate)?.id;
+
+    if (!resolved) {
+      updateSelectedPageId();
+      return undefined;
+    }
+
+    updateSelectedPageId(resolved);
+    return resolved;
+  };
+
+  const rememberSelectedPageId = (
+    pageId: string,
+    pages: readonly DfSheetReviewPage[]
+  ) => {
+    const resolved = pages.find((page) => page.id === pageId)?.id;
+    if (!resolved) {
+      throw new Error('Cannot remember a page outside the authenticated project.');
+    }
+    updateSelectedPageId(resolved);
+  };
 
   return {
     project: input.stored.project,
-    selectedPageId: input.stored.selectedPageId,
+    get selectedPageId() {
+      return selectedPageId;
+    },
     user: input.stored.user,
     expiresAt: input.stored.expiresAt,
     listPages: () => request<DfSheetReviewPage[]>('/api/review/pages'),
     listAssignees: () =>
       request<DfSheetReviewAssignee[]>('/api/review/assignees'),
+    resolveSelectedPageId,
+    rememberSelectedPageId,
     createAdapter: (options) =>
       createDfSheetSessionAdapter({
         ...options,
@@ -259,6 +315,36 @@ function readStoredValue<T>(key: string): T | null {
     return raw ? (JSON.parse(raw) as T) : null;
   } catch {
     return null;
+  }
+}
+
+function createSelectedPageKey(projectId: string, userId: string) {
+  return `${SELECTED_PAGE_KEY_PREFIX}${encodeURIComponent(
+    projectId
+  )}:${encodeURIComponent(userId)}`;
+}
+
+function readSelectedPageId(key: string) {
+  try {
+    return window.localStorage.getItem(key)?.trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeSelectedPageId(key: string, pageId: string) {
+  try {
+    window.localStorage.setItem(key, pageId);
+  } catch {
+    // Page persistence is a convenience and must not block review access.
+  }
+}
+
+function removeSelectedPageId(key: string) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Page persistence is a convenience and must not block review access.
   }
 }
 

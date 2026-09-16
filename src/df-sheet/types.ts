@@ -44,6 +44,15 @@ export type DfSheetReviewSession = {
   expiresAt: number;
   listPages: () => Promise<DfSheetReviewPage[]>;
   listAssignees: () => Promise<DfSheetReviewAssignee[]>;
+  /** Returns the current or remembered page only when it still exists. */
+  resolveSelectedPageId: (
+    pages: readonly DfSheetReviewPage[]
+  ) => string | undefined;
+  /** Saves a validated page preference for this project and signed-in user. */
+  rememberSelectedPageId: (
+    pageId: string,
+    pages: readonly DfSheetReviewPage[]
+  ) => void;
   createAdapter: (options: DfSheetReviewAdapterOptions) => ReviewShellAdapter;
   figmaImageStore: ReviewFigmaImageStore;
   disconnect: () => void;

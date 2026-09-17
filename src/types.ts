@@ -292,6 +292,7 @@ export interface WebReviewKitOptions {
   onRestoreItem?: (item: ReviewItem) => void | Promise<void>;
   onCreateItem?: (item: ReviewItem) => void | Promise<void>;
   onItemsChange?: (items: ReviewItem[]) => void;
+  onItemsError?: (error: unknown) => void;
   onModeChange?: (mode: ReviewMode) => void;
   ui?: {
     panel?: boolean;

@@ -464,6 +464,24 @@ describe('df-sheet session and adapter boundaries', () => {
     await expect(session!.listPages()).rejects.toThrow('error-only');
     await expect(session!.listPages()).rejects.toThrow('df-sheet request failed (502 /api/review/pages).');
     await expect(session!.listPages()).rejects.toBeInstanceOf(DfSheetReviewSessionExpiredError);
+    expect(window.sessionStorage.getItem(sessionKey)).toBeNull();
+  });
+
+  it.each(['qa', 'figma'] as const)('invalidates rejected %s sessions without deleting a newer login', async (source) => {
+    window.sessionStorage.setItem(sessionKey, JSON.stringify(stored()));
+    const request = vi.fn<typeof fetch>(async () => jsonResponse({ success: false }, 401));
+    const session = (await connectDfSheetReview({ projectId, fetch: request }))!;
+    const load = () => source === 'qa'
+      ? session.createAdapter({ pageId: 'another-page' }).list({ projectId, routeKey: '/' })
+      : session.figmaImageStore.listImages({ type: 'route', projectId, pageUrl: '/' });
+
+    await expect(load()).rejects.toBeInstanceOf(DfSheetReviewSessionExpiredError);
+    expect(window.sessionStorage.getItem(sessionKey)).toBeNull();
+
+    const newer = JSON.stringify({ ...stored(), accessToken: 'new-token' });
+    window.sessionStorage.setItem(sessionKey, newer);
+    await expect(load()).rejects.toBeInstanceOf(DfSheetReviewSessionExpiredError);
+    expect(window.sessionStorage.getItem(sessionKey)).toBe(newer);
   });
 
   it('preserves multipart fields without a JSON content type', async () => {

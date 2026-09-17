@@ -1,6 +1,6 @@
 import { createEndpointReviewFigmaImageStore } from '../figma/image.store';
 import { createDfSheetSessionAdapter } from './adapter';
-import { requestDfSheet } from './http';
+import { DfSheetReviewSessionExpiredError, requestDfSheet } from './http';
 import type { ConnectDfSheetReviewOptions, DfSheetReviewSession, DfSheetReviewProject, DfSheetReviewUser, DfSheetReviewPage, DfSheetReviewAssignee } from './types';
 
 export const DEFAULT_DF_SHEET_REVIEW_URL = 'https://df-sheet.vercel.app';
@@ -187,9 +187,21 @@ function createSession(input: {
   stored: StoredSession;
   selectPage?: boolean;
 }): DfSheetReviewSession {
+  const sessionFetch: typeof fetch = async (url, init) => {
+    const response = await input.requestFetch(url, init);
+    if (response.status === 401) {
+      // A late response from an old session must not clear a newer login.
+      const cached = readStoredValue<StoredSession>(input.sessionKey);
+      if (cached?.accessToken === input.stored.accessToken) {
+        window.sessionStorage.removeItem(input.sessionKey);
+      }
+      throw new DfSheetReviewSessionExpiredError();
+    }
+    return response;
+  };
   const request = <T>(path: string, init?: RequestInit) =>
     requestDfSheet<T>(
-      input.requestFetch,
+      sessionFetch,
       input.baseUrl,
       path,
       input.stored.accessToken,
@@ -268,7 +280,7 @@ function createSession(input: {
       }),
     figmaImageStore: createEndpointReviewFigmaImageStore({
       endpoint: `${input.baseUrl}/api/review/figma-images`,
-      fetch: input.requestFetch,
+      fetch: sessionFetch,
       headers: { Authorization: `Bearer ${input.stored.accessToken}` },
       token: () => null,
     }),

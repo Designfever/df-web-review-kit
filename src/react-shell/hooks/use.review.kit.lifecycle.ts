@@ -16,6 +16,7 @@ import type {
   WebReviewKitController,
 } from '../../types';
 import { createWebReviewKit } from '../../core/web.review.kit.app';
+import { getErrorMessage } from '../../core/error';
 import { useReviewShellStoreApi } from '../store/store.context';
 import { setTargetScrollbarHidden } from '../target/target';
 import { getViewportPresetKind } from '../viewport';
@@ -142,6 +143,11 @@ export const useReviewKitLifecycle = ({
         const state = storeApi.getState();
         state.setItems(items);
         state.setIsItemsLoading(false);
+      },
+      onItemsError: (error) => {
+        const state = storeApi.getState();
+        state.setIsItemsLoading(false);
+        state.setToastMessage(getErrorMessage(error, 'Failed to load QA. Try again.'));
       },
       onModeChange,
       ui: {

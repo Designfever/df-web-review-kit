@@ -231,7 +231,8 @@ class WebReviewKitApp {
     if (this.isOpen) return;
 
     this.isOpen = true;
-    void this.reload();
+    // reload reports failures through onItemsError; opening is fire-and-forget.
+    void this.reload().catch(() => {});
   }
 
   close() {
@@ -578,10 +579,15 @@ class WebReviewKitApp {
     const environment = this.getEnvironment();
     if (!environment) return this.items;
 
-    this.items = await this.adapter.list({
-      projectId: this.options.projectId,
-      routeKey: getRouteKey(environment),
-    });
+    try {
+      this.items = await this.adapter.list({
+        projectId: this.options.projectId,
+        routeKey: getRouteKey(environment),
+      });
+    } catch (error) {
+      this.options.onItemsError?.(error);
+      throw error;
+    }
     this.options.onItemsChange?.(this.items);
     if (this.isOpen) {
       this.render();

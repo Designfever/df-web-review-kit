@@ -53,7 +53,7 @@ No review secret is required in the host or Vercel:
 
 The authenticated session is stored only in browser `sessionStorage` and expires
 quickly. The optional remembered page preference is non-sensitive and uses
-`localStorage`. Reload the review page to sign in again after expiration.
+`localStorage`. QA and Figma requests discard the cached session on HTTP 401. When QA loading fails, the shell stops loading and displays the error. Reload the entire review page to sign in again; switching QA pages or refreshing the target iframe reuses the current session.
 `baseUrl` exists only for local df-sheet development.
 
 ## Shared page selection (0.12.0)

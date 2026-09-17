@@ -20,6 +20,30 @@ describe('createWebReviewKit', () => {
     controller.destroy();
   });
 
+  it('reports a failed initial load and allows a later reload to recover', async () => {
+    const error = new Error('Session expired. Reload to sign in.');
+    const list = vi.fn().mockRejectedValueOnce(error).mockResolvedValue([]);
+    const onItemsError = vi.fn();
+    const onItemsChange = vi.fn();
+    const controller = createWebReviewKit({
+      projectId: 'test-project',
+      adapter: { list, get: vi.fn(), create: vi.fn(), update: vi.fn(), remove: vi.fn() },
+      onItemsError,
+      onItemsChange,
+    });
+    try {
+      controller.open();
+      await vi.waitFor(() => expect(onItemsError).toHaveBeenCalledWith(error));
+      expect(onItemsChange).not.toHaveBeenCalled();
+      await expect(controller.reload()).resolves.toEqual([]);
+      expect(onItemsChange).toHaveBeenCalledWith([]);
+      list.mockRejectedValueOnce(error);
+      await expect(controller.reload()).rejects.toBe(error);
+    } finally {
+      controller.destroy();
+    }
+  });
+
   it.each([false, true])('closes draft owners outside without losing selections (docked: %s)', async (docked) => {
     const target = document.createElement('div');
     const composerHost = document.createElement('div');

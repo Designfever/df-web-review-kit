@@ -250,6 +250,34 @@ pnpm typecheck:dev
 pnpm build:dev
 ```
 
+## Release
+
+Copy `.env.release.example` to `.env.release` in the project root and fill in
+`JANDI_WEBHOOK_URL` and `DISCORD_WEBHOOK_URL` with the full webhook URLs.
+The script loads this file automatically (Node 22.9+ required). Existing shell
+environment variables take precedence. `.env.release` is ignored by Git and
+excluded from the npm package; keep actual URLs out of the example file.
+Use your existing npm login, update `package.json` to a new version, then run:
+
+```bash
+pnpm release -- "Fixed session recovery"
+```
+
+This validates both webhook URLs and the memo, runs tests/typecheck/build, publishes
+to npm, then sends the package name, version, memo, completion time (KST), and npm link
+as a green JANDI attachment card and an amber Discord embed.
+It does not create commits or tags, push Git changes, or bump the version.
+Both URLs are required. The package/version, memo, and link are limited to 2000 characters combined.
+Notifications use the [JANDI incoming webhook format](https://support.jandi.com/en/articles/connect-incoming-webhook-21bc249f)
+and [Discord webhook format](https://discord.com/developers/docs/resources/webhook#execute-webhook).
+
+A failed check or publish sends no notification. Each service gets one request
+with a 10-second timeout and no automatic retries. If one service fails, the other
+is still attempted and the command exits with an error. Publishing cannot be undone
+by a notification failure: do not rerun the release command to retry delivery.
+Check both channels first (a timeout can occur after delivery), then manually resend
+only the missing notification. Live delivery must be verified on the next release.
+
 ## License
 
 Apache-2.0. Copyright 2026 Designfever.

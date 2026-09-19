@@ -1,4 +1,5 @@
 import { createEndpointReviewFigmaImageStore } from '../figma/image.store';
+import { configureReviewAnalytics, type ReviewAnalyticsConfig } from '../analytics';
 import { createDfSheetSessionAdapter } from './adapter';
 import { DfSheetReviewSessionExpiredError, requestDfSheet } from './http';
 import type { ConnectDfSheetReviewOptions, DfSheetReviewSession, DfSheetReviewProject, DfSheetReviewUser, DfSheetReviewPage, DfSheetReviewAssignee } from './types';
@@ -16,6 +17,7 @@ const SELECTED_PAGE_KEY_PREFIX =
 
 type StoredSession = {
   accessToken: string;
+  analytics?: ReviewAnalyticsConfig;
   selectedPageId?: string;
   expiresAt: number;
   project: DfSheetReviewProject;
@@ -32,6 +34,7 @@ type PendingLogin = {
 
 type DfSheetTokenResponse = {
   access_token: string;
+  analytics?: ReviewAnalyticsConfig;
   token_type: 'Bearer';
   expires_in: number;
   project: DfSheetReviewProject;
@@ -124,6 +127,9 @@ export async function connectDfSheetReview(
 
     const stored: StoredSession = {
       accessToken: token.access_token,
+      ...(isReviewAnalyticsConfig(token.analytics)
+        ? { analytics: token.analytics }
+        : {}),
       ...(selectedPageId ? { selectedPageId } : {}),
       expiresAt: Date.now() + token.expires_in * 1000,
       project: token.project,
@@ -187,6 +193,10 @@ function createSession(input: {
   stored: StoredSession;
   selectPage?: boolean;
 }): DfSheetReviewSession {
+  configureReviewAnalytics(input.stored.analytics, {
+    projectId: input.stored.project.id,
+    reviewerName: input.stored.user.name,
+  });
   const sessionFetch: typeof fetch = async (url, init) => {
     const response = await input.requestFetch(url, init);
     if (response.status === 401) {
@@ -259,6 +269,7 @@ function createSession(input: {
   };
 
   return {
+    analytics: input.stored.analytics,
     project: input.stored.project,
     get selectedPageId() {
       return selectedPageId;
@@ -373,6 +384,16 @@ function isStoredSession(
 
 function isPendingLogin(value: PendingLogin | null): value is PendingLogin {
   return Boolean(value?.state && value.verifier && value.redirectUri);
+}
+
+function isReviewAnalyticsConfig(
+  value: ReviewAnalyticsConfig | undefined
+): value is ReviewAnalyticsConfig {
+  return Boolean(
+    value?.provider === 'amplitude' &&
+      typeof value.apiKey === 'string' &&
+      value.apiKey.trim()
+  );
 }
 
 function trimBaseUrl(value: string) {

@@ -1,4 +1,8 @@
 import { useState, type DragEvent, type ReactNode } from 'react';
+import {
+  getReviewAnalyticsFailureProperties,
+  trackReviewEvent,
+} from '../../analytics';
 import { Plus as PlusIcon, RefreshCw as RefreshCwIcon } from 'lucide-react';
 import type { ReviewFigmaImage, ReviewFigmaImageAssetInput } from '../../figma/image.types';
 import {
@@ -26,6 +30,11 @@ export const FigmaImagesImport = ({
   const statusText = importError || error;
   const addImageSource = async (source: string, file?: File) => {
     setImportError('');
+    trackReviewEvent('click', {
+      panelId: 'figma-images',
+      controlId: 'add-image',
+      action: 'import',
+    });
     try {
       const asset = file
         ? await createReviewImageAssetFromFile(file)
@@ -37,8 +46,25 @@ export const FigmaImagesImport = ({
         file?.name.replace(/\.[^.]+$/, ''),
         asset
       );
-      if (image) setFigmaUrlDraft('');
+      if (image) {
+        setFigmaUrlDraft('');
+        trackReviewEvent('success', {
+          action: 'import',
+          panelId: 'figma-images',
+        });
+      } else {
+        trackReviewEvent('failure', {
+          action: 'import',
+          panelId: 'figma-images',
+          errorCode: 'empty_result',
+        });
+      }
     } catch (addError) {
+      trackReviewEvent('failure', {
+        action: 'import',
+        panelId: 'figma-images',
+        ...getReviewAnalyticsFailureProperties(addError),
+      });
       setImportError(
         addError instanceof Error ? addError.message : 'Image import failed.'
       );

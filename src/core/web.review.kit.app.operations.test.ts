@@ -4,6 +4,16 @@ import type { WebReviewKitViewConfig } from './view/types';
 import type { ReviewDraftAttachment } from './review/draft';
 import { createWebReviewKit } from './web.review.kit.app';
 
+const analytics = vi.hoisted(() => ({
+  getReviewAnalyticsFailureProperties: vi.fn((error: unknown) => ({
+    errorCode:
+      error instanceof Error ? error.name : 'unknown',
+  })),
+  trackReviewEvent: vi.fn(),
+}));
+
+vi.mock('../analytics', () => analytics);
+
 // Expose the existing view/actions boundary; exercise the real app and operations.
 const view = vi.hoisted(() => ({ config: undefined as WebReviewKitViewConfig | undefined }));
 vi.mock('./web.review.kit.view', () => ({
@@ -18,6 +28,7 @@ afterEach(() => {
   controller?.destroy();
   document.body.replaceChildren();
   vi.restoreAllMocks();
+  analytics.trackReviewEvent.mockClear();
 });
 function setup(options: Partial<WebReviewKitOptions> = {}) {
   const create = vi.fn(async (item: ReviewItem) => item);
@@ -87,6 +98,12 @@ describe('core item and attachment orchestration', () => {
     await pending;
     expect(config.getState().isCreatingItem).toBe(false);
     expect(create.mock.calls[0][0].attachments).toEqual([uploaded]);
+    expect(analytics.trackReviewEvent).toHaveBeenCalledWith('click', {
+      panelId: 'qa', controlId: 'save', action: 'save',
+    });
+    expect(analytics.trackReviewEvent).toHaveBeenCalledWith('success', {
+      action: 'save', panelId: 'qa',
+    });
   });
 
   it.each(['missing', 'rejected'] as const)('keeps draft and reports required upload failure: %s', async mode => {
@@ -100,6 +117,9 @@ describe('core item and attachment orchestration', () => {
     expect(config.getState().isCreatingItem).toBe(false);
     expect(config.getState().domDraft?.attachments).toEqual([attachment]);
     expect(config.getState().draftError).toBe(mode === 'missing' ? 'Attachment upload adapter is not configured.' : 'Attachment upload failed (size): Too large');
+    expect(analytics.trackReviewEvent).toHaveBeenCalledWith('failure', {
+      action: 'save', panelId: 'qa', errorCode: 'Error',
+    });
     expect(revoke).not.toHaveBeenCalled();
     controller.close();
     expect(revoke).toHaveBeenCalledWith('blob:attachment');

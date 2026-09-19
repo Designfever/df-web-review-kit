@@ -1,4 +1,5 @@
 import type { ReviewShellStore } from '../store/create.review.shell.store';
+import { trackReviewEvent } from '../../analytics';
 import {
   PANEL_ENDPOINT, announcePanelEndpoint, isValidPanelDefinition, notifyPanelListener,
   type PanelEndpoint, type PanelFrame,
@@ -218,6 +219,11 @@ export function createCustomPanelRegistry(store: ReviewShellStore) {
     },
     toggle(id: string) {
       if (!registrations.has(id)) return;
+      trackReviewEvent('click', {
+        panelId: `custom:${id}`,
+        controlId: 'panel-toggle',
+        action: 'toggle-panel',
+      });
       const state = store.getState();
       store.setState({
         sidePanel: `custom:${id}`,

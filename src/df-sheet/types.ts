@@ -1,6 +1,7 @@
 import type { ReviewFigmaImageStore } from '../figma/image.types';
 import type { ReviewItem } from '../types';
 import type { ReviewShellAdapter, ReviewShellAssigneeOption } from '../react-shell/types';
+import type { ReviewAnalyticsConfig } from '../analytics';
 
 export type DfSheetReviewPage = {
   id: string;
@@ -38,6 +39,7 @@ export type DfSheetReviewAdapterOptions = {
 };
 
 export type DfSheetReviewSession = {
+  analytics?: ReviewAnalyticsConfig;
   project: DfSheetReviewProject;
   selectedPageId?: string;
   user: DfSheetReviewUser;

@@ -7,26 +7,28 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 1. [Easy Install](easy-install.md)
 2. [Host-owned review page](review-page/README.md)
 3. [df-sheet connection](df-sheet.md)
-4. [Installation](installation.md)
-5. [Easy Install v0.9 contract](easy-install-v0.9.md)
-6. [Custom provider profiles](provider-profiles.md)
-7. [Packed installation E2E matrix](pack-install-e2e.md)
-8. [v1.0 promotion checklist](v1.0-promotion-checklist.md)
-9. [Host env sample](../.env.sample)
-10. [Adapter boundaries](adapters.md)
-11. [Testing](testing.md)
-12. [Custom adapter sample](adaptor.sample.ts)
-13. [DB setup](db-setup.md)
-14. [Architecture and runtime logic](architecture.md)
-15. [Figma overlay](figma-overlay.md)
-16. [Grid overlay](grid-overlay.md)
-17. [Custom right-rail panels](custom-panels.md)
+4. [Analytics](analytics.md)
+5. [Installation](installation.md)
+6. [Easy Install v0.9 contract](easy-install-v0.9.md)
+7. [Custom provider profiles](provider-profiles.md)
+8. [Packed installation E2E matrix](pack-install-e2e.md)
+9. [v1.0 promotion checklist](v1.0-promotion-checklist.md)
+10. [Host env sample](../.env.sample)
+11. [Adapter boundaries](adapters.md)
+12. [Testing](testing.md)
+13. [Custom adapter sample](adaptor.sample.ts)
+14. [DB setup](db-setup.md)
+15. [Architecture and runtime logic](architecture.md)
+16. [Figma overlay](figma-overlay.md)
+17. [Grid overlay](grid-overlay.md)
+18. [Custom right-rail panels](custom-panels.md)
 
 ## Document Roles
 
 - `easy-install.md`: framework-neutral installer boundary, `df.ts`, doctor, and guide routing.
 - `review-page/`: host-owned `/review` recipes for Next.js, Vite + React, Vue Router, and custom hosts.
 - `df-sheet.md`: standard df-login, short-session QA adapter, and authenticated Figma image flow.
+- `analytics.md`: SSO-provided Amplitude setup, explicit event schema, Session Replay privacy, and failure isolation.
 - `installation.md`: manually install the npm package, create the `/review` route, wire adapters, and run checks.
 - `easy-install-v0.9.md`: experimental CLI contract, support scope, extension contract, safety rules, and v1.0 criteria.
 - `provider-profiles.md`: generic private-provider schema, capability composition, environment safety, and authoring examples.
@@ -41,6 +43,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
+- [0.14.0](release-notes-0.14.0.md): SSO 기반 Amplitude 명시적 이벤트와 Session Replay 자동 초기화.
 - [0.13.3](release-notes-0.13.3.md): DF Sheet 인증 실패 시 무한 로딩 해제와 세션 캐시 제거.
 - [0.13.2](release-notes-0.13.2.md): 프로젝트와 사용자별 DF Sheet 리뷰 페이지 선택 유지.
 - [0.13.1](release-notes-0.13.1.md): 완료된 Review Kit QA를 DF Sheet 상태와 동기화.

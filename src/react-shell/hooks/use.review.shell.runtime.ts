@@ -8,6 +8,7 @@ import type { ReviewShellProviderValues } from '../review/shell.providers';
 import { DEFAULT_REVIEW_PATH_PREFIX } from '../route';
 import type { ReviewShellProps } from '../types';
 import { useReviewCommandKey } from './use.review.command.key';
+import { useReviewAnalyticsPanelView } from './use.review.analytics';
 import { useReviewController } from './use.review.controller';
 import { useReviewRuler } from './use.review.ruler';
 import { useReviewShellActionsValue } from './use.review.shell.actions.value';
@@ -102,10 +103,15 @@ export const useReviewShellRuntime = ({
   const {
     isListVisible,
     openSidePanel,
+    sidePanel,
     toggleSidePanel,
   } = useReviewSidePanel({
     isFigmaImageManagementEnabled,
     isImprovementEnabled,
+  });
+  useReviewAnalyticsPanelView({
+    isVisible: isListVisible,
+    panelId: sidePanel,
   });
 
   const {

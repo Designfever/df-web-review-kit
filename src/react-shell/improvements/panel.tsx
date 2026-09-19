@@ -7,6 +7,10 @@ import {
   X,
 } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
+import {
+  getReviewAnalyticsFailureProperties,
+  trackReviewEvent,
+} from '../../analytics';
 import type { NormalizedReviewShellAdapter } from '../adapters';
 import type {
   ReviewImprovementArea,
@@ -86,9 +90,23 @@ export const ImprovementsPanel = ({
     setIsSubmitting(true);
     setError('');
     setCreated(null);
+    trackReviewEvent('click', {
+      panelId: 'improvements',
+      controlId: 'submit',
+      action: 'create-improvement',
+    });
+    let pendingAction = 'create-improvement';
     try {
       if (files.length > 0 && !adapter.uploadAttachment) {
         throw new Error('현재 연결에서는 이미지를 첨부할 수 없습니다.');
+      }
+      if (files.length > 0) {
+        pendingAction = 'upload';
+        trackReviewEvent('click', {
+          panelId: 'improvements',
+          controlId: 'upload-attachments',
+          action: 'upload',
+        });
       }
       const attachments = adapter.uploadAttachment
         ? await Promise.all(
@@ -103,6 +121,13 @@ export const ImprovementsPanel = ({
             )
           )
         : [];
+      if (files.length > 0) {
+        trackReviewEvent('success', {
+          action: 'upload',
+          panelId: 'improvements',
+        });
+        pendingAction = 'create-improvement';
+      }
       const normalizedContent = content.trim();
       const currentReviewUrl =
         typeof window === 'undefined' ? reviewRoute : window.location.href;
@@ -117,12 +142,21 @@ export const ImprovementsPanel = ({
         area,
         attachmentUrls: attachments.map((attachment) => attachment.url),
       });
+      trackReviewEvent('success', {
+        action: 'create-improvement',
+        panelId: 'improvements',
+      });
       setCreated(result);
       setTitle('');
       setContent('');
       setFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (submitError) {
+      trackReviewEvent('failure', {
+        action: pendingAction,
+        panelId: 'improvements',
+        ...getReviewAnalyticsFailureProperties(submitError),
+      });
       setError(
         submitError instanceof Error
           ? submitError.message

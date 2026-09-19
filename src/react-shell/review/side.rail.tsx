@@ -1,5 +1,6 @@
 // 우측 사이드 레일의 presentational UI.
 import type { ReactNode } from 'react';
+import { trackReviewEvent } from '../../analytics';
 import {
   Bot as BotIcon,
   ListChecks as QaListIcon,
@@ -55,6 +56,16 @@ export const ReviewSideRail = ({
   onToggleDesignInspector: () => void;
   onToggleSourceTreePanel: () => void;
 }) => {
+  const trackClick = (
+    panelId: string,
+    controlId: string,
+    action: string,
+    handler: () => void | Promise<void>
+  ) => {
+    trackReviewEvent('click', { panelId, controlId, action });
+    void handler();
+  };
+
   return (
     <div className="df-review-side-rail">
       <button
@@ -66,7 +77,14 @@ export const ReviewSideRail = ({
         data-review-tooltip-placement="left"
         title="Design inspector (Shift+1)"
         type="button"
-        onClick={onToggleDesignInspector}
+        onClick={() =>
+          trackClick(
+            'design-inspector',
+            'panel-toggle',
+            'toggle-panel',
+            onToggleDesignInspector
+          )
+        }
       >
         <InspectorIcon aria-hidden="true" />
       </button>
@@ -84,7 +102,14 @@ export const ReviewSideRail = ({
           data-review-tooltip="Figma Images (Shift+2)"
           data-review-tooltip-placement="left"
           type="button"
-          onClick={onToggleFigmaImagesPanel}
+          onClick={() =>
+            trackClick(
+              'figma-images',
+              'panel-toggle',
+              'toggle-panel',
+              onToggleFigmaImagesPanel
+            )
+          }
           title="Figma Images (Shift+2)"
         >
           <span aria-hidden="true">
@@ -101,7 +126,9 @@ export const ReviewSideRail = ({
         data-review-tooltip="QA (Shift+3)"
         data-review-tooltip-placement="left"
         type="button"
-        onClick={onToggleQaPanel}
+        onClick={() =>
+          trackClick('qa', 'panel-toggle', 'toggle-panel', onToggleQaPanel)
+        }
         title="QA (Shift+3)"
       >
         <span aria-hidden="true">
@@ -123,7 +150,14 @@ export const ReviewSideRail = ({
           data-review-tooltip="개선사항"
           data-review-tooltip-placement="left"
           type="button"
-          onClick={onToggleImprovementsPanel}
+          onClick={() =>
+            trackClick(
+              'improvements',
+              'panel-toggle',
+              'toggle-panel',
+              onToggleImprovementsPanel
+            )
+          }
           title="개선사항"
         >
           <span aria-hidden="true">
@@ -145,7 +179,14 @@ export const ReviewSideRail = ({
         data-review-tooltip="Component List (Shift+4)"
         data-review-tooltip-placement="left"
         type="button"
-        onClick={onToggleSourceTreePanel}
+        onClick={() =>
+          trackClick(
+            'source',
+            'panel-toggle',
+            'toggle-panel',
+            onToggleSourceTreePanel
+          )
+        }
         title="Component List (Shift+4)"
       >
         <span aria-hidden="true">
@@ -161,7 +202,9 @@ export const ReviewSideRail = ({
             data-review-tooltip="Log out"
             data-review-tooltip-placement="left"
             type="button"
-            onClick={() => void onLogout()}
+            onClick={() =>
+              trackClick('shell', 'logout', 'logout', onLogout)
+            }
             title="Log out"
           >
             <span aria-hidden="true">
@@ -175,7 +218,14 @@ export const ReviewSideRail = ({
           data-review-tooltip="Initial prompt"
           data-review-tooltip-placement="left"
           type="button"
-          onClick={onOpenInitialPrompt}
+          onClick={() =>
+            trackClick(
+              'shell',
+              'initial-prompt',
+              'open-initial-prompt',
+              onOpenInitialPrompt
+            )
+          }
           title="Initial prompt"
         >
           <span aria-hidden="true">
@@ -188,7 +238,14 @@ export const ReviewSideRail = ({
           data-review-tooltip="Settings"
           data-review-tooltip-placement="left"
           type="button"
-          onClick={onOpenSettings}
+          onClick={() =>
+            trackClick(
+              'shell',
+              'settings',
+              'open-settings',
+              onOpenSettings
+            )
+          }
           title="Settings"
         >
           <span aria-hidden="true">
@@ -208,7 +265,9 @@ export const ReviewSideRail = ({
           data-review-tooltip="About"
           data-review-tooltip-placement="left"
           type="button"
-          onClick={onOpenAbout}
+          onClick={() =>
+            trackClick('shell', 'about', 'open-about', onOpenAbout)
+          }
           title="About"
         >
           <span aria-hidden="true">

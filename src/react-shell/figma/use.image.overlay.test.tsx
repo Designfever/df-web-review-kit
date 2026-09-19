@@ -62,7 +62,7 @@ describe('useReviewFigmaImageOverlayController', () => {
   });
 
   it('does not rewrite unchanged overlay state when the image list refreshes', async () => {
-    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+    const setItem = vi.spyOn(window.localStorage, 'setItem');
 
     await act(async () => {
       root.render(<OverlayHarness images={[image]} />);

@@ -1,4 +1,8 @@
 import { localAdapter } from '../adapters/local';
+import {
+  getReviewAnalyticsFailureProperties,
+  trackReviewEvent,
+} from '../analytics';
 import type {
   ReviewItem,
   ReviewMode,
@@ -764,6 +768,11 @@ class WebReviewKitApp {
     this.draftError = '';
     this.isCreatingItem = true;
     this.render();
+    trackReviewEvent('click', {
+      panelId: 'qa',
+      controlId: 'save',
+      action: 'save',
+    });
 
     try {
       const attachments = await prepareItemAttachments({
@@ -777,7 +786,13 @@ class WebReviewKitApp {
       this.highlightItem(createdItem.id);
       await this.reload();
       await this.options.onCreateItem?.(createdItem);
+      trackReviewEvent('success', { action: 'save', panelId: 'qa' });
     } catch (error) {
+      trackReviewEvent('failure', {
+        action: 'save',
+        panelId: 'qa',
+        ...getReviewAnalyticsFailureProperties(error),
+      });
       this.draftError = this.getCreateItemErrorMessage(
         error,
         Boolean(input.attachments?.length)

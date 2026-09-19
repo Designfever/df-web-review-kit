@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { trackReviewEvent } from '../../analytics';
 import { useReviewSettingsState } from './settings.context';
 import { useReviewShellRefs } from '../store/shell.refs';
 import { screenCaptureSessions } from '../target/screen.capture';
@@ -25,6 +26,11 @@ export const ReviewModeToolbar = ({
   const { iframeRef } = useReviewShellRefs();
   const [pending, setPending] = useState(false);
   const selectMode = async (nextMode: ReviewMode) => {
+    trackReviewEvent('click', {
+      panelId: 'qa',
+      controlId: `${nextMode}-mode`,
+      action: 'select-review-mode',
+    });
     if (captureMethod === 'browser') {
       const frame = iframeRef.current;
       const session = frame && screenCaptureSessions.get(frame);

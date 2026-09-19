@@ -1,5 +1,9 @@
 export { DEFAULT_DF_SHEET_REVIEW_URL, connectDfSheetReview } from './df-sheet/session';
-export { DfSheetReviewSessionExpiredError } from './df-sheet/http';
+export {
+  DfSheetReviewRequestError,
+  DfSheetReviewSessionExpiredError,
+} from './df-sheet/http';
+export type { ReviewAnalyticsConfig } from './analytics';
 export type {
   DfSheetReviewPage,
   DfSheetReviewProject,

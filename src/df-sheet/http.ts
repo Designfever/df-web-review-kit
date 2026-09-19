@@ -7,6 +7,18 @@ type DfSheetEnvelope<T> = {
   error?: string;
 };
 
+export class DfSheetReviewRequestError extends Error {
+  readonly code?: string;
+  readonly status: number;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = 'DfSheetReviewRequestError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
 export class DfSheetReviewSessionExpiredError extends Error {
   constructor() {
     super('Your df-sheet review session expired. Reload this page to sign in again.');
@@ -33,9 +45,18 @@ export async function requestDfSheet<T>(
     throw new DfSheetReviewSessionExpiredError();
   }
   if (!response.ok || body?.success !== true || !('data' in body)) {
-    throw new Error(
-      body?.message || body?.error || `df-sheet request failed (${response.status} ${path}).`
+    throw new DfSheetReviewRequestError(
+      body?.message || body?.error || `df-sheet request failed (${response.status} ${path}).`,
+      response.status,
+      normalizeErrorCode(body?.error)
     );
   }
   return body.data as T;
+}
+
+function normalizeErrorCode(value: string | undefined) {
+  const normalized = value?.trim();
+  return normalized && /^[a-zA-Z0-9._:-]+$/.test(normalized)
+    ? normalized.slice(0, 80)
+    : undefined;
 }

@@ -7,6 +7,14 @@ import {
 } from './df-sheet';
 import type { ReviewItem } from './types';
 
+const analyticsMocks = vi.hoisted(() => ({
+  configureReviewAnalytics: vi.fn(),
+}));
+
+vi.mock('./analytics', () => ({
+  configureReviewAnalytics: analyticsMocks.configureReviewAnalytics,
+}));
+
 const projectId = 'f82b8ad5-7289-43d4-b175-bd5ecf1d4dba';
 const sessionKey = `df-web-review-kit:df-sheet:session:${projectId}`;
 const pendingKey = `df-web-review-kit:df-sheet:pending:${projectId}`;
@@ -21,6 +29,7 @@ const jsonResponse = (data: unknown, status = 200) =>
 
 describe('connectDfSheetReview', () => {
   beforeEach(() => {
+    analyticsMocks.configureReviewAnalytics.mockClear();
     window.localStorage.clear();
     window.sessionStorage.clear();
     window.history.replaceState(null, '', '/review');
@@ -196,6 +205,15 @@ describe('connectDfSheetReview', () => {
           access_token: 'new-token',
           token_type: 'Bearer',
           expires_in: 600,
+          analytics: {
+            provider: 'amplitude',
+            apiKey: 'browser-project-key',
+            sessionReplay: {
+              enabled: true,
+              maskInputs: true,
+              sampleRate: 1,
+            },
+          },
           project: { id: projectId, key: 'IKAOS' },
           user: { user_id: 'hyungjoo', name: null },
         },
@@ -209,6 +227,19 @@ describe('connectDfSheetReview', () => {
     });
 
     expect(session?.project.id).toBe(projectId);
+    expect(session?.analytics).toEqual({
+      provider: 'amplitude',
+      apiKey: 'browser-project-key',
+      sessionReplay: {
+        enabled: true,
+        maskInputs: true,
+        sampleRate: 1,
+      },
+    });
+    expect(analyticsMocks.configureReviewAnalytics).toHaveBeenCalledWith(
+      session?.analytics,
+      { projectId, reviewerName: null }
+    );
     expect(window.location.search).toBe('?item=12');
     expect(window.sessionStorage.getItem(pendingKey)).toBeNull();
     expect(window.sessionStorage.getItem(sessionKey)).toContain('new-token');

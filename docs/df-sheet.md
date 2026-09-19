@@ -56,6 +56,10 @@ quickly. The optional remembered page preference is non-sensitive and uses
 `localStorage`. QA and Figma requests discard the cached session on HTTP 401. When QA loading fails, the shell stops loading and displays the error. Reload the entire review page to sign in again; switching QA pages or refreshing the target iframe reuses the current session.
 `baseUrl` exists only for local df-sheet development.
 
+When df-sheet includes an authenticated `analytics` configuration, Review Kit
+initializes it automatically. The host does not pass or store the API key. See
+[Analytics](analytics.md) for the event and Session Replay boundary.
+
 ## Shared page selection (0.12.0)
 
 Use `connectDfSheetReview({ projectId, selectPage: true })` to select a QA page

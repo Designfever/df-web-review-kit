@@ -21,6 +21,35 @@ pnpm build:dev
 npm pack --dry-run --json
 ```
 
+## DF Sheet integration fixture
+
+Run `pnpm dev:review` and open `http://127.0.0.1:5177/review-df-sheet/`.
+This connects to the Web Review Kit project
+(`cdf02474-e15a-48b3-bf1b-f42b95da0cc5`) through real DF Sheet SSO. After login,
+the fixture loads the authenticated page list and asks you to select a page
+when needed. The QA header lets you switch pages; your selection is remembered.
+This does not require DF Sheet's optional SSO page-selection callback.
+QA, improvements, attachments, and Figma images use that project's
+remote services. Test submissions create real records in the selected page.
+The existing `/review/` fixture remains available for local testing.
+
+To test custom panels with DF Sheet, open
+`http://localhost:5177/review-df-sheet/?target=/components/&w=768&h=1024`.
+In the Custom rail group, open **Preview editor**. Change the preview text and
+accent color, then use **Reset preview**. Switching to another panel should
+preserve edits; reloading the target should reset them and reconnect the panel.
+The standalone `/components/` demo also links directly to this test.
+
+For a static test build, run `pnpm build:dev`, then
+`pnpm exec vite preview --config dev/vite.config.ts` and open
+`http://127.0.0.1:5178/review-df-sheet/`. A deployed build needs SPA fallback
+for the review route and fixture pages, and an origin accepted by DF Sheet SSO.
+
+Before release, manually verify login, page selection, QA save, Figma import,
+improvement attachments, logout, and expired-session recovery. When SSO returns
+analytics settings, also verify actual Amplitude event delivery and Replay
+masking. A successful build or mocked SDK test does not verify these services.
+
 ## Current Coverage
 
 ### Adapter contract suite

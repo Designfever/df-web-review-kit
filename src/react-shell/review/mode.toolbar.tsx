@@ -5,7 +5,7 @@ import { useReviewShellRefs } from '../store/shell.refs';
 import { screenCaptureSessions } from '../target/screen.capture';
 import {
   Scan as ScanIcon,
-  SquareMousePointer as SquareMousePointerIcon,
+  MousePointerClick as ElementQaIcon,
 } from 'lucide-react';
 import type { ReviewMode } from '../../types';
 
@@ -59,7 +59,7 @@ export const ReviewModeToolbar = ({
           disabled={pending}
           onClick={() => void selectMode('element')}
         >
-          <SquareMousePointerIcon aria-hidden="true" />
+          <ElementQaIcon aria-hidden="true" />
         </button>
       )}
       {canWriteDom && canWriteArea && (

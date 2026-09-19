@@ -8,6 +8,7 @@ import type {
 } from '../../types';
 import type { ReviewShellWriteMode } from '../types';
 import type { StoredReviewSidePanel } from '../settings';
+import { useReviewShellStoreApi } from '../store/store.context';
 import { useReviewShellRefs } from '../store/shell.refs';
 import { getReviewModeWriteMode } from '../review/shell.helpers';
 import { setTargetFigmaOverlayLocked } from '../target/target';
@@ -73,6 +74,7 @@ export const useReviewShellPanelActions = ({
   isImprovementEnabled,
   toggleSidePanel,
 }: UseReviewShellPanelActionsOptions) => {
+  const storeApi = useReviewShellStoreApi();
   const toggleQaPanel = useCallback(() => {
     toggleSidePanel('qa');
   }, [toggleSidePanel]);
@@ -92,8 +94,9 @@ export const useReviewShellPanelActions = ({
 
   const toggleImprovementsPanel = useCallback(() => {
     if (!isImprovementEnabled) return;
-    toggleSidePanel('improvements');
-  }, [isImprovementEnabled, toggleSidePanel]);
+    const state = storeApi.getState();
+    state.setIsImprovementsOpen(!state.isImprovementsOpen);
+  }, [isImprovementEnabled, storeApi]);
 
   return {
     toggleFigmaImagesPanel,

@@ -5,16 +5,13 @@ import {
   Monitor as MonitorIcon,
   Moon as MoonIcon,
   Sun as SunIcon,
+  X as CloseIcon,
 } from 'lucide-react';
 import {
   DEFAULT_REVIEW_THEME,
   DEFAULT_REVIEW_TOOLTIPS_ENABLED,
   FIGMA_TOKEN_GUIDE_ID,
-  FIGMA_TOKEN_STORAGE_KEY,
-  REVIEW_TOOLTIP_STORAGE_KEY,
   REVIEW_THEME_OPTIONS,
-  REVIEW_THEME_STORAGE_KEY,
-  REVIEW_USER_ID_STORAGE_KEY,
 } from '../constants';
 import { type ReviewCaptureMethod, normalizeReviewTheme } from '../settings';
 import type { ReviewShellTheme } from '../types';
@@ -26,6 +23,7 @@ const getReviewThemeIcon = (theme: ReviewShellTheme) => {
 };
 
 interface ReviewSettingsModalProps {
+  embedded?: boolean;
   captureMethodDraft: ReviewCaptureMethod;
   onCaptureMethodDraftChange: (method: ReviewCaptureMethod) => void;
   figmaTokenDraft: string;
@@ -53,6 +51,7 @@ interface ReviewSettingsModalProps {
 }
 
 export const ReviewSettingsModal = ({
+  embedded = false,
   captureMethodDraft,
   onCaptureMethodDraftChange,
   figmaTokenDraft,
@@ -72,21 +71,9 @@ export const ReviewSettingsModal = ({
   onToggleFigmaTokenGuide,
   onSave,
 }: ReviewSettingsModalProps) => {
-  return (
-    <div
-      aria-label="Review settings"
-      aria-modal="true"
-      className="df-review-settings-modal"
-      role="dialog"
-    >
-      <button
-        aria-label="Close settings"
-        className="df-review-settings-backdrop"
-        type="button"
-        onClick={onClose}
-      />
+  const content = (
       <form
-        className="df-review-settings-dialog"
+        className={embedded ? "df-review-settings-embedded" : "df-review-settings-dialog df-review-standard-dialog"}
         onSubmit={(event) => {
           event.preventDefault();
           onSave(
@@ -98,20 +85,20 @@ export const ReviewSettingsModal = ({
           );
         }}
       >
-        <div className="df-review-settings-header">
+        {!embedded && <div className="df-review-settings-header">
           <div className="df-review-settings-title">
             <strong>Settings</strong>
             <span>
-              {FIGMA_TOKEN_STORAGE_KEY} / {REVIEW_USER_ID_STORAGE_KEY} /{' '}
-              {REVIEW_THEME_STORAGE_KEY} / {REVIEW_TOOLTIP_STORAGE_KEY}
+              Capture, appearance, and review preferences.
             </span>
           </div>
           <div className="df-review-settings-header-actions">
             <button aria-label="Close settings" type="button" onClick={onClose}>
-              x
+              <CloseIcon aria-hidden="true" />
             </button>
           </div>
         </div>
+        }
         <div className="df-review-settings-body">
           <div className="df-review-settings-row">
             <span>Capture</span>
@@ -282,6 +269,23 @@ export const ReviewSettingsModal = ({
           </div>
         </div>
       </form>
+  );
+  if (embedded) return content;
+  return (
+    <div
+      aria-label="Review settings"
+      aria-modal="true"
+      className="df-review-settings-modal"
+      role="dialog"
+    >
+      <button
+        aria-label="Close settings"
+        className="df-review-settings-backdrop"
+        type="button"
+        onClick={onClose}
+      />
+      {content}
+
     </div>
   );
 };

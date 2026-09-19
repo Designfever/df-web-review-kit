@@ -17,8 +17,6 @@ describe('ReviewSideRail', () => {
         presenceSessionId="session"
         onLogout={() => undefined}
         onOpenAbout={() => undefined}
-        onOpenInitialPrompt={() => undefined}
-        onOpenSettings={() => undefined}
         onToggleFigmaImagesPanel={() => undefined}
         onToggleQaPanel={() => undefined}
         onToggleImprovementsPanel={() => undefined}
@@ -28,10 +26,12 @@ describe('ReviewSideRail', () => {
     );
 
     const logoutIndex = html.indexOf('aria-label="Log out"');
-    const promptIndex = html.indexOf('aria-label="Open initial prompt"');
+    const aboutIndex = html.indexOf('aria-label="Open about"');
 
     expect(logoutIndex).toBeGreaterThan(-1);
-    expect(logoutIndex).toBeLessThan(promptIndex);
+    expect(aboutIndex).toBeGreaterThan(logoutIndex);
+    expect(html).not.toContain('aria-label="Open initial prompt"');
+    expect(html).not.toContain('aria-label="Open settings"');
     expect(html).toContain('aria-label="Show design inspector"');
     expect(html).toContain('aria-controls="df-review-design-inspector"');
   });

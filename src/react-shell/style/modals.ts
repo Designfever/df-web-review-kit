@@ -723,4 +723,100 @@ export const reviewShellModalStyle = `
         }
 
 
+  .df-review-standard-dialog {
+    width: min(560px, calc(100vw - 32px));
+    height: min(680px, calc(100dvh - 40px));
+    max-height: calc(100dvh - 40px);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .df-review-standard-dialog > .df-review-settings-header,
+  .df-review-standard-dialog > .df-review-prompt-header {
+    min-height: 65px;
+    padding: var(--df-review-space-3) var(--df-review-space-4);
+    gap: var(--df-review-space-3);
+    border-bottom-color: var(--df-review-line-soft);
+    background: var(--df-review-card);
+  }
+
+  .df-review-standard-dialog .df-review-settings-title,
+  .df-review-standard-dialog .df-review-prompt-header > div {
+    gap: 3px;
+  }
+
+  .df-review-standard-dialog .df-review-settings-header strong,
+  .df-review-standard-dialog .df-review-prompt-header strong {
+    font-size: var(--df-review-font-size-md);
+  }
+
+  .df-review-standard-dialog .df-review-settings-header button,
+  .df-review-standard-dialog .df-review-modal-close {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    min-height: 30px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--df-review-muted);
+  }
+
+  .df-review-standard-dialog .df-review-settings-header button:hover,
+  .df-review-standard-dialog .df-review-modal-close:hover {
+    background: var(--df-review-card-hover);
+    color: var(--df-review-text);
+  }
+
+  .df-review-standard-dialog .df-review-settings-header button svg,
+  .df-review-standard-dialog .df-review-modal-close svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .df-review-standard-dialog > .df-review-settings-body,
+  .df-review-standard-dialog > .df-review-prompt-body,
+  .df-review-standard-dialog > .df-review-about-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--df-review-space-4);
+    gap: var(--df-review-space-4);
+  }
+
+  .df-review-standard-dialog .df-review-settings-actions {
+    padding-top: var(--df-review-space-2);
+  }
+
+  .df-review-df-body {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+  }
+  .df-review-df-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--df-review-line-soft);
+  }
+  .df-review-df-tabs button {
+    flex: 1;
+    min-height: 34px;
+    border: 0;
+    border-radius: var(--df-review-radius-sm);
+    background: transparent;
+    color: var(--df-review-muted);
+    font-size: 12px;
+  }
+  .df-review-df-tabs button[aria-selected="true"] {
+    background: var(--df-review-card-hover);
+    color: var(--df-review-text);
+  }
+  .df-review-df-content {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px;
+  }
+  .df-review-settings-embedded .df-review-settings-body {
+    padding: 0;
+  }
 `;

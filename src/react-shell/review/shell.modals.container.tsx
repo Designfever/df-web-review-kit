@@ -27,6 +27,7 @@ export const ReviewShellModalsContainer = () => {
     setCaptureMethodDraft,
     areTooltipsEnabledDraft,
     closeFigmaSettings,
+    openFigmaSettings,
     figmaSettingsStatus,
     figmaTokenDraft,
     isFigmaSettingsOpen,
@@ -89,6 +90,23 @@ export const ReviewShellModalsContainer = () => {
     [setCopiedPromptKey, showToast]
   );
 
+  const [activeTab, setActiveTab] = useState<'About' | 'Prompt' | 'Settings' | 'Shortcuts'>('About');
+  const isDfPopupOpen = isInitialPromptOpen || isInitialPromptScriptOpen || isFigmaSettingsOpen;
+  useEffect(() => {
+    if (!isDfPopupOpen) setActiveTab('About');
+  }, [isDfPopupOpen]);
+  useEffect(() => {
+    if (isFigmaSettingsOpen) setActiveTab('Settings');
+  }, [isFigmaSettingsOpen]);
+  useEffect(() => {
+    if (isInitialPromptScriptOpen) setActiveTab('Prompt');
+  }, [isInitialPromptScriptOpen]);
+  const closeDfPopup = () => {
+    closeFigmaSettings();
+    setIsInitialPromptOpen(false);
+    setIsInitialPromptScriptOpen(false);
+  };
+
   return (
     <>
       {hasSitemapOpened && (
@@ -107,8 +125,16 @@ export const ReviewShellModalsContainer = () => {
         />
       )}
 
-      {isFigmaSettingsOpen && (
+      {isDfPopupOpen && (
+        <PromptModal activeTab={activeTab} onClose={closeDfPopup}
+          onTabChange={(tab) => {
+            if (tab === 'Settings' && !isFigmaSettingsOpen) openFigmaSettings();
+            setActiveTab(tab);
+          }}>
+        <div hidden={activeTab !== 'Settings'}>
+
         <ReviewSettingsModal
+          embedded
           captureMethodDraft={captureMethodDraft}
           onCaptureMethodDraftChange={setCaptureMethodDraft}
           areTooltipsEnabledDraft={areTooltipsEnabledDraft}
@@ -119,11 +145,14 @@ export const ReviewShellModalsContainer = () => {
           reviewThemeDraft={reviewThemeDraft}
           reviewUserIdDraft={reviewUserIdDraft}
           onClearStatus={() => setFigmaSettingsStatus('')}
-          onClose={closeFigmaSettings}
+          onClose={closeDfPopup}
           onFigmaTokenDraftChange={setFigmaTokenDraft}
           onReviewThemeDraftChange={setReviewThemeDraft}
           onReviewUserIdDraftChange={setReviewUserIdDraft}
-          onSave={saveReviewSettings}
+          onSave={(...values) => {
+            saveReviewSettings(...values);
+            closeDfPopup();
+          }}
           onTooltipsEnabledDraftChange={setAreTooltipsEnabledDraft}
           onToggleFigmaTokenGuide={() =>
             setIsFigmaTokenGuideOpen((current) => !current)
@@ -132,19 +161,15 @@ export const ReviewShellModalsContainer = () => {
             setIsFigmaTokenVisible((current) => !current)
           }
         />
-      )}
-
-      {isInitialPromptOpen && (
-        <PromptModal onClose={() => setIsInitialPromptOpen(false)} />
-      )}
-
-      {isInitialPromptScriptOpen && (
-        <InitialPromptModal
+        </div>
+        {activeTab === 'Prompt' && <InitialPromptModal
+          embedded
           copiedPromptKey={copiedPromptKey}
           initialPromptText={initialPromptText}
-          onClose={() => setIsInitialPromptScriptOpen(false)}
+          onClose={closeDfPopup}
           onCopyPrompt={(text, key) => void copyInitialPrompt(text, key)}
-        />
+        />}
+        </PromptModal>
       )}
     </>
   );

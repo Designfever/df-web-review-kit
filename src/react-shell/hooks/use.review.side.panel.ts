@@ -23,13 +23,12 @@ const getAvailableSidePanel = (
   sidePanel: ReviewSidePanel,
   {
     isFigmaImageManagementEnabled,
-    isImprovementEnabled,
   }: UseReviewSidePanelOptions
 ): ReviewSidePanel => {
   if (sidePanel === 'figma-images' && !isFigmaImageManagementEnabled) {
     return 'qa';
   }
-  if (sidePanel === 'improvements' && !isImprovementEnabled) return 'qa';
+  if (sidePanel === 'improvements') return 'qa';
   return sidePanel;
 };
 

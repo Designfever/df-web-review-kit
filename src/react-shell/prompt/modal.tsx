@@ -1,9 +1,13 @@
+import type { ReactNode } from 'react';
 import packageJson from '../../../package.json';
 
 import { ReviewModal } from '../review/modal';
 
 interface PromptModalProps {
   onClose: () => void;
+  activeTab: 'About' | 'Prompt' | 'Settings' | 'Shortcuts';
+  onTabChange: (tab: 'About' | 'Prompt' | 'Settings' | 'Shortcuts') => void;
+  children: ReactNode;
 }
 
 const REVIEW_KIT_VERSION = packageJson.version;
@@ -44,17 +48,40 @@ const SHORTCUT_SECTIONS = [
   },
 ];
 
-export const PromptModal = ({ onClose }: PromptModalProps) => {
+export const PromptModal = ({ onClose, activeTab, onTabChange, children }: PromptModalProps) => {
   return (
     <ReviewModal
       ariaLabel="Review help"
-      bodyClassName="df-review-about-body"
+      bodyClassName="df-review-df-body"
       description={`v${REVIEW_KIT_VERSION}`}
-      dialogClassName="df-review-about-dialog"
+      dialogClassName="df-review-about-dialog df-review-standard-dialog"
       title="df-web-review-kit"
       onClose={onClose}
     >
-      <div className="df-review-shortcut-groups">
+      <div role="tablist" aria-label="DF popup" className="df-review-df-tabs">
+        {(['About', 'Prompt', 'Settings', 'Shortcuts'] as const).map((tab, index, tabs) => (
+          <button key={tab} type="button" role="tab" id={`df-popup-tab-${tab}`}
+            aria-selected={activeTab === tab} aria-controls="df-popup-panel"
+            tabIndex={activeTab === tab ? 0 : -1}
+            onClick={() => onTabChange(tab)}
+            onKeyDown={(event) => {
+              const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length
+                : event.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length
+                : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : -1;
+              if (next < 0) return;
+              event.preventDefault();
+              onTabChange(tabs[next]);
+              event.currentTarget.parentElement?.querySelectorAll('button')[next]?.focus();
+            }}>{tab}</button>
+        ))}
+      </div>
+      <div role="tabpanel" id="df-popup-panel" aria-labelledby={`df-popup-tab-${activeTab}`} className="df-review-df-content" tabIndex={0}>
+      {activeTab === 'About' && <section className="df-review-shortcut-group">
+        <strong>df-web-review-kit</strong>
+        <p>Review pages, compare Figma designs, and share QA feedback.</p>
+        <span>Version {REVIEW_KIT_VERSION}</span>
+      </section>}
+      {activeTab === 'Shortcuts' && <div className="df-review-shortcut-groups">
         {SHORTCUT_SECTIONS.map((section) => (
           <section className="df-review-shortcut-group" key={section.title}>
             <strong>{section.title}</strong>
@@ -72,6 +99,8 @@ export const PromptModal = ({ onClose }: PromptModalProps) => {
             </div>
           </section>
         ))}
+      </div>}
+      {children}
       </div>
     </ReviewModal>
   );

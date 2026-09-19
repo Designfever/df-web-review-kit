@@ -37,9 +37,14 @@ export function DevNav({
         ))}
       </nav>
       {!isReviewTarget ? (
-        <a className="dev-review-link" href={`${reviewPathPrefix}/?target=/&w=390&h=844`}>
-          Open /review
-        </a>
+        <>
+          <a className="dev-review-link" href={`${reviewPathPrefix}/?target=/&w=390&h=844`}>
+            Open /review
+          </a>
+          <a className="dev-review-link" href="/review-df-sheet/?target=/&w=390&h=844">
+            Open DF Sheet review
+          </a>
+        </>
       ) : null}
     </header>
   );

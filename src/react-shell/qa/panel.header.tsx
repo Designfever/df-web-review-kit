@@ -70,6 +70,9 @@ export const QaPanelHeader = ({
                 : `${displayLabel} QA`}
             </span>
           )}
+          {qaPageSelector?.options.length === 1 && (
+            <span>{qaPageSelector.options[0].label}</span>
+          )}
           {qaPageSelector && qaPageSelector.options.length > 1 && (
             <select
               aria-label="df-sheet page"
@@ -86,13 +89,15 @@ export const QaPanelHeader = ({
               ))}
             </select>
           )}
-          <strong
-            title={`${activeRemainingItemCount} remaining of ${activeItemCount}`}
-          >
-            {!hasActiveFilter
-              ? `${activeRemainingItemCount}/${activeItemCount}`
-              : `${filteredItemCount}/${activeItemCount}`}
-          </strong>
+          {qaPageSelector?.options.length !== 1 && (
+            <strong
+              title={`${activeRemainingItemCount} remaining of ${activeItemCount}`}
+            >
+              {!hasActiveFilter
+                ? `${activeRemainingItemCount}/${activeItemCount}`
+                : `${filteredItemCount}/${activeItemCount}`}
+            </strong>
+          )}
         </span>
         <div className="df-review-list-controls">
           {showSourceSelect && (

@@ -24,6 +24,7 @@ import {
   presets,
 } from './fixtures/config';
 import { TargetApp } from './fixtures/target-app';
+import { DF_SHEET_REVIEW_PATH, mountDfSheetReview } from './df-sheet-review';
 import './style.css';
 // Portal controls render in the review document; load their scoped CSS in both branches.
 import './fixtures/components/portal-editor.css';
@@ -309,7 +310,12 @@ function createDevAttachmentId() {
   }`;
 }
 
-if (window.location.pathname.startsWith(REVIEW_PATH_PREFIX)) {
+if (
+  window.location.pathname === DF_SHEET_REVIEW_PATH ||
+  window.location.pathname.startsWith(`${DF_SHEET_REVIEW_PATH}/`)
+) {
+  void mountDfSheetReview();
+} else if (window.location.pathname.startsWith(REVIEW_PATH_PREFIX)) {
   mountDevReviewShell();
 } else {
   createRoot(document.getElementById('root') as HTMLElement).render(

@@ -77,10 +77,14 @@ export function PortalEditorDemo() {
         <p className="dev-portal-kicker">Live preview</p>
         <h2 data-qa-id="portal-preview-text" style={{ color }}>{text || 'Your text here'}</h2>
         <p>Edit the text and accent color from the right-side panel.</p>
-        {isFramed ? <p className="dev-portal-help" role="status">{status}</p> :
+        {isFramed ? <p className="dev-portal-help" role="status">{status}</p> : <>
           <a className="dev-portal-review-link" href="/review/?target=/components/&w=768&h=1024">
             Open in Review Kit
-          </a>}
+          </a>
+          <a className="dev-portal-review-link" href="/review-df-sheet/?target=/components/&w=768&h=1024">
+            Test in DF Sheet review
+          </a>
+        </>}
       </div>
       {!isFramed && <aside className="dev-portal-local-panel" ref={setLocalContainer}
         aria-label="Preview editor" />}

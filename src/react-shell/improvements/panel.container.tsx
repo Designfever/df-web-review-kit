@@ -5,11 +5,11 @@ import { ImprovementsPanel } from './panel';
 export const ImprovementsPanelContainer = () => {
   const { improvementAdapterEntry, projectId } = useReviewShellConfig();
   const isVisible = useReviewShellStore(
-    (state) => state.isListVisible && state.sidePanel === 'improvements'
+    (state) => state.isImprovementsOpen
   );
   const activeRoute = useReviewShellStore((state) => state.activeRoute);
-  const setIsListVisible = useReviewShellStore(
-    (state) => state.setIsListVisible
+  const setIsImprovementsOpen = useReviewShellStore(
+    (state) => state.setIsImprovementsOpen
   );
 
   if (!improvementAdapterEntry?.createImprovement) return null;
@@ -20,7 +20,7 @@ export const ImprovementsPanelContainer = () => {
       isVisible={isVisible}
       projectId={projectId}
       reviewRoute={activeRoute}
-      onClose={() => setIsListVisible(false)}
+      onClose={() => setIsImprovementsOpen(false)}
     />
   );
 };

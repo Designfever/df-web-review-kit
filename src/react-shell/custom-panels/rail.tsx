@@ -8,8 +8,8 @@ export function CustomPanelRailButtons() {
   const entries = useSyncExternalStore(registry.subscribe, registry.getSnapshot, registry.getSnapshot);
   const selected = useReviewShellStore(state => state.sidePanel);
   const visible = useReviewShellStore(state => state.isListVisible);
-  return <>
-    {entries.length > 0 && <span className="df-review-side-divider" aria-hidden="true" />}
+  if (!entries.length) return null;
+  return <div className="df-review-rail-group" role="group" aria-label="Custom">
     {entries.map(({ definition, container }) => {
     const active = visible && selected === `custom:${definition.id}`;
     return <button
@@ -30,5 +30,5 @@ export function CustomPanelRailButtons() {
         {definition.icon.paths.map((d, index) => <path key={index} d={d} />)}
       </svg> : <PanelRight aria-hidden="true" />}
     </button>;
-  })}</>;
+  })}</div>;
 }

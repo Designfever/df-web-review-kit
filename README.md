@@ -36,7 +36,7 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
 - [Design inspector](docs/design-inspector.md): 기존 리뷰 iframe의 CSS·글꼴·치수·요소 간격 검사와 수동 QA.
 - [Analytics](docs/analytics.md): SSO 기반 Amplitude 이벤트와 Session Replay의 수집·privacy 경계.
-- [Release notes 0.14.0](docs/release-notes-0.14.0.md): Amplitude 명시적 이벤트와 Session Replay 자동 초기화.
+- [Release notes 0.14.0](docs/release-notes-0.14.0.md): Amplitude·Session Replay, DF 탭 팝업과 레일 메뉴 정리.
 - [Release notes 0.13.3](docs/release-notes-0.13.3.md): DF Sheet 인증 실패 시 무한 로딩 해제와 세션 캐시 제거.
 - [Release notes 0.13.2](docs/release-notes-0.13.2.md): 프로젝트와 사용자별 DF Sheet 리뷰 페이지 선택 유지.
 - [Release notes 0.13.1](docs/release-notes-0.13.1.md): 완료된 Review Kit QA를 DF Sheet 상태와 동기화.

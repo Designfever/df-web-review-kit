@@ -74,6 +74,7 @@ export const useReviewShellRuntime = ({
     targetOverlayState,
   } = useReviewShellState();
   const storeApi = useReviewShellStoreApi();
+  const isImprovementsOpen = useReviewShellStore((state) => state.isImprovementsOpen);
   const isItemEditing = useReviewShellStore((state) =>
     Boolean(state.editingItem)
   );
@@ -365,6 +366,7 @@ export const useReviewShellRuntime = ({
 
   useReviewShellHotkeys({
     isRailHotkeyBlocked:
+      isImprovementsOpen ||
       isFigmaSettingsOpen ||
       isInitialPromptOpen ||
       isInitialPromptScriptOpen ||

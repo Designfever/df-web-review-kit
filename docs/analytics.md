@@ -33,10 +33,15 @@ Autocapture is disabled. Review Kit sends only these explicit events:
 Every event also includes:
 
 - `source: "review-kit"`
-- `project_id`
+- `page_name` once a DF Sheet page is selected and its name is available
 - `package_version`
 - a stable anonymous `anonymous_id`
-- `reviewer_name` only when df-sheet provides it
+- `creator_id`: the logged-in DF Sheet account ID, not the original issue author
+
+`page_name` and `creator_id` replace the former `project_id` and `reviewer_name`
+event properties. Page selection and adapter creation update the page context
+from the authenticated page list. Events before page selection omit `page_name`.
+`creator_id` is a custom event property; Amplitude's built-in user ID is not set.
 
 Event properties are allowlisted. Review content, target-page text, form values,
 API keys, tokens, URLs, and error messages are not sent as analytics properties.

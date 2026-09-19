@@ -1,24 +1,22 @@
 export const reviewShellImprovementsStyle = `
   .df-review-improvements-panel {
-    grid-column: 2;
-    grid-row: 1 / span 3;
-    position: relative;
-    z-index: 880;
-    display: grid;
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    padding: 0;
+    width: min(560px, calc(100vw - 32px));
+    height: min(680px, calc(100dvh - 40px));
+    max-height: calc(100dvh - 40px);
     grid-template-rows: auto minmax(0, 1fr);
-    min-width: 0;
-    min-height: 0;
-    overflow: hidden;
-    border-left: 1px solid var(--df-review-line-soft);
     color: var(--df-review-text);
-    background: linear-gradient(180deg, var(--df-review-panel), var(--df-review-bg));
   }
 
-  .df-review-shell:not(.is-list-visible) .df-review-improvements-panel,
-  .df-review-improvements-panel[aria-hidden='true'] {
-    visibility: hidden;
-    border-left: 0;
-    pointer-events: none;
+  .df-review-improvements-panel:not([open]) {
+    display: none;
+  }
+
+  .df-review-improvements-panel::backdrop {
+    background: var(--df-review-color-backdrop);
   }
 
   .df-review-improvements-header {
@@ -281,6 +279,12 @@ export const reviewShellImprovementsStyle = `
     border-color: var(--df-review-accent);
     color: var(--df-review-accent-contrast);
     background: var(--df-review-accent);
+  }
+
+  .df-review-improvements-form footer button {
+    height: var(--df-review-control-height-md);
+    min-height: var(--df-review-control-height-md);
+    font-size: var(--df-review-font-size-sm);
   }
 
   .df-review-improvements-form button:disabled {

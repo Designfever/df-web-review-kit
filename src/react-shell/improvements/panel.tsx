@@ -6,7 +6,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   getReviewAnalyticsFailureProperties,
   trackReviewEvent,
@@ -52,6 +52,17 @@ export const ImprovementsPanel = ({
   onClose: () => void;
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (isVisible && !dialog.open) {
+      dialog.showModal();
+      trackReviewEvent('view', { panelId: 'improvements' });
+    } else if (!isVisible && dialog.open) {
+      dialog.close();
+    }
+  }, [isVisible]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] =
@@ -168,11 +179,23 @@ export const ImprovementsPanel = ({
   };
 
   return (
-    <aside
+    <dialog
+      ref={dialogRef}
       id="df-review-improvements-panel"
-      className="df-review-improvements-panel"
-      aria-hidden={!isVisible}
+      className="df-review-settings-dialog df-review-improvements-panel"
       aria-label="개선사항 등록"
+      onClose={onClose}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      onClick={(event) => {
+        if (event.target !== event.currentTarget) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        if (event.clientX < rect.left || event.clientX > rect.right ||
+            event.clientY < rect.top || event.clientY > rect.bottom) onClose();
+      }}
+      onKeyDown={(event) => event.stopPropagation()}
     >
       <header className="df-review-improvements-header">
         <div>
@@ -326,6 +349,6 @@ export const ImprovementsPanel = ({
           </button>
         </footer>
       </form>
-    </aside>
+    </dialog>
   );
 };

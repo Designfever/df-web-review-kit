@@ -30,6 +30,12 @@ export const ReviewModal = ({
       aria-modal="true"
       className={className ?? 'df-review-prompt-modal'}
       role="dialog"
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+      }}
     >
       <button
         aria-label={`Close ${ariaLabel}`}

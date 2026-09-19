@@ -4,6 +4,8 @@ import type { ReviewMode } from '../../types';
 import type { ReviewShellState } from './create.review.shell.store';
 
 export interface UiSlice {
+  isImprovementsOpen: boolean;
+  setIsImprovementsOpen: (value: boolean) => void;
   isInitialPromptOpen: boolean;
   isInitialPromptScriptOpen: boolean;
   isSitemapOpen: boolean;
@@ -36,6 +38,8 @@ export const createUiSlice: StateCreator<
   [],
   UiSlice
 > = (set) => ({
+  isImprovementsOpen: false,
+  setIsImprovementsOpen: (isImprovementsOpen) => set({ isImprovementsOpen }),
   isInitialPromptOpen: false,
   isInitialPromptScriptOpen: false,
   isSitemapOpen: false,

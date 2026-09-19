@@ -56,7 +56,7 @@ export async function connectDfSheetReview(
   if (!projectId) throw new Error('projectId is required.');
 
   const baseUrl = trimBaseUrl(options.baseUrl ?? DEFAULT_DF_SHEET_REVIEW_URL);
-  const requestFetch = options.fetch ?? globalThis.fetch;
+  const requestFetch = options.fetch ?? globalThis.fetch?.bind(globalThis);
   if (!requestFetch) throw new Error('df-sheet review login requires fetch.');
 
   const sessionKey = `${SESSION_KEY_PREFIX}${projectId}`;
@@ -193,10 +193,15 @@ function createSession(input: {
   stored: StoredSession;
   selectPage?: boolean;
 }): DfSheetReviewSession {
-  configureReviewAnalytics(input.stored.analytics, {
-    projectId: input.stored.project.id,
-    reviewerName: input.stored.user.name,
-  });
+  let reviewPages: readonly DfSheetReviewPage[] = [];
+  const configureAnalytics = (pageId?: string) => {
+    configureReviewAnalytics(input.stored.analytics, {
+      projectId: input.stored.project.id,
+      pageName: reviewPages.find((page) => page.id === pageId)?.name,
+      creatorId: input.stored.user.user_id,
+    });
+  };
+  configureAnalytics();
   const sessionFetch: typeof fetch = async (url, init) => {
     const response = await input.requestFetch(url, init);
     if (response.status === 401) {
@@ -226,6 +231,7 @@ function createSession(input: {
 
   const updateSelectedPageId = (pageId?: string) => {
     selectedPageId = pageId;
+    configureAnalytics(pageId);
     if (pageId) {
       input.stored.selectedPageId = pageId;
       writeSelectedPageId(selectedPageKey, pageId);
@@ -244,6 +250,7 @@ function createSession(input: {
   }
 
   const resolveSelectedPageId = (pages: readonly DfSheetReviewPage[]) => {
+    reviewPages = pages;
     const rememberedPageId = readSelectedPageId(selectedPageKey);
     const candidate = selectedPageId ?? rememberedPageId;
     const resolved = pages.find((page) => page.id === candidate)?.id;
@@ -265,6 +272,7 @@ function createSession(input: {
     if (!resolved) {
       throw new Error('Cannot remember a page outside the authenticated project.');
     }
+    reviewPages = pages;
     updateSelectedPageId(resolved);
   };
 
@@ -276,19 +284,26 @@ function createSession(input: {
     },
     user: input.stored.user,
     expiresAt: input.stored.expiresAt,
-    listPages: () => request<DfSheetReviewPage[]>('/api/review/pages'),
+    listPages: async () => {
+      const pages = await request<DfSheetReviewPage[]>('/api/review/pages');
+      reviewPages = pages;
+      configureAnalytics(selectedPageId);
+      return pages;
+    },
     listAssignees: () =>
       request<DfSheetReviewAssignee[]>('/api/review/assignees'),
     resolveSelectedPageId,
     rememberSelectedPageId,
-    createAdapter: (options) =>
-      createDfSheetSessionAdapter({
+    createAdapter: (options) => {
+      configureAnalytics(options.pageId);
+      return createDfSheetSessionAdapter({
         ...options,
         baseUrl: input.baseUrl,
         projectId: input.stored.project.id,
         user: input.stored.user,
         request,
-      }),
+      });
+    },
     figmaImageStore: createEndpointReviewFigmaImageStore({
       endpoint: `${input.baseUrl}/api/review/figma-images`,
       fetch: sessionFetch,

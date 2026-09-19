@@ -3,6 +3,7 @@ import { ReviewModal } from '../review/modal';
 import { getPromptLengthLabel } from './prompt';
 
 interface InitialPromptModalProps {
+  embedded?: boolean;
   initialPromptText: string;
   copiedPromptKey: string | null;
   onClose: () => void;
@@ -10,19 +11,13 @@ interface InitialPromptModalProps {
 }
 
 export const InitialPromptModal = ({
+  embedded = false,
   initialPromptText,
   copiedPromptKey,
   onClose,
   onCopyPrompt,
 }: InitialPromptModalProps) => {
-  return (
-    <ReviewModal
-      ariaLabel="Initial prompt"
-      description="AI handoff script for coding agents"
-      dialogClassName="df-review-prompt-dialog-narrow"
-      title="Initial Prompt"
-      onClose={onClose}
-    >
+  const content = (
       <section
         className="df-review-prompt-block"
         aria-labelledby="df-review-initial-prompt-title"
@@ -49,6 +44,17 @@ export const InitialPromptModal = ({
           value={initialPromptText || 'Initial prompt is not configured.'}
         />
       </section>
+  );
+  if (embedded) return content;
+  return (
+    <ReviewModal
+      ariaLabel="Initial prompt"
+      description="AI handoff script for coding agents"
+      dialogClassName="df-review-prompt-dialog-narrow df-review-standard-dialog"
+      title="Initial Prompt"
+      onClose={onClose}
+    >
+      {content}
     </ReviewModal>
   );
 };

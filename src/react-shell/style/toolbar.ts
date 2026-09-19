@@ -413,6 +413,17 @@ export const reviewShellToolbarStyle = `
 	    background: var(--df-review-side-rail);
 	  }
 
+  .df-review-rail-group {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+  }
+
+  .df-review-rail-group + .df-review-rail-group {
+    border-top: 1px solid var(--df-review-line);
+    margin-top: 4px;
+  }
+
   .df-review-side-toggle {
     position: relative;
     flex: 0 0 48px;

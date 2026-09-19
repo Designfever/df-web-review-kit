@@ -10,6 +10,10 @@ describe('ImprovementsPanel', () => {
   const createImprovement = vi.fn();
 
   beforeEach(() => {
+    Object.defineProperties(HTMLDialogElement.prototype, {
+      showModal: { configurable: true, value: function (this: HTMLDialogElement) { this.open = true; } },
+      close: { configurable: true, value: function (this: HTMLDialogElement) { this.open = false; } },
+    });
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean })
       .IS_REACT_ACT_ENVIRONMENT = true;
     window.history.replaceState(
@@ -31,6 +35,35 @@ describe('ImprovementsPanel', () => {
   afterEach(async () => {
     await act(async () => root.unmount());
     container.remove();
+    Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+    Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+  });
+
+  it('opens as a modal, handles cancel, and preserves the draft after reopening', async () => {
+    const onClose = vi.fn();
+    const adapter = { createImprovement } as unknown as NormalizedReviewShellAdapter;
+    const render = async (isVisible: boolean) => {
+      await act(async () => root.render(
+        <ImprovementsPanel adapter={adapter} isVisible={isVisible}
+          projectId="project-1" reviewRoute="/story" onClose={onClose} />
+      ));
+    };
+    await render(true);
+    const dialog = container.querySelector('dialog')!;
+    expect(dialog.open).toBe(true);
+    const title = container.querySelector<HTMLInputElement>('input[placeholder="제목을 입력하세요"]')!;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(title, 'Draft');
+      title.dispatchEvent(new Event('input', { bubbles: true }));
+      dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
+    });
+    expect(onClose).toHaveBeenCalledOnce();
+    await render(false);
+    expect(dialog.open).toBe(false);
+    await render(true);
+    expect(dialog.open).toBe(true);
+    expect(title.value).toBe('Draft');
+    expect(createImprovement).not.toHaveBeenCalled();
   });
 
   it('adds the current review URL and shows a successful DF Sheet result', async () => {

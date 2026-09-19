@@ -35,6 +35,28 @@ describe('connectDfSheetReview', () => {
     window.history.replaceState(null, '', '/review');
   });
 
+  it('preserves the browser receiver when calling the default fetch from a session', async () => {
+    window.sessionStorage.setItem(sessionKey, JSON.stringify({
+      accessToken: 'short-token',
+      expiresAt: Date.now() + 300_000,
+      project: { id: projectId, key: 'IKAOS' },
+      user: { user_id: 'hyungjoo', name: 'Hyung-Joo' },
+    }));
+    const request = vi.fn(function (this: unknown) {
+      if (this !== globalThis) throw new TypeError('Illegal invocation');
+      return Promise.resolve(jsonResponse({ success: true, data: [{ id: 'page-1', name: 'QA' }] }));
+    });
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = request;
+    try {
+      const session = await connectDfSheetReview({ projectId });
+      await expect(session!.listPages()).resolves.toEqual([{ id: 'page-1', name: 'QA' }]);
+      expect(request).toHaveBeenCalledOnce();
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('reuses a short browser session and creates authenticated clients', async () => {
     window.sessionStorage.setItem(
       sessionKey,
@@ -238,7 +260,7 @@ describe('connectDfSheetReview', () => {
     });
     expect(analyticsMocks.configureReviewAnalytics).toHaveBeenCalledWith(
       session?.analytics,
-      { projectId, reviewerName: null }
+      { projectId, pageName: undefined, creatorId: 'hyungjoo' }
     );
     expect(window.location.search).toBe('?item=12');
     expect(window.sessionStorage.getItem(pendingKey)).toBeNull();
@@ -333,6 +355,10 @@ describe('connectDfSheetReview', () => {
     expect(session?.resolveSelectedPageId(pages)).toBeUndefined();
 
     session?.rememberSelectedPageId('page-2', pages);
+    expect(analyticsMocks.configureReviewAnalytics).toHaveBeenLastCalledWith(
+      session?.analytics,
+      { projectId, pageName: '운영 검수', creatorId: 'hyungjoo' }
+    );
     expect(session?.selectedPageId).toBe('page-2');
     expect(window.localStorage.getItem(selectedPageKey)).toBe('page-2');
     expect(JSON.parse(window.sessionStorage.getItem(sessionKey)!).selectedPageId)
@@ -341,6 +367,15 @@ describe('connectDfSheetReview', () => {
     const reloaded = await connectDfSheetReview({ projectId });
     expect(reloaded?.resolveSelectedPageId(pages)).toBe('page-2');
     expect(reloaded?.selectedPageId).toBe('page-2');
+    expect(analyticsMocks.configureReviewAnalytics).toHaveBeenLastCalledWith(
+      reloaded?.analytics,
+      { projectId, pageName: '운영 검수', creatorId: 'hyungjoo' }
+    );
+    reloaded?.createAdapter({ pageId: 'page-1' });
+    expect(analyticsMocks.configureReviewAnalytics).toHaveBeenLastCalledWith(
+      reloaded?.analytics,
+      { projectId, pageName: 'QA', creatorId: 'hyungjoo' }
+    );
 
     reloaded?.disconnect();
     expect(window.localStorage.getItem(selectedPageKey)).toBe('page-2');

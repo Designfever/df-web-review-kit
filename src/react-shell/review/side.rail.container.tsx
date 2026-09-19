@@ -10,8 +10,6 @@ export const ReviewSideRailContainer = () => {
   const { improvementAdapterEntry, onLogout } = useReviewShellConfig();
   const {
     openAbout,
-    openInitialPrompt,
-    openSettings,
     toggleFigmaImagesPanel,
     toggleImprovementsPanel,
     toggleDesignInspectorPanel,
@@ -25,6 +23,7 @@ export const ReviewSideRailContainer = () => {
   const { isEnabled: isFigmaImageManagementEnabled } =
     useReviewFigmaImagesState();
   const isListVisible = useReviewShellStore((state) => state.isListVisible);
+  const isImprovementsOpen = useReviewShellStore((state) => state.isImprovementsOpen);
   const sidePanel = useReviewShellStore((state) => state.sidePanel);
 
   return (
@@ -41,16 +40,13 @@ export const ReviewSideRailContainer = () => {
       isImprovementEnabled={Boolean(improvementAdapterEntry?.createImprovement)}
       isImprovementsPanelVisible={
         Boolean(improvementAdapterEntry?.createImprovement) &&
-        isListVisible &&
-        sidePanel === 'improvements'
+        isImprovementsOpen
       }
       isDesignInspectorVisible={isListVisible && sidePanel === 'design-inspector'}
       isSourceTreePanelVisible={isListVisible && sidePanel === 'source'}
       presenceSessionId={presenceSessionId}
       onOpenAbout={openAbout}
-      onOpenInitialPrompt={openInitialPrompt}
       onLogout={onLogout}
-      onOpenSettings={openSettings}
       onToggleFigmaImagesPanel={toggleFigmaImagesPanel}
       onToggleImprovementsPanel={toggleImprovementsPanel}
       onToggleDesignInspector={toggleDesignInspectorPanel}

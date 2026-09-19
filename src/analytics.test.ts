@@ -27,7 +27,7 @@ describe('review analytics', () => {
         apiKey: 'browser-project-key',
         sessionReplay: { enabled: true, maskInputs: true, sampleRate: 1 },
       },
-      { projectId: 'project-1', reviewerName: 'Reviewer' }
+      { projectId: 'project-1', pageName: 'Release test', creatorId: 'hyungjoo' }
     );
     trackReviewEvent('click', {
       panelId: 'qa panel',
@@ -50,10 +50,10 @@ describe('review analytics', () => {
     );
     expect(amplitude.track).toHaveBeenCalledWith('click', {
       source: 'review-kit',
-      project_id: 'project-1',
+      page_name: 'Release test',
       package_version: expect.any(String),
       anonymous_id: expect.any(String),
-      reviewer_name: 'Reviewer',
+      creator_id: 'hyungjoo',
       panel_id: 'qa_panel',
       control_id: 'save_button',
       action: 'save',
@@ -61,6 +61,27 @@ describe('review analytics', () => {
     expect(window.localStorage.getItem(
       'df-web-review-kit:analytics:anonymous-id'
     )).toEqual(expect.any(String));
+  });
+
+  it('keeps queued events on their original page and user when context changes', async () => {
+    const { configureReviewAnalytics, trackReviewEvent } = await import('./analytics');
+    const config = { provider: 'amplitude' as const, apiKey: 'browser-project-key' };
+    configureReviewAnalytics(config, {
+      projectId: 'project-1', pageName: 'First page', creatorId: 'first-user',
+    });
+    trackReviewEvent('view', { panelId: 'qa' });
+    configureReviewAnalytics(config, {
+      projectId: 'project-1', pageName: 'Second page', creatorId: 'second-user',
+    });
+    trackReviewEvent('view', { panelId: 'qa' });
+    await vi.waitFor(() => expect(amplitude.track).toHaveBeenCalledTimes(2));
+    expect(amplitude.track).toHaveBeenNthCalledWith(1, 'view', expect.objectContaining({
+      page_name: 'First page', creator_id: 'first-user',
+    }));
+    expect(amplitude.track).toHaveBeenNthCalledWith(2, 'view', expect.objectContaining({
+      page_name: 'Second page', creator_id: 'second-user',
+    }));
+    expect(amplitude.initAll).toHaveBeenCalledOnce();
   });
 
   it('stays disabled without config and fails safely when initialization rejects', async () => {
@@ -73,7 +94,7 @@ describe('review analytics', () => {
     amplitude.initAll.mockRejectedValueOnce(new Error('blocked'));
     configureReviewAnalytics(
       { provider: 'amplitude', apiKey: 'rejected-key' },
-      { projectId: 'project-1' }
+      { projectId: 'project-1', creatorId: 'hyungjoo' }
     );
     trackReviewEvent('success', { action: 'save' });
     await new Promise((resolve) => window.setTimeout(resolve, 0));

@@ -43,7 +43,7 @@ Public docs are intentionally small. Keep implementation history, handoff notes,
 
 ## Release History
 
-- [0.14.0](release-notes-0.14.0.md): SSO 기반 Amplitude 명시적 이벤트와 Session Replay 자동 초기화.
+- [0.14.0](release-notes-0.14.0.md): SSO 기반 Amplitude·Session Replay, DF 탭 팝업·레일 정리와 릴리즈 알림.
 - [0.13.3](release-notes-0.13.3.md): DF Sheet 인증 실패 시 무한 로딩 해제와 세션 캐시 제거.
 - [0.13.2](release-notes-0.13.2.md): 프로젝트와 사용자별 DF Sheet 리뷰 페이지 선택 유지.
 - [0.13.1](release-notes-0.13.1.md): 완료된 Review Kit QA를 DF Sheet 상태와 동기화.

@@ -57,6 +57,10 @@ DF 팝업을 정리합니다.
 
 ## 검증 범위
 
+- 2026-09-21 릴리즈 검사: 기존 테스트 391개와 릴리즈 스크립트 테스트 4개 통과.
+  라이브러리·개발 fixture의 typecheck/build 및 dead-code 검사 통과.
+- 패키지 설치 E2E 통과: Vite React 소비 프로젝트의 타입·빌드·CLI 재실행,
+  Next.js 안내 및 legacy/custom 설치 경계 확인.
 - SSO analytics 계약과 session cache 전달을 검증합니다.
 - SDK 지연 초기화, property allowlist, 비활성화와 실패 격리를 검증합니다.
 - QA 저장의 click → success/failure 경로를 검증합니다.
@@ -65,3 +69,12 @@ DF 팝업을 정리합니다.
 - 사용자가 실제 DF Sheet 이슈 추가와 Amplitude 이벤트 수신을 확인했습니다.
   변경된 `page_name`/`creator_id`의 대시보드 수신, 실제 Figma import,
   Session Replay masking은 별도 실환경 확인이 필요합니다.
+
+## 릴리즈 명령과 알림
+
+- `pnpm release -- "변경 내용 메모"`로 검사와 npm publish를 실행합니다.
+  성공 후 JANDI와 Discord에 버전, 메모, 완료 시각(KST), npm 링크를 보냅니다.
+- 로컬 `.env.release`에서 webhook 설정을 읽습니다. 실제 URL은 Git과
+  배포 패키지에 포함하지 않습니다.
+- 알림 실패 시 이미 성공한 npm publish를 다시 실행하지 않습니다.
+  registry와 각 채널의 수신 여부를 확인한 뒤 누락된 알림만 처리합니다.

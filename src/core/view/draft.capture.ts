@@ -21,6 +21,7 @@ function canCaptureViewport(config: WebReviewKitViewConfig) {
 /** Area draft capture payload: stored coordinates as-is. */
 function getCaptureAreaDraft(draft: AreaDraft) {
   return {
+    annotations: draft.annotations,
     viewport: draft.viewport,
     marker: draft.marker,
     selection: draft.selection,
@@ -38,6 +39,7 @@ function getCaptureDomDraft(
 ) {
   if (!isElementDraft) {
     return {
+      annotations: draft.annotations,
       viewport: draft.viewport,
       marker: draft.marker,
       selection: draft.selection,
@@ -65,6 +67,7 @@ function getCaptureDomDraft(
     : undefined;
 
   return {
+    annotations: draft.annotations,
     viewport: draft.viewport,
     marker,
     selection,

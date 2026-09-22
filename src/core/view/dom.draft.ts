@@ -46,6 +46,7 @@ import {
 } from './form.widgets';
 import { setAdjustmentToggleIcon } from './icons';
 import { createSelectionHighlight } from './markers';
+import { createDomAnnotationLayer } from './area.annotation';
 import type { DraftLayerContext } from './types';
 
 /**
@@ -86,6 +87,16 @@ export function createDomDraftLayer(
       true
     );
     group.append(selectionHighlight);
+    group.append(
+      createDomAnnotationLayer(context, draft, (currentDraft) => {
+        const currentSelection = currentDraft.selection?.viewport;
+        if (!currentSelection) return undefined;
+        const selection = toViewportSelection(currentSelection);
+        return isElementDraft
+          ? getAdjustedDraftSelection(selection, currentDraft, presets)
+          : selection;
+      })
+    );
   }
 
   const pin = document.createElement('button');
@@ -263,6 +274,7 @@ export function createDomDraftLayer(
       anchor: currentDraft.anchor,
       marker: currentDraft.marker,
       selection: currentDraft.selection,
+      annotations: currentDraft.annotations,
       attachments: currentDraft.attachments,
     });
   };

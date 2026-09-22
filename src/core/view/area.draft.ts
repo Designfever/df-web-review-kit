@@ -32,6 +32,7 @@ import {
   isTitleFieldEnabled,
 } from './form.widgets';
 import { createMarkerElement, createSelectionHighlight } from './markers';
+import { createAreaAnnotationLayer } from './area.annotation';
 import type { DraftLayerContext } from './types';
 
 /** Area draft form: metrics, comment, attachments, assignee, save/cancel. */
@@ -160,6 +161,7 @@ export function createAreaForm(context: DraftLayerContext) {
         anchor: draft.anchor,
         marker: draft.marker,
         selection: draft.selection,
+        annotations: draft.annotations,
         attachments: draft.attachments,
       });
     },
@@ -241,6 +243,7 @@ export function createAreaDraftOverlay(
 
   const selection = toViewportSelection(draft.selection.viewport);
   layer.append(createSelectionHighlight(selection, environment, true));
+  layer.append(createAreaAnnotationLayer(context, draft));
 
   if (draft.marker) {
     const hostPoint = toHostPoint(draft.marker.viewport, environment);

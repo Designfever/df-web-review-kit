@@ -36,6 +36,7 @@ export async function captureIframeViewport(
   try {
     const screen = await screenCaptureSessions.get(frame)?.capture(frame, viewport, region);
     if (screen) {
+      drawCaptureRectangles(screen, 1, input, region);
       return {
         file: await canvasToBlob(screen, 'image/png'),
         name: `b-${formatCaptureTimestamp(input.timestamp)}.png`,
@@ -151,6 +152,7 @@ async function createHtml2CanvasCapture(
   const canvas = region
     ? cropCaptureCanvas(targetDocument, sourceCanvas, region, scale)
     : sourceCanvas;
+  drawCaptureRectangles(canvas, scale, input, region);
   if (!region) {
     drawCaptureAnnotations(canvas, scale, input);
   }
@@ -528,6 +530,31 @@ function drawCaptureAnnotations(
   context.scale(scale, scale);
   drawCaptureSelection(context, input.selection?.viewport);
   drawCaptureMarker(context, input.marker?.viewport);
+  context.restore();
+}
+
+function drawCaptureRectangles(
+  canvas: HTMLCanvasElement,
+  scale: number,
+  input: ReviewViewportCaptureInput,
+  region?: RelativeSelection
+) {
+  if (!input.annotations?.length) return;
+  const context = canvas.getContext('2d');
+  if (!context) return;
+
+  context.save();
+  context.scale(scale, scale);
+  context.lineWidth = 3;
+  context.strokeStyle = '#8b5cf6';
+  context.shadowColor = 'rgba(0, 0, 0, 0.9)';
+  context.shadowBlur = 4;
+  context.shadowOffsetY = 2;
+  for (const annotation of input.annotations) {
+    const x = annotation.x - (region?.x ?? 0);
+    const y = annotation.y - (region?.y ?? 0);
+    context.strokeRect(x, y, annotation.width, annotation.height);
+  }
   context.restore();
 }
 

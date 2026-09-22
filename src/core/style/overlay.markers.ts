@@ -7,10 +7,76 @@ export const overlayMarkersStyle = `    .dfwr-marker-layer {
     }
 
     .dfwr-area-preview-layer {
+      display: contents;
+    }
+
+    .dfwr-area-annotation-layer {
+      display: contents;
+    }
+
+    .dfwr-area-annotation-canvas {
       position: fixed;
-      inset: 0;
-      z-index: 3;
+      display: block;
+      z-index: 4;
+      cursor: crosshair;
+      filter:
+        drop-shadow(0 0 1px rgba(255, 255, 255, 0.95))
+        drop-shadow(0 2px 3px rgba(0, 0, 0, 0.9));
       pointer-events: none;
+      touch-action: none;
+    }
+
+    .dfwr-area-annotation-canvas.is-active {
+      pointer-events: auto;
+    }
+
+    .dfwr-area-annotation-toolbar {
+      position: fixed;
+      z-index: 5;
+      display: flex;
+      gap: 6px;
+      padding: 5px;
+      transform: translateX(-100%);
+      border: 1px solid var(--df-review-color-border);
+      border-radius: var(--df-review-radius-sm);
+      background: var(--df-review-color-panel);
+      box-shadow: var(--df-review-shadow-popover);
+      pointer-events: auto;
+    }
+
+    .dfwr-area-annotation-toolbar button {
+      appearance: none;
+      min-width: 36px;
+      height: 32px;
+      padding: 0 9px;
+      border: 1px solid var(--df-review-color-border-strong);
+      border-radius: var(--df-review-radius-xs);
+      color: var(--df-review-color-text);
+      background: var(--df-review-color-control);
+      cursor: pointer;
+      font: inherit;
+      font-size: var(--df-review-font-size-xs);
+    }
+
+    .dfwr-area-annotation-toolbar button:hover,
+    .dfwr-area-annotation-toolbar button:focus-visible,
+    .dfwr-area-annotation-toolbar button.is-active {
+      border-color: #8b5cf6;
+      background: rgba(139, 92, 246, 0.16);
+      outline: none;
+    }
+
+    .dfwr-area-annotation-toolbar button:disabled {
+      opacity: 0.42;
+      cursor: default;
+    }
+
+    .dfwr-area-annotation-rectangle-icon {
+      display: block;
+      width: 18px;
+      height: 14px;
+      margin: auto;
+      border: 2px solid #8b5cf6;
     }
 
     .dfwr-selection-highlight {

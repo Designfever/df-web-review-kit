@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useRef,
   type MutableRefObject,
   type RefObject,
 } from 'react';
@@ -11,6 +12,7 @@ import type {
 } from '../../types';
 import {
   getReviewItemRestoreScrollPosition,
+  isAnchorRestorableReviewItem,
   queryReviewItemAnchorElement,
   setDocumentScrollInstantly,
 } from '../anchor.restore';
@@ -65,16 +67,10 @@ function runWithAutoScrollBehavior(
 
 const RESTORE_WAIT_MAX_MS = 2600;
 const RESTORE_STABLE_FRAME_COUNT = 2;
-const RESTORE_SCROLL_RECHECK_DELAYS_MS = [120, 360] as const;
 
 const waitForNextAnimationFrame = (targetWindow: Window) =>
   new Promise<void>((resolve) => {
     targetWindow.requestAnimationFrame(() => resolve());
-  });
-
-const waitForTargetTimeout = (targetWindow: Window, ms: number) =>
-  new Promise<void>((resolve) => {
-    targetWindow.setTimeout(resolve, ms);
   });
 
 const getRestoreLayoutSnapshot = (
@@ -97,6 +93,20 @@ const getRestoreLayoutSnapshot = (
   ].join(':');
 };
 
+const canRestoreStoredScrollPosition = (
+  targetWindow: Window,
+  targetDocument: Document,
+  item: ReviewItem
+) => {
+  const scrollElement = targetDocument.scrollingElement;
+  const maxTop = Math.max(
+    0,
+    (scrollElement?.scrollHeight ?? 0) - targetWindow.innerHeight
+  );
+
+  return maxTop >= (item.scroll?.y ?? 0);
+};
+
 const waitForRestoreAnchor = async (
   targetWindow: Window,
   targetDocument: Document,
@@ -113,7 +123,9 @@ const waitForRestoreAnchor = async (
   ) {
     const anchorElement = queryReviewItemAnchorElement(targetDocument, item);
     const snapshot = getRestoreLayoutSnapshot(targetDocument, anchorElement);
-    const canRestore = item.anchor ? Boolean(anchorElement) : true;
+    const canRestore = isAnchorRestorableReviewItem(item)
+      ? Boolean(anchorElement)
+      : canRestoreStoredScrollPosition(targetWindow, targetDocument, item);
 
     if (snapshot === previousSnapshot) {
       stableFrameCount += 1;
@@ -149,6 +161,7 @@ export const useReviewItemRestore = ({
   onTargetChange,
 }: UseReviewItemRestoreOptions) => {
   const storeApi = useReviewShellStoreApi();
+  const activeRestoreItemIdRef = useRef<string | null>(null);
   const clearSelectedItem = useCallback(() => {
     pendingRestoreRef.current = null;
     onSelectedItemIdChange(null);
@@ -193,10 +206,12 @@ export const useReviewItemRestore = ({
         return true;
       };
 
-      if (!applyScrollPosition(queryReviewItemAnchorElement(targetDocument, item))) {
-        return false;
+      if (
+        !isAnchorRestorableReviewItem(item) &&
+        canRestoreStoredScrollPosition(targetWindow, targetDocument, item)
+      ) {
+        return applyScrollPosition();
       }
-      highlightControllerItem(item, controllerRef.current, isCurrentRestore);
 
       const anchorElement = await waitForRestoreAnchor(
         targetWindow,
@@ -209,12 +224,6 @@ export const useReviewItemRestore = ({
       if (!applyScrollPosition(anchorElement)) return false;
       highlightControllerItem(item, controllerRef.current, isCurrentRestore);
 
-      for (const delay of RESTORE_SCROLL_RECHECK_DELAYS_MS) {
-        await waitForTargetTimeout(targetWindow, delay);
-        if (!applyScrollPosition(anchorElement)) return false;
-        highlightControllerItem(item, controllerRef.current, isCurrentRestore);
-      }
-
       return true;
     },
     [controllerRef, iframeRef, onSyncTargetViewport, storeApi]
@@ -222,13 +231,20 @@ export const useReviewItemRestore = ({
 
   const applyPendingRestore = useCallback(() => {
     const item = pendingRestoreRef.current;
-    if (!item) return;
+    if (!item || activeRestoreItemIdRef.current === item.id) return;
+    activeRestoreItemIdRef.current = item.id;
 
-    void applyItemScroll(item).then((didApply) => {
-      if (didApply && pendingRestoreRef.current?.id === item.id) {
-        pendingRestoreRef.current = null;
-      }
-    });
+    void applyItemScroll(item)
+      .then((didApply) => {
+        if (didApply && pendingRestoreRef.current?.id === item.id) {
+          pendingRestoreRef.current = null;
+        }
+      })
+      .finally(() => {
+        if (activeRestoreItemIdRef.current === item.id) {
+          activeRestoreItemIdRef.current = null;
+        }
+      });
   }, [applyItemScroll, pendingRestoreRef]);
 
   const restoreReviewItem = useCallback(

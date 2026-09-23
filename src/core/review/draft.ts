@@ -36,6 +36,8 @@ export interface ReviewDraftAttachment {
 /** In-progress area item before it is persisted through the adapter. */
 export interface AreaDraft extends ReviewDraftComposer {
   viewport: ViewportSize;
+  /** Target scroll position used to keep viewport geometry attached to page content. */
+  scroll?: ReviewPoint;
   anchor?: DomAnchor;
   marker?: ReviewMarker;
   selection?: ReviewSelection;

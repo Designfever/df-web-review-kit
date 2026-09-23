@@ -455,15 +455,56 @@ class WebReviewKitApp {
   };
 
   private readonly handleViewportChange = () => {
-    if (!this.isOpen || this.renderFrame || this.isDraftComposerFocused()) return;
+    if (!this.isOpen || this.renderFrame) return;
 
     this.renderFrame = window.requestAnimationFrame(() => {
       this.renderFrame = undefined;
-      if (this.isDraftComposerFocused()) return;
+      this.syncAreaDraftViewportGeometry();
       this.syncDomDraftViewportGeometry();
+      if (this.isDraftComposerFocused()) return;
       this.render();
     });
   };
+
+  private syncAreaDraftViewportGeometry() {
+    const draft = this.areaDraft;
+    const environment = this.getEnvironment();
+    if (!draft?.selection || !environment) return;
+
+    const scroll = {
+      x: environment.window.scrollX,
+      y: environment.window.scrollY,
+    };
+    const previousScroll = draft.scroll ?? scroll;
+    const delta = {
+      x: previousScroll.x - scroll.x,
+      y: previousScroll.y - scroll.y,
+    };
+    if (delta.x === 0 && delta.y === 0 && draft.scroll) return;
+
+    this.areaDraft = {
+      ...draft,
+      scroll,
+      marker: draft.marker
+        ? {
+            ...draft.marker,
+            viewport: roundPoint({
+              x: draft.marker.viewport.x + delta.x,
+              y: draft.marker.viewport.y + delta.y,
+            }),
+          }
+        : undefined,
+      selection: {
+        ...draft.selection,
+        viewport: {
+          ...draft.selection.viewport,
+          x: draft.selection.viewport.x + delta.x,
+          y: draft.selection.viewport.y + delta.y,
+        },
+      },
+      annotations: translateAnnotations(draft.annotations, delta),
+    };
+  }
 
   private syncDomDraftViewportGeometry() {
     const draft = this.domDraft;
@@ -497,6 +538,10 @@ class WebReviewKitApp {
         ...draft.selection,
         viewport: toPublicSelection(selection),
       },
+      annotations: translateAnnotations(draft.annotations, {
+        x: selection.left - draft.selection.viewport.x,
+        y: selection.top - draft.selection.viewport.y,
+      }),
     };
   }
 
@@ -841,6 +886,17 @@ class WebReviewKitApp {
     this.highlightItem(item.id);
     this.render();
   }
+}
+
+function translateAnnotations(
+  annotations: AreaDraft['annotations'],
+  delta: ReviewPoint
+) {
+  return annotations?.map((annotation) => ({
+    ...annotation,
+    x: annotation.x + delta.x,
+    y: annotation.y + delta.y,
+  }));
 }
 
 function createNoopController(): WebReviewKitController {

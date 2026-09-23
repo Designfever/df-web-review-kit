@@ -7,10 +7,9 @@ import {
 import type { DraftLayerContext } from './types';
 
 describe('createAreaAnnotationLayer', () => {
-  it('blocks wheel scrolling only while the rectangle tool is active', () => {
+  it('updates the area draft from the rectangle and clear controls', () => {
     let draft: AreaDraft = {
       viewport: { width: 390, height: 844 },
-      annotationTool: 'rectangle',
     };
     const context = {
       config: {
@@ -25,26 +24,47 @@ describe('createAreaAnnotationLayer', () => {
       },
     } as unknown as DraftLayerContext;
     const layer = createAreaAnnotationLayer(context, draft);
-    const canvas = layer.querySelector('canvas');
-    if (!canvas) throw new Error('Annotation canvas was not created.');
-
+    const rectangleButton = layer.querySelector<HTMLButtonElement>(
+      '[aria-label="Draw rectangle"]'
+    );
+    if (!rectangleButton) {
+      throw new Error('Area annotation draw control was not created.');
+    }
     expect(
-      canvas.dispatchEvent(new WheelEvent('wheel', { cancelable: true }))
-    ).toBe(false);
+      rectangleButton.querySelectorAll(
+        '.dfwr-area-annotation-rectangle-icon span'
+      )
+    ).toHaveLength(4);
 
-    draft = { ...draft, annotationTool: undefined };
+    rectangleButton.click();
+    expect(draft.annotationTool).toBe('rectangle');
+
+    draft = {
+      ...draft,
+      annotations: [
+        { kind: 'rectangle', x: 20, y: 30, width: 80, height: 40 },
+      ],
+    };
+    const clearButton = createAreaAnnotationLayer(
+      context,
+      draft
+    ).querySelector<HTMLButtonElement>('[aria-label="Clear annotations"]');
+    if (!clearButton) {
+      throw new Error('Area annotation clear control was not created.');
+    }
+    expect(clearButton.title).toBe('Clear annotations');
     expect(
-      canvas.dispatchEvent(new WheelEvent('wheel', { cancelable: true }))
-    ).toBe(true);
+      clearButton.querySelector('.dfwr-area-annotation-clear-icon')
+    ).not.toBeNull();
+    clearButton.click();
+    expect(draft.annotations).toBeUndefined();
+    expect(draft.annotationTool).toBeUndefined();
   });
 
   it('updates the DOM draft from the rectangle and clear controls', () => {
     let draft: DomDraft = {
       viewport: { width: 390, height: 844 },
       marker: { viewport: { x: 20, y: 30 } },
-      annotations: [
-        { kind: 'rectangle', x: 20, y: 30, width: 80, height: 40 },
-      ],
     };
     const context = {
       config: {
@@ -62,17 +82,32 @@ describe('createAreaAnnotationLayer', () => {
     const rectangleButton = layer.querySelector<HTMLButtonElement>(
       '[aria-label="Draw rectangle"]'
     );
-    const clearButton = layer.querySelector<HTMLButtonElement>(
-      '[aria-label="Clear annotations"]'
-    );
-    if (!rectangleButton || !clearButton) {
-      throw new Error('DOM annotation controls were not created.');
+    if (!rectangleButton) {
+      throw new Error('DOM annotation draw control was not created.');
     }
 
     rectangleButton.click();
     expect(draft.annotationTool).toBe('rectangle');
 
+    draft = {
+      ...draft,
+      annotations: [
+        { kind: 'rectangle', x: 20, y: 30, width: 80, height: 40 },
+      ],
+    };
+    const clearButton = createDomAnnotationLayer(
+      context,
+      draft,
+      () => undefined
+    ).querySelector<HTMLButtonElement>('[aria-label="Clear annotations"]');
+    if (!clearButton) {
+      throw new Error('DOM annotation clear control was not created.');
+    }
+    expect(
+      clearButton.querySelector('.dfwr-area-annotation-clear-icon')
+    ).not.toBeNull();
     clearButton.click();
     expect(draft.annotations).toBeUndefined();
+    expect(draft.annotationTool).toBeUndefined();
   });
 });

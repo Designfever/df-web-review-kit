@@ -188,6 +188,7 @@ export interface ReviewItem {
   anchor?: DomAnchor;
   marker?: ReviewMarker;
   selection?: ReviewSelection;
+  annotations?: ReviewRectangleAnnotation[];
   attachments?: ReviewAttachment[];
   externalIssueId?: string;
   externalIssueUrl?: string;

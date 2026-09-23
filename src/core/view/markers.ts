@@ -62,55 +62,19 @@ export function createMarkerElement(
   return marker;
 }
 
-/** Dashed rectangle shown while drafting or when restoring a selection. */
-export function createSelectionHighlight(
-  selection: ViewportSelection,
-  environment: ReviewEnvironment,
-  isDraft: boolean
-) {
-  const rect = toHostSelection(selection, environment);
-  const highlight = document.createElement('div');
-  highlight.className = `dfwr-selection-highlight${
-    isDraft ? ' is-draft' : ''
-  }`;
-  highlight.style.left = `${rect.left}px`;
-  highlight.style.top = `${rect.top}px`;
-  highlight.style.width = `${rect.width}px`;
-  highlight.style.height = `${rect.height}px`;
-  return highlight;
-}
-
-/** Highlight box + floating label pair for a stored item's target area. */
-function createItemHighlightElements(
+/** Floating DOM label for a stored item whose rectangle is drawn on Canvas. */
+function createItemHighlightLabel(
   selection: ViewportSelection,
   environment: ReviewEnvironment,
   item: ReviewItem,
   label: string,
   scope: ReviewItemScope,
-  isBound: boolean,
   isHighlighted: boolean,
   showLabel: boolean
 ) {
+  if (!showLabel) return [];
   const rect = toHostSelection(selection, environment);
   const mode = getReviewItemHighlightMode(item);
-  const highlight = document.createElement('div');
-  highlight.className = [
-    'dfwr-item-target-highlight',
-    `is-mode-${mode}`,
-    `is-scope-${scope}`,
-    isBound ? 'is-bound' : 'is-fallback',
-    isHighlighted ? 'is-highlighted' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
-  highlight.style.left = `${rect.left}px`;
-  highlight.style.top = `${rect.top}px`;
-  highlight.style.width = `${rect.width}px`;
-  highlight.style.height = `${rect.height}px`;
-  highlight.dataset.reviewItemId = item.id;
-
-  if (!showLabel) return [highlight];
-
   const labelElement = document.createElement('div');
   labelElement.className = [
     'dfwr-item-target-label',
@@ -126,7 +90,7 @@ function createItemHighlightElements(
   labelElement.style.top = `${Math.max(4, rect.top - 24)}px`;
   labelElement.dataset.reviewItemId = item.id;
 
-  return [highlight, labelElement];
+  return [labelElement];
 }
 
 /**
@@ -169,13 +133,12 @@ export function createMarkerLayer({
       const selection = getItemHighlightSelection(item, environment);
       if (selection) {
         layer.append(
-          ...createItemHighlightElements(
+          ...createItemHighlightLabel(
             selection.viewport,
             environment,
             item,
             displayLabel,
             scope,
-            selection.isBound,
             isHighlighted,
             showHighlightLabels
           )

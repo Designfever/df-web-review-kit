@@ -31,7 +31,7 @@ import {
   getDraftFields,
   isTitleFieldEnabled,
 } from './form.widgets';
-import { createMarkerElement, createSelectionHighlight } from './markers';
+import { createMarkerElement } from './markers';
 import { createAreaAnnotationLayer } from './area.annotation';
 import type { DraftLayerContext } from './types';
 
@@ -241,8 +241,6 @@ export function createAreaDraftOverlay(
   const environment = config.getEnvironment();
   if (!environment || !draft.selection) return layer;
 
-  const selection = toViewportSelection(draft.selection.viewport);
-  layer.append(createSelectionHighlight(selection, environment, true));
   layer.append(createAreaAnnotationLayer(context, draft));
 
   if (draft.marker) {

@@ -17,6 +17,7 @@ import { createAreaDraftOverlay, createAreaDraftPopover, createAreaForm } from '
 import { createDomDraftLayer } from './view/dom.draft';
 import { createMarkerLayer } from './view/markers';
 import { createReviewPanel } from './view/panel';
+import { createReviewCanvas } from './view/review.canvas';
 import { createAreaLayer, createElementLayer } from './view/selection.layers';
 import type {
   DraftLayerContext,
@@ -90,6 +91,7 @@ export class WebReviewKitView {
       .filter(Boolean)
       .join(' ');
     shell.setAttribute('aria-hidden', state.isOpen ? 'false' : 'true');
+    shell.append(createReviewCanvas(this.draftContext));
 
     if (this.config.options.ui?.panel !== false) {
       // Standalone core usage gets a built-in panel; React shell disables this.

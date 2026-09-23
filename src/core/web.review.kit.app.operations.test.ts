@@ -184,8 +184,11 @@ describe('core item and attachment orchestration', () => {
 
   it('normalizes owners and persistence metadata without altering comment or geometry', async () => {
     const { config, create } = setup({ userId: ' reviewer ', assigneeOptions: [{ value: 'two', label: 'Two' }] });
-    await config.actions.createItem({ ...input, title: ' Title ', assigneeIds: [' one ', 'one', '', 'two'], assigneeNames: [' First ', ''], viewport: { width: 390, height: 844 }, scope: 'mobile', status: 'review', marker: { viewport: { x: 2, y: 3 } } });
-    expect(create.mock.calls[0][0]).toMatchObject({ title: 'Title', createdBy: 'reviewer', assigneeId: 'one', assigneeName: 'First', assigneeIds: ['one', 'two'], assigneeNames: ['First', 'Two'], scope: 'mobile', status: 'review', viewport: { width: 390, height: 844 }, comment: input.comment, marker: { viewport: { x: 2, y: 3 } } });
+    const annotations = [
+      { kind: 'rectangle' as const, x: 10, y: 20, width: 30, height: 40 },
+    ];
+    await config.actions.createItem({ ...input, title: ' Title ', assigneeIds: [' one ', 'one', '', 'two'], assigneeNames: [' First ', ''], viewport: { width: 390, height: 844 }, scope: 'mobile', status: 'review', marker: { viewport: { x: 2, y: 3 } }, annotations });
+    expect(create.mock.calls[0][0]).toMatchObject({ title: 'Title', createdBy: 'reviewer', assigneeId: 'one', assigneeName: 'First', assigneeIds: ['one', 'two'], assigneeNames: ['First', 'Two'], scope: 'mobile', status: 'review', viewport: { width: 390, height: 844 }, comment: input.comment, marker: { viewport: { x: 2, y: 3 } }, annotations });
     expect(create.mock.calls[0][0].updatedAt).toBe(create.mock.calls[0][0].createdAt);
     await config.actions.createItem({ ...input, assigneeId: ' two ' });
     expect(create.mock.calls[1][0]).toMatchObject({ assigneeId: 'two', assigneeName: 'Two', status: 'todo' });

@@ -4,6 +4,7 @@ import type {
   ReviewItemStatus,
   ReviewMarker,
   ReviewPoint,
+  ReviewRectangleAnnotation,
   ReviewSelection,
   ViewportSize,
 } from '../../types';
@@ -35,6 +36,8 @@ export interface ReviewDraftAttachment {
 /** In-progress area item before it is persisted through the adapter. */
 export interface AreaDraft extends ReviewDraftComposer {
   viewport: ViewportSize;
+  /** Target scroll position used to keep viewport geometry attached to page content. */
+  scroll?: ReviewPoint;
   anchor?: DomAnchor;
   marker?: ReviewMarker;
   selection?: ReviewSelection;
@@ -46,6 +49,8 @@ export interface AreaDraft extends ReviewDraftComposer {
   assigneeIds?: string[];
   assigneeNames?: string[];
   attachments?: ReviewDraftAttachment[];
+  annotationTool?: 'rectangle';
+  annotations?: ReviewRectangleAnnotation[];
 }
 
 /** In-progress DOM item before it is persisted through the adapter. */
@@ -66,4 +71,6 @@ export interface DomDraft extends ReviewDraftComposer {
   adjustment?: ReviewAdjustmentDraft;
   previewElement?: ReviewDraftPreviewElement;
   attachments?: ReviewDraftAttachment[];
+  annotationTool?: 'rectangle';
+  annotations?: ReviewRectangleAnnotation[];
 }

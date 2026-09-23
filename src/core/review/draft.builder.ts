@@ -177,6 +177,10 @@ export function buildAreaDraft(params: {
 
   return {
     viewport,
+    scroll: {
+      x: environment.window.scrollX,
+      y: environment.window.scrollY,
+    },
     anchor,
     marker,
     selection: reviewSelection,

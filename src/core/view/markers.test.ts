@@ -39,7 +39,7 @@ function createAreaItem(overrides: Partial<ReviewItem> = {}): ReviewItem {
 }
 
 describe('createMarkerLayer', () => {
-  it('keeps the highlight when the shell renders its title', () => {
+  it('leaves visual highlights to Canvas when the shell renders its title', () => {
     const layer = createMarkerLayer({
       items: [createAreaItem()],
       highlightedItemId: 'item-111',
@@ -48,7 +48,7 @@ describe('createMarkerLayer', () => {
       showHighlightLabels: false,
     });
 
-    expect(layer.querySelector('.dfwr-item-target-highlight')).not.toBeNull();
+    expect(layer.querySelector('.dfwr-item-target-highlight')).toBeNull();
     expect(layer.querySelector('.dfwr-item-target-label')).toBeNull();
   });
 
@@ -101,7 +101,7 @@ describe('createMarkerLayer', () => {
     expect(layer.querySelector('.dfwr-item-target-highlight')).toBeNull();
   });
 
-  it('renders the selected item with its target highlight', () => {
+  it('renders only the DOM label for a selected item', () => {
     const layer = createMarkerLayer({
       items: [createAreaItem({ scope: 'mobile' })],
       highlightedItemId: 'item-111',
@@ -112,7 +112,7 @@ describe('createMarkerLayer', () => {
     expect(layer.querySelector('.dfwr-bound-marker')).toBeNull();
     expect(
       layer.querySelector('.dfwr-item-target-highlight.is-scope-mobile')
-    ).not.toBeNull();
+    ).toBeNull();
     expect(
       layer.querySelector('.dfwr-item-target-label.is-scope-mobile')
     ).not.toBeNull();

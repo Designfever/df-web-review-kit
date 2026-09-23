@@ -45,7 +45,7 @@ import {
   isTitleFieldEnabled,
 } from './form.widgets';
 import { setAdjustmentToggleIcon } from './icons';
-import { createSelectionHighlight } from './markers';
+import { createDomAnnotationLayer } from './area.annotation';
 import type { DraftLayerContext } from './types';
 
 /**
@@ -74,18 +74,17 @@ export function createDomDraftLayer(
       : draft.marker.viewport,
     environment
   );
-  let selectionHighlight: HTMLDivElement | undefined;
-
   if (draft.selection) {
-    const selection = toViewportSelection(draft.selection.viewport);
-    selectionHighlight = createSelectionHighlight(
-      isElementDraft
-        ? getAdjustedDraftSelection(selection, draft, presets)
-        : selection,
-      environment,
-      true
+    group.append(
+      createDomAnnotationLayer(context, draft, (currentDraft) => {
+        const currentSelection = currentDraft.selection?.viewport;
+        if (!currentSelection) return undefined;
+        const selection = toViewportSelection(currentSelection);
+        return isElementDraft
+          ? getAdjustedDraftSelection(selection, currentDraft, presets)
+          : selection;
+      })
     );
-    group.append(selectionHighlight);
   }
 
   const pin = document.createElement('button');
@@ -263,6 +262,7 @@ export function createDomDraftLayer(
       anchor: currentDraft.anchor,
       marker: currentDraft.marker,
       selection: currentDraft.selection,
+      annotations: currentDraft.annotations,
       attachments: currentDraft.attachments,
     });
   };
@@ -272,7 +272,6 @@ export function createDomDraftLayer(
         draft,
         pin,
         popover,
-        selectionHighlight,
         textarea,
         dockToggle: options.dockComposer,
       })
@@ -377,7 +376,7 @@ export function createDomDraftLayer(
 /**
  * Element-adjustment controls (nudge the previewed element via arrow keys /
  * buttons). Wires keyboard deltas to the draft transform and keeps the pin,
- * popover, highlight and textarea in sync as the value changes.
+ * popover and textarea in sync as the value changes.
  */
 function createAdjustmentControls(
   context: DraftLayerContext,
@@ -385,14 +384,12 @@ function createAdjustmentControls(
     draft,
     pin,
     popover,
-    selectionHighlight,
     textarea,
     dockToggle,
   }: {
     draft: DomDraft;
     pin: HTMLButtonElement;
     popover: HTMLDivElement;
-    selectionHighlight?: HTMLDivElement;
     textarea: HTMLTextAreaElement;
     dockToggle?: boolean;
   }
@@ -444,7 +441,6 @@ function createAdjustmentControls(
     syncDraftAdjustmentUi(context, {
       draft: nextDraft,
       pin,
-      selectionHighlight,
     });
   };
 
@@ -521,17 +517,15 @@ function getAdjustmentKeyDelta(event: KeyboardEvent) {
   return undefined;
 }
 
-/** Re-applies adjusted coordinates to the pin/highlight and the live preview. */
+/** Re-applies adjusted coordinates to the pin and the live preview. */
 function syncDraftAdjustmentUi(
   context: DraftLayerContext,
   {
     draft,
     pin,
-    selectionHighlight,
   }: {
     draft: DomDraft;
     pin: HTMLButtonElement;
-    selectionHighlight?: HTMLDivElement;
   }
 ) {
   const { config } = context;
@@ -545,21 +539,6 @@ function syncDraftAdjustmentUi(
   );
   pin.style.left = `${hostPoint.x}px`;
   pin.style.top = `${hostPoint.y}px`;
-
-  if (draft.selection && selectionHighlight) {
-    const rect = toHostSelection(
-      getAdjustedDraftSelection(
-        toViewportSelection(draft.selection.viewport),
-        draft,
-        presets
-      ),
-      environment
-    );
-    selectionHighlight.style.left = `${rect.left}px`;
-    selectionHighlight.style.top = `${rect.top}px`;
-    selectionHighlight.style.width = `${rect.width}px`;
-    selectionHighlight.style.height = `${rect.height}px`;
-  }
 
   context.syncDraftPreview(draft);
 }

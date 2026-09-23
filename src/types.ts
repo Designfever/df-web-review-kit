@@ -129,7 +129,12 @@ export interface ReviewViewportCaptureInput {
   };
   marker?: ReviewMarker;
   selection?: ReviewSelection;
+  annotations?: ReviewRectangleAnnotation[];
   timestamp: string;
+}
+
+export interface ReviewRectangleAnnotation extends RelativeSelection {
+  kind: 'rectangle';
 }
 
 export interface ReviewViewportCaptureResult {
@@ -183,6 +188,7 @@ export interface ReviewItem {
   anchor?: DomAnchor;
   marker?: ReviewMarker;
   selection?: ReviewSelection;
+  annotations?: ReviewRectangleAnnotation[];
   attachments?: ReviewAttachment[];
   externalIssueId?: string;
   externalIssueUrl?: string;

@@ -60,4 +60,59 @@ describe('captureIframeViewport resolution', () => {
       vi.doUnmock('html2canvas');
     }
   });
+
+  it('rebases rectangle annotations into a cropped area capture', async () => {
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    const source = frame.contentDocument!.createElement('canvas');
+    const render = vi.fn(async (_element, options) => {
+      source.width = options.width;
+      source.height = options.height;
+      return source;
+    });
+    vi.doMock('html2canvas', () => ({ default: render }));
+    const prototype = Object.getPrototypeOf(source) as HTMLCanvasElement;
+    const drawImage = vi.fn();
+    const strokeRect = vi.fn();
+    const captureContext = {
+      drawImage,
+      restore: vi.fn(),
+      save: vi.fn(),
+      scale: vi.fn(),
+      strokeRect,
+    } as unknown as CanvasRenderingContext2D;
+    const context = vi
+      .spyOn(prototype, 'getContext')
+      .mockReturnValue(captureContext);
+    const encode = vi
+      .spyOn(prototype, 'toBlob')
+      .mockImplementation((callback) =>
+        callback(new Blob(['image'], { type: 'image/webp' }))
+      );
+    try {
+      const { captureIframeViewport } = await import('./capture');
+      await captureIframeViewport(frame, {
+        routeKey: '/',
+        pageUrl: 'http://localhost/',
+        viewport: { width: 390, height: 844 },
+        scroll: { x: 0, y: 0 },
+        timestamp: '2026-09-22T00:00:00Z',
+        captureRegion: { x: 20, y: 30, width: 120, height: 80 },
+        annotations: [
+          { kind: 'rectangle', x: 30, y: 40, width: 50, height: 20 },
+        ],
+      });
+
+      expect(strokeRect).toHaveBeenCalledWith(10, 10, 50, 20);
+      expect(captureContext.strokeStyle).toBe('#8b5cf6');
+      expect(captureContext.shadowColor).toBe('rgba(0, 0, 0, 0.9)');
+      expect(captureContext.shadowBlur).toBe(4);
+      expect(captureContext.shadowOffsetY).toBe(2);
+    } finally {
+      context.mockRestore();
+      encode.mockRestore();
+      frame.remove();
+      vi.doUnmock('html2canvas');
+    }
+  });
 });

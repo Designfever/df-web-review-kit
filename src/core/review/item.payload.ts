@@ -8,7 +8,12 @@ export function buildReviewItemPayload({
   devicePixelRatio, scroll,
 }: {
   input: DraftItemFields & Pick<ReviewItem, 'kind' | 'comment'> &
-    Partial<Pick<ReviewItem, 'scope' | 'anchor' | 'marker' | 'selection'>>;
+    Partial<
+      Pick<
+        ReviewItem,
+        'scope' | 'anchor' | 'marker' | 'selection' | 'annotations'
+      >
+    >;
   options: Pick<WebReviewKitOptions, 'projectId' | 'userId' | 'assigneeOptions' | 'viewports'>;
   id: string;
   now: string;
@@ -70,6 +75,7 @@ export function buildReviewItemPayload({
     anchor: input.anchor,
     marker: input.marker,
     selection: input.selection,
+    annotations: input.annotations,
     createdAt: now,
     updatedAt: now,
   };

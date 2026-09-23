@@ -9,6 +9,9 @@ describe('createAreaForm', () => {
     let areaDraft: AreaDraft = {
       viewport: { width: 1440, height: 900 },
       comment: 'Check this area',
+      annotations: [
+        { kind: 'rectangle', x: 20, y: 30, width: 80, height: 40 },
+      ],
     };
     const createItem = vi.fn(async () => undefined);
     const config: WebReviewKitViewConfig = {
@@ -83,6 +86,9 @@ describe('createAreaForm', () => {
         assigneeName: 'One',
         assigneeIds: ['one', 'two'],
         assigneeNames: ['One', 'Two'],
+        annotations: [
+          { kind: 'rectangle', x: 20, y: 30, width: 80, height: 40 },
+        ],
       })
     );
   });

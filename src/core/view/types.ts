@@ -46,6 +46,7 @@ export type CreateReviewItemInput = Pick<ReviewItem, 'kind' | 'comment'> &
       | 'selection'
     >
   > & {
+    annotations?: AreaDraft['annotations'];
     attachments?: ReviewDraftAttachment[];
   };
 
@@ -77,10 +78,10 @@ interface WebReviewKitViewActions {
   setSelectingArea: (isSelectingArea: boolean) => void;
   createItem: (input: CreateReviewItemInput) => Promise<void>;
   captureDomDraft: (
-    input: Pick<DomDraft, 'marker' | 'selection' | 'viewport'>
+    input: Pick<DomDraft, 'annotations' | 'marker' | 'selection' | 'viewport'>
   ) => Promise<void>;
   captureAreaDraft: (
-    input: Pick<AreaDraft, 'marker' | 'selection' | 'viewport'>
+    input: Pick<AreaDraft, 'annotations' | 'marker' | 'selection' | 'viewport'>
   ) => Promise<void>;
   bindElementDraftToPoint: (
     point: ReviewPoint,

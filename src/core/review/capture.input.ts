@@ -12,7 +12,7 @@ import type { AreaDraft, ReviewDraftAttachment } from './draft';
 
 export type CaptureDraftInput = Pick<
   AreaDraft,
-  'marker' | 'selection' | 'viewport'
+  'annotations' | 'marker' | 'selection' | 'viewport'
 >;
 
 export function createViewportCaptureInput(
@@ -37,6 +37,7 @@ export function createViewportCaptureInput(
     },
     marker: draft.marker,
     selection: draft.selection,
+    annotations: draft.annotations,
     timestamp,
   };
 }
@@ -68,6 +69,7 @@ export function createCaptureDraftAttachment(
       scroll: input.scroll,
       marker: input.marker,
       selection: input.selection,
+      annotations: input.annotations,
       timestamp: input.timestamp,
       devicePixelRatio: input.devicePixelRatio,
       width: result.width,

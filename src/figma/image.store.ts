@@ -6,6 +6,7 @@ import type {
   ReviewFigmaImageStore,
 } from './image.types';
 import {
+  decodeReviewFigmaImageDataUrl,
   getReviewFigmaImageFormatFromMimeType,
   getReviewFigmaImageMimeType,
 } from './image.asset';
@@ -42,7 +43,14 @@ export type ReviewFigmaImageStoreClientOptions = {
 export type EndpointReviewFigmaImageStoreOptions =
   ReviewFigmaImageStoreClientOptions & {
     headers?: ReviewFigmaImageStoreHeadersProvider;
+    directUpload?: {
+      maxInlineRequestBytes?: number;
+      fetch?: typeof fetch;
+    };
   };
+
+const DEFAULT_MAX_INLINE_REQUEST_BYTES = 4_000_000;
+const MAX_DIRECT_IMAGE_BYTES = 20 * 1024 * 1024;
 
 export type ReviewFigmaImageClientRenderOptions = {
   token?: string | null | (() => string | null | undefined);
@@ -91,9 +99,58 @@ export function createEndpointReviewFigmaImageStore(
         options.clientRender,
         options.fetch
       );
+      const body = JSON.stringify(nextInput);
+      if (
+        nextInput.asset &&
+        options.directUpload &&
+        new TextEncoder().encode(body).byteLength >
+          (options.directUpload.maxInlineRequestBytes ?? DEFAULT_MAX_INLINE_REQUEST_BYTES)
+      ) {
+        const { blob, mimeType } = decodeReviewFigmaImageDataUrl(nextInput.asset);
+        if (blob.size > MAX_DIRECT_IMAGE_BYTES) {
+          throw new Error('Figma image files must be 20MB or smaller.');
+        }
+        const ticket = await request<{
+          uploadId: string;
+          uploadUrl: string;
+          uploadToken: string;
+        }>(`${endpoint}/presign`, {
+          method: 'POST',
+          body: JSON.stringify({ mimeType, byteSize: blob.size }),
+        });
+        const uploadFetch =
+          options.directUpload.fetch ?? globalThis.fetch.bind(globalThis);
+        let uploadResponse: Response;
+        try {
+          uploadResponse = await uploadFetch(ticket.uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': mimeType },
+            body: blob,
+          });
+        } catch {
+          throw new Error('R2 image upload failed. Check the network and R2 CORS settings.');
+        }
+        if (!uploadResponse.ok) {
+          throw new Error(`R2 image upload failed with ${uploadResponse.status}.`);
+        }
+        return request<ReviewFigmaImage>(endpoint, {
+          method: 'POST',
+          body: JSON.stringify({
+            ...nextInput,
+            asset: undefined,
+            directUpload: {
+              uploadId: ticket.uploadId,
+              uploadToken: ticket.uploadToken,
+            },
+          }),
+          figmaToken: readReviewFigmaImageToken(
+            options.token ?? getStoredReviewFigmaImageToken
+          ),
+        });
+      }
       return request<ReviewFigmaImage>(endpoint, {
         method: 'POST',
-        body: JSON.stringify(nextInput),
+        body,
         figmaToken: readReviewFigmaImageToken(
           options.token ?? getStoredReviewFigmaImageToken
         ),

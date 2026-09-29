@@ -11,6 +11,7 @@ import {
   createReviewFigmaClientRenderedAsset,
   type ReviewFigmaImageClientRenderOptions,
 } from './image.store';
+import { decodeReviewFigmaImageDataUrl } from './image.asset';
 import { getReviewFigmaImageTargetKey } from './image.target';
 import { parseReviewFigmaNodeRef } from './parse';
 
@@ -256,7 +257,7 @@ async function uploadFigmaAsset({
   const requestFetch = fetchOption ?? globalThis.fetch;
   if (!requestFetch) throw new Error('Figma asset upload requires fetch.');
 
-  const { blob, mimeType } = decodeAssetDataUrl(asset);
+  const { blob, mimeType } = decodeReviewFigmaImageDataUrl(asset);
   const response = await withTimeout(
     requestFetch(
       createAssetUploadUrl(endpoint, {
@@ -405,27 +406,6 @@ function rowToFigmaImage(row: ReviewFigmaRemoteImageRow): ReviewFigmaImage {
     byteSize: row.byte_size ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-  };
-}
-
-function decodeAssetDataUrl(asset: ReviewFigmaImageAssetInput) {
-  const match = asset.dataUrl.match(/^data:([^;,]+);base64,(.*)$/);
-  if (!match) throw new Error('Valid Figma image asset data URL is required.');
-
-  const mimeType = match[1]?.trim();
-  if (!mimeType || mimeType !== asset.mimeType) {
-    throw new Error('Figma image asset MIME type mismatch.');
-  }
-
-  const binary = globalThis.atob(match[2] ?? '');
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-
-  return {
-    blob: new Blob([bytes], { type: mimeType }),
-    mimeType,
   };
 }
 

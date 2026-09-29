@@ -1,5 +1,8 @@
 // Pure helpers for Figma image asset format conversion and storage-key handling.
-import type { ReviewFigmaImageFormat } from './image.types';
+import type {
+  ReviewFigmaImageAssetInput,
+  ReviewFigmaImageFormat,
+} from './image.types';
 import type { ReviewFigmaRenderFormat } from './render';
 
 export function parseReviewFigmaImageFormat(value: unknown) {
@@ -73,4 +76,21 @@ export function getReviewFigmaImageMimeType(
   if (format === 'jpg') return 'image/jpeg';
   if (format === 'png') return 'image/png';
   return 'image/webp';
+}
+
+export function decodeReviewFigmaImageDataUrl(asset: ReviewFigmaImageAssetInput) {
+  const match = asset.dataUrl.match(/^data:([^;,]+);base64,(.*)$/);
+  if (!match) throw new Error('Valid Figma image asset data URL is required.');
+  if (match[1]?.trim() !== asset.mimeType) {
+    throw new Error('Figma image asset MIME type mismatch.');
+  }
+  const binary = globalThis.atob(match[2] ?? '');
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return {
+    blob: new Blob([bytes], { type: asset.mimeType }),
+    mimeType: asset.mimeType,
+  };
 }

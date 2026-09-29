@@ -51,6 +51,14 @@ No review secret is required in the host or Vercel:
 - Figma image endpoint and asset storage: owned by df-sheet and df-asset-hub
 - host value: `REVIEW_PROJECT_ID` in checked-in `df.ts`
 
+For Figma image uploads, the session sends registration JSON up to 4,000,000
+bytes through the DF Sheet API. Larger PNG, JPEG, or WebP files up to 20 MiB
+use a short-lived R2 upload URL from DF Sheet, followed by an authenticated
+registration request. The original file is uploaded without DF Sheet or R2
+credentials in the host. The DF Sheet API converts it to the same WebP format
+used by smaller uploads. The R2 bucket must allow `PUT` with `Content-Type`
+from each review host origin.
+
 The authenticated session is stored only in browser `sessionStorage` and expires
 quickly. The optional remembered page preference is non-sensitive and uses
 `localStorage`. QA and Figma requests discard the cached session on HTTP 401. When QA loading fails, the shell stops loading and displays the error. Reload the entire review page to sign in again; switching QA pages or refreshing the target iframe reuses the current session.

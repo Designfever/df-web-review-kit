@@ -309,6 +309,7 @@ function createSession(input: {
       fetch: sessionFetch,
       headers: { Authorization: `Bearer ${input.stored.accessToken}` },
       token: () => null,
+      directUpload: { fetch: input.requestFetch },
     }),
     disconnect,
     createLogoutUrl: async () => {

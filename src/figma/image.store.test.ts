@@ -165,6 +165,90 @@ describe('createEndpointReviewFigmaImageStore', () => {
       })
     );
   });
+
+  it('keeps a small image on the JSON upload path', async () => {
+    const request = vi.fn(async (_url: string, _init?: RequestInit) =>
+      new Response(JSON.stringify({ success: true, data: { id: 'small' } }))
+    );
+    const store = createEndpointReviewFigmaImageStore({
+      endpoint: 'https://df-sheet.example/api/review/figma-images',
+      fetch: request as typeof fetch,
+      directUpload: { maxInlineRequestBytes: 10_000 },
+    });
+
+    await store.addImage({
+      target: { type: 'route', projectId: 'project', pageUrl: '/' },
+      figmaUrl: 'small.png',
+      asset: {
+        dataUrl: 'data:image/png;base64,aW1hZ2U=',
+        imageFormat: 'png',
+        mimeType: 'image/png',
+      },
+    });
+
+    expect(request).toHaveBeenCalledOnce();
+    expect(JSON.parse(String(request.mock.calls[0]?.[1]?.body)).asset.dataUrl)
+      .toBe('data:image/png;base64,aW1hZ2U=');
+  });
+
+  it('uploads a large image directly to R2 before registering it', async () => {
+    const endpoint = 'https://df-sheet.example/api/review/figma-images';
+    const request = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url === `${endpoint}/presign`) {
+        expect(JSON.parse(String(init?.body))).toEqual({
+          mimeType: 'image/png',
+          byteSize: 5,
+        });
+        return new Response(JSON.stringify({
+          success: true,
+          data: {
+            uploadId: 'upload-id',
+            uploadUrl: 'https://r2.example/signed',
+            uploadToken: 'upload-token',
+          },
+        }));
+      }
+      return new Response(JSON.stringify({
+        success: true,
+        data: { id: 'figma_upload-id' },
+      }));
+    });
+    const upload = vi.fn(async () => new Response(null, { status: 200 }));
+    const store = createEndpointReviewFigmaImageStore({
+      endpoint,
+      fetch: request as typeof fetch,
+      headers: { Authorization: 'Bearer session' },
+      directUpload: {
+        maxInlineRequestBytes: 100,
+        fetch: upload as typeof fetch,
+      },
+    });
+
+    await expect(store.addImage({
+      target: { type: 'route', projectId: 'project', pageUrl: '/' },
+      figmaUrl: 'large.png',
+      asset: {
+        dataUrl: 'data:image/png;base64,aW1hZ2U=',
+        imageFormat: 'png',
+        mimeType: 'image/png',
+      },
+    })).resolves.toMatchObject({ id: 'figma_upload-id' });
+
+    expect(upload).toHaveBeenCalledOnce();
+    expect(upload).toHaveBeenCalledWith('https://r2.example/signed', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'image/png' },
+      body: expect.any(Blob),
+    });
+    expect(request).toHaveBeenCalledTimes(2);
+    const finalRequest = request.mock.calls[1]?.[1];
+    expect(JSON.parse(String(finalRequest?.body))).toMatchObject({
+      directUpload: { uploadId: 'upload-id', uploadToken: 'upload-token' },
+    });
+    expect(String(finalRequest?.body)).not.toContain('data:image/png');
+    expect(new Headers(finalRequest?.headers).get('Authorization'))
+      .toBe('Bearer session');
+  });
 });
 
 function createFigmaApiResponse() {

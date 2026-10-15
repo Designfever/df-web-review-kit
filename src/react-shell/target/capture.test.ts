@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { normalizeZeroSizeCaptureGradients } from './capture';
+import { screenCaptureSessions, type ScreenCaptureSession } from './screen.capture';
 
 describe('normalizeZeroSizeCaptureGradients', () => {
   it('removes gradients from zero-size elements only', () => {
@@ -30,6 +31,42 @@ describe('normalizeZeroSizeCaptureGradients', () => {
 });
 
 describe('captureIframeViewport resolution', () => {
+  it.each(['browser', 'html2canvas'] as const)('keeps the full viewport and highlight in %s output', async renderer => {
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    const canvas = frame.contentDocument!.createElement('canvas');
+    canvas.width = 3840;
+    canvas.height = 2160;
+    const render = vi.fn(async () => canvas);
+    vi.doMock('html2canvas', () => ({ default: render }));
+    const capture = vi.fn(async () => renderer === 'browser' ? canvas : null);
+    const session = vi.spyOn(screenCaptureSessions, 'get').mockReturnValue({ capture } as unknown as ScreenCaptureSession);
+    const strokeRect = vi.fn();
+    const arc = vi.fn();
+    const prototype = Object.getPrototypeOf(canvas) as HTMLCanvasElement;
+    const context = vi.spyOn(prototype, 'getContext').mockReturnValue({
+      save: vi.fn(), restore: vi.fn(), scale: vi.fn(), fillRect: vi.fn(),
+      strokeRect, arc, beginPath: vi.fn(), fill: vi.fn(), stroke: vi.fn(),
+    } as unknown as CanvasRenderingContext2D);
+    const encode = vi.spyOn(prototype, 'toBlob').mockImplementation(callback => callback(new Blob(['image'])));
+    try {
+      const { captureIframeViewport } = await import('./capture');
+      const result = await captureIframeViewport(frame, {
+        routeKey: '/', pageUrl: 'http://localhost/', viewport: { width: 3840, height: 2160 },
+        scroll: { x: 0, y: 300 }, timestamp: '2026-10-15T00:00:00Z',
+        marker: { viewport: { x: 120, y: 80 } },
+        selection: { viewport: { x: 100, y: 60, width: 200, height: 100 } },
+      });
+      expect(result).toMatchObject({ width: 3840, height: 2160, metadata: { captureTarget: 'viewport' } });
+      expect(capture).toHaveBeenCalledWith(frame, { width: 3840, height: 2160 }, undefined);
+      expect(strokeRect).toHaveBeenCalledWith(101.5, 61.5, 197, 97);
+      expect(arc).toHaveBeenCalledWith(120, 80, 9, 0, Math.PI * 2);
+    } finally {
+      session.mockRestore(); context.mockRestore(); encode.mockRestore();
+      frame.remove(); vi.doUnmock('html2canvas');
+    }
+  });
+
   it('uses CSS pixel dimensions on a Retina target', async () => {
     const frame = document.createElement('iframe');
     document.body.append(frame);

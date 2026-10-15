@@ -23,6 +23,9 @@ export const TopbarContainer = () => {
   const { viewportPresets } = useReviewShellConfig();
   const draftTarget = useReviewShellStore((state) => state.draftTarget);
   const size = useReviewShellStore((state) => state.size);
+  const zoom = useReviewShellStore((state) => state.zoom);
+  const fitZoom = useReviewShellStore((state) => state.fitZoom);
+  const setZoom = useReviewShellStore((state) => state.setZoom);
   const targetOverlayState = useReviewShellStore(
     (state) => state.targetOverlayState
   );
@@ -44,6 +47,22 @@ export const TopbarContainer = () => {
       copyLabel={copyLabel}
       viewportPresets={viewportPresets}
       size={size}
+      zoomControl={
+        <label className="df-review-frame-zoom">
+          <select
+            aria-label="Target zoom"
+            value={zoom}
+            onChange={(event) => setZoom(
+              event.target.value === 'fit' ? 'fit' : Number(event.target.value)
+            )}
+          >
+            <option value="fit">Fit ({Math.round(fitZoom * 100)}%)</option>
+            {[0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map((value) => (
+              <option key={value} value={value}>{value * 100}%</option>
+            ))}
+          </select>
+        </label>
+      }
       presetScopeCounts={presetScopeCounts}
       targetOverlayState={targetOverlayState}
       figmaOverlayUnavailableMessage={figmaOverlayUnavailableMessage}

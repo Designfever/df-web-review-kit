@@ -14,6 +14,12 @@ afterEach(() => {
 });
 
 describe('review viewport presets', () => {
+  it('restores the 3840px wide viewport from URLs and captures', () => {
+    window.history.replaceState(null, '', '/review?w=3840&h=2160');
+    expect(getInitialSize(DEFAULT_REVIEW_VIEWPORT_PRESETS)).toMatchObject({
+      kind: 'wide', width: 3840, height: 2160,
+    });
+  });
   it('uses 1920 by 1280 for Desktop without classifying it as Wide', () => {
     const desktop = findViewportPreset(DEFAULT_REVIEW_VIEWPORT_PRESETS, 1920, 1280);
     expect(desktop).toEqual({
@@ -49,6 +55,7 @@ describe('review viewport presets', () => {
         { label: 'Mobile', width: 390, height: 720, kind: 'mobile' },
         { label: 'Tablet', width: 768, height: 1024, kind: 'tablet' },
         { label: 'Wide', width: 1980, height: 1080, kind: 'wide' },
+        { label: 'Ultra Wide', width: 3840, height: 2160, kind: 'wide' },
       ]);
   });
 

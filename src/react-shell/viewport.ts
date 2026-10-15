@@ -5,7 +5,8 @@ export const DEFAULT_REVIEW_VIEWPORT_PRESETS: ReviewShellViewportPreset[] = [
   { label: 'Mobile', width: 390, height: 720, kind: 'mobile' },
   { label: 'Tablet', width: 768, height: 1024, kind: 'tablet' },
   { label: 'Desktop', width: 1920, height: 1280, kind: 'desktop' },
-  { label: 'Wide', width: 1980, height: 1080, kind: 'wide' }
+  { label: 'Wide', width: 1980, height: 1080, kind: 'wide' },
+  { label: 'Ultra Wide', width: 3840, height: 2160, kind: 'wide' }
 ];
 
 const getFallbackPreset = (presets: ReviewShellViewportPreset[]) =>

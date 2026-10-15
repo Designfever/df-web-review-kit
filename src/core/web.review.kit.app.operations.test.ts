@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ReviewAttachmentUploadInput, ReviewItem, WebReviewKitController, WebReviewKitOptions } from '../types';
+import type { ReviewAttachmentUploadInput, ReviewItem, ReviewViewportCaptureInput, WebReviewKitController, WebReviewKitOptions } from '../types';
 import type { WebReviewKitViewConfig } from './view/types';
 import type { ReviewDraftAttachment } from './review/draft';
 import { createWebReviewKit } from './web.review.kit.app';
@@ -45,7 +45,7 @@ function setup(options: Partial<WebReviewKitOptions> = {}) {
 function captureSetup() {
   vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:manual');
   const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
-  const captureViewport = vi.fn(async () => ({
+  const captureViewport = vi.fn(async (_input: ReviewViewportCaptureInput) => ({
     file: new Blob(['capture'], { type: 'image/png' }), width: 20, height: 10,
   }));
   const context = setup({ target: { window, document, captureViewport } });
@@ -60,6 +60,42 @@ const draftAttachment = (): ReviewDraftAttachment => ({
 const uploaded = { url: '/file.png', name: 'file.png', mime: 'image/png', size: 4, kind: 'image' as const };
 
 describe('core item and attachment orchestration', () => {
+  it.each(['dom', 'area'] as const)('captures the full viewport manually for %s issues and preserves highlights', async kind => {
+    const { config, captureViewport } = captureSetup();
+    const draft = {
+      viewport: { width: 3840, height: 2160 },
+      marker: { viewport: { x: 120, y: 80 } },
+      selection: { viewport: { x: 100, y: 60, width: 200, height: 100 } },
+    };
+    if (kind === 'dom') {
+      config.actions.setDomDraft(draft);
+      await config.actions.captureDomDraft(draft);
+    } else {
+      config.actions.setAreaDraft(draft);
+      await config.actions.captureAreaDraft(draft);
+    }
+    expect(captureViewport).toHaveBeenCalledOnce();
+    expect(captureViewport.mock.calls[0][0]).toMatchObject(draft);
+    expect(captureViewport.mock.calls[0][0].captureRegion).toBeUndefined();
+  });
+
+  it.each(['dom', 'area'] as const)('automatically saves a full viewport attachment for %s issues', async kind => {
+    const { config, create, captureViewport } = captureSetup();
+    const uploadAttachment = vi.fn(async (attachment: ReviewAttachmentUploadInput) => ({
+      ...uploaded, kind: 'capture' as const, metadata: attachment.metadata,
+    }));
+    config.options.adapter!.uploadAttachment = uploadAttachment;
+    const draft = {
+      ...input, kind, viewport: { width: 3840, height: 2160 },
+      selection: { viewport: { x: 100, y: 60, width: 200, height: 100 } },
+    };
+    await config.actions.createItem(draft);
+    expect(captureViewport.mock.calls[0][0].captureRegion).toBeUndefined();
+    expect(captureViewport.mock.calls[0][0]).toMatchObject({ viewport: draft.viewport, selection: draft.selection });
+    expect(uploadAttachment).toHaveBeenCalledOnce();
+    expect(create.mock.calls[0][0].attachments?.[0].metadata).toMatchObject({ viewport: draft.viewport, selection: draft.selection });
+  });
+
   it('preserves the draft when Escape dismisses a modal', () => {
     const { config } = captureSetup();
     config.actions.setDomDraft({ ...config.getState().domDraft!, comment: 'Keep my writing' });

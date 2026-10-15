@@ -157,7 +157,27 @@ describe('screen capture session', () => {
       await session.capture(frame, viewport, region);
       expect(drawImage.mock.calls[2][1]).toBe(640);
       expect(getDisplayMedia).toHaveBeenCalledOnce();
+      // A 3840px viewport at 25% zoom keeps target-space crop/output dimensions.
+      vi.mocked(frame.getBoundingClientRect).mockReturnValue(new DOMRect(10, 100, 960, 540));
+      const wideViewport = { width: 3840, height: 2160 };
+      const wideRegion = { x: 1920, y: 1080, width: 320, height: 180 };
+      const wide = await session.capture(frame, wideViewport, wideRegion);
+      expect([wide?.width, wide?.height]).toEqual([320, 180]);
+      expect(drawImage.mock.calls[3].slice(1)).toEqual([
+        1960, 1480, 320, 180, 0, 0, 320, 180,
+      ]);
+      const scroll = document.createElement('div');
+      scroll.className = 'df-review-frame-scroll';
+      document.body.append(scroll);
+      scroll.append(frame);
+      vi.spyOn(scroll, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 1024, 500));
+      await expect(session.capture(frame, wideViewport)).rejects.toThrow('clipped');
+      document.body.append(frame);
+      scroll.remove();
       left = -100;
+      vi.mocked(frame.getBoundingClientRect).mockImplementation(
+        () => ({ left, top: 100, width: 400, height: 300 }) as DOMRect
+      );
       await expect(session.capture(frame, viewport)).rejects.toThrow('clipped');
       expect(getComputedStyle(overlay).opacity).toBe('0.7');
       expect(frame.contentDocument!.querySelector('style')).toBeNull();

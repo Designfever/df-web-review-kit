@@ -1,7 +1,6 @@
 // web.review.kit.app.ts 에서 분리한 뷰포트 캡처 입력/첨부 빌더.
 // 인스턴스 상태에 의존하지 않는 순수 변환이라 별도 모듈로 둔다.
 import type {
-  RelativeSelection,
   ReviewViewportCaptureInput,
   ReviewViewportCaptureResult,
 } from '../../types';
@@ -17,8 +16,7 @@ export type CaptureDraftInput = Pick<
 
 export function createViewportCaptureInput(
   environment: ReviewEnvironment,
-  draft: CaptureDraftInput,
-  captureRegion?: RelativeSelection
+  draft: CaptureDraftInput
 ): ReviewViewportCaptureInput {
   const timestamp = new Date().toISOString();
   const viewport = draft.viewport ?? getViewportSize(environment);
@@ -29,7 +27,6 @@ export function createViewportCaptureInput(
     pageUrl: getPageUrl(environment),
     originalUrl: getOriginalUrl(environment),
     viewport,
-    captureRegion,
     devicePixelRatio: environment.window.devicePixelRatio || 1,
     scroll: {
       x: environment.window.scrollX,

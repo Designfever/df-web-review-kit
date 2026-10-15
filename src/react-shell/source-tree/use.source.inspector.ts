@@ -13,6 +13,7 @@ import {
   type RefObject,
 } from 'react';
 import { bindSourceSelectionEvents } from './source.selection.events';
+import { getFrameGeometry, projectRect } from '../../design-inspector/frame.geometry';
 import type {
   SourceComponentPopup,
   SourceInspectorRect,
@@ -70,18 +71,12 @@ export function useReviewSourceInspector({
       const frame = iframeRef.current;
       if (!frame) return null;
 
-      const frameRect = frame.getBoundingClientRect();
-      const elementRect = element.getBoundingClientRect();
-      const left = Math.max(frameRect.left, frameRect.left + elementRect.left);
-      const top = Math.max(frameRect.top, frameRect.top + elementRect.top);
-      const right = Math.min(
-        frameRect.right,
-        frameRect.left + elementRect.right
-      );
-      const bottom = Math.min(
-        frameRect.bottom,
-        frameRect.top + elementRect.bottom
-      );
+      const geometry = getFrameGeometry(frame);
+      const elementRect = projectRect(element.getBoundingClientRect(), geometry);
+      const left = Math.max(geometry.bounds.left, elementRect.left);
+      const top = Math.max(geometry.bounds.top, elementRect.top);
+      const right = Math.min(geometry.bounds.right, elementRect.right);
+      const bottom = Math.min(geometry.bounds.bottom, elementRect.bottom);
 
       return {
         height: Math.max(2, bottom - top),

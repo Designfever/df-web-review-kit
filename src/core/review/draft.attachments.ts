@@ -32,7 +32,7 @@ export async function prepareItemAttachments({ input, item, environment, adapter
       environment.captureViewport && adapter.uploadAttachment) {
     let previewUrl: string | undefined;
     try {
-      const captureInput = createViewportCaptureInput(environment, { ...input, viewport: item.viewport }, input.selection?.viewport);
+      const captureInput = createViewportCaptureInput(environment, { ...input, viewport: item.viewport });
       const result = await environment.captureViewport(captureInput);
       const capture = createCaptureDraftAttachment(result, captureInput);
       previewUrl = capture.previewUrl;

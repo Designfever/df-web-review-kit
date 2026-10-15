@@ -16,6 +16,7 @@ export const reviewShellStageStyle = `
   }
 
   .df-review-frame-actions {
+    flex-wrap: wrap;
     gap: 12px;
     position: relative;
     z-index: 600;
@@ -27,6 +28,7 @@ export const reviewShellStageStyle = `
     border-top: 1px solid var(--df-review-line-soft);
     background: var(--df-review-mode-bar);
   }
+
 
 	  .df-review-frame-scroll {
 	    min-width: 0;
@@ -50,6 +52,15 @@ export const reviewShellStageStyle = `
     gap: 8px;
     width: max-content;
     max-width: 100%;
+  }
+
+  .df-review-device-viewport {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: var(--df-review-radius-lg);
+    box-shadow: var(--df-review-shadow-device);
   }
 
   .df-review-device {

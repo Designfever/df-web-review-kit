@@ -172,15 +172,16 @@ export class ScreenCaptureSession {
     const height = (area.height * rect.height) / viewport.height;
     // Screen sharing only contains pixels visible in the host viewport.
     const clip = frame.parentElement?.getBoundingClientRect();
+    const scrollClip = frame.closest('.df-review-frame-scroll')?.getBoundingClientRect();
     if (
       width <= 0 ||
       height <= 0 ||
-      left < Math.max(0, clip?.left ?? 0) - 1 ||
-      top < Math.max(0, clip?.top ?? 0) - 1 ||
+      left < Math.max(0, clip?.left ?? 0, scrollClip?.left ?? 0) - 1 ||
+      top < Math.max(0, clip?.top ?? 0, scrollClip?.top ?? 0) - 1 ||
       left + width >
-        Math.min(view.innerWidth, clip?.right ?? view.innerWidth) + 1 ||
+        Math.min(view.innerWidth, clip?.right ?? view.innerWidth, scrollClip?.right ?? view.innerWidth) + 1 ||
       top + height >
-        Math.min(view.innerHeight, clip?.bottom ?? view.innerHeight) + 1
+        Math.min(view.innerHeight, clip?.bottom ?? view.innerHeight, scrollClip?.bottom ?? view.innerHeight) + 1
     ) {
       throw new Error(
         'Capture area is clipped. Fit the target into the Review viewport.'

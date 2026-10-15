@@ -59,7 +59,7 @@ export const useReviewRulerDrag = ({
 
   const startRulerDrag = useCallback(
     (clientX: number, clientY: number, rect: DOMRect) => {
-      const point = getRulerPointFromRect(clientX, clientY, rect);
+      const point = getRulerPointFromRect(clientX, clientY, rect, sizeRef.current);
 
       rulerDragRectRef.current = rect;
       isRulerDraggingRef.current = true;
@@ -100,8 +100,8 @@ export const useReviewRulerDrag = ({
         const frameRect = frame.getBoundingClientRect();
 
         return {
-          clientX: event.clientX + frameRect.left,
-          clientY: event.clientY + frameRect.top,
+          clientX: event.clientX * frameRect.width / (frame.clientWidth || sizeRef.current.width) + frameRect.left,
+          clientY: event.clientY * frameRect.height / (frame.clientHeight || sizeRef.current.height) + frameRect.top,
         };
       }
 
@@ -132,7 +132,7 @@ export const useReviewRulerDrag = ({
       if (!rect) return undefined;
 
       const point = getRulerEventClientPoint(event);
-      const snapped = getRulerPointFromRect(point.clientX, point.clientY, rect);
+      const snapped = getRulerPointFromRect(point.clientX, point.clientY, rect, sizeRef.current);
 
       return { x: snapDesign(snapped.x, 'x'), y: snapDesign(snapped.y, 'y') };
     };
@@ -146,7 +146,8 @@ export const useReviewRulerDrag = ({
       const y = clientY - rect.top;
       if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
 
-      return { x: snapDesign(x, 'x'), y: snapDesign(y, 'y') };
+      const point = getRulerPointFromRect(clientX, clientY, rect, sizeRef.current);
+      return { x: snapDesign(point.x, 'x'), y: snapDesign(point.y, 'y') };
     };
 
     const handleDragStart: EventListener = (event) => {

@@ -37,6 +37,7 @@ export async function captureIframeViewport(
     const screen = await screenCaptureSessions.get(frame)?.capture(frame, viewport, region);
     if (screen) {
       drawCaptureRectangles(screen, 1, input, region);
+      if (!region) drawCaptureAnnotations(screen, 1, input);
       return {
         file: await canvasToBlob(screen, 'image/png'),
         name: `b-${formatCaptureTimestamp(input.timestamp)}.png`,
@@ -104,6 +105,7 @@ export async function captureIframeViewport(
     height: viewport.height,
     metadata: {
       captureFallback: 'svg',
+      captureTarget: 'viewport',
       captureError: errors.join(' | ') || 'Capture was saved as SVG fallback.',
     },
   };
@@ -229,6 +231,7 @@ async function createSvgCanvasCapture(
     height: canvas.height,
     metadata: {
       captureRenderer: 'svg-canvas',
+      captureTarget: 'viewport',
       captureScale: scale,
     },
   };

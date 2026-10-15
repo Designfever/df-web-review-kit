@@ -1,4 +1,12 @@
 export const reviewShellToolbarStyle = `
+  .df-review-frame-zoom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--df-review-muted);
+  }
+
 				  .df-review-tools {
 			    display: flex;
 			    align-items: center;
@@ -137,13 +145,12 @@ export const reviewShellToolbarStyle = `
 	    line-height: 1;
 	  }
 
-  .df-review-preset-select {
+  .df-review-preset-select,
+  .df-review-frame-zoom select {
     -webkit-appearance: none;
     appearance: none;
-    display: none;
     height: var(--df-review-control-height-md);
     min-height: var(--df-review-control-height-md);
-    min-width: 154px;
     border: 1px solid var(--df-review-line-soft);
     border-radius: var(--df-review-radius-md);
     padding: 0 42px 0 14px;
@@ -156,6 +163,11 @@ export const reviewShellToolbarStyle = `
     box-shadow: var(--df-review-shadow-control);
     font-size: var(--df-review-font-size-sm);
     font-weight: var(--df-review-font-weight-normal);
+  }
+
+  .df-review-preset-select {
+    display: none;
+    min-width: 154px;
   }
 
 	  .df-review-presets button {

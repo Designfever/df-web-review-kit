@@ -25,6 +25,10 @@ export interface TargetSliceState {
 }
 
 export interface TargetSlice extends TargetSliceState {
+  zoom: number | 'fit';
+  fitZoom: number;
+  setZoom: (zoom: number | 'fit') => void;
+  setFitZoom: (fitZoom: number) => void;
   navigateFrameTarget: (frameTarget: string) => void;
   setActiveRoute: (activeRoute: string) => void;
   setDraftTarget: (draftTarget: string) => void;
@@ -65,6 +69,10 @@ export const createTargetSlice = (
   initialState: TargetSliceState
 ): StateCreator<ReviewShellState, [], [], TargetSlice> => (set) => ({
   ...initialState,
+  zoom: 'fit',
+  fitZoom: 1,
+  setZoom: (zoom) => set({ zoom }),
+  setFitZoom: (fitZoom) => set({ fitZoom }),
   navigateFrameTarget: (frameTarget) =>
     set((state) => ({
       frameNavigationVersion: state.frameNavigationVersion + 1,

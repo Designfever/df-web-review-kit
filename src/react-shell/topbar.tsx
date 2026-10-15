@@ -10,7 +10,7 @@ import {
   Smartphone as SmartphoneIcon,
   SquareMousePointer as SquareMousePointerIcon,
 } from 'lucide-react';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
 import type { ReviewItemScope } from '../index';
 import { FIGMA_OVERLAY_UNAVAILABLE_MESSAGE } from './constants';
 import { FigmaMarkIcon } from './figma/figma-mark-icon';
@@ -24,6 +24,7 @@ import { getViewportPresetKind } from './viewport';
 interface ReviewTopbarProps {
   draftTarget: string;
   copyLabel: string;
+  zoomControl?: ReactNode;
   viewportPresets: ReviewShellViewportPreset[];
   size: ReviewShellViewportPreset;
   presetScopeCounts: ReadonlyMap<ReviewItemScope, number>;
@@ -68,6 +69,7 @@ function getTargetOpenHref(targetSrc: string) {
 export const ReviewTopbar = ({
   draftTarget,
   copyLabel,
+  zoomControl,
   viewportPresets,
   size,
   presetScopeCounts,
@@ -204,6 +206,7 @@ export const ReviewTopbar = ({
         </div>
 
         <div className="df-review-overlays" aria-label="Target overlays">
+          {zoomControl}
           <button
             aria-label="Toggle grid overlay"
             className={`df-review-overlay-button is-grid${

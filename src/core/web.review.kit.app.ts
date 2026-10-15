@@ -765,8 +765,7 @@ class WebReviewKitApp {
 
     const captureInput = createViewportCaptureInput(
       environment,
-      input,
-      input.selection?.viewport
+      input
     );
     this.draftError = '';
     this.isCapturingViewport = true;

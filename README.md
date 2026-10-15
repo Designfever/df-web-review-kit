@@ -146,6 +146,12 @@ mountReviewShell({
 
 See [Installation](docs/installation.md) for route files, `.env.sample`, Supabase adapter wiring, viewport presets, and verification commands.
 
+The review stage starts in **Fit** mode. Use the dropdown immediately before the grid button on the right of the header to choose 10–200% display zoom or return to Fit. Zoom preserves the target viewport, responsive breakpoints, and saved issue coordinates. The default **Ultra Wide** preset is 3840×2160; projects with custom `presets` can add their own wide dimensions.
+
+Browser capture uses visible tab pixels and returns an image at the target dimensions. At reduced zoom, enlarging those pixels does not restore original detail. Use 100% zoom for detailed region captures, or the html2canvas capture method for rendering at the target resolution. For a full browser capture, choose Fit so the entire target is visible.
+
+DOM and Area issue screenshots include the entire current iframe viewport, with the issue marker and selection outline. Both the Capture button and automatic screenshots on save preserve this context; content beyond the viewport is excluded.
+
 ## Environment
 
 Copy [.env.sample](.env.sample) into the host project as `.env.local`, then fill only the values that project needs.

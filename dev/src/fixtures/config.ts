@@ -16,4 +16,5 @@ export const presets: ReviewShellViewportPreset[] = [
   { label: 'MO 620', kind: 'mobile', width: 620, height: 900, designWidth: 620 },
   { label: 'TA 768', kind: 'tablet', width: 768, height: 1024, designWidth: 768 },
   { label: 'PC 1920', kind: 'desktop', width: 1920, height: 1280, designWidth: 1920 },
+  { label: 'Wide 3840', kind: 'wide', width: 3840, height: 2160, designWidth: 3840 },
 ];

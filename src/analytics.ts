@@ -12,6 +12,8 @@ export type ReviewAnalyticsConfig = {
 
 type ReviewAnalyticsContext = {
   projectId: string;
+  projectKey?: string;
+  projectName?: string;
   pageName?: string;
   creatorId: string;
 };
@@ -63,6 +65,8 @@ export function configureReviewAnalytics(
   const key = `${config.provider}:${config.apiKey.trim()}`;
   const analyticsContext = {
     projectId: context.projectId.trim(),
+    projectKey: context.projectKey?.trim() || undefined,
+    projectName: context.projectName?.trim() || undefined,
     pageName: context.pageName?.trim() || undefined,
     creatorId: context.creatorId.trim(),
     anonymousId: getOrCreateAnonymousId(),
@@ -116,11 +120,13 @@ export function trackReviewEvent<T extends keyof ReviewAnalyticsEventProperties>
     if (!client || state?.key !== current.key) return;
     const common = {
       source: 'review-kit',
+      project_id: current.context.projectId,
+      ...(current.context.projectKey ? { project_key: current.context.projectKey } : {}),
+      ...(current.context.projectName ? { project_name: current.context.projectName } : {}),
       ...(current.context.pageName ? { page_name: current.context.pageName } : {}),
       creator_id: current.context.creatorId,
       package_version: packageJson.version,
       anonymous_id: current.context.anonymousId,
-
     };
     client.track(eventType, {
       ...common,

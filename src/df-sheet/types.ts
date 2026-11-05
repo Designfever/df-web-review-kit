@@ -11,6 +11,7 @@ export type DfSheetReviewPage = {
 export type DfSheetReviewProject = {
   id: string;
   key: string;
+  name?: string;
 };
 
 export type DfSheetReviewUser = {

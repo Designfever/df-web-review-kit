@@ -39,7 +39,7 @@ describe('connectDfSheetReview', () => {
     window.sessionStorage.setItem(sessionKey, JSON.stringify({
       accessToken: 'short-token',
       expiresAt: Date.now() + 300_000,
-      project: { id: projectId, key: 'IKAOS' },
+      project: { id: projectId, key: 'IKAOS', name: '아이카오스' },
       user: { user_id: 'hyungjoo', name: 'Hyung-Joo' },
     }));
     const request = vi.fn(function (this: unknown) {
@@ -63,7 +63,7 @@ describe('connectDfSheetReview', () => {
       JSON.stringify({
         accessToken: 'short-token',
         expiresAt: Date.now() + 300_000,
-        project: { id: projectId, key: 'IKAOS' },
+        project: { id: projectId, key: 'IKAOS', name: '아이카오스' },
         user: { user_id: 'hyungjoo', name: 'Hyung-Joo' },
       })
     );
@@ -236,7 +236,7 @@ describe('connectDfSheetReview', () => {
               sampleRate: 1,
             },
           },
-          project: { id: projectId, key: 'IKAOS' },
+          project: { id: projectId, key: 'IKAOS', name: '아이카오스' },
           user: { user_id: 'hyungjoo', name: null },
         },
       });
@@ -260,7 +260,7 @@ describe('connectDfSheetReview', () => {
     });
     expect(analyticsMocks.configureReviewAnalytics).toHaveBeenCalledWith(
       session?.analytics,
-      { projectId, pageName: undefined, creatorId: 'hyungjoo' }
+      { projectId, projectKey: 'IKAOS', projectName: '아이카오스', pageName: undefined, creatorId: 'hyungjoo' }
     );
     expect(window.location.search).toBe('?item=12');
     expect(window.sessionStorage.getItem(pendingKey)).toBeNull();
@@ -273,7 +273,7 @@ describe('connectDfSheetReview', () => {
       JSON.stringify({
         accessToken: 'expired-on-server',
         expiresAt: Date.now() + 300_000,
-        project: { id: projectId, key: 'IKAOS' },
+        project: { id: projectId, key: 'IKAOS', name: '아이카오스' },
         user: { user_id: 'hyungjoo', name: null },
       })
     );
@@ -357,7 +357,7 @@ describe('connectDfSheetReview', () => {
     session?.rememberSelectedPageId('page-2', pages);
     expect(analyticsMocks.configureReviewAnalytics).toHaveBeenLastCalledWith(
       session?.analytics,
-      { projectId, pageName: '운영 검수', creatorId: 'hyungjoo' }
+      { projectId, projectKey: 'LEXUS', projectName: undefined, pageName: '운영 검수', creatorId: 'hyungjoo' }
     );
     expect(session?.selectedPageId).toBe('page-2');
     expect(window.localStorage.getItem(selectedPageKey)).toBe('page-2');
@@ -369,12 +369,12 @@ describe('connectDfSheetReview', () => {
     expect(reloaded?.selectedPageId).toBe('page-2');
     expect(analyticsMocks.configureReviewAnalytics).toHaveBeenLastCalledWith(
       reloaded?.analytics,
-      { projectId, pageName: '운영 검수', creatorId: 'hyungjoo' }
+      { projectId, projectKey: 'LEXUS', projectName: undefined, pageName: '운영 검수', creatorId: 'hyungjoo' }
     );
     reloaded?.createAdapter({ pageId: 'page-1' });
     expect(analyticsMocks.configureReviewAnalytics).toHaveBeenLastCalledWith(
       reloaded?.analytics,
-      { projectId, pageName: 'QA', creatorId: 'hyungjoo' }
+      { projectId, projectKey: 'LEXUS', projectName: undefined, pageName: 'QA', creatorId: 'hyungjoo' }
     );
 
     reloaded?.disconnect();
@@ -414,7 +414,7 @@ describe('connectDfSheetReview', () => {
       JSON.stringify({
         accessToken: 'short-token',
         expiresAt: Date.now() + 300_000,
-        project: { id: projectId, key: 'IKAOS' },
+        project: { id: projectId, key: 'IKAOS', name: '아이카오스' },
         user: { user_id: 'hyungjoo', name: 'Hyung-Joo' },
       })
     );
@@ -451,7 +451,7 @@ describe('connectDfSheetReview', () => {
 describe('df-sheet session and adapter boundaries', () => {
   const stored = (expiresAt = Date.now() + 300_000) => ({
     accessToken: 'mock-token', expiresAt,
-    project: { id: projectId, key: 'IKAOS' },
+    project: { id: projectId, key: 'IKAOS', name: '아이카오스' },
     user: { user_id: 'reviewer', name: null },
   });
   beforeEach(() => {

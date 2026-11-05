@@ -197,6 +197,8 @@ function createSession(input: {
   const configureAnalytics = (pageId?: string) => {
     configureReviewAnalytics(input.stored.analytics, {
       projectId: input.stored.project.id,
+      projectKey: input.stored.project.key,
+      projectName: input.stored.project.name,
       pageName: reviewPages.find((page) => page.id === pageId)?.name,
       creatorId: input.stored.user.user_id,
     });

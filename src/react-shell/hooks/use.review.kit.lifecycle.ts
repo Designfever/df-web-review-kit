@@ -19,7 +19,6 @@ import { createWebReviewKit } from '../../core/web.review.kit.app';
 import { getErrorMessage } from '../../core/error';
 import { useReviewShellStoreApi } from '../store/store.context';
 import { setTargetScrollbarHidden } from '../target/target';
-import { getViewportPresetKind } from '../viewport';
 import { bindReviewFrameNavigation } from './review.frame.navigation';
 import { getReviewKitTarget } from './review.kit.target';
 import type { ReviewShellStatusOption } from '../types';
@@ -166,10 +165,7 @@ export const useReviewKitLifecycle = ({
     onModeChange(controllerRef.current.getMode());
     void onRestoreInitialItem().then(onApplyPendingRestore);
     onRefreshTargetOverlayState();
-    setTargetScrollbarHidden(
-      targetDocument,
-      getViewportPresetKind(storeApi.getState().size) === 'mobile'
-    );
+    setTargetScrollbarHidden(targetDocument, true);
   }, [
     adapter,
     fields,

@@ -9,6 +9,7 @@ export const reviewShellStageStyle = `
 	  }
 
   .df-review-frame {
+    position: relative;
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
     min-width: 0;
@@ -61,6 +62,18 @@ export const reviewShellStageStyle = `
     overflow: hidden;
     border-radius: var(--df-review-radius-lg);
     box-shadow: var(--df-review-shadow-device);
+  }
+
+  .df-review-frame-scrollbar {
+    position: absolute;
+    z-index: 7;
+    width: 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .df-review-frame-scrollbar > div {
+    width: 1px;
   }
 
   .df-review-device {

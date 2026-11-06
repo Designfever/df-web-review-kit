@@ -13,6 +13,7 @@ import { useReviewShellAdapterState } from '../store/use.review.adapter.state';
 import {
   useTargetFigmaImageOverlays,
 } from './figma.image.overlay';
+import { ReviewFrameScrollbar } from './frame.scrollbar';
 import { ReviewOutsideMarkers } from './outside.markers';
 import { useCustomPanelRegistry } from '../custom-panels/context';
 import { useFrameZoom } from './use.frame.zoom';
@@ -99,6 +100,12 @@ export const ReviewTargetFrame = () => {
             </div>
           </div>
         </div>
+        <ReviewFrameScrollbar
+          frameKey={`${frameTargetSrc}:${frameNavigationVersion}`}
+          frameScrollRef={frameScrollRef}
+          iframeRef={iframeRef}
+          scale={scale}
+        />
         <div className="df-review-frame-actions">
           <ReviewModeToolbar
             canWriteArea={canWriteArea}

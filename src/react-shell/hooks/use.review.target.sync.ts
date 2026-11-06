@@ -13,8 +13,6 @@ import {
 import { useReviewShellStoreApi } from '../store/store.context';
 import { setTargetScrollbarHidden } from '../target/target';
 import type { ReviewShellViewportPreset } from '../types';
-import { getViewportPresetKind } from '../viewport';
-
 interface UseReviewTargetSyncOptions {
   iframeRef: RefObject<HTMLIFrameElement | null>;
   reviewPathPrefix: string;
@@ -97,10 +95,7 @@ export const useReviewTargetSync = ({
       updateShellUrl(currentTarget, size, source);
     }
     onSyncTargetViewport();
-    setTargetScrollbarHidden(
-      iframeRef.current?.contentDocument,
-      getViewportPresetKind(size) === 'mobile'
-    );
+    setTargetScrollbarHidden(iframeRef.current?.contentDocument, true);
   }, [
     iframeRef,
     onSyncTargetViewport,

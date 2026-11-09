@@ -36,6 +36,9 @@ This package does not own internal operator tools, private admin keys, or produc
 - [Grid overlay](docs/grid-overlay.md): how the shell toggles a host grid/helper overlay.
 - [Design inspector](docs/design-inspector.md): 기존 리뷰 iframe의 CSS·글꼴·치수·요소 간격 검사와 수동 QA.
 - [Analytics](docs/analytics.md): SSO 기반 Amplitude 이벤트와 Session Replay의 수집·privacy 경계.
+- [Release notes 0.16.2](docs/release-notes-0.16.2.md): iframe 바깥 스크롤바 동기화와 Figma absolute overlay 갱신.
+- [Release notes 0.16.1](docs/release-notes-0.16.1.md): Amplitude project_id 복구와 project_name 추가.
+- [Release notes 0.16.0](docs/release-notes-0.16.0.md): iframe Fit/확대·축소, wide 프리셋, viewport 전체 캡처.
 - [Release notes 0.15.0](docs/release-notes-0.15.0.md): canvas 기반 QA 표시와 rectangle annotation.
 - [Release notes 0.14.0](docs/release-notes-0.14.0.md): Amplitude·Session Replay, DF 탭 팝업과 레일 메뉴 정리.
 - [Release notes 0.13.3](docs/release-notes-0.13.3.md): DF Sheet 인증 실패 시 무한 로딩 해제와 세션 캐시 제거.

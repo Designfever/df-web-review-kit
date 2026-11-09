@@ -60,7 +60,6 @@ export const reviewShellStageStyle = `
     width: 100%;
     height: 100%;
     overflow: hidden;
-    border-radius: var(--df-review-radius-lg);
     box-shadow: var(--df-review-shadow-device);
   }
 
@@ -83,7 +82,6 @@ export const reviewShellStageStyle = `
 	    margin: 0;
 	    overflow: hidden;
 	    border: 1px solid var(--df-review-line);
-	    border-radius: var(--df-review-radius-lg);
 	    background: #fff;
     box-shadow: var(--df-review-shadow-device);
   }

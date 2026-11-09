@@ -20,6 +20,7 @@ export function ReviewFrameScrollbar({
     if (!track || !stage) return;
 
     let detachFrame = () => {};
+    let raf = 0;
     const sync = () => {
       const frame = iframeRef.current;
       const device = stage.querySelector<HTMLElement>('.df-review-device-frame');
@@ -54,10 +55,19 @@ export function ReviewFrameScrollbar({
 
       const ratio = track.clientHeight / html.clientHeight;
       const nextHeight = html.scrollHeight * ratio;
-      setContentHeight((current) => (current === nextHeight ? current : nextHeight));
+      setContentHeight((current) =>
+        current === nextHeight ? current : nextHeight
+      );
       const nextTop = win.scrollY * ratio;
       if (Math.abs(track.scrollTop - nextTop) < 1) return;
       track.scrollTop = nextTop;
+    };
+    const scheduleSync = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        sync();
+      });
     };
 
     const bindFrame = () => {
@@ -71,29 +81,49 @@ export function ReviewFrameScrollbar({
         return;
       }
       if (!win || !doc) return;
-      const contentObserver = new ResizeObserver(sync);
+
+      const contentObserver = new ResizeObserver(scheduleSync);
       if (doc.documentElement) contentObserver.observe(doc.documentElement);
       if (doc.body) contentObserver.observe(doc.body);
-      win.addEventListener('scroll', sync, { passive: true });
-      detachFrame = () => {
-        win.removeEventListener('scroll', sync);
-        contentObserver.disconnect();
+
+      const mutationObserver = new MutationObserver(scheduleSync);
+      mutationObserver.observe(doc, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'src', 'class', 'hidden'],
+      });
+
+      const onMedia = (event: Event) => {
+        if (event.target instanceof HTMLImageElement) scheduleSync();
       };
-      sync();
+      doc.addEventListener('load', onMedia, true);
+      doc.addEventListener('error', onMedia, true);
+      win.addEventListener('scroll', scheduleSync, { passive: true });
+
+      detachFrame = () => {
+        win.removeEventListener('scroll', scheduleSync);
+        doc.removeEventListener('load', onMedia, true);
+        doc.removeEventListener('error', onMedia, true);
+        contentObserver.disconnect();
+        mutationObserver.disconnect();
+      };
+      scheduleSync();
     };
 
-    const observer = new ResizeObserver(sync);
+    const observer = new ResizeObserver(scheduleSync);
     observer.observe(stage);
     const device = stage.querySelector('.df-review-device-frame');
     if (device) observer.observe(device);
-    stage.addEventListener('scroll', sync, { passive: true });
+    stage.addEventListener('scroll', scheduleSync, { passive: true });
     const frame = iframeRef.current;
     frame?.addEventListener('load', bindFrame);
     bindFrame();
 
     return () => {
+      if (raf) window.cancelAnimationFrame(raf);
       observer.disconnect();
-      stage.removeEventListener('scroll', sync);
+      stage.removeEventListener('scroll', scheduleSync);
       frame?.removeEventListener('load', bindFrame);
       detachFrame();
     };
